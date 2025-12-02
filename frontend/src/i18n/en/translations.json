@@ -211,6 +211,18 @@
   "dashboard": {
     "registration": {
       "showMessage": "Show message"
+    },
+    "upcomingEvents": {
+      "empty": "No upcoming events"
+    },
+    "registrations": {
+      "empty": "No recent registrations"
+    },
+    "shifts": {
+      "empty": "No upcoming shifts"
+    },
+    "tasks": {
+      "empty": "No open tasks"
     }
   },
   "club": {

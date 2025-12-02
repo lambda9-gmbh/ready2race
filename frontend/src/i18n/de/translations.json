@@ -211,6 +211,18 @@
   "dashboard": {
     "registration": {
       "showMessage": "Nachricht anzeigen"
+    },
+    "upcomingEvents": {
+      "empty": "Keine anstehenden Veranstaltungen"
+    },
+    "registrations": {
+      "empty": "Keine neuen Anmeldungen"
+    },
+    "shifts": {
+      "empty": "Keine anstehenden Schichten"
+    },
+    "tasks": {
+      "empty": "Keine offenen Aufgaben"
     }
   },
   "club": {

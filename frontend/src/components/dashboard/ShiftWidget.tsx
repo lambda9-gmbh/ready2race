@@ -129,7 +129,7 @@ export function ShiftWidget({userId}: {userId: string}) {
                                 py={2}>
                                 <WorkOutline sx={{fontSize: 48, color: 'text.secondary'}} />
                                 <Typography color={'text.secondary'} textAlign={'center'}>
-                                    No upcoming shifts
+                                    {t('dashboard.shifts.empty')}
                                 </Typography>
                             </Stack>
                         ) : (

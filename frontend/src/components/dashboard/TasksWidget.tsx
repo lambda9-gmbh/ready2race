@@ -81,7 +81,7 @@ export function TasksWidget({userId}: {userId: string}) {
                                 py={2}>
                                 <TaskAlt sx={{fontSize: 48, color: 'text.secondary'}} />
                                 <Typography color={'text.secondary'} textAlign={'center'}>
-                                    No open tasks
+                                    {t('dashboard.tasks.empty')}
                                 </Typography>
                             </Stack>
                         ) : (

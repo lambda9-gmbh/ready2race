@@ -48,7 +48,7 @@ export function UpcomingEventsWidget(props: {hideRegistration?: boolean; hideTit
                                 py={4}>
                                 <EventAvailable sx={{fontSize: 48, color: 'text.secondary'}} />
                                 <Typography color={'text.secondary'} textAlign={'center'}>
-                                    No upcoming events
+                                    {t('dashboard.upcomingEvents.empty')}
                                 </Typography>
                             </Stack>
                         ) : (

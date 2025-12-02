@@ -1,5 +1,5 @@
 import React, {Fragment, useState} from 'react'
-import {Box, Button, Divider, List, ListItem, ListItemText, Stack, Typography} from '@mui/material'
+import {Box, Button, Divider, List, ListItem, Stack, Typography} from '@mui/material'
 import {ClockIcon} from '@mui/x-date-pickers'
 import {Assignment, Groups, Message, HowToReg} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
@@ -8,6 +8,7 @@ import {DashboardWidget} from '@components/dashboard/DashboardWidget.tsx'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getEventRegistrations} from '@api/sdk.gen.ts'
 import {Link} from '@tanstack/react-router'
+import {format} from 'date-fns'
 
 export function EventRegistrationsWidget() {
     const [messageDialogOpen, setMessageDialogOpen] = useState(false)
@@ -57,7 +58,7 @@ export function EventRegistrationsWidget() {
                                 py={4}>
                                 <HowToReg sx={{fontSize: 48, color: 'text.secondary'}} />
                                 <Typography color={'text.secondary'} textAlign={'center'}>
-                                    No recent registrations
+                                    {t('dashboard.registrations.empty')}
                                 </Typography>
                             </Stack>
                         ) : (
@@ -65,22 +66,22 @@ export function EventRegistrationsWidget() {
                                 {registrations?.data?.map((registration, index) => (
                                     <Fragment key={registration.id}>
                                         {index !== 0 && <Divider variant={'middle'} />}
-                                        <ListItem>
-                                            <ListItemText
-                                                primary={
-                                                    <Box
-                                                        sx={{
-                                                            display: 'flex',
-                                                            flexWrap: 'wrap',
-                                                            gap: 1,
-                                                            alignItems: 'center',
-                                                        }}>
+                                        <ListItem sx={{py: {xs: 2, md: 2.5}, px: {xs: 1, md: 2}}}>
+                                            <Stack spacing={1.5} width={1} color={'text.secondary'}>
+                                                <Stack
+                                                    direction={{xs: 'column', md: 'row'}}
+                                                    spacing={{xs: 1, md: 1.5}}
+                                                    alignItems={{xs: 'flex-start', md: 'center'}}
+                                                    flexWrap="wrap">
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={1}
+                                                        alignItems="center"
+                                                        flexWrap="wrap">
                                                         <Link
                                                             to={'/club/$clubId'}
                                                             params={{clubId: registration.clubId}}>
-                                                            <Button
-                                                                color={'primary'}
-                                                                size={'small'}>
+                                                            <Button size={'small'}>
                                                                 <Typography>
                                                                     {registration.clubName}
                                                                 </Typography>
@@ -103,71 +104,72 @@ export function EventRegistrationsWidget() {
                                                                 </Typography>
                                                             </Button>
                                                         </Link>
+                                                    </Stack>
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={2}
+                                                        color={'text.secondary'}>
                                                         <Stack
                                                             direction={'row'}
-                                                            spacing={1}
-                                                            color={'text.secondary'}>
-                                                            <Groups fontSize={'small'} />
-                                                            <Typography fontSize={'small'}>
+                                                            spacing={0.75}
+                                                            alignItems={'center'}>
+                                                            <Groups fontSize={'medium'} />
+                                                            <Typography>
                                                                 {registration.participantCount}
                                                             </Typography>
                                                         </Stack>
                                                         <Stack
                                                             direction={'row'}
-                                                            spacing={1}
-                                                            color={'text.secondary'}>
-                                                            <Assignment fontSize={'small'} />
-                                                            <Typography fontSize={'small'}>
+                                                            spacing={0.75}
+                                                            alignItems={'center'}>
+                                                            <Assignment fontSize={'medium'} />
+                                                            <Typography>
                                                                 {
                                                                     registration.competitionRegistrationCount
                                                                 }
                                                             </Typography>
                                                         </Stack>
-                                                    </Box>
-                                                }
-                                                secondary={
-                                                    <Box
-                                                        sx={{
-                                                            display: 'flex',
-                                                            flexWrap: 'wrap',
-                                                            gap: 1,
-                                                            alignItems: 'center',
-                                                            mt: 1,
-                                                        }}>
+                                                    </Stack>
+                                                </Stack>
+                                                <Stack
+                                                    direction={{xs: 'column', sm: 'row'}}
+                                                    spacing={{xs: 1, sm: 2}}
+                                                    alignItems={{xs: 'flex-start', sm: 'center'}}
+                                                    color={'text.secondary'}>
+                                                    <Stack
+                                                        direction={'row'}
+                                                        alignItems={'center'}
+                                                        spacing={0.75}>
+                                                        <ClockIcon fontSize={'medium'} />
+                                                        <Typography>
+                                                            {format(
+                                                                new Date(registration.createdAt),
+                                                                t('format.datetime'),
+                                                            )}
+                                                        </Typography>
+                                                    </Stack>
+                                                    {registration.message && (
                                                         <Stack
                                                             direction={'row'}
                                                             alignItems={'center'}
-                                                            spacing={1}>
-                                                            <ClockIcon fontSize={'small'} />
-                                                            <Typography fontSize={'small'}>
-                                                                {new Date(
-                                                                    registration.createdAt,
-                                                                ).toLocaleString()}
-                                                            </Typography>
+                                                            spacing={0.5}>
+                                                            <Message fontSize={'medium'} />
+                                                            <Button
+                                                                variant={'text'}
+                                                                size={'medium'}
+                                                                onClick={() =>
+                                                                    showNachricht(
+                                                                        registration.message,
+                                                                    )
+                                                                }>
+                                                                {t(
+                                                                    'dashboard.registration.showMessage',
+                                                                )}
+                                                            </Button>
                                                         </Stack>
-                                                        {registration.message && (
-                                                            <Stack
-                                                                direction={'row'}
-                                                                alignItems={'center'}
-                                                                spacing={0}>
-                                                                <Message fontSize={'small'} />
-                                                                <Button
-                                                                    variant={'text'}
-                                                                    size={'small'}
-                                                                    onClick={() =>
-                                                                        showNachricht(
-                                                                            registration.message,
-                                                                        )
-                                                                    }>
-                                                                    {t(
-                                                                        'dashboard.registration.showMessage',
-                                                                    )}
-                                                                </Button>
-                                                            </Stack>
-                                                        )}
-                                                    </Box>
-                                                }
-                                            />
+                                                    )}
+                                                </Stack>
+                                            </Stack>
                                         </ListItem>
                                     </Fragment>
                                 ))}
