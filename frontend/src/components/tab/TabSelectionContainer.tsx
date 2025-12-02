@@ -8,7 +8,17 @@ type Props<TabType extends string> = PropsWithChildren<{
 const TabSelectionContainer = <TabType extends string>({children, ...props}: Props<TabType>) => {
     return (
         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-            <Tabs value={props.activeTab} onChange={(_, v) => props.setActiveTab(v)}>
+            <Tabs
+                value={props.activeTab}
+                onChange={(_, v) => props.setActiveTab(v)}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+                sx={{
+                    '& .MuiTabScrollButton-root.Mui-disabled': {
+                        display: 'none',
+                    },
+                }}>
                 {children}
             </Tabs>
         </Box>
