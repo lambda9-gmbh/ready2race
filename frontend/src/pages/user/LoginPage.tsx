@@ -3,7 +3,7 @@ import {useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {FormContainer, useForm} from 'react-hook-form-mui'
-import {Box, Divider, Stack, Typography} from '@mui/material'
+import {Box, Stack, Typography} from '@mui/material'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
@@ -66,15 +66,6 @@ const LoginPage = () => {
                         </Box>
                     </Box>
                     <SubmitButton submitting={submitting}>{t('user.login.submit')}</SubmitButton>
-                    <Divider />
-                    <Stack direction="row" spacing={1} justifyContent="center">
-                        <Typography sx={{fontWeight: 'light'}}>
-                            {t('user.login.signUp.message')}
-                        </Typography>
-                        <Link to="/registration">
-                            <Typography>{t('user.login.signUp.link')}</Typography>
-                        </Link>
-                    </Stack>
                 </Stack>
             </FormContainer>
         </SimpleFormLayout>

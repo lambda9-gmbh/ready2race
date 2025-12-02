@@ -1174,11 +1174,7 @@
           }
         }
       },
-      "error": "An error has occurred during registration",
-      "login": {
-        "message": "Already have an account?",
-        "link": "Login here"
-      }
+      "error": "An error has occurred during registration"
     },
     "resetPassword": {
       "resetPassword": "Reset password",

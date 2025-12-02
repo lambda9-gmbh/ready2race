@@ -1,4 +1,4 @@
-import {Box, Divider, Stack, Typography} from '@mui/material'
+import {Box, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {registerUser} from 'api/sdk.gen.ts'
@@ -7,7 +7,6 @@ import {useCaptcha, useFeedback} from '@utils/hooks.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
-import {Link} from '@tanstack/react-router'
 import ConfirmationMailSent from '@components/user/ConfirmationMailSent.tsx'
 import {NewPassword, PasswordFormPart} from '@components/form/NewPassword.tsx'
 import {CaptchaDto, RegisterRequest} from '@api/types.gen.ts'
@@ -122,17 +121,8 @@ const RegistrationPage = () => {
                             <SubmitButton submitting={submitting}>
                                 {t('user.registration.register')}
                             </SubmitButton>
-                            <Divider />
                         </Stack>
                     </FormContainer>
-                    <Stack direction="row" spacing="5px" justifyContent="center" sx={{mt: 4}}>
-                        <Typography variant="body1" sx={{fontWeight: 'light'}}>
-                            {t('user.registration.login.message')}
-                        </Typography>
-                        <Link to="/login">
-                            <Typography>{t('user.registration.login.link')}</Typography>
-                        </Link>
-                    </Stack>
                 </>
             ) : (
                 <ConfirmationMailSent header={t('user.registration.email.emailSent.header')}>
