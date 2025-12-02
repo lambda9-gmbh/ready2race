@@ -25,6 +25,7 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object ResultConfirmationImageMissing : CompetitionExecutionError
     data object ResultDocumentNotFound : CompetitionExecutionError
     data object NotInChallengeTimespan : CompetitionExecutionError
+    data object PlaceAndTimeBothNull : CompetitionExecutionError
 
     sealed interface ResultUploadError : CompetitionExecutionError {
         data object FileError : ResultUploadError
@@ -46,6 +47,9 @@ sealed interface CompetitionExecutionError : ServiceError {
             data class PlacesUncontinuous(val actual: Int, val expected: Int) : Invalid
 
             data class Unexpected(val reason: ValidationResult.Invalid) : Invalid
+
+            data class DataInListIncomplete(val reason: ValidationResult.Invalid) : Invalid
+            data class ResultNotFailedAndNoData(val reason: ValidationResult.Invalid) : Invalid
 
         }
     }
@@ -133,6 +137,18 @@ sealed interface CompetitionExecutionError : ServiceError {
             errorCode = ErrorCode.SPREADSHEET_NO_HEADERS
         )
 
+        is ResultUploadError.Invalid.DataInListIncomplete -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Data in list is incomplete for some results.",
+            errorCode = ErrorCode.LIST_DATA_INCOMPLETE
+        )
+
+        is ResultUploadError.Invalid.ResultNotFailedAndNoData -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Result is not marked as failed, but no data is given.",
+            errorCode = ErrorCode.RESULT_NOT_FAILED_AND_NO_DATA
+        )
+
         IsChallengeEvent -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Not allowed when the event is a challenge event"
@@ -151,6 +167,11 @@ sealed interface CompetitionExecutionError : ServiceError {
         NotInChallengeTimespan -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Results can not be submitted outside of the challenge timespan."
+        )
+
+        PlaceAndTimeBothNull -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Results must have Places or Times completely filled out if not failed."
         )
 
         is ResultUploadError.CellBlank -> ApiError(

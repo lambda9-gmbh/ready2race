@@ -43,6 +43,8 @@ import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
+import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
+import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
 import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
@@ -50,6 +52,7 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
 import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
+import FormInputTimecode from '@components/form/input/FormInputTimecode.tsx'
 
 type EditMatchTeam = {
     registrationId: string
@@ -64,6 +67,7 @@ type EditMatchForm = {
 type EnterResultsTeam = {
     registrationId: string
     place: string
+    timeString: string
     failed: boolean
     failedReason: string
 }
@@ -159,10 +163,24 @@ const CompetitionExecution = () => {
             validate: values => {
                 const validValues = values.filter(val => val.failed === false)
                 const duplicatePlaces = Array.from(groupBy(validValues, val => val.place))
-                    .filter(([, items]) => items.length > 1)
+                    .filter(([val, items]) => items.length > 1 && val !== '')
                     .map(([place]) => place)
+                const partiallyFilledPlaces =
+                    validValues.some(val => val.place === '') &&
+                    validValues.some(val => val.place !== '')
+                const partiallyFilledTimes =
+                    validValues.some(val => val.timeString === '') &&
+                    validValues.some(val => val.timeString !== '')
+                const neitherPlaceNorTimeFilled = validValues.every(
+                    val => val.place === '' && val.timeString === '',
+                )
 
-                if (duplicatePlaces.length > 0) {
+                if (neitherPlaceNorTimeFilled) {
+                    setTeamResultsError(
+                        t('event.competition.execution.results.validation.noResultsEntered'),
+                    )
+                    return 'noResultsEntered'
+                } else if (duplicatePlaces.length > 0) {
                     setTeamResultsError(
                         t(
                             duplicatePlaces.length === 1
@@ -174,6 +192,16 @@ const CompetitionExecution = () => {
                             t('event.competition.execution.results.validation.duplicates.message'),
                     )
                     return 'duplicates'
+                } else if (partiallyFilledPlaces) {
+                    setTeamResultsError(
+                        t('event.competition.execution.results.validation.missingPlaces'),
+                    )
+                    return 'missingPlaces'
+                } else if (partiallyFilledTimes) {
+                    setTeamResultsError(
+                        t('event.competition.execution.results.validation.missingTimes'),
+                    )
+                    return 'missingTimes'
                 }
 
                 setTeamResultsError(null)
@@ -196,6 +224,7 @@ const CompetitionExecution = () => {
             .map(team => ({
                 registrationId: team.registrationId,
                 place: team.place?.toString() ?? '',
+                timeString: team.timeString?.toString() ?? '',
                 failed: team.failed,
                 failedReason: team.failedReason ?? '',
             }))
@@ -341,6 +370,18 @@ const CompetitionExecution = () => {
                             ),
                         )
                         break
+                    case 'LIST_DATA_INCOMPLETE':
+                        feedback.error(
+                            t('event.competition.execution.results.error.LIST_DATA_INCOMPLETE'),
+                        )
+                        break
+                    case 'RESULT_NOT_FAILED_AND_NO_DATA':
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.RESULT_NOT_FAILED_AND_NO_DATA',
+                            ),
+                        )
+                        break
                     default:
                         feedback.error(t('common.error.unexpected'))
                         break
@@ -367,6 +408,7 @@ const CompetitionExecution = () => {
     }
     const closeResultsDialog = () => {
         setResultsDialogOpen(false)
+        setTeamResultsError(null)
     }
 
     const onSubmitResults = async (
@@ -386,7 +428,8 @@ const CompetitionExecution = () => {
                 body: {
                     teamResults: formData.teamResults.map(results => ({
                         registrationId: results.registrationId,
-                        place: results.failed ? undefined : Number(results.place),
+                        place: results.failed || !results.place ? undefined : Number(results.place),
+                        timeString: results.failed ? undefined : takeIfNotEmpty(results.timeString),
                         failed: results.failed,
                         failedReason: results.failed
                             ? takeIfNotEmpty(results.failedReason)
@@ -677,7 +720,10 @@ const CompetitionExecution = () => {
                 onClose={closeResultsDialog}
                 fullScreen={smallScreenLayout}>
                 <Box sx={{[theme.breakpoints.up('md')]: {m: 2}}}>
-                    <FormContainer formContext={resultsFormContext} onSuccess={onSubmitResults}>
+                    <FormContainer
+                        FormProps={{style: {display: 'contents'}}}
+                        formContext={resultsFormContext}
+                        onSuccess={onSubmitResults}>
                         {selectedResultsMatch && currentRoundMatches && (
                             <CompetitionExecutionMatchDialog
                                 enterResults={true}
@@ -688,7 +734,6 @@ const CompetitionExecution = () => {
                                           })
                                         : t('event.competition.execution.results.title.unnamed')
                                 }
-                                selectedMatchDto={selectedResultsMatch}
                                 fieldArrayError={teamResultsError}
                                 submitting={submitting}
                                 closeDialog={closeResultsDialog}
@@ -713,7 +758,9 @@ const CompetitionExecution = () => {
                                                     {t('event.competition.execution.match.team')}
                                                 </TableCell>
                                                 <TableCell width="40%">
-                                                    {t('event.competition.execution.match.place')}
+                                                    {t(
+                                                        'event.competition.execution.match.placeAndTime',
+                                                    )}
                                                 </TableCell>
                                                 <TableCell width="10%">
                                                     {t(
@@ -751,21 +798,51 @@ const CompetitionExecution = () => {
                                                             </TableCell>
                                                             <TableCell width="40%">
                                                                 {!failedValue ? (
-                                                                    <Box sx={{maxWidth: 100}}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            width: 1,
+                                                                            display: 'flex',
+                                                                            flexDirection: 'column',
+                                                                            gap: 2,
+                                                                        }}>
                                                                         {controlledResultFields && (
-                                                                            <FormInputNumber
-                                                                                name={`teamResults.${fieldIndex}.place`}
-                                                                                required
-                                                                                min={1}
-                                                                                max={
-                                                                                    controlledResultFields.filter(
-                                                                                        r =>
-                                                                                            !r.failed,
-                                                                                    ).length
-                                                                                }
-                                                                                integer
-                                                                            />
+                                                                            <Box
+                                                                                display="flex"
+                                                                                gap={1}
+                                                                                alignItems={
+                                                                                    'center'
+                                                                                }>
+                                                                                <EmojiEventsOutlinedIcon
+                                                                                    color={'action'}
+                                                                                />
+                                                                                <FormInputNumber
+                                                                                    name={`teamResults.${fieldIndex}.place`}
+                                                                                    min={1}
+                                                                                    max={
+                                                                                        controlledResultFields.filter(
+                                                                                            r =>
+                                                                                                !r.failed,
+                                                                                        ).length
+                                                                                    }
+                                                                                    integer
+                                                                                    size="small"
+                                                                                    placeholder="#"
+                                                                                />
+                                                                            </Box>
                                                                         )}
+                                                                        <Box
+                                                                            display="flex"
+                                                                            gap={1}
+                                                                            alignItems={'center'}>
+                                                                            <TimerOutlinedIcon
+                                                                                color={'action'}
+                                                                            />
+                                                                            <FormInputTimecode
+                                                                                name={`teamResults.${fieldIndex}.timeString`}
+                                                                                size="small"
+                                                                                placeholder="00:00:00.000"
+                                                                            />
+                                                                        </Box>
                                                                     </Box>
                                                                 ) : (
                                                                     <FormInputText
@@ -773,6 +850,7 @@ const CompetitionExecution = () => {
                                                                         label={t(
                                                                             'event.competition.execution.results.failedReason',
                                                                         )}
+                                                                        size="small"
                                                                     />
                                                                 )}
                                                             </TableCell>
@@ -819,7 +897,6 @@ const CompetitionExecution = () => {
                                           })
                                         : t('event.competition.execution.matchData.title.unnamed')
                                 }
-                                selectedMatchDto={selectedEditMatch}
                                 fieldArrayError={teamEditMatchError}
                                 submitting={submitting}
                                 closeDialog={closeEditMatchDialog}

@@ -401,11 +401,14 @@ const CompetitionExecutionRound = ({
                                                           'event.competition.execution.match.startNumber.startNumber',
                                                       )}
                                             </TableCell>
-                                            <TableCell width="55%">
+                                            <TableCell width="50%">
                                                 {t('event.competition.execution.match.team')}
                                             </TableCell>
-                                            <TableCell width="30%">
+                                            <TableCell width="10%">
                                                 {t('event.competition.execution.match.place')}
+                                            </TableCell>
+                                            <TableCell width="25%">
+                                                {t('event.competition.execution.match.time')}
                                             </TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -417,11 +420,11 @@ const CompetitionExecutionRound = ({
                                                     <TableCell width="15%">
                                                         {team.startNumber}
                                                     </TableCell>
-                                                    <TableCell width="55%">
+                                                    <TableCell width="50%">
                                                         {team.clubName +
                                                             (team.name ? ` ${team.name}` : '')}
                                                     </TableCell>
-                                                    <TableCell width="30%">
+                                                    <TableCell width="10%">
                                                         {team.deregistered
                                                             ? t(
                                                                   'event.competition.registration.deregister.deregistered',
@@ -437,6 +440,9 @@ const CompetitionExecutionRound = ({
                                                                     ? ` (${team.failedReason})`
                                                                     : '')
                                                               : team.place}
+                                                    </TableCell>
+                                                    <TableCell width="25%">
+                                                        {team.timeString}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

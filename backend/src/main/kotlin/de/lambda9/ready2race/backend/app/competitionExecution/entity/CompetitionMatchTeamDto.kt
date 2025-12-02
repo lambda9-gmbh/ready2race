@@ -10,6 +10,8 @@ data class CompetitionMatchTeamDto(
     val name: String?,
     val startNumber: Int,
     val place: Int?,
+    val timeString: String?,
+    val placesCalculated: Boolean,
     val deregistered: Boolean,
     val deregistrationReason: String?,
     val failed: Boolean,

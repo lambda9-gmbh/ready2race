@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
+import de.lambda9.ready2race.backend.app.timecode.control.toTimecode
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.tailwind.core.KIO
@@ -27,6 +28,8 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
                             name = team.registrationName,
                             startNumber = team.startNumber,
                             place = team.place,
+                            timeString = team.timeString,
+                            placesCalculated = team.placesCalculated,
                             deregistered = team.deregistered,
                             deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
                             failed = team.failed,
@@ -76,6 +79,8 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                         competitionMatch = team.competitionMatch!!,
                         startNumber = team.startNumber!!,
                         place = team.place,
+                        timeString = team.timecode?.toTimecode()?.toString(),
+                        placesCalculated = team.placesCalculated!!,
                         competitionRegistration = team.competitionRegistration!!,
                         clubId = team.clubId!!,
                         clubName = team.clubName!!,
