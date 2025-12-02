@@ -60,11 +60,13 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
             styleOverrides: {
                 root: {
                     textTransform: 'none',
-                    [_theme.breakpoints.down('sm')]: {
-                        minHeight: '3.5rem',
-                        fontSize: '1.2rem',
-                        padding: '0.75rem 1rem',
-                        fontWeight: 600,
+                    '.mobile-optimized-layout &': {
+                        [_theme.breakpoints.down('sm')]: {
+                            minHeight: '3.5rem',
+                            fontSize: '1.2rem',
+                            padding: '0.75rem 1rem',
+                            fontWeight: 600,
+                        },
                     },
                 },
             },

@@ -433,6 +433,7 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 columns={columns}
                 dataRequest={dataRequest}
                 entityName={t('club.participant.title')}
+                mobileBreakpoint={'lg'}
             />
         </Fragment>
     )
