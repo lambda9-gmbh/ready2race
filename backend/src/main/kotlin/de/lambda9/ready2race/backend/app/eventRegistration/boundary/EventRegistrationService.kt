@@ -927,12 +927,15 @@ object EventRegistrationService {
                                 ) {
 
                                     block(
-                                        padding = Padding(bottom = 5f)
+                                        padding = Padding(bottom = 10f),
                                     ) {
                                         text(
                                             fontStyle = FontStyle.BOLD,
-                                            centered = true,
-                                        ) { category?.name ?: "Unkategorisiert" }
+                                            newLine = false,
+                                            ) { category?.name ?: "Unkategorisiert / " }
+                                        text(
+                                            newLine = false,
+                                        ) { "uncategorized" }
                                     }
 
                                     categoryTeams.groupBy { it.clubId }.forEach { (_, clubTeams) ->
@@ -943,7 +946,10 @@ object EventRegistrationService {
 
                                                 text(
                                                     fontStyle = FontStyle.BOLD
-                                                ) { team.clubName }
+                                                ) { team.actualClubName?: team.clubName }
+                                                text(
+                                                    newLine = false
+                                                ) { "  ${team.clubName}" }
                                                 team.name?.let {
                                                     text(
                                                         newLine = false,

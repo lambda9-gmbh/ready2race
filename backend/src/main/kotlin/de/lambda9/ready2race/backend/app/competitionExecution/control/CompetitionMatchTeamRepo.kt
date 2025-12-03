@@ -66,7 +66,6 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT.EXTERNAL_CLUB_NAME,
                 NAMED_PARTICIPANT.NAME.`as`("named_role"),
                 EVENT.MIXED_TEAM_TERM,
-                NAMED_PARTICIPANT.NAME.`as`("named_role"),
                 TIMECODE.TIME,
                 TIMECODE.BASE_UNIT,
                 TIMECODE.MILLISECOND_PRECISION

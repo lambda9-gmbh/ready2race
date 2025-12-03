@@ -90,49 +90,62 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                             sx={{
                                                 justifyContent: 'space-between',
                                             }}>
-                                            {'failed' in team && (
-                                                <Typography variant={team.place ? 'h5' : 'body1'}>
-                                                    {team.place
-                                                        ? `${team.place}.`
-                                                        : team.failed
-                                                          ? t(
-                                                                'event.competition.execution.results.failed',
-                                                            ) +
-                                                            (team.failedReason
-                                                                ? ` (${team.failedReason})`
-                                                                : '')
-                                                          : team.deregistered
-                                                            ? t(
-                                                                  'event.competition.registration.deregister.deregistered',
-                                                              ) +
-                                                              (team.deregisteredReason
-                                                                  ? ` (${team.deregisteredReason})`
-                                                                  : '')
-                                                            : ''}
-                                                </Typography>
+                                            {'failed' in team ? (
+                                                <Box>
+                                                    <Typography
+                                                        variant={team.place ? 'h5' : 'body1'}>
+                                                        {team.place
+                                                            ? `${team.place}.`
+                                                            : team.failed
+                                                              ? t(
+                                                                    'event.competition.execution.results.failed',
+                                                                ) +
+                                                                (team.failedReason
+                                                                    ? ` (${team.failedReason})`
+                                                                    : '')
+                                                              : team.deregistered
+                                                                ? t(
+                                                                      'event.competition.registration.deregister.deregistered',
+                                                                  ) +
+                                                                  (team.deregisteredReason
+                                                                      ? ` (${team.deregisteredReason})`
+                                                                      : '')
+                                                                : ''}
+                                                    </Typography>
+                                                    {'failed' in team &&
+                                                        !team.failed &&
+                                                        team.timeString && (
+                                                            <Box
+                                                                display="flex"
+                                                                gap={1}
+                                                                alignItems={'center'}>
+                                                                <TimerOutlinedIcon
+                                                                    color={'action'}
+                                                                    fontSize={'inherit'}
+                                                                />
+                                                                <Typography
+                                                                    color={'textSecondary'}
+                                                                    variant={'body2'}>
+                                                                    {team.timeString}
+                                                                </Typography>
+                                                            </Box>
+                                                        )}
+                                                </Box>
+                                            ) : (
+                                                <Box></Box>
                                             )}
                                             <Box>
                                                 <Typography textAlign={'right'}>
-                                                    {(team.teamName ? `${team.teamName} ` : '') +
-                                                        (team.actualClubName ?? team.clubName)}
+                                                    {team.actualClubName ?? team.clubName}
                                                 </Typography>
-                                                <Typography textAlign={'right'}>
-                                                    {(team.teamName ? `${team.teamName} ` : '') +
-                                                        (team.actualClubName ?? team.clubName)}
+                                                <Typography
+                                                    color={'textSecondary'}
+                                                    variant={'body2'}
+                                                    textAlign={'right'}>
+                                                    {team.clubName + ` ${team.teamName}`}
                                                 </Typography>
                                             </Box>
                                         </Stack>
-                                        {'failed' in team && !team.failed && team.timeString && (
-                                            <Box display="flex" gap={1} alignItems={'center'}>
-                                                <TimerOutlinedIcon
-                                                    color={'action'}
-                                                    fontSize={'inherit'}
-                                                />
-                                                <Typography color={'textSecondary'}>
-                                                    {team.timeString}
-                                                </Typography>
-                                            </Box>
-                                        )}
                                         <Divider sx={{my: 1}} />
                                         <Grid2 container>
                                             {team.participants

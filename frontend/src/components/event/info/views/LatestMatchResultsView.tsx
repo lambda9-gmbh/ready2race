@@ -132,7 +132,6 @@ export const LatestMatchResultsView: React.FC<LatestMatchResultsViewProps> = ({e
                                             <TableCell align="center" sx={{width: 60}}>
                                                 {t('event.info.place')}
                                             </TableCell>
-                                            <TableCell>{t('event.info.team')}</TableCell>
                                             <TableCell>{t('club.club')}</TableCell>
                                             <TableCell>{t('event.info.participants')}</TableCell>
                                         </TableRow>
@@ -144,17 +143,13 @@ export const LatestMatchResultsView: React.FC<LatestMatchResultsViewProps> = ({e
                                                     <SinglePlaceColored place={team.place ?? 0} />
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Typography variant="body2">
-                                                        {team.teamName || '-'}
+                                                    <Typography>
+                                                        {team.actualClubName ?? team.clubName}
                                                     </Typography>
-                                                </TableCell>
-                                                <TableCell>
                                                     <Typography
                                                         variant="body2"
                                                         color="text.secondary">
-                                                        {team.actualClubName ??
-                                                            team.clubName ??
-                                                            '-'}
+                                                        {team.clubName + ` ${team.teamName}`}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>

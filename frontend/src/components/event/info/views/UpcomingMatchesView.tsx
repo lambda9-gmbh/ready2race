@@ -199,13 +199,9 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="caption"
                                                                             color="text.secondary">
-                                                                            {team.teamName +
-                                                                                ' ' +
-                                                                                (team.actualClubName ??
-                                                                                    team.clubName ??
-                                                                                    t(
-                                                                                        'event.info.unnamed',
-                                                                                    ))}
+                                                                            {(team.actualClubName ??
+                                                                                team.clubName) +
+                                                                                ` | ${team.clubName} ${team.teamName}`}
                                                                         </Typography>
                                                                     </>
                                                                 ) : (
@@ -213,13 +209,14 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="body1"
                                                                             fontWeight="medium">
-                                                                            {team.teamName +
-                                                                                ' ' +
-                                                                                (team.actualClubName ??
-                                                                                    team.clubName ??
-                                                                                    t(
-                                                                                        'event.info.unnamed',
-                                                                                    ))}
+                                                                            {team.actualClubName ??
+                                                                                team.clubName}
+                                                                        </Typography>
+                                                                        <Typography
+                                                                            variant={'body2'}
+                                                                            color="text.secondary">
+                                                                            {team.clubName +
+                                                                                ` ${team.teamName}`}
                                                                         </Typography>
                                                                         {team.participants.length >
                                                                             0 && (

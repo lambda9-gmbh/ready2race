@@ -1197,17 +1197,10 @@ object CompetitionExecutionService {
                         ) {
                             text(
                                 fontStyle = FontStyle.BOLD
-                            ) { team.registeringClubName }
-                            team.teamName?.let {
-                                text(
-                                    newLine = false,
-                                ) { " $it" }
-                            }
-                            team.actualClubName?.let {
-                                text(
-                                    newLine = false,
-                                ) { " [$it]" }
-                            }
+                            ) { team.actualClubName ?: team.registeringClubName }
+                            text(
+                                newLine = false,
+                            ) { "  ${team.registeringClubName}${if (team.teamName != null) " ${team.teamName}" else ""}" }
                             team.ratingCategory?.let {
                                 text(
                                     newLine = false,

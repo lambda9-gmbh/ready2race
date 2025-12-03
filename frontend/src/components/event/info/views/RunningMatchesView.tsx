@@ -165,13 +165,9 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="caption"
                                                                             color="text.secondary">
-                                                                            {team.teamName +
-                                                                                ' ' +
-                                                                                (team.actualClubName ??
-                                                                                    team.clubName ??
-                                                                                    t(
-                                                                                        'event.info.unnamed',
-                                                                                    ))}
+                                                                            {(team.actualClubName ??
+                                                                                team.clubName) +
+                                                                                ` | ${team.clubName} ${team.teamName}`}
                                                                         </Typography>
                                                                     </>
                                                                 ) : (
