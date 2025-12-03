@@ -7,9 +7,12 @@ import {useMemo, useRef, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
     Box,
+    Card,
+    CardContent,
     Chip,
     DialogContent,
     DialogTitle,
+    Divider,
     IconButton,
     Link,
     Stack,
@@ -19,6 +22,8 @@ import {
     TableHead,
     TableRow,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material'
 import {Add, CheckCircle, Download, Info, Warning} from '@mui/icons-material'
 import QrCodeIcon from '@mui/icons-material/QrCode'
@@ -52,6 +57,8 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     const {t} = useTranslation()
     const user = useUser()
     const feedback = useFeedback()
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -97,6 +104,181 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                 minWidth: 550,
                 sortable: false,
                 renderCell: ({row}) => {
+                    if (isMobile) {
+                        return (
+                            <Stack spacing={1} sx={{width: 1, py: 1}}>
+                                {row.namedParticipants.map(np =>
+                                    np.participants.map(participant => (
+                                        <Card
+                                            key={participant.id}
+                                            variant="outlined"
+                                            sx={{width: 1}}>
+                                            <CardContent>
+                                                <Stack spacing={1.5}>
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        fontWeight="bold">
+                                                        {`${participant.firstname} ${participant.lastname}`}
+                                                    </Typography>
+                                                    <Divider />
+                                                    <Stack spacing={0.5}>
+                                                        <Typography
+                                                            variant="caption"
+                                                            color="text.secondary">
+                                                            {t(
+                                                                'event.competition.namedParticipant.namedParticipant',
+                                                            )}
+                                                        </Typography>
+                                                        <Typography variant="body2">
+                                                            {np.namedParticipantName}
+                                                        </Typography>
+                                                    </Stack>
+                                                    {participant.qrCodeId && (
+                                                        <Stack spacing={0.5}>
+                                                            <Typography
+                                                                variant="caption"
+                                                                color="text.secondary">
+                                                                {t('qrCode.qrCode')}
+                                                            </Typography>
+                                                            <Typography variant="body2">
+                                                                {participant.qrCodeId}
+                                                            </Typography>
+                                                        </Stack>
+                                                    )}
+                                                    {participant.currentStatus !== undefined && (
+                                                        <Stack spacing={0.5}>
+                                                            <Typography
+                                                                variant="caption"
+                                                                color="text.secondary">
+                                                                {t(
+                                                                    'club.participant.tracking.status',
+                                                                )}
+                                                            </Typography>
+                                                            <Chip
+                                                                label={
+                                                                    participant.currentStatus ===
+                                                                    'ENTRY'
+                                                                        ? t(
+                                                                              'club.participant.tracking.in',
+                                                                          )
+                                                                        : t(
+                                                                              'club.participant.tracking.out',
+                                                                          )
+                                                                }
+                                                                color={
+                                                                    participant.currentStatus ===
+                                                                    'ENTRY'
+                                                                        ? 'success'
+                                                                        : 'default'
+                                                                }
+                                                                size="small"
+                                                                sx={{width: 'fit-content'}}
+                                                            />
+                                                            {participant.lastScanAt && (
+                                                                <Typography variant="caption">
+                                                                    {t(
+                                                                        'club.participant.tracking.lastScan.at',
+                                                                    )}
+                                                                    :{' '}
+                                                                    {format(
+                                                                        new Date(
+                                                                            participant.lastScanAt,
+                                                                        ),
+                                                                        t('format.datetime'),
+                                                                    )}
+                                                                </Typography>
+                                                            )}
+                                                            {participant.lastScanBy && (
+                                                                <Typography variant="caption">
+                                                                    {t('common.by')}:{' '}
+                                                                    {
+                                                                        participant.lastScanBy
+                                                                            .firstname
+                                                                    }{' '}
+                                                                    {
+                                                                        participant.lastScanBy
+                                                                            .lastname
+                                                                    }
+                                                                </Typography>
+                                                            )}
+                                                        </Stack>
+                                                    )}
+                                                    {row.globalParticipantRequirements.length +
+                                                        np.participantRequirements.length >
+                                                        0 && (
+                                                        <Stack spacing={0.5}>
+                                                            <Typography
+                                                                variant="caption"
+                                                                color="text.secondary">
+                                                                {t(
+                                                                    'event.participantRequirement.approved',
+                                                                )}
+                                                                {!isMobile &&
+                                                                    ` (${participant.participantRequirementsChecked.length} / ${row.globalParticipantRequirements.length + np.participantRequirements.length})`}
+                                                            </Typography>
+                                                            <Stack spacing={0.5} sx={{pl: 1}}>
+                                                                {[
+                                                                    ...row.globalParticipantRequirements.map(
+                                                                        gpr => ({
+                                                                            ...gpr,
+                                                                            qrCodeRequired: false,
+                                                                        }),
+                                                                    ),
+                                                                    ...np.participantRequirements,
+                                                                ].map(req => {
+                                                                    const isChecked =
+                                                                        participant.participantRequirementsChecked.some(
+                                                                            c => c.id === req.id,
+                                                                        )
+                                                                    const note =
+                                                                        participant.participantRequirementsChecked.find(
+                                                                            c => c.id === req.id,
+                                                                        )?.note
+                                                                    return (
+                                                                        <Stack
+                                                                            direction="row"
+                                                                            spacing={0.5}
+                                                                            alignItems="center"
+                                                                            key={req.id}>
+                                                                            {isChecked ? (
+                                                                                <CheckCircle
+                                                                                    color="success"
+                                                                                    sx={{
+                                                                                        fontSize: 16,
+                                                                                    }}
+                                                                                />
+                                                                            ) : (
+                                                                                <Cancel
+                                                                                    color="error"
+                                                                                    sx={{
+                                                                                        fontSize: 16,
+                                                                                    }}
+                                                                                />
+                                                                            )}
+                                                                            <Typography variant="caption">
+                                                                                {req.name}
+                                                                                {req.optional &&
+                                                                                    ` (${t('entity.optional')})`}
+                                                                                {req.qrCodeRequired &&
+                                                                                    ' (QR)'}
+                                                                                {note &&
+                                                                                    ` [ ${note} ]`}
+                                                                            </Typography>
+                                                                        </Stack>
+                                                                    )
+                                                                })}
+                                                            </Stack>
+                                                        </Stack>
+                                                    )}
+                                                </Stack>
+                                            </CardContent>
+                                        </Card>
+                                    )),
+                                )}
+                            </Stack>
+                        )
+                    }
+
                     return (
                         <Table size="small">
                             <TableHead>
@@ -452,7 +634,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                   ]
                 : []),
         ],
-        [],
+        [isMobile],
     )
 
     const handleDownloadResultDocument = async (docId: string, docName: string) => {
@@ -531,6 +713,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                 dataRequest={dataRequest}
                 entityName={t('event.registration.teams')}
                 hideEntityActions
+                mobileBreakpoint={'lg'}
             />
             <ChallengeResultDialog
                 dialogOpen={resultsDialogOpen}

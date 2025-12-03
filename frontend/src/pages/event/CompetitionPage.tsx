@@ -1,4 +1,14 @@
-import {Box, Card, List, ListItem, Stack, Tab, Typography, useTheme} from '@mui/material'
+import {
+    Box,
+    Card,
+    List,
+    ListItem,
+    Stack,
+    Tab,
+    Typography,
+    useMediaQuery,
+    useTheme,
+} from '@mui/material'
 import {Trans, useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
@@ -39,6 +49,8 @@ const CompetitionPage = () => {
     const feedback = useFeedback()
     const user = useUser()
     const theme = useTheme()
+
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -205,19 +217,20 @@ const CompetitionPage = () => {
                                             {competitionData.properties.competitionCategory.name}
                                         </Typography>
                                         {competitionData.properties.competitionCategory
-                                            .description && (
-                                            <HtmlTooltip
-                                                title={
-                                                    <Typography>
-                                                        {
-                                                            competitionData.properties
-                                                                .competitionCategory.description
-                                                        }
-                                                    </Typography>
-                                                }>
-                                                <Info color={'info'} fontSize={'small'} />
-                                            </HtmlTooltip>
-                                        )}
+                                            .description &&
+                                            !isMobile && (
+                                                <HtmlTooltip
+                                                    title={
+                                                        <Typography>
+                                                            {
+                                                                competitionData.properties
+                                                                    .competitionCategory.description
+                                                            }
+                                                        </Typography>
+                                                    }>
+                                                    <Info color={'info'} fontSize={'small'} />
+                                                </HtmlTooltip>
+                                            )}
                                     </Stack>
                                 )}
                                 {competitionData.properties.description && (
@@ -277,7 +290,7 @@ const CompetitionPage = () => {
                                                         <Typography fontWeight={'bold'}>
                                                             {f.name}
                                                         </Typography>
-                                                        {f.description && (
+                                                        {f.description && !isMobile && (
                                                             <HtmlTooltip
                                                                 title={
                                                                     <Typography>
