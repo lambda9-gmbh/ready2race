@@ -5,7 +5,6 @@ import {
     Button,
     Checkbox,
     Chip,
-    Divider,
     FormControlLabel,
     Paper,
     Stack,
@@ -23,8 +22,8 @@ import {
     Person,
 } from '@mui/icons-material'
 import {EventRegistrationCompetitionDto, RatingCategoryToEventDto} from '../../api'
-import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
+import {Trans} from 'react-i18next'
 import {
     EventRegistrationFormData,
     EventRegistrationParticipantFormData,
@@ -146,35 +145,70 @@ const EventSingleCompetitionField = (props: {
     }, [props.option.ratingCategoryRequired, ratingCategories, participant, t])
 
     return (
-        <Stack direction="row" sx={{alignItems: 'center'}}>
+        <Stack
+            direction={{xs: 'column', sm: 'row'}}
+            sx={{alignItems: {xs: 'flex-start', sm: 'center'}, gap: {xs: 1, sm: 0}}}>
             <FormControlLabel
                 control={<Checkbox />}
                 disabled={props.locked || (props.isLate && !props.option.lateRegistrationAllowed)}
                 checked={active}
                 onChange={(_, checked) => onChange(checked)}
+                sx={{cursor: 'pointer'}}
                 label={
-                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
+                    <Stack direction={'row'} alignItems={'center'} spacing={1} flexWrap={'wrap'}>
                         <Typography>{props.option.name}</Typography>
                         {props.option.competitionCategory && (
-                            <Chip variant={'outlined'} label={props.option.competitionCategory} />
+                            <Chip
+                                variant={'outlined'}
+                                label={props.option.competitionCategory}
+                                size={'small'}
+                            />
                         )}
-                        <EventRegistrationPriceTooltip competition={props.option} />
                     </Stack>
                 }
             />
+
             {active && (props.option.fees?.length ?? 0) > 0 && (
-                <>
-                    <Divider orientation={'vertical'} sx={{mr: 2}} />
+                <Box sx={{display: 'flex', gap: 4, flexWrap: 'wrap'}}>
+                    {/* Fee Display */}
+                    <Stack spacing={0.5} sx={{ml: {xs: 0, sm: 4}, mt: 0.5, pl: {xs: 1, sm: 0}}}>
+                        {props.option.fees
+                            ?.filter(f => f.required)
+                            .map(fee => (
+                                <Typography key={fee.id} variant="body2" color="text.secondary">
+                                    {fee.label}: <strong>{Number(fee.amount).toFixed(2)}€</strong>
+                                    {props.option.lateRegistrationAllowed && fee.lateAmount && (
+                                        <Typography
+                                            component="span"
+                                            variant="caption"
+                                            color="warning.main"
+                                            sx={{ml: 1}}>
+                                            (
+                                            <Trans
+                                                i18nKey={'event.competition.fee.asLate'}
+                                                values={{amount: Number(fee.lateAmount).toFixed(2)}}
+                                            />
+                                            )
+                                        </Typography>
+                                    )}
+                                </Typography>
+                            ))}
+                        {(props.option.fees?.filter(f => !f.required).length ?? 0) > 0 && (
+                            <Typography variant="caption" color="text.secondary">
+                                + {t('event.registration.optionalFee')}
+                            </Typography>
+                        )}
+                    </Stack>
                     <CheckboxButtonGroup
                         disabled={props.locked}
                         name={`participants.${props.participantIndex}.competitionsSingle.${competitionIndex}.optionalFees`}
                         options={props.option.fees?.filter(f => !f.required) ?? []}
                         row
                     />
-                </>
+                </Box>
             )}
             {active && ratingCategories.length > 0 && (
-                <Box sx={{ml: 2, my: 1}}>
+                <Box sx={{ml: {xs: 0, sm: 2}, my: 1, width: {xs: '100%', sm: 'auto'}}}>
                     <Typography variant={'subtitle2'}>
                         {t('event.competition.registration.ratingCategory')}
                     </Typography>
@@ -243,13 +277,20 @@ export const EventRegistrationSingleCompetitionForm = () => {
         if (allCategories.size > 1) {
             return (
                 <Alert icon={<FilterAlt />} color={'info'} sx={{mB: 2}}>
-                    <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                    <Stack direction={{xs: 'column', sm: 'row'}} spacing={1} alignItems={'center'}>
                         <Typography>{t('event.competition.category.category')}</Typography>
                         <ToggleButtonGroup
                             size={'small'}
                             value={category}
                             exclusive
-                            onChange={handleChange}>
+                            onChange={handleChange}
+                            sx={{
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                '& .MuiToggleButton-root': {
+                                    minWidth: {xs: '70px', sm: 'auto'},
+                                },
+                            }}>
                             <ToggleButton value={ALL_CATEGORIES}>{t('common.all')}</ToggleButton>
                             {Array.from(allCategories)
                                 .filter(cat => cat !== undefined)
@@ -328,7 +369,9 @@ export const EventRegistrationSingleCompetitionForm = () => {
                     })
                     .map(competition => {
                         // Determine the rating category to use
-                        let selectedRatingCategory = competition.ratingCategoryRequired ? '' : 'none'
+                        let selectedRatingCategory = competition.ratingCategoryRequired
+                            ? ''
+                            : 'none'
 
                         // If rating category is required, check if there's exactly one valid option
                         if (competition.ratingCategoryRequired) {
@@ -367,7 +410,14 @@ export const EventRegistrationSingleCompetitionForm = () => {
                 )
             }
         })
-    }, [selectionState, participantList, competitionsSingle, info?.state, formContext, ratingCategories])
+    }, [
+        selectionState,
+        participantList,
+        competitionsSingle,
+        info?.state,
+        formContext,
+        ratingCategories,
+    ])
 
     const getSelectAllButton = () => {
         let icon: ReactNode
@@ -394,7 +444,7 @@ export const EventRegistrationSingleCompetitionForm = () => {
                 variant="outlined"
                 startIcon={icon}
                 onClick={handleSelectAll}
-                sx={{cursor: 'pointer'}}>
+                sx={{cursor: 'pointer', minHeight: '44px', width: {xs: '100%', sm: 'auto'}}}>
                 {label}
             </Button>
         )
@@ -405,7 +455,7 @@ export const EventRegistrationSingleCompetitionForm = () => {
             {getToggleButtons()}
             {participantList.length > 0 && <Box>{getSelectAllButton()}</Box>}
             {participantList.map((participant, index) => (
-                <Paper sx={{p: 2}} elevation={2} key={participant.id}>
+                <Paper sx={{p: {xs: 1, sm: 2}}} elevation={2} key={participant.id}>
                     <Stack direction="row" spacing={1}>
                         <Stack spacing={2} flex={1}>
                             <Stack direction="row" alignItems={'end'} spacing={1}>
@@ -437,7 +487,11 @@ export const EventRegistrationSingleCompetitionForm = () => {
                                 ))}
                             </Stack>
                         </Stack>
-                        <Typography alignSelf={'end'} variant={'overline'} color={'grey'}>
+                        <Typography
+                            alignSelf={'end'}
+                            variant={'overline'}
+                            color={'grey'}
+                            sx={{display: {xs: 'none', sm: 'block'}}}>
                             #{index + 1}
                         </Typography>
                     </Stack>

@@ -1,5 +1,5 @@
 import {CheckboxButtonGroup, useFieldArray, useFormContext, useWatch} from 'react-hook-form-mui'
-import {Box, Button, Chip, Divider, IconButton, Paper, Stack, Typography} from '@mui/material'
+import {Box, Button, Divider, IconButton, Paper, Stack} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {GroupAdd} from '@mui/icons-material'
 import {v4 as uuid} from 'uuid'
@@ -8,7 +8,7 @@ import {
     EventRegistrationNamedParticipantDto,
     RatingCategoryToEventDto,
 } from '../../api'
-import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
+import {EventRegistrationCompetitionFeeCard} from './EventRegistrationCompetitionFeeCard.tsx'
 import {useTranslation} from 'react-i18next'
 import {useCallback, useMemo} from 'react'
 import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamParticipantAutocomplete.tsx'
@@ -91,7 +91,7 @@ const TeamInput = (props: {
     ])
 
     return (
-        <Paper sx={{p: 2}} elevation={2}>
+        <Paper sx={{p: {xs: 1, sm: 2}}} elevation={2}>
             <Stack rowGap={2}>
                 <Stack spacing={2}>
                     {props.competition.namedParticipant?.map(
@@ -139,7 +139,7 @@ const TeamInput = (props: {
                     />
                 )}
                 {ratingCategories.length > 0 && (
-                    <Box sx={{my: 1, maxWidth: 300}}>
+                    <Box sx={{my: 1, maxWidth: {xs: '100%', sm: 300}}}>
                         <FormInputSelect
                             name={`competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.ratingCategory`}
                             options={ratingCategoryOptions}
@@ -163,7 +163,7 @@ const TeamInput = (props: {
                 )}
 
                 <IconButton
-                    sx={{alignSelf: 'end'}}
+                    sx={{alignSelf: 'end', cursor: 'pointer', minWidth: '44px', minHeight: '44px'}}
                     disabled={props.locked}
                     onClick={() => props.onRemove(props.teamIndex)}>
                     <DeleteIcon />
@@ -210,15 +210,9 @@ const EventRegistrationTeamsForm = (props: {
     )
 
     return (
-        <Stack padding={1}>
-            <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                <Typography>{`${props.competition.name} ${props.competition.identifier}`}</Typography>
-                {props.competition.competitionCategory && (
-                    <Chip variant={'outlined'} label={props.competition.competitionCategory} />
-                )}
-                <EventRegistrationPriceTooltip competition={props.competition} />
-            </Stack>
-            <Stack spacing={1} padding={1}>
+        <Stack padding={{xs: 0.5, sm: 1}}>
+            <EventRegistrationCompetitionFeeCard competition={props.competition} />
+            <Stack spacing={1} padding={{xs: 0.5, sm: 1}}>
                 {teams.map((team, teamIndex) => (
                     <TeamInput
                         key={team.fieldId}
@@ -232,6 +226,11 @@ const EventRegistrationTeamsForm = (props: {
                 ))}
                 <Button
                     disabled={props.isLate && !props.competition.lateRegistrationAllowed}
+                    sx={{
+                        minHeight: '44px',
+                        cursor: 'pointer',
+                        width: {xs: '100%', sm: 'auto'},
+                    }}
                     onClick={() => {
                         append({
                             id: uuid(),

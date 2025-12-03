@@ -67,12 +67,15 @@ export const EventRegistrationParticipantForm = (props: {
     }, [isExternal])
 
     return (
-        <Paper sx={{p: 1, pl: 2, pr: 2}} elevation={2}>
+        <Paper sx={{p: {xs: 0.5, sm: 1}, pl: {xs: 1, sm: 2}, pr: {xs: 1, sm: 2}}} elevation={2}>
             <Stack direction={'row'} alignItems={'center'} spacing={1}>
                 {isEditable ? (
                     <>
                         <Stack spacing={1} flex={1}>
-                            <Stack direction="row" spacing={2} alignItems={'center'}>
+                            <Stack
+                                direction={{xs: 'column', sm: 'row'}}
+                                spacing={2}
+                                alignItems={{xs: 'stretch', sm: 'center'}}>
                                 <FormInputText
                                     name={`participants.${props.index}.firstname`}
                                     label={t('entity.firstname')}
@@ -130,9 +133,13 @@ export const EventRegistrationParticipantForm = (props: {
                                     label={t('user.email.email')}
                                     size={'small'}
                                     onChange={handleChange}
+                                    fullWidth
                                 />
                             </Stack>
-                            <Stack direction="row" spacing={2} alignItems={'center'}>
+                            <Stack
+                                direction={{xs: 'column', sm: 'row'}}
+                                spacing={2}
+                                alignItems={{xs: 'flex-start', sm: 'center'}}>
                                 <FormInputCheckbox
                                     name={`participants.${props.index}.external`}
                                     label={
@@ -145,7 +152,7 @@ export const EventRegistrationParticipantForm = (props: {
                                     }
                                     onChange={handleChange}
                                 />
-                                <Box flex={1}>
+                                <Box flex={1} sx={{width: {xs: '100%', sm: 'auto'}}}>
                                     {isExternal && (
                                         <AutocompleteClub
                                             name={`participants.${props.index}.externalClubName`}
@@ -159,14 +166,19 @@ export const EventRegistrationParticipantForm = (props: {
                             </Stack>
                         </Stack>
                         {isNew && (
-                            <IconButton onClick={props.removeParticipant}>
+                            <IconButton onClick={props.removeParticipant} sx={{cursor: 'pointer'}}>
                                 <DeleteIcon />
                             </IconButton>
                         )}
                     </>
                 ) : (
-                    <Stack flex={1} direction={'row'} alignItems={'center'}>
-                        <Stack direction={'row'} flex={1} spacing={1}>
+                    <Stack flex={1} direction={'row'} alignItems={'center'} flexWrap={'wrap'}>
+                        <Stack
+                            direction={'row'}
+                            flex={1}
+                            spacing={1}
+                            flexWrap={'wrap'}
+                            sx={{minWidth: {xs: '100%', sm: 'auto'}}}>
                             <Typography>
                                 {existingParticipantValues?.firstname}{' '}
                                 {existingParticipantValues?.lastname}
@@ -181,12 +193,16 @@ export const EventRegistrationParticipantForm = (props: {
                                 {existingParticipantValues?.externalClubName}
                             </Typography>
                         </Stack>
-                        <IconButton onClick={() => setIsEditable(true)}>
+                        <IconButton onClick={() => setIsEditable(true)} sx={{cursor: 'pointer'}}>
                             <Edit />
                         </IconButton>
                     </Stack>
                 )}
-                <Typography alignSelf={'end'} variant={'overline'} color={'grey'}>
+                <Typography
+                    alignSelf={'end'}
+                    variant={'overline'}
+                    color={'grey'}
+                    sx={{display: {xs: 'none', sm: 'block'}}}>
                     #{props.index + 1}
                 </Typography>
             </Stack>

@@ -115,8 +115,14 @@ export const EventRegistrationFeeDisplay = () => {
     const hideFees = [...competitionMap.values()].flatMap(c => c.fees).length === 0
 
     return !hideFees ? (
-        <Paper elevation={2} sx={{width: '240px', alignSelf: 'end', mb: 3}}>
-            <Stack p={1} alignItems={'end'}>
+        <Paper
+            elevation={2}
+            sx={{
+                width: {xs: '100%', sm: '240px'},
+                alignSelf: {xs: 'stretch', sm: 'end'},
+                mb: 3,
+            }}>
+            <Stack p={{xs: 1.5, sm: 1}} alignItems={{xs: 'center', sm: 'end'}}>
                 <Typography variant={'caption'}>{t('event.registration.totalFees')}</Typography>
                 <Typography variant={'h5'}>{(teamAmount + singleAmount).toFixed(2)}€</Typography>
                 {info?.state !== 'REGULAR' && (

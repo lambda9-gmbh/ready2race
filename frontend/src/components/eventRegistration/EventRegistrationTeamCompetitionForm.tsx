@@ -27,13 +27,20 @@ export const EventRegistrationTeamCompetitionForm = () => {
         if (allCategories.size > 1) {
             return (
                 <Alert icon={<FilterAlt />} color={'info'} sx={{mB: 2}}>
-                    <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                    <Stack direction={{xs: 'column', sm: 'row'}} spacing={1} alignItems={'center'}>
                         <Typography>{t('event.competition.category.category')}</Typography>
                         <ToggleButtonGroup
                             size={'small'}
                             value={category}
                             exclusive
-                            onChange={handleChange}>
+                            onChange={handleChange}
+                            sx={{
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                '& .MuiToggleButton-root': {
+                                    minWidth: {xs: '70px', sm: 'auto'},
+                                },
+                            }}>
                             <ToggleButton value={ALL_CATEGORIES}>{t('common.all')}</ToggleButton>
                             {Array.from(allCategories)
                                 .filter(cat => cat !== undefined)
