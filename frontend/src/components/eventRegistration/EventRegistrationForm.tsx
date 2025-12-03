@@ -9,6 +9,8 @@ import {
     StepLabel,
     Stepper,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material'
 import {FormContainer, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {PersonAdd} from '@mui/icons-material'
@@ -61,6 +63,9 @@ const EventRegistrationForm = ({
     const [activeStep, setActiveStep] = React.useState(0)
     const {info} = useEventRegistration()
     const {eventId} = eventRegisterIndexRoute.useParams()
+    const theme = useTheme()
+
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const handleNext = () => {
         formContext.trigger(steps[activeStep]?.validateKeys, {shouldFocus: true}).then(valid => {
@@ -203,6 +208,10 @@ const EventRegistrationForm = ({
                                 fontSize: {xs: '0.875rem', sm: '1rem'},
                             },
                             flexDirection: {xs: 'column', sm: 'row'},
+                            [theme.breakpoints.down('md')]: {
+                                alignItems: 'start',
+                                gap: 0.5,
+                            },
                         }}>
                         {steps.map(({label}) => {
                             return (
@@ -235,7 +244,9 @@ const EventRegistrationForm = ({
                                         }}>
                                         {t('common.back')}
                                     </Button>
-                                    <Box sx={{flex: '1 1 auto', display: {xs: 'none', sm: 'block'}}} />
+                                    <Box
+                                        sx={{flex: '1 1 auto', display: {xs: 'none', sm: 'block'}}}
+                                    />
                                     {activeStep === steps.length - 1 ? (
                                         <Button
                                             key={'submit-form'}
