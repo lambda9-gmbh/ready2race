@@ -225,6 +225,13 @@ export type ClubDto = {
     updatedAt: string
 }
 
+export type ClubImportRequest = {
+    separator: string
+    charset: string
+    colName: string
+    noHeader: boolean
+}
+
 export type ClubSearchDto = {
     id: string
     name: string
@@ -1266,15 +1273,17 @@ export type ParticipantForExecutionDto = {
 
 export type ParticipantImportRequest = {
     separator: string
+    charset: string
     colFirstname: string
     colLastname: string
     colYear: string
     colGender: string
     colExternalClubname?: string
+    colEmail?: string
+    noHeader: boolean
     valueGenderMale: string
     valueGenderFemale: string
     valueGenderDiverse: string
-    colEmail?: string
 }
 
 export type ParticipantInfo = {
@@ -1300,6 +1309,7 @@ export type ParticipantRequirementCheckForEventConfigDto = {
     lastnameColName: string
     yearsColName?: string
     clubColName?: string
+    noHeader: boolean
     requirementColName?: string
     requirementIsValidValue?: string
 }
@@ -3422,6 +3432,17 @@ export type AddClubParticipantData = {
 export type AddClubParticipantResponse = string
 
 export type AddClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ImportClubsData = {
+    body: {
+        request: ClubImportRequest
+        files: Array<Blob | File>
+    }
+}
+
+export type ImportClubsResponse = void
+
+export type ImportClubsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type ImportClubParticipantsData = {
     body: {

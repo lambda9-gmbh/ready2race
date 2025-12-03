@@ -1,10 +1,14 @@
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {ClubDto, deleteClub, getClubs} from '../../api'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import EntityTable from '../EntityTable.tsx'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {format} from 'date-fns'
+import {Upload} from '@mui/icons-material'
+import {Button} from '@mui/material'
+import {useState} from 'react'
+import ClubImportDialog from '@components/club/ClubImportDialog.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -26,6 +30,7 @@ const deleteRequest = (dto: ClubDto) => {
 
 const ClubTable = (props: BaseEntityTableProps<ClubDto>) => {
     const {t} = useTranslation()
+    const [showImportDialog, setShowImportDialog] = useState(false)
 
     const columns: GridColDef<ClubDto>[] = [
         {
@@ -44,22 +49,37 @@ const ClubTable = (props: BaseEntityTableProps<ClubDto>) => {
     ]
 
     return (
-        <EntityTable
-            {...props}
-            resource={'CLUB'}
-            initialPagination={initialPagination}
-            pageSizeOptions={pageSizeOptions}
-            initialSort={initialSort}
-            columns={columns}
-            dataRequest={dataRequest}
-            linkColumn={entity => ({
-                to: '/club/$clubId',
-                params: {clubId: entity.id},
-            })}
-            entityName={t('club.club')}
-            deleteRequest={deleteRequest}
-            onDelete={() => {}}
-        />
+        <>
+            <EntityTable
+                {...props}
+                resource={'CLUB'}
+                initialPagination={initialPagination}
+                pageSizeOptions={pageSizeOptions}
+                initialSort={initialSort}
+                columns={columns}
+                dataRequest={dataRequest}
+                linkColumn={entity => ({
+                    to: '/club/$clubId',
+                    params: {clubId: entity.id},
+                })}
+                entityName={t('club.club')}
+                deleteRequest={deleteRequest}
+                onDelete={() => {}}
+                customTableActions={
+                    <Button
+                        variant={'outlined'}
+                        startIcon={<Upload />}
+                        onClick={() => setShowImportDialog(true)}>
+                        <Trans i18nKey={'club.import'} />
+                    </Button>
+                }
+            />
+            <ClubImportDialog
+                open={showImportDialog}
+                onClose={() => setShowImportDialog(false)}
+                reloadClubs={props.reloadData}
+            />
+        </>
     )
 }
 

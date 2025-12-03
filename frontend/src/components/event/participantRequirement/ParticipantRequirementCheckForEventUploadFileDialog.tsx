@@ -1,108 +1,41 @@
-import {ParticipantRequirementCheckForEventConfigDto} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {
     checkParticipantRequirementsForEvent,
     getActiveParticipantRequirementsForEvent,
 } from '@api/sdk.gen.ts'
-import {useFieldArray, useForm, useFormContext} from 'react-hook-form-mui'
-import {useCallback, useMemo, useState} from 'react'
-import EntityDialog from '@components/EntityDialog.tsx'
-import {Alert, Box, IconButton, Stack, Typography} from '@mui/material'
-import {FormInputText} from '@components/form/input/FormInputText.tsx'
-import {AutocompleteOption, BaseEntityDialogProps} from '@utils/types.ts'
+import {useMemo, useState} from 'react'
+import {
+    Alert,
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Stack,
+    Autocomplete,
+    TextField,
+} from '@mui/material'
+import {AutocompleteOption} from '@utils/types.ts'
 import {eventRoute} from '@routes'
-import {Delete, Info} from '@mui/icons-material'
-import SelectFileButton from '@components/SelectFileButton.tsx'
-import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
+import {Info} from '@mui/icons-material'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
+import BaseDialog from '@components/BaseDialog.tsx'
+import {Trans} from 'react-i18next'
+import CsvImportWizard from '@components/csv/CsvImportWizard'
+import {CsvImportWizardConfig, CsvImportWizardResult} from '@components/csv/types'
 
-type ParticipantRequirementCheckForEventForm = {
-    requirementId: string
-    separator?: string
-    charset?: string
-    firstnameColName: string
-    lastnameColName: string
-    yearsColName?: string
-    clubColName?: string
-    requirementColName?: string
-    requirementIsValidValue?: string
-    files: {
-        file: File
-    }[]
+type Props = {
+    open: boolean
+    onClose: () => void
+    onSuccess?: () => void
 }
 
-const FileSelection = () => {
-    const formContext = useFormContext<ParticipantRequirementCheckForEventForm>()
-    const {t} = useTranslation()
-
-    const {fields, append, remove} = useFieldArray({
-        control: formContext.control,
-        name: 'files',
-        keyName: 'fieldId',
-        rules: {
-            validate: values => {
-                if (values.length < 1) {
-                    setEmptyListError(t('event.document.error.emptyList'))
-                    return 'empty'
-                }
-            },
-        },
-    })
-
-    const [emptyListError, setEmptyListError] = useState<string | null>(null)
-
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-            }}>
-            {emptyListError && <Typography color={'error'}>{emptyListError}</Typography>}
-            {fields.map((field, index) => (
-                <Stack
-                    direction={'row'}
-                    spacing={4}
-                    justifyContent={'space-between'}
-                    key={field.fieldId}>
-                    <Typography>{field.file.name}</Typography>
-                    <IconButton onClick={() => remove(index)}>
-                        <Delete />
-                    </IconButton>
-                </Stack>
-            ))}
-            <SelectFileButton
-                variant={'outlined'}
-                multiple
-                onSelected={files => {
-                    Array.from(files).forEach(file => append({file}))
-                }}
-                accept={'.csv'}>
-                {t('common.form.selectFile')}
-            </SelectFileButton>
-        </Box>
-    )
-}
-
-const ParticipantRequirementCheckForEventUploadFileDialog = (
-    props: BaseEntityDialogProps<ParticipantRequirementCheckForEventConfigDto>,
-) => {
+const ParticipantRequirementCheckForEventUploadFileDialog = (props: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
-
     const {eventId} = eventRoute.useParams()
 
-    const addAction = (formData: ParticipantRequirementCheckForEventForm) => {
-        let {files, ...config} = formData
-
-        return checkParticipantRequirementsForEvent({
-            path: {eventId},
-            body: {
-                config,
-                files: files.map(file => file.file),
-            },
-        })
-    }
+    const [selectedRequirementId, setSelectedRequirementId] = useState<string>('')
+    const [showWizard, setShowWizard] = useState(false)
 
     const {data: requirementsData, pending: requirementsPending} = useFetch(
         signal =>
@@ -133,76 +66,147 @@ const ParticipantRequirementCheckForEventUploadFileDialog = (
         [requirementsData?.data],
     )
 
-    const defaultValues: ParticipantRequirementCheckForEventForm = {
-        requirementId: requirements[0]?.id ?? '',
-        separator: ';',
-        charset: 'UTF-8',
-        firstnameColName: t('entity.firstname'),
-        lastnameColName: t('entity.lastname'),
-        files: [],
+    const handleOpenWizard = () => {
+        if (!selectedRequirementId) {
+            feedback.error(t('common.form.required'))
+            return
+        }
+        setShowWizard(true)
     }
 
-    const formContext = useForm<ParticipantRequirementCheckForEventForm>()
+    const handleCloseWizard = () => {
+        setShowWizard(false)
+    }
 
-    const onOpen = useCallback(() => {
-        formContext.reset(defaultValues)
-    }, [requirements])
+    const wizardConfig: CsvImportWizardConfig = {
+        title: t('event.participantRequirement.checkUpload'),
+        fieldMappings: [
+            {
+                key: 'firstnameColName',
+                label: t('event.participantRequirement.firstnameColName'),
+                required: true,
+                defaultColumnName: t('entity.firstname'),
+            },
+            {
+                key: 'lastnameColName',
+                label: t('event.participantRequirement.lastnameColName'),
+                required: true,
+                defaultColumnName: t('entity.lastname'),
+            },
+            {
+                key: 'yearsColName',
+                label: t('event.participantRequirement.yearsColName'),
+                required: false,
+            },
+            {
+                key: 'clubColName',
+                label: t('event.participantRequirement.clubColName'),
+                required: false,
+            },
+            {
+                key: 'requirementColName',
+                label: t('event.participantRequirement.requirementColName'),
+                required: false,
+            },
+        ],
+        valueMappings: [
+            {
+                key: 'requirementIsValidValue',
+                label: t('event.participantRequirement.requirementIsValidValue'),
+                required: false,
+            },
+        ],
+        defaultSeparator: ';',
+        defaultCharset: 'UTF-8',
+    }
+
+    const handleComplete = async (result: CsvImportWizardResult) => {
+        const config = {
+            requirementId: selectedRequirementId,
+            separator: result.config.separator,
+            noHeader: !result.config.hasHeader,
+            charset: result.config.charset,
+            firstnameColName: result.columnMappings.firstnameColName as string,
+            lastnameColName: result.columnMappings.lastnameColName as string,
+            yearsColName: result.columnMappings.yearsColName as string | undefined,
+            clubColName: result.columnMappings.clubColName as string | undefined,
+            requirementColName: result.columnMappings.requirementColName as string | undefined,
+            requirementIsValidValue: result.valueMappings.requirementIsValidValue as
+                | string
+                | undefined,
+        }
+
+        const {error} = await checkParticipantRequirementsForEvent({
+            path: {eventId},
+            body: {
+                config,
+                files: [result.config.file],
+            },
+        })
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+            throw error
+        } else {
+            setShowWizard(false)
+            props.onClose()
+            if (props.onSuccess) {
+                props.onSuccess()
+            }
+        }
+    }
 
     return (
-        <EntityDialog
-            {...props}
-            formContext={formContext}
-            onOpen={onOpen}
-            addAction={addAction}
-            title={t('event.participantRequirement.checkUpload')}>
-            <Stack spacing={4}>
-                <FormInputAutocomplete
-                    loading={requirementsPending}
-                    required={true}
-                    name={'requirementId'}
-                    options={requirements}
-                    matchId={true}
-                    label={t('participantRequirement.participantRequirement')}
+        <>
+            <BaseDialog open={props.open && !showWizard} onClose={props.onClose}>
+                <DialogTitle>{t('event.participantRequirement.checkUpload')}</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={4}>
+                        <Autocomplete
+                            loading={requirementsPending}
+                            options={requirements}
+                            value={requirements.find(r => r?.id === selectedRequirementId) || null}
+                            onChange={(_, value: AutocompleteOption | null) => {
+                                setSelectedRequirementId(value?.id ?? '')
+                            }}
+                            getOptionLabel={option => option?.label ?? ''}
+                            isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                            renderInput={params => (
+                                <TextField
+                                    {...params}
+                                    label={t('participantRequirement.participantRequirement')}
+                                    required
+                                />
+                            )}
+                        />
+                        <Alert icon={<Info />} severity={'info'}>
+                            {t('event.participantRequirement.info')}
+                        </Alert>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={props.onClose}>
+                        <Trans i18nKey={'common.cancel'} />
+                    </Button>
+                    <Button
+                        onClick={handleOpenWizard}
+                        variant="contained"
+                        color="primary"
+                        disabled={!selectedRequirementId}>
+                        <Trans i18nKey={'common.next'} />
+                    </Button>
+                </DialogActions>
+            </BaseDialog>
+
+            {showWizard && (
+                <CsvImportWizard
+                    open={showWizard}
+                    onClose={handleCloseWizard}
+                    config={wizardConfig}
+                    onComplete={handleComplete}
                 />
-                <FormInputLabel label={t('event.participantRequirement.file')} required={true}>
-                    <FileSelection />
-                </FormInputLabel>
-                <FormInputText name="charset" label={t('event.participantRequirement.charset')} />
-                <FormInputText
-                    name="separator"
-                    label={t('event.participantRequirement.separator')}
-                />
-                <FormInputText
-                    name="firstnameColName"
-                    label={t('event.participantRequirement.firstnameColName')}
-                    required
-                />
-                <FormInputText
-                    name="lastnameColName"
-                    label={t('event.participantRequirement.lastnameColName')}
-                    required
-                />
-                <FormInputText
-                    name="yearsColName"
-                    label={t('event.participantRequirement.yearsColName')}
-                />
-                <FormInputText
-                    name="clubColName"
-                    label={t('event.participantRequirement.clubColName')}
-                />
-                <FormInputText
-                    name="requirementColName"
-                    label={t('event.participantRequirement.requirementColName')}
-                />
-                <Alert icon={<Info />} severity={'info'}>
-                    {t('event.participantRequirement.info')}
-                </Alert>
-                <FormInputText
-                    name="requirementIsValidValue"
-                    label={t('event.participantRequirement.requirementIsValidValue')}
-                />
-            </Stack>
-        </EntityDialog>
+            )}
+        </>
     )
 }
 

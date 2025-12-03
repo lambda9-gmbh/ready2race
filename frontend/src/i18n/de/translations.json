@@ -115,7 +115,47 @@
       "download": "Herunterladen",
       "view": "Anzeigen"
     },
-    "add": "Hinzufügen"
+    "add": "Hinzufügen",
+    "submit": "Absenden"
+  },
+  "csv": {
+    "wizard": {
+      "step1": {
+        "title": "Dateiauswahl",
+        "info": "Wählen Sie Ihre CSV-Datei aus und konfigurieren Sie die Parsing-Optionen.",
+        "fileSelection": "Dateiauswahl",
+        "selectFile": "Datei auswählen",
+        "changeFile": "Datei ändern",
+        "parsingOptions": "Parsing-Optionen",
+        "separator": "Trennzeichen",
+        "separatorHelp": "Zeichen zur Trennung von Spalten (z.B. ',' oder ';')",
+        "charset": "Zeichensatz",
+        "charsetHelp": "Zeichenkodierung der Datei (z.B. 'UTF-8' oder 'ISO-8859-1')",
+        "detectingCharset": "Zeichensatz wird erkannt...",
+        "hasHeader": "Erste Zeile enthält Spaltennamen"
+      },
+      "step2": {
+        "title": "Spaltenzuordnung",
+        "info": "Ordnen Sie die Spalten aus Ihrer CSV-Datei den erwarteten Feldern zu. Gesamtzeilen: {{totalRows}}",
+        "noParsedData": "Keine Daten verfügbar. Bitte gehen Sie zurück und wählen Sie eine Datei.",
+        "columnMapping": "Spaltenzuordnung",
+        "columnIndex": "Spalte {{index}}",
+        "notMapped": "Nicht zugeordnet",
+        "dataPreview": "Datenvorschau",
+        "noData": "Keine Daten zur Vorschau verfügbar",
+        "moreRows": "Zeige {{shown}} von {{total}} Zeilen"
+      },
+      "step3": {
+        "title": "Wertzuordnungen",
+        "info": "Konfigurieren Sie, wie Werte in Ihrer CSV interpretiert werden sollen.",
+        "valueMappings": "Wertzuordnungen"
+      },
+      "error": {
+        "noConfig": "Konfiguration ist unvollständig",
+        "missingMappings": "Bitte ordnen Sie die folgenden erforderlichen Felder zu: {{fields}}",
+        "missingValueMappings": "Bitte geben Sie Werte für die folgenden erforderlichen Felder an: {{fields}}"
+      }
+    }
   },
   "format": {
     "date": "dd.MM.yyyy",
@@ -228,6 +268,13 @@
   "club": {
     "club": "Verein",
     "clubs": "Vereine",
+    "name": "Vereinsname",
+    "import": "Vereine importieren",
+    "upload": {
+      "dialog": {
+        "submit": "Vereine importieren"
+      }
+    },
     "participants": "Mitglieder",
     "participant": {
       "import": "Mitglieder importieren",

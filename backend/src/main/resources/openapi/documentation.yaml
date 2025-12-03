@@ -2514,6 +2514,39 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /club/import:
+    post:
+      operationId: importClubs
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/ClubImportRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /club/{clubId}/participant/import:
     parameters:
       - in: path
@@ -8329,6 +8362,7 @@ components:
         - requirementId
         - firstnameColName
         - lastnameColName
+        - noHeader
       properties:
         requirementId:
           type: string
@@ -8345,6 +8379,8 @@ components:
           type: string
         clubColName:
           type: string
+        noHeader:
+          type: boolean
         requirementColName:
           type: string
         requirementIsValidValue:
@@ -8636,10 +8672,12 @@ components:
       type: object
       required:
         - separator
+        - charset
         - colFirstname
         - colLastname
         - colYear
         - colGender
+        - noHeader
         - valueGenderMale
         - valueGenderFemale
         - valueGenderDiverse
@@ -8647,6 +8685,8 @@ components:
         separator:
           type: string
           format: character
+        charset:
+          type: string
         colFirstname:
           type: string
         colLastname:
@@ -8657,13 +8697,15 @@ components:
           type: string
         colExternalClubname:
           type: string
+        colEmail:
+          type: string
+        noHeader:
+          type: boolean
         valueGenderMale:
           type: string
         valueGenderFemale:
           type: string
         valueGenderDiverse:
-          type: string
-        colEmail:
           type: string
 
     # event registration
@@ -11550,3 +11592,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChallengeCompetitionInfoDto'
+
+    ClubImportRequest:
+      type: object
+      required:
+        - separator
+        - charset
+        - colName
+        - noHeader
+      properties:
+        separator:
+          type: string
+        charset:
+          type: string
+        colName:
+          type: string
+        noHeader:
+          type: boolean
