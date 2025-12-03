@@ -9,7 +9,6 @@ import {
     StepLabel,
     Stepper,
     Typography,
-    useMediaQuery,
     useTheme,
 } from '@mui/material'
 import {FormContainer, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
@@ -64,8 +63,6 @@ const EventRegistrationForm = ({
     const {info} = useEventRegistration()
     const {eventId} = eventRegisterIndexRoute.useParams()
     const theme = useTheme()
-
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const handleNext = () => {
         formContext.trigger(steps[activeStep]?.validateKeys, {shouldFocus: true}).then(valid => {
