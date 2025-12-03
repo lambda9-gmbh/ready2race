@@ -77,6 +77,7 @@ class CompetitionSetupTemplateServiceTest {
                 challengeEvent = false,
                 challengeResultType = null,
                 allowSelfSubmission = false,
+                submissionNeedsVerification = false,
             ),
             userId = SYSTEM_USER
         )

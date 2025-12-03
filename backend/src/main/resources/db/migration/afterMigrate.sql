@@ -505,6 +505,7 @@ select e.id,
        e.challenge_event,
        e.challenge_match_result_type,
        e.self_submission,
+       e.submission_needs_verification,
        count(distinct c.id) as competition_count,
        min(ed.date)         as event_from,
        max(ed.date)         as event_to
@@ -536,6 +537,7 @@ select e.id,
        e.challenge_event,
        e.challenge_match_result_type,
        e.self_submission,
+       e.submission_needs_verification,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        err.event is not null                                                            as registrations_finalized
 from event e

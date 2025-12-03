@@ -374,6 +374,7 @@
     },
     "challengeResultType": "Challenge result type",
     "allowSelfSubmission": "Allow self submission of results",
+    "submissionNeedsVerification": "Submitted results must be verified",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",

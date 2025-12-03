@@ -628,6 +628,7 @@ export type CreateEventRequest = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
 }
 
 export type DocumentTemplateDto = {
@@ -755,6 +756,7 @@ export type EventDto = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
 }
 
 export type EventForExportDto = {
@@ -792,6 +794,7 @@ export type EventPublicDto = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
 }
 
 export type EventRegistrationCompetitionDto = {
@@ -1869,6 +1872,7 @@ export type UpdateEventRequest = {
     mixedTeamTerm?: string
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
 }
 
 export type UpdateQrCodeRequirementDto = {

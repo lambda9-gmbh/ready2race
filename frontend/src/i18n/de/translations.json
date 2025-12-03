@@ -374,6 +374,7 @@
     },
     "challengeResultType": "Challenge Ergebnistyp",
     "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
+    "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",

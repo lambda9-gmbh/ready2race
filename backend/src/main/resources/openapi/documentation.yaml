@@ -7174,6 +7174,7 @@ components:
         - registrationsFinalized
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
       properties:
         id:
           type: string
@@ -7221,6 +7222,8 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        submissionNeedsVerification:
+          type: boolean
 
     EventPublicDto:
       type: object
@@ -7231,6 +7234,7 @@ components:
         - createdAt
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
       properties:
         id:
           type: string
@@ -7266,6 +7270,8 @@ components:
         challengeResultType:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
+          type: boolean
+        submissionNeedsVerification:
           type: boolean
 
     EventRegistrationViewDto:
@@ -7314,6 +7320,7 @@ components:
         - published
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
       properties:
         name:
           type: string
@@ -7348,6 +7355,8 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        submissionNeedsVerification:
+          type: boolean
 
     UpdateEventRequest:
       type: object
@@ -7356,6 +7365,7 @@ components:
         - published
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
       properties:
         name:
           type: string
@@ -7387,6 +7397,8 @@ components:
         challengeResultType:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
+          type: boolean
+        submissionNeedsVerification:
           type: boolean
 
 
