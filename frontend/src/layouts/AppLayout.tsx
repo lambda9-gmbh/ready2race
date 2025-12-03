@@ -6,6 +6,7 @@ import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 const AppLayout = () => {
     return (
         <Container
+            className="mobile-optimized-layout"
             maxWidth="lg"
             sx={{
                 minHeight: '100vh',

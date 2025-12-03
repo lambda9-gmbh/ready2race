@@ -1,4 +1,4 @@
-import {ListItem, ListItemText, Stack, Typography} from '@mui/material'
+import {ListItem, ListItemText, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Info} from '@mui/icons-material'
 import {NamedParticipantForCompetitionDto} from '@api/types.gen.ts'
@@ -10,6 +10,7 @@ type Props = {
 }
 const CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
     const {t} = useTranslation()
+    const theme = useTheme()
 
     const count =
         gender === 'male'
@@ -19,6 +20,8 @@ const CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
               : gender === 'nonBinary'
                 ? np.countNonBinary
                 : np.countMixed
+
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     return count > 0 ? (
         <ListItem>
@@ -33,7 +36,7 @@ const CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
                             ? t('event.competition.gender.nonBinary')
                             : t('event.competition.gender.mixed')}
                 </ListItemText>
-                {np.description && (
+                {np.description && !isMobile && (
                     <HtmlTooltip
                         title={
                             <>

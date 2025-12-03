@@ -2,13 +2,15 @@ import {
     DataGrid,
     DataGridProps,
     GridActionsCellItem,
+    GridActionsCellItemProps,
     GridColDef,
     GridPaginationModel,
     GridRowParams,
     GridSortModel,
     GridValidRowModel,
 } from '@mui/x-data-grid'
-import {ReactNode, useMemo, useRef, useState} from 'react'
+import {ReactElement, ReactNode, useMemo, useRef, useState} from 'react'
+import EntityCardList from './EntityCardList'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
 import {BaseEntityTableProps, EntityAction, PageResponse, PartialRequired} from '@utils/types.ts'
 import {LinkComponentProps, useNavigate} from '@tanstack/react-router'
@@ -16,10 +18,20 @@ import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
 import {useDebounce, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {Alert, Box, Button, Stack, TextField, Typography, useTheme} from '@mui/material'
+import {
+    Alert,
+    Box,
+    Button,
+    Stack,
+    TextField,
+    Typography,
+    useMediaQuery,
+    useTheme,
+} from '@mui/material'
 import {Add, Delete, Edit} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {ApiError, Privilege, Resource} from '@api/types.gen.ts'
+import {Breakpoint} from '@mui/system/createBreakpoints/createBreakpoints'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
@@ -55,6 +67,7 @@ type ExtendedEntityTableProps<
     editableIf?: (entity: Entity) => boolean
     creatable?: boolean
     hideEntityActions?: boolean
+    mobileBreakpoint?: Breakpoint
 } & (
     | {
           deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false>
@@ -180,6 +193,7 @@ const EntityTableInternal = <
     editableIf,
     creatable = true,
     hideEntityActions,
+    mobileBreakpoint,
 }: EntityTableInternalProps<Entity, GetError, DeleteError>) => {
     const user = useUser()
     const {t} = useTranslation()
@@ -187,8 +201,73 @@ const EntityTableInternal = <
     const {confirmAction} = useConfirmation()
     const theme = useTheme()
     const navigate = useNavigate()
+    const isMobile = useMediaQuery(theme.breakpoints.down(mobileBreakpoint ?? 'md'))
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
+
+    const getEntityActions = (entity: Entity): EntityAction[] => {
+        const actions: EntityAction[] = []
+
+        if (!hideEntityActions) {
+            actions.push(
+                ...customEntityActions(entity, user.checkPrivilege).filter(action => !!action),
+            )
+
+            if (crud.update && options.entityUpdate && (editableIf?.(entity) ?? true)) {
+                actions.push(
+                    <GridActionsCellItem
+                        icon={<Edit />}
+                        label={t('common.edit')}
+                        onClick={() => openDialog({...entity})}
+                        showInMenu={true}
+                    />,
+                )
+            }
+
+            if (
+                deleteRequest &&
+                crud.delete &&
+                options.entityDelete &&
+                (deletableIf?.(entity) ?? true)
+            ) {
+                actions.push(
+                    <GridActionsCellItem
+                        icon={<Delete />}
+                        label={t('common.delete')}
+                        onClick={() => {
+                            confirmAction(async () => {
+                                setIsDeletingRow(true)
+                                const {error} = await deleteRequest(entity)
+                                setIsDeletingRow(false)
+                                if (error) {
+                                    if (onDeleteError !== undefined) {
+                                        onDeleteError(error)
+                                    } else {
+                                        feedback.error(
+                                            t('entity.delete.error', {
+                                                entity: entityName,
+                                            }),
+                                        )
+                                    }
+                                } else {
+                                    onDelete?.()
+                                    feedback.success(
+                                        t('entity.delete.success', {
+                                            entity: entityName,
+                                        }),
+                                    )
+                                }
+                                reloadData()
+                            })
+                        }}
+                        showInMenu={true}
+                    />,
+                )
+            }
+        }
+
+        return actions
+    }
 
     const cols: GridColDef<Entity>[] = [
         ...columns.filter(c => !c.requiredPrivilege || user.checkPrivilege(c.requiredPrivilege)),
@@ -197,61 +276,11 @@ const EntityTableInternal = <
                   {
                       field: 'actions',
                       type: 'actions' as const,
-                      getActions: (params: GridRowParams<Entity>) => [
-                          ...customEntityActions(params.row, user.checkPrivilege).filter(
-                              action => !!action,
+                      getActions: (params: GridRowParams<Entity>) =>
+                          getEntityActions(params.row).filter(
+                              (action): action is ReactElement<GridActionsCellItemProps> =>
+                                  !!action,
                           ),
-                          ...(crud.update &&
-                          options.entityUpdate &&
-                          (editableIf?.(params.row) ?? true)
-                              ? [
-                                    <GridActionsCellItem
-                                        icon={<Edit />}
-                                        label={t('common.edit')}
-                                        onClick={() => openDialog({...params.row})}
-                                        showInMenu={true}
-                                    />,
-                                ]
-                              : []),
-                          ...(deleteRequest &&
-                          crud.delete &&
-                          options.entityDelete &&
-                          (deletableIf?.(params.row) ?? true)
-                              ? [
-                                    <GridActionsCellItem
-                                        icon={<Delete />}
-                                        label={t('common.delete')}
-                                        onClick={() => {
-                                            confirmAction(async () => {
-                                                setIsDeletingRow(true)
-                                                const {error} = await deleteRequest(params.row)
-                                                setIsDeletingRow(false)
-                                                if (error) {
-                                                    if (onDeleteError !== undefined) {
-                                                        onDeleteError(error)
-                                                    } else {
-                                                        feedback.error(
-                                                            t('entity.delete.error', {
-                                                                entity: entityName,
-                                                            }),
-                                                        )
-                                                    }
-                                                } else {
-                                                    onDelete?.()
-                                                    feedback.success(
-                                                        t('entity.delete.success', {
-                                                            entity: entityName,
-                                                        }),
-                                                    )
-                                                }
-                                                reloadData()
-                                            })
-                                        }}
-                                        showInMenu={true}
-                                    />,
-                                ]
-                              : []),
-                      ],
                   },
               ]
             : []),
@@ -301,7 +330,13 @@ const EntityTableInternal = <
                 ))}
             {!error ? (
                 <>
-                    <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
+                    <Box
+                        display={'flex'}
+                        justifyContent={'space-between'}
+                        flexWrap={'wrap'}
+                        sx={{gap: 2}}
+                        mb={1}
+                        pt={1}>
                         {withSearch ? (
                             <TextField
                                 size={'small'}
@@ -315,7 +350,7 @@ const EntityTableInternal = <
                         ) : (
                             <Box />
                         )}
-                        <Stack direction={'row'} spacing={1}>
+                        <Stack direction={isMobile ? 'column' : 'row'} spacing={1}>
                             {customTableActions}
                             {crud.create && options.entityCreate && creatable && (
                                 <Button
@@ -327,49 +362,74 @@ const EntityTableInternal = <
                             )}
                         </Stack>
                     </Box>
-                    <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                        <DataGrid
+                    {isMobile ? (
+                        <EntityCardList
+                            data={data?.data ?? []}
+                            columns={columns.filter(
+                                c =>
+                                    !c.requiredPrivilege ||
+                                    user.checkPrivilege(c.requiredPrivilege),
+                            )}
+                            getActions={getEntityActions}
                             onRowClick={
-                                linkColumn ? params => navigate(linkColumn(params.row)) : undefined
+                                linkColumn ? entity => navigate(linkColumn(entity)) : undefined
                             }
-                            isRowSelectable={() => false}
-                            paginationMode="server"
-                            pageSizeOptions={[
-                                ...pageSizeOptions,
-                                ...(pageSizeOptions.includes(initialPagination.pageSize)
-                                    ? []
-                                    : [initialPagination.pageSize]),
-                            ]}
-                            disableColumnFilter={true}
+                            loading={pending || isDeletingRow}
+                            rowCount={rowCount}
                             paginationModel={paginationModel}
                             onPaginationModelChange={setPaginationModel}
-                            sortingMode="server"
-                            sortModel={sortModel}
-                            onSortModelChange={setSortModel}
-                            columns={cols}
-                            rows={data?.data ?? []}
-                            rowCount={rowCount}
-                            loading={pending || isDeletingRow}
-                            density={'compact'}
-                            getRowHeight={() => 'auto'}
-                            sx={{
-                                '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
-                                '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {
-                                    py: '15px',
-                                },
-                                '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
-                                    py: '22px',
-                                },
-                                '& .MuiDataGrid-columnHeader': {
-                                    backgroundColor: t => t.palette.primary.light,
-                                },
-                                '& .MuiDataGrid-row': {
-                                    cursor: linkColumn ? 'pointer' : 'default',
-                                },
-                            }}
-                            {...gridProps}
+                            pageSizeOptions={pageSizeOptions}
+                            emptyMessage={t('common.noResults')}
                         />
-                    </Box>
+                    ) : (
+                        <Box sx={{display: 'flex', flexDirection: 'column'}}>
+                            <DataGrid
+                                onRowClick={
+                                    linkColumn
+                                        ? params => navigate(linkColumn(params.row))
+                                        : undefined
+                                }
+                                isRowSelectable={() => false}
+                                paginationMode="server"
+                                pageSizeOptions={[
+                                    ...pageSizeOptions,
+                                    ...(pageSizeOptions.includes(initialPagination.pageSize)
+                                        ? []
+                                        : [initialPagination.pageSize]),
+                                ]}
+                                disableColumnFilter={true}
+                                paginationModel={paginationModel}
+                                onPaginationModelChange={setPaginationModel}
+                                sortingMode="server"
+                                sortModel={sortModel}
+                                onSortModelChange={setSortModel}
+                                columns={cols}
+                                rows={data?.data ?? []}
+                                rowCount={rowCount}
+                                loading={pending || isDeletingRow}
+                                density={'compact'}
+                                getRowHeight={() => 'auto'}
+                                sx={{
+                                    '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {
+                                        py: '8px',
+                                    },
+                                    '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {
+                                        py: '15px',
+                                    },
+                                    '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
+                                        py: '22px',
+                                    },
+                                    '& .MuiDataGrid-columnHeader': {
+                                        backgroundColor: t => t.palette.primary.light,
+                                    },
+                                    '& .MuiDataGrid-row': {
+                                        cursor: linkColumn ? 'pointer' : 'default',
+                                    },
+                                }}
+                                {...gridProps}
+                            />
+                        </Box>
+                    )}
                 </>
             ) : (
                 <Alert severity="error">

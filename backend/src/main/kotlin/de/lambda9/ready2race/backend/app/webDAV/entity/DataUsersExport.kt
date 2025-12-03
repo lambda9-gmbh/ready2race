@@ -83,7 +83,7 @@ data class DataUsersExport(
             }
 
             if (filteredClubRecordsWithoutUserRefs.isNotEmpty()) {
-                !ClubRepo.create(filteredClubRecordsWithoutUserRefs).orDie()
+                !ClubRepo.createNoDuplicates(filteredClubRecordsWithoutUserRefs).orDie()
             }
 
 

@@ -115,7 +115,47 @@
       "download": "Download",
       "view": "View"
     },
-    "add": "Add"
+    "add": "Add",
+    "submit": "Submit"
+  },
+  "csv": {
+    "wizard": {
+      "step1": {
+        "title": "File Selection",
+        "info": "Select your CSV file and configure the parsing options.",
+        "fileSelection": "File Selection",
+        "selectFile": "Select File",
+        "changeFile": "Change File",
+        "parsingOptions": "Parsing Options",
+        "separator": "Separator",
+        "separatorHelp": "Character used to separate columns (e.g., ',' or ';')",
+        "charset": "Character Set",
+        "charsetHelp": "Character encoding of the file (e.g., 'UTF-8' or 'ISO-8859-1')",
+        "detectingCharset": "Detecting character set...",
+        "hasHeader": "First row contains headers"
+      },
+      "step2": {
+        "title": "Column Mapping",
+        "info": "Map the columns from your CSV file to the expected fields. Total rows: {{totalRows}}",
+        "noParsedData": "No data available. Please go back and select a file.",
+        "columnMapping": "Column Mapping",
+        "columnIndex": "Column {{index}}",
+        "notMapped": "Not mapped",
+        "dataPreview": "Data Preview",
+        "noData": "No data to preview",
+        "moreRows": "Showing {{shown}} of {{total}} rows"
+      },
+      "step3": {
+        "title": "Value Mappings",
+        "info": "Configure how values in your CSV should be interpreted.",
+        "valueMappings": "Value Mappings"
+      },
+      "error": {
+        "noConfig": "Configuration is incomplete",
+        "missingMappings": "Please map the following required fields: {{fields}}",
+        "missingValueMappings": "Please provide values for the following required fields: {{fields}}"
+      }
+    }
   },
   "format": {
     "date": "MM/dd/yyyy",
@@ -211,6 +251,18 @@
   "dashboard": {
     "registration": {
       "showMessage": "Show message"
+    },
+    "upcomingEvents": {
+      "empty": "No upcoming events"
+    },
+    "registrations": {
+      "empty": "No recent registrations"
+    },
+    "shifts": {
+      "empty": "No upcoming shifts"
+    },
+    "tasks": {
+      "empty": "No open tasks"
     }
   },
   "club": {
@@ -218,6 +270,13 @@
     "registrant": "Registrant",
     "registeredBy": "registered by",
     "clubs": "Clubs",
+    "name": "Club name",
+    "import": "Vereine importieren",
+    "upload": {
+      "dialog": {
+        "submit": "Vereine importieren"
+      }
+    },
     "participants": "Members",
     "participant": {
       "import": "Import members",
@@ -1177,11 +1236,7 @@
           }
         }
       },
-      "error": "An error has occurred during registration",
-      "login": {
-        "message": "Already have an account?",
-        "link": "Login here"
-      }
+      "error": "An error has occurred during registration"
     },
     "resetPassword": {
       "resetPassword": "Reset password",

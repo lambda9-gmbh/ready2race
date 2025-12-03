@@ -19,7 +19,7 @@ const LandingPage = () => {
                     </Link>
                 </Stack>
             </Grid2>
-            <UpcomingEventsWidget hideRegistration={true} />
+            <UpcomingEventsWidget hideRegistration={true} hideTitle={true} />
         </Grid2>
     )
 }

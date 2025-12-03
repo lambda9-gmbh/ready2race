@@ -4,6 +4,7 @@ import {Container, Box} from '@mui/material'
 const ResultsLayout = () => {
     return (
         <Container
+            className="mobile-optimized-layout"
             maxWidth="lg"
             sx={{
                 minHeight: '100vh',

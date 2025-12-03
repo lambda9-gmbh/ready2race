@@ -50,12 +50,12 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
         <Box pt={2} pb={2}>
             <Link ref={downloadRef} display={'none'}></Link>
             {requiredDocs.length > 0 && (
-                <Stack spacing={1}>
+                <Stack spacing={2}>
                     <Typography variant={'h6'}>
                         {t('event.registration.acceptDocuments')}
                     </Typography>
                     {requiredDocs.map(type => (
-                        <Stack key={type.id}>
+                        <Stack key={type.id} spacing={1}>
                             <FormInputCheckbox
                                 name={type.id}
                                 label={type.name}
@@ -68,8 +68,14 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
                                     <Button
                                         startIcon={<FileDownload />}
                                         onClick={() => download(f.id, f.name)}
-                                        size={'small'}
-                                        variant={'text'}>
+                                        size={'medium'}
+                                        variant={'text'}
+                                        sx={{
+                                            minHeight: '44px',
+                                            cursor: 'pointer',
+                                            justifyContent: {xs: 'flex-start', sm: 'center'},
+                                            width: {xs: '100%', sm: 'auto'},
+                                        }}>
                                         {f.name}
                                     </Button>
                                 </Stack>
@@ -82,10 +88,10 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
                 <Divider sx={{mt: 2, mb: 2}} />
             )}
             {additionalDocs.length > 0 && (
-                <Stack spacing={1}>
+                <Stack spacing={2}>
                     <Typography variant={'h6'}>{t('event.registration.infoDocuments')}</Typography>
                     {additionalDocs.map(type => (
-                        <Stack key={type.id}>
+                        <Stack key={type.id} spacing={1}>
                             <Typography>{type.name}</Typography>
                             {type.description && <Typography>{type.description}</Typography>}
                             {type.files.map(f => (
@@ -93,8 +99,14 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
                                     <Button
                                         startIcon={<FileDownload />}
                                         onClick={() => download(f.id, f.name)}
-                                        size={'small'}
-                                        variant={'text'}>
+                                        size={'medium'}
+                                        variant={'text'}
+                                        sx={{
+                                            minHeight: '44px',
+                                            cursor: 'pointer',
+                                            justifyContent: {xs: 'flex-start', sm: 'center'},
+                                            width: {xs: '100%', sm: 'auto'},
+                                        }}>
                                         {f.name}
                                     </Button>
                                 </Box>

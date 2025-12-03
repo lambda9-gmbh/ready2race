@@ -1,4 +1,12 @@
-import {Button, DialogActions, DialogContent, DialogTitle, Stack, Typography} from '@mui/material'
+import {
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Stack,
+    Typography,
+    useTheme,
+} from '@mui/material'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {PropsWithChildren} from 'react'
 import {useTranslation} from 'react-i18next'
@@ -13,10 +21,11 @@ type Props = PropsWithChildren<{
 }>
 const CompetitionExecutionMatchDialog = ({submitting, ...props}: Props) => {
     const {t} = useTranslation()
+    const theme = useTheme()
     return (
         <>
             <DialogTitle>{props.title}</DialogTitle>
-            <DialogContent dividers={true}>
+            <DialogContent dividers={true} sx={{[theme.breakpoints.down('md')]: {px: 0}}}>
                 <Stack spacing={2}>
                     {props.fieldArrayError && (
                         <Typography color={'error'}>{props.fieldArrayError}</Typography>

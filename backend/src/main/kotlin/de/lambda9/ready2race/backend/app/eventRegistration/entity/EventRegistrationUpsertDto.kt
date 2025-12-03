@@ -11,7 +11,7 @@ data class EventRegistrationUpsertDto(
     val participants: List<EventRegistrationParticipantUpsertDto>,
     val competitionRegistrations: List<CompetitionRegistrationUpsertDto>,
     val message: String?,
-    val callbackUrl: String? = null,
+    val callbackUrl: String? = null, // Is only allowed to be null internally in the server
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(

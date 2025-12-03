@@ -29,7 +29,7 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
     const registrationState = getRegistrationState(event)
 
     return (
-        <ListItem>
+        <ListItem sx={{py: {xs: 2, md: 2.5}}}>
             <Box
                 sx={{
                     display: 'flex',
@@ -43,57 +43,57 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
                     sx={{flex: 1}}
                     disableTypography={true}
                     primary={
-                        <Stack>
-                            <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                        <Stack spacing={1.5}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: {xs: 1, md: 1.5},
+                                    alignItems: 'center',
+                                }}>
                                 <Link to={'/event/$eventId'} params={{eventId: event.id}}>
-                                    <Button>
+                                    <Button size={'medium'}>
                                         <Typography color={'primary'} variant={'h6'}>
                                             {event.name}
                                         </Typography>
                                     </Button>
                                 </Link>
-                                <Stack
-                                    direction="row"
-                                    divider={<Divider orientation="vertical" flexItem />}
-                                    spacing={2}>
-                                    {event.eventFrom != null && (
-                                        <Stack direction="row" spacing={0.5}>
-                                            <Event
-                                                fontSize={'small'}
-                                                sx={{
-                                                    color: 'text.secondary',
-                                                }}
-                                            />
-                                            <Typography color={'text.secondary'}>
-                                                {new Date(event.eventFrom).toLocaleDateString()}
-                                                {event.eventTo !== event.eventFrom &&
-                                                    ` - ${new Date(
-                                                        event.eventTo!!,
-                                                    ).toLocaleDateString()}`}
-                                            </Typography>
-                                        </Stack>
-                                    )}
-                                    {event.location && (
-                                        <Stack direction="row" spacing={0.5}>
-                                            <LocationOn
-                                                fontSize={'small'}
-                                                sx={{
-                                                    color: 'text.secondary',
-                                                }}
-                                            />
-                                            <Typography color={'text.secondary'}>
-                                                {event.location}
-                                            </Typography>
-                                        </Stack>
-                                    )}
-                                    <Typography color={'text.secondary'}>
-                                        {event.competitionCount}{' '}
-                                        {t('event.competition.competitions')}
-                                    </Typography>
-                                </Stack>
-                            </Stack>
+                                {event.eventFrom != null && (
+                                    <Stack direction="row" spacing={0.75} alignItems={'center'}>
+                                        <Event
+                                            fontSize={'medium'}
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        />
+                                        <Typography color={'text.secondary'}>
+                                            {new Date(event.eventFrom).toLocaleDateString()}
+                                            {event.eventTo !== event.eventFrom &&
+                                                ` - ${new Date(
+                                                    event.eventTo!!,
+                                                ).toLocaleDateString()}`}
+                                        </Typography>
+                                    </Stack>
+                                )}
+                                {event.location && (
+                                    <Stack direction="row" spacing={0.75} alignItems={'center'}>
+                                        <LocationOn
+                                            fontSize={'medium'}
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        />
+                                        <Typography color={'text.secondary'}>
+                                            {event.location}
+                                        </Typography>
+                                    </Stack>
+                                )}
+                                <Typography color={'text.secondary'}>
+                                    {event.competitionCount} {t('event.competition.competitions')}
+                                </Typography>
+                            </Box>
                             {event.description && (
-                                <Stack p={1}>
+                                <Stack px={1} py={0.5}>
                                     <Typography fontWeight={'light'}>
                                         {event.description}
                                     </Typography>
@@ -105,11 +105,12 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
                         <Stack
                             fontSize={'1em'}
                             direction={'row'}
-                            p={1}
-                            spacing={1}
+                            pt={1.5}
+                            px={1}
+                            spacing={1.5}
                             divider={<Divider orientation="vertical" flexItem />}>
-                            <ClockIcon fontSize={'small'} />
-                            <Stack spacing={0.5}>
+                            <ClockIcon />
+                            <Stack spacing={0.75}>
                                 <Typography
                                     variant={'body2'}
                                     color={'text.secondary'}
@@ -141,7 +142,7 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
                     }
                 />
                 {!hideRegistration && registrationState !== 'CLOSED' && (
-                    <Box sx={{alignSelf: 'center'}}>
+                    <Box sx={{alignSelf: 'center', mt: {xs: 2, md: 0}}}>
                         <Link
                             to={`/event/$eventId/register`}
                             params={{eventId: event.id}}

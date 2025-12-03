@@ -9,6 +9,7 @@ import {
     StepLabel,
     Stepper,
     Typography,
+    useTheme,
 } from '@mui/material'
 import {FormContainer, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {PersonAdd} from '@mui/icons-material'
@@ -61,6 +62,7 @@ const EventRegistrationForm = ({
     const [activeStep, setActiveStep] = React.useState(0)
     const {info} = useEventRegistration()
     const {eventId} = eventRegisterIndexRoute.useParams()
+    const theme = useTheme()
 
     const handleNext = () => {
         formContext.trigger(steps[activeStep]?.validateKeys, {shouldFocus: true}).then(valid => {
@@ -175,23 +177,39 @@ const EventRegistrationForm = ({
 
     return (
         <Box
-            style={{
-                padding: '10px',
+            sx={{
+                p: {xs: 1, sm: '10px'},
                 background: 'white',
                 minWidth: '320px',
-                borderRadius: '10px',
+                borderRadius: {xs: 0, sm: '10px'},
             }}>
             <FormContainer formContext={formContext} onSuccess={onSubmit}>
                 <Stack>
                     <Stack
-                        direction={'row'}
+                        direction={{xs: 'column', sm: 'row'}}
                         justifyContent={'space-between'}
-                        alignItems={'center'}
-                        p={2}>
-                        <Typography variant={'h2'}>{info?.name}</Typography>
+                        alignItems={{xs: 'stretch', sm: 'center'}}
+                        spacing={{xs: 2, sm: 0}}
+                        p={{xs: 1, sm: 2}}>
+                        <Typography
+                            variant={'h2'}
+                            sx={{fontSize: {xs: '1.5rem', sm: '2rem', md: '2.5rem'}}}>
+                            {info?.name}
+                        </Typography>
                         <EventRegistrationFeeDisplay />
                     </Stack>
-                    <Stepper activeStep={activeStep}>
+                    <Stepper
+                        activeStep={activeStep}
+                        sx={{
+                            '& .MuiStepLabel-label': {
+                                fontSize: {xs: '0.875rem', sm: '1rem'},
+                            },
+                            flexDirection: {xs: 'column', sm: 'row'},
+                            [theme.breakpoints.down('md')]: {
+                                alignItems: 'start',
+                                gap: 0.5,
+                            },
+                        }}>
                         {steps.map(({label}) => {
                             return (
                                 <Step key={label}>
@@ -201,29 +219,53 @@ const EventRegistrationForm = ({
                         })}
                     </Stepper>
                     <Box>
-                        <Box sx={{p: 2}}>
+                        <Box sx={{p: {xs: 1, sm: 2}}}>
                             {steps[activeStep]?.content}
                             <React.Fragment>
-                                <Box sx={{display: 'flex', flexDirection: 'row', pt: 2}}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: {xs: 'column', sm: 'row'},
+                                        gap: {xs: 1, sm: 0},
+                                        pt: 2,
+                                    }}>
                                     <Button
                                         color="inherit"
                                         disabled={activeStep === 0}
                                         onClick={handleBack}
-                                        sx={{mr: 1}}>
+                                        sx={{
+                                            mr: {xs: 0, sm: 1},
+                                            minHeight: '44px',
+                                            order: {xs: 2, sm: 1},
+                                            width: {xs: '100%', sm: 'auto'},
+                                        }}>
                                         {t('common.back')}
                                     </Button>
-                                    <Box sx={{flex: '1 1 auto'}} />
+                                    <Box
+                                        sx={{flex: '1 1 auto', display: {xs: 'none', sm: 'block'}}}
+                                    />
                                     {activeStep === steps.length - 1 ? (
                                         <Button
                                             key={'submit-form'}
                                             variant="contained"
-                                            type={'submit'}>
+                                            type={'submit'}
+                                            sx={{
+                                                minHeight: '44px',
+                                                order: {xs: 1, sm: 2},
+                                                width: {xs: '100%', sm: 'auto'},
+                                            }}>
                                             {adminEdit
                                                 ? t('common.save')
                                                 : t('event.registration.finish')}
                                         </Button>
                                     ) : (
-                                        <Button onClick={() => handleNext()}>
+                                        <Button
+                                            onClick={() => handleNext()}
+                                            sx={{
+                                                minHeight: '44px',
+                                                order: {xs: 1, sm: 2},
+                                                width: {xs: '100%', sm: 'auto'},
+                                            }}>
                                             {t('common.next')}
                                         </Button>
                                     )}

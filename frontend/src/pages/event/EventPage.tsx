@@ -286,7 +286,7 @@ const EventPage = () => {
                                         </List>
                                     </Box>
                                 </Card>
-                                <Card sx={{p: 2}}>
+                                <Card sx={{p: 2, display: 'flex', gap: 2, flexWrap: 'wrap'}}>
                                     <Link
                                         to={'/results/event/$eventId'}
                                         params={{eventId: data.id}}>
@@ -298,8 +298,7 @@ const EventPage = () => {
                                         !data.challengeEvent && (
                                             <Button
                                                 variant={'outlined'}
-                                                onClick={handleResultsDownload}
-                                                sx={{ml: 2}}>
+                                                onClick={handleResultsDownload}>
                                                 <Trans i18nKey={'event.results.download'} />
                                             </Button>
                                         )}
@@ -370,6 +369,7 @@ const EventPage = () => {
                         </TabPanel>
                         <TabPanel index={'settings'} activeTab={activeTab}>
                             <Stack spacing={4}>
+                                <RatingCategoriesForEvent />
                                 <DocumentTable
                                     {...documentAdministrationProps.table}
                                     title={t('event.document.documents')}
@@ -406,7 +406,6 @@ const EventPage = () => {
                                         </>,
                                     ]}
                                 />
-                                <RatingCategoriesForEvent />
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'invoices'} activeTab={activeTab}>

@@ -21,7 +21,7 @@ import ParticipantRequirementApproveManuallyForEventDialog, {
 } from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
 import ParticipantRequirementCheckForEventUploadFileDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
-import {Box, Stack, Typography} from '@mui/material'
+import {Box, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
@@ -48,6 +48,8 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
     const user = useUser()
     const {confirmAction} = useConfirmation()
     const feedback = useFeedback()
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('lg'))
 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [editQrParticipant, setEditQrParticipant] = useState<ParticipantForEventDto | null>(null)
@@ -107,12 +109,19 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 field: 'year',
                 headerName: t('club.participant.year'),
             },
-            {
-                field: 'externalClubName',
-                headerName: t('club.participant.externalClub'),
-                minWidth: 150,
-                flex: 1,
-            },
+            ...(!isMobile
+                ? [
+                      {
+                          field: 'externalClubName',
+                          headerName: t('club.participant.externalClub'),
+                          minWidth: 150,
+                          flex: 1,
+                          renderCell: ({row}: {row: ParticipantForEventDto}) => (
+                              <Typography>{row.externalClubName ?? '-'}</Typography>
+                          ),
+                      },
+                  ]
+                : []),
             {
                 field: 'participantRequirementsChecked',
                 headerName: t('event.participantRequirement.approved'),
@@ -185,6 +194,42 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                         return ' - '
                     }
 
+                    if (isMobile) {
+                        return (
+                            <Stack spacing={0.5} sx={{width: 1}}>
+                                {!isMobile && (
+                                    <Typography variant="caption" color="text.secondary">
+                                        ({row.participantRequirementsChecked?.length ?? 0}/
+                                        {deduplicatedRequirements.length})
+                                    </Typography>
+                                )}
+                                <Stack spacing={0.5} sx={{pl: 0.5}}>
+                                    {deduplicatedRequirements.map(req => (
+                                        <Stack
+                                            direction="row"
+                                            spacing={0.5}
+                                            alignItems="center"
+                                            key={req.id}>
+                                            {req.checked ? (
+                                                <CheckCircle color="success" sx={{fontSize: 16}} />
+                                            ) : (
+                                                <Cancel color="error" sx={{fontSize: 16}} />
+                                            )}
+                                            <Typography variant="caption">
+                                                {req.name} (
+                                                {req.assignmentType === 'global'
+                                                    ? t('participantRequirement.global')
+                                                    : req.participantName}
+                                                ){req.qrCodeRequired && ' (QR)'}
+                                                {req.note && ` [ ${req.note} ]`}
+                                            </Typography>
+                                        </Stack>
+                                    ))}
+                                </Stack>
+                            </Stack>
+                        )
+                    }
+
                     return (
                         <Stack direction={'row'} spacing={1} alignItems={'center'}>
                             <Typography>
@@ -225,8 +270,16 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 headerName: t('qrCode.qrCode'),
                 minWidth: 100,
                 sortable: false,
-                renderCell: ({row}) =>
-                    row.qrCodeId ? (
+                renderCell: ({row}) => {
+                    if (!row.qrCodeId) {
+                        return <>-</>
+                    }
+
+                    if (isMobile) {
+                        return <Typography variant="body2">{row.qrCodeId}</Typography>
+                    }
+
+                    return (
                         <HtmlTooltip
                             title={
                                 <Box sx={{p: 1}}>
@@ -238,12 +291,11 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                             }>
                             <QrCodeIcon />
                         </HtmlTooltip>
-                    ) : (
-                        <>-</>
-                    ),
+                    )
+                },
             },
         ],
-        [requirementsData?.data, namedParticipantsForEvent, t],
+        [requirementsData?.data, namedParticipantsForEvent, t, isMobile],
     )
 
     const participantRequirementCheckForEventConfigProps =
@@ -404,8 +456,9 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 reloadData={props.reloadData}
             />
             <ParticipantRequirementCheckForEventUploadFileDialog
-                {...participantRequirementCheckForEventConfigProps.dialog}
-                reloadData={props.reloadData}
+                open={participantRequirementCheckForEventConfigProps.dialog.dialogIsOpen}
+                onClose={participantRequirementCheckForEventConfigProps.dialog.closeDialog}
+                onSuccess={props.reloadData}
             />
             <EntityTable
                 {...props}
@@ -433,6 +486,7 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 columns={columns}
                 dataRequest={dataRequest}
                 entityName={t('club.participant.title')}
+                mobileBreakpoint={'lg'}
             />
         </Fragment>
     )

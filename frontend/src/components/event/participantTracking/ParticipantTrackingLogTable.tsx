@@ -105,6 +105,7 @@ const ParticipantTrackingLogTable = (props: BaseEntityTableProps<ParticipantTrac
             columns={columns}
             dataRequest={dataRequest}
             entityName={t('event.registration.registration')}
+            mobileBreakpoint={'lg'}
         />
     )
 }
