@@ -120,6 +120,15 @@ const EventSingleCompetitionField = (props: {
         }
     }
 
+    // Get the actual fee objects for selected optional fees
+    const selectedOptionalFees = useMemo(() => {
+        if (competitionIndex === undefined || !props.option.fees) return []
+        const competition = singleCompetitions?.[competitionIndex]
+        if (!competition?.optionalFees || competition.optionalFees.length === 0) return []
+        return props.option.fees
+            .filter(f => !f.required && competition.optionalFees?.includes(f.id))
+    }, [competitionIndex, singleCompetitions, props.option.fees])
+
     // Filter rating categories based on age restrictions
     const ratingCategoryOptions = useMemo(() => {
         const baseOptions = props.option.ratingCategoryRequired
@@ -193,10 +202,31 @@ const EventSingleCompetitionField = (props: {
                                     )}
                                 </Typography>
                             ))}
-                        {(props.option.fees?.filter(f => !f.required).length ?? 0) > 0 && (
-                            <Typography variant="caption" color="text.secondary">
-                                + {t('event.registration.optionalFee')}
-                            </Typography>
+                        {selectedOptionalFees.length > 0 && (
+                            <>
+                                <Typography variant="caption" color="text.secondary" sx={{mt: 1}}>
+                                    {t('event.registration.optionalFee')}:
+                                </Typography>
+                                {selectedOptionalFees.map(fee => (
+                                    <Typography key={fee.id} variant="body2" color="text.secondary">
+                                        + {fee.label}: <strong>{Number(fee.amount).toFixed(2)}€</strong>
+                                        {props.option.lateRegistrationAllowed && fee.lateAmount && (
+                                            <Typography
+                                                component="span"
+                                                variant="caption"
+                                                color="warning.main"
+                                                sx={{ml: 1}}>
+                                                (
+                                                <Trans
+                                                    i18nKey={'event.competition.fee.asLate'}
+                                                    values={{amount: Number(fee.lateAmount).toFixed(2)}}
+                                                />
+                                                )
+                                            </Typography>
+                                        )}
+                                    </Typography>
+                                ))}
+                            </>
                         )}
                     </Stack>
                     <CheckboxButtonGroup
