@@ -267,6 +267,8 @@
   },
   "club": {
     "club": "Club",
+    "registrant": "Registrant",
+    "registeredBy": "registered by",
     "clubs": "Clubs",
     "name": "Club name",
     "import": "Vereine importieren",
@@ -677,6 +679,7 @@
             "short": "No."
           },
           "team": "Team",
+          "registeredBy": "registered by",
           "place": "Place",
           "time": "Time",
           "placeAndTime": "Place/Time",

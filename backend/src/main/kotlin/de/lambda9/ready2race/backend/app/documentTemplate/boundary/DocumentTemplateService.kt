@@ -97,6 +97,7 @@ object DocumentTemplateService {
                                         name = "#1",
                                         clubId = club1,
                                         clubName = "Ruderclub",
+                                        actualClubName = null,
                                         ratingCategory = null,
                                         participants = listOf(
                                             EventRegistrationResultData.ParticipantRegistrationData(
@@ -114,6 +115,7 @@ object DocumentTemplateService {
                                         clubId = club1,
                                         clubName = "Ruderclub",
                                         ratingCategory = null,
+                                        actualClubName = null,
                                         participants = listOf(
                                             EventRegistrationResultData.ParticipantRegistrationData(
                                                 role = "Teilnehmer",
@@ -130,6 +132,7 @@ object DocumentTemplateService {
                                         clubId = club1,
                                         clubName = "Ruderclub",
                                         ratingCategory = null,
+                                        actualClubName = null,
                                         participants = listOf(
                                             EventRegistrationResultData.ParticipantRegistrationData(
                                                 role = "Teilnehmer",
@@ -146,6 +149,7 @@ object DocumentTemplateService {
                                         clubId = club2,
                                         clubName = "Rudern",
                                         ratingCategory = null,
+                                        actualClubName = null,
                                         participants = listOf(
                                             EventRegistrationResultData.ParticipantRegistrationData(
                                                 role = "Teilnehmer",
@@ -168,6 +172,7 @@ object DocumentTemplateService {
                                         name = "#1",
                                         clubId = club1,
                                         clubName = "Ruderclub",
+                                        actualClubName = null,
                                         ratingCategory = null,
                                         participants = listOf(
                                             EventRegistrationResultData.ParticipantRegistrationData(
@@ -192,6 +197,7 @@ object DocumentTemplateService {
                                         name = "#2",
                                         clubId = club1,
                                         clubName = "Ruderclub",
+                                        actualClubName = null,
                                         ratingCategory = null,
                                         participants = listOf(
                                             EventRegistrationResultData.ParticipantRegistrationData(
@@ -216,6 +222,7 @@ object DocumentTemplateService {
                                         name = null,
                                         clubId = club2,
                                         clubName = "Rudern",
+                                        actualClubName = null,
                                         ratingCategory = null,
                                         participants = listOf(
                                             EventRegistrationResultData.ParticipantRegistrationData(

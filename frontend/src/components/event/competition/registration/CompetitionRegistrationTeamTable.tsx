@@ -89,7 +89,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
         () => [
             {
                 field: 'clubName',
-                headerName: t('club.club'),
+                headerName: t('club.registrant'),
                 minWidth: 200,
             },
             {
@@ -283,10 +283,11 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{width: '30%'}}>{t('entity.name')}</TableCell>
-                                    <TableCell sx={{width: '25%'}}>
+                                    <TableCell sx={{width: '25%'}}>{t('entity.name')}</TableCell>
+                                    <TableCell sx={{width: '20%'}}>
                                         {t('event.competition.namedParticipant.namedParticipant')}
                                     </TableCell>
+                                    <TableCell sx={{width: '10%'}}>{t('club.club')}</TableCell>
                                     <TableCell sx={{width: '15%'}}>{t('qrCode.qrCode')}</TableCell>
                                     <TableCell sx={{width: '15%'}}>
                                         {t('club.participant.tracking.status')}
@@ -306,6 +307,9 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                 }}>{`${participant.firstname} ${participant.lastname}`}</TableCell>
                                             <TableCell sx={{width: '25%'}}>
                                                 {np.namedParticipantName}
+                                            </TableCell>
+                                            <TableCell sx={{width: '10%'}}>
+                                                {participant.externalClubName ?? row.clubName}
                                             </TableCell>
                                             <TableCell sx={{width: '15%'}}>
                                                 {participant.qrCodeId ? (

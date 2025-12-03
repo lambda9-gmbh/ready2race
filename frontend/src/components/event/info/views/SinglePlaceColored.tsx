@@ -1,4 +1,4 @@
-import {Typography} from "@mui/material";
+import {Typography} from '@mui/material'
 
 type Props = {
     place: number
@@ -19,7 +19,7 @@ const SinglePlaceColored = ({place}: Props) => {
                             ? '#CD7F32'
                             : 'inherit',
             }}>
-            {place}
+            {place === 0 ? '/' : place}
         </Typography>
     )
 }

@@ -267,17 +267,17 @@ object CompetitionExecutionService {
 
             val sortedRounds = sortRounds(setupRounds)
 
-            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
+            val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
 
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
                 round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
-                    .toCompetitionRoundDto()
+                    .toCompetitionRoundDto(event.mixedTeamTerm)
             }.map {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(
                         rounds = it,
                         canNotCreateRoundReasons,
-                        isChallengeEvent = isChallengeEvent
+                        isChallengeEvent = event.challengeEvent!!
                     )
                 )
             }
@@ -506,7 +506,7 @@ object CompetitionExecutionService {
 
                 CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
                     this.place = if (noPlaces) {
-                        calculatedPlaces.indexOfFirst { (id, _) -> id == result.registrationId } + 1
+                        (calculatedPlaces.indexOfFirst { (id, _) -> id == result.registrationId } + 1).takeIf { it > 0 }
                     } else {
                         result.place
                     }
@@ -1197,16 +1197,21 @@ object CompetitionExecutionService {
                         ) {
                             text(
                                 fontStyle = FontStyle.BOLD
-                            ) { team.registeringClubName }
-                            team.teamName?.let {
+                            ) { team.actualClubName ?: team.registeringClubName }
+                            block(
+                                padding = Padding(left = 5f),
+                            ){
+                                text(
+                                    fontStyle = FontStyle.BOLD,
+                                    fontSize = 8f,
+                                ){
+                                    "gemeldet von / "
+                                }
                                 text(
                                     newLine = false,
-                                ) { " $it" }
-                            }
-                            team.actualClubName?.let {
-                                text(
-                                    newLine = false,
-                                ) { " [$it]" }
+                                    fontSize = 8f,
+                                ) {
+                                    "registered by" + "   ${team.registeringClubName}${if (team.teamName != null) " | ${team.teamName}" else ""}" }
                             }
                             team.ratingCategory?.let {
                                 text(

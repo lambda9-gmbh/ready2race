@@ -9647,6 +9647,8 @@ components:
           format: uuid
         clubName:
           type: string
+        actualClubName:
+          type: string
         name:
           type: string
         startNumber:
@@ -10273,6 +10275,8 @@ components:
         namedRole:
           type: string
           nullable: true
+        externalClubName:
+          type: string
 
 
 
@@ -10373,6 +10377,8 @@ components:
         clubName:
           type: string
           nullable: true
+        actualClubName:
+          type: string
         participants:
           type: array
           items:
@@ -10465,6 +10471,8 @@ components:
         clubName:
           type: string
           nullable: true
+        actualClubName:
+          type: string
         place:
           type: integer
         timeString:
@@ -10550,6 +10558,8 @@ components:
         clubName:
           type: string
           nullable: true
+        actualClubName:
+          type: string
         currentScore:
           type: integer
           nullable: true

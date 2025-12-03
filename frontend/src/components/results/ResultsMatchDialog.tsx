@@ -59,14 +59,16 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                 {match.competitionName} - {match.roundName}
                             </Typography>
                             {match.matchName ?? ''}
-                            <Box>
-                                <Chip
-                                    label={match.categoryName}
-                                    variant={'outlined'}
-                                    color={'primary'}
-                                    size={'small'}
-                                />
-                            </Box>
+                            {match.categoryName && (
+                                <Box>
+                                    <Chip
+                                        label={match.categoryName}
+                                        variant={'outlined'}
+                                        color={'primary'}
+                                        size={'small'}
+                                    />
+                                </Box>
+                            )}
                         </Stack>
                     </DialogTitle>
                     <DialogContent>
@@ -88,43 +90,64 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                             sx={{
                                                 justifyContent: 'space-between',
                                             }}>
-                                            {'failed' in team && (
-                                                <Typography variant={team.place ? 'h5' : 'body1'}>
-                                                    {team.place
-                                                        ? `${team.place}.`
-                                                        : team.failed
-                                                          ? t(
-                                                                'event.competition.execution.results.failed',
-                                                            ) +
-                                                            (team.failedReason
-                                                                ? ` (${team.failedReason})`
-                                                                : '')
-                                                          : team.deregistered
-                                                            ? t(
-                                                                  'event.competition.registration.deregister.deregistered',
-                                                              ) +
-                                                              (team.deregisteredReason
-                                                                  ? ` (${team.deregisteredReason})`
-                                                                  : '')
-                                                            : ''}
-                                                </Typography>
+                                            {'failed' in team ? (
+                                                <Box>
+                                                    <Typography
+                                                        variant={team.place ? 'h5' : 'body1'}>
+                                                        {team.place
+                                                            ? `${team.place}.`
+                                                            : team.failed
+                                                              ? t(
+                                                                    'event.competition.execution.results.failed',
+                                                                ) +
+                                                                (team.failedReason
+                                                                    ? ` (${team.failedReason})`
+                                                                    : '')
+                                                              : team.deregistered
+                                                                ? t(
+                                                                      'event.competition.registration.deregister.deregistered',
+                                                                  ) +
+                                                                  (team.deregisteredReason
+                                                                      ? ` (${team.deregisteredReason})`
+                                                                      : '')
+                                                                : ''}
+                                                    </Typography>
+                                                    {'failed' in team &&
+                                                        !team.failed &&
+                                                        team.timeString && (
+                                                            <Box
+                                                                display="flex"
+                                                                gap={1}
+                                                                alignItems={'center'}>
+                                                                <TimerOutlinedIcon
+                                                                    color={'action'}
+                                                                    fontSize={'inherit'}
+                                                                />
+                                                                <Typography
+                                                                    color={'textSecondary'}
+                                                                    variant={'body2'}>
+                                                                    {team.timeString}
+                                                                </Typography>
+                                                            </Box>
+                                                        )}
+                                                </Box>
+                                            ) : (
+                                                <Box></Box>
                                             )}
-                                            <Typography textAlign={'right'}>
-                                                {team.clubName +
-                                                    (team.teamName ? ` ${team.teamName}` : '')}
-                                            </Typography>
-                                        </Stack>
-                                        {'failed' in team && !team.failed && team.timeString && (
-                                            <Box display="flex" gap={1} alignItems={'center'}>
-                                                <TimerOutlinedIcon
-                                                    color={'action'}
-                                                    fontSize={'inherit'}
-                                                />
-                                                <Typography color={'textSecondary'}>
-                                                    {team.timeString}
+                                            <Box>
+                                                <Typography textAlign={'right'}>
+                                                    {team.actualClubName ?? team.clubName}
+                                                </Typography>
+                                                <Typography
+                                                    color={'textSecondary'}
+                                                    variant={'body2'}
+                                                    textAlign={'right'}>
+                                                    {`${t('club.registeredBy')} ` +
+                                                        team.clubName +
+                                                        ` | ${team.teamName}`}
                                                 </Typography>
                                             </Box>
-                                        )}
+                                        </Stack>
                                         <Divider sx={{my: 1}} />
                                         <Grid2 container>
                                             {team.participants
@@ -149,7 +172,21 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                 ' ' +
                                                                 participant.lastName
                                                             }
-                                                            secondary={participant.namedRole}
+                                                            secondary={
+                                                                <>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        color="text.secondary">
+                                                                        {participant.namedRole}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        color="text.secondary">
+                                                                        {participant.externalClubName ??
+                                                                            team.clubName}
+                                                                    </Typography>
+                                                                </>
+                                                            }
                                                         />
                                                     </Grid2>
                                                 ))}

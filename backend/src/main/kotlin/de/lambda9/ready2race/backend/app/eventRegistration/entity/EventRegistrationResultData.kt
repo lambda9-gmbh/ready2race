@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.entity
 
+import de.lambda9.ready2race.backend.app.club.control.getActualClubname
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationResultViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RegisteredCompetitionTeamRecord
@@ -20,6 +21,7 @@ data class EventRegistrationResultData(
         val name: String?,
         val clubId: UUID,
         val clubName: String,
+        val actualClubName: String?,
         val ratingCategory: RatingCategoryRegistrationData?,
         val participants: List<ParticipantRegistrationData>,
     )
@@ -54,6 +56,7 @@ data class EventRegistrationResultData(
                             name = team!!.teamName,
                             clubId = team.clubId!!,
                             clubName = team.clubName!!,
+                            actualClubName = getActualClubname(team.participants!!.map { it!!.externalClubName }.toSet(), result.mixedTeamTerm),
                             ratingCategory = team.ratingCategory?.let {
                                 RatingCategoryRegistrationData(
                                     id = it.id,
