@@ -683,8 +683,8 @@ import type {
     UpdateGlobalConfigurationsData,
     UpdateGlobalConfigurationsError,
     UpdateGlobalConfigurationsResponse,
-    GetGlobalConfigurationsError,
-    GetGlobalConfigurationsResponse,
+    GetCreateClubOnRegistrationAllowedError,
+    GetCreateClubOnRegistrationAllowedResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3545,15 +3545,15 @@ export const updateGlobalConfigurations = <ThrowOnError extends boolean = false>
     })
 }
 
-export const getGlobalConfigurations = <ThrowOnError extends boolean = false>(
+export const getCreateClubOnRegistrationAllowed = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetGlobalConfigurationsResponse,
-        GetGlobalConfigurationsError,
+        GetCreateClubOnRegistrationAllowedResponse,
+        GetCreateClubOnRegistrationAllowedError,
         ThrowOnError
     >({
         ...options,
-        url: '/globalConfigurations',
+        url: '/globalConfigurations/createClubOnRegistration',
     })
 }

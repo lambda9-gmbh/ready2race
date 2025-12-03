@@ -107,7 +107,7 @@ fun Route.user() {
             post {
                 call.respondComprehension {
                     !checkCaptcha()
-                    val body = !receiveKIO(RegisterRequest.example)
+                    val body = !receiveKIO(AppUserRegisterRequest.example)
                     AppUserService.register(body)
                 }
             }

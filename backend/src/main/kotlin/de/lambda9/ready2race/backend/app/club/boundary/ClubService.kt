@@ -5,11 +5,7 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.club.control.clubDto
 import de.lambda9.ready2race.backend.app.club.control.toRecord
-import de.lambda9.ready2race.backend.app.club.entity.ClubDto
-import de.lambda9.ready2race.backend.app.club.entity.ClubError
-import de.lambda9.ready2race.backend.app.club.entity.ClubImportRequest
-import de.lambda9.ready2race.backend.app.club.entity.ClubSort
-import de.lambda9.ready2race.backend.app.club.entity.ClubUpsertDto
+import de.lambda9.ready2race.backend.app.club.entity.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -114,6 +110,12 @@ object ClubService {
         } else {
             noData
         }
+    }
+    
+    fun participantSelfRegister(
+        request: ParticipantRegisterRequest
+    ): App<ClubError, ApiResponse.NoData> = KIO.comprehension {
+
     }
 
 }

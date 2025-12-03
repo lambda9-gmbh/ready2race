@@ -6293,21 +6293,16 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
+  /globalConfigurations/createClubOnRegistration:
     get:
-      operationId: getGlobalConfigurations
+      operationId: getCreateClubOnRegistrationAllowed
       responses:
         200:
           description: Global configurations
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GlobalConfigurationsDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
+                type: boolean
         500:
           $ref: '#/components/responses/500'
 
@@ -7030,24 +7025,41 @@ components:
     RegisterRequest:
       type: object
       required:
-        - email
         - password
         - firstname
         - lastname
-        - clubname
+        - isParticipant
+        - isChallengeManager
         - language
         - callbackUrl
       properties:
         email:
           type: string
+          nullable: true
         password:
           type: string
         firstname:
           type: string
         lastname:
           type: string
+        clubId:
+          type: string
+          format: uuid
+          nullable: true
         clubname:
           type: string
+          nullable: true
+        isParticipant:
+          type: boolean
+        isChallengeManager:
+          type: boolean
+        eventId:
+          type: string
+          format: uuid
+          nullable: true
+        birthYear:
+          type: integer
+          nullable: true
         language:
           $ref: '#/components/schemas/EmailLanguage'
         callbackUrl:
@@ -11659,22 +11671,6 @@ components:
           type: string
         noHeader:
           type: boolean
-
-
-    GlobalConfigurationsDto:
-      type: object
-      required:
-        - allowClubCreationOnRegistration
-        - updatedAt
-      properties:
-        allowClubCreationOnRegistration:
-          type: boolean
-        updatedAt:
-          type: string
-          format: date-time
-        updatedBy:
-          type: string
-          format: uuid
 
     UpdateGlobalConfigurationsRequest:
       type: object

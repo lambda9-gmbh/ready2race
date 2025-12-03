@@ -37,7 +37,6 @@ fun Route.club() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.ReadClubGlobal)
                 val params = !pagination<ClubSort>()
                 ClubService.page(params) { it.clubDto() }
             }

@@ -17,11 +17,9 @@ fun Route.globalConfigurations() {
                 GlobalConfigurationsService.updateConfigurations(request, user.id!!)
             }
         }
-        get {
+        get("/createClubOnRegistration") {
             call.respondComprehension {
-                !authenticate(Privilege.ReadAdministrationConfigGlobal)
-
-                GlobalConfigurationsService.getConfigurations()
+                GlobalConfigurationsService.getCreateClubOnRegistration()
             }
         }
     }

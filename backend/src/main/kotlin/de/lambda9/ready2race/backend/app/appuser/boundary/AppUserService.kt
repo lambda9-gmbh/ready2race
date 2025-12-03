@@ -265,13 +265,13 @@ object AppUserService {
 
     // Error-Code 409 "Conflict" is reserved by the "Email already in use" error. Should another 409 be created, the Error Display in the Frontend-Application needs to be updated
     fun register(
-        request: RegisterRequest,
+        request: AppUserRegisterRequest,
     ): App<AppUserError, ApiResponse.NoData> = KIO.comprehension {
 
         !EmailAddressRepo.exists(request.email).orDie()
             .onTrueFail { AppUserError.EmailAlreadyInUse }
 
-        val record = !request.toRecord(registrationLifeTime)
+        val record = !request.toAppUserRegistrationRecord(registrationLifeTime)
         val id = !AppUserRegistrationRepo.create(record).orDie()
 
         val content = !EmailService.getTemplate(

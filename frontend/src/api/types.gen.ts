@@ -946,12 +946,6 @@ export type FileExportEventStatusDto = {
 
 export type Gender = 'M' | 'F' | 'D'
 
-export type GlobalConfigurationsDto = {
-    allowClubCreationOnRegistration: boolean
-    updatedAt: string
-    updatedBy?: string
-}
-
 export type GroupedParticipantQrAssignmentDto = {
     competitionRegistrationId: string
     competitionRegistrationName: string
@@ -5303,6 +5297,6 @@ export type UpdateGlobalConfigurationsResponse = void
 
 export type UpdateGlobalConfigurationsError = BadRequestError | ApiError
 
-export type GetGlobalConfigurationsResponse = GlobalConfigurationsDto
+export type GetCreateClubOnRegistrationAllowedResponse = boolean
 
-export type GetGlobalConfigurationsError = BadRequestError | ApiError
+export type GetCreateClubOnRegistrationAllowedError = ApiError

@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.globalConfigurations.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.globalConfigurations.control.GlobalConfigurationsRepo
-import de.lambda9.ready2race.backend.app.globalConfigurations.entity.GlobalConfigurationsDto
 import de.lambda9.ready2race.backend.app.globalConfigurations.entity.UpdateGlobalConfigurationsRequest
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -27,16 +26,12 @@ object GlobalConfigurationsService {
         noData
     }
 
-    fun getConfigurations(): App<Nothing, ApiResponse.Dto<GlobalConfigurationsDto>> = KIO.comprehension {
+    fun getCreateClubOnRegistration(): App<Nothing, ApiResponse.Dto<Boolean>> = KIO.comprehension {
         GlobalConfigurationsRepo.get().orDie()
             .onNullDie("Global configurations are always present")
             .map {
                 ApiResponse.Dto(
-                    GlobalConfigurationsDto(
-                        allowClubCreationOnRegistration = it.createClubOnRegistration,
-                        updatedAt = it.updatedAt,
-                        updatedBy = it.updatedBy
-                    )
+                    it.createClubOnRegistration
                 )
             }
     }

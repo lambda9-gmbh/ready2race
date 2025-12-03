@@ -1,9 +1,9 @@
-import {Box, Stack, Typography} from '@mui/material'
+import {Box, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {FormContainer, useForm} from 'react-hook-form-mui'
-import {registerUser} from 'api/sdk.gen.ts'
+import {getClub, getClubs, getCreateClubOnRegistrationAllowed, registerUser} from 'api/sdk.gen.ts'
 import {useState} from 'react'
-import {useCaptcha, useFeedback} from '@utils/hooks.ts'
+import {useCaptcha, useFeedback, useFetch} from '@utils/hooks.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
@@ -25,6 +25,9 @@ type Form = {
 const RegistrationPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const theme = useTheme()
+
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const [submitting, setSubmitting] = useState(false)
 
@@ -47,6 +50,27 @@ const RegistrationPage = () => {
     }
 
     const {captcha, onSubmitResult} = useCaptcha(setCaptchaStart)
+
+    const {data: createClubOnRegistrationAllowed} = useFetch(
+        signal => getCreateClubOnRegistrationAllowed({signal}),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            },
+            deps: [],
+        },
+    )
+
+    const {data: clubsData} = useFetch(signal => getClubs({signal}), {
+        onResponse: ({error}) => {
+            if (error) {
+                feedback.error(t('common.error.unexpected'))
+            }
+        },
+        deps: [],
+    })
 
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)
@@ -98,7 +122,7 @@ const RegistrationPage = () => {
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
                             <FormInputEmail name={'email'} label={t('user.email.email')} required />
-                            <NewPassword formContext={formContext} horizontal />
+                            <NewPassword formContext={formContext} horizontal={!isMobile} />
                             <FormInputText
                                 name={'firstname'}
                                 label={t('user.firstname')}
