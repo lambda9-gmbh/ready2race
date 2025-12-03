@@ -506,7 +506,7 @@ object CompetitionExecutionService {
 
                 CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
                     this.place = if (noPlaces) {
-                        calculatedPlaces.indexOfFirst { (id, _) -> id == result.registrationId } + 1
+                        (calculatedPlaces.indexOfFirst { (id, _) -> id == result.registrationId } + 1).takeIf { it > 0 }
                     } else {
                         result.place
                     }
@@ -1198,9 +1198,21 @@ object CompetitionExecutionService {
                             text(
                                 fontStyle = FontStyle.BOLD
                             ) { team.actualClubName ?: team.registeringClubName }
-                            text(
-                                newLine = false,
-                            ) { "  ${team.registeringClubName}${if (team.teamName != null) " ${team.teamName}" else ""}" }
+                            block(
+                                padding = Padding(left = 5f),
+                            ){
+                                text(
+                                    fontStyle = FontStyle.BOLD,
+                                    fontSize = 8f,
+                                ){
+                                    "gemeldet von / "
+                                }
+                                text(
+                                    newLine = false,
+                                    fontSize = 8f,
+                                ) {
+                                    "registered by" + "   ${team.registeringClubName}${if (team.teamName != null) " | ${team.teamName}" else ""}" }
+                            }
                             team.ratingCategory?.let {
                                 text(
                                     newLine = false,

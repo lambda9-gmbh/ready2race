@@ -142,7 +142,9 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                     color={'textSecondary'}
                                                     variant={'body2'}
                                                     textAlign={'right'}>
-                                                    {team.clubName + ` ${team.teamName}`}
+                                                    {`${t('club.registeredBy')} ` +
+                                                        team.clubName +
+                                                        ` | ${team.teamName}`}
                                                 </Typography>
                                             </Box>
                                         </Stack>

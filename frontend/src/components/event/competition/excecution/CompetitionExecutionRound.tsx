@@ -427,7 +427,9 @@ const CompetitionExecutionRound = ({
                                                         <Typography
                                                             variant="body2"
                                                             color="textSecondary">
-                                                            {team.clubName + ` ${team.name}`}
+                                                            {`${t('club.registeredBy')} ` +
+                                                                team.clubName +
+                                                                ` | ${team.name}`}
                                                         </Typography>
                                                     </TableCell>
                                                     <TableCell width="10%">

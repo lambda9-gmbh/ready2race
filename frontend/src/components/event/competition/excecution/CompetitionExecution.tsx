@@ -800,10 +800,11 @@ const CompetitionExecution = () => {
                                                                 <Typography
                                                                     color={'textSecondary'}
                                                                     variant={'body2'}>
-                                                                    {selectedResultsMatch.teams[
-                                                                        fieldIndex
-                                                                    ].clubName +
-                                                                        ` ${selectedResultsMatch.teams[fieldIndex].name}`}
+                                                                    {`${t('club.registeredBy')} ` +
+                                                                        selectedResultsMatch.teams[
+                                                                            fieldIndex
+                                                                        ].clubName +
+                                                                        ` | ${selectedResultsMatch.teams[fieldIndex].name}`}
                                                                 </Typography>
                                                             </TableCell>
                                                             <TableCell width="40%">

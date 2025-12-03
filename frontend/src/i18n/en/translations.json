@@ -216,6 +216,7 @@
   "club": {
     "club": "Club",
     "registrant": "Registrant",
+    "registeredBy": "registered by",
     "clubs": "Clubs",
     "participants": "Members",
     "participant": {
@@ -619,7 +620,7 @@
             "short": "No."
           },
           "team": "Team",
-          "registrant": "Registrant",
+          "registeredBy": "registered by",
           "place": "Place",
           "time": "Time",
           "placeAndTime": "Place/Time",

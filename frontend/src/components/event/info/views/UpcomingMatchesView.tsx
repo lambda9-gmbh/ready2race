@@ -201,7 +201,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                                             color="text.secondary">
                                                                             {(team.actualClubName ??
                                                                                 team.clubName) +
-                                                                                ` | ${team.clubName} ${team.teamName}`}
+                                                                                ` ${t('club.registeredBy')} ${team.clubName} | ${team.teamName}`}
                                                                         </Typography>
                                                                     </>
                                                                 ) : (
@@ -215,8 +215,9 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                                         <Typography
                                                                             variant={'body2'}
                                                                             color="text.secondary">
-                                                                            {team.clubName +
-                                                                                ` ${team.teamName}`}
+                                                                            {`${t('club.registeredBy')} ` +
+                                                                                team.clubName +
+                                                                                ` | ${team.teamName}`}
                                                                         </Typography>
                                                                         {team.participants.length >
                                                                             0 && (

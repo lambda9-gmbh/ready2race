@@ -947,13 +947,25 @@ object EventRegistrationService {
                                                 text(
                                                     fontStyle = FontStyle.BOLD
                                                 ) { team.actualClubName?: team.clubName }
-                                                text(
-                                                    newLine = false
-                                                ) { "  ${team.clubName}" }
-                                                team.name?.let {
+                                                block (
+                                                    padding = Padding(left = 5f)
+                                                ) {
+                                                    text(
+                                                        fontStyle = FontStyle.BOLD,
+                                                        fontSize = 8f,
+                                                    ) {
+                                                        "gemeldet von / "
+                                                    }
                                                     text(
                                                         newLine = false,
-                                                    ) { " $it" }
+                                                        fontSize = 8f,
+                                                    ) { "registered by" + "   ${team.clubName}" }
+                                                    team.name?.let {
+                                                        text(
+                                                            newLine = false,
+                                                            fontSize = 8f,
+                                                        ) { " | $it" }
+                                                    }
                                                 }
 
                                                 table(

@@ -167,7 +167,7 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                             color="text.secondary">
                                                                             {(team.actualClubName ??
                                                                                 team.clubName) +
-                                                                                ` | ${team.clubName} ${team.teamName}`}
+                                                                                ` ${t('club.registeredBy')} ${team.clubName} | ${team.teamName}`}
                                                                         </Typography>
                                                                     </>
                                                                 ) : (
@@ -175,13 +175,15 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="body1"
                                                                             fontWeight="medium">
-                                                                            {team.teamName +
-                                                                                ' ' +
-                                                                                (team.actualClubName ??
-                                                                                    team.clubName ??
-                                                                                    t(
-                                                                                        'event.info.unnamed',
-                                                                                    ))}
+                                                                            {team.actualClubName ??
+                                                                                team.clubName}
+                                                                        </Typography>
+                                                                        <Typography
+                                                                            variant={'body2'}
+                                                                            color="text.secondary">
+                                                                            {`${t('club.registeredBy')} ` +
+                                                                                team.clubName +
+                                                                                ` | ${team.teamName}`}
                                                                         </Typography>
                                                                         {team.participants.length >
                                                                             0 && (

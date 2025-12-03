@@ -149,7 +149,9 @@ export const LatestMatchResultsView: React.FC<LatestMatchResultsViewProps> = ({e
                                                     <Typography
                                                         variant="body2"
                                                         color="text.secondary">
-                                                        {team.clubName + ` ${team.teamName}`}
+                                                        {`${t('club.registeredBy')} ` +
+                                                            team.clubName +
+                                                            ` | ${team.teamName}`}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>

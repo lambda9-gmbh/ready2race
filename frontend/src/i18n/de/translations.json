@@ -216,6 +216,7 @@
   "club": {
     "club": "Verein",
     "registrant": "Anmelder",
+    "registeredBy": "gemeldet von",
     "clubs": "Vereine",
     "participants": "Mitglieder",
     "participant": {
@@ -619,7 +620,7 @@
             "short": "Nr."
           },
           "team": "Team",
-          "registrant": "Anmelder",
+          "registeredBy": "gemeldet von",
           "place": "Platz",
           "time": "Zeit",
           "placeAndTime": "Platz/Zeit",
