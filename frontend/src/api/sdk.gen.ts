@@ -680,6 +680,11 @@ import type {
     ResendAccessTokenData,
     ResendAccessTokenError,
     ResendAccessTokenResponse,
+    UpdateGlobalConfigurationsData,
+    UpdateGlobalConfigurationsError,
+    UpdateGlobalConfigurationsResponse,
+    GetGlobalConfigurationsError,
+    GetGlobalConfigurationsResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3524,5 +3529,31 @@ export const resendAccessToken = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/participant/{participantId}/resendAccessToken',
+    })
+}
+
+export const updateGlobalConfigurations = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateGlobalConfigurationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateGlobalConfigurationsResponse,
+        UpdateGlobalConfigurationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/globalConfigurations',
+    })
+}
+
+export const getGlobalConfigurations = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetGlobalConfigurationsResponse,
+        GetGlobalConfigurationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/globalConfigurations',
     })
 }

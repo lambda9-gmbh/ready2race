@@ -269,10 +269,16 @@
     "club": "Club",
     "clubs": "Clubs",
     "name": "Club name",
-    "import": "Vereine importieren",
+    "import": "Import clubs",
+    "settings": {
+      "title": "Club Settings",
+      "allowClubCreationOnRegistration": "Allow club creation on registration",
+      "save": "Save settings",
+      "saved": "Settings saved"
+    },
     "upload": {
       "dialog": {
-        "submit": "Vereine importieren"
+        "submit": "Import clubs"
       }
     },
     "participants": "Members",
@@ -374,6 +380,7 @@
     },
     "challengeResultType": "Challenge result type",
     "allowSelfSubmission": "Allow self submission of results",
+    "allowParticipantSelfRegistration": "Allow participants to register themselves",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",

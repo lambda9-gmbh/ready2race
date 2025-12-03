@@ -6273,6 +6273,44 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /globalConfigurations:
+    put:
+      operationId: updateGlobalConfigurations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGlobalConfigurationsRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getGlobalConfigurations
+      responses:
+        200:
+          description: Global configurations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalConfigurationsDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -7174,6 +7212,7 @@ components:
         - registrationsFinalized
         - challengeEvent
         - allowSelfSubmission
+        - allowParticipantSelfRegistration
       properties:
         id:
           type: string
@@ -7221,6 +7260,8 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        allowParticipantSelfRegistration:
+          type: boolean
 
     EventPublicDto:
       type: object
@@ -7231,6 +7272,7 @@ components:
         - createdAt
         - challengeEvent
         - allowSelfSubmission
+        - allowParticipantSelfRegistration
       properties:
         id:
           type: string
@@ -7266,6 +7308,8 @@ components:
         challengeResultType:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
+          type: boolean
+        allowParticipantSelfRegistration:
           type: boolean
 
     EventRegistrationViewDto:
@@ -7314,6 +7358,7 @@ components:
         - published
         - challengeEvent
         - allowSelfSubmission
+        - allowParticipantSelfRegistration
       properties:
         name:
           type: string
@@ -7348,6 +7393,8 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        allowParticipantSelfRegistration:
+          type: boolean
 
     UpdateEventRequest:
       type: object
@@ -7356,6 +7403,7 @@ components:
         - published
         - challengeEvent
         - allowSelfSubmission
+        - allowParticipantSelfRegistration
       properties:
         name:
           type: string
@@ -7387,6 +7435,8 @@ components:
         challengeResultType:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
+          type: boolean
+        allowParticipantSelfRegistration:
           type: boolean
 
 
@@ -11608,4 +11658,28 @@ components:
         colName:
           type: string
         noHeader:
+          type: boolean
+
+
+    GlobalConfigurationsDto:
+      type: object
+      required:
+        - allowClubCreationOnRegistration
+        - updatedAt
+      properties:
+        allowClubCreationOnRegistration:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+          format: uuid
+
+    UpdateGlobalConfigurationsRequest:
+      type: object
+      required:
+        - allowClubCreationOnRegistration
+      properties:
+        allowClubCreationOnRegistration:
           type: boolean

@@ -12,7 +12,7 @@ import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
 import {
     readInvoiceGlobal,
-    readSmtpConfigGlobal,
+    readAdministrationConfigGlobal,
     readUserGlobal,
     updateEventGlobal,
     updateUserGlobal,
@@ -376,7 +376,7 @@ export const administrationIndexRoute = createRoute({
     path: '/',
     component: () => <AdministrationPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location, readSmtpConfigGlobal)
+        checkAuth(context, location, readAdministrationConfigGlobal)
     },
 })
 

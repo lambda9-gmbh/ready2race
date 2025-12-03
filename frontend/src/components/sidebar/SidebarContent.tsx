@@ -18,7 +18,7 @@ import {
     readClubGlobal,
     readClubOwn,
     readInvoiceGlobal,
-    readSmtpConfigGlobal,
+    readAdministrationConfigGlobal,
     readUserGlobal,
     updateEventGlobal,
 } from '@authorization/privileges.ts'
@@ -108,7 +108,7 @@ const SidebarContent = ({...props}: Props) => {
             <SidebarItem
                 text={t('navigation.titles.administration')}
                 icon={<AdminPanelSettings />}
-                privilege={readSmtpConfigGlobal}
+                privilege={readAdministrationConfigGlobal}
                 to={'/administration'}
             />
         </Sidebar>

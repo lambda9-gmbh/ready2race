@@ -628,6 +628,7 @@ export type CreateEventRequest = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    allowParticipantSelfRegistration: boolean
 }
 
 export type DocumentTemplateDto = {
@@ -755,6 +756,7 @@ export type EventDto = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    allowParticipantSelfRegistration: boolean
 }
 
 export type EventForExportDto = {
@@ -792,6 +794,7 @@ export type EventPublicDto = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    allowParticipantSelfRegistration: boolean
 }
 
 export type EventRegistrationCompetitionDto = {
@@ -942,6 +945,12 @@ export type FileExportEventStatusDto = {
 }
 
 export type Gender = 'M' | 'F' | 'D'
+
+export type GlobalConfigurationsDto = {
+    allowClubCreationOnRegistration: boolean
+    updatedAt: string
+    updatedBy?: string
+}
 
 export type GroupedParticipantQrAssignmentDto = {
     competitionRegistrationId: string
@@ -1869,6 +1878,11 @@ export type UpdateEventRequest = {
     mixedTeamTerm?: string
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    allowParticipantSelfRegistration: boolean
+}
+
+export type UpdateGlobalConfigurationsRequest = {
+    allowClubCreationOnRegistration: boolean
 }
 
 export type UpdateQrCodeRequirementDto = {
@@ -5280,3 +5294,15 @@ export type ResendAccessTokenData = {
 export type ResendAccessTokenResponse = void
 
 export type ResendAccessTokenError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateGlobalConfigurationsData = {
+    body: UpdateGlobalConfigurationsRequest
+}
+
+export type UpdateGlobalConfigurationsResponse = void
+
+export type UpdateGlobalConfigurationsError = BadRequestError | ApiError
+
+export type GetGlobalConfigurationsResponse = GlobalConfigurationsDto
+
+export type GetGlobalConfigurationsError = BadRequestError | ApiError

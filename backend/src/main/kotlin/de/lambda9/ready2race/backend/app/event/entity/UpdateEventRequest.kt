@@ -24,6 +24,7 @@ data class UpdateEventRequest(
     val mixedTeamTerm: String?,
     val challengeResultType: MatchResultType?,
     val allowSelfSubmission: Boolean,
+    val allowParticipantSelfRegistration: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -50,6 +51,7 @@ data class UpdateEventRequest(
                 mixedTeamTerm = "Renngemeinschaft",
                 challengeResultType = MatchResultType.DISTANCE,
                 allowSelfSubmission = false,
+                allowParticipantSelfRegistration = false,
             )
     }
 }

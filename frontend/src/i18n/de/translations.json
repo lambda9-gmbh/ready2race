@@ -270,6 +270,12 @@
     "clubs": "Vereine",
     "name": "Vereinsname",
     "import": "Vereine importieren",
+    "settings": {
+      "title": "Vereinseinstellungen",
+      "allowClubCreationOnRegistration": "Vereinserstellung bei Anmeldung erlauben",
+      "save": "Einstellungen speichern",
+      "saved": "Einstellungen gespeichert"
+    },
     "upload": {
       "dialog": {
         "submit": "Vereine importieren"
@@ -374,6 +380,7 @@
     },
     "challengeResultType": "Challenge Ergebnistyp",
     "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
+    "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",

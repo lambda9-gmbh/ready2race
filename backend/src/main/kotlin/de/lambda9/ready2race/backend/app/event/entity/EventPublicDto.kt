@@ -19,4 +19,5 @@ data class EventPublicDto(
     val challengeEvent: Boolean,
     val challengeResultType: MatchResultType?,
     val allowSelfSubmission: Boolean,
+    val allowParticipantSelfRegistration: Boolean,
 )
