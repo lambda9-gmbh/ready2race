@@ -755,6 +755,12 @@
             "confirmTitle": "Bestätigung erforderlich",
             "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
             "confirm": "Ergebnis bestätigen",
+            "delete": "Ergebnis löschen",
+            "verified": "Ergebnis verifiziert",
+            "unverified": "Ergebnis nicht verifiziert",
+            "proof": "Nachweis vorhanden",
+            "download": "Nachweis herunterladen",
+            "view": "Nachweis ansehen",
             "submitResults": "Ergebnis einreichen",
             "outsideOfTime": "Sie befinden sich derzeit außerhalb des Challenge Zeitraums."
           },

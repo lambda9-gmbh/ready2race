@@ -448,6 +448,7 @@ export type CompetitionRegistrationTeamDto = {
     deregistration?: CompetitionDeregistrationDto
     globalParticipantRequirements: Array<ParticipantRequirementDto>
     challengeResultValue?: number
+    challengeResultVerifiedAt?: string
     /**
      * Map of documentId to documentName
      */
@@ -5214,6 +5215,30 @@ export type SubmitChallengeTeamResultsData = {
 export type SubmitChallengeTeamResultsResponse = void
 
 export type SubmitChallengeTeamResultsError = BadRequestError | ApiError
+
+export type DeleteChallengeTeamResultData = {
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type DeleteChallengeTeamResultResponse = void
+
+export type DeleteChallengeTeamResultError = BadRequestError | ApiError
+
+export type VerifyChallengeTeamResultData = {
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type VerifyChallengeTeamResultResponse = void
+
+export type VerifyChallengeTeamResultError = BadRequestError | ApiError
 
 export type SubmitChallengeTeamResultsByTokenData = {
     body: {

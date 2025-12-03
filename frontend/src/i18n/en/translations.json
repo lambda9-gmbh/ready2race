@@ -755,6 +755,12 @@
             "confirmTitle": "Confirmation required",
             "confirmBody": "The result can no longer be changed after submission. Please make sure the results are correct.",
             "confirm": "Confirm results",
+            "delete": "Delete result",
+            "verified": "Result  verified",
+            "unverified": "Result not verified",
+            "proof": "Proof available",
+            "download": "Download proof",
+            "view": "View proof",
             "submitResults": "Submit results",
             "outsideOfTime": "You are currently outside of the challenge timespan."
           },

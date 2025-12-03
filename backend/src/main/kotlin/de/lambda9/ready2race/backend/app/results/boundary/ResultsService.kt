@@ -65,7 +65,7 @@ object ResultsService {
             !EventService.checkEventExisting(eventId)
         }
 
-        val allTeams = !ChallengeResultTeamViewRepo.get(eventId, competition, ratingCategory).orDie()
+        val allTeams = !ChallengeResultTeamViewRepo.get(eventId, competition, ratingCategory, true).orDie()
 
         // Get all participants for the teams
         val registrationIds = allTeams.mapNotNull { it.competitionRegistrationId }
@@ -206,7 +206,7 @@ object ResultsService {
             }
 
             val allParticipantResults =
-                !ChallengeResultParticipantViewRepo.get(eventId, competition, ratingCategory).orDie()
+                !ChallengeResultParticipantViewRepo.get(eventId, competition, ratingCategory, true).orDie()
 
             // Group results by participant
             val participantGroups = allParticipantResults.groupBy { it.id!! to (it.firstname!! to it.lastname!!) }

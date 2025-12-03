@@ -18,14 +18,13 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Participa
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.collections.get
-import kotlin.text.get
 
 fun CompetitionRegistrationTeamRecord.toDto(
     requirementsForEvent: List<ParticipantRequirementForEventRecord>,
     namedParticipants: Map<UUID, List<ParticipantForCompetitionRegistrationTeam>>,
     challengeResultValue: Int?,
-    challengeResultDocuments: Map<UUID, String>?
+    challengeResultDocuments: Map<UUID, String>?,
+    challengeResultVerifiedAt: LocalDateTime?,
 ): App<Nothing, CompetitionRegistrationTeamDto> =
     (ratingCategory?.toDto() ?: KIO.ok(null)).map { cat ->
         CompetitionRegistrationTeamDto(
@@ -53,6 +52,7 @@ fun CompetitionRegistrationTeamRecord.toDto(
                 .map { it.toRequirementDto() },
             challengeResultValue = challengeResultValue,
             challengeResultDocuments = challengeResultDocuments,
+            challengeResultVerifiedAt = challengeResultVerifiedAt,
             ratingCategory = cat,
         )
     }

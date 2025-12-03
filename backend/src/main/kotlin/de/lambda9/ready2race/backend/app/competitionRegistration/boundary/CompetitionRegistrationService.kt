@@ -167,7 +167,7 @@ object CompetitionRegistrationService {
                         challengeResults?.find { it.competitionRegistration == team.competitionRegistrationId }
                             ?.let { resultRecord ->
                                 resultRecord.resultValue?.let { resultValue ->
-                                    resultValue to ((resultRecord.resultDocuments?.associate { doc -> doc!!.id to doc.name })
+                                    (resultValue to resultRecord.resultVerifiedAt) to ((resultRecord.resultDocuments?.associate { doc -> doc!!.id to doc.name })
                                         ?: emptyMap())
                                 }
                             }
@@ -175,8 +175,9 @@ object CompetitionRegistrationService {
                     team.toDto(
                         requirementsForEvent,
                         actuallyParticipatingWithInfos.groupBy({ it.first }, { it.second }),
-                        challengeResultValue = challengeResultValueToDocuments?.first,
-                        challengeResultDocuments = if (readDocumentAccess) challengeResultValueToDocuments?.second else null
+                        challengeResultValue = challengeResultValueToDocuments?.first?.first,
+                        challengeResultDocuments = if (readDocumentAccess) challengeResultValueToDocuments?.second else null,
+                        challengeResultVerifiedAt = challengeResultValueToDocuments?.first?.second,
                     )
                 }
             }.map {

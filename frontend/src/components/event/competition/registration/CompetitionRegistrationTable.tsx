@@ -46,12 +46,14 @@ type Props = BaseEntityTableProps<CompetitionRegistrationDto> & {
     registrationState: OpenForRegistrationType
     registrationInitialized: boolean
     reloadEvent: () => void
+    challengeEvent: boolean
 }
 
 const CompetitionRegistrationTable = ({
     registrationState,
     registrationInitialized,
     reloadEvent,
+    challengeEvent,
     ...props
 }: Props) => {
     const {t} = useTranslation()

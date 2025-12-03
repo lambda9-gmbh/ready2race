@@ -1199,6 +1199,7 @@ create view competition_match_team_result as
 select cmt.id,
        cmt.competition_registration,
        cmt.result_value,
+       cmt.result_verified_at,
        coalesce(array_agg(distinct cmtd) filter ( where cmtd.id is not null ), '{}') as result_documents
 from competition_match_team cmt
          left join competition_match_team_document cmtd on cmtd.competition_match_team_id = cmt.id
@@ -1219,6 +1220,7 @@ create view challenge_result_team_view as
 select cr.id              as competition_registration_id,
        cr.name            as competition_registration_name,
        cmt.result_value   as team_result_value,
+       cmt.result_verified_at,
        cr.rating_category as rating_category_id,
        rc.name            as rating_category_name,
        rc.description     as rating_category_description,
@@ -1242,6 +1244,7 @@ select p.id,
        p.firstname,
        p.lastname,
        cmt.result_value as team_result_value,
+       cmt.result_verified_at,
        cr.id            as competition_registration_id,
        cr.name          as competition_registration_name,
        rc.id            as rating_category_id,

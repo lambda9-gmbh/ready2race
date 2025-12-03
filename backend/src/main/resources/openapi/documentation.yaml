@@ -6077,6 +6077,42 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteChallengeTeamResult
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/verify:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    put:
+      operationId: verifyChallengeTeamResult
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
   /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/accessToken/{accessToken}:
     parameters:
@@ -7833,6 +7869,9 @@ components:
             $ref: '#/components/schemas/ParticipantRequirementDto'
         challengeResultValue:
           type: integer
+        challengeResultVerifiedAt:
+          type: string
+          format: date-time
         challengeResultDocuments:
           type: object
           description: Map of documentId to documentName

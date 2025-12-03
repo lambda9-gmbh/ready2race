@@ -661,6 +661,12 @@ import type {
     SubmitChallengeTeamResultsData,
     SubmitChallengeTeamResultsError,
     SubmitChallengeTeamResultsResponse,
+    DeleteChallengeTeamResultData,
+    DeleteChallengeTeamResultError,
+    DeleteChallengeTeamResultResponse,
+    VerifyChallengeTeamResultData,
+    VerifyChallengeTeamResultError,
+    VerifyChallengeTeamResultResponse,
     SubmitChallengeTeamResultsByTokenData,
     SubmitChallengeTeamResultsByTokenError,
     SubmitChallengeTeamResultsByTokenResponse,
@@ -3421,6 +3427,32 @@ export const submitChallengeTeamResults = <ThrowOnError extends boolean = false>
             ...options?.headers,
         },
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}',
+    })
+}
+
+export const deleteChallengeTeamResult = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteChallengeTeamResultData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteChallengeTeamResultResponse,
+        DeleteChallengeTeamResultError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}',
+    })
+}
+
+export const verifyChallengeTeamResult = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<VerifyChallengeTeamResultData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        VerifyChallengeTeamResultResponse,
+        VerifyChallengeTeamResultError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/verify',
     })
 }
 
