@@ -86,7 +86,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
-    const [onlyUnverified, setOnlyUnverified] = useState(false)
+    const [onlyUnverified, setOnlyUnverified] = useState<boolean>()
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getCompetitionRegistrationTeams({
@@ -862,27 +862,6 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     return (
         <>
             <Link ref={downloadRef} display={'none'}></Link>
-            {eventData.challengeEvent &&
-                eventData.allowSelfSubmission &&
-                eventData.submissionNeedsVerification && (
-                    <Box display={'flex'} justifyContent={'end'}>
-                        <FormInputLabel
-                            label={t(
-                                'event.competition.execution.results.challenge.onlyUnverified',
-                            )}
-                            required={true}
-                            horizontal
-                            reverse>
-                            <Switch
-                                value={onlyUnverified}
-                                onChange={(_, checked) => {
-                                    setOnlyUnverified(checked)
-                                    props.reloadData()
-                                }}
-                            />
-                        </FormInputLabel>
-                    </Box>
-                )}
             <EntityTable
                 {...props}
                 parentResource={'REGISTRATION'}
@@ -894,6 +873,29 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                 entityName={t('event.registration.teams')}
                 hideEntityActions
                 mobileBreakpoint={'lg'}
+                customTableActions={
+                    eventData.challengeEvent &&
+                    eventData.allowSelfSubmission &&
+                    eventData.submissionNeedsVerification && (
+                        <Box display={'flex'} justifyContent={'end'}>
+                            <FormInputLabel
+                                label={t(
+                                    'event.competition.execution.results.challenge.onlyUnverified',
+                                )}
+                                required={true}
+                                horizontal
+                                reverse>
+                                <Switch
+                                    value={onlyUnverified ?? false}
+                                    onChange={(_, checked) => {
+                                        setOnlyUnverified(checked)
+                                        props.reloadData()
+                                    }}
+                                />
+                            </FormInputLabel>
+                        </Box>
+                    )
+                }
             />
             <ChallengeResultDialog
                 dialogOpen={resultsDialogOpen}

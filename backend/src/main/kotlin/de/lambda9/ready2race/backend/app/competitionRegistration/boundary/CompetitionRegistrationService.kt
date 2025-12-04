@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamResultRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionChallengeError
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasFeeRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
@@ -89,6 +90,10 @@ object CompetitionRegistrationService {
     ): App<ServiceError, ApiResponse.Page<CompetitionRegistrationTeamDto, CompetitionRegistrationTeamSort>> =
         KIO.comprehension {
 
+            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
+
+            !KIO.failOn(!isChallengeEvent && onlyUnverified) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+
             val total =
                 !CompetitionRegistrationTeamRepo.teamCountForCompetition(competitionId, params.search, scope, user, onlyUnverified)
                     .orDie()
@@ -97,7 +102,7 @@ object CompetitionRegistrationService {
 
             val requirementsForEvent = !ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie()
 
-            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
+
             val challengeResults = if (isChallengeEvent) {
                 !CompetitionMatchTeamResultRepo.getByCompetitionRegistrationIds(page.mapNotNull { it.competitionRegistrationId })
                     .orDie()
