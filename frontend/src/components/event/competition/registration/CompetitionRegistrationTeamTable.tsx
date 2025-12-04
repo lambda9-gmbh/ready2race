@@ -7,9 +7,11 @@ import {useMemo, useRef, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
     Box,
+    Button,
     Card,
     CardContent,
     Chip,
+    DialogActions,
     DialogContent,
     DialogTitle,
     Divider,
@@ -27,7 +29,6 @@ import {
 } from '@mui/material'
 import {
     Add,
-    Camera,
     CameraAlt,
     Check,
     CheckCircle,
@@ -56,6 +57,7 @@ import {useFeedback} from '@utils/hooks.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {currentlyInTimespan} from '@utils/helpers.ts'
 import BaseDialog from '@components/BaseDialog.tsx'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -74,6 +76,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     const user = useUser()
     const feedback = useFeedback()
     const theme = useTheme()
+    const {confirmAction} = useConfirmation()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const {eventId} = eventRoute.useParams()
@@ -101,28 +104,45 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                 competitionData.properties.challengeConfig?.endAt,
             ))
 
-    const handleVerification = async (id: string) => {
-        await verifyChallengeTeamResult({
-            path: {
-                eventId,
-                competitionId,
-                competitionRegistrationId: id,
-            },
-        })
+    const handleVerification = (id: string) => {
+        confirmAction(
+            async () => {
+                await verifyChallengeTeamResult({
+                    path: {
+                        eventId,
+                        competitionId,
+                        competitionRegistrationId: id,
+                    },
+                })
 
-        props.reloadData()
+                props.reloadData()
+                closeViewDocumentDialog()
+            },
+            {
+                content: t('event.competition.execution.results.challenge.confirmAction.verify'),
+                okText: t('event.competition.execution.results.challenge.verify'),
+            },
+        )
     }
 
-    const handleResultDelete = async (id: string) => {
-        await deleteChallengeTeamResult({
-            path: {
-                eventId,
-                competitionId,
-                competitionRegistrationId: id,
-            },
-        })
+    const handleResultDelete = (id: string) => {
+        confirmAction(
+            async () => {
+                await deleteChallengeTeamResult({
+                    path: {
+                        eventId,
+                        competitionId,
+                        competitionRegistrationId: id,
+                    },
+                })
 
-        props.reloadData()
+                props.reloadData()
+                closeViewDocumentDialog()
+            },
+            {
+                content: t('event.competition.execution.results.challenge.confirmAction.delete'),
+            },
+        )
     }
 
     const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
@@ -630,6 +650,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                               void openViewDocumentDialog(
                                                                   docId,
                                                                   docName,
+                                                                  row,
                                                               )
                                                           } else if (
                                                               itemId.startsWith('$download')
@@ -648,9 +669,9 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                                   docName,
                                                               )
                                                           } else if (itemId === 'verify') {
-                                                              await handleVerification(row.id)
+                                                              handleVerification(row.id)
                                                           } else if (itemId === 'delete') {
-                                                              await handleResultDelete(row.id)
+                                                              handleResultDelete(row.id)
                                                           }
                                                       }}
                                                       items={[
@@ -695,7 +716,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                                     {
                                                                         id: 'verify',
                                                                         label: t(
-                                                                            'event.competition.execution.results.challenge.confirm',
+                                                                            'event.competition.execution.results.challenge.verify',
                                                                         ),
                                                                         icon: (
                                                                             <Check
@@ -794,8 +815,15 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     const [viewDocumentDialogOpen, setViewDocumentDialogOpen] = useState(false)
     const [viewDocumentUrl, setViewDocumentUrl] = useState<string | null>(null)
     const [viewDocumentName, setViewDocumentName] = useState<string>('')
+    const [viewDocumentTeam, setViewDocumentTeam] = useState<CompetitionRegistrationTeamDto | null>(
+        null,
+    )
 
-    const openViewDocumentDialog = async (docId: string, docName: string) => {
+    const openViewDocumentDialog = async (
+        docId: string,
+        docName: string,
+        team: CompetitionRegistrationTeamDto,
+    ) => {
         const {data, error} = await downloadMatchTeamResultDocument({
             path: {
                 eventId,
@@ -810,6 +838,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
             setViewDocumentUrl(URL.createObjectURL(data))
             setViewDocumentName(docName)
             setViewDocumentDialogOpen(true)
+            setViewDocumentTeam(team)
         }
     }
 
@@ -820,6 +849,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
         setViewDocumentDialogOpen(false)
         setViewDocumentUrl(null)
         setViewDocumentName('')
+        setViewDocumentTeam(null)
     }
 
     return (
@@ -882,6 +912,25 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                         </Box>
                     )}
                 </DialogContent>
+                {viewDocumentTeam &&
+                    !viewDocumentTeam.challengeResultVerifiedAt &&
+                    eventData.submissionNeedsVerification && (
+                        <DialogActions>
+                            <Button variant={'text'} onClick={closeViewDocumentDialog}>
+                                {t('common.cancel')}
+                            </Button>
+                            <Button
+                                variant={'outlined'}
+                                onClick={() => handleResultDelete(viewDocumentTeam.id)}>
+                                {t('event.competition.execution.results.challenge.delete')}
+                            </Button>
+                            <Button
+                                variant={'contained'}
+                                onClick={() => handleVerification(viewDocumentTeam.id)}>
+                                {t('event.competition.execution.results.challenge.verify')}
+                            </Button>
+                        </DialogActions>
+                    )}
             </BaseDialog>
         </>
     )

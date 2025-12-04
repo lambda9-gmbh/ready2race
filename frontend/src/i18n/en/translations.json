@@ -754,8 +754,13 @@
             "success": "The challenge result was transmitted successfully.",
             "confirmTitle": "Confirmation required",
             "confirmBody": "The result can no longer be changed after submission. Please make sure the results are correct.",
-            "confirm": "Confirm results",
+            "confirm": "Confirm result",
+            "verify": "Verify result",
             "delete": "Delete result",
+            "confirmAction": {
+              "verify": "Once verified, results cannot be changed. Please ensure everything is correct.",
+              "delete": "This action can not be undone. Are you sure?"
+            },
             "verified": "Result  verified",
             "unverified": "Result not verified",
             "proof": "Proof available",

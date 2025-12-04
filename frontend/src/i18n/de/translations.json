@@ -755,7 +755,12 @@
             "confirmTitle": "Bestätigung erforderlich",
             "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
             "confirm": "Ergebnis bestätigen",
+            "verify": "Ergebnis verifizieren",
             "delete": "Ergebnis löschen",
+            "confirmAction": {
+              "verify": "Einmal verifizierte Ergebnisse können nicht verändert werden. Stellen Sie bitte sicher, dass alles korrekt ist.",
+              "delete": "Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?"
+            },
             "verified": "Ergebnis verifiziert",
             "unverified": "Ergebnis nicht verifiziert",
             "proof": "Nachweis vorhanden",
