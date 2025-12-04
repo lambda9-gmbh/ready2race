@@ -1334,6 +1334,11 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - in: query
+          name: onlyUnverified
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: CompetitionRegistrationTeam page successfully retrieved

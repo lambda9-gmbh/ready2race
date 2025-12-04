@@ -763,6 +763,7 @@
             },
             "verified": "Result  verified",
             "unverified": "Result not verified",
+            "onlyUnverified": "Only show not verified results",
             "proof": "Proof available",
             "download": "Download proof",
             "view": "View proof",

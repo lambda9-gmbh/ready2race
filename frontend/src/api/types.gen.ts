@@ -2842,6 +2842,7 @@ export type GetCompetitionRegistrationTeamsData = {
          * Result offset for pagination
          */
         offset?: number
+        onlyUnverified?: boolean
         /**
          * Filter result with space-separated search terms for pagination
          */

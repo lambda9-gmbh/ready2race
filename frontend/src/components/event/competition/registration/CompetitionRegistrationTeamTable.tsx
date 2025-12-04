@@ -18,6 +18,7 @@ import {
     IconButton,
     Link,
     Stack,
+    Switch,
     Table,
     TableBody,
     TableCell,
@@ -58,6 +59,7 @@ import SelectionMenu from '@components/SelectionMenu.tsx'
 import {currentlyInTimespan} from '@utils/helpers.ts'
 import BaseDialog from '@components/BaseDialog.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -84,11 +86,16 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
+    const [onlyUnverified, setOnlyUnverified] = useState(false)
+
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getCompetitionRegistrationTeams({
             signal,
             path: {eventId, competitionId},
-            query: {...paginationParameters},
+            query: {
+                ...paginationParameters,
+                onlyUnverified,
+            },
         })
     }
 
@@ -855,6 +862,27 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     return (
         <>
             <Link ref={downloadRef} display={'none'}></Link>
+            {eventData.challengeEvent &&
+                eventData.allowSelfSubmission &&
+                eventData.submissionNeedsVerification && (
+                    <Box display={'flex'} justifyContent={'end'}>
+                        <FormInputLabel
+                            label={t(
+                                'event.competition.execution.results.challenge.onlyUnverified',
+                            )}
+                            required={true}
+                            horizontal
+                            reverse>
+                            <Switch
+                                value={onlyUnverified}
+                                onChange={(_, checked) => {
+                                    setOnlyUnverified(checked)
+                                    props.reloadData()
+                                }}
+                            />
+                        </FormInputLabel>
+                    </Box>
+                )}
             <EntityTable
                 {...props}
                 parentResource={'REGISTRATION'}

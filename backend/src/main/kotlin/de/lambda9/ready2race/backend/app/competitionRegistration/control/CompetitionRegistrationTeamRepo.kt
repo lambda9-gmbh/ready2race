@@ -38,6 +38,7 @@ object CompetitionRegistrationTeamRepo {
         search: String?,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
+        onlyUnverified: Boolean,
     ): JIO<Int> = Jooq.query {
         with(COMPETITION_REGISTRATION_TEAM) {
             fetchCount(
@@ -45,7 +46,8 @@ object CompetitionRegistrationTeamRepo {
                 DSL.and(
                     COMPETITION_ID.eq(competitionId),
                     filterScope(scope, user.club),
-                    search.metaSearch(searchFields())
+                    search.metaSearch(searchFields()),
+                    if (onlyUnverified) filterUnverified else DSL.trueCondition(),
                 ),
             )
         }
@@ -61,18 +63,28 @@ object CompetitionRegistrationTeamRepo {
         params: PaginationParameters<CompetitionRegistrationTeamSort>,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
+        onlyUnverified: Boolean,
     ): JIO<List<CompetitionRegistrationTeamRecord>> = Jooq.query {
         with(COMPETITION_REGISTRATION_TEAM) {
             selectFrom(this)
                 .page(params, searchFields()) {
-                    COMPETITION_ID.eq(competitionId).and(
-                        filterScope(scope, user.club)
+                    DSL.and(
+                        COMPETITION_ID.eq(competitionId),
+                        filterScope(scope, user.club),
+                        if (onlyUnverified) filterUnverified else DSL.trueCondition(),
                     )
                 }
                 .fetch()
         }
     }
 
+    private val filterUnverified: Condition =
+        DSL.exists(
+            DSL.selectOne().from(COMPETITION_MATCH_TEAM)
+                .where(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION_TEAM.COMPETITION_REGISTRATION_ID))
+                .and(COMPETITION_MATCH_TEAM.RESULT_VALUE.isNotNull)
+                .and(COMPETITION_MATCH_TEAM.RESULT_VERIFIED_AT.isNull)
+        )
 
     private fun filterScope(
         scope: Privilege.Scope,

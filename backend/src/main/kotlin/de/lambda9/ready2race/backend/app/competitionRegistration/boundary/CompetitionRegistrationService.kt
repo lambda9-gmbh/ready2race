@@ -85,14 +85,15 @@ object CompetitionRegistrationService {
         competitionId: UUID,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
+        onlyUnverified: Boolean,
     ): App<ServiceError, ApiResponse.Page<CompetitionRegistrationTeamDto, CompetitionRegistrationTeamSort>> =
         KIO.comprehension {
 
             val total =
-                !CompetitionRegistrationTeamRepo.teamCountForCompetition(competitionId, params.search, scope, user)
+                !CompetitionRegistrationTeamRepo.teamCountForCompetition(competitionId, params.search, scope, user, onlyUnverified)
                     .orDie()
             val page =
-                !CompetitionRegistrationTeamRepo.teamPageForCompetition(competitionId, params, scope, user).orDie()
+                !CompetitionRegistrationTeamRepo.teamPageForCompetition(competitionId, params, scope, user, onlyUnverified).orDie()
 
             val requirementsForEvent = !ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie()
 
