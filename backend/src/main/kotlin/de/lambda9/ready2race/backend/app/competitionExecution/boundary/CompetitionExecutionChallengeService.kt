@@ -160,6 +160,8 @@ object CompetitionExecutionChallengeService {
             startNumber = highestStartNumber?.let { it + 1 } ?: 1,
             place = null,
             resultValue = request.result,
+            resultVerifiedAt = now,
+            resultVerifiedBy = userId,
             createdAt = now,
             createdBy = userId,
             updatedAt = now,
@@ -272,6 +274,8 @@ object CompetitionExecutionChallengeService {
             startNumber = highestStartNumber?.let { it + 1 } ?: 1,
             place = null,
             resultValue = request.result,
+            resultVerifiedAt = null,
+            resultVerifiedBy = null,
             createdAt = now,
             createdBy = null,
             updatedAt = now,
@@ -302,6 +306,111 @@ object CompetitionExecutionChallengeService {
             ).orDie()
         }
 
+
+        ApiResponse.noData
+    }
+
+    fun deleteResult(
+        competitionId: UUID,
+        competitionRegistrationId: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val now = LocalDateTime.now()
+
+        val competition = !CompetitionRepo.getById(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
+
+        val event = !EventRepo.get(competition.event!!).orDie()
+            .onNullFail { EventError.NotFound }
+        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+        !KIO.failOn(scope == Privilege.Scope.OWN && event.selfSubmission != true) { SelfSubmissionNotAllowed }
+
+        val outsideChallengeTimespan =
+            competition.challengeStartAt?.isAfter(now) ?: false || competition.challengeEndAt?.isBefore(now) ?: false
+        !KIO.failOn(scope == Privilege.Scope.OWN && outsideChallengeTimespan) { CompetitionExecutionError.NotInChallengeTimespan }
+
+        val round = !CompetitionSetupRoundRepo.getWithMatchesBySetup(competition.propertiesId!!).orDie()
+            .andThen {
+                !KIO.failOn(it.isEmpty()) { CompetitionExecutionChallengeError.ChallengeNotStartedYet }
+                !KIO.failOn(it.size > 1) { CompetitionExecutionChallengeError.CorruptedSetup }
+                !KIO.failOn(
+                    (it.first().setupMatches?.size ?: 0) != 1
+                ) { CompetitionExecutionChallengeError.CorruptedSetup }
+
+                KIO.ok(it)
+            }.map { it.first() }
+
+        val match = round.matches!!.first()!!
+
+        val competitionRegistrationRecord =
+            !CompetitionRegistrationRepo.findByIdAndCompetitionId(competitionRegistrationId, competitionId).orDie()
+                .onNullFail { CompetitionRegistrationError.NotFound }
+
+        !KIO.failOn(scope == Privilege.Scope.OWN && (competitionRegistrationRecord.club != user.club)) { CompetitionRegistrationError.NotFound }
+
+        val record = !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(
+            matchId = match.competitionSetupMatch!!,
+            registrationId = competitionRegistrationId,
+        ).orDie().onNullFail { CompetitionExecutionChallengeError.NoResultSubmitted }
+
+        record.delete()
+
+        ApiResponse.noData
+    }
+
+    fun verifyChallengeResult(
+        competitionId: UUID,
+        competitionRegistrationId: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val now = LocalDateTime.now()
+
+        val competition = !CompetitionRepo.getById(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
+
+        val event = !EventRepo.get(competition.event!!).orDie()
+            .onNullFail { EventError.NotFound }
+        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+        !KIO.failOn(scope == Privilege.Scope.OWN && event.selfSubmission != true) { SelfSubmissionNotAllowed }
+
+        val outsideChallengeTimespan =
+            competition.challengeStartAt?.isAfter(now) ?: false || competition.challengeEndAt?.isBefore(now) ?: false
+        !KIO.failOn(scope == Privilege.Scope.OWN && outsideChallengeTimespan) { CompetitionExecutionError.NotInChallengeTimespan }
+
+        val round = !CompetitionSetupRoundRepo.getWithMatchesBySetup(competition.propertiesId!!).orDie()
+            .andThen {
+                !KIO.failOn(it.isEmpty()) { CompetitionExecutionChallengeError.ChallengeNotStartedYet }
+                !KIO.failOn(it.size > 1) { CompetitionExecutionChallengeError.CorruptedSetup }
+                !KIO.failOn(
+                    (it.first().setupMatches?.size ?: 0) != 1
+                ) { CompetitionExecutionChallengeError.CorruptedSetup }
+
+                KIO.ok(it)
+            }.map { it.first() }
+
+        val match = round.matches!!.first()!!
+
+        val competitionRegistrationRecord =
+            !CompetitionRegistrationRepo.findByIdAndCompetitionId(competitionRegistrationId, competitionId).orDie()
+                .onNullFail { CompetitionRegistrationError.NotFound }
+
+        !KIO.failOn(scope == Privilege.Scope.OWN && (competitionRegistrationRecord.club != user.club)) { CompetitionRegistrationError.NotFound }
+
+        val record = !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(
+            matchId = match.competitionSetupMatch!!,
+            registrationId = competitionRegistrationId,
+        ).orDie().onNullFail { CompetitionExecutionChallengeError.NoResultSubmitted }
+
+        !CompetitionMatchTeamRepo.update(record) {
+            resultVerifiedAt = now
+            resultVerifiedBy = user.id
+            updatedAt = now
+            updatedBy = user.id
+        }.orDie()
 
         ApiResponse.noData
     }

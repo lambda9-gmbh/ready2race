@@ -75,7 +75,7 @@ object EventParticipantService {
 
         val newToken = RandomUtilities.token()
 
-        !EventParticipantRepo.updateAccessToken(eventId, participantId, newToken).orDie()
+        !EventParticipantRepo.upsertAccessToken(eventId, participantId, newToken).orDie()
 
         val content = !EmailService.getTemplate(
             EmailTemplateKey.PARTICIPANT_CHALLENGE_REGISTERED,

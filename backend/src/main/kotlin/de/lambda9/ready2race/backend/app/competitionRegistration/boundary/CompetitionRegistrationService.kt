@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamResultRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionChallengeError
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasFeeRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
@@ -85,18 +86,23 @@ object CompetitionRegistrationService {
         competitionId: UUID,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
+        onlyUnverified: Boolean,
     ): App<ServiceError, ApiResponse.Page<CompetitionRegistrationTeamDto, CompetitionRegistrationTeamSort>> =
         KIO.comprehension {
 
+            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
+
+            !KIO.failOn(!isChallengeEvent && onlyUnverified) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+
             val total =
-                !CompetitionRegistrationTeamRepo.teamCountForCompetition(competitionId, params.search, scope, user)
+                !CompetitionRegistrationTeamRepo.teamCountForCompetition(competitionId, params.search, scope, user, onlyUnverified)
                     .orDie()
             val page =
-                !CompetitionRegistrationTeamRepo.teamPageForCompetition(competitionId, params, scope, user).orDie()
+                !CompetitionRegistrationTeamRepo.teamPageForCompetition(competitionId, params, scope, user, onlyUnverified).orDie()
 
             val requirementsForEvent = !ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie()
 
-            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
+
             val challengeResults = if (isChallengeEvent) {
                 !CompetitionMatchTeamResultRepo.getByCompetitionRegistrationIds(page.mapNotNull { it.competitionRegistrationId })
                     .orDie()
@@ -167,7 +173,7 @@ object CompetitionRegistrationService {
                         challengeResults?.find { it.competitionRegistration == team.competitionRegistrationId }
                             ?.let { resultRecord ->
                                 resultRecord.resultValue?.let { resultValue ->
-                                    resultValue to ((resultRecord.resultDocuments?.associate { doc -> doc!!.id to doc.name })
+                                    (resultValue to resultRecord.resultVerifiedAt) to ((resultRecord.resultDocuments?.associate { doc -> doc!!.id to doc.name })
                                         ?: emptyMap())
                                 }
                             }
@@ -175,8 +181,9 @@ object CompetitionRegistrationService {
                     team.toDto(
                         requirementsForEvent,
                         actuallyParticipatingWithInfos.groupBy({ it.first }, { it.second }),
-                        challengeResultValue = challengeResultValueToDocuments?.first,
-                        challengeResultDocuments = if (readDocumentAccess) challengeResultValueToDocuments?.second else null
+                        challengeResultValue = challengeResultValueToDocuments?.first?.first,
+                        challengeResultDocuments = if (readDocumentAccess) challengeResultValueToDocuments?.second else null,
+                        challengeResultVerifiedAt = challengeResultValueToDocuments?.first?.second,
                     )
                 }
             }.map {

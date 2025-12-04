@@ -448,6 +448,7 @@ export type CompetitionRegistrationTeamDto = {
     deregistration?: CompetitionDeregistrationDto
     globalParticipantRequirements: Array<ParticipantRequirementDto>
     challengeResultValue?: number
+    challengeResultVerifiedAt?: string
     /**
      * Map of documentId to documentName
      */
@@ -628,6 +629,7 @@ export type CreateEventRequest = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
 }
 
@@ -756,6 +758,7 @@ export type EventDto = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
 }
 
@@ -794,6 +797,7 @@ export type EventPublicDto = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
 }
 
@@ -1496,11 +1500,16 @@ export type RatingCategoryToEventRequest = {
 }
 
 export type RegisterRequest = {
-    email: string
+    email?: string | null
     password: string
     firstname: string
     lastname: string
-    clubname: string
+    clubId?: string | null
+    clubname?: string | null
+    isParticipant: boolean
+    isChallengeManager: boolean
+    eventId?: string | null
+    birthYear?: number | null
     language: EmailLanguage
     callbackUrl: string
 }
@@ -1872,6 +1881,7 @@ export type UpdateEventRequest = {
     mixedTeamTerm?: string
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
 }
 
@@ -2845,6 +2855,7 @@ export type GetCompetitionRegistrationTeamsData = {
          * Result offset for pagination
          */
         offset?: number
+        onlyUnverified?: boolean
         /**
          * Filter result with space-separated search terms for pagination
          */
@@ -5218,6 +5229,30 @@ export type SubmitChallengeTeamResultsData = {
 export type SubmitChallengeTeamResultsResponse = void
 
 export type SubmitChallengeTeamResultsError = BadRequestError | ApiError
+
+export type DeleteChallengeTeamResultData = {
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type DeleteChallengeTeamResultResponse = void
+
+export type DeleteChallengeTeamResultError = BadRequestError | ApiError
+
+export type VerifyChallengeTeamResultData = {
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type VerifyChallengeTeamResultResponse = void
+
+export type VerifyChallengeTeamResultError = BadRequestError | ApiError
 
 export type SubmitChallengeTeamResultsByTokenData = {
     body: {

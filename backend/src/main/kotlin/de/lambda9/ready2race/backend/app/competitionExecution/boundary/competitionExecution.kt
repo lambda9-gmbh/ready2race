@@ -208,8 +208,8 @@ fun Route.competitionExecution() {
             }
         }
         route("/challenge") {
-            route("/team-results") {
-                post("/{competitionRegistrationId}/accessToken/{accessToken}") {
+            route("/team-results/{competitionRegistrationId}") {
+                post("/accessToken/{accessToken}") {
                     call.respondComprehension {
 
                         val accessToken = !pathParam("accessToken")
@@ -268,7 +268,39 @@ fun Route.competitionExecution() {
 
                     }
                 }
-                post("/{competitionRegistrationId}") {
+                delete {
+                    call.respondComprehension {
+
+                        // GLOBAL can always verify results - OWN only if self_submission is enabled for the event
+                        val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.RESULT)
+                        val competitionId = !pathParam("competitionId", uuid)
+                        val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
+
+                        CompetitionExecutionChallengeService.deleteResult(
+                            competitionId = competitionId,
+                            competitionRegistrationId = competitionRegistrationId,
+                            user = user,
+                            scope = scope,
+                        )
+                    }
+                }
+                put("/verify") {
+                    call.respondComprehension {
+
+                        // GLOBAL can always verify results - OWN only if self_submission is enabled for the event
+                        val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.RESULT)
+                        val competitionId = !pathParam("competitionId", uuid)
+                        val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
+
+                        CompetitionExecutionChallengeService.verifyChallengeResult(
+                            competitionId = competitionId,
+                            competitionRegistrationId = competitionRegistrationId,
+                            user = user,
+                            scope = scope,
+                        )
+                    }
+                }
+                post {
                     call.respondComprehension {
 
                         // GLOBAL can always submit results - OWN only if self_submission is enabled for the event

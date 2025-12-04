@@ -7,15 +7,18 @@ import {useMemo, useRef, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
     Box,
+    Button,
     Card,
     CardContent,
     Chip,
+    DialogActions,
     DialogContent,
     DialogTitle,
     Divider,
     IconButton,
     Link,
     Stack,
+    Switch,
     Table,
     TableBody,
     TableCell,
@@ -25,21 +28,38 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material'
-import {Add, CheckCircle, Download, Info, Warning} from '@mui/icons-material'
+import {
+    Add,
+    CameraAlt,
+    Check,
+    CheckCircle,
+    Delete,
+    Download,
+    Info,
+    MoreVert,
+    Verified,
+    Visibility,
+    Warning,
+} from '@mui/icons-material'
 import QrCodeIcon from '@mui/icons-material/QrCode'
 import {format} from 'date-fns'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import Cancel from '@mui/icons-material/Cancel'
 import {useUser} from '@contexts/user/UserContext.ts'
 import ChallengeResultDialog from '@components/event/competition/registration/ChallengeResultDialog.tsx'
-import {downloadMatchTeamResultDocument, getCompetitionRegistrationTeams} from '@api/sdk.gen'
+import {
+    deleteChallengeTeamResult,
+    downloadMatchTeamResultDocument,
+    getCompetitionRegistrationTeams,
+    verifyChallengeTeamResult,
+} from '@api/sdk.gen'
 import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
-import DownloadIcon from '@mui/icons-material/Download'
 import {currentlyInTimespan} from '@utils/helpers.ts'
-import VisibilityIcon from '@mui/icons-material/Visibility'
 import BaseDialog from '@components/BaseDialog.tsx'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -58,6 +78,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     const user = useUser()
     const feedback = useFeedback()
     const theme = useTheme()
+    const {confirmAction} = useConfirmation()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const {eventId} = eventRoute.useParams()
@@ -65,11 +86,16 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
+    const [onlyUnverified, setOnlyUnverified] = useState<boolean>()
+
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getCompetitionRegistrationTeams({
             signal,
             path: {eventId, competitionId},
-            query: {...paginationParameters},
+            query: {
+                ...paginationParameters,
+                onlyUnverified,
+            },
         })
     }
 
@@ -84,6 +110,47 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                 competitionData.properties.challengeConfig?.startAt,
                 competitionData.properties.challengeConfig?.endAt,
             ))
+
+    const handleVerification = (id: string) => {
+        confirmAction(
+            async () => {
+                await verifyChallengeTeamResult({
+                    path: {
+                        eventId,
+                        competitionId,
+                        competitionRegistrationId: id,
+                    },
+                })
+
+                props.reloadData()
+                closeViewDocumentDialog()
+            },
+            {
+                content: t('event.competition.execution.results.challenge.confirmAction.verify'),
+                okText: t('event.competition.execution.results.challenge.verify'),
+            },
+        )
+    }
+
+    const handleResultDelete = (id: string) => {
+        confirmAction(
+            async () => {
+                await deleteChallengeTeamResult({
+                    path: {
+                        eventId,
+                        competitionId,
+                        competitionRegistrationId: id,
+                    },
+                })
+
+                props.reloadData()
+                closeViewDocumentDialog()
+            },
+            {
+                content: t('event.competition.execution.results.challenge.confirmAction.delete'),
+            },
+        )
+    }
 
     const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
         () => [
@@ -518,18 +585,64 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                           alignItems: 'center',
                                       }}>
                                       {row.challengeResultValue ? (
-                                          <>
-                                              <Typography variant={'body2'} color={'textSecondary'}>
+                                          <Stack spacing={1} alignItems={'center'}>
+                                              <Typography
+                                                  variant={'body2'}
+                                                  color={'textSecondary'}
+                                                  textAlign={'center'}>
                                                   {row.ratingCategory?.name ?? ''}
                                               </Typography>
-                                              <Typography>
-                                                  {row.challengeResultValue}{' '}
-                                                  {challengeResultTypeUnit}
-                                              </Typography>
-                                              {challengeResultDocuments.length > 0 && (
+                                              <Stack direction={'row'} spacing={1}>
+                                                  <Typography>
+                                                      {row.challengeResultValue}{' '}
+                                                      {challengeResultTypeUnit}
+                                                  </Typography>
+                                                  {eventData.submissionNeedsVerification &&
+                                                  row.challengeResultVerifiedAt ? (
+                                                      <HtmlTooltip
+                                                          title={
+                                                              <Typography>
+                                                                  {t(
+                                                                      'event.competition.execution.results.challenge.verified',
+                                                                  )}
+                                                              </Typography>
+                                                          }>
+                                                          <Verified color={'primary'} />
+                                                      </HtmlTooltip>
+                                                  ) : (
+                                                      <HtmlTooltip
+                                                          title={
+                                                              <Typography>
+                                                                  {t(
+                                                                      'event.competition.execution.results.challenge.unverified',
+                                                                  )}
+                                                              </Typography>
+                                                          }>
+                                                          <Warning color={'warning'} />
+                                                      </HtmlTooltip>
+                                                  )}
+                                                  {challengeResultDocuments.length > 0 &&
+                                                      !competitionData.properties.challengeConfig
+                                                          ?.resultConfirmationImageRequired && (
+                                                          <HtmlTooltip
+                                                              title={
+                                                                  <Typography>
+                                                                      {t(
+                                                                          'event.competition.execution.results.challenge.proof',
+                                                                      )}
+                                                                  </Typography>
+                                                              }>
+                                                              <CameraAlt color={'primary'} />
+                                                          </HtmlTooltip>
+                                                      )}
+                                              </Stack>
+                                              {(challengeResultDocuments.length > 0 ||
+                                                  (eventData.submissionNeedsVerification &&
+                                                      !row.challengeResultVerifiedAt &&
+                                                      resultSubmissionAllowed)) && (
                                                   <SelectionMenu
                                                       keyLabel={'challenge-team-result-doc'}
-                                                      buttonContent={<Download />}
+                                                      buttonContent={<MoreVert />}
                                                       onSelectItem={async (itemId: string) => {
                                                           if (itemId.startsWith('$view')) {
                                                               const docId = itemId.replace(
@@ -544,6 +657,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                               void openViewDocumentDialog(
                                                                   docId,
                                                                   docName,
+                                                                  row,
                                                               )
                                                           } else if (
                                                               itemId.startsWith('$download')
@@ -561,40 +675,76 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                                   docId,
                                                                   docName,
                                                               )
+                                                          } else if (itemId === 'verify') {
+                                                              handleVerification(row.id)
+                                                          } else if (itemId === 'delete') {
+                                                              handleResultDelete(row.id)
                                                           }
                                                       }}
-                                                      items={challengeResultDocuments.flatMap(
-                                                          doc => [
-                                                              {
-                                                                  id: '$download' + doc.id,
-                                                                  label:
-                                                                      challengeResultDocuments.length >
-                                                                      1
-                                                                          ? doc.fileName
-                                                                          : t(
-                                                                                'common.file.download',
-                                                                            ),
-                                                                  icon: (
-                                                                      <DownloadIcon
-                                                                          color={'primary'}
-                                                                      />
-                                                                  ),
-                                                              },
-                                                              {
-                                                                  id: '$view' + doc.id,
-                                                                  label:
-                                                                      challengeResultDocuments.length >
-                                                                      1
-                                                                          ? doc.fileName
-                                                                          : t('common.file.view'),
-                                                                  icon: (
-                                                                      <VisibilityIcon
-                                                                          color={'primary'}
-                                                                      />
-                                                                  ),
-                                                              },
-                                                          ],
-                                                      )}
+                                                      items={[
+                                                          ...challengeResultDocuments.flatMap(
+                                                              doc => [
+                                                                  {
+                                                                      id: '$download' + doc.id,
+                                                                      label:
+                                                                          challengeResultDocuments.length >
+                                                                          1
+                                                                              ? doc.fileName
+                                                                              : t(
+                                                                                    'event.competition.execution.results.challenge.download',
+                                                                                ),
+                                                                      icon: (
+                                                                          <Download
+                                                                              color={'primary'}
+                                                                          />
+                                                                      ),
+                                                                  },
+                                                                  {
+                                                                      id: '$view' + doc.id,
+                                                                      label:
+                                                                          challengeResultDocuments.length >
+                                                                          1
+                                                                              ? doc.fileName
+                                                                              : t(
+                                                                                    'event.competition.execution.results.challenge.view',
+                                                                                ),
+                                                                      icon: (
+                                                                          <Visibility
+                                                                              color={'primary'}
+                                                                          />
+                                                                      ),
+                                                                  },
+                                                              ],
+                                                          ),
+                                                          ...(eventData.submissionNeedsVerification &&
+                                                          !row.challengeResultVerifiedAt &&
+                                                          resultSubmissionAllowed
+                                                              ? [
+                                                                    {
+                                                                        id: 'verify',
+                                                                        label: t(
+                                                                            'event.competition.execution.results.challenge.verify',
+                                                                        ),
+                                                                        icon: (
+                                                                            <Check
+                                                                                color={'primary'}
+                                                                            />
+                                                                        ),
+                                                                    },
+                                                                    {
+                                                                        id: 'delete',
+                                                                        label: t(
+                                                                            'event.competition.execution.results.challenge.delete',
+                                                                        ),
+                                                                        icon: (
+                                                                            <Delete
+                                                                                color={'primary'}
+                                                                            />
+                                                                        ),
+                                                                    },
+                                                                ]
+                                                              : []),
+                                                      ]}
                                                       anchor={{
                                                           button: {
                                                               vertical: 'top',
@@ -607,7 +757,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                       }}
                                                   />
                                               )}
-                                          </>
+                                          </Stack>
                                       ) : resultSubmissionAllowed ? (
                                           <>
                                               <HtmlTooltip
@@ -672,8 +822,15 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     const [viewDocumentDialogOpen, setViewDocumentDialogOpen] = useState(false)
     const [viewDocumentUrl, setViewDocumentUrl] = useState<string | null>(null)
     const [viewDocumentName, setViewDocumentName] = useState<string>('')
+    const [viewDocumentTeam, setViewDocumentTeam] = useState<CompetitionRegistrationTeamDto | null>(
+        null,
+    )
 
-    const openViewDocumentDialog = async (docId: string, docName: string) => {
+    const openViewDocumentDialog = async (
+        docId: string,
+        docName: string,
+        team: CompetitionRegistrationTeamDto,
+    ) => {
         const {data, error} = await downloadMatchTeamResultDocument({
             path: {
                 eventId,
@@ -688,6 +845,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
             setViewDocumentUrl(URL.createObjectURL(data))
             setViewDocumentName(docName)
             setViewDocumentDialogOpen(true)
+            setViewDocumentTeam(team)
         }
     }
 
@@ -698,6 +856,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
         setViewDocumentDialogOpen(false)
         setViewDocumentUrl(null)
         setViewDocumentName('')
+        setViewDocumentTeam(null)
     }
 
     return (
@@ -714,6 +873,29 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                 entityName={t('event.registration.teams')}
                 hideEntityActions
                 mobileBreakpoint={'lg'}
+                customTableActions={
+                    eventData.challengeEvent &&
+                    eventData.allowSelfSubmission &&
+                    eventData.submissionNeedsVerification && (
+                        <Box display={'flex'} justifyContent={'end'}>
+                            <FormInputLabel
+                                label={t(
+                                    'event.competition.execution.results.challenge.onlyUnverified',
+                                )}
+                                required={true}
+                                horizontal
+                                reverse>
+                                <Switch
+                                    value={onlyUnverified ?? false}
+                                    onChange={(_, checked) => {
+                                        setOnlyUnverified(checked)
+                                        props.reloadData()
+                                    }}
+                                />
+                            </FormInputLabel>
+                        </Box>
+                    )
+                }
             />
             <ChallengeResultDialog
                 dialogOpen={resultsDialogOpen}
@@ -760,6 +942,25 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                         </Box>
                     )}
                 </DialogContent>
+                {viewDocumentTeam &&
+                    !viewDocumentTeam.challengeResultVerifiedAt &&
+                    eventData.submissionNeedsVerification && (
+                        <DialogActions>
+                            <Button variant={'text'} onClick={closeViewDocumentDialog}>
+                                {t('common.cancel')}
+                            </Button>
+                            <Button
+                                variant={'outlined'}
+                                onClick={() => handleResultDelete(viewDocumentTeam.id)}>
+                                {t('event.competition.execution.results.challenge.delete')}
+                            </Button>
+                            <Button
+                                variant={'contained'}
+                                onClick={() => handleVerification(viewDocumentTeam.id)}>
+                                {t('event.competition.execution.results.challenge.verify')}
+                            </Button>
+                        </DialogActions>
+                    )}
             </BaseDialog>
         </>
     )

@@ -93,6 +93,7 @@ object EventService {
             mixedTeamTerm = request.mixedTeamTerm
             challengeMatchResultType = request.challengeResultType?.name
             selfSubmission = request.allowSelfSubmission
+            submissionNeedsVerification = request.submissionNeedsVerification
             participantSelfRegistration = request.allowParticipantSelfRegistration
             updatedBy = userId
             updatedAt = LocalDateTime.now()

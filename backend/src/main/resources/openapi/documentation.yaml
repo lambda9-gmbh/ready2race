@@ -1334,6 +1334,11 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - in: query
+          name: onlyUnverified
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: CompetitionRegistrationTeam page successfully retrieved
@@ -6077,6 +6082,42 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteChallengeTeamResult
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/verify:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    put:
+      operationId: verifyChallengeTeamResult
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
   /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/accessToken/{accessToken}:
     parameters:
@@ -7224,6 +7265,7 @@ components:
         - registrationsFinalized
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
         - allowParticipantSelfRegistration
       properties:
         id:
@@ -7272,6 +7314,8 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        submissionNeedsVerification:
+          type: boolean
         allowParticipantSelfRegistration:
           type: boolean
 
@@ -7284,6 +7328,7 @@ components:
         - createdAt
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
         - allowParticipantSelfRegistration
       properties:
         id:
@@ -7320,6 +7365,8 @@ components:
         challengeResultType:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
+          type: boolean
+        submissionNeedsVerification:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
@@ -7370,6 +7417,7 @@ components:
         - published
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
         - allowParticipantSelfRegistration
       properties:
         name:
@@ -7405,6 +7453,8 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        submissionNeedsVerification:
+          type: boolean
         allowParticipantSelfRegistration:
           type: boolean
 
@@ -7415,6 +7465,7 @@ components:
         - published
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
         - allowParticipantSelfRegistration
       properties:
         name:
@@ -7447,6 +7498,8 @@ components:
         challengeResultType:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
+          type: boolean
+        submissionNeedsVerification:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
@@ -7883,6 +7936,9 @@ components:
             $ref: '#/components/schemas/ParticipantRequirementDto'
         challengeResultValue:
           type: integer
+        challengeResultVerifiedAt:
+          type: string
+          format: date-time
         challengeResultDocuments:
           type: object
           description: Map of documentId to documentName
