@@ -66,7 +66,7 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
         supervisorScope {
             logger.info { "Scheduling jobs ..." }
 
-            scheduleDynamic("Send next email", 10.seconds) {
+            /*scheduleDynamic("Send next email", 10.seconds) {
                 EmailService.sendNext()
                     .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
@@ -79,7 +79,7 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                             }
                         }
                     }
-            }
+            }*/
 
             scheduleDynamic("Produce next invoice", 5.minutes) {
                 InvoiceService.produceNextRegistrationInvoice()

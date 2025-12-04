@@ -53,6 +53,20 @@ export type AppUserNameDto = {
     lastname: string
 }
 
+export type AppUserRegisterRequest = {
+    email: string
+    password: string
+    firstname: string
+    lastname: string
+    clubId?: string
+    clubname?: string
+    language: EmailLanguage
+    callbackUrl: string
+    registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
+    birthYear?: number
+    gender?: Gender
+}
+
 export type AppUserRegistrationDto = {
     id: string
     email: string
@@ -694,6 +708,7 @@ export type ErrorCode =
     | 'PLACES_UNCONTINUOUS'
     | 'LIST_DATA_INCOMPLETE'
     | 'RESULT_NOT_FAILED_AND_NO_DATA'
+    | 'CLUB_NAME_ALREADY_EXISTS'
 
 export type EventDayDto = {
     id: string
@@ -1308,6 +1323,23 @@ export type ParticipantQrAssignmentDto = {
     namedParticipantName: string
 }
 
+export type ParticipantRegisterCompetitionRequest = {
+    competitionId: string
+    optionalFees?: Array<string>
+    ratingCategory?: string
+}
+
+export type ParticipantRegisterRequest = {
+    firstname: string
+    lastname: string
+    gender: Gender
+    birthYear: number
+    email?: string
+    clubId: string
+    language: EmailLanguage
+    registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
+}
+
 export type ParticipantRequirementCheckForEventConfigDto = {
     requirementId: string
     separator?: string
@@ -1497,21 +1529,6 @@ export type RatingCategoryToEventRequest = {
     ratingCategory: string
     yearFrom?: number
     yearTo?: number
-}
-
-export type RegisterRequest = {
-    email?: string | null
-    password: string
-    firstname: string
-    lastname: string
-    clubId?: string | null
-    clubname?: string | null
-    isParticipant: boolean
-    isChallengeManager: boolean
-    eventId?: string | null
-    birthYear?: number | null
-    language: EmailLanguage
-    callbackUrl: string
 }
 
 export type RegistrationInvoiceType = 'REGULAR' | 'LATE'
@@ -2114,7 +2131,7 @@ export type UpdateUserResponse = void
 export type UpdateUserError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type RegisterUserData = {
-    body: RegisterRequest
+    body: AppUserRegisterRequest
     query: {
         /**
          * Captcha challenge id
@@ -3702,6 +3719,17 @@ export type GetRegistrationsWithoutTeamNumberResponse =
     Array<CompetitionRegistrationsWithoutTeamNumberDto>
 
 export type GetRegistrationsWithoutTeamNumberError = BadRequestError | ApiError
+
+export type ParticipantSelfRegisterData = {
+    body: ParticipantRegisterRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type ParticipantSelfRegisterResponse = unknown
+
+export type ParticipantSelfRegisterError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddFeeData = {
     body: FeeRequest

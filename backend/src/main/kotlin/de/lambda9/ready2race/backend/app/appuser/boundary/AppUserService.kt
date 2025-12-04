@@ -3,20 +3,24 @@ package de.lambda9.ready2race.backend.app.appuser.boundary
 import de.lambda9.ready2race.backend.afterNow
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.appuser.entity.AppUserForEventDto
-import de.lambda9.ready2race.backend.app.appuser.entity.AppUserForEventSort
 import de.lambda9.ready2race.backend.app.appuser.control.*
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
+import de.lambda9.ready2race.backend.app.ratingcategory.control.EventRatingCategoryViewRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.AgeRestriction
 import de.lambda9.ready2race.backend.app.role.boundary.RoleService
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.ADMIN_ROLE
@@ -25,9 +29,12 @@ import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.kio.onTrueFail
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -263,16 +270,138 @@ object AppUserService {
         )
     }
 
-    // Error-Code 409 "Conflict" is reserved by the "Email already in use" error. Should another 409 be created, the Error Display in the Frontend-Application needs to be updated
     fun register(
         request: AppUserRegisterRequest,
-    ): App<AppUserError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !EmailAddressRepo.exists(request.email).orDie()
             .onTrueFail { AppUserError.EmailAlreadyInUse }
 
+        request.clubname?.let {
+            val nameExists = !ClubRepo.nameExists(it).orDie()
+            !KIO.failOn(nameExists) {
+                AppUserError.ClubNameAlreadyExists
+            }
+        }
+
         val record = !request.toAppUserRegistrationRecord(registrationLifeTime)
         val id = !AppUserRegistrationRepo.create(record).orDie()
+
+
+        // Competition registrations
+        if (request.registerToSingleCompetitions.isNotEmpty()) {
+
+            val birthYear = request.birthYear!! // Verified in validation
+
+            val competitions =
+                !CompetitionRepo.getByIds(request.registerToSingleCompetitions.map { it.competitionId }).orDie()
+
+            !KIO.failOn(request.registerToSingleCompetitions.size != competitions.size) {
+                CompetitionError.CompetitionNotFound
+            }
+            val eventId = competitions.first().event!!
+
+            // Check that all competitions are single competitions
+            val namedParticipants = competitions.flatMap { it.namedParticipants!!.filterNotNull() }
+            !KIO.failOn(
+                namedParticipants.size != competitions.size
+                    || namedParticipants.map { it.countMales!! + it.countFemales!! + it.countNonBinary!! + it.countMixed!! }
+                    .any { it > 1 }) {
+                EventRegistrationError.SelfRegistrationOnlyForSingleCompetitions
+            }
+            val openForRegistrationType = !EventService.getOpenForRegistrationType(eventId).failIf({
+                it == OpenForRegistrationType.CLOSED
+            }) { EventRegistrationError.RegistrationClosed }
+
+            val ratingCategoryAgeRestrictions = !EventRatingCategoryViewRepo.get(eventId).orDie()
+                .map { list ->
+                    list.associate {
+                        it.ratingCategory!! to AgeRestriction(
+                            from = it.yearRestrictionFrom,
+                            to = it.yearRestrictionTo
+                        )
+                    }
+                }
+            val ratingCategoryExistsForEvent = ratingCategoryAgeRestrictions.isNotEmpty()
+
+            // Competition registration
+            val competitionRegistrationRecords = request.registerToSingleCompetitions.map {
+                AppUserRegistrationCompetitionRegistrationRecord(
+                    id = UUID.randomUUID(),
+                    appUserRegistration = id,
+                    competitionId = it.competitionId,
+                    ratingcategory = it.ratingCategory,
+                    lateRegistration = openForRegistrationType == OpenForRegistrationType.LATE
+                )
+            }
+            !AppUserRegistrationCompetitionRegistrationRepo.create(competitionRegistrationRecords).orDie()
+
+            !request.registerToSingleCompetitions.traverse { competitionRegistration ->
+                KIO.comprehension {
+
+                    val competition = competitions.first { it.id == competitionRegistration.competitionId }
+
+                    val competitionRegRecord =
+                        competitionRegistrationRecords.first { it.competitionId == competitionRegistration.competitionId }
+
+
+                    !KIO.failOn(ratingCategoryExistsForEvent && competition.ratingCategoryRequired!! && competitionRegistration.ratingCategory == null) {
+                        EventRegistrationError.RatingCategoryMissing(
+                            teamName = "${request.firstname} ${request.lastname}",
+                            competitionName = competition.name!!
+                        )
+                    }
+                    // Validate age if rating category is provided
+                    competitionRegistration.ratingCategory?.let { ratingCategoryId ->
+                        val ageRestriction = !KIO.failOnNull(ratingCategoryAgeRestrictions[ratingCategoryId]) {
+                            EventRegistrationError.RatingCategoryNotFound(
+                                id = ratingCategoryId,
+                                competitionName = competition.name!!
+                            )
+                        }
+
+                        val isValid =
+                            ((ageRestriction.from != null && ageRestriction.from <= birthYear) || ageRestriction.from == null) &&
+                                ((ageRestriction.to != null && ageRestriction.to >= birthYear) || ageRestriction.to == null)
+
+                        !KIO.failOn(!isValid) {
+                            EventRegistrationError.AgeRequirementNotMet(
+                                participantName = "${request.firstname} ${request.lastname}",
+                                competitionName = competition.name!!,
+                                teamName = null
+                            )
+                        }
+                    }
+
+                    // Optional fees
+                    if (competitionRegistration.optionalFees?.isNotEmpty() ?: false) {
+                        val optionalCompetitionFees =
+                            competition.fees!!.filter { it?.required == false }.map { it!!.id!! }
+
+                        val feeRecords = !competitionRegistration.optionalFees!!.traverse { registrationFee ->
+                            KIO.comprehension {
+                                !KIO.failOn(!optionalCompetitionFees.contains(registrationFee)) {
+                                    EventRegistrationError.FeeNotFound(
+                                        id = registrationFee,
+                                        competitionName = competition.name!!
+                                    )
+                                }
+                                KIO.ok(
+                                    AppUserRegistrationCompetitionRegistrationFeeRecord(
+                                        appUserRegistrationCompetitionRegistration = competitionRegRecord.id,
+                                        optionalFee = registrationFee,
+                                    )
+                                )
+                            }
+                        }
+                        !AppUserRegistrationCompetitionRegistrationFeeRepo.create(feeRecords).orDie()
+                    }
+                    unit
+                }
+            }
+
+            noData
+        }
 
         val content = !EmailService.getTemplate(
             EmailTemplateKey.USER_REGISTRATION,

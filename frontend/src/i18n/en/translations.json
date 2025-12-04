@@ -270,6 +270,10 @@
     "clubs": "Clubs",
     "name": "Club name",
     "import": "Import clubs",
+    "error": {
+      "nameAlreadyExists": "A club with this name already exists",
+      "mustSelectExistingClub": "Please select an existing club from the list"
+    },
     "settings": {
       "title": "Club Settings",
       "allowClubCreationOnRegistration": "Allow club creation on registration",
@@ -1177,6 +1181,7 @@
     },
     "firstname": "Firstname",
     "lastname": "Lastname",
+    "birthYear": "Birth Year",
     "password": {
       "password": "Password",
       "confirm": "Passwort bestätigen",
@@ -1233,6 +1238,9 @@
     "registration": {
       "register": "Register",
       "pendingRegistrations": "Pending registrations",
+      "registrationType": "Registration Type",
+      "asParticipant": "As Participant",
+      "asChallengeManager": "As Challenge Manager",
       "email": {
         "emailSent": {
           "header": "Please verify your email",
@@ -1253,7 +1261,10 @@
           }
         }
       },
-      "error": "An error has occurred during registration"
+      "error": {
+        "generic": "An error has occurred during registration",
+        "selectAtLeastOneType": "Please select at least one registration type"
+      }
     },
     "resetPassword": {
       "resetPassword": "Reset password",

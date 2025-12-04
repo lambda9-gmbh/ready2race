@@ -6,13 +6,13 @@ import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.club.control.clubDto
 import de.lambda9.ready2race.backend.app.club.control.toRecord
 import de.lambda9.ready2race.backend.app.club.entity.*
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.ToApiError
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -110,12 +110,6 @@ object ClubService {
         } else {
             noData
         }
-    }
-    
-    fun participantSelfRegister(
-        request: ParticipantRegisterRequest
-    ): App<ClubError, ApiResponse.NoData> = KIO.comprehension {
-
     }
 
 }

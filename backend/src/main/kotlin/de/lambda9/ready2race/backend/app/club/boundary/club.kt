@@ -46,7 +46,6 @@ fun Route.club() {
         route("/search") {
             get {
                 call.respondComprehension {
-                    !authenticate()
                     val params = !pagination<ClubSort>()
                     val eventId = !optionalQueryParam("eventId", uuid)
                     ClubService.page(params, eventId) { it.clubSearchDto() }

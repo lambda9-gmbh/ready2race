@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationUpsertDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationViewSort
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.ParticipantRegisterRequest
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -82,7 +83,7 @@ fun Route.eventRegistration() {
         }
     }
 
-    get("/missingTeamNumbers"){
+    get("/missingTeamNumbers") {
         call.respondComprehension {
             !authenticate(Privilege.ReadRegistrationGlobal)
             val eventId = !pathParam("eventId", uuid)
@@ -95,6 +96,15 @@ fun Route.eventRegistration() {
             !authenticate(Privilege.ReadRegistrationGlobal)
             val eventId = !pathParam("eventId", uuid)
             EventRegistrationService.downloadResult(eventId)
+        }
+    }
+
+    post("/selfRegister") {
+        call.respondComprehension {
+            val eventId = !pathParam("eventId", uuid)
+            val payload = !receiveKIO(ParticipantRegisterRequest.example)
+
+            EventRegistrationService.participantSelfRegister(eventId, payload)
         }
     }
 }

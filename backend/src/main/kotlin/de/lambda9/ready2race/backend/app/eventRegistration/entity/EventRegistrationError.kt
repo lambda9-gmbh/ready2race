@@ -11,6 +11,8 @@ sealed interface EventRegistrationError : ServiceError {
     data object EventNotFound : EventRegistrationError
     data object RegistrationClosed : EventRegistrationError
     data object RegistrationsNotFinalized : EventRegistrationError
+    data object SelfRegistrationNotAllowed : EventRegistrationError
+    data object SelfRegistrationOnlyForSingleCompetitions : EventRegistrationError
 
     data class InvalidRegistration(val msg: String) : EventRegistrationError
     data class UpsertParticipantNotFound(val id: UUID) : EventRegistrationError
@@ -44,6 +46,7 @@ sealed interface EventRegistrationError : ServiceError {
             message = "Registration closed",
             errorCode = ErrorCode.EVENT_REGISTRATION_CLOSED
         )
+
 
         is UpsertParticipantNotFound -> ApiError(
             status = HttpStatusCode.BadRequest,
@@ -111,5 +114,16 @@ sealed interface EventRegistrationError : ServiceError {
         )
 
         RegistrationsNotFinalized -> ApiError(status = HttpStatusCode.BadRequest, message = "Event not finalized")
+
+
+        SelfRegistrationNotAllowed -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Self registration to this event is not allowed"
+        )
+
+        SelfRegistrationOnlyForSingleCompetitions -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Self registration is only allowed for competitions with a team size of 1"
+        )
     }
 }

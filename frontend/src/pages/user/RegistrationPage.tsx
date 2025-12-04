@@ -1,24 +1,55 @@
 import {Box, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {FormContainer, useForm} from 'react-hook-form-mui'
-import {getClub, getClubs, getCreateClubOnRegistrationAllowed, registerUser} from 'api/sdk.gen.ts'
-import {useState} from 'react'
+import {
+    getClubs,
+    getCompetitions,
+    getCreateClubOnRegistrationAllowed,
+    getPublicEvents,
+    participantSelfRegister,
+    registerUser,
+} from 'api/sdk.gen.ts'
+import {useEffect, useMemo, useState} from 'react'
 import {useCaptcha, useFeedback, useFetch} from '@utils/hooks.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import ConfirmationMailSent from '@components/user/ConfirmationMailSent.tsx'
 import {NewPassword, PasswordFormPart} from '@components/form/NewPassword.tsx'
-import {CaptchaDto, RegisterRequest} from '@api/types.gen.ts'
+import {
+    AppUserRegisterRequest,
+    CaptchaDto,
+    EventPublicDto,
+    Gender,
+    ParticipantRegisterRequest,
+    type ParticipantSelfRegisterError,
+    RegisterUserError,
+} from '@api/types.gen.ts'
 import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 import FormInputCaptcha from '@components/form/input/FormInputCaptcha.tsx'
+import {AutocompleteClub} from '@components/club/AutocompleteClub.tsx'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
+import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
+import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import FormInputMultiselect from '@components/form/input/FormInputMultiselect.tsx'
+import {AutocompleteOption} from '@utils/types.ts'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 
 type Form = {
-    email: string
+    clubname: string
+    clubId?: string
     firstname: string
     lastname: string
-    clubname: string
+    isParticipant: boolean
+    isChallengeManager: boolean
+    event: AutocompleteOption
+    competitions: string[]
+    birthYear?: number
+    gender?: Gender
+    emailRequired: string
+    emailOptional: string
     captcha: number
 } & PasswordFormPart
 
@@ -30,20 +61,31 @@ const RegistrationPage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const [submitting, setSubmitting] = useState(false)
-
     const [requested, setRequested] = useState(false)
 
     const defaultValues: Form = {
-        email: '',
+        clubname: '',
+        clubId: undefined,
         firstname: '',
         lastname: '',
-        clubname: '',
+        isParticipant: false,
+        isChallengeManager: false,
+        event: null,
+        competitions: [],
+        birthYear: undefined,
+        gender: undefined,
+        emailRequired: '',
+        emailOptional: '',
         password: '',
         confirmPassword: '',
         captcha: 0,
     }
 
     const formContext = useForm<Form>({values: defaultValues})
+    const watchIsParticipant = formContext.watch('isParticipant')
+    const watchIsChallengeManager = formContext.watch('isChallengeManager')
+    const watchEvent = formContext.watch('event')
+    const watchClubname = formContext.watch('clubname')
 
     const setCaptchaStart = ({start}: CaptchaDto) => {
         formContext.setValue('captcha', start)
@@ -63,7 +105,32 @@ const RegistrationPage = () => {
         },
     )
 
-    const {data: clubsData} = useFetch(signal => getClubs({signal}), {
+    const {data: clubsData} = useFetch(
+        signal =>
+            getClubs({
+                signal,
+                query: {
+                    search: watchClubname,
+                },
+            }),
+        {
+            onResponse: ({error, data}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                } else if (data) {
+                    const foundClub = data.data.find(club => club.name === watchClubname)
+                    if (foundClub) {
+                        formContext.setValue('clubId', foundClub.id)
+                    } else {
+                        formContext.setValue('clubId', undefined)
+                    }
+                }
+            },
+            deps: [watchClubname],
+        },
+    )
+
+    const {data: eventsData} = useFetch(signal => getPublicEvents({signal}), {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.error.unexpected'))
@@ -72,16 +139,83 @@ const RegistrationPage = () => {
         deps: [],
     })
 
+    // Fetch competitions for the selected event
+    // TODO: New endpoint that fetches only competitions that fit the defined data (gender and age fit)
+    const {data: competitionsData} = useFetch(
+        signal =>
+            getCompetitions({
+                path: {eventId: watchEvent!.id},
+                signal,
+            }),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            },
+            preCondition: () => watchEvent !== null,
+            deps: [watchEvent],
+        },
+    )
+
+    // Update clubId when a club name is selected from the list
+    useEffect(() => {
+        if (clubsData && watchClubname) {
+            const foundClub = clubsData.data.find(club => club.name === watchClubname)
+            if (foundClub) {
+                formContext.setValue('clubId', foundClub.id)
+            } else {
+                formContext.setValue('clubId', undefined)
+            }
+        }
+    }, [watchClubname, clubsData, formContext])
+
+    // Filter events that allow participant self-registration
+    const availableEvents = eventsData?.data.filter(
+        (event: EventPublicDto) => event.allowParticipantSelfRegistration,
+    )
+
     const handleSubmit = async (formData: Form) => {
+        // Validate at least one registration type is selected
+        if (!formData.isParticipant && !formData.isChallengeManager) {
+            feedback.error(t('user.registration.error.selectAtLeastOneType'))
+            return
+        }
+
+        // Validate that participant-only registrations have an existing club selected
+        if (formData.isParticipant && !formData.isChallengeManager && !formData.clubId) {
+            formContext.setError('clubname', {
+                type: 'validate',
+                message: t('club.error.mustSelectExistingClub'),
+            })
+            return
+        }
+
         setSubmitting(true)
 
-        const {error} = await registerUser({
-            query: {
-                challenge: captcha.data!.id,
-                input: formData.captcha,
-            },
-            body: mapFormToRequest(formData),
-        })
+        let error: RegisterUserError | ParticipantSelfRegisterError | undefined
+        if (formData.isChallengeManager) {
+            // Use registerUser when creating an account (challenge manager)
+
+            const result = await registerUser({
+                query: {
+                    challenge: captcha.data!.id,
+                    input: formData.captcha,
+                },
+                body: mapFormToAppUserRegisterRequest(formData),
+            })
+            error = result.error
+        } else {
+            // Use participantSelfRegister when only registering as participant
+
+            if (!formData.event) return
+
+            const result = await participantSelfRegister({
+                path: {eventId: formData.event.id},
+                body: mapFormToParticipantRegisterRequest(formData),
+            })
+            error = result.error
+        }
 
         setSubmitting(false)
         onSubmitResult()
@@ -92,23 +226,33 @@ const RegistrationPage = () => {
                 feedback.error(t('captcha.error.notFound'))
             } else if (error.status.value === 409) {
                 if (error.errorCode === 'EMAIL_IN_USE') {
-                    formContext.setError('email', {
-                        type: 'validate',
-                        message:
-                            t('user.email.inUse.statement') +
-                            ' ' +
-                            t('user.email.inUse.callToAction.registration'),
-                    })
+                    formContext.setError(
+                        watchIsChallengeManager ? 'emailRequired' : 'emailOptional',
+                        {
+                            type: 'validate',
+                            message:
+                                t('user.email.inUse.statement') +
+                                ' ' +
+                                t('user.email.inUse.callToAction.registration'),
+                        },
+                    )
                 } else if (error.errorCode === 'CAPTCHA_WRONG') {
                     feedback.error(t('captcha.error.incorrect'))
+                } else if (error.errorCode === 'CLUB_NAME_ALREADY_EXISTS') {
+                    formContext.setError('clubname', {
+                        type: 'validate',
+                        message: t('club.error.nameAlreadyExists'),
+                    })
                 }
             } else {
-                feedback.error(t('user.registration.error'))
+                feedback.error(t('user.registration.error.generic'))
             }
         } else {
             setRequested(true)
         }
     }
+
+    const currentYear = useMemo(() => new Date().getFullYear(), [])
 
     return (
         <SimpleFormLayout maxWidth={500}>
@@ -121,27 +265,123 @@ const RegistrationPage = () => {
                     </Box>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
-                            <FormInputEmail name={'email'} label={t('user.email.email')} required />
-                            <NewPassword formContext={formContext} horizontal={!isMobile} />
+                            <Box>
+                                <Typography variant="body2" sx={{mb: 2}}>
+                                    {t('user.registration.registrationType')}
+                                </Typography>
+                                <Stack
+                                    spacing={2}
+                                    direction={{xs: 'column', sm: 'row'}}
+                                    sx={{justifyContent: 'space-between'}}>
+                                    <FormInputCheckbox
+                                        name="isChallengeManager"
+                                        label={t('user.registration.asChallengeManager')}
+                                        horizontal
+                                        reverse
+                                    />
+                                    <FormInputCheckbox
+                                        name="isParticipant"
+                                        label={t('user.registration.asParticipant')}
+                                        horizontal
+                                        reverse
+                                    />
+                                </Stack>
+                            </Box>
+
+                            <AutocompleteClub
+                                name="clubname"
+                                label={t('club.club')}
+                                required
+                                freeSolo={
+                                    createClubOnRegistrationAllowed === true &&
+                                    watchIsChallengeManager
+                                }
+                            />
+
                             <FormInputText
-                                name={'firstname'}
+                                name="firstname"
                                 label={t('user.firstname')}
                                 required
                                 sx={{flex: 1}}
                             />
+
                             <FormInputText
-                                name={'lastname'}
+                                name="lastname"
                                 label={t('user.lastname')}
                                 required
                                 sx={{flex: 1}}
                             />
-                            <FormInputText
-                                name={'clubname'}
-                                label={t('club.club')}
-                                required
-                                sx={{flex: 1}}
-                            />
+
+                            {watchIsParticipant &&
+                                availableEvents &&
+                                availableEvents.length > 0 && (
+                                    <FormInputAutocomplete
+                                        name="event"
+                                        label={t('event.event')}
+                                        required
+                                        options={availableEvents.map(event => ({
+                                            id: event.id,
+                                            label: event.name,
+                                        }))}
+                                    />
+                                )}
+
+                            {watchIsParticipant && (
+                                <>
+                                    <FormInputRadioButtonGroup
+                                        name="gender"
+                                        label={t('entity.gender')}
+                                        required
+                                        row
+                                        options={[
+                                            {label: 'M', id: 'M'},
+                                            {label: 'F', id: 'F'},
+                                            {label: 'D', id: 'D'},
+                                        ]}
+                                    />
+                                    <FormInputNumber
+                                        required
+                                        name={'birthYear'}
+                                        label={t('user.birthYear')}
+                                        integer
+                                        min={currentYear - 120}
+                                        max={currentYear}
+                                    />
+                                    {watchEvent &&
+                                        competitionsData &&
+                                        competitionsData.data.length > 0 && (
+                                            <FormInputMultiselect
+                                                name="competitions"
+                                                label={t('event.competition.competitions')}
+                                                options={competitionsData.data.map(competition => ({
+                                                    id: competition.id,
+                                                    label: competition.properties.name,
+                                                }))}
+                                                showCheckbox
+                                                showChips
+                                                fullWidth
+                                            />
+                                        )}
+                                </>
+                            )}
+                            {watchIsChallengeManager ? (
+                                <FormInputEmail
+                                    name="emailRequired"
+                                    label={t('user.email.email')}
+                                    required
+                                />
+                            ) : (
+                                <FormInputEmail
+                                    name="emailOptional"
+                                    label={t('user.email.email')}
+                                />
+                            )}
+
+                            {watchIsChallengeManager && (
+                                <NewPassword formContext={formContext} horizontal={!isMobile} />
+                            )}
                             <FormInputCaptcha captchaProps={captcha} />
+
                             <SubmitButton submitting={submitting}>
                                 {t('user.registration.register')}
                             </SubmitButton>
@@ -164,14 +404,43 @@ const RegistrationPage = () => {
 
 export default RegistrationPage
 
-function mapFormToRequest(formData: Form): RegisterRequest {
+function mapFormToAppUserRegisterRequest(formData: Form): AppUserRegisterRequest {
     return {
-        email: formData.email,
+        email: formData.emailRequired!,
         password: formData.password,
         firstname: formData.firstname,
         lastname: formData.lastname,
-        clubname: formData.clubname,
+        clubId: formData.clubId,
+        clubname: formData.clubId ? undefined : formData.clubname,
         language: languageMapping[i18nLanguage()],
         callbackUrl: location.origin + location.pathname + '/',
+        registerToSingleCompetitions: formData.competitions
+            .filter(val => val !== undefined)
+            .map(competition => ({
+                competitionId: competition,
+                optionalFees: [], // TODO
+                ratingCategory: undefined, // TODO
+            })),
+        birthYear: formData.birthYear,
+        gender: formData.gender,
+    }
+}
+
+function mapFormToParticipantRegisterRequest(formData: Form): ParticipantRegisterRequest {
+    return {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        gender: formData.gender!,
+        birthYear: formData.birthYear!,
+        email: takeIfNotEmpty(formData.emailOptional),
+        clubId: formData.clubId!,
+        language: languageMapping[i18nLanguage()],
+        registerToSingleCompetitions: formData.competitions
+            .filter(val => val !== undefined)
+            .map(competition => ({
+                competitionId: competition,
+                optionalFees: [], // TODO
+                ratingCategory: undefined, // TODO
+            })),
     }
 }

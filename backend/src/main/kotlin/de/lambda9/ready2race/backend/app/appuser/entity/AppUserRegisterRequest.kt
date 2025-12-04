@@ -1,17 +1,22 @@
 package de.lambda9.ready2race.backend.app.appuser.entity
 
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.ParticipantRegisterCompetitionRequest
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.security.PasswordUtilities.DEFAULT_PASSWORD_MIN_LENGTH
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.emailPattern
 import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.isEmpty
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.IntValidators.max
 import de.lambda9.ready2race.backend.validation.validators.IntValidators.min
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.minLength
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.pattern
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isNull
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
 import java.time.LocalDateTime
@@ -26,8 +31,9 @@ data class AppUserRegisterRequest(
     val clubname: String?,
     val language: EmailLanguage,
     val callbackUrl: String,
-    val registerToSingleCompetitions: List<UUID>,
+    val registerToSingleCompetitions: List<ParticipantRegisterCompetitionRequest>,
     val birthYear: Int?,
+    val gender: Gender?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -47,6 +53,19 @@ data class AppUserRegisterRequest(
                 )
             ),
             this::birthYear validate LocalDateTime.now().year.let { allOf(min(it - 120), max(it)) },
+            this::registerToSingleCompetitions validate collection,
+            ValidationResult.oneOf(
+                ValidationResult.allOf(
+                    this::birthYear validate notNull,
+                    this::gender validate notNull,
+                    this::registerToSingleCompetitions validate notEmpty
+                ),
+                ValidationResult.allOf(
+                    this::birthYear validate isNull,
+                    this::gender validate isNull,
+                    this::registerToSingleCompetitions validate isEmpty
+                )
+            )
         )
 
     companion object {
@@ -60,8 +79,9 @@ data class AppUserRegisterRequest(
                 clubname = "1.RC Flensburg",
                 language = EmailLanguage.EN,
                 callbackUrl = "https://example.com/verifyRegistration",
-                registerToSingleCompetitions = listOf(UUID.randomUUID()),
+                registerToSingleCompetitions = listOf(ParticipantRegisterCompetitionRequest.example),
                 birthYear = 1990,
+                gender = Gender.F,
             )
     }
 }

@@ -334,6 +334,9 @@ import type {
     GetRegistrationsWithoutTeamNumberData,
     GetRegistrationsWithoutTeamNumberError,
     GetRegistrationsWithoutTeamNumberResponse,
+    ParticipantSelfRegisterData,
+    ParticipantSelfRegisterError,
+    ParticipantSelfRegisterResponse,
     AddFeeData,
     AddFeeError,
     AddFeeResponse,
@@ -2026,6 +2029,19 @@ export const getRegistrationsWithoutTeamNumber = <ThrowOnError extends boolean =
     >({
         ...options,
         url: '/event/{eventId}/missingTeamNumbers',
+    })
+}
+
+export const participantSelfRegister = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ParticipantSelfRegisterData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ParticipantSelfRegisterResponse,
+        ParticipantSelfRegisterError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/selfRegister',
     })
 }
 

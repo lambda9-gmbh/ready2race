@@ -1,13 +1,13 @@
-import {ClubDto, getGlobalConfigurations, updateGlobalConfigurations} from '../../api'
+import {ClubDto, getCreateClubOnRegistrationAllowed, updateGlobalConfigurations} from '../../api'
 import {Box, Card, CardContent, CardHeader, Stack} from '@mui/material'
-import {useEntityAdministration} from '@utils/hooks.ts'
+import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
 import ClubTable from '../../components/club/ClubTable.tsx'
 import ClubDialog from '../../components/club/ClubDialog.tsx'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import FormInputSwitch from '../../components/form/input/FormInputSwitch.tsx'
 import {SubmitButton} from '../../components/form/SubmitButton.tsx'
-import {useCallback, useEffect, useState} from 'react'
+import {useCallback, useState} from 'react'
 import {useSnackbar} from 'notistack'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateAdministrationConfigGlobal} from '@authorization/privileges.ts'
@@ -18,6 +18,7 @@ type GlobalConfigForm = {
 
 const ClubsPage = () => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
     const {enqueueSnackbar} = useSnackbar()
     const [submitting, setSubmitting] = useState(false)
     const user = useUser()
@@ -32,18 +33,18 @@ const ClubsPage = () => {
         },
     })
 
-    useEffect(() => {
-        getGlobalConfigurations()
-            .then(response => {
+    useFetch(signal => getCreateClubOnRegistrationAllowed({signal}), {
+        onResponse: ({error, data}) => {
+            if (error) {
+                feedback.error(t('common.error.unexpected'))
+            } else if (data) {
                 formContext.reset({
-                    allowClubCreationOnRegistration:
-                        response.data?.allowClubCreationOnRegistration ?? false,
+                    allowClubCreationOnRegistration: data,
                 })
-            })
-            .catch(error => {
-                console.error('Failed to load global configurations', error)
-            })
-    }, [])
+            }
+        },
+        deps: [],
+    })
 
     const onSubmit = useCallback(
         (data: GlobalConfigForm) => {

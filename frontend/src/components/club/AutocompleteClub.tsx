@@ -11,6 +11,7 @@ export const AutocompleteClub = (props: {
     label: string
     required?: boolean
     disabled?: boolean
+    freeSolo?: boolean
     onChange?: () => void
 }) => {
     const {t} = useTranslation()
@@ -84,7 +85,7 @@ export const AutocompleteClub = (props: {
                 size: 'small',
                 autoSelect: true,
                 // @ts-ignore
-                freeSolo: true,
+                freeSolo: props.freeSolo ?? true,
                 filterSelectedOptions: true,
                 disabled: props.disabled,
             }}

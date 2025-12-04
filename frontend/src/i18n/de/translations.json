@@ -270,6 +270,10 @@
     "clubs": "Vereine",
     "name": "Vereinsname",
     "import": "Vereine importieren",
+    "error": {
+      "nameAlreadyExists": "Ein Verein mit diesem Namen existiert bereits",
+      "mustSelectExistingClub": "Bitte wählen Sie einen bestehenden Verein aus der Liste aus"
+    },
     "settings": {
       "title": "Vereinseinstellungen",
       "allowClubCreationOnRegistration": "Vereinserstellung bei Anmeldung erlauben",
@@ -1177,6 +1181,7 @@
     },
     "firstname": "Vorname",
     "lastname": "Nachname",
+    "birthYear": "Geburtsjahr",
     "password": {
       "password": "Passwort",
       "confirm": "Passwort bestätigen",
@@ -1233,6 +1238,13 @@
     "registration": {
       "register": "Registrieren",
       "pendingRegistrations": "Ausstehende Registrierungen",
+      "registrationType": "Registrierungstyp",
+      "asParticipant": "Als Teilnehmer:in",
+      "asChallengeManager": "Als Challengemanager:in",
+      "error": {
+        "generic": "Beim Registrieren ist ein Fehler aufgetreten",
+        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus"
+      },
       "email": {
         "emailSent": {
           "header": "Bestätigen Sie Ihre E-Mail-Adresse",
@@ -1253,7 +1265,6 @@
           }
         }
       },
-      "error": "Bei der Registrierung ist ein Fehler aufgetreten",
       "login": {
         "message": "Sie besitzen bereits ein Konto?",
         "link": "Hier anmelden"

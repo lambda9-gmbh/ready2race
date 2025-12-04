@@ -176,7 +176,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              $ref: '#/components/schemas/AppUserRegisterRequest'
       responses:
         204:
           description: Registration initiated
@@ -2997,6 +2997,29 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/selfRegister:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: participantSelfRegister
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRegisterRequest'
+      responses:
+        200:
+          description: Participant successfully self-registered
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -6610,6 +6633,7 @@ components:
         - PLACES_UNCONTINUOUS
         - LIST_DATA_INCOMPLETE
         - RESULT_NOT_FAILED_AND_NO_DATA
+        - CLUB_NAME_ALREADY_EXISTS
 
     Gender:
       type: string
@@ -7063,20 +7087,19 @@ components:
         assignedEmail:
           $ref: '#/components/schemas/AssignedEmailDto'
 
-    RegisterRequest:
+    AppUserRegisterRequest:
       type: object
       required:
+        - email
         - password
         - firstname
         - lastname
-        - isParticipant
-        - isChallengeManager
         - language
         - callbackUrl
+        - registerToSingleCompetitions
       properties:
         email:
           type: string
-          nullable: true
         password:
           type: string
         firstname:
@@ -7086,26 +7109,21 @@ components:
         clubId:
           type: string
           format: uuid
-          nullable: true
         clubname:
           type: string
-          nullable: true
-        isParticipant:
-          type: boolean
-        isChallengeManager:
-          type: boolean
-        eventId:
-          type: string
-          format: uuid
-          nullable: true
-        birthYear:
-          type: integer
-          nullable: true
         language:
           $ref: '#/components/schemas/EmailLanguage'
         callbackUrl:
           type: string
           format: url
+        registerToSingleCompetitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantRegisterCompetitionRequest'
+        birthYear:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
 
     VerifyRegistrationRequest:
       type: object
@@ -9254,6 +9272,54 @@ components:
         - competitionId
         - optionalFees
         - isLate
+
+    ParticipantRegisterRequest:
+      type: object
+      required:
+        - firstname
+        - lastname
+        - gender
+        - birthYear
+        - clubId
+        - language
+        - registerToSingleCompetitions
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        gender:
+          $ref: '#/components/schemas/Gender'
+        birthYear:
+          type: integer
+        email:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        registerToSingleCompetitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantRegisterCompetitionRequest'
+
+    ParticipantRegisterCompetitionRequest:
+      type: object
+      required:
+        - competitionId
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        optionalFees:
+          type: array
+          items:
+            type: string
+            format: uuid
+        ratingCategory:
+          type: string
+          format: uuid
 
     DocumentType:
       type: string
