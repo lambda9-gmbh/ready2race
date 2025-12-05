@@ -21,6 +21,8 @@ object EventRegistrationRepo {
 
     private fun EventRegistrationsView.searchFields() = listOf(EVENT_NAME)
 
+    fun get(id: UUID) = EVENT_REGISTRATION.selectOne { ID.eq(id) }
+
     fun getView(id: UUID) = EVENT_REGISTRATIONS_VIEW.selectOne { ID.eq(id) }
 
     fun getClub(id: UUID) = EVENT_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }

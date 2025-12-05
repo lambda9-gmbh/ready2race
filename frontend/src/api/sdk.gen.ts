@@ -319,6 +319,12 @@ import type {
     GetRegistrationInvoicesData,
     GetRegistrationInvoicesError,
     GetRegistrationInvoicesResponse,
+    GetEventRegistrationDocumentsAcceptedData,
+    GetEventRegistrationDocumentsAcceptedError,
+    GetEventRegistrationDocumentsAcceptedResponse,
+    AcceptEventRegistrationDocumentsData,
+    AcceptEventRegistrationDocumentsError,
+    AcceptEventRegistrationDocumentsResponse,
     GetEventRegistrationTemplateData,
     GetEventRegistrationTemplateError,
     GetEventRegistrationTemplateResponse,
@@ -1964,6 +1970,32 @@ export const getRegistrationInvoices = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventRegistration/{eventRegistrationId}/invoices',
+    })
+}
+
+export const getEventRegistrationDocumentsAccepted = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventRegistrationDocumentsAcceptedData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventRegistrationDocumentsAcceptedResponse,
+        GetEventRegistrationDocumentsAcceptedError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/eventDocumentsAccepted',
+    })
+}
+
+export const acceptEventRegistrationDocuments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AcceptEventRegistrationDocumentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AcceptEventRegistrationDocumentsResponse,
+        AcceptEventRegistrationDocumentsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/acceptDocuments',
     })
 }
 

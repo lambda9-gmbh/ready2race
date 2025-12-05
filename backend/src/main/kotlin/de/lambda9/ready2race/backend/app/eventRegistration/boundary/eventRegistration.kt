@@ -55,6 +55,22 @@ fun Route.eventRegistration() {
                 }
             }
         }
+
+        get("/eventDocumentsAccepted") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.ReadRegistrationOwn)
+                val eventId = !pathParam("eventId", uuid)
+                EventRegistrationService.getEventDocumentsOfficiallyAccepted(eventId, user)
+            }
+        }
+
+        post("/acceptDocuments") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateRegistrationOwn)
+                val eventId = !pathParam("eventId", uuid)
+                EventRegistrationService.acceptEventDocuments(eventId, user)
+            }
+        }
     }
 
     get("/registrationTemplate") {
@@ -70,6 +86,7 @@ fun Route.eventRegistration() {
             val user = !authenticate(Privilege.CreateRegistrationOwn)
             val eventId = !pathParam("eventId", uuid)
             val payload = !receiveKIO(EventRegistrationUpsertDto.example)
+
             EventRegistrationService.upsertRegistrationForEvent(eventId, payload, user)
         }
     }

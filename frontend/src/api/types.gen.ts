@@ -929,6 +929,7 @@ export type EventRegistrationViewDto = {
     clubName: string
     competitionRegistrationCount: number
     participantCount: number
+    eventDocumentsOfficiallyAccepted: boolean
 }
 
 export type FeeDto = {
@@ -939,6 +940,7 @@ export type FeeDto = {
 
 export type FeeForCompetitionDto = {
     id: string
+    assignmentId: string
     name: string
     description?: string
     required: boolean
@@ -3658,6 +3660,32 @@ export type GetRegistrationInvoicesResponse = {
 }
 
 export type GetRegistrationInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetEventRegistrationDocumentsAcceptedData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventRegistrationDocumentsAcceptedResponse = boolean
+
+export type GetEventRegistrationDocumentsAcceptedError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type AcceptEventRegistrationDocumentsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type AcceptEventRegistrationDocumentsResponse = void
+
+export type AcceptEventRegistrationDocumentsError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
 
 export type GetEventRegistrationTemplateData = {
     path: {

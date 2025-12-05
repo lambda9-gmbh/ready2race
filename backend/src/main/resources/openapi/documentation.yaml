@@ -2874,6 +2874,51 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/eventRegistration/eventDocumentsAccepted:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventRegistrationDocumentsAccepted
+      responses:
+        200:
+          description: Checks if the event documents have been officially been accepted by a user of the club
+          content:
+            application/json:
+              schema:
+                type:
+                  boolean
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventRegistration/acceptDocuments:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: acceptEventRegistrationDocuments
+      responses:
+        204:
+          description: Accepts the event documents for an existing event registration
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/registrationTemplate:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7401,6 +7446,7 @@ components:
         - clubName
         - competitionRegistrationCount
         - participantCount
+        - eventDocumentsOfficiallyAccepted
       properties:
         id:
           type: string
@@ -7427,6 +7473,8 @@ components:
           type: number
         participantCount:
           type: number
+        eventDocumentsOfficiallyAccepted:
+          type: boolean
 
     CreateEventRequest:
       type: object
@@ -7642,11 +7690,15 @@ components:
       type: object
       required:
         - id
+        - assignmentId
         - name
         - required
         - amount
       properties:
         id:
+          type: string
+          format: uuid
+        assignmentId:
           type: string
           format: uuid
         name:
@@ -7825,6 +7877,7 @@ components:
         - isLate
         - updatedAt
         - createdAt
+        - eventDocumentsOfficiallyAccepted
       properties:
         id:
           type: string

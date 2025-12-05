@@ -176,7 +176,6 @@ fun Route.event() {
                 }
                 get {
                     call.respondComprehension {
-                        !authenticate()
                         val eventId = !pathParam("eventId", uuid)
 
                         RatingCategoryService.getRatingCategoriesForEvent(eventId)

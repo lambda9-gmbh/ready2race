@@ -13,6 +13,8 @@ sealed interface EventRegistrationError : ServiceError {
     data object RegistrationsNotFinalized : EventRegistrationError
     data object SelfRegistrationNotAllowed : EventRegistrationError
     data object SelfRegistrationOnlyForSingleCompetitions : EventRegistrationError
+    data object OnlyAvailableForClubUsers : EventRegistrationError
+    data object DocumentsAlreadyAccepted : EventRegistrationError
 
     data class InvalidRegistration(val msg: String) : EventRegistrationError
     data class UpsertParticipantNotFound(val id: UUID) : EventRegistrationError
@@ -124,6 +126,16 @@ sealed interface EventRegistrationError : ServiceError {
         SelfRegistrationOnlyForSingleCompetitions -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Self registration is only allowed for competitions with a team size of 1"
+        )
+
+        OnlyAvailableForClubUsers -> ApiError(
+            status = HttpStatusCode.Forbidden,
+            message = "This action is only available for users with a club id"
+        )
+
+        DocumentsAlreadyAccepted -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "The event documents have already been accepted"
         )
     }
 }

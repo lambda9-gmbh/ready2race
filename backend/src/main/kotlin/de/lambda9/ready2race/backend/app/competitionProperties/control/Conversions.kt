@@ -54,6 +54,7 @@ fun NamedParticipantForCompetitionPropertiesRecord.toDto(): App<Nothing, NamedPa
 fun FeeForCompetitionPropertiesRecord.toDto(): App<Nothing, FeeForCompetitionDto> = KIO.ok(
     FeeForCompetitionDto(
         id = id!!,
+        assignmentId = assignmentId!!,
         name = name!!,
         description = description,
         required = required!!,

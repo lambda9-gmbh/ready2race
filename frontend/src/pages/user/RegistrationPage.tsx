@@ -1,11 +1,13 @@
 import {Box, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {FormContainer, useForm} from 'react-hook-form-mui'
+import {CheckboxButtonGroup, FormContainer, useForm} from 'react-hook-form-mui'
+import {Controller} from 'react-hook-form'
 import {
     getClubs,
     getCompetitions,
     getCreateClubOnRegistrationAllowed,
     getPublicEvents,
+    getRatingCategoriesForEvent,
     participantSelfRegister,
     registerUser,
 } from 'api/sdk.gen.ts'
@@ -33,9 +35,16 @@ import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import FormInputMultiselect from '@components/form/input/FormInputMultiselect.tsx'
+import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
 import {AutocompleteOption} from '@utils/types.ts'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+
+type CompetitionRegistration = {
+    checked: boolean
+    competitionId: string
+    optionalFees: string[]
+    ratingCategory?: string
+}
 
 type Form = {
     clubname: string
@@ -45,7 +54,7 @@ type Form = {
     isParticipant: boolean
     isChallengeManager: boolean
     event: AutocompleteOption
-    competitions: string[]
+    competitions: CompetitionRegistration[]
     birthYear?: number
     gender?: Gender
     emailRequired: string
@@ -82,10 +91,12 @@ const RegistrationPage = () => {
     }
 
     const formContext = useForm<Form>({values: defaultValues})
+
     const watchIsParticipant = formContext.watch('isParticipant')
     const watchIsChallengeManager = formContext.watch('isChallengeManager')
     const watchEvent = formContext.watch('event')
     const watchClubname = formContext.watch('clubname')
+    const watchCompetitions = formContext.watch('competitions')
 
     const setCaptchaStart = ({start}: CaptchaDto) => {
         formContext.setValue('captcha', start)
@@ -139,7 +150,6 @@ const RegistrationPage = () => {
         deps: [],
     })
 
-    // Fetch competitions for the selected event
     // TODO: New endpoint that fetches only competitions that fit the defined data (gender and age fit)
     const {data: competitionsData} = useFetch(
         signal =>
@@ -148,15 +158,68 @@ const RegistrationPage = () => {
                 signal,
             }),
         {
-            onResponse: ({error}) => {
+            onResponse: ({error, data}) => {
                 if (error) {
-                    feedback.error(t('common.error.unexpected'))
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.competition.competitions'),
+                        }),
+                    )
+                } else if (data) {
+                    const initialCompetitions: CompetitionRegistration[] = data.data.map(
+                        competition => ({
+                            checked: false,
+                            competitionId: competition.id,
+                            optionalFees: [],
+                            ratingCategory: competition.properties.ratingCategoryRequired
+                                ? ''
+                                : 'none',
+                        }),
+                    )
+                    formContext.setValue('competitions', initialCompetitions)
                 }
             },
             preCondition: () => watchEvent !== null,
             deps: [watchEvent],
         },
     )
+
+    const {data: ratingCategories} = useFetch(
+        signal =>
+            getRatingCategoriesForEvent({
+                signal,
+                path: {eventId: watchEvent!.id},
+            }),
+        {
+            onResponse: ({error}) =>
+                error &&
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: t('configuration.ratingCategory.ratingCategories'),
+                    }),
+                ),
+            preCondition: () => watchEvent !== null,
+            deps: [watchEvent],
+        },
+    )
+
+    const ratingCategoryOptions = (ratingCategoryRequired: boolean) =>
+        (ratingCategories?.length ?? 0) > 0
+            ? [
+                  ...(ratingCategoryRequired
+                      ? []
+                      : [
+                            {
+                                id: 'none',
+                                label: t('common.form.select.none'),
+                            },
+                        ]),
+                  ...(ratingCategories?.map(dto => ({
+                      id: dto.ratingCategory.id,
+                      label: dto.ratingCategory.name,
+                  })) ?? []),
+              ]
+            : []
 
     // Update clubId when a club name is selected from the list
     useEffect(() => {
@@ -350,17 +413,79 @@ const RegistrationPage = () => {
                                     {watchEvent &&
                                         competitionsData &&
                                         competitionsData.data.length > 0 && (
-                                            <FormInputMultiselect
-                                                name="competitions"
-                                                label={t('event.competition.competitions')}
-                                                options={competitionsData.data.map(competition => ({
-                                                    id: competition.id,
-                                                    label: competition.properties.name,
-                                                }))}
-                                                showCheckbox
-                                                showChips
-                                                fullWidth
-                                            />
+                                            <Box>
+                                                <Typography variant="body2" sx={{mb: 2}}>
+                                                    {t('event.competition.competitions')}
+                                                </Typography>
+                                                <Stack spacing={3}>
+                                                    {competitionsData.data.map((competition, index) => {
+                                                        const competitionReg = watchCompetitions?.[index]
+                                                        const isChecked = competitionReg?.checked ?? false
+                                                        const optionalFees =
+                                                            competition.properties.fees?.filter(
+                                                                f => !f.required,
+                                                            ) ?? []
+
+                                                        return (
+                                                            <Box key={competition.id}>
+                                                                <Controller
+                                                                    name={`competitions.${index}.checked`}
+                                                                    control={formContext.control}
+                                                                    render={({field}) => (
+                                                                        <FormInputCheckbox
+                                                                            name={field.name}
+                                                                            label={
+                                                                                competition.properties
+                                                                                    .name
+                                                                            }
+                                                                            checked={field.value}
+                                                                            onChange={field.onChange}
+                                                                        />
+                                                                    )}
+                                                                />
+                                                                {isChecked && (
+                                                                    <Box sx={{ml: 4, mt: 2}}>
+                                                                        <Stack spacing={2}>
+                                                                            {(ratingCategories?.length ??
+                                                                                0) > 0 && (
+                                                                                <FormInputSelect
+                                                                                    name={`competitions.${index}.ratingCategory`}
+                                                                                    label={t(
+                                                                                        'event.competition.registration.ratingCategory',
+                                                                                    )}
+                                                                                    options={ratingCategoryOptions(
+                                                                                        competition
+                                                                                            .properties
+                                                                                            .ratingCategoryRequired,
+                                                                                    )}
+                                                                                    required={
+                                                                                        competition
+                                                                                            .properties
+                                                                                            .ratingCategoryRequired
+                                                                                    }
+                                                                                />
+                                                                            )}
+                                                                            {optionalFees.length > 0 && (
+                                                                                <CheckboxButtonGroup
+                                                                                    label={t(
+                                                                                        'event.registration.optionalFee',
+                                                                                    )}
+                                                                                    name={`competitions.${index}.optionalFees`}
+                                                                                    labelKey={'name'}
+                                                                                    options={
+                                                                                        optionalFees
+                                                                                    }
+                                                                                    row
+                                                                                />
+                                                                            )}
+                                                                        </Stack>
+                                                                    </Box>
+                                                                )}
+                                                            </Box>
+                                                        )
+                                                    })}
+                                                </Stack>
+                                            </Box>
                                         )}
                                 </>
                             )}
@@ -415,11 +540,12 @@ function mapFormToAppUserRegisterRequest(formData: Form): AppUserRegisterRequest
         language: languageMapping[i18nLanguage()],
         callbackUrl: location.origin + location.pathname + '/',
         registerToSingleCompetitions: formData.competitions
-            .filter(val => val !== undefined)
+            .filter(competition => competition.checked)
             .map(competition => ({
-                competitionId: competition,
-                optionalFees: [], // TODO
-                ratingCategory: undefined, // TODO
+                competitionId: competition.competitionId,
+                optionalFees: competition.optionalFees,
+                ratingCategory:
+                    competition.ratingCategory !== 'none' ? competition.ratingCategory : undefined,
             })),
         birthYear: formData.birthYear,
         gender: formData.gender,
@@ -436,11 +562,12 @@ function mapFormToParticipantRegisterRequest(formData: Form): ParticipantRegiste
         clubId: formData.clubId!,
         language: languageMapping[i18nLanguage()],
         registerToSingleCompetitions: formData.competitions
-            .filter(val => val !== undefined)
+            .filter(competition => competition.checked)
             .map(competition => ({
-                competitionId: competition,
-                optionalFees: [], // TODO
-                ratingCategory: undefined, // TODO
+                competitionId: competition.competitionId,
+                optionalFees: competition.optionalFees,
+                ratingCategory:
+                    competition.ratingCategory !== 'none' ? competition.ratingCategory : undefined,
             })),
     }
 }

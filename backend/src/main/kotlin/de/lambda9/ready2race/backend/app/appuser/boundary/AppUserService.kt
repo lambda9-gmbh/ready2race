@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationValidation
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
@@ -18,8 +19,6 @@ import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
-import de.lambda9.ready2race.backend.app.ratingcategory.control.EventRatingCategoryViewRepo
-import de.lambda9.ready2race.backend.app.ratingcategory.entity.AgeRestriction
 import de.lambda9.ready2race.backend.app.role.boundary.RoleService
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -28,6 +27,7 @@ import de.lambda9.ready2race.backend.database.CLUB_REPRESENTATIVE_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.security.PasswordUtilities
@@ -249,7 +249,7 @@ object AppUserService {
             .onNullFail { AppUserError.InvitationNotFound }
 
         val record = !invitation.toAppUser(request.password)
-        val id = !createUser(record)
+        val id = !createUser(record, listOf(USER_ROLE))
 
         val roles = invitation.roles!!.map { it!!.id!! }
 
@@ -301,28 +301,16 @@ object AppUserService {
             }
             val eventId = competitions.first().event!!
 
-            // Check that all competitions are single competitions
-            val namedParticipants = competitions.flatMap { it.namedParticipants!!.filterNotNull() }
-            !KIO.failOn(
-                namedParticipants.size != competitions.size
-                    || namedParticipants.map { it.countMales!! + it.countFemales!! + it.countNonBinary!! + it.countMixed!! }
-                    .any { it > 1 }) {
-                EventRegistrationError.SelfRegistrationOnlyForSingleCompetitions
-            }
-            val openForRegistrationType = !EventService.getOpenForRegistrationType(eventId).failIf({
+            // Validate single competitions
+            !CompetitionRegistrationValidation.validateSingleCompetitions(competitions)
+
+            !EventService.getOpenForRegistrationType(eventId).failIf({
                 it == OpenForRegistrationType.CLOSED
             }) { EventRegistrationError.RegistrationClosed }
 
-            val ratingCategoryAgeRestrictions = !EventRatingCategoryViewRepo.get(eventId).orDie()
-                .map { list ->
-                    list.associate {
-                        it.ratingCategory!! to AgeRestriction(
-                            from = it.yearRestrictionFrom,
-                            to = it.yearRestrictionTo
-                        )
-                    }
-                }
-            val ratingCategoryExistsForEvent = ratingCategoryAgeRestrictions.isNotEmpty()
+            // Get rating category restrictions
+            val (ratingCategoryAgeRestrictions, ratingCategoryExistsForEvent) =
+                !CompetitionRegistrationValidation.getRatingCategoryRestrictions(eventId)
 
             // Competition registration
             val competitionRegistrationRecords = request.registerToSingleCompetitions.map {
@@ -331,7 +319,6 @@ object AppUserService {
                     appUserRegistration = id,
                     competitionId = it.competitionId,
                     ratingcategory = it.ratingCategory,
-                    lateRegistration = openForRegistrationType == OpenForRegistrationType.LATE
                 )
             }
             !AppUserRegistrationCompetitionRegistrationRepo.create(competitionRegistrationRecords).orDie()
@@ -345,32 +332,27 @@ object AppUserService {
                         competitionRegistrationRecords.first { it.competitionId == competitionRegistration.competitionId }
 
 
-                    !KIO.failOn(ratingCategoryExistsForEvent && competition.ratingCategoryRequired!! && competitionRegistration.ratingCategory == null) {
-                        EventRegistrationError.RatingCategoryMissing(
-                            teamName = "${request.firstname} ${request.lastname}",
-                            competitionName = competition.name!!
-                        )
-                    }
+                    val participantName = "${request.firstname} ${request.lastname}"
+
+                    // Validate rating category required
+                    !CompetitionRegistrationValidation.validateRatingCategoryRequired(
+                        ratingCategoryExistsForEvent = ratingCategoryExistsForEvent,
+                        competitionRatingCategoryRequired = competition.ratingCategoryRequired!!,
+                        providedRatingCategory = competitionRegistration.ratingCategory,
+                        teamName = participantName,
+                        competitionName = competition.name!!
+                    )
+
                     // Validate age if rating category is provided
                     competitionRegistration.ratingCategory?.let { ratingCategoryId ->
-                        val ageRestriction = !KIO.failOnNull(ratingCategoryAgeRestrictions[ratingCategoryId]) {
-                            EventRegistrationError.RatingCategoryNotFound(
-                                id = ratingCategoryId,
-                                competitionName = competition.name!!
-                            )
-                        }
-
-                        val isValid =
-                            ((ageRestriction.from != null && ageRestriction.from <= birthYear) || ageRestriction.from == null) &&
-                                ((ageRestriction.to != null && ageRestriction.to >= birthYear) || ageRestriction.to == null)
-
-                        !KIO.failOn(!isValid) {
-                            EventRegistrationError.AgeRequirementNotMet(
-                                participantName = "${request.firstname} ${request.lastname}",
-                                competitionName = competition.name!!,
-                                teamName = null
-                            )
-                        }
+                        !CompetitionRegistrationValidation.validateAgeRestriction(
+                            birthYear = birthYear,
+                            ratingCategoryId = ratingCategoryId,
+                            ratingCategoryRestrictions = ratingCategoryAgeRestrictions,
+                            participantName = participantName,
+                            teamName = null,
+                            competitionName = competition.name!!
+                        )
                     }
 
                     // Optional fees
@@ -380,12 +362,11 @@ object AppUserService {
 
                         val feeRecords = !competitionRegistration.optionalFees!!.traverse { registrationFee ->
                             KIO.comprehension {
-                                !KIO.failOn(!optionalCompetitionFees.contains(registrationFee)) {
-                                    EventRegistrationError.FeeNotFound(
-                                        id = registrationFee,
-                                        competitionName = competition.name!!
-                                    )
-                                }
+                                !CompetitionRegistrationValidation.validateOptionalFee(
+                                    feeId = registrationFee,
+                                    competitionFees = optionalCompetitionFees,
+                                    competitionName = competition.name!!
+                                )
                                 KIO.ok(
                                     AppUserRegistrationCompetitionRegistrationFeeRecord(
                                         appUserRegistrationCompetitionRegistration = competitionRegRecord.id,
@@ -435,24 +416,41 @@ object AppUserService {
 
         val registration = !AppUserRegistrationRepo.consume(request.token).orDie()
             .onNullFail { AppUserError.RegistrationNotFound }
-
-        val clubId = if (registration.clubname != null) {
-            !ClubRepo.create(
+        val now = LocalDateTime.now()
+        val userId = if (registration.clubname != null) {
+            val clubId = !ClubRepo.create(
                 ClubRecord(
                     UUID.randomUUID(),
                     registration.clubname!!,
-                    LocalDateTime.now(),
+                    now,
                     SYSTEM_USER,
-                    LocalDateTime.now(),
+                    now,
                     SYSTEM_USER
                 )
             ).orDie()
+            val record = !registration.toAppUser(clubId)
+            !createUser(record, listOf(USER_ROLE, CLUB_REPRESENTATIVE_ROLE))
         } else {
-            null
+            val clubId = registration.clubId!!
+
+            val record = !registration.toAppUser(clubId)
+            val userId = !createUser(record, listOf(USER_ROLE))
+
+            !AppUserClubRepresentativeApprovalRepo.create(
+                AppUserClubRepresentativeApprovalRecord(
+                    appUser = userId,
+                    club = clubId,
+                    approved = false,
+                    createdAt = now,
+                    updatedAt = now,
+                    updatedBy = userId
+                )
+            ).orDie()
+
+            userId
         }
 
-        val record = !registration.toAppUser(clubId)
-        val userId = !createUser(record)
+        
 
         KIO.ok(
             ApiResponse.Created(userId)
@@ -512,24 +510,20 @@ object AppUserService {
 
     private fun createUser(
         record: AppUserRecord,
+        roles: List<UUID>
     ): App<Nothing, UUID> = KIO.comprehension {
         val userId = !AppUserRepo.create(record).orDie()
 
-        !AppUserHasRoleRepo.create(
+        val appUserHasRoleRecords = roles.map {
             AppUserHasRoleRecord(
                 appUser = userId,
-                role = USER_ROLE,
+                role = it,
             )
-        ).orDie()
-
-        if (record.club != null) {
-            !AppUserHasRoleRepo.create(
-                AppUserHasRoleRecord(
-                    appUser = userId,
-                    role = CLUB_REPRESENTATIVE_ROLE,
-                )
-            ).orDie()
         }
+
+        !AppUserHasRoleRepo.create(
+            appUserHasRoleRecords
+        ).orDie()
 
         KIO.ok(userId)
     }

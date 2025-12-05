@@ -2,34 +2,26 @@ package de.lambda9.ready2race.backend.app.competitionRegistration.control
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationDto
-import de.lambda9.ready2race.backend.app.competitionRegistration.entity.*
-import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeCompetitionInfoDto
-import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeNamedParticipantInfoDto
-import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeParticipantInfoDto
-import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeResultInfoDto
-import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeTeamInfoDto
+import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationDto
+import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationFeeDto
+import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationNamedParticipantDto
+import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
+import de.lambda9.ready2race.backend.app.eventParticipant.entity.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionRegistrationTeam
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.select
-import de.lambda9.ready2race.backend.database.selectOne
-import de.lambda9.ready2race.backend.database.update
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.impl.DSL
 import java.util.*
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamRecord
 
 object CompetitionRegistrationRepo {
 
@@ -149,13 +141,20 @@ object CompetitionRegistrationRepo {
             .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
             .join(COMPETITION).on(COMPETITION.ID.eq(COMPETITION_REGISTRATION.COMPETITION))
             .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-            .join(COMPETITION_PROPERTIES_CHALLENGE_CONFIG).on(COMPETITION_PROPERTIES_CHALLENGE_CONFIG.COMPETITION_PROPERTIES.eq(COMPETITION_PROPERTIES.ID))
-            .leftJoin(COMPETITION_MATCH_TEAM).on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
-            .leftJoin(COMPETITION_MATCH_TEAM_DOCUMENT).on(COMPETITION_MATCH_TEAM_DOCUMENT.COMPETITION_MATCH_TEAM_ID.eq(COMPETITION_MATCH_TEAM.ID))
+            .join(COMPETITION_PROPERTIES_CHALLENGE_CONFIG)
+            .on(COMPETITION_PROPERTIES_CHALLENGE_CONFIG.COMPETITION_PROPERTIES.eq(COMPETITION_PROPERTIES.ID))
+            .leftJoin(COMPETITION_MATCH_TEAM)
+            .on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            .leftJoin(COMPETITION_MATCH_TEAM_DOCUMENT)
+            .on(COMPETITION_MATCH_TEAM_DOCUMENT.COMPETITION_MATCH_TEAM_ID.eq(COMPETITION_MATCH_TEAM.ID))
             .where(
                 DSL.exists(
                     DSL.selectOne().from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
-                        .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+                        .where(
+                            COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(
+                                COMPETITION_REGISTRATION.ID
+                            )
+                        )
                         .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(participantId))
                 )
             )

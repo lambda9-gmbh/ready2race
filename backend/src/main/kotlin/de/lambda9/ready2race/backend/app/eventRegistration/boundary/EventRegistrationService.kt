@@ -6,10 +6,10 @@ import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationValidation
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationsWithoutTeamNumberDto
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
@@ -121,6 +121,8 @@ object EventRegistrationService {
             it == OpenForRegistrationType.CLOSED || user.club == null
         }) { EventRegistrationError.RegistrationClosed }
 
+        val clubId: UUID = user.club!!
+
         val event = !EventRepo.get(eventId).orDie().onNullDie("Existing already checked.")
 
         val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
@@ -137,17 +139,21 @@ object EventRegistrationService {
 
         val now = LocalDateTime.now()
 
-        val (persistedRegistrationId, isUpdate) = !EventRegistrationRepo.findByEventAndClub(eventId, user.club!!)
+        val documentsAccepted = user.club != null
+
+        val (persistedRegistrationId, isUpdate) = !EventRegistrationRepo.findByEventAndClub(eventId, clubId!!)
             .map { it?.let { it.id to true } }.orDie() ?: (!EventRegistrationRepo.create(
             EventRegistrationRecord(
                 UUID.randomUUID(),
                 eventId,
-                user.club!!,
+                clubId,
                 registrationDto.message,
                 now,
                 user.id!!,
                 now,
-                user.id!!
+                user.id!!,
+                eventDocumentsOfficiallyAcceptedAt = if (documentsAccepted) now else null,
+                eventDocumentsOfficiallyAcceptedBy = if (documentsAccepted) user.id!! else null,
             )
         ).orDie() to false)
 
@@ -160,7 +166,7 @@ object EventRegistrationService {
 
             !CompetitionRegistrationRepo.deleteForEventRegistrationUpdate(persistedRegistrationId, type).orDie()
 
-            val clubRegistrations = !CompetitionRegistrationRepo.getByClub(user.club!!).orDie()
+            val clubRegistrations = !CompetitionRegistrationRepo.getByClub(clubId).orDie()
             val grouped = clubRegistrations.groupBy { it.competition }
 
             val compIdsWithNewRegistrations = registrationDto.participants.flatMap {
@@ -202,7 +208,7 @@ object EventRegistrationService {
                 val result = !handleSingleCompetitionRegistration(
                     pDto,
                     user.id!!,
-                    user.club!!,
+                    clubId,
                     template,
                     persistedRegistrationId,
                     now,
@@ -241,7 +247,7 @@ object EventRegistrationService {
                             template.toContent(
                                 EmailTemplatePlaceholder.RECIPIENT to pDto.firstname + " " + pDto.lastname,
                                 EmailTemplatePlaceholder.EVENT to event.name,
-                                EmailTemplatePlaceholder.LINK to registrationDto.callbackUrl!! + newAccessToken,
+                                EmailTemplatePlaceholder.LINK to registrationDto.callbackUrl!! + newAccessToken, // Calback url is not null due to dto validation
                             )
                         }
 
@@ -262,7 +268,7 @@ object EventRegistrationService {
                 template,
                 competitionRegistrationDto,
                 persistedRegistrationId,
-                user.club!!,
+                clubId,
                 now,
                 user.id!!,
                 userInfoMap,
@@ -273,8 +279,8 @@ object EventRegistrationService {
             )
         }
 
-        val clubName = !ClubRepo.getName(user.club!!).orDie()
-        val participants = !ParticipantForEventRepo.getByClub(user.club!!).orDie()
+        val clubName = !ClubRepo.getName(clubId).orDie()
+        val participants = !ParticipantForEventRepo.getByClub(clubId).orDie()
 
         //TODO: @refactor: move to Repo, !don't! query for ALL clubs
         val competitions = (!Jooq.query {
@@ -288,7 +294,7 @@ object EventRegistrationService {
         }.trimMargin()
 
         val summaryCompetitions = competitions.joinToString("\n") { c ->
-            val teams = c.teams!!.filter { it!!.clubId == user.club }
+            val teams = c.teams!!.filter { it!!.clubId == clubId }
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
                 |        ${
@@ -709,18 +715,15 @@ object EventRegistrationService {
         val competitions =
             !CompetitionRepo.getByIds(request.registerToSingleCompetitions.map { it.competitionId }).orDie()
 
-        !KIO.failOn(request.registerToSingleCompetitions.size != competitions.size || competitions.any { it.event != eventId }) {
-            CompetitionError.CompetitionNotFound
-        }
+        // Validate competitions exist and belong to event
+        !CompetitionRegistrationValidation.validateCompetitionConsistency(
+            expectedCount = request.registerToSingleCompetitions.size,
+            actualCompetitions = competitions,
+            eventId = eventId
+        )
 
-        // Check that all competitions are single competitions
-        val namedParticipants = competitions.flatMap { it.namedParticipants!!.filterNotNull() }
-        !KIO.failOn(
-            namedParticipants.size != competitions.size
-                || namedParticipants.map { it.countMales!! + it.countFemales!! + it.countNonBinary!! + it.countMixed!! }
-                .any { it > 1 }) {
-            EventRegistrationError.SelfRegistrationOnlyForSingleCompetitions
-        }
+        // Validate single competitions
+        !CompetitionRegistrationValidation.validateSingleCompetitions(competitions)
 
         val event = !EventRepo.get(eventId).orDie().onNullDie("Competition should reference the event")
 
@@ -732,17 +735,9 @@ object EventRegistrationService {
             it == OpenForRegistrationType.CLOSED
         }) { EventRegistrationError.RegistrationClosed }
 
-
-        val ratingCategoryAgeRestrictions = !EventRatingCategoryViewRepo.get(eventId).orDie()
-            .map { list ->
-                list.associate {
-                    it.ratingCategory!! to AgeRestriction(
-                        from = it.yearRestrictionFrom,
-                        to = it.yearRestrictionTo
-                    )
-                }
-            }
-        val ratingCategoryExistsForEvent = ratingCategoryAgeRestrictions.isNotEmpty()
+        // Get rating category restrictions
+        val (ratingCategoryAgeRestrictions, ratingCategoryExistsForEvent) =
+            !CompetitionRegistrationValidation.getRatingCategoryRestrictions(eventId)
 
         val now = LocalDateTime.now()
 
@@ -760,7 +755,9 @@ object EventRegistrationService {
                     createdAt = now,
                     createdBy = null,
                     updatedAt = now,
-                    updatedBy = null
+                    updatedBy = null,
+                    eventDocumentsOfficiallyAcceptedAt = null,
+                    eventDocumentsOfficiallyAcceptedBy = null,
                 )
             ).orDie()
         } else eventRegistration.id!!
@@ -789,33 +786,27 @@ object EventRegistrationService {
 
                 val competition = competitions.first { it.id == competitionRegistration.competitionId }
 
+                val participantName = "${request.firstname} ${request.lastname}"
 
-                !KIO.failOn(ratingCategoryExistsForEvent && competition.ratingCategoryRequired!! && competitionRegistration.ratingCategory == null) {
-                    EventRegistrationError.RatingCategoryMissing(
-                        teamName = "${request.firstname} ${request.lastname}",
-                        competitionName = competition.name!!
-                    )
-                }
+                // Validate rating category required
+                !CompetitionRegistrationValidation.validateRatingCategoryRequired(
+                    ratingCategoryExistsForEvent = ratingCategoryExistsForEvent,
+                    competitionRatingCategoryRequired = competition.ratingCategoryRequired!!,
+                    providedRatingCategory = competitionRegistration.ratingCategory,
+                    teamName = participantName,
+                    competitionName = competition.name!!
+                )
+
                 // Validate age if rating category is provided
                 competitionRegistration.ratingCategory?.let { ratingCategoryId ->
-                    val ageRestriction = !KIO.failOnNull(ratingCategoryAgeRestrictions[ratingCategoryId]) {
-                        EventRegistrationError.RatingCategoryNotFound(
-                            id = ratingCategoryId,
-                            competitionName = competition.name!!
-                        )
-                    }
-
-                    val isValid =
-                        ((ageRestriction.from != null && ageRestriction.from <= request.birthYear) || ageRestriction.from == null) &&
-                            ((ageRestriction.to != null && ageRestriction.to >= request.birthYear) || ageRestriction.to == null)
-
-                    !KIO.failOn(!isValid) {
-                        EventRegistrationError.AgeRequirementNotMet(
-                            participantName = "${request.firstname} ${request.lastname}",
-                            competitionName = competition.name!!,
-                            teamName = null
-                        )
-                    }
+                    !CompetitionRegistrationValidation.validateAgeRestriction(
+                        birthYear = request.birthYear,
+                        ratingCategoryId = ratingCategoryId,
+                        ratingCategoryRestrictions = ratingCategoryAgeRestrictions,
+                        participantName = participantName,
+                        teamName = null,
+                        competitionName = competition.name!!
+                    )
                 }
 
                 val existingCount =
@@ -873,12 +864,11 @@ object EventRegistrationService {
                 val optionalCompetitionFees = competition.fees!!.filter { it?.required == false }.map { it!!.id!! }
                 competitionRegistration.optionalFees?.traverse { registrationFee ->
                     KIO.comprehension {
-                        !KIO.failOn(!optionalCompetitionFees.contains(registrationFee)) {
-                            EventRegistrationError.FeeNotFound(
-                                id = registrationFee,
-                                competitionName = competition.name!!
-                            )
-                        }
+                        !CompetitionRegistrationValidation.validateOptionalFee(
+                            feeId = registrationFee,
+                            competitionFees = optionalCompetitionFees,
+                            competitionName = competition.name!!
+                        )
                         CompetitionRegistrationOptionalFeeRepo.create(
                             CompetitionRegistrationOptionalFeeRecord(
                                 competitionRegistrationId,
@@ -910,6 +900,46 @@ object EventRegistrationService {
         ) { AuthError.PrivilegeMissing }
 
         record.toDto().map { ApiResponse.Dto(it) }
+    }
+
+    fun getEventDocumentsOfficiallyAccepted(
+        eventId: UUID,
+        user: AppUserWithPrivilegesRecord,
+    ): App<ServiceError, ApiResponse.Dto<Boolean>> = KIO.comprehension {
+        val clubId = !KIO.failOnNull(user.club) {
+            EventRegistrationError.OnlyAvailableForClubUsers
+        }
+        val record = !EventRegistrationRepo.getByEventAndClub(eventId, clubId).orDie()
+
+        ok(ApiResponse.Dto(record?.eventDocumentsOfficiallyAcceptedAt != null))
+    }
+
+    fun acceptEventDocuments(
+        eventId: UUID,
+        user: AppUserWithPrivilegesRecord,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        val clubId = !KIO.failOnNull(user.club) {
+            EventRegistrationError.OnlyAvailableForClubUsers
+        }
+
+        val eventReg = !EventRegistrationRepo.getByEventAndClub(eventId, clubId).orDie()
+            .onNullFail { EventRegistrationError.NotFound }
+
+        !KIO.failOn(eventReg.clubId != clubId) {
+            EventRegistrationError.NotFound
+        }
+        !KIO.failOn(eventReg.eventDocumentsOfficiallyAcceptedAt != null) {
+            EventRegistrationError.DocumentsAlreadyAccepted
+        }
+
+        !EventRegistrationRepo.update(eventReg.id!!) {
+            eventDocumentsOfficiallyAcceptedAt = LocalDateTime.now()
+            eventDocumentsOfficiallyAcceptedBy = user.id
+            updatedAt = LocalDateTime.now()
+            updatedBy = user.id
+        }.orDie()
+
+        noData
     }
 
     fun deleteRegistration(

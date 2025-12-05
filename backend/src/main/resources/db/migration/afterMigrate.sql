@@ -172,6 +172,7 @@ select cphf.competition_properties,
        cphf.required,
        cphf.amount,
        cphf.late_amount,
+       cphf.id as assignment_id,
        f.id,
        f.name,
        f.description
@@ -560,7 +561,8 @@ select er.id,
        c.id                             as club_id,
        c.name                           as club_name,
        count(distinct cr.id)            as competition_registration_count,
-       count(distinct crnp.participant) as participant_count
+       count(distinct crnp.participant) as participant_count,
+       er.event_documents_officially_accepted_at
 from event_registration er
          left join event e on er.event = e.id
          left join club c on er.club = c.id
@@ -751,7 +753,7 @@ select cmt.id,
        cmt.start_number,
        cmt.place,
        cmt.places_calculated,
-       tc as timecode,
+       tc                                                                      as timecode,
        cmt.competition_registration,
        cmt.out,
        cmt.failed,

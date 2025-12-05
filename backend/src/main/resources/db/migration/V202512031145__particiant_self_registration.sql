@@ -15,10 +15,9 @@ values (true, true, now(), null);
 create table app_user_registration_competition_registration
 (
     id                    uuid primary key,
-    app_user_registration uuid    not null references app_user_registration,
-    competition_id        uuid    not null references competition,
-    ratingCategory        uuid references rating_category,
-    late_registration     boolean not null
+    app_user_registration uuid not null references app_user_registration,
+    competition_id        uuid not null references competition,
+    ratingCategory        uuid references rating_category
 );
 
 create index on app_user_registration_competition_registration (app_user_registration);
@@ -49,3 +48,8 @@ create table app_user_club_representative_approval
     updated_at timestamp not null,
     updated_by uuid      references app_user on delete set null
 );
+
+alter table event_registration
+    add column event_documents_officially_accepted_by uuid      null references app_user on delete set null default null,
+    add column event_documents_officially_accepted_at timestamp null                                        default null
+;
