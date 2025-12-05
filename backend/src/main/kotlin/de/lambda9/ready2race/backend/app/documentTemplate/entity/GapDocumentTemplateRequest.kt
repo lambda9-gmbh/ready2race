@@ -11,7 +11,7 @@ data class GapDocumentTemplateRequest(
 
     companion object {
         val example get() = GapDocumentTemplateRequest(
-            type = GapDocumentType.CERTIFICATE,
+            type = GapDocumentType.CERTIFICATE_OF_PARTICIPATION,
             placeholders = emptyList(),
         )
     }

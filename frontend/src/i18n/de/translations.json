@@ -202,6 +202,64 @@
       }
     }
   },
+  "gap": {
+    "document": {
+      "template": {
+        "loading": "Lade...",
+        "template": "Urkundenvorlage",
+        "templates": "Urkundenvorlagen",
+        "tableHint": "Werden verwendet, um Urkunden mit Platzhaltern für Teilnehmerdaten zu generieren.",
+        "name": "Dateiname",
+        "type": "Urkundentyp",
+        "types": {
+          "CERTIFICATE_OF_PARTICIPATION": "Teilnahmeurkunde"
+        },
+        "file": {
+          "choose": "PDF-Vorlage auswählen",
+          "change": "PDF-Vorlage ändern",
+          "missing": "Bitte wählen Sie ein PDF-Dokument aus."
+        },
+        "noPdfSelected": "Kein PDF ausgewählt. Bitte laden Sie eine PDF-Vorlage hoch.",
+        "page": "Seite {{page}}",
+        "placeholders": {
+          "title": "Platzhalter auf PDF platzieren"
+        },
+        "loadPdf": {
+          "error": "PDF konnte nicht geladen werden."
+        },
+        "preview": {
+          "title": "Urkundenvorlagenvorschau",
+          "error": "Vorschau konnte nicht geladen werden.",
+          "show": "Urkunde in der Vorschau anzeigen"
+        }
+      },
+      "placeholder": {
+        "available": "Verfügbare Platzhalter",
+        "addInstructions": "Klicken Sie auf einen Platzhaltertyp, um ihn der aktuellen Seite hinzuzufügen. Ziehen und skalieren Sie, um zu positionieren.",
+        "properties": "Platzhalter-Eigenschaften",
+        "type": {
+          "label": "Platzhaltertyp",
+          "FIRST_NAME": "Vorname",
+          "LAST_NAME": "Nachname",
+          "FULL_NAME": "Vollständiger Name",
+          "PLACE": "Platzierung",
+          "RESULT": "Ergebnis",
+          "EVENT_NAME": "Veranstaltungsname"
+        },
+        "name": "Eigene Bezeichnung (optional)",
+        "nameHelp": "Eine eigene Bezeichnung, um diesen Platzhalter zu identifizieren",
+        "textAlign": "Textausrichtung",
+        "align": {
+          "LEFT": "Links",
+          "CENTER": "Zentriert",
+          "RIGHT": "Rechts"
+        },
+        "page": "Seite",
+        "position": "Position",
+        "size": "Größe"
+      }
+    }
+  },
   "decimal": {
     "point": ","
   },

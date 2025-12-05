@@ -440,6 +440,9 @@ import type {
     DeleteGapDocumentTemplateData,
     DeleteGapDocumentTemplateError,
     DeleteGapDocumentTemplateResponse,
+    DownloadGapDocumentTemplateOriginalData,
+    DownloadGapDocumentTemplateOriginalError,
+    DownloadGapDocumentTemplateOriginalResponse,
     DownloadGapDocumentTemplateSampleData,
     DownloadGapDocumentTemplateSampleError,
     DownloadGapDocumentTemplateSampleResponse,
@@ -2494,6 +2497,19 @@ export const deleteGapDocumentTemplate = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).delete<
         DeleteGapDocumentTemplateResponse,
         DeleteGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}',
+    })
+}
+
+export const downloadGapDocumentTemplateOriginal = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadGapDocumentTemplateOriginalData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadGapDocumentTemplateOriginalResponse,
+        DownloadGapDocumentTemplateOriginalError,
         ThrowOnError
     >({
         ...options,

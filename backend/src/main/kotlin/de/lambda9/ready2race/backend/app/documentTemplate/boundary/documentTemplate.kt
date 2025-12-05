@@ -92,15 +92,23 @@ fun Route.documentTemplate() {
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.UpdateEventGlobal)
-                    val id = !pathParam("documentTemplateId", uuid)
+                    val id = !pathParam("gapDocumentTemplateId", uuid)
                     GapDocumentTemplateService.deleteTemplate(id)
+                }
+            }
+
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("gapDocumentTemplateId", uuid)
+                    GapDocumentTemplateService.download(id)
                 }
             }
 
             get("/preview") {
                 call.respondComprehension {
                     !authenticate(Privilege.ReadEventGlobal)
-                    val id = !pathParam("documentTemplateId", uuid)
+                    val id = !pathParam("gapDocumentTemplateId", uuid)
                     GapDocumentTemplateService.getPreview(id)
                 }
             }

@@ -4272,6 +4272,16 @@ export type DeleteGapDocumentTemplateResponse = void
 
 export type DeleteGapDocumentTemplateError = BadRequestError | ApiError
 
+export type DownloadGapDocumentTemplateOriginalData = {
+    path: {
+        gapDocumentTemplateId: string
+    }
+}
+
+export type DownloadGapDocumentTemplateOriginalResponse = Blob | File
+
+export type DownloadGapDocumentTemplateOriginalError = BadRequestError | ApiError
+
 export type DownloadGapDocumentTemplateSampleData = {
     path: {
         gapDocumentTemplateId: string

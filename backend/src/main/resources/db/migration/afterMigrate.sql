@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists gap_document_template_view;
 drop view if exists event_rating_category_view;
 drop view if exists challenge_result_participant_view;
 drop view if exists challenge_result_team_view;

@@ -87,6 +87,20 @@ object GapDocumentTemplateService {
         GapDocumentTemplateRepo.delete(id).orDie().failIf({ it < 1}) { GapDocumentTemplateError.NotFound }
             .noDataResponse()
 
+    fun download(
+        id: UUID,
+    ): App<GapDocumentTemplateError, ApiResponse.File> = KIO.comprehension {
+        val bytes = !GapDocumentTemplateDataRepo.getData(id).orDie().onNullFail { GapDocumentTemplateError.NotFound }
+        val template = !GapDocumentTemplateRepo.get(id).orDie().onNullDie("foreign key constraint")
+
+        KIO.ok(
+            ApiResponse.File(
+                name = template.name!!,
+                bytes = bytes,
+            )
+        )
+    }
+
     fun getPreview(
         id: UUID
     ): App<GapDocumentTemplateError, ApiResponse.File> = KIO.comprehension {
@@ -99,6 +113,7 @@ object GapDocumentTemplateService {
         when (type) {
             GapDocumentType.CERTIFICATE_OF_PARTICIPATION -> CertificateService.participantForEvent(
                 additions = template.placeholders!!.mapNotNull {
+                    println("1 placeholder found")
                     val type =
                         try {
                             GapDocumentPlaceholderType.valueOf(it!!.type)

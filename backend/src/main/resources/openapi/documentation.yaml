@@ -3972,6 +3972,21 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
+    get:
+      operationId: downloadGapDocumentTemplateOriginal
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /gapDocumentTemplate/{gapDocumentTemplateId}/preview:
     parameters:
       - in: path

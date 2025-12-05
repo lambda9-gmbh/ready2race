@@ -202,6 +202,64 @@
       }
     }
   },
+  "gap": {
+    "document": {
+      "template": {
+        "loading": "Loading...",
+        "template": "Certificate template",
+        "templates": "Certificate templates",
+        "tableHint": "Used to generate certificates with placeholders for participant data.",
+        "name": "Filename",
+        "type": "Certificate type",
+        "types": {
+          "CERTIFICATE_OF_PARTICIPATION": "Certificate of Participation"
+        },
+        "file": {
+          "choose": "Choose PDF template",
+          "change": "Change PDF template",
+          "missing": "Please choose a PDF document."
+        },
+        "noPdfSelected": "No PDF selected. Please upload a PDF template.",
+        "page": "Page {{page}}",
+        "placeholders": {
+          "title": "Place Placeholders on PDF"
+        },
+        "loadPdf": {
+          "error": "Cannot load PDF."
+        },
+        "preview": {
+          "title": "Certificate template preview",
+          "error": "Cannot load preview.",
+          "show": "Preview certificate"
+        }
+      },
+      "placeholder": {
+        "available": "Available Placeholders",
+        "addInstructions": "Click a placeholder type to add it to the current page. Drag and resize to position.",
+        "properties": "Placeholder Properties",
+        "type": {
+          "label": "Placeholder Type",
+          "FIRST_NAME": "First Name",
+          "LAST_NAME": "Last Name",
+          "FULL_NAME": "Full Name",
+          "PLACE": "Place",
+          "RESULT": "Result",
+          "EVENT_NAME": "Event Name"
+        },
+        "name": "Custom Label (optional)",
+        "nameHelp": "A custom name to help you identify this placeholder",
+        "textAlign": "Text Alignment",
+        "align": {
+          "LEFT": "Left",
+          "CENTER": "Center",
+          "RIGHT": "Right"
+        },
+        "page": "Page",
+        "position": "Position",
+        "size": "Size"
+      }
+    }
+  },
   "decimal": {
     "point": "."
   },
