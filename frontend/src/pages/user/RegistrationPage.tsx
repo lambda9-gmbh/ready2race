@@ -8,6 +8,7 @@ import {
     getCreateClubOnRegistrationAllowed,
     getPublicEvents,
     getRatingCategoriesForEvent,
+    getRegistrationDocuments,
     participantSelfRegister,
     registerUser,
 } from 'api/sdk.gen.ts'
@@ -38,6 +39,7 @@ import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
 import {AutocompleteOption} from '@utils/types.ts'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {EventRegistrationConfirmDocumentsForm} from '@components/eventRegistration/EventRegistrationConfirmDocumentsForm.tsx'
 
 type CompetitionRegistration = {
     checked: boolean
@@ -200,6 +202,25 @@ const RegistrationPage = () => {
                 ),
             preCondition: () => watchEvent !== null,
             deps: [watchEvent],
+        },
+    )
+
+    const {data: registrationDocuments} = useFetch(
+        signal =>
+            getRegistrationDocuments({
+                signal,
+                path: {eventId: watchEvent!.id},
+            }),
+        {
+            onResponse: ({error}) =>
+                error &&
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: t('event.document.documents'),
+                    }),
+                ),
+            preCondition: () => watchEvent !== null && watchIsParticipant,
+            deps: [watchEvent, watchIsParticipant],
         },
     )
 
@@ -486,6 +507,14 @@ const RegistrationPage = () => {
                                                     })}
                                                 </Stack>
                                             </Box>
+                                        )}
+                                    {watchEvent &&
+                                        registrationDocuments &&
+                                        registrationDocuments.length > 0 && (
+                                            <EventRegistrationConfirmDocumentsForm
+                                                eventId={watchEvent.id}
+                                                documentTypes={registrationDocuments}
+                                            />
                                         )}
                                 </>
                             )}

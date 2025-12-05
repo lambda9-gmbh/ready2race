@@ -10,6 +10,9 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationValidation
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
@@ -17,8 +20,10 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
+import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.role.boundary.RoleService
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -27,7 +32,7 @@ import de.lambda9.ready2race.backend.database.CLUB_REPRESENTATIVE_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
-import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
+import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.security.PasswordUtilities
@@ -412,13 +417,37 @@ object AppUserService {
 
     fun verifyRegistration(
         request: VerifyRegistrationRequest,
-    ): App<AppUserError, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
-        val registration = !AppUserRegistrationRepo.consume(request.token).orDie()
+        // Fetch
+        val registration = !AppUserRegistrationRepo.get(request.token).orDie()
             .onNullFail { AppUserError.RegistrationNotFound }
+        val competitionRegistrations =
+            !AppUserRegistrationCompetitionRegistrationRepo.getByAppUserRegistration(registration.id).orDie()
+        val feeRecsForRegistration = !AppUserRegistrationCompetitionRegistrationFeeRepo.getByCompetitionRegistrations(
+            competitionRegistrations.map { it.id }
+        ).orDie()
+        val competitionRegToFees =
+            competitionRegistrations.associate { compRec -> compRec.id to feeRecsForRegistration.filter { it.appUserRegistrationCompetitionRegistration == compRec.id } }
+
+
+        // Delete
+        !AppUserRegistrationCompetitionRegistrationFeeRepo.deleteByCompetitionRegistrations(
+            competitionRegistrations.map { it.id }
+        ).orDie()
+        !AppUserRegistrationCompetitionRegistrationRepo.deleteByAppUserRegistration(registration.id).orDie()
+        registration.delete()
+
         val now = LocalDateTime.now()
-        val userId = if (registration.clubname != null) {
-            val clubId = !ClubRepo.create(
+
+        val clubId = if (registration.clubname != null) {
+
+            val nameExists = !ClubRepo.nameExists(registration.clubname!!).orDie()
+            !KIO.failOn(nameExists) {
+                AppUserError.ClubNameAlreadyExists
+            }
+
+            !ClubRepo.create(
                 ClubRecord(
                     UUID.randomUUID(),
                     registration.clubname!!,
@@ -428,11 +457,14 @@ object AppUserService {
                     SYSTEM_USER
                 )
             ).orDie()
+        } else {
+            registration.clubId!!
+        }
+
+        val userId = if (registration.clubname != null) {
             val record = !registration.toAppUser(clubId)
             !createUser(record, listOf(USER_ROLE, CLUB_REPRESENTATIVE_ROLE))
         } else {
-            val clubId = registration.clubId!!
-
             val record = !registration.toAppUser(clubId)
             val userId = !createUser(record, listOf(USER_ROLE))
 
@@ -450,7 +482,116 @@ object AppUserService {
             userId
         }
 
-        
+        // Handle competition registrations if present
+
+        if (competitionRegistrations.isNotEmpty()) {
+            val participantId = !ParticipantRepo.create(
+                ParticipantRecord(
+                    id = UUID.randomUUID(),
+                    club = clubId,
+                    firstname = registration.firstname,
+                    lastname = registration.lastname,
+                    year = registration.year!!,
+                    gender = registration.gender!!,
+                    phone = null,
+                    external = false,
+                    externalClubName = null,
+                    createdAt = now,
+                    createdBy = userId,
+                    updatedAt = now,
+                    updatedBy = userId,
+                    email = registration.email,
+                )
+            ).orDie()
+
+            val competitions = !CompetitionRepo.getByIds(competitionRegistrations.map { it.competitionId }).orDie()
+            val eventId = competitions.first().event!!
+
+            val eventRegistration = !EventRegistrationRepo.getByEventAndClub(eventId, clubId).orDie()
+            val eventRegistrationId = if (eventRegistration == null) {
+                !EventRegistrationRepo.create(
+                    EventRegistrationRecord(
+                        id = UUID.randomUUID(),
+                        event = eventId,
+                        club = clubId,
+                        message = null,
+                        createdAt = now,
+                        createdBy = userId,
+                        updatedAt = now,
+                        updatedBy = userId,
+                        eventDocumentsOfficiallyAcceptedAt = now,
+                        eventDocumentsOfficiallyAcceptedBy = userId,
+                    )
+                ).orDie()
+            } else eventRegistration.id!!
+
+
+            val openForRegistrationType = !EventService.getOpenForRegistrationType(eventId).failIf({
+                it == OpenForRegistrationType.CLOSED
+            }) { EventRegistrationError.RegistrationClosed }
+
+            !competitionRegistrations.traverse { competitionRegistration ->
+                KIO.comprehension {
+                    val competition = competitions.first { it.id == competitionRegistration.competitionId }
+
+                    val existingCount = !CompetitionRegistrationRepo.countForCompetitionAndClub(
+                        competitionRegistration.competitionId,
+                        clubId
+                    ).orDie()
+                    val registrationName = when {
+                        existingCount < 1 -> null
+                        existingCount == 1 -> {
+                            val first = !CompetitionRegistrationRepo.getByCompetitionAndClub(
+                                competitionRegistration.competitionId,
+                                clubId
+                            ).orDie()
+                                .map { it.singleOrNull() }.onNullDie("Count returned 1 row, select returned NOT 1 row.")
+                            first.name = "#1"
+                            first.update()
+                            "#2"
+                        }
+
+                        else -> "#${existingCount + 1}"
+                    }
+
+                    val competitionRegistrationId = !CompetitionRegistrationRepo.create(
+                        CompetitionRegistrationRecord(
+                            id = UUID.randomUUID(),
+                            eventRegistration = eventRegistrationId,
+                            competition = competitionRegistration.competitionId,
+                            club = clubId,
+                            name = registrationName,
+                            createdAt = now,
+                            createdBy = userId,
+                            updatedAt = now,
+                            updatedBy = userId,
+                            teamNumber = null,
+                            isLate = openForRegistrationType == OpenForRegistrationType.LATE,
+                            ratingCategory = competitionRegistration.ratingcategory
+                        )
+                    ).orDie()
+
+                    !CompetitionRegistrationNamedParticipantRepo.create(
+                        CompetitionRegistrationNamedParticipantRecord(
+                            competitionRegistration = competitionRegistrationId,
+                            namedParticipant = competition.namedParticipants!!.first()?.id!!,
+                            participant = participantId
+                        )
+                    ).orDie()
+                    val fees = competitionRegToFees[competitionRegistration.id]!!
+                    !fees.traverse { feeRecord ->
+                        CompetitionRegistrationOptionalFeeRepo.create(
+                            CompetitionRegistrationOptionalFeeRecord(
+                                competitionRegistrationId,
+                                feeRecord.optionalFee
+                            )
+                        ).orDie()
+                    }
+
+                    unit
+                }
+            }
+        }
 
         KIO.ok(
             ApiResponse.Created(userId)
@@ -552,5 +693,13 @@ object AppUserService {
                 pagination = params.toPagination(total)
             )
         }
+    }
+
+    fun getPendingClubRepresentativeApprovals(
+        clubId: UUID,
+    ): App<ServiceError, ApiResponse.ListDto<PendingClubRepresentativeApprovalDto>> = KIO.comprehension {
+        val pending = !AppUserClubRepresentativeApprovalRepo.getPendingByClubId(clubId).orDie()
+
+        KIO.ok(ApiResponse.ListDto(pending))
     }
 }

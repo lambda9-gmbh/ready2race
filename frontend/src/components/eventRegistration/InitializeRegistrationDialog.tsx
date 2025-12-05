@@ -34,6 +34,13 @@ const InitializeRegistrationDialog = ({eventId, open, onClose, onSuccess, ...pro
                 },
             }),
         {
+            onResponse: ({error}) =>
+                error &&
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: t('event.document.documents'),
+                    }),
+                ),
             preCondition: () => open,
             deps: [open],
         },

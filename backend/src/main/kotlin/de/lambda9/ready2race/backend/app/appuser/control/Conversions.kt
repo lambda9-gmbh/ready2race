@@ -69,6 +69,7 @@ fun AppUserRegisterRequest.toAppUserRegistrationRecord(lifeTime: Duration): App<
             language = language.name,
             expiresAt = lifeTime.afterNow(),
             createdAt = LocalDateTime.now(),
+            clubId = clubId,
             year = birthYear,
             gender = gender,
         )
