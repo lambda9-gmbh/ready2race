@@ -149,6 +149,7 @@ fun Route.competitionExecution() {
 
                                 else -> {}
                             }
+                            part.dispose()
                         }
                     }
 
@@ -249,6 +250,7 @@ fun Route.competitionExecution() {
 
                                     else -> {}
                                 }
+                                part.dispose()
                             }
                         }
 
@@ -341,6 +343,7 @@ fun Route.competitionExecution() {
 
                                     else -> {}
                                 }
+                                part.dispose()
                             }
                         }
 

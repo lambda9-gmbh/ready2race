@@ -428,6 +428,21 @@ import type {
     DeleteCompetitionSetupTemplateResponse,
     GetCompetitionSetupTemplateOverviewError,
     GetCompetitionSetupTemplateOverviewResponse,
+    GetGapDocumentTemplatesData,
+    GetGapDocumentTemplatesError,
+    GetGapDocumentTemplatesResponse,
+    AddGapDocumentTemplateData,
+    AddGapDocumentTemplateError,
+    AddGapDocumentTemplateResponse,
+    UpdateGapDocumentTemplateData,
+    UpdateGapDocumentTemplateError,
+    UpdateGapDocumentTemplateResponse,
+    DeleteGapDocumentTemplateData,
+    DeleteGapDocumentTemplateError,
+    DeleteGapDocumentTemplateResponse,
+    DownloadGapDocumentTemplateSampleData,
+    DownloadGapDocumentTemplateSampleError,
+    DownloadGapDocumentTemplateSampleResponse,
     GetDocumentTemplatesData,
     GetDocumentTemplatesError,
     GetDocumentTemplatesResponse,
@@ -2426,6 +2441,76 @@ export const getCompetitionSetupTemplateOverview = <ThrowOnError extends boolean
     >({
         ...options,
         url: '/competitionSetupTemplate/overview',
+    })
+}
+
+export const getGapDocumentTemplates = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetGapDocumentTemplatesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetGapDocumentTemplatesResponse,
+        GetGapDocumentTemplatesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate',
+    })
+}
+
+export const addGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddGapDocumentTemplateResponse,
+        AddGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/gapDocumentTemplate',
+    })
+}
+
+export const updateGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateGapDocumentTemplateResponse,
+        UpdateGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}',
+    })
+}
+
+export const deleteGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteGapDocumentTemplateResponse,
+        DeleteGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}',
+    })
+}
+
+export const downloadGapDocumentTemplateSample = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadGapDocumentTemplateSampleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadGapDocumentTemplateSampleResponse,
+        DownloadGapDocumentTemplateSampleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}/preview',
     })
 }
 

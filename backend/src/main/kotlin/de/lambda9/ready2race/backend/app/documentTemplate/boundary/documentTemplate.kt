@@ -1,12 +1,13 @@
 package de.lambda9.ready2race.backend.app.documentTemplate.boundary
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import de.lambda9.ready2race.backend.app.auth.boundary.auth
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateRequest
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateViewSort
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
@@ -21,6 +22,90 @@ import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 
 fun Route.documentTemplate() {
+
+    route("/gapDocumentTemplate") {
+        get {
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateEventGlobal)
+                val params = !pagination<GapDocumentTemplateViewSort>()
+                GapDocumentTemplateService.page(params)
+            }
+        }
+
+        post {
+            val multiPartData = call.receiveMultipart()
+
+            var upload: File? = null
+            var templateRequest: GapDocumentTemplateRequest? = null
+
+            var done = false
+            while (!done) {
+                val part = multiPartData.readPart()
+                if (part == null) {
+                    done = true
+                } else {
+                    when (part) {
+                        is PartData.FileItem -> {
+                            if (upload == null) {
+                                upload = File(
+                                    part.originalFileName!!,
+                                    part.provider().toByteArray(),
+                                )
+                            } else {
+                                // TODO: @Fix this does nothing, wrap the multipart receiving into the respondComprehension and add the '!'
+                                KIO.fail(RequestError.File.Multiple)
+                            }
+                        }
+
+                        is PartData.FormItem -> {
+                            if (part.name == "request") {
+                                templateRequest = jsonMapper.readValue<GapDocumentTemplateRequest>(part.value)
+                            }
+                        }
+
+                        else -> {}
+                    }
+                    part.dispose()
+                }
+            }
+
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateEventGlobal)
+                val request = !KIO.failOnNull(templateRequest) { RequestError.BodyMissing(GapDocumentTemplateRequest.example) }
+                val file = !KIO.failOnNull(upload) { RequestError.File.Missing }
+                !KIO.failOn(!checkValidPdf(file.bytes)) { RequestError.File.UnsupportedType }
+
+                GapDocumentTemplateService.addTemplate(file, request)
+            }
+        }
+
+        route("/{gapDocumentTemplateId}") {
+            put {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val id = !pathParam("gapDocumentTemplateId", uuid)
+                    val payload = !receiveKIO(GapDocumentTemplateRequest.example)
+                    GapDocumentTemplateService.updateTemplate(id, payload)
+                }
+            }
+
+            delete {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val id = !pathParam("documentTemplateId", uuid)
+                    GapDocumentTemplateService.deleteTemplate(id)
+                }
+            }
+
+            get("/preview") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("documentTemplateId", uuid)
+                    GapDocumentTemplateService.getPreview(id)
+                }
+            }
+        }
+    }
 
     route("/documentTemplate") {
         get {
@@ -62,6 +147,7 @@ fun Route.documentTemplate() {
 
                         else -> {}
                     }
+                    part.dispose()
                 }
             }
 

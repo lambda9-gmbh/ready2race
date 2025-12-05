@@ -1277,3 +1277,13 @@ select erc.event,
 from event_rating_category erc
          join rating_category rc on rc.id = erc.rating_category
 ;
+
+create view gap_document_template_view as
+select gdt.id,
+       gdt.name,
+       gdt.type,
+       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
+from gap_document_template gdt
+         left join gap_document_placeholder gdp on gdp.template = gdt.id
+group by gdt.id
+;

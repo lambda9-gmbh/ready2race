@@ -53,7 +53,9 @@ fun <R : Record> TableImpl<R>.insert(
 fun <R : TableRecord<R>> TableImpl<R>.insert(
     records: Collection<R>,
 ): JIO<Int> = Jooq.query {
-    batchInsert(records).execute().sum()
+    insertInto(this@insert)
+        .set(records)
+        .execute()
 }
 
 fun <R : Record> TableImpl<R>.insertReturning(
