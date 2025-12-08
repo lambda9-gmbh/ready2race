@@ -286,6 +286,28 @@
       }
     },
     "participants": "Mitglieder",
+    "representative": {
+      "representatives": "Verwaltung",
+      "pendingApprovals": "Ausstehende Genehmigungen",
+      "approve": {
+        "approve": "Bestätigen",
+        "success": "Erfolgreich genehmigt",
+        "error": "Fehler beim Genehmigen",
+        "confirmation": {
+          "title": "{{username}} bestätigen?",
+          "content": "Sind Sie sicher, dass Sie {{username}} als zusätzliche Clubverwaltung bestätigen möchten? Das Konto erhält alle Rechte für diesen Club. Diese Aktion kann nicht rückgängig gemacht werden."
+        }
+      },
+      "deny": {
+        "deny": "Ablehnen",
+        "success": "Erfolgreich abgelehnt",
+        "error": "Fehler beim Ablehnen",
+        "confirmation": {
+          "title": "{{username}} ablehnen?",
+          "content": "Sind Sie sicher, dass Sie die Anfrage von {{username}} als zusätzliche Clubverwaltung ablehnen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+        }
+      }
+    },
     "participant": {
       "import": "Mitglieder importieren",
       "upload": {

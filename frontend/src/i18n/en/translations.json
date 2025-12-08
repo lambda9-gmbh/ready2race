@@ -286,6 +286,28 @@
       }
     },
     "participants": "Members",
+    "representative": {
+      "representatives": "Representatives",
+      "pendingApprovals": "Pending Approvals",
+      "approve": {
+        "approve": "Approve",
+        "success": "Representative approved successfully",
+        "error": "Failed to approve representative",
+        "confirmation": {
+          "title": "Approve {{username}}?",
+          "content": "Are you sure you want to approve {{username}} as a club representative? The account will receive full rights to this club. This action cannot be undone."
+        }
+      },
+      "deny": {
+        "deny": "Deny",
+        "success": "Representative denied successfully",
+        "error": "Failed to deny representative",
+        "confirmation": {
+          "title": "Deny {{username}}?",
+          "content": "Are you sure you want to deny the request of {{username}} to be a club representative? This action cannot be undone."
+        }
+      }
+    },
     "participant": {
       "import": "Import members",
       "upload": {

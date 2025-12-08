@@ -465,14 +465,15 @@ object AppUserService {
             val record = !registration.toAppUser(clubId)
             !createUser(record, listOf(USER_ROLE, CLUB_REPRESENTATIVE_ROLE))
         } else {
-            val record = !registration.toAppUser(clubId)
+            val record = !registration.toAppUser(clubId = null)
             val userId = !createUser(record, listOf(USER_ROLE))
 
             !AppUserClubRepresentativeApprovalRepo.create(
                 AppUserClubRepresentativeApprovalRecord(
+                    id = UUID.randomUUID(),
                     appUser = userId,
                     club = clubId,
-                    approved = false,
+                    approved = null,
                     createdAt = now,
                     updatedAt = now,
                     updatedBy = userId
@@ -701,5 +702,50 @@ object AppUserService {
         val pending = !AppUserClubRepresentativeApprovalRepo.getPendingByClubId(clubId).orDie()
 
         KIO.ok(ApiResponse.ListDto(pending))
+    }
+
+    fun updateClubRepresentativeApproval(
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+        targetUser: UUID,
+        approve: Boolean,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val approval = !AppUserClubRepresentativeApprovalRepo.getOpenByUserId(targetUser).orDie()
+            .onNullFail { AppUserError.NotFound }
+
+        !KIO.failOn(scope == Privilege.Scope.OWN && approval.club != user.club) {
+            AuthError.PrivilegeMissing
+        }
+
+        val userToApprove = !AppUserRepo.get(targetUser).orDie()
+            .onNullFail { AppUserError.NotFound }
+
+        !KIO.failOn(userToApprove.club != null) {
+            AppUserError.ClubRepresentativeCanNotBeApproved
+        }
+
+        !AppUserClubRepresentativeApprovalRepo.update(approval) {
+            approved = approve
+            updatedAt = LocalDateTime.now()
+            updatedBy = user.id
+        }.orDie()
+
+        if (approve) {
+            !AppUserRepo.updateByRecord(userToApprove) {
+                club = approval.club
+                updatedAt = LocalDateTime.now()
+                updatedBy = user.id
+            }.orDie()
+
+            !AppUserHasRoleRepo.create(
+                AppUserHasRoleRecord(
+                    appUser = targetUser,
+                    role = CLUB_REPRESENTATIVE_ROLE,
+                )
+            ).orDie()
+        }
+
+        noData
     }
 }

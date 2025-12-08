@@ -41,9 +41,10 @@ alter table app_user_registration
 
 create table app_user_club_representative_approval
 (
-    app_user   uuid primary key references app_user,
+    id         uuid primary key,
+    app_user   uuid      not null references app_user,
     club       uuid      not null references club,
-    approved   boolean   not null,
+    approved   boolean   null default null,
     created_at timestamp not null,
     updated_at timestamp not null,
     updated_by uuid      references app_user on delete set null

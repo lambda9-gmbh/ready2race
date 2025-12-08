@@ -12,7 +12,8 @@ enum class AppUserError : ServiceError {
     RegistrationNotFound,
     InvitationNotFound,
     PasswordResetNotFound,
-    ClubNameAlreadyExists;
+    ClubNameAlreadyExists,
+    ClubRepresentativeCanNotBeApproved;
 
     override fun respond(): ApiError = when (this) {
         EmailAlreadyInUse ->
@@ -51,6 +52,12 @@ enum class AppUserError : ServiceError {
                 status = HttpStatusCode.Conflict,
                 message = "Club name already exists",
                 errorCode = ErrorCode.CLUB_NAME_ALREADY_EXISTS
+            )
+
+        ClubRepresentativeCanNotBeApproved ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = "The user can not be approved as a club representative",
             )
     }
 }

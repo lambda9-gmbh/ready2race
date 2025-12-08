@@ -1435,6 +1435,14 @@ export type PasswordResetRequest = {
     password: string
 }
 
+export type PendingClubRepresentativeApprovalDto = {
+    userId: string
+    firstName: string
+    lastName: string
+    email: string
+    createdAt: string
+}
+
 export type PossibleSubstitutionParticipantDto = {
     id: string
     firstName: string
@@ -3576,6 +3584,17 @@ export type GetClubNamesResponse = {
 
 export type GetClubNamesError = ApiError
 
+export type GetPendingClubRepresentativeApprovalsData = {
+    path: {
+        clubId: string
+    }
+}
+
+export type GetPendingClubRepresentativeApprovalsResponse =
+    Array<PendingClubRepresentativeApprovalDto>
+
+export type GetPendingClubRepresentativeApprovalsError = BadRequestError | ApiError
+
 export type GetRegistrationsForEventData = {
     path: {
         eventId: string
@@ -4736,6 +4755,19 @@ export type GetWorkShiftsForUserResponse = {
 }
 
 export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateClubRepresentativeApprovalData = {
+    path: {
+        userId: string
+    }
+    query: {
+        approve: boolean
+    }
+}
+
+export type UpdateClubRepresentativeApprovalResponse = void
+
+export type UpdateClubRepresentativeApprovalError = BadRequestError | ApiError
 
 export type GetInvoicesData = {
     query?: {

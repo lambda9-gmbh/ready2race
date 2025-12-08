@@ -1,6 +1,5 @@
 package de.lambda9.ready2race.backend.app.appuser.boundary
 
-import de.lambda9.ready2race.backend.app.appuser.entity.AppUserForEventSort
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
@@ -100,7 +99,21 @@ fun Route.user() {
                     }
                 }
             }
+            route("/clubRepresentative/approval") {
+                put {
 
+                    call.respondComprehension {
+                        val id = !pathParam("userId", uuid)
+                        val (user, scope) = !authenticate(
+                            Privilege.Action.UPDATE,
+                            Privilege.Resource.CLUB
+                        )
+                        val approve = !queryParam("approve", boolean)
+
+                        AppUserService.updateClubRepresentativeApproval(user, scope, id, approve)
+                    }
+                }
+            }
         }
 
         route("/registration") {

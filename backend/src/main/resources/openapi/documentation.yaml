@@ -2738,6 +2738,36 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /club/{clubId}/clubRepresentative:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPendingClubRepresentativeApprovals
+      responses:
+        200:
+          description: Pending club representative approvals successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PendingClubRepresentativeApprovalDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventRegistration:
     parameters:
       - in: path
@@ -5012,6 +5042,35 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /user/{userId}/clubRepresentative/approval:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: approve
+        in: query
+        required: true
+        schema:
+          type: boolean
+    put:
+      operationId: updateClubRepresentativeApproval
+      responses:
+        204:
+          description: Club representative successfully approved or denied
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /invoice:
     get:
       parameters:
@@ -7131,6 +7190,28 @@ components:
           format: date-time
         assignedEmail:
           $ref: '#/components/schemas/AssignedEmailDto'
+
+    PendingClubRepresentativeApprovalDto:
+      type: object
+      required:
+        - userId
+        - firstName
+        - lastName
+        - email
+        - createdAt
+      properties:
+        userId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
     AppUserRegisterRequest:
       type: object

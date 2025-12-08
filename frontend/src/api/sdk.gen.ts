@@ -307,6 +307,9 @@ import type {
     GetClubNamesData,
     GetClubNamesError,
     GetClubNamesResponse,
+    GetPendingClubRepresentativeApprovalsData,
+    GetPendingClubRepresentativeApprovalsError,
+    GetPendingClubRepresentativeApprovalsResponse,
     GetRegistrationsForEventData,
     GetRegistrationsForEventError,
     GetRegistrationsForEventResponse,
@@ -552,6 +555,9 @@ import type {
     GetWorkShiftsForUserData,
     GetWorkShiftsForUserError,
     GetWorkShiftsForUserResponse,
+    UpdateClubRepresentativeApprovalData,
+    UpdateClubRepresentativeApprovalError,
+    UpdateClubRepresentativeApprovalResponse,
     GetInvoicesData,
     GetInvoicesError,
     GetInvoicesResponse,
@@ -1921,6 +1927,19 @@ export const getClubNames = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getPendingClubRepresentativeApprovals = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetPendingClubRepresentativeApprovalsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetPendingClubRepresentativeApprovalsResponse,
+        GetPendingClubRepresentativeApprovalsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/clubRepresentative',
+    })
+}
+
 export const getRegistrationsForEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetRegistrationsForEventData, ThrowOnError>,
 ) => {
@@ -2949,6 +2968,19 @@ export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/user/{userId}/workshift',
+    })
+}
+
+export const updateClubRepresentativeApproval = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubRepresentativeApprovalData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateClubRepresentativeApprovalResponse,
+        UpdateClubRepresentativeApprovalError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/{userId}/clubRepresentative/approval',
     })
 }
 

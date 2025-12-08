@@ -27,6 +27,10 @@ object AppUserRepo {
 
     fun update(id: UUID, f: AppUserRecord.() -> Unit) = APP_USER.update(f) { ID.eq(id) }
 
+    fun updateByRecord(record: AppUserRecord, f: AppUserRecord.() -> Unit) = APP_USER.update(record, f)
+
+    fun get(id: UUID) = APP_USER.selectOne { ID.eq(id) }
+
     fun getByEmail(
         email: String,
     ): JIO<AppUserRecord?> = Jooq.query {

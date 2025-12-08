@@ -101,6 +101,17 @@ fun Route.club() {
                     }
                 }
             }
+            route("/clubRepresentative") {
+                get {
+
+                    call.respondComprehension {
+                        !authenticate(Privilege.ReadClubOwn)
+                        val id = !pathParam("clubId", uuid)
+
+                        AppUserService.getPendingClubRepresentativeApprovals(id)
+                    }
+                }
+            }
 
             participant()
 

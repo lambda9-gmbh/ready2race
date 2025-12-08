@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserCl
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_CLUB_REPRESENTATIVE_APPROVAL
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -25,7 +26,7 @@ object AppUserClubRepresentativeApprovalRepo {
             .from(APP_USER_CLUB_REPRESENTATIVE_APPROVAL)
             .join(APP_USER).on(APP_USER.ID.eq(APP_USER_CLUB_REPRESENTATIVE_APPROVAL.APP_USER))
             .where(APP_USER_CLUB_REPRESENTATIVE_APPROVAL.CLUB.eq(clubId))
-            .and(APP_USER_CLUB_REPRESENTATIVE_APPROVAL.APPROVED.eq(false))
+            .and(APP_USER_CLUB_REPRESENTATIVE_APPROVAL.APPROVED.isNull)
             .fetch {
                 PendingClubRepresentativeApprovalDto(
                     userId = it[APP_USER_CLUB_REPRESENTATIVE_APPROVAL.APP_USER]!!,
@@ -37,6 +38,9 @@ object AppUserClubRepresentativeApprovalRepo {
             }
     }
 
-    fun update(appUserId: UUID, f: AppUserClubRepresentativeApprovalRecord.() -> Unit) =
-        APP_USER_CLUB_REPRESENTATIVE_APPROVAL.update(f) { APP_USER.eq(appUserId) }
+    fun getOpenByUserId(userId: UUID) =
+        APP_USER_CLUB_REPRESENTATIVE_APPROVAL.selectOne { APP_USER.eq(userId).and(APPROVED.isNull) }
+
+    fun update(record: AppUserClubRepresentativeApprovalRecord, f: AppUserClubRepresentativeApprovalRecord.() -> Unit) =
+        APP_USER_CLUB_REPRESENTATIVE_APPROVAL.update(record, f)
 }
