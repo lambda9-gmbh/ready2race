@@ -449,6 +449,7 @@
     "competition": {
       "competition": "Competition",
       "competitions": "Competitions",
+      "noCompetitionsAvailable": "No competitions available",
       "identifier": "Identifier",
       "name": "Name",
       "description": "Description",
@@ -1263,6 +1264,9 @@
       "registrationType": "Registration Type",
       "asParticipant": "As Participant",
       "asChallengeManager": "As Challenge Manager",
+      "step": {
+        "competitionsNotApplicable": "No competition selection required for challenge manager registrations"
+      },
       "email": {
         "emailSent": {
           "header": "Please verify your email",

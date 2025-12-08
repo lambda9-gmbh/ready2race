@@ -449,6 +449,7 @@
     "competition": {
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
+      "noCompetitionsAvailable": "Keine Wettkämpfe verfügbar",
       "identifier": "Kennung",
       "name": "Name",
       "description": "Beschreibung",
@@ -1263,6 +1264,9 @@
       "registrationType": "Registrierungstyp",
       "asParticipant": "Als Teilnehmer:in",
       "asChallengeManager": "Als Challengemanager:in",
+      "step": {
+        "competitionsNotApplicable": "Keine Wettkampfauswahl erforderlich für Challengemanager-Registrierungen"
+      },
       "error": {
         "generic": "Beim Registrieren ist ein Fehler aufgetreten",
         "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus"
