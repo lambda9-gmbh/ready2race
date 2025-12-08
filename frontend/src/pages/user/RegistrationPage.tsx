@@ -1,4 +1,4 @@
-import {Box, Button, Stack, Step, StepLabel, Stepper, Typography} from '@mui/material'
+import {Box, Button, Divider, Stack, Step, StepLabel, Stepper, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {
@@ -38,6 +38,7 @@ import InfoIcon from '@mui/icons-material/Info'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import {StepIconProps} from '@mui/material/StepIcon'
+import {CheckCircleOutline} from '@mui/icons-material'
 
 const stepIcons: {[index: string]: JSX.Element} = {
     1: <HowToRegIcon />,
@@ -313,6 +314,9 @@ const RegistrationPage = () => {
             }
         } else {
             setRequested(formData.isChallengeManager ? 'CONFIRMATION_MAIL' : 'PARTICIPATING')
+            setRegisteredForEvent(
+                eventsData?.data?.find(val => val.id === formData.event?.id) || null,
+            )
         }
     }
 
@@ -442,6 +446,8 @@ const RegistrationPage = () => {
         }
     }
 
+    const [registeredForEvent, setRegisteredForEvent] = useState<EventPublicDto | null>(null)
+
     return (
         <SimpleFormLayout maxWidth={600}>
             {!requested ? (
@@ -499,14 +505,33 @@ const RegistrationPage = () => {
                     </Typography>
                 </ConfirmationMailSent>
             ) : (
-                <ConfirmationMailSent header={t('user.registration.requested.emailSent.header')}>
-                    <Typography textAlign="center">
-                        {t('user.registration.requested.emailSent.message.part1')}
+                <Stack spacing={2}>
+                    <Box sx={{display: 'flex'}}>
+                        <CheckCircleOutline sx={{height: 100, width: 100, margin: 'auto'}} />
+                    </Box>
+                    <Typography variant="h2" textAlign="center">
+                        {t('user.registration.requested.participating.header')}
                     </Typography>
+                    <Divider />
                     <Typography textAlign="center">
-                        {t('user.registration.requested.emailSent.message.part2')}
+                        {t('user.registration.requested.participating.message.part1')}
                     </Typography>
-                </ConfirmationMailSent>
+                    {registeredForEvent?.challengeEvent &&
+                        registeredForEvent.allowSelfSubmission && (
+                            <>
+                                <Typography textAlign="center">
+                                    {t(
+                                        'user.registration.requested.participating.message.part2Email',
+                                    )}
+                                </Typography>
+                                <Typography textAlign="center">
+                                    {t(
+                                        'user.registration.requested.participating.message.part3ClubRep',
+                                    )}
+                                </Typography>
+                            </>
+                        )}
+                </Stack>
             )}
         </SimpleFormLayout>
     )

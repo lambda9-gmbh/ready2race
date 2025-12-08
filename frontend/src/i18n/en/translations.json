@@ -1268,12 +1268,25 @@
         "competitionsNotApplicable": "No competition selection required for challenge manager registrations",
         "emailToSubmitResults": "To submit a result yourself, an email address is required. Otherwise, a club representative will need to enter the result on your behalf."
       },
+      "error": {
+        "generic": "Beim Registrieren ist ein Fehler aufgetreten",
+        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
+        "selectAtLeastOneCompetition": "Bitte wählen Sie mindestens einen Wettkampf aus"
+      },
       "requested": {
         "emailSent": {
           "header": "Please verify your email",
           "message": {
             "part1": "We've sent you an email to verify your email adress and activate your account.",
             "part2": "Click on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
+          }
+        },
+        "participating": {
+          "header": "Successfully registered",
+          "message": {
+            "part1": "You have successfully registered for the event {{eventName}}",
+            "part2Email": "If you have provided an email address, you will shortly receive an email with a link that will redirect you to the results portal.",
+            "part3ClubRep": "Otherwise, your club representative is responsible for entering the results."
           }
         },
         "verified": {
@@ -1287,11 +1300,6 @@
             "unexpected": "Your e-mail address could not be confirmed. Please try again later."
           }
         }
-      },
-      "error": {
-        "generic": "An error has occurred during registration",
-        "selectAtLeastOneType": "Please select at least one registration type",
-        "selectAtLeastOneCompetition": "Please select at least one competition"
       }
     },
     "resetPassword": {

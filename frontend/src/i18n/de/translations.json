@@ -1285,7 +1285,8 @@
           "header": "Erfolgreich angemeldet",
           "message": {
             "part1": "Sie haben sich erfolgreich für die Veranstaltung {{eventName}} angemeldet.",
-            "part2": "Wenn Sie eine E-Mail-Adresse angegeben haben, erhalten Sie in Kürze eine E-Mail mit "
+            "part2Email": "Wenn Sie eine E-Mail-Adresse angegeben haben, erhalten Sie in Kürze eine E-Mail mit einem Link, der Sie zum Ergebnis Portal weiterleitet.",
+            "part3ClubRep": "Ansonsten ist Ihr Vereinsverantwortliche für das Eintragen der Ergebnisse verantwortlich."
           }
         },
         "verified": {
@@ -1299,10 +1300,6 @@
             "unexpected": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuchen Sie es später erneut."
           }
         }
-      },
-      "login": {
-        "message": "Sie besitzen bereits ein Konto?",
-        "link": "Hier anmelden"
       }
     },
     "resetPassword": {
