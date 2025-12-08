@@ -1,12 +1,18 @@
-import {Box, Stack, Typography} from '@mui/material'
+import {Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
+import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
+import {EventPublicDto} from '@api/types.gen.ts'
 
-export const Step1RegistrationType = () => {
+interface Step1RegistrationTypeProps {
+    availableEvents?: EventPublicDto[]
+}
+
+export const Step1RegistrationType = ({availableEvents}: Step1RegistrationTypeProps) => {
     const {t} = useTranslation()
 
     return (
-        <Box>
+        <Stack spacing={2}>
             <Typography variant="body2" sx={{mb: 2}}>
                 {t('user.registration.registrationType')}
             </Typography>
@@ -27,6 +33,17 @@ export const Step1RegistrationType = () => {
                     reverse
                 />
             </Stack>
-        </Box>
+            {availableEvents && availableEvents.length > 0 && (
+                <FormInputAutocomplete
+                    name="event"
+                    label={t('event.event')}
+                    required
+                    options={availableEvents.map(event => ({
+                        id: event.id,
+                        label: event.name,
+                    }))}
+                />
+            )}
+        </Stack>
     )
 }

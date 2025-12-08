@@ -1265,18 +1265,27 @@
       "asParticipant": "Als Teilnehmer:in",
       "asChallengeManager": "Als Challengemanager:in",
       "step": {
-        "competitionsNotApplicable": "Keine Wettkampfauswahl erforderlich für Challengemanager-Registrierungen"
+        "competitionsNotApplicable": "Keine Wettkampfauswahl erforderlich für Challengemanager-Registrierungen",
+        "emailToSubmitResults": "Um ein Ergebnis selbst hochzuladen, ist eine E-Mail-Adresse erforderlich. Andernfalls muss ein Vereinsvertreter das Ergebnis für Sie eingeben."
       },
       "error": {
         "generic": "Beim Registrieren ist ein Fehler aufgetreten",
-        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus"
+        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
+        "selectAtLeastOneCompetition": "Bitte wählen Sie mindestens einen Wettkampf aus"
       },
-      "email": {
+      "requested": {
         "emailSent": {
           "header": "Bestätigen Sie Ihre E-Mail-Adresse",
           "message": {
             "part1": "Wir haben Ihnen eine E-Mail geschickt, um Ihre E-Mail-Adresse zu verifizieren und Ihr Konto zu aktivieren.",
             "part2": "Klicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+          }
+        },
+        "participating": {
+          "header": "Erfolgreich angemeldet",
+          "message": {
+            "part1": "Sie haben sich erfolgreich für die Veranstaltung {{eventName}} angemeldet.",
+            "part2": "Wenn Sie eine E-Mail-Adresse angegeben haben, erhalten Sie in Kürze eine E-Mail mit "
           }
         },
         "verified": {
@@ -1653,7 +1662,8 @@
       "club": "Verein",
       "relative": "Relativ",
       "individual": "Individuell"
-    }
+    },
+    "noEvents": "Keine Veranstaltungen verfügbar"
   },
   "webDAV": {
     "infoText": {

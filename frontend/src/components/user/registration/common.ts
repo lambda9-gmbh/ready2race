@@ -60,6 +60,9 @@ export function mapFormToAppUserRegisterRequest(
     }
 }
 
+// TODO: validate/sanitize basepath (also in routes.tsx)
+const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
 export function mapFormToParticipantRegisterRequest(
     formData: RegistrationForm,
 ): ParticipantRegisterRequest {
@@ -71,6 +74,7 @@ export function mapFormToParticipantRegisterRequest(
         email: takeIfNotEmpty(formData.emailOptional),
         clubId: formData.clubId!,
         language: languageMapping[i18nLanguage()],
+        callbackUrl: location.origin + (basepath ? `/${basepath}` : '') + '/challenge/',
         registerToSingleCompetitions: formData.competitions
             .filter(competition => competition.checked)
             .map(competition => ({

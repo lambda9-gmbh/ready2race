@@ -89,27 +89,33 @@ const InitializeRegistrationDialog = ({eventId, open, onClose, onSuccess, ...pro
             </DialogTitle>
             <FormContainer onSuccess={handleSubmit}>
                 <DialogContent>
-                    <Stack spacing={4}>
-                        {!props.registrationInitialized ? (
-                            <>
-                                <Typography>
-                                    <Trans i18nKey={'event.registration.initialize.info.1'} />
-                                </Typography>
-                                <Typography>
-                                    <Trans i18nKey={'event.registration.initialize.info.2'} />
-                                </Typography>
-                            </>
-                        ) : (
-                            <Typography>
-                                <Trans i18nKey={'event.registration.initialize.info.2'} />
-                            </Typography>
-                        )}
-                    </Stack>
-                    {documents && (
-                        <EventRegistrationConfirmDocumentsForm
-                            eventId={eventId}
-                            documentTypes={documents}
-                        />
+                    {documents && documents.length > 0 && (
+                        <>
+                            <Stack spacing={4}>
+                                {!props.registrationInitialized ? (
+                                    <>
+                                        <Typography>
+                                            <Trans
+                                                i18nKey={'event.registration.initialize.info.1'}
+                                            />
+                                        </Typography>
+                                        <Typography>
+                                            <Trans
+                                                i18nKey={'event.registration.initialize.info.2'}
+                                            />
+                                        </Typography>
+                                    </>
+                                ) : (
+                                    <Typography>
+                                        <Trans i18nKey={'event.registration.initialize.info.2'} />
+                                    </Typography>
+                                )}
+                            </Stack>
+                            <EventRegistrationConfirmDocumentsForm
+                                eventId={eventId}
+                                documentTypes={documents}
+                            />
+                        </>
                     )}
                 </DialogContent>
                 <DialogActions>

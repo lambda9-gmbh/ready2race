@@ -10,15 +10,18 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
+import de.lambda9.ready2race.backend.app.competitionRegistration.boundary.CompetitionRegistrationService
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationValidation
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
+import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
@@ -486,24 +489,23 @@ object AppUserService {
         // Handle competition registrations if present
 
         if (competitionRegistrations.isNotEmpty()) {
-            val participantId = !ParticipantRepo.create(
-                ParticipantRecord(
-                    id = UUID.randomUUID(),
-                    club = clubId,
-                    firstname = registration.firstname,
-                    lastname = registration.lastname,
-                    year = registration.year!!,
-                    gender = registration.gender!!,
-                    phone = null,
-                    external = false,
-                    externalClubName = null,
-                    createdAt = now,
-                    createdBy = userId,
-                    updatedAt = now,
-                    updatedBy = userId,
-                    email = registration.email,
-                )
-            ).orDie()
+            val participantRecord = ParticipantRecord(
+                id = UUID.randomUUID(),
+                club = clubId,
+                firstname = registration.firstname,
+                lastname = registration.lastname,
+                year = registration.year!!,
+                gender = registration.gender!!,
+                phone = null,
+                external = false,
+                externalClubName = null,
+                createdAt = now,
+                createdBy = userId,
+                updatedAt = now,
+                updatedBy = userId,
+                email = registration.email,
+            )
+            val participantId = !ParticipantRepo.create(participantRecord).orDie()
 
             val competitions = !CompetitionRepo.getByIds(competitionRegistrations.map { it.competitionId }).orDie()
             val eventId = competitions.first().event!!
@@ -530,6 +532,9 @@ object AppUserService {
             val openForRegistrationType = !EventService.getOpenForRegistrationType(eventId).failIf({
                 it == OpenForRegistrationType.CLOSED
             }) { EventRegistrationError.RegistrationClosed }
+
+            val event = !EventRepo.get(eventId).orDie()
+                .onNullDie("Event must be provided")
 
             !competitionRegistrations.traverse { competitionRegistration ->
                 KIO.comprehension {
@@ -587,6 +592,18 @@ object AppUserService {
                                 feeRecord.optionalFee
                             )
                         ).orDie()
+                    }
+
+                    if (participantRecord.email != null && event.challengeEvent == true && event.selfSubmission == true) {
+                        !CompetitionRegistrationService.createParticipantAccess(
+                            participantId = participantRecord.id,
+                            participantFirstName = participantRecord.firstname,
+                            participantLastName = participantRecord.lastname,
+                            participantEmail = participantRecord.email!!,
+                            event = event,
+                            emailLanguage = EmailLanguage.DE, // TODO: somehow get a language,
+                            callbackUrl = request.callbackUrl
+                        )
                     }
 
                     unit

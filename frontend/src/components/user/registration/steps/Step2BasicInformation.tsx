@@ -1,4 +1,4 @@
-import {Stack, useMediaQuery, useTheme} from '@mui/material'
+import {Alert, Stack, useMediaQuery, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFormContext} from 'react-hook-form-mui'
 import {useMemo} from 'react'
@@ -6,20 +6,19 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 import {NewPassword} from '@components/form/NewPassword.tsx'
 import {AutocompleteClub} from '@components/club/AutocompleteClub.tsx'
-import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {EventPublicDto} from '@api/types.gen.ts'
 import {RegistrationForm} from '@components/user/registration/common.ts'
+import {EventPublicDto} from '@api/types.gen.ts'
 
 interface Step2BasicInformationProps {
     createClubOnRegistrationAllowed: boolean | null
-    availableEvents?: EventPublicDto[]
+    selectedEvent: EventPublicDto | undefined
 }
 
 export const Step2BasicInformation = ({
     createClubOnRegistrationAllowed,
-    availableEvents,
+    selectedEvent,
 }: Step2BasicInformationProps) => {
     const {t} = useTranslation()
     const theme = useTheme()
@@ -47,7 +46,14 @@ export const Step2BasicInformation = ({
             {watchIsChallengeManager ? (
                 <FormInputEmail name="emailRequired" label={t('user.email.email')} required />
             ) : (
-                <FormInputEmail name="emailOptional" label={t('user.email.email')} />
+                <>
+                    <FormInputEmail name="emailOptional" label={t('user.email.email')} />
+                    {selectedEvent && selectedEvent.allowSelfSubmission && (
+                        <Alert severity={'info'}>
+                            {t('user.registration.step.emailToSubmitResults')}
+                        </Alert>
+                    )}
+                </>
             )}
 
             {watchIsChallengeManager && (
@@ -56,18 +62,6 @@ export const Step2BasicInformation = ({
 
             {watchIsParticipant && (
                 <>
-                    {availableEvents && availableEvents.length > 0 && (
-                        <FormInputAutocomplete
-                            name="event"
-                            label={t('event.event')}
-                            required
-                            options={availableEvents.map(event => ({
-                                id: event.id,
-                                label: event.name,
-                            }))}
-                        />
-                    )}
-
                     <FormInputRadioButtonGroup
                         name="gender"
                         label={t('entity.gender')}

@@ -24,6 +24,7 @@ data class ParticipantRegisterRequest(
     val email: String?,
     val clubId: UUID,
     val language: EmailLanguage,
+    val callbackUrl: String,
     val registerToSingleCompetitions: List<ParticipantRegisterCompetitionRequest>,
 ) : Validatable {
     override fun validate(): ValidationResult =
@@ -32,6 +33,7 @@ data class ParticipantRegisterRequest(
             this::firstname validate notBlank,
             this::lastname validate notBlank,
             this::birthYear validate LocalDateTime.now().year.let { allOf(min(it - 120), max(it)) },
+            this::callbackUrl validate notBlank,
             this::registerToSingleCompetitions validate notEmpty,
             this::registerToSingleCompetitions validate collection,
         )
@@ -46,6 +48,7 @@ data class ParticipantRegisterRequest(
                 email = "john.doe@example.com",
                 clubId = UUID.randomUUID(),
                 language = EmailLanguage.EN,
+                callbackUrl = "https://ready2race.info/challenge/",
                 registerToSingleCompetitions = listOf(ParticipantRegisterCompetitionRequest.example),
             )
     }

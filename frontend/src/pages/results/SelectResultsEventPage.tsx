@@ -43,9 +43,7 @@ const SelectResultsEventPage = () => {
                             </Link>
                         ))
                 ) : (
-                    <Typography sx={{textAlign: 'center'}}>
-                        {'[todo] No events available'}
-                    </Typography>
+                    <Typography sx={{textAlign: 'center'}}>{t('results.noEvents')}</Typography>
                 )}
             </Stack>
         </Box>

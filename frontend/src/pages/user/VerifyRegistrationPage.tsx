@@ -7,6 +7,9 @@ import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {useTranslation} from 'react-i18next'
 import RequestStatusResponse from '@components/user/RequestStatusResponse.tsx'
 
+// TODO: validate/sanitize basepath (also in routes.tsx)
+const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
 const VerifyRegistrationPage = () => {
     const {t} = useTranslation()
     const {registrationToken} = registrationTokenRoute.useParams()
@@ -24,6 +27,7 @@ const VerifyRegistrationPage = () => {
             const result = await verifyUserRegistration({
                 body: {
                     token: registrationToken,
+                    callbackUrl: location.origin + (basepath ? `/${basepath}` : '') + '/challenge/',
                 },
             })
 
@@ -44,16 +48,18 @@ const VerifyRegistrationPage = () => {
                     success={requestResult === 'Success'}
                     header={
                         requestResult === 'Success'
-                            ? t('user.registration.email.verified.header')
-                            : t('user.registration.email.verificationError.header')
+                            ? t('user.registration.requested.verified.header')
+                            : t('user.registration.requested.verificationError.header')
                     }
                     showLoginNavigation>
                     <Typography textAlign="center">
                         {requestResult === 'Success'
-                            ? t('user.registration.email.verified.message')
+                            ? t('user.registration.requested.verified.message')
                             : requestResult === 'NotFound'
-                              ? t('user.registration.email.verificationError.message.notFound')
-                              : t('user.registration.email.verificationError.message.unexpected')}
+                              ? t('user.registration.requested.verificationError.message.notFound')
+                              : t(
+                                    'user.registration.requested.verificationError.message.unexpected',
+                                )}
                     </Typography>
                 </RequestStatusResponse>
             )}

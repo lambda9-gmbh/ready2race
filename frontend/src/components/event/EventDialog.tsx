@@ -76,10 +76,6 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
     const challengeEventWatch = formContext.watch('challengeEvent')
     const challengeResultTypes = [{id: 'DISTANCE', label: 'Distance (m)'}]
 
-    const allowParticipantSelfRegistrationWatch = formContext.watch(
-        'allowParticipantSelfRegistration',
-    )
-
     return (
         <EntityDialog
             {...props}
@@ -149,14 +145,6 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     name={`allowParticipantSelfRegistration`}
                     label={t('event.allowParticipantSelfRegistration')}
                 />
-                {allowParticipantSelfRegistrationWatch && (
-                    <Alert severity={'info'}>
-                        <Typography variant={'body2'}>
-                            [todo] WIP Participants will currently not be shown the event documents
-                            when registering!
-                        </Typography>
-                    </Alert>
-                )}
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate

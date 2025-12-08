@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.boundary.CompetitionRegistrationService
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
@@ -226,36 +227,16 @@ object EventRegistrationService {
                         it.teams ?: emptyList()
                     }.flatMap { it.namedParticipants }.flatMap { it.participantIds }.any { it == result.first })
                 ) {
-                    val accessTokenExists = !EventParticipantRepo.exists(eventId, result.second.id).orDie()
 
-                    if (!accessTokenExists) {
-
-                        val newAccessToken = RandomUtilities.token()
-
-                        !EventParticipantRepo.create(
-                            EventParticipantRecord(
-                                event = eventId,
-                                participant = result.second.id,
-                                accessToken = newAccessToken,
-                            )
-                        ).orDie()
-
-                        val content = !EmailService.getTemplate(
-                            EmailTemplateKey.PARTICIPANT_CHALLENGE_REGISTERED,
-                            EmailLanguage.DE, // TODO: somehow get a language
-                        ).map { template ->
-                            template.toContent(
-                                EmailTemplatePlaceholder.RECIPIENT to pDto.firstname + " " + pDto.lastname,
-                                EmailTemplatePlaceholder.EVENT to event.name,
-                                EmailTemplatePlaceholder.LINK to registrationDto.callbackUrl!! + newAccessToken, // Calback url is not null due to dto validation
-                            )
-                        }
-
-                        !EmailService.enqueue(
-                            recipient = pDto.email,
-                            content = content,
-                        )
-                    }
+                    !CompetitionRegistrationService.createParticipantAccess(
+                        participantId = pDto.id,
+                        participantFirstName = pDto.firstname,
+                        participantLastName = pDto.lastname,
+                        participantEmail = pDto.email,
+                        event,
+                        emailLanguage = EmailLanguage.DE, // TODO: somehow get a language,
+                        registrationDto.callbackUrl!!,
+                    )
                 }
 
                 ok(result)
@@ -707,7 +688,6 @@ object EventRegistrationService {
     }
 
 
-    // TODO: Send confirmation e-mail if provided
     fun participantSelfRegister(
         eventId: UUID,
         request: ParticipantRegisterRequest
@@ -762,24 +742,23 @@ object EventRegistrationService {
             ).orDie()
         } else eventRegistration.id!!
 
-        val participantId = !ParticipantRepo.create(
-            ParticipantRecord(
-                id = UUID.randomUUID(),
-                club = request.clubId,
-                firstname = request.firstname,
-                lastname = request.lastname,
-                year = request.birthYear,
-                gender = request.gender,
-                phone = null,
-                external = false,
-                externalClubName = null,
-                createdAt = now,
-                createdBy = null,
-                updatedAt = now,
-                updatedBy = null,
-                email = request.email,
-            )
-        ).orDie()
+        val participantRecord = ParticipantRecord(
+            id = UUID.randomUUID(),
+            club = request.clubId,
+            firstname = request.firstname,
+            lastname = request.lastname,
+            year = request.birthYear,
+            gender = request.gender,
+            phone = null,
+            external = false,
+            externalClubName = null,
+            createdAt = now,
+            createdBy = null,
+            updatedAt = now,
+            updatedBy = null,
+            email = request.email
+        )
+        val participantId = !ParticipantRepo.create(participantRecord).orDie()
 
         !request.registerToSingleCompetitions.traverse { competitionRegistration ->
             KIO.comprehension {
@@ -877,6 +856,18 @@ object EventRegistrationService {
                         ).orDie()
                     }
                 }?.not()
+
+                if (participantRecord.email != null && event.challengeEvent == true && event.selfSubmission == true) {
+                    !CompetitionRegistrationService.createParticipantAccess(
+                        participantId = participantRecord.id,
+                        participantFirstName = participantRecord.firstname,
+                        participantLastName = participantRecord.lastname,
+                        participantEmail = participantRecord.email!!,
+                        event = event,
+                        emailLanguage = request.language,
+                        callbackUrl = request.callbackUrl
+                    )
+                }
 
                 unit
             }

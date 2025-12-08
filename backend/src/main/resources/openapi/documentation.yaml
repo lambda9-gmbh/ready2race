@@ -7290,8 +7290,11 @@ components:
       type: object
       required:
         - token
+        - callbackUrl
       properties:
         token:
+          type: string
+        callbackUrl:
           type: string
 
     AppUserInvitationDto:
@@ -9451,6 +9454,7 @@ components:
         - birthYear
         - clubId
         - language
+        - callbackUrl
         - registerToSingleCompetitions
       properties:
         firstname:
@@ -9468,6 +9472,8 @@ components:
           format: uuid
         language:
           $ref: '#/components/schemas/EmailLanguage'
+        callbackUrl:
+          type: string
         registerToSingleCompetitions:
           type: array
           items:

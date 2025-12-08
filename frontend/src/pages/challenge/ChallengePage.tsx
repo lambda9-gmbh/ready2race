@@ -17,7 +17,7 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getChallengeInfo, downloadMatchTeamResultDocumentByToken} from '@api/sdk.gen.ts'
 import {currentlyInTimespan} from '@utils/helpers.ts'
 import Throbber from '@components/Throbber.tsx'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {ChallengeCompetitionInfoDto} from '@api/types.gen.ts'
 import {format} from 'date-fns'
 import {challengeRoute} from '@routes'
@@ -34,6 +34,8 @@ import {useRef, useState} from 'react'
 import ChallengeResultDialog, {
     ResultInputTeamInfo,
 } from '@components/event/competition/registration/ChallengeResultDialog.tsx'
+import {Link} from '@tanstack/react-router'
+import {ArrowForward} from '@mui/icons-material'
 
 const CompetitionCard = ({
     competition,
@@ -287,6 +289,13 @@ const ChallengePage = () => {
     return (
         <>
             <a ref={downloadRef} style={{display: 'none'}} />
+            <Box sx={{display: 'flex', justifyContent: 'end'}}>
+                <Link to={'/results'}>
+                    <Button variant={'outlined'} endIcon={<ArrowForward />}>
+                        <Trans i18nKey={'landing.liveEventsLink'} />
+                    </Button>
+                </Link>
+            </Box>
             {challengePending ? (
                 <Stack sx={{display: 'flex', flex: 1, justifyContent: 'center'}}>
                     <Throbber />

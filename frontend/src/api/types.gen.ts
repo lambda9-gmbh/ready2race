@@ -1339,6 +1339,7 @@ export type ParticipantRegisterRequest = {
     email?: string
     clubId: string
     language: EmailLanguage
+    callbackUrl: string
     registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
 }
 
@@ -1928,6 +1929,7 @@ export type UploadMatchResultRequest = {
 
 export type VerifyRegistrationRequest = {
     token: string
+    callbackUrl: string
 }
 
 export type WebDAVExportEventRequest = {

@@ -65,7 +65,7 @@ const RegistrationPage = () => {
     const feedback = useFeedback()
 
     const [submitting, setSubmitting] = useState(false)
-    const [requested, setRequested] = useState(false)
+    const [requested, setRequested] = useState<false | 'CONFIRMATION_MAIL' | 'PARTICIPATING'>(false)
     const [activeStep, setActiveStep] = useState(0)
     const [reloadCompetitions, setReloadCompetitions] = useState(0)
 
@@ -312,7 +312,7 @@ const RegistrationPage = () => {
                 feedback.error(t('user.registration.error.generic'))
             }
         } else {
-            setRequested(true)
+            setRequested(formData.isChallengeManager ? 'CONFIRMATION_MAIL' : 'PARTICIPATING')
         }
     }
 
@@ -320,14 +320,15 @@ const RegistrationPage = () => {
         let fieldsToValidate: (keyof RegistrationForm)[] = []
 
         switch (step) {
-            case RegistrationStep.REGISTRATION_TYPE:
+            case RegistrationStep.REGISTRATION_TYPE: {
                 if (!watchIsParticipant && !watchIsChallengeManager) {
                     feedback.error(t('user.registration.error.selectAtLeastOneType'))
                     return false
                 }
-                return true
+                return await formContext.trigger(['event'])
+            }
 
-            case RegistrationStep.BASIC_INFORMATION:
+            case RegistrationStep.BASIC_INFORMATION: {
                 fieldsToValidate = ['clubname', 'firstname', 'lastname']
 
                 if (watchIsChallengeManager) {
@@ -356,10 +357,14 @@ const RegistrationPage = () => {
                 }
 
                 return isValid
+            }
 
             case RegistrationStep.COMPETITIONS:
-                if (!watchIsParticipant) {
-                    return true
+                if (watchIsParticipant) {
+                    if (formContext.getValues('competitions').length < 1) {
+                        feedback.error(t('user.registration.error.selectAtLeastOneCompetition'))
+                        return false
+                    }
                 }
                 return true
 
@@ -390,13 +395,13 @@ const RegistrationPage = () => {
     const getStepContent = (step: RegistrationStep) => {
         switch (step) {
             case RegistrationStep.REGISTRATION_TYPE:
-                return <Step1RegistrationType />
+                return <Step1RegistrationType availableEvents={availableEvents} />
 
             case RegistrationStep.BASIC_INFORMATION:
                 return (
                     <Step2BasicInformation
                         createClubOnRegistrationAllowed={createClubOnRegistrationAllowed ?? false}
-                        availableEvents={availableEvents}
+                        selectedEvent={availableEvents?.find(val => val.id === watchEvent?.id)}
                     />
                 )
 
@@ -484,13 +489,22 @@ const RegistrationPage = () => {
                         </Stack>
                     </FormContainer>
                 </>
-            ) : (
-                <ConfirmationMailSent header={t('user.registration.email.emailSent.header')}>
+            ) : requested === 'CONFIRMATION_MAIL' ? (
+                <ConfirmationMailSent header={t('user.registration.requested.emailSent.header')}>
                     <Typography textAlign="center">
-                        {t('user.registration.email.emailSent.message.part1')}
+                        {t('user.registration.requested.emailSent.message.part1')}
                     </Typography>
                     <Typography textAlign="center">
-                        {t('user.registration.email.emailSent.message.part2')}
+                        {t('user.registration.requested.emailSent.message.part2')}
+                    </Typography>
+                </ConfirmationMailSent>
+            ) : (
+                <ConfirmationMailSent header={t('user.registration.requested.emailSent.header')}>
+                    <Typography textAlign="center">
+                        {t('user.registration.requested.emailSent.message.part1')}
+                    </Typography>
+                    <Typography textAlign="center">
+                        {t('user.registration.requested.emailSent.message.part2')}
                     </Typography>
                 </ConfirmationMailSent>
             )}
