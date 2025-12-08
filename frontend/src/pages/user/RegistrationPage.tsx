@@ -4,7 +4,7 @@ import {CheckboxButtonGroup, FormContainer, useForm} from 'react-hook-form-mui'
 import {Controller} from 'react-hook-form'
 import {
     getClubs,
-    getCompetitions,
+    getCompetitionsForRegistration,
     getCreateClubOnRegistrationAllowed,
     getPublicEvents,
     getRatingCategoriesForEvent,
@@ -57,7 +57,7 @@ type Form = {
     isChallengeManager: boolean
     event: AutocompleteOption
     competitions: CompetitionRegistration[]
-    birthYear?: number
+    birthYear: string
     gender?: Gender
     emailRequired: string
     emailOptional: string
@@ -83,7 +83,7 @@ const RegistrationPage = () => {
         isChallengeManager: false,
         event: null,
         competitions: [],
-        birthYear: undefined,
+        birthYear: '',
         gender: undefined,
         emailRequired: '',
         emailOptional: '',
@@ -99,6 +99,8 @@ const RegistrationPage = () => {
     const watchEvent = formContext.watch('event')
     const watchClubname = formContext.watch('clubname')
     const watchCompetitions = formContext.watch('competitions')
+    const watchBirthYear = formContext.watch('birthYear')
+    const watchGender = formContext.watch('gender')
 
     const setCaptchaStart = ({start}: CaptchaDto) => {
         formContext.setValue('captcha', start)
@@ -152,11 +154,14 @@ const RegistrationPage = () => {
         deps: [],
     })
 
-    // TODO: New endpoint that fetches only competitions that fit the defined data (gender and age fit)
     const {data: competitionsData} = useFetch(
         signal =>
-            getCompetitions({
+            getCompetitionsForRegistration({
                 path: {eventId: watchEvent!.id},
+                query: {
+                    birthYear: Number(watchBirthYear)!,
+                    gender: watchGender!,
+                },
                 signal,
             }),
         {
@@ -168,7 +173,7 @@ const RegistrationPage = () => {
                         }),
                     )
                 } else if (data) {
-                    const initialCompetitions: CompetitionRegistration[] = data.data.map(
+                    const initialCompetitions: CompetitionRegistration[] = data.map(
                         competition => ({
                             checked: false,
                             competitionId: competition.id,
@@ -181,8 +186,9 @@ const RegistrationPage = () => {
                     formContext.setValue('competitions', initialCompetitions)
                 }
             },
-            preCondition: () => watchEvent !== null,
-            deps: [watchEvent],
+            preCondition: () =>
+                watchEvent !== null && watchBirthYear !== '' && watchGender !== undefined,
+            deps: [watchEvent, watchBirthYear, watchGender],
         },
     )
 
@@ -338,6 +344,8 @@ const RegistrationPage = () => {
 
     const currentYear = useMemo(() => new Date().getFullYear(), [])
 
+    // const selectedClubIsInList = clubsData
+
     return (
         <SimpleFormLayout maxWidth={500}>
             {!requested ? (
@@ -433,15 +441,17 @@ const RegistrationPage = () => {
                                     />
                                     {watchEvent &&
                                         competitionsData &&
-                                        competitionsData.data.length > 0 && (
+                                        competitionsData.length > 0 && (
                                             <Box>
                                                 <Typography variant="body2" sx={{mb: 2}}>
                                                     {t('event.competition.competitions')}
                                                 </Typography>
                                                 <Stack spacing={3}>
-                                                    {competitionsData.data.map((competition, index) => {
-                                                        const competitionReg = watchCompetitions?.[index]
-                                                        const isChecked = competitionReg?.checked ?? false
+                                                    {competitionsData.map((competition, index) => {
+                                                        const competitionReg =
+                                                            watchCompetitions?.[index]
+                                                        const isChecked =
+                                                            competitionReg?.checked ?? false
                                                         const optionalFees =
                                                             competition.properties.fees?.filter(
                                                                 f => !f.required,
@@ -456,11 +466,13 @@ const RegistrationPage = () => {
                                                                         <FormInputCheckbox
                                                                             name={field.name}
                                                                             label={
-                                                                                competition.properties
-                                                                                    .name
+                                                                                competition
+                                                                                    .properties.name
                                                                             }
                                                                             checked={field.value}
-                                                                            onChange={field.onChange}
+                                                                            onChange={
+                                                                                field.onChange
+                                                                            }
                                                                         />
                                                                     )}
                                                                 />
@@ -486,13 +498,16 @@ const RegistrationPage = () => {
                                                                                     }
                                                                                 />
                                                                             )}
-                                                                            {optionalFees.length > 0 && (
+                                                                            {optionalFees.length >
+                                                                                0 && (
                                                                                 <CheckboxButtonGroup
                                                                                     label={t(
                                                                                         'event.registration.optionalFee',
                                                                                     )}
                                                                                     name={`competitions.${index}.optionalFees`}
-                                                                                    labelKey={'name'}
+                                                                                    labelKey={
+                                                                                        'name'
+                                                                                    }
                                                                                     options={
                                                                                         optionalFees
                                                                                     }
@@ -576,7 +591,7 @@ function mapFormToAppUserRegisterRequest(formData: Form): AppUserRegisterRequest
                 ratingCategory:
                     competition.ratingCategory !== 'none' ? competition.ratingCategory : undefined,
             })),
-        birthYear: formData.birthYear,
+        birthYear: formData.birthYear !== '' ? Number(formData.birthYear) : undefined,
         gender: formData.gender,
     }
 }
@@ -586,7 +601,7 @@ function mapFormToParticipantRegisterRequest(formData: Form): ParticipantRegiste
         firstname: formData.firstname,
         lastname: formData.lastname,
         gender: formData.gender!,
-        birthYear: formData.birthYear!,
+        birthYear: Number(formData.birthYear!),
         email: takeIfNotEmpty(formData.emailOptional),
         clubId: formData.clubId!,
         language: languageMapping[i18nLanguage()],

@@ -691,6 +691,9 @@ import type {
     DownloadMatchTeamResultDocumentByTokenData,
     DownloadMatchTeamResultDocumentByTokenError,
     DownloadMatchTeamResultDocumentByTokenResponse,
+    GetCompetitionsForRegistrationData,
+    GetCompetitionsForRegistrationError,
+    GetCompetitionsForRegistrationResponse,
     GetSmtpConfigError,
     GetSmtpConfigResponse,
     SetSmtpOverrideData,
@@ -3582,6 +3585,19 @@ export const downloadMatchTeamResultDocumentByToken = <ThrowOnError extends bool
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}/accessToken/{accessToken}',
+    })
+}
+
+export const getCompetitionsForRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionsForRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionsForRegistrationResponse,
+        GetCompetitionsForRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/registration',
     })
 }
 

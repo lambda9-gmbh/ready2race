@@ -6346,6 +6346,41 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/competition/registration:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: query
+        name: birthYear
+        required: true
+        schema:
+          type: integer
+      - in: query
+        name: gender
+        required: true
+        schema:
+          $ref: '#/components/schemas/Gender'
+    get:
+      operationId: getCompetitionsForRegistration
+      responses:
+        200:
+          description: Public list of filtered competitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /smtp-override:
     get:
       operationId: getSmtpConfig

@@ -5384,6 +5384,20 @@ export type DownloadMatchTeamResultDocumentByTokenResponse = Blob | File
 
 export type DownloadMatchTeamResultDocumentByTokenError = BadRequestError | ApiError
 
+export type GetCompetitionsForRegistrationData = {
+    path: {
+        eventId: string
+    }
+    query: {
+        birthYear: number
+        gender: Gender
+    }
+}
+
+export type GetCompetitionsForRegistrationResponse = Array<CompetitionDto>
+
+export type GetCompetitionsForRegistrationError = BadRequestError | ApiError
+
 export type GetSmtpConfigResponse = SmtpConfigOverrideDto
 
 export type GetSmtpConfigError = ApiError

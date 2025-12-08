@@ -223,6 +223,8 @@ object CompetitionRepo {
         }
     }
 
+    fun getPublicCompetitions(eventId: UUID) = COMPETITION_PUBLIC_VIEW.select { EVENT.eq(eventId) }
+
     fun findUnknown(
         competitions: List<UUID>
     ): JIO<List<UUID>> = Jooq.query {

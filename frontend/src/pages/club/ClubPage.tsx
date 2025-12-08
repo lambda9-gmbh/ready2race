@@ -134,9 +134,7 @@ const ClubPage = () => {
                 <>
                     <Stack direction={'row'} spacing={1}>
                         <Typography variant="h2">{clubData.name}</Typography>
-                        <IconButton
-                            onClick={() => clubProps.table.openDialog(clubData)}
-                            className="cursor-pointer">
+                        <IconButton onClick={() => clubProps.table.openDialog(clubData)}>
                             <Edit />
                         </IconButton>
                     </Stack>
