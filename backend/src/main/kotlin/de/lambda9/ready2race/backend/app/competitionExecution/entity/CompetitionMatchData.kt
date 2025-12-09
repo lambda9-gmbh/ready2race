@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.club.control.getActualClubname
+import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
@@ -109,7 +109,7 @@ data class CompetitionMatchData(
 
             val clubs = actuallyParticipatingParticipants.map { it.externalClubName }.toSet()
 
-            val actualClubName = getActualClubname(clubs, mixedTeamTerm)
+            val actualClubName = singletonOrFallback(clubs, mixedTeamTerm)
 
             KIO.ok(
                 CompetitionMatchTeam(

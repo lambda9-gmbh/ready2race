@@ -40,10 +40,3 @@ fun ClubRecord.clubSearchDto(): App<Nothing, ClubSearchDto> = KIO.ok(
 )
 
 
-fun getActualClubname(clubs: Set<String?>, mixedTeamTerm: String?): String? {
-    return if (clubs.size == 1) {
-        clubs.first()
-    } else {
-        mixedTeamTerm
-    }
-}

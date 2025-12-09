@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.club.control.getActualClubname
+import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
@@ -9,11 +9,9 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfiguration
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
-import de.lambda9.ready2race.backend.app.timecode.control.toTimecode
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.data.Timecode
-import de.lambda9.ready2race.backend.database.generated.tables.records.TimecodeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -212,7 +210,7 @@ object EventInfoService {
                     teamName = first.get("team_name", String::class.java),
                     teamNumber = null,
                     clubName = first.get("club_name", String::class.java),
-                    actualClubName = getActualClubname(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
+                    actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
                     place = first[COMPETITION_MATCH_TEAM.PLACE],
                     timeString = first[TIMECODE.TIME]?.let {
@@ -254,7 +252,7 @@ object EventInfoService {
                     teamName = first.get("team_name", String::class.java),
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                     clubName = first.get("club_name", String::class.java),
-                    actualClubName = getActualClubname(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
+                    actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
                     participants = groupedRecords.mapNotNull { record ->
                         record.get("participant_id", UUID::class.java)?.let {
                             UpcomingMatchParticipantInfo(
@@ -285,7 +283,7 @@ object EventInfoService {
                     teamName = first.get("team_name", String::class.java),
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                     clubName = first.get("club_name", String::class.java),
-                    actualClubName = getActualClubname(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
+                    actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
                     currentScore = null, // Could be calculated if scoring data is available
                     currentPosition = first[COMPETITION_MATCH_TEAM.PLACE],
                     participants = groupedRecords.mapNotNull { record ->
