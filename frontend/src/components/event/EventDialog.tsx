@@ -28,6 +28,8 @@ type EventForm = {
     challengeEvent: boolean
     challengeResultType: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
+    allowParticipantSelfRegistration: boolean
 }
 
 const addAction = (formData: EventForm) => {
@@ -61,6 +63,8 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         challengeEvent: false,
         challengeResultType: 'DISTANCE',
         allowSelfSubmission: false,
+        submissionNeedsVerification: false,
+        allowParticipantSelfRegistration: false,
     }
 
     const formContext = useForm<EventForm>()
@@ -133,6 +137,14 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     name={`allowSelfSubmission`}
                     label={t('event.allowSelfSubmission')}
                 />
+                <FormInputCheckbox
+                    name={`submissionNeedsVerification`}
+                    label={t('event.submissionNeedsVerification')}
+                />
+                <FormInputCheckbox
+                    name={`allowParticipantSelfRegistration`}
+                    label={t('event.allowParticipantSelfRegistration')}
+                />
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate
@@ -160,6 +172,8 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         challengeEvent: formData.challengeEvent,
         challengeResultType: formData.challengeEvent ? formData.challengeResultType : undefined,
         allowSelfSubmission: formData.allowSelfSubmission,
+        submissionNeedsVerification: formData.submissionNeedsVerification,
+        allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
     }
 }
 
@@ -178,6 +192,8 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         mixedTeamTerm: takeIfNotEmpty(formData.mixedTeamTerm),
         challengeResultType: challengeEvent ? formData.challengeResultType : undefined,
         allowSelfSubmission: formData.allowSelfSubmission,
+        submissionNeedsVerification: formData.submissionNeedsVerification,
+        allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
     }
 }
 
@@ -197,6 +213,8 @@ function mapDtoToForm(dto: EventDto): EventForm {
         challengeEvent: dto.challengeEvent,
         challengeResultType: dto.challengeResultType ?? 'DISTANCE',
         allowSelfSubmission: dto.allowSelfSubmission,
+        submissionNeedsVerification: dto.submissionNeedsVerification,
+        allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
     }
 }
 

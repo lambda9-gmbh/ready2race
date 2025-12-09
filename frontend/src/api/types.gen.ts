@@ -53,6 +53,20 @@ export type AppUserNameDto = {
     lastname: string
 }
 
+export type AppUserRegisterRequest = {
+    email: string
+    password: string
+    firstname: string
+    lastname: string
+    clubId?: string
+    clubname?: string
+    language: EmailLanguage
+    callbackUrl: string
+    registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
+    birthYear?: number
+    gender?: Gender
+}
+
 export type AppUserRegistrationDto = {
     id: string
     email: string
@@ -449,6 +463,7 @@ export type CompetitionRegistrationTeamDto = {
     deregistration?: CompetitionDeregistrationDto
     globalParticipantRequirements: Array<ParticipantRequirementDto>
     challengeResultValue?: number
+    challengeResultVerifiedAt?: string
     /**
      * Map of documentId to documentName
      */
@@ -562,6 +577,11 @@ export type CompetitionSetupTemplateRequest = {
     rounds: Array<CompetitionSetupRoundDto>
 }
 
+export type CompetitionsForRegistrationDto = {
+    competitions: Array<CompetitionDto>
+    teamsEventOmitted: boolean
+}
+
 export type CompetitionTeamNamedParticipantDto = {
     namedParticipantId: string
     namedParticipantName: string
@@ -629,6 +649,8 @@ export type CreateEventRequest = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
+    allowParticipantSelfRegistration: boolean
 }
 
 export type DocumentTemplateDto = {
@@ -692,6 +714,7 @@ export type ErrorCode =
     | 'PLACES_UNCONTINUOUS'
     | 'LIST_DATA_INCOMPLETE'
     | 'RESULT_NOT_FAILED_AND_NO_DATA'
+    | 'CLUB_NAME_ALREADY_EXISTS'
 
 export type EventDayDto = {
     id: string
@@ -756,6 +779,8 @@ export type EventDto = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
+    allowParticipantSelfRegistration: boolean
 }
 
 export type EventForExportDto = {
@@ -793,6 +818,8 @@ export type EventPublicDto = {
     challengeEvent: boolean
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
+    allowParticipantSelfRegistration: boolean
 }
 
 export type EventRegistrationCompetitionDto = {
@@ -908,6 +935,7 @@ export type EventRegistrationViewDto = {
     clubName: string
     competitionRegistrationCount: number
     participantCount: number
+    eventDocumentsOfficiallyAccepted: boolean
 }
 
 export type FeeDto = {
@@ -918,6 +946,7 @@ export type FeeDto = {
 
 export type FeeForCompetitionDto = {
     id: string
+    assignmentId: string
     name: string
     description?: string
     required: boolean
@@ -1304,6 +1333,24 @@ export type ParticipantQrAssignmentDto = {
     namedParticipantName: string
 }
 
+export type ParticipantRegisterCompetitionRequest = {
+    competitionId: string
+    optionalFees?: Array<string>
+    ratingCategory?: string
+}
+
+export type ParticipantRegisterRequest = {
+    firstname: string
+    lastname: string
+    gender: Gender
+    birthYear: number
+    email?: string
+    clubId: string
+    language: EmailLanguage
+    callbackUrl: string
+    registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
+}
+
 export type ParticipantRequirementCheckForEventConfigDto = {
     requirementId: string
     separator?: string
@@ -1395,6 +1442,14 @@ export type PasswordResetInitRequest = {
 
 export type PasswordResetRequest = {
     password: string
+}
+
+export type PendingClubRepresentativeApprovalDto = {
+    userId: string
+    firstName: string
+    lastName: string
+    email: string
+    createdAt: string
 }
 
 export type PossibleSubstitutionParticipantDto = {
@@ -1493,16 +1548,6 @@ export type RatingCategoryToEventRequest = {
     ratingCategory: string
     yearFrom?: number
     yearTo?: number
-}
-
-export type RegisterRequest = {
-    email: string
-    password: string
-    firstname: string
-    lastname: string
-    clubname: string
-    language: EmailLanguage
-    callbackUrl: string
 }
 
 export type RegistrationInvoiceType = 'REGULAR' | 'LATE'
@@ -1874,6 +1919,12 @@ export type UpdateEventRequest = {
     mixedTeamTerm?: string
     challengeResultType?: MatchResultType
     allowSelfSubmission: boolean
+    submissionNeedsVerification: boolean
+    allowParticipantSelfRegistration: boolean
+}
+
+export type UpdateGlobalConfigurationsRequest = {
+    allowClubCreationOnRegistration: boolean
 }
 
 export type UpdateQrCodeRequirementDto = {
@@ -1888,6 +1939,7 @@ export type UploadMatchResultRequest = {
 
 export type VerifyRegistrationRequest = {
     token: string
+    callbackUrl: string
 }
 
 export type WebDAVExportEventRequest = {
@@ -2101,7 +2153,7 @@ export type UpdateUserResponse = void
 export type UpdateUserError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type RegisterUserData = {
-    body: RegisterRequest
+    body: AppUserRegisterRequest
     query: {
         /**
          * Captcha challenge id
@@ -2842,6 +2894,7 @@ export type GetCompetitionRegistrationTeamsData = {
          * Result offset for pagination
          */
         offset?: number
+        onlyUnverified?: boolean
         /**
          * Filter result with space-separated search terms for pagination
          */
@@ -3543,6 +3596,17 @@ export type GetClubNamesResponse = {
 
 export type GetClubNamesError = ApiError
 
+export type GetPendingClubRepresentativeApprovalsData = {
+    path: {
+        clubId: string
+    }
+}
+
+export type GetPendingClubRepresentativeApprovalsResponse =
+    Array<PendingClubRepresentativeApprovalDto>
+
+export type GetPendingClubRepresentativeApprovalsError = BadRequestError | ApiError
+
 export type GetRegistrationsForEventData = {
     path: {
         eventId: string
@@ -3628,6 +3692,32 @@ export type GetRegistrationInvoicesResponse = {
 
 export type GetRegistrationInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type GetEventRegistrationDocumentsAcceptedData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventRegistrationDocumentsAcceptedResponse = boolean
+
+export type GetEventRegistrationDocumentsAcceptedError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type AcceptEventRegistrationDocumentsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type AcceptEventRegistrationDocumentsResponse = void
+
+export type AcceptEventRegistrationDocumentsError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
 export type GetEventRegistrationTemplateData = {
     path: {
         eventId: string
@@ -3688,6 +3778,27 @@ export type GetRegistrationsWithoutTeamNumberResponse =
     Array<CompetitionRegistrationsWithoutTeamNumberDto>
 
 export type GetRegistrationsWithoutTeamNumberError = BadRequestError | ApiError
+
+export type ParticipantSelfRegisterData = {
+    body: ParticipantRegisterRequest
+    path: {
+        eventId: string
+    }
+    query: {
+        /**
+         * Captcha challenge id
+         */
+        challenge: string
+        /**
+         * Captcha solution
+         */
+        input: number
+    }
+}
+
+export type ParticipantSelfRegisterResponse = unknown
+
+export type ParticipantSelfRegisterError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddFeeData = {
     body: FeeRequest
@@ -4667,6 +4778,19 @@ export type GetWorkShiftsForUserResponse = {
 
 export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type UpdateClubRepresentativeApprovalData = {
+    path: {
+        userId: string
+    }
+    query: {
+        approve: boolean
+    }
+}
+
+export type UpdateClubRepresentativeApprovalResponse = void
+
+export type UpdateClubRepresentativeApprovalError = BadRequestError | ApiError
+
 export type GetInvoicesData = {
     query?: {
         /**
@@ -5216,6 +5340,30 @@ export type SubmitChallengeTeamResultsResponse = void
 
 export type SubmitChallengeTeamResultsError = BadRequestError | ApiError
 
+export type DeleteChallengeTeamResultData = {
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type DeleteChallengeTeamResultResponse = void
+
+export type DeleteChallengeTeamResultError = BadRequestError | ApiError
+
+export type VerifyChallengeTeamResultData = {
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type VerifyChallengeTeamResultResponse = void
+
+export type VerifyChallengeTeamResultError = BadRequestError | ApiError
+
 export type SubmitChallengeTeamResultsByTokenData = {
     body: {
         request: CompetitionChallengeResultRequest
@@ -5258,6 +5406,20 @@ export type DownloadMatchTeamResultDocumentByTokenResponse = Blob | File
 
 export type DownloadMatchTeamResultDocumentByTokenError = BadRequestError | ApiError
 
+export type GetCompetitionsForRegistrationData = {
+    path: {
+        eventId: string
+    }
+    query: {
+        birthYear: number
+        gender: Gender
+    }
+}
+
+export type GetCompetitionsForRegistrationResponse = CompetitionsForRegistrationDto
+
+export type GetCompetitionsForRegistrationError = BadRequestError | ApiError
+
 export type GetSmtpConfigResponse = SmtpConfigOverrideDto
 
 export type GetSmtpConfigError = ApiError
@@ -5285,3 +5447,15 @@ export type ResendAccessTokenData = {
 export type ResendAccessTokenResponse = void
 
 export type ResendAccessTokenError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateGlobalConfigurationsData = {
+    body: UpdateGlobalConfigurationsRequest
+}
+
+export type UpdateGlobalConfigurationsResponse = void
+
+export type UpdateGlobalConfigurationsError = BadRequestError | ApiError
+
+export type GetCreateClubOnRegistrationAllowedResponse = boolean
+
+export type GetCreateClubOnRegistrationAllowedError = ApiError

@@ -14,6 +14,7 @@ import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.queryParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
@@ -113,7 +114,9 @@ fun Route.competitionRegistration() {
                     val competitionId = !pathParam("competitionId", uuid)
                     val params = !pagination<CompetitionRegistrationTeamSort>()
 
-                    CompetitionRegistrationService.teamPage(params, eventId, competitionId, scope, user)
+                    val onlyUnverified = !optionalQueryParam("onlyUnverified", boolean) ?: false
+
+                    CompetitionRegistrationService.teamPage(params, eventId, competitionId, scope, user, onlyUnverified)
                 }
             }
         }

@@ -250,6 +250,7 @@ const CompetitionRegistrationDialog = ({
 
     const directResultPossible =
         eventData.challengeEvent &&
+        !props.entity &&
         ((eventData.allowSelfSubmission &&
             currentlyInTimespan(
                 competition.properties.challengeConfig?.startAt,

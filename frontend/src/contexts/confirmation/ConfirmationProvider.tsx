@@ -22,7 +22,7 @@ const closedConfirmation = (options?: ConfirmationOptions): ConfirmationState =>
     options: options, // to avoid changing content right before closing dialog
 })
 
-export const ConfirmationProvider = (props: PropsWithChildren<{}>) => {
+export const ConfirmationProvider = (props: PropsWithChildren) => {
     const {t} = useTranslation()
     const [confirmation, setConfirmation] = useState<ConfirmationState>(closedConfirmation)
 

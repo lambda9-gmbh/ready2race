@@ -3,6 +3,7 @@ import {
     AppBar,
     Box,
     Button,
+    Chip,
     Container,
     Divider,
     Drawer,
@@ -21,6 +22,7 @@ import {useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
 import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 import SidebarContent from '@components/sidebar/SidebarContent.tsx'
+import Config from '../Config.ts'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -56,6 +58,19 @@ const RootLayout = () => {
                             <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
                                 {drawerExpanded ? <MenuOpen /> : <Menu />}
                             </IconButton>
+                            {(Config.mode === 'development' || Config.mode === 'test') && (
+                                <Chip
+                                    label={Config.mode === 'development' ? 'Dev-Mode' : 'Test-Mode'}
+                                    color="warning"
+                                    size="small"
+                                    sx={{
+                                        position: 'absolute',
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        fontWeight: 'bold',
+                                    }}
+                                />
+                            )}
                             <Stack direction={'row'} spacing={1}>
                                 {!languageSet && <LanguageWidget />}
                                 <UserWidget />

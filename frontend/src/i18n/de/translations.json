@@ -272,12 +272,44 @@
     "clubs": "Vereine",
     "name": "Vereinsname",
     "import": "Vereine importieren",
+    "error": {
+      "nameAlreadyExists": "Ein Verein mit diesem Namen existiert bereits",
+      "mustSelectExistingClub": "Bitte wählen Sie einen bestehenden Verein aus der Liste aus"
+    },
+    "settings": {
+      "title": "Vereinseinstellungen",
+      "allowClubCreationOnRegistration": "Vereinserstellung bei Anmeldung erlauben",
+      "save": "Einstellungen speichern",
+      "saved": "Einstellungen gespeichert"
+    },
     "upload": {
       "dialog": {
         "submit": "Vereine importieren"
       }
     },
     "participants": "Mitglieder",
+    "representative": {
+      "representatives": "Verwaltung",
+      "pendingApprovals": "Ausstehende Genehmigungen",
+      "approve": {
+        "approve": "Bestätigen",
+        "success": "Erfolgreich genehmigt",
+        "error": "Fehler beim Genehmigen",
+        "confirmation": {
+          "title": "{{username}} bestätigen?",
+          "content": "Sind Sie sicher, dass Sie {{username}} als zusätzliche Clubverwaltung bestätigen möchten? Das Konto erhält alle Rechte für diesen Club. Diese Aktion kann nicht rückgängig gemacht werden."
+        }
+      },
+      "deny": {
+        "deny": "Ablehnen",
+        "success": "Erfolgreich abgelehnt",
+        "error": "Fehler beim Ablehnen",
+        "confirmation": {
+          "title": "{{username}} ablehnen?",
+          "content": "Sind Sie sicher, dass Sie die Anfrage von {{username}} als zusätzliche Clubverwaltung ablehnen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+        }
+      }
+    },
     "participant": {
       "import": "Mitglieder importieren",
       "upload": {
@@ -376,6 +408,8 @@
     },
     "challengeResultType": "Challenge Ergebnistyp",
     "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
+    "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
+    "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -417,6 +451,7 @@
     "competition": {
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
+      "noCompetitionsAvailable": "Keine Wettkämpfe verfügbar",
       "identifier": "Kennung",
       "name": "Name",
       "description": "Beschreibung",
@@ -757,6 +792,18 @@
             "confirmTitle": "Bestätigung erforderlich",
             "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
             "confirm": "Ergebnis bestätigen",
+            "verify": "Ergebnis verifizieren",
+            "delete": "Ergebnis löschen",
+            "confirmAction": {
+              "verify": "Einmal verifizierte Ergebnisse können nicht verändert werden. Stellen Sie bitte sicher, dass alles korrekt ist.",
+              "delete": "Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?"
+            },
+            "verified": "Ergebnis verifiziert",
+            "unverified": "Ergebnis nicht verifiziert",
+            "onlyUnverified": "Zeige nur nicht verifizierte Ergebnisse",
+            "proof": "Nachweis vorhanden",
+            "download": "Nachweis herunterladen",
+            "view": "Nachweis ansehen",
             "submitResults": "Ergebnis einreichen",
             "outsideOfTime": "Sie befinden sich derzeit außerhalb des Challenge Zeitraums."
           },
@@ -1160,6 +1207,7 @@
     },
     "firstname": "Vorname",
     "lastname": "Nachname",
+    "birthYear": "Geburtsjahr",
     "password": {
       "password": "Passwort",
       "confirm": "Passwort bestätigen",
@@ -1216,12 +1264,33 @@
     "registration": {
       "register": "Registrieren",
       "pendingRegistrations": "Ausstehende Registrierungen",
-      "email": {
+      "registrationType": "Registrierungstyp",
+      "asParticipant": "Als Teilnehmer:in",
+      "asClubRepresentative": "Als Vereinsverwaltung",
+      "step": {
+        "competitionsNotApplicable": "Keine Wettkampfauswahl erforderlich",
+        "emailToSubmitResults": "Um ein Ergebnis selbst hochzuladen, ist eine E-Mail-Adresse erforderlich. Andernfalls muss die Vereinsverwaltung das Ergebnis für Sie eingeben."
+      },
+      "teamCompetitionsOmitted": "Mit diesem Formular können Sie sich nur für Einzelwettkämpfe anmelden. Um an Mannschaftswettkämpfen teilzunehmen, wenden Sie sich bitte an Ihre Vereinsverwaltung.",
+      "error": {
+        "generic": "Beim Registrieren ist ein Fehler aufgetreten",
+        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
+        "selectAtLeastOneCompetition": "Bitte wählen Sie mindestens einen Wettkampf aus"
+      },
+      "requested": {
         "emailSent": {
           "header": "Bestätigen Sie Ihre E-Mail-Adresse",
           "message": {
             "part1": "Wir haben Ihnen eine E-Mail geschickt, um Ihre E-Mail-Adresse zu verifizieren und Ihr Konto zu aktivieren.",
             "part2": "Klicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+          }
+        },
+        "participating": {
+          "header": "Erfolgreich angemeldet",
+          "message": {
+            "part1": "Sie haben sich erfolgreich für die Veranstaltung {{eventName}} angemeldet.",
+            "part2Email": "Wenn Sie eine E-Mail-Adresse angegeben haben, erhalten Sie in Kürze eine E-Mail mit einem Link, der Sie zum Ergebnis Portal weiterleitet.",
+            "part3ClubRep": "Ansonsten ist Ihre Vereinsverwaltung für das Eintragen der Ergebnisse verantwortlich."
           }
         },
         "verified": {
@@ -1235,11 +1304,6 @@
             "unexpected": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuchen Sie es später erneut."
           }
         }
-      },
-      "error": "Bei der Registrierung ist ein Fehler aufgetreten",
-      "login": {
-        "message": "Sie besitzen bereits ein Konto?",
-        "link": "Hier anmelden"
       }
     },
     "resetPassword": {
@@ -1599,7 +1663,8 @@
       "club": "Verein",
       "relative": "Relativ",
       "individual": "Individuell"
-    }
+    },
+    "noEvents": "Keine Veranstaltungen verfügbar"
   },
   "webDAV": {
     "infoText": {

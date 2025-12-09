@@ -176,7 +176,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              $ref: '#/components/schemas/AppUserRegisterRequest'
       responses:
         204:
           description: Registration initiated
@@ -1334,6 +1334,11 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - in: query
+          name: onlyUnverified
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: CompetitionRegistrationTeam page successfully retrieved
@@ -2733,6 +2738,36 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /club/{clubId}/clubRepresentative:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPendingClubRepresentativeApprovals
+      responses:
+        200:
+          description: Pending club representative approvals successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PendingClubRepresentativeApprovalDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventRegistration:
     parameters:
       - in: path
@@ -2869,6 +2904,51 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/eventRegistration/eventDocumentsAccepted:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventRegistrationDocumentsAccepted
+      responses:
+        200:
+          description: Checks if the event documents have been officially been accepted by a user of the club
+          content:
+            application/json:
+              schema:
+                type:
+                  boolean
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventRegistration/acceptDocuments:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: acceptEventRegistrationDocuments
+      responses:
+        204:
+          description: Accepts the event documents for an existing event registration
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/registrationTemplate:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -2992,6 +3072,31 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/selfRegister:
+    parameters:
+      - $ref: '#/components/parameters/challenge'
+      - $ref: '#/components/parameters/input'
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: participantSelfRegister
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRegisterRequest'
+      responses:
+        200:
+          description: Participant successfully self-registered
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -4939,6 +5044,35 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /user/{userId}/clubRepresentative/approval:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: approve
+        in: query
+        required: true
+        schema:
+          type: boolean
+    put:
+      operationId: updateClubRepresentativeApproval
+      responses:
+        204:
+          description: Club representative successfully approved or denied
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /invoice:
     get:
       parameters:
@@ -6077,6 +6211,42 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteChallengeTeamResult
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/verify:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    put:
+      operationId: verifyChallengeTeamResult
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
   /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/accessToken/{accessToken}:
     parameters:
@@ -6167,6 +6337,39 @@ paths:
       responses:
         200:
           $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/registration:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: query
+        name: birthYear
+        required: true
+        schema:
+          type: integer
+      - in: query
+        name: gender
+        required: true
+        schema:
+          $ref: '#/components/schemas/Gender'
+    get:
+      operationId: getCompetitionsForRegistration
+      responses:
+        200:
+          description: Public list of filtered competitions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionsForRegistrationDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -6270,6 +6473,39 @@ paths:
           $ref: '#/components/responses/403'
         422:
           $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /globalConfigurations:
+    put:
+      operationId: updateGlobalConfigurations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGlobalConfigurationsRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /globalConfigurations/createClubOnRegistration:
+    get:
+      operationId: getCreateClubOnRegistrationAllowed
+      responses:
+        200:
+          description: Global configurations
+          content:
+            application/json:
+              schema:
+                type: boolean
         500:
           $ref: '#/components/responses/500'
 
@@ -6536,6 +6772,7 @@ components:
         - PLACES_UNCONTINUOUS
         - LIST_DATA_INCOMPLETE
         - RESULT_NOT_FAILED_AND_NO_DATA
+        - CLUB_NAME_ALREADY_EXISTS
 
     Gender:
       type: string
@@ -6989,16 +7226,38 @@ components:
         assignedEmail:
           $ref: '#/components/schemas/AssignedEmailDto'
 
-    RegisterRequest:
+    PendingClubRepresentativeApprovalDto:
+      type: object
+      required:
+        - userId
+        - firstName
+        - lastName
+        - email
+        - createdAt
+      properties:
+        userId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    AppUserRegisterRequest:
       type: object
       required:
         - email
         - password
         - firstname
         - lastname
-        - clubname
         - language
         - callbackUrl
+        - registerToSingleCompetitions
       properties:
         email:
           type: string
@@ -7008,6 +7267,9 @@ components:
           type: string
         lastname:
           type: string
+        clubId:
+          type: string
+          format: uuid
         clubname:
           type: string
         language:
@@ -7015,13 +7277,24 @@ components:
         callbackUrl:
           type: string
           format: url
+        registerToSingleCompetitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantRegisterCompetitionRequest'
+        birthYear:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
 
     VerifyRegistrationRequest:
       type: object
       required:
         - token
+        - callbackUrl
       properties:
         token:
+          type: string
+        callbackUrl:
           type: string
 
     AppUserInvitationDto:
@@ -7174,6 +7447,8 @@ components:
         - registrationsFinalized
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
+        - allowParticipantSelfRegistration
       properties:
         id:
           type: string
@@ -7221,6 +7496,10 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        submissionNeedsVerification:
+          type: boolean
+        allowParticipantSelfRegistration:
+          type: boolean
 
     EventPublicDto:
       type: object
@@ -7231,6 +7510,8 @@ components:
         - createdAt
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
+        - allowParticipantSelfRegistration
       properties:
         id:
           type: string
@@ -7267,6 +7548,10 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        submissionNeedsVerification:
+          type: boolean
+        allowParticipantSelfRegistration:
+          type: boolean
 
     EventRegistrationViewDto:
       type: object
@@ -7280,6 +7565,7 @@ components:
         - clubName
         - competitionRegistrationCount
         - participantCount
+        - eventDocumentsOfficiallyAccepted
       properties:
         id:
           type: string
@@ -7306,6 +7592,8 @@ components:
           type: number
         participantCount:
           type: number
+        eventDocumentsOfficiallyAccepted:
+          type: boolean
 
     CreateEventRequest:
       type: object
@@ -7314,6 +7602,8 @@ components:
         - published
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
+        - allowParticipantSelfRegistration
       properties:
         name:
           type: string
@@ -7348,6 +7638,10 @@ components:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
           type: boolean
+        submissionNeedsVerification:
+          type: boolean
+        allowParticipantSelfRegistration:
+          type: boolean
 
     UpdateEventRequest:
       type: object
@@ -7356,6 +7650,8 @@ components:
         - published
         - challengeEvent
         - allowSelfSubmission
+        - submissionNeedsVerification
+        - allowParticipantSelfRegistration
       properties:
         name:
           type: string
@@ -7387,6 +7683,10 @@ components:
         challengeResultType:
           $ref: '#/components/schemas/MatchResultType'
         allowSelfSubmission:
+          type: boolean
+        submissionNeedsVerification:
+          type: boolean
+        allowParticipantSelfRegistration:
           type: boolean
 
 
@@ -7509,11 +7809,15 @@ components:
       type: object
       required:
         - id
+        - assignmentId
         - name
         - required
         - amount
       properties:
         id:
+          type: string
+          format: uuid
+        assignmentId:
           type: string
           format: uuid
         name:
@@ -7692,6 +7996,7 @@ components:
         - isLate
         - updatedAt
         - createdAt
+        - eventDocumentsOfficiallyAccepted
       properties:
         id:
           type: string
@@ -7821,6 +8126,9 @@ components:
             $ref: '#/components/schemas/ParticipantRequirementDto'
         challengeResultValue:
           type: integer
+        challengeResultVerifiedAt:
+          type: string
+          format: date-time
         challengeResultDocuments:
           type: object
           description: Map of documentId to documentName
@@ -9136,6 +9444,57 @@ components:
         - competitionId
         - optionalFees
         - isLate
+
+    ParticipantRegisterRequest:
+      type: object
+      required:
+        - firstname
+        - lastname
+        - gender
+        - birthYear
+        - clubId
+        - language
+        - callbackUrl
+        - registerToSingleCompetitions
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        gender:
+          $ref: '#/components/schemas/Gender'
+        birthYear:
+          type: integer
+        email:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        callbackUrl:
+          type: string
+        registerToSingleCompetitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantRegisterCompetitionRequest'
+
+    ParticipantRegisterCompetitionRequest:
+      type: object
+      required:
+        - competitionId
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        optionalFees:
+          type: array
+          items:
+            type: string
+            format: uuid
+        ratingCategory:
+          type: string
+          format: uuid
 
     DocumentType:
       type: string
@@ -11618,4 +11977,25 @@ components:
         colName:
           type: string
         noHeader:
+          type: boolean
+
+    UpdateGlobalConfigurationsRequest:
+      type: object
+      required:
+        - allowClubCreationOnRegistration
+      properties:
+        allowClubCreationOnRegistration:
+          type: boolean
+
+    CompetitionsForRegistrationDto:
+      type: object
+      required:
+        - competitions
+        - teamsEventOmitted
+      properties:
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionDto'
+        teamsEventOmitted:
           type: boolean

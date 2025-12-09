@@ -1,6 +1,6 @@
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
-import {useEntityAdministration} from '@utils/hooks.ts'
+import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {CompetitionDto, CompetitionRegistrationDto, EventDto} from '@api/types.gen.ts'
 import {Trans, useTranslation} from 'react-i18next'
 import {useAuthenticatedUser} from '@contexts/user/UserContext.ts'
@@ -11,6 +11,7 @@ import ChallengeResultDialog, {
     ResultInputTeamInfo,
 } from '@components/event/competition/registration/ChallengeResultDialog.tsx'
 import {useState} from 'react'
+import {getEventRegistrationDocumentsAccepted} from '@api/sdk.gen.ts'
 
 type Props = {
     eventData: EventDto
@@ -20,6 +21,7 @@ type Props = {
 const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Props) => {
     const {t} = useTranslation()
     const user = useAuthenticatedUser()
+    const feedback = useFeedback()
 
     const [lastChallengeRegistration, setLastChallengeRegistration] =
         useState<ResultInputTeamInfo | null>(null)
@@ -44,24 +46,39 @@ const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Pro
         },
     )
 
+    const {data: documentsAccepted} = useFetch(
+        signal => getEventRegistrationDocumentsAccepted({signal, path: {eventId: eventData.id}}),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            },
+            deps: [eventData],
+            preCondition: () => user.clubId != null,
+        },
+    )
     const registrationInitialized = (eventData.registrationCount ?? 0) > 0
 
     return (
         <Stack spacing={2}>
-            {registrationPossible && !registrationInitialized && !eventData.challengeEvent && (
-                <Alert severity={'info'}>
-                    <Typography sx={{mb: 1}}>
-                        <Trans i18nKey={'event.competition.registration.noEventRegistration'} />
-                        <Trans i18nKey={'event.registerHere.1'} />
-                        <InlineLink
-                            to={'/event/$eventId/register'}
-                            params={{eventId: eventData.id}}>
-                            {t('event.registerHere.2')}
-                        </InlineLink>
-                        <Trans i18nKey={'event.registerHere.3'} />
-                    </Typography>
-                </Alert>
-            )}
+            {registrationPossible &&
+                !registrationInitialized &&
+                user.clubId &&
+                !eventData.challengeEvent && (
+                    <Alert severity={'info'}>
+                        <Typography sx={{mb: 1}}>
+                            <Trans i18nKey={'event.competition.registration.noEventRegistration'} />
+                            <Trans i18nKey={'event.registerHere.1'} />
+                            <InlineLink
+                                to={'/event/$eventId/register'}
+                                params={{eventId: eventData.id}}>
+                                {t('event.registerHere.2')}
+                            </InlineLink>
+                            <Trans i18nKey={'event.registerHere.3'} />
+                        </Typography>
+                    </Alert>
+                )}
             <CompetitionRegistrationDialog
                 {...competitionRegistrationProps.dialog}
                 openResultDialog={reg => setLastChallengeRegistration(reg)}
@@ -93,7 +110,9 @@ const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Pro
                 {...competitionRegistrationProps.table}
                 registrationState={registrationState}
                 registrationInitialized={registrationInitialized}
+                documentsAccepted={documentsAccepted}
                 reloadEvent={reloadEvent}
+                challengeEvent={eventData.challengeEvent}
             />
         </Stack>
     )

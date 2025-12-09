@@ -44,14 +44,16 @@ const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 type Props = BaseEntityTableProps<CompetitionRegistrationDto> & {
     registrationState: OpenForRegistrationType
-    registrationInitialized: boolean
     reloadEvent: () => void
+    challengeEvent: boolean
+    registrationInitialized: boolean
+    documentsAccepted: boolean | null
 }
 
 const CompetitionRegistrationTable = ({
     registrationState,
-    registrationInitialized,
     reloadEvent,
+    challengeEvent,
     ...props
 }: Props) => {
     const {t} = useTranslation()
@@ -62,6 +64,14 @@ const CompetitionRegistrationTable = ({
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
+
+    const canInitializeRegistration =
+        user.loggedIn && user.clubId !== undefined && !props.registrationInitialized
+    const canAcceptDocuments =
+        user.loggedIn &&
+        user.clubId !== undefined &&
+        props.registrationInitialized &&
+        !props.documentsAccepted
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getCompetitionRegistrations({
@@ -301,12 +311,12 @@ const CompetitionRegistrationTable = ({
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
                 entityName={t('event.registration.registration')}
-                creatable={registrationInitialized || user.checkPrivilege(updateRegistrationGlobal)}
+                creatable={props.registrationInitialized && (props.documentsAccepted ?? false)}
                 deletableIf={writable}
                 editableIf={writable}
                 customEntityActions={customEntityActions}
                 customTableActions={
-                    !registrationInitialized && !user.checkPrivilege(updateRegistrationGlobal) ? (
+                    canInitializeRegistration || canAcceptDocuments ? (
                         <Button
                             variant={'outlined'}
                             startIcon={<Add />}
@@ -316,7 +326,7 @@ const CompetitionRegistrationTable = ({
                     ) : undefined
                 }
             />
-            {!registrationInitialized && !user.checkPrivilege(updateRegistrationGlobal) && (
+            {(canInitializeRegistration || canAcceptDocuments) && (
                 <InitializeRegistrationDialog
                     eventId={eventId}
                     open={showInitRegisterDialog}
@@ -325,6 +335,7 @@ const CompetitionRegistrationTable = ({
                         reloadEvent()
                         props.openDialog()
                     }}
+                    registrationInitialized={props.registrationInitialized}
                 />
             )}
             <CompetitionDeregistrationDialog

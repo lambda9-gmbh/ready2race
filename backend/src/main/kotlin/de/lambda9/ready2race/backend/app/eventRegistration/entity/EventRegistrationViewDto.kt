@@ -14,4 +14,5 @@ data class EventRegistrationViewDto(
     val clubName: String,
     val competitionRegistrationCount: Long,
     val participantCount: Long,
+    val eventDocumentsOfficiallyAccepted: Boolean,
 )

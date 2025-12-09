@@ -5,6 +5,7 @@ import java.util.UUID
 
 data class FeeForCompetitionDto(
     val id: UUID,
+    val assignmentId: UUID,
     val name: String,
     val description: String?,
     val required: Boolean,

@@ -3,12 +3,12 @@ package de.lambda9.ready2race.backend.app.eventRegistration.control
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo.competitionRgistrationReferenced
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventRegistrationsView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationsViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -21,6 +21,8 @@ object EventRegistrationRepo {
 
     private fun EventRegistrationsView.searchFields() = listOf(EVENT_NAME)
 
+    fun get(id: UUID) = EVENT_REGISTRATION.selectOne { ID.eq(id) }
+
     fun getView(id: UUID) = EVENT_REGISTRATIONS_VIEW.selectOne { ID.eq(id) }
 
     fun getClub(id: UUID) = EVENT_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
@@ -28,6 +30,9 @@ object EventRegistrationRepo {
     fun create(record: EventRegistrationRecord) = EVENT_REGISTRATION.insertReturning(record) { ID }
 
     fun delete(id: UUID) = EVENT_REGISTRATION.delete { ID.eq(id) }
+
+    fun getByEventAndClub(eventId: UUID, clubId: UUID) =
+        EVENT_REGISTRATIONS_VIEW.selectOne { CLUB_ID.eq(clubId).and(EVENT_ID.eq(eventId)) }
 
     fun getIdsForInvoicing(eventId: UUID, type: RegistrationInvoiceType) = EVENT_REGISTRATION.select({ ID }) {
         DSL.and(
@@ -104,6 +109,7 @@ object EventRegistrationRepo {
 
     fun getRegistrationResult(eventId: UUID) = EVENT_REGISTRATION_RESULT_VIEW.selectOne { ID.eq(eventId) }
 
+    // TODO: Bug: When multiple events have different documents with the same type this fetches all of them, not just by event
     fun getEventRegistrationDocuments(eventId: UUID): JIO<List<EventRegistrationDocumentTypeDto>?> = Jooq.query {
 
         val documents = selectDocumentsForEventRegistrationInfo()
@@ -395,6 +401,7 @@ object EventRegistrationRepo {
         EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED
     ).from(EVENT_DOCUMENT)
         .where(EVENT_DOCUMENT.EVENT_DOCUMENT_TYPE.eq(EVENT_DOCUMENT_TYPE.ID))
+        .and(EVENT_DOCUMENT.EVENT.eq(EVENT.ID))
         .asMultiset("documents")
         .convertFrom {
             it.map {

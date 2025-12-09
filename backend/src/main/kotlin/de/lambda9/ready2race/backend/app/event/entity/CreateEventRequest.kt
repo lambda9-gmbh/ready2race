@@ -25,6 +25,8 @@ data class CreateEventRequest(
     val challengeEvent: Boolean,
     val challengeResultType: MatchResultType?,
     val allowSelfSubmission: Boolean,
+    val submissionNeedsVerification: Boolean,
+    val allowParticipantSelfRegistration: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -62,6 +64,8 @@ data class CreateEventRequest(
                 challengeEvent = true,
                 challengeResultType = MatchResultType.DISTANCE,
                 allowSelfSubmission = false,
+                submissionNeedsVerification = false,
+                allowParticipantSelfRegistration = false,
             )
     }
 }

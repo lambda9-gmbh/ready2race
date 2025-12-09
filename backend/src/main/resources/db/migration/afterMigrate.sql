@@ -172,6 +172,7 @@ select cphf.competition_properties,
        cphf.required,
        cphf.amount,
        cphf.late_amount,
+       cphf.id as assignment_id,
        f.id,
        f.name,
        f.description
@@ -505,6 +506,8 @@ select e.id,
        e.challenge_event,
        e.challenge_match_result_type,
        e.self_submission,
+       e.submission_needs_verification,
+       e.participant_self_registration,
        count(distinct c.id) as competition_count,
        min(ed.date)         as event_from,
        max(ed.date)         as event_to
@@ -536,6 +539,8 @@ select e.id,
        e.challenge_event,
        e.challenge_match_result_type,
        e.self_submission,
+       e.submission_needs_verification,
+       e.participant_self_registration,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        err.event is not null                                                            as registrations_finalized
 from event e
@@ -556,7 +561,8 @@ select er.id,
        c.id                             as club_id,
        c.name                           as club_name,
        count(distinct cr.id)            as competition_registration_count,
-       count(distinct crnp.participant) as participant_count
+       count(distinct crnp.participant) as participant_count,
+       er.event_documents_officially_accepted_at
 from event_registration er
          left join event e on er.event = e.id
          left join club c on er.club = c.id
@@ -748,7 +754,7 @@ select cmt.id,
        cmt.start_number,
        cmt.place,
        cmt.places_calculated,
-       tc as timecode,
+       tc                                                                      as timecode,
        cmt.competition_registration,
        cmt.out,
        cmt.failed,
@@ -1198,6 +1204,7 @@ create view competition_match_team_result as
 select cmt.id,
        cmt.competition_registration,
        cmt.result_value,
+       cmt.result_verified_at,
        coalesce(array_agg(distinct cmtd) filter ( where cmtd.id is not null ), '{}') as result_documents
 from competition_match_team cmt
          left join competition_match_team_document cmtd on cmtd.competition_match_team_id = cmt.id
@@ -1218,6 +1225,7 @@ create view challenge_result_team_view as
 select cr.id              as competition_registration_id,
        cr.name            as competition_registration_name,
        cmt.result_value   as team_result_value,
+       cmt.result_verified_at,
        cr.rating_category as rating_category_id,
        rc.name            as rating_category_name,
        rc.description     as rating_category_description,
@@ -1241,6 +1249,7 @@ select p.id,
        p.firstname,
        p.lastname,
        cmt.result_value as team_result_value,
+       cmt.result_verified_at,
        cr.id            as competition_registration_id,
        cr.name          as competition_registration_name,
        rc.id            as rating_category_id,
