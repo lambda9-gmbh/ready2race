@@ -39,6 +39,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import {StepIconProps} from '@mui/material/StepIcon'
 import {CheckCircleOutline} from '@mui/icons-material'
+import {getRegistrationState} from '@utils/helpers.ts'
 
 const stepIcons: {[index: string]: JSX.Element} = {
     1: <HowToRegIcon />,
@@ -168,7 +169,7 @@ const RegistrationPage = () => {
                         }),
                     )
                 } else if (data) {
-                    const initialCompetitions: CompetitionRegistration[] = data.map(
+                    const initialCompetitions: CompetitionRegistration[] = data.competitions.map(
                         competition => ({
                             checked: false,
                             competitionId: competition.id,
@@ -239,7 +240,13 @@ const RegistrationPage = () => {
 
     // Filter events that allow participant self-registration
     const availableEvents = eventsData?.data.filter(
-        (event: EventPublicDto) => event.allowParticipantSelfRegistration,
+        (event: EventPublicDto) =>
+            event.allowParticipantSelfRegistration &&
+            getRegistrationState({
+                registrationAvailableFrom: event.registrationAvailableFrom,
+                registrationAvailableTo: event.registrationAvailableTo,
+                lateRegistrationAvailableTo: event.lateRegistrationAvailableTo,
+            }) !== 'CLOSED',
     )
 
     const handleSubmit = async (formData: RegistrationForm) => {

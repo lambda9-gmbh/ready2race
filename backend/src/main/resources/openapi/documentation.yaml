@@ -6526,9 +6526,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CompetitionDto'
+                $ref: '#/components/schemas/CompetitionsForRegistrationDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -12155,6 +12153,19 @@ components:
         - allowClubCreationOnRegistration
       properties:
         allowClubCreationOnRegistration:
+          type: boolean
+
+    CompetitionsForRegistrationDto:
+      type: object
+      required:
+        - competitions
+        - teamsEventOmitted
+      properties:
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionDto'
+        teamsEventOmitted:
           type: boolean
 
     GapDocumentPlaceholderDto:

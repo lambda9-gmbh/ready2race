@@ -576,6 +576,11 @@ export type CompetitionSetupTemplateRequest = {
     rounds: Array<CompetitionSetupRoundDto>
 }
 
+export type CompetitionsForRegistrationDto = {
+    competitions: Array<CompetitionDto>
+    teamsEventOmitted: boolean
+}
+
 export type CompetitionTeamNamedParticipantDto = {
     namedParticipantId: string
     namedParticipantName: string
@@ -5538,7 +5543,7 @@ export type GetCompetitionsForRegistrationData = {
     }
 }
 
-export type GetCompetitionsForRegistrationResponse = Array<CompetitionDto>
+export type GetCompetitionsForRegistrationResponse = CompetitionsForRegistrationDto
 
 export type GetCompetitionsForRegistrationError = BadRequestError | ApiError
 

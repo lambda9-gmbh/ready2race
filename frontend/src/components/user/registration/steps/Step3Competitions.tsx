@@ -1,4 +1,4 @@
-import {Box, Stack, Typography} from '@mui/material'
+import {Alert, Box, Divider, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {CheckboxButtonGroup, useFormContext} from 'react-hook-form-mui'
 import {Controller} from 'react-hook-form'
@@ -74,7 +74,7 @@ export const Step3Competitions = ({
         ]
     }
 
-    if (!competitionsData || competitionsData.length === 0) {
+    if (!competitionsData || competitionsData.competitions.length === 0) {
         return (
             <Box sx={{textAlign: 'center', py: 4}}>
                 <Typography variant="body1" color="text.secondary">
@@ -85,114 +85,107 @@ export const Step3Competitions = ({
     }
 
     return (
-        <Stack spacing={3}>
-            <Box>
-                <Typography variant="body2" sx={{mb: 2}}>
-                    {t('event.competition.competitions')}
-                </Typography>
-                <Stack spacing={3}>
-                    {competitionsData.map((competition, index) => {
-                        const competitionReg = watchCompetitions?.[index]
-                        const isChecked = competitionReg?.checked ?? false
-                        const optionalFees =
-                            competition.properties.fees?.filter(f => !f.required) ?? []
-                        const challengeConfig = competition.properties.challengeConfig
+        <Stack spacing={2}>
+            <Typography variant="subtitle2" sx={{mb: 2}}>
+                {t('event.competition.competitions')}
+            </Typography>
+            {competitionsData.teamsEventOmitted && (
+                <Alert severity={'info'}>{t('user.registration.teamCompetitionsOmitted')}</Alert>
+            )}
+            <Stack spacing={3}>
+                {competitionsData.competitions.map((competition, index) => {
+                    const competitionReg = watchCompetitions?.[index]
+                    const isChecked = competitionReg?.checked ?? false
+                    const optionalFees = competition.properties.fees?.filter(f => !f.required) ?? []
+                    const challengeConfig = competition.properties.challengeConfig
 
-                        return (
-                            <Box key={competition.id}>
-                                <Controller
-                                    name={`competitions.${index}.checked`}
-                                    control={formContext.control}
-                                    render={({field}) => (
-                                        <FormInputCheckbox
-                                            name={field.name}
-                                            label={competition.properties.name}
-                                            checked={field.value}
-                                            onChange={(val, checked) => {
-                                                field.onChange(val)
-                                                if (checked) {
-                                                    // Determine the rating category to use
-                                                    let selectedRatingCategory = competition
-                                                        .properties.ratingCategoryRequired
-                                                        ? ''
-                                                        : 'none'
+                    return (
+                        <Box key={competition.id}>
+                            {index > 0 && <Divider />}
+                            <Controller
+                                name={`competitions.${index}.checked`}
+                                control={formContext.control}
+                                render={({field}) => (
+                                    <FormInputCheckbox
+                                        name={field.name}
+                                        label={competition.properties.name}
+                                        checked={field.value}
+                                        onChange={(val, checked) => {
+                                            field.onChange(val)
+                                            if (checked) {
+                                                // Determine the rating category to use
+                                                let selectedRatingCategory = competition.properties
+                                                    .ratingCategoryRequired
+                                                    ? ''
+                                                    : 'none'
 
-                                                    // If rating category is required, check if there's exactly one valid option
-                                                    if (
-                                                        competition.properties
-                                                            .ratingCategoryRequired
-                                                    ) {
-                                                        const validRatingCategories =
-                                                            ratingCategories?.filter(rc =>
-                                                                isRatingCategoryValid(rc),
-                                                            )
+                                                // If rating category is required, check if there's exactly one valid option
+                                                if (competition.properties.ratingCategoryRequired) {
+                                                    const validRatingCategories =
+                                                        ratingCategories?.filter(rc =>
+                                                            isRatingCategoryValid(rc),
+                                                        )
 
-                                                        // Auto-select if there's exactly one valid rating category
-                                                        if (validRatingCategories?.length === 1) {
-                                                            selectedRatingCategory =
-                                                                validRatingCategories[0]
-                                                                    .ratingCategory.id
-                                                        }
+                                                    // Auto-select if there's exactly one valid rating category
+                                                    if (validRatingCategories?.length === 1) {
+                                                        selectedRatingCategory =
+                                                            validRatingCategories[0].ratingCategory
+                                                                .id
                                                     }
-
-                                                    formContext.setValue(
-                                                        `competitions.${index}.ratingCategory`,
-                                                        selectedRatingCategory,
-                                                    )
                                                 }
-                                            }}
-                                        />
-                                    )}
-                                />
-                                {challengeConfig && (
-                                    <Typography variant={'body2'}>
-                                        {format(
-                                            new Date(challengeConfig.startAt),
-                                            t('format.datetime'),
-                                        )}{' '}
-                                        -{' '}
-                                        {format(
-                                            new Date(challengeConfig.endAt),
-                                            t('format.datetime'),
+
+                                                formContext.setValue(
+                                                    `competitions.${index}.ratingCategory`,
+                                                    selectedRatingCategory,
+                                                )
+                                            }
+                                        }}
+                                    />
+                                )}
+                            />
+                            {challengeConfig && (
+                                <Typography variant={'body2'}>
+                                    {format(
+                                        new Date(challengeConfig.startAt),
+                                        t('format.datetime'),
+                                    )}{' '}
+                                    -{' '}
+                                    {format(new Date(challengeConfig.endAt), t('format.datetime'))}
+                                </Typography>
+                            )}
+                            {isChecked && (
+                                <Box sx={{ml: 4, mt: 2}}>
+                                    <Stack spacing={2}>
+                                        {(ratingCategories?.length ?? 0) > 0 && (
+                                            <FormInputSelect
+                                                name={`competitions.${index}.ratingCategory`}
+                                                label={t(
+                                                    'event.competition.registration.ratingCategory',
+                                                )}
+                                                options={ratingCategoryOptions(
+                                                    competition.properties.ratingCategoryRequired,
+                                                )}
+                                                required={
+                                                    competition.properties.ratingCategoryRequired
+                                                }
+                                            />
                                         )}
-                                    </Typography>
-                                )}
-                                {isChecked && (
-                                    <Box sx={{ml: 4, mt: 2}}>
-                                        <Stack spacing={2}>
-                                            {(ratingCategories?.length ?? 0) > 0 && (
-                                                <FormInputSelect
-                                                    name={`competitions.${index}.ratingCategory`}
-                                                    label={t(
-                                                        'event.competition.registration.ratingCategory',
-                                                    )}
-                                                    options={ratingCategoryOptions(
-                                                        competition.properties
-                                                            .ratingCategoryRequired,
-                                                    )}
-                                                    required={
-                                                        competition.properties
-                                                            .ratingCategoryRequired
-                                                    }
-                                                />
-                                            )}
-                                            {optionalFees.length > 0 && (
-                                                <CheckboxButtonGroup
-                                                    label={t('event.registration.optionalFee')}
-                                                    name={`competitions.${index}.optionalFees`}
-                                                    labelKey={'name'}
-                                                    options={optionalFees}
-                                                    row
-                                                />
-                                            )}
-                                        </Stack>
-                                    </Box>
-                                )}
-                            </Box>
-                        )
-                    })}
-                </Stack>
-            </Box>
+                                        {optionalFees.length > 0 && (
+                                            <CheckboxButtonGroup
+                                                label={t('event.registration.optionalFee')}
+                                                name={`competitions.${index}.optionalFees`}
+                                                labelKey={'name'}
+                                                options={optionalFees}
+                                                row
+                                            />
+                                        )}
+                                    </Stack>
+                                </Box>
+                            )}
+                        </Box>
+                    )
+                })}
+            </Stack>
         </Stack>
     )
 }

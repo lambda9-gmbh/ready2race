@@ -1326,6 +1326,7 @@
         "competitionsNotApplicable": "Keine Wettkampfauswahl erforderlich",
         "emailToSubmitResults": "Um ein Ergebnis selbst hochzuladen, ist eine E-Mail-Adresse erforderlich. Andernfalls muss die Vereinsverwaltung das Ergebnis für Sie eingeben."
       },
+      "teamCompetitionsOmitted": "Mit diesem Formular können Sie sich nur für Einzelwettkämpfe anmelden. Um an Mannschaftswettkämpfen teilzunehmen, wenden Sie sich bitte an Ihre Vereinsverwaltung.",
       "error": {
         "generic": "Beim Registrieren ist ein Fehler aufgetreten",
         "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",

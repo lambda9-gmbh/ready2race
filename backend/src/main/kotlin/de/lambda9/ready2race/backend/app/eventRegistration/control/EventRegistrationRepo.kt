@@ -109,7 +109,6 @@ object EventRegistrationRepo {
 
     fun getRegistrationResult(eventId: UUID) = EVENT_REGISTRATION_RESULT_VIEW.selectOne { ID.eq(eventId) }
 
-    // TODO: Bug: When multiple events have different documents with the same type this fetches all of them, not just by event
     fun getEventRegistrationDocuments(eventId: UUID): JIO<List<EventRegistrationDocumentTypeDto>?> = Jooq.query {
 
         val documents = selectDocumentsForEventRegistrationInfo()
