@@ -7444,6 +7444,7 @@ components:
       required:
         - id
         - name
+        - published
         - registrationsFinalized
         - challengeEvent
         - allowSelfSubmission

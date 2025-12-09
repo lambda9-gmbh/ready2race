@@ -61,8 +61,7 @@ const RootLayout = () => {
                             {(Config.mode === 'development' || Config.mode === 'test') && (
                                 <Chip
                                     label={Config.mode === 'development' ? 'Dev-Mode' : 'Test-Mode'}
-                                    color="warning"
-                                    size="small"
+                                    color={Config.mode === 'development' ? 'warning' : 'secondary'}
                                     sx={{
                                         position: 'absolute',
                                         left: '50%',

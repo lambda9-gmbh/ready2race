@@ -768,7 +768,7 @@ export type EventDto = {
     registrationAvailableTo?: string
     lateRegistrationAvailableTo?: string
     invoicePrefix?: string
-    published?: boolean
+    published: boolean
     invoicesProduced?: string
     lateInvoicesProduced?: string
     paymentDueBy?: string

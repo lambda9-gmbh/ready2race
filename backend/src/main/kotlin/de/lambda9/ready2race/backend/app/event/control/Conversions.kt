@@ -55,7 +55,7 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         registrationAvailableTo = registrationAvailableTo,
         lateRegistrationAvailableTo = lateRegistrationAvailableTo,
         invoicePrefix = invoicePrefix.takeIf { scope == Privilege.Scope.GLOBAL },
-        published = published,
+        published = published!!,
         invoicesProduced = invoicesProduced.takeIf { scope == Privilege.Scope.GLOBAL },
         lateInvoicesProduced = lateInvoicesProduced.takeIf { scope == Privilege.Scope.GLOBAL },
         paymentDueBy = paymentDueBy,
