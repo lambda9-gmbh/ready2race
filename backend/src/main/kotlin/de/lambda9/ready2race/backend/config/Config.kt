@@ -87,6 +87,7 @@ data class Config(
             .applyNotNull(localhost) {
                 withProperties(mapOf("mail.smtp.localhost" to it))
             }
+            .withProperties(mapOf("mail.mime.allowutf8" to "true"))
             .buildMailer()
     }
 
