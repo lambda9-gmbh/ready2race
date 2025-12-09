@@ -9,6 +9,7 @@ import {
     GetRatingCategoriesForEventResponse,
 } from '@api/types.gen.ts'
 import {RegistrationForm} from '@components/user/registration/common.ts'
+import {format} from 'date-fns'
 
 interface Step3CompetitionsProps {
     competitionsData?: GetCompetitionsForRegistrationResponse
@@ -95,6 +96,7 @@ export const Step3Competitions = ({
                         const isChecked = competitionReg?.checked ?? false
                         const optionalFees =
                             competition.properties.fees?.filter(f => !f.required) ?? []
+                        const challengeConfig = competition.properties.challengeConfig
 
                         return (
                             <Box key={competition.id}>
@@ -142,6 +144,19 @@ export const Step3Competitions = ({
                                         />
                                     )}
                                 />
+                                {challengeConfig && (
+                                    <Typography variant={'body2'}>
+                                        {format(
+                                            new Date(challengeConfig.startAt),
+                                            t('format.datetime'),
+                                        )}{' '}
+                                        -{' '}
+                                        {format(
+                                            new Date(challengeConfig.endAt),
+                                            t('format.datetime'),
+                                        )}
+                                    </Typography>
+                                )}
                                 {isChecked && (
                                     <Box sx={{ml: 4, mt: 2}}>
                                         <Stack spacing={2}>
