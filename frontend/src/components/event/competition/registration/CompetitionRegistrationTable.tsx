@@ -94,7 +94,7 @@ const CompetitionRegistrationTable = ({
         () => [
             {
                 field: 'clubName',
-                headerName: t('club.club'),
+                headerName: t('club.registrant'),
                 minWidth: 150,
             },
             {
@@ -130,17 +130,18 @@ const CompetitionRegistrationTable = ({
                 field: 'namedParticipants',
                 headerName: t('event.registration.teamMembers'),
                 flex: 2,
-                minWidth: 300,
+                minWidth: 350,
                 sortable: false,
                 renderCell: ({row}) => {
                     return (
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{width: '40%'}}>{t('entity.name')}</TableCell>
-                                    <TableCell sx={{width: '40%'}}>
+                                    <TableCell sx={{width: '26%'}}>{t('entity.name')}</TableCell>
+                                    <TableCell sx={{width: '26%'}}>
                                         {t('event.competition.namedParticipant.namedParticipant')}
                                     </TableCell>
+                                    <TableCell sx={{width: '26%'}}>{t('club.club')}</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -149,10 +150,14 @@ const CompetitionRegistrationTable = ({
                                         <TableRow key={participant.id}>
                                             <TableCell
                                                 sx={{
-                                                    width: '40%',
+                                                    width: '26%',
                                                 }}>{`${participant.firstname} ${participant.lastname}`}</TableCell>
-                                            <TableCell sx={{width: '40%'}}>
+                                            <TableCell sx={{width: '26%'}}>
                                                 {np.namedParticipantName}
+                                            </TableCell>
+                                            <TableCell sx={{width: '26%'}}>
+                                                {participant.externalClubName ??
+                                                    participant.clubName}
                                             </TableCell>
                                         </TableRow>
                                     )),

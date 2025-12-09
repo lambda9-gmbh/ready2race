@@ -38,3 +38,5 @@ fun ClubRecord.clubSearchDto(): App<Nothing, ClubSearchDto> = KIO.ok(
         name = name
     )
 )
+
+

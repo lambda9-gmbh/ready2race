@@ -626,6 +626,7 @@ group by c.id, cp.id, cc.id;
 create view event_registration_result_view as
 select e.id,
        e.name                                                             as event_name,
+       e.mixed_team_term                                                  as mixed_team_term,
        coalesce(array_agg(ecr) filter ( where ecr.id is not null ), '{}') as competitions
 from event e
          left join event_competition_registration ecr on e.id = ecr.event

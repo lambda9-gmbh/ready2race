@@ -1,8 +1,5 @@
 package de.lambda9.ready2race.backend
 
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
-
 fun <A: Any?> lexiNumberComp(stringSelector: (A) -> String?) = Comparator<A> { a, b ->
     val identA = a?.let(stringSelector)
     val identB = b?.let(stringSelector)
@@ -31,5 +28,13 @@ fun <A: Any?> lexiNumberComp(stringSelector: (A) -> String?) = Comparator<A> { a
             intA > intB -> 1
             else -> 0
         }
+    }
+}
+
+fun <T> singletonOrFallback(singletonSet: Set<T>, fallback: T): T {
+    return if (singletonSet.size == 1) {
+        singletonSet.first()
+    } else {
+        fallback
     }
 }

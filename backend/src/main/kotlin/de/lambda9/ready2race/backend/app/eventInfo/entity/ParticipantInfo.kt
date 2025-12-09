@@ -6,5 +6,6 @@ data class ParticipantInfo(
     val participantId: UUID,
     val firstName: String,
     val lastName: String,
-    val namedRole: String?
+    val namedRole: String?,
+    val externalClubName: String?
 )

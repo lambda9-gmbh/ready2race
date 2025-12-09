@@ -789,12 +789,23 @@ const CompetitionExecution = () => {
                                                                 }
                                                             </TableCell>
                                                             <TableCell width="40%">
-                                                                {`${selectedResultsMatch.teams[fieldIndex].clubName}` +
-                                                                    (selectedResultsMatch.teams[
+                                                                <Typography>
+                                                                    {selectedResultsMatch.teams[
                                                                         fieldIndex
-                                                                    ].name
-                                                                        ? ` - ${selectedResultsMatch.teams[fieldIndex].name}`
-                                                                        : '')}
+                                                                    ].actualClubName ??
+                                                                        selectedResultsMatch.teams[
+                                                                            fieldIndex
+                                                                        ].clubName}
+                                                                </Typography>
+                                                                <Typography
+                                                                    color={'textSecondary'}
+                                                                    variant={'body2'}>
+                                                                    {`${t('club.registeredBy')} ` +
+                                                                        selectedResultsMatch.teams[
+                                                                            fieldIndex
+                                                                        ].clubName +
+                                                                        ` | ${selectedResultsMatch.teams[fieldIndex].name}`}
+                                                                </Typography>
                                                             </TableCell>
                                                             <TableCell width="40%">
                                                                 {!failedValue ? (
