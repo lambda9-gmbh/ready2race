@@ -5,10 +5,7 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.control.toDto
-import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetitionRequest
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionDto
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionSortable
+import de.lambda9.ready2race.backend.app.competition.entity.*
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionChallengeService
 import de.lambda9.ready2race.backend.app.competitionProperties.boundary.CompetitionPropertiesService
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
@@ -244,7 +241,7 @@ object CompetitionService {
         eventId: UUID,
         birthYear: Int,
         gender: Gender,
-    ): App<ServiceError, ApiResponse.ListDto<CompetitionDto>> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Dto<CompetitionsForRegistrationDto>> = KIO.comprehension {
         !EventService.checkEventExisting(eventId)
 
         val competitions = !CompetitionRepo.getPublicCompetitions(eventId).orDie()
@@ -262,22 +259,20 @@ object CompetitionService {
             it == OpenForRegistrationType.CLOSED
         }) { EventRegistrationError.RegistrationClosed }
 
-        val filtered = competitions
+        val competitionsWithoutTeamComps = competitions.filter { competition ->
+            competition.namedParticipants!!.size == 1 && competition.namedParticipants!!.first()
+                .let { it!!.countMales!! + it.countFemales!! + it.countNonBinary!! + it.countMixed!! } == 1
+        }
+
+        val filtered = competitionsWithoutTeamComps
             .filter { competition ->
-                competition.namedParticipants!!.size == 1
-                    &&
-                    competition.namedParticipants!!.first()
-                        .let {// Single competitions only
-                            it!!.countMales!! + it.countFemales!! + it.countNonBinary!! + it.countMixed!!
-                        } == 1
-                    &&
-                    competition.namedParticipants!!.first().let { namedParticipant -> // Correct gender
-                        namedParticipant!!.countMixed!! > 0 || when (gender) {
-                            Gender.M -> namedParticipant.countMales!! > 0
-                            Gender.F -> namedParticipant.countFemales!! > 0
-                            Gender.D -> namedParticipant.countNonBinary!! > 0
-                        }
+                competition.namedParticipants!!.first().let { namedParticipant -> // Correct gender
+                    namedParticipant!!.countMixed!! > 0 || when (gender) {
+                        Gender.M -> namedParticipant.countMales!! > 0
+                        Gender.F -> namedParticipant.countFemales!! > 0
+                        Gender.D -> namedParticipant.countNonBinary!! > 0
                     }
+                }
                     && if (competition.ratingCategoryRequired!!) {
                     validRatingCategoryAge
                 } else true
@@ -285,6 +280,13 @@ object CompetitionService {
 
         val dtoList = !filtered.traverse { it.toDto() }
 
-        KIO.ok(ApiResponse.ListDto(dtoList))
+        KIO.ok(
+            ApiResponse.Dto(
+                CompetitionsForRegistrationDto(
+                    competitions = dtoList,
+                    teamsEventOmitted = competitions.size > competitionsWithoutTeamComps.size,
+                )
+            )
+        )
     }
 }

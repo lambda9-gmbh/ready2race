@@ -1268,6 +1268,7 @@
         "competitionsNotApplicable": "No competition selection required for challenge manager registrations",
         "emailToSubmitResults": "To submit a result yourself, an email address is required. Otherwise, a club representative will need to enter the result on your behalf."
       },
+      "teamCompetitionsOmitted": "You can only register for individual competitions using this form. To participate in team competitions, please contact your club administration.",
       "error": {
         "generic": "Beim Registrieren ist ein Fehler aufgetreten",
         "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
