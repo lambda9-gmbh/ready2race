@@ -31,10 +31,10 @@ fun <A: Any?> lexiNumberComp(stringSelector: (A) -> String?) = Comparator<A> { a
     }
 }
 
-fun <T> singletonOrFallback(clubs: Set<T>, mixedTeamTerm: T): T {
-    return if (clubs.size == 1) {
-        clubs.first()
+fun <T> singletonOrFallback(singletonSet: Set<T>, fallback: T): T {
+    return if (singletonSet.size == 1) {
+        singletonSet.first()
     } else {
-        mixedTeamTerm
+        fallback
     }
 }
