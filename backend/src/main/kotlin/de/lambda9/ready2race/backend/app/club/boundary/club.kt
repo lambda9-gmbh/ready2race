@@ -37,7 +37,6 @@ fun Route.club() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.ReadClubGlobal)
                 val params = !pagination<ClubSort>()
                 ClubService.page(params) { it.clubDto() }
             }
@@ -47,7 +46,6 @@ fun Route.club() {
         route("/search") {
             get {
                 call.respondComprehension {
-                    !authenticate()
                     val params = !pagination<ClubSort>()
                     val eventId = !optionalQueryParam("eventId", uuid)
                     ClubService.page(params, eventId) { it.clubSearchDto() }
@@ -100,6 +98,17 @@ fun Route.club() {
                         } else {
                             AppUserService.getAllByClubId(id)
                         }
+                    }
+                }
+            }
+            route("/clubRepresentative") {
+                get {
+
+                    call.respondComprehension {
+                        !authenticate(Privilege.ReadClubOwn)
+                        val id = !pathParam("clubId", uuid)
+
+                        AppUserService.getPendingClubRepresentativeApprovals(id)
                     }
                 }
             }

@@ -1,19 +1,17 @@
 package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserRegistrationSort
-import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserRegistrationView
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRegistrationViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_REGISTRATION
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_REGISTRATION_VIEW
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime
+import java.util.*
 
 object AppUserRegistrationRepo {
 
@@ -41,15 +39,6 @@ object AppUserRegistrationRepo {
         }
     }
 
-    fun consume(
-        token: String,
-    ): JIO<AppUserRegistrationRecord?> = Jooq.query {
-        with(APP_USER_REGISTRATION) {
-            deleteFrom(this)
-                .where(TOKEN.eq(token))
-                .and(EXPIRES_AT.gt(LocalDateTime.now()))
-                .returning()
-                .fetchOne()
-        }
-    }
+    fun get(token: String): JIO<AppUserRegistrationRecord?> =
+        APP_USER_REGISTRATION.selectOne { TOKEN.eq(token).and(EXPIRES_AT.gt(LocalDateTime.now())) }
 }

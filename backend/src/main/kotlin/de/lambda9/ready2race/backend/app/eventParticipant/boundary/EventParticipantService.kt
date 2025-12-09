@@ -35,13 +35,15 @@ object EventParticipantService {
         accessToken: String,
     ): App<ServiceError, ApiResponse.Dto<ChallengeInfoDto>> = KIO.comprehension {
 
-        val eventParticipant = !EventParticipantRepo.getByToken(accessToken).orDie().onNullFail { EventParticipantError.TokenNotFound }
+        val eventParticipant =
+            !EventParticipantRepo.getByToken(accessToken).orDie().onNullFail { EventParticipantError.TokenNotFound }
 
         val event = !EventRepo.get(eventParticipant.event).orDie().onNullDie("Referenced entity")
 
         !KIO.failOn(event.challengeEvent != true) { EventError.NotFound }
 
-        val competitions = !CompetitionRegistrationRepo.getForChallengeInfo(event.id, eventParticipant.participant).orDie()
+        val competitions =
+            !CompetitionRegistrationRepo.getForChallengeInfo(event.id, eventParticipant.participant).orDie()
 
         KIO.ok(
             ApiResponse.Dto(
@@ -63,9 +65,10 @@ object EventParticipantService {
         scope: Privilege.Scope,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        val participant = !ParticipantRepo.get(participantId).orDie().onNullFail { ParticipantError.ParticipantNotFound }.failIf({
-            it.email == null
-        }) { EventParticipantError.NoEmail }
+        val participant =
+            !ParticipantRepo.get(participantId).orDie().onNullFail { ParticipantError.ParticipantNotFound }.failIf({
+                it.email == null
+            }) { EventParticipantError.NoEmail }
 
         !KIO.failOn(scope == Privilege.Scope.OWN && user.club != participant.club) { AuthError.PrivilegeMissing }
 
@@ -79,7 +82,7 @@ object EventParticipantService {
 
         val content = !EmailService.getTemplate(
             EmailTemplateKey.PARTICIPANT_CHALLENGE_REGISTERED,
-            EmailLanguage.DE, // TODO: somehow get a language
+            EmailLanguage.valueOf(user.language!!),
         ).map { template ->
             template.toContent(
                 EmailTemplatePlaceholder.RECIPIENT to participant.firstname + " " + participant.lastname,

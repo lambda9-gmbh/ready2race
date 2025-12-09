@@ -3,7 +3,11 @@ import {Button, DialogActions, DialogContent, DialogTitle, Stack, Typography} fr
 import {Trans, useTranslation} from 'react-i18next'
 import {EventRegistrationConfirmDocumentsForm} from '@components/eventRegistration/EventRegistrationConfirmDocumentsForm.tsx'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {addEventRegistration, getRegistrationDocuments} from '@api/sdk.gen.ts'
+import {
+    addEventRegistration,
+    getRegistrationDocuments,
+    acceptEventRegistrationDocuments,
+} from '@api/sdk.gen.ts'
 import {FormContainer} from 'react-hook-form-mui'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {useState} from 'react'
@@ -13,39 +17,69 @@ type Props = {
     open: boolean
     onClose: () => void
     onSuccess: () => void
+    registrationInitialized: boolean
 }
 
-const InitializeRegistrationDialog = ({eventId, open, onClose, onSuccess}: Props) => {
+const InitializeRegistrationDialog = ({eventId, open, onClose, onSuccess, ...props}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const [submitting, setSubmitting] = useState(false)
 
-    const {data} = useFetch(signal =>
-        getRegistrationDocuments({
-            signal,
-            path: {
-                eventId,
-            },
-        }),
+    const {data: documents} = useFetch(
+        signal =>
+            getRegistrationDocuments({
+                signal,
+                path: {
+                    eventId,
+                },
+            }),
+        {
+            onResponse: ({error}) =>
+                error &&
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: t('event.document.documents'),
+                    }),
+                ),
+            preCondition: () => open,
+            deps: [open],
+        },
     )
 
     const handleSubmit = async () => {
         setSubmitting(true)
-        const {error} = await addEventRegistration({
-            path: {eventId},
-            body: {
-                participants: [],
-                competitionRegistrations: [],
-            },
-        })
-        setSubmitting(false)
 
-        if (error) {
-            feedback.error(t('common.error.unexpected'))
+        if (!props.registrationInitialized) {
+            // Scenario 1: Create new registration
+            const {error: createError} = await addEventRegistration({
+                path: {eventId},
+                body: {
+                    participants: [],
+                    competitionRegistrations: [],
+                },
+            })
+
+            if (createError) {
+                setSubmitting(false)
+                feedback.error(t('common.error.unexpected'))
+                return
+            }
         } else {
-            onClose()
-            onSuccess()
+            // Scenario 2: Accept event documents
+            const {error: acceptError} = await acceptEventRegistrationDocuments({
+                path: {eventId},
+            })
+
+            if (acceptError) {
+                setSubmitting(false)
+                feedback.error(t('common.error.unexpected'))
+                return
+            }
         }
+
+        setSubmitting(false)
+        onClose()
+        onSuccess()
     }
 
     return (
@@ -55,20 +89,34 @@ const InitializeRegistrationDialog = ({eventId, open, onClose, onSuccess}: Props
             </DialogTitle>
             <FormContainer onSuccess={handleSubmit}>
                 <DialogContent>
-                    <Stack spacing={4}>
-                        <Typography>
-                            <Trans i18nKey={'event.registration.initialize.info.1'} />
-                        </Typography>
-                        {(data?.length ?? 0) > 0 && (
-                            <Typography>
-                                <Trans i18nKey={'event.registration.initialize.info.2'} />
-                            </Typography>
-                        )}
-                    </Stack>
-                    <EventRegistrationConfirmDocumentsForm
-                        eventId={eventId}
-                        documentTypes={data ?? []}
-                    />
+                    {documents && documents.length > 0 && (
+                        <>
+                            <Stack spacing={4}>
+                                {!props.registrationInitialized ? (
+                                    <>
+                                        <Typography>
+                                            <Trans
+                                                i18nKey={'event.registration.initialize.info.1'}
+                                            />
+                                        </Typography>
+                                        <Typography>
+                                            <Trans
+                                                i18nKey={'event.registration.initialize.info.2'}
+                                            />
+                                        </Typography>
+                                    </>
+                                ) : (
+                                    <Typography>
+                                        <Trans i18nKey={'event.registration.initialize.info.2'} />
+                                    </Typography>
+                                )}
+                            </Stack>
+                            <EventRegistrationConfirmDocumentsForm
+                                eventId={eventId}
+                                documentTypes={documents}
+                            />
+                        </>
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose} disabled={submitting}>

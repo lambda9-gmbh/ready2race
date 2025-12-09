@@ -327,13 +327,45 @@
     "club": "Club",
     "clubs": "Clubs",
     "name": "Club name",
-    "import": "Vereine importieren",
+    "import": "Import clubs",
+    "error": {
+      "nameAlreadyExists": "A club with this name already exists",
+      "mustSelectExistingClub": "Please select an existing club from the list"
+    },
+    "settings": {
+      "title": "Club Settings",
+      "allowClubCreationOnRegistration": "Allow club creation on registration",
+      "save": "Save settings",
+      "saved": "Settings saved"
+    },
     "upload": {
       "dialog": {
-        "submit": "Vereine importieren"
+        "submit": "Import clubs"
       }
     },
     "participants": "Members",
+    "representative": {
+      "representatives": "Representatives",
+      "pendingApprovals": "Pending Approvals",
+      "approve": {
+        "approve": "Approve",
+        "success": "Representative approved successfully",
+        "error": "Failed to approve representative",
+        "confirmation": {
+          "title": "Approve {{username}}?",
+          "content": "Are you sure you want to approve {{username}} as a club representative? The account will receive full rights to this club. This action cannot be undone."
+        }
+      },
+      "deny": {
+        "deny": "Deny",
+        "success": "Representative denied successfully",
+        "error": "Failed to deny representative",
+        "confirmation": {
+          "title": "Deny {{username}}?",
+          "content": "Are you sure you want to deny the request of {{username}} to be a club representative? This action cannot be undone."
+        }
+      }
+    },
     "participant": {
       "import": "Import members",
       "upload": {
@@ -433,6 +465,7 @@
     "challengeResultType": "Challenge result type",
     "allowSelfSubmission": "Allow self submission of results",
     "submissionNeedsVerification": "Submitted results must be verified",
+    "allowParticipantSelfRegistration": "Allow participants to register themselves",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -474,6 +507,7 @@
     "competition": {
       "competition": "Competition",
       "competitions": "Competitions",
+      "noCompetitionsAvailable": "No competitions available",
       "identifier": "Identifier",
       "name": "Name",
       "description": "Description",
@@ -1228,6 +1262,7 @@
     },
     "firstname": "Firstname",
     "lastname": "Lastname",
+    "birthYear": "Birth Year",
     "password": {
       "password": "Password",
       "confirm": "Passwort bestätigen",
@@ -1284,12 +1319,32 @@
     "registration": {
       "register": "Register",
       "pendingRegistrations": "Pending registrations",
-      "email": {
+      "registrationType": "Registration Type",
+      "asParticipant": "As Participant",
+      "asClubRepresentative": "As Challenge Manager",
+      "step": {
+        "competitionsNotApplicable": "No competition selection required for challenge manager registrations",
+        "emailToSubmitResults": "To submit a result yourself, an email address is required. Otherwise, a club representative will need to enter the result on your behalf."
+      },
+      "error": {
+        "generic": "Beim Registrieren ist ein Fehler aufgetreten",
+        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
+        "selectAtLeastOneCompetition": "Bitte wählen Sie mindestens einen Wettkampf aus"
+      },
+      "requested": {
         "emailSent": {
           "header": "Please verify your email",
           "message": {
             "part1": "We've sent you an email to verify your email adress and activate your account.",
             "part2": "Click on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
+          }
+        },
+        "participating": {
+          "header": "Successfully registered",
+          "message": {
+            "part1": "You have successfully registered for the event {{eventName}}",
+            "part2Email": "If you have provided an email address, you will shortly receive an email with a link that will redirect you to the results portal.",
+            "part3ClubRep": "Otherwise, your club representative is responsible for entering the results."
           }
         },
         "verified": {
@@ -1303,8 +1358,7 @@
             "unexpected": "Your e-mail address could not be confirmed. Please try again later."
           }
         }
-      },
-      "error": "An error has occurred during registration"
+      }
     },
     "resetPassword": {
       "resetPassword": "Reset password",
@@ -1662,7 +1716,8 @@
       "club": "Club",
       "relative": "Relative",
       "individual": "Individual"
-    }
+    },
+    "noEvents": "No events available"
   },
   "webDAV": {
     "infoText": {

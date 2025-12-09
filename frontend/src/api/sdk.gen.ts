@@ -307,6 +307,9 @@ import type {
     GetClubNamesData,
     GetClubNamesError,
     GetClubNamesResponse,
+    GetPendingClubRepresentativeApprovalsData,
+    GetPendingClubRepresentativeApprovalsError,
+    GetPendingClubRepresentativeApprovalsResponse,
     GetRegistrationsForEventData,
     GetRegistrationsForEventError,
     GetRegistrationsForEventResponse,
@@ -319,6 +322,12 @@ import type {
     GetRegistrationInvoicesData,
     GetRegistrationInvoicesError,
     GetRegistrationInvoicesResponse,
+    GetEventRegistrationDocumentsAcceptedData,
+    GetEventRegistrationDocumentsAcceptedError,
+    GetEventRegistrationDocumentsAcceptedResponse,
+    AcceptEventRegistrationDocumentsData,
+    AcceptEventRegistrationDocumentsError,
+    AcceptEventRegistrationDocumentsResponse,
     GetEventRegistrationTemplateData,
     GetEventRegistrationTemplateError,
     GetEventRegistrationTemplateResponse,
@@ -334,6 +343,9 @@ import type {
     GetRegistrationsWithoutTeamNumberData,
     GetRegistrationsWithoutTeamNumberError,
     GetRegistrationsWithoutTeamNumberResponse,
+    ParticipantSelfRegisterData,
+    ParticipantSelfRegisterError,
+    ParticipantSelfRegisterResponse,
     AddFeeData,
     AddFeeError,
     AddFeeResponse,
@@ -561,6 +573,9 @@ import type {
     GetWorkShiftsForUserData,
     GetWorkShiftsForUserError,
     GetWorkShiftsForUserResponse,
+    UpdateClubRepresentativeApprovalData,
+    UpdateClubRepresentativeApprovalError,
+    UpdateClubRepresentativeApprovalResponse,
     GetInvoicesData,
     GetInvoicesError,
     GetInvoicesResponse,
@@ -694,6 +709,9 @@ import type {
     DownloadMatchTeamResultDocumentByTokenData,
     DownloadMatchTeamResultDocumentByTokenError,
     DownloadMatchTeamResultDocumentByTokenResponse,
+    GetCompetitionsForRegistrationData,
+    GetCompetitionsForRegistrationError,
+    GetCompetitionsForRegistrationResponse,
     GetSmtpConfigError,
     GetSmtpConfigResponse,
     SetSmtpOverrideData,
@@ -704,6 +722,11 @@ import type {
     ResendAccessTokenData,
     ResendAccessTokenError,
     ResendAccessTokenResponse,
+    UpdateGlobalConfigurationsData,
+    UpdateGlobalConfigurationsError,
+    UpdateGlobalConfigurationsResponse,
+    GetCreateClubOnRegistrationAllowedError,
+    GetCreateClubOnRegistrationAllowedResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1925,6 +1948,19 @@ export const getClubNames = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getPendingClubRepresentativeApprovals = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetPendingClubRepresentativeApprovalsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetPendingClubRepresentativeApprovalsResponse,
+        GetPendingClubRepresentativeApprovalsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/clubRepresentative',
+    })
+}
+
 export const getRegistrationsForEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetRegistrationsForEventData, ThrowOnError>,
 ) => {
@@ -1974,6 +2010,32 @@ export const getRegistrationInvoices = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventRegistration/{eventRegistrationId}/invoices',
+    })
+}
+
+export const getEventRegistrationDocumentsAccepted = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventRegistrationDocumentsAcceptedData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventRegistrationDocumentsAcceptedResponse,
+        GetEventRegistrationDocumentsAcceptedError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/eventDocumentsAccepted',
+    })
+}
+
+export const acceptEventRegistrationDocuments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AcceptEventRegistrationDocumentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AcceptEventRegistrationDocumentsResponse,
+        AcceptEventRegistrationDocumentsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/acceptDocuments',
     })
 }
 
@@ -2039,6 +2101,19 @@ export const getRegistrationsWithoutTeamNumber = <ThrowOnError extends boolean =
     >({
         ...options,
         url: '/event/{eventId}/missingTeamNumbers',
+    })
+}
+
+export const participantSelfRegister = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ParticipantSelfRegisterData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ParticipantSelfRegisterResponse,
+        ParticipantSelfRegisterError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/selfRegister',
     })
 }
 
@@ -3000,6 +3075,19 @@ export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const updateClubRepresentativeApproval = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubRepresentativeApprovalData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateClubRepresentativeApprovalResponse,
+        UpdateClubRepresentativeApprovalError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/{userId}/clubRepresentative/approval',
+    })
+}
+
 export const getInvoices = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<GetInvoicesData, ThrowOnError>,
 ) => {
@@ -3601,6 +3689,19 @@ export const downloadMatchTeamResultDocumentByToken = <ThrowOnError extends bool
     })
 }
 
+export const getCompetitionsForRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionsForRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionsForRegistrationResponse,
+        GetCompetitionsForRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/registration',
+    })
+}
+
 /**
  * Get SMTP configuration
  */
@@ -3657,5 +3758,31 @@ export const resendAccessToken = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/participant/{participantId}/resendAccessToken',
+    })
+}
+
+export const updateGlobalConfigurations = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateGlobalConfigurationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateGlobalConfigurationsResponse,
+        UpdateGlobalConfigurationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/globalConfigurations',
+    })
+}
+
+export const getCreateClubOnRegistrationAllowed = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCreateClubOnRegistrationAllowedResponse,
+        GetCreateClubOnRegistrationAllowedError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/globalConfigurations/createClubOnRegistration',
     })
 }

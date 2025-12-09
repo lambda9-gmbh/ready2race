@@ -20,6 +20,8 @@ object ClubRepo {
 
     fun allAsJson() = CLUB.selectAsJson()
 
+    fun nameExists(name: String) = CLUB.exists { NAME.eq(name) }
+
     fun create(
         record: ClubRecord,
     ): JIO<UUID> = CLUB.insertReturning(record) { ID }

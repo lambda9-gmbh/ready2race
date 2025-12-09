@@ -147,13 +147,13 @@ export const readResultOwn: Privilege = {
     scope: 'OWN',
 }
 
-export const updateSmtpConfigGlobal: Privilege = {
+export const updateAdministrationConfigGlobal: Privilege = {
     action: 'UPDATE',
     resource: 'ADMINISTRATION',
     scope: 'GLOBAL',
 }
 
-export const readSmtpConfigGlobal: Privilege = {
+export const readAdministrationConfigGlobal: Privilege = {
     action: 'READ',
     resource: 'ADMINISTRATION',
     scope: 'GLOBAL',

@@ -43,5 +43,6 @@ fun EventRegistrationsViewRecord.toDto(): App<Nothing, EventRegistrationViewDto>
             clubName = clubName!!,
             competitionRegistrationCount = competitionRegistrationCount!!,
             participantCount = participantCount!!,
+            eventDocumentsOfficiallyAccepted = eventDocumentsOfficiallyAcceptedAt != null,
         )
     )

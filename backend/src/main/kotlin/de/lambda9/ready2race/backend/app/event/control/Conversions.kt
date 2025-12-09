@@ -36,6 +36,7 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 challengeMatchResultType = challengeResultType?.name,
                 selfSubmission = allowSelfSubmission,
                 submissionNeedsVerification = submissionNeedsVerification,
+                participantSelfRegistration = allowParticipantSelfRegistration,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -70,6 +71,7 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         challengeResultType = challengeMatchResultType?.let { MatchResultType.valueOf(it) },
         allowSelfSubmission = selfSubmission!!,
         submissionNeedsVerification = submissionNeedsVerification!!,
+        allowParticipantSelfRegistration = participantSelfRegistration!!,
     )
 )
 
@@ -90,6 +92,7 @@ fun EventPublicViewRecord.eventPublicDto(): App<Nothing, EventPublicDto> = KIO.o
         challengeResultType = challengeMatchResultType?.let { MatchResultType.valueOf(it) },
         allowSelfSubmission = selfSubmission!!,
         submissionNeedsVerification = submissionNeedsVerification!!,
+        allowParticipantSelfRegistration = participantSelfRegistration!!,
     )
 )
 

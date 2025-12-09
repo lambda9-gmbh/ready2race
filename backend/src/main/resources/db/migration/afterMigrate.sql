@@ -173,6 +173,7 @@ select cphf.competition_properties,
        cphf.required,
        cphf.amount,
        cphf.late_amount,
+       cphf.id as assignment_id,
        f.id,
        f.name,
        f.description
@@ -507,6 +508,7 @@ select e.id,
        e.challenge_match_result_type,
        e.self_submission,
        e.submission_needs_verification,
+       e.participant_self_registration,
        count(distinct c.id) as competition_count,
        min(ed.date)         as event_from,
        max(ed.date)         as event_to
@@ -539,6 +541,7 @@ select e.id,
        e.challenge_match_result_type,
        e.self_submission,
        e.submission_needs_verification,
+       e.participant_self_registration,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        err.event is not null                                                            as registrations_finalized
 from event e
@@ -559,7 +562,8 @@ select er.id,
        c.id                             as club_id,
        c.name                           as club_name,
        count(distinct cr.id)            as competition_registration_count,
-       count(distinct crnp.participant) as participant_count
+       count(distinct crnp.participant) as participant_count,
+       er.event_documents_officially_accepted_at
 from event_registration er
          left join event e on er.event = e.id
          left join club c on er.club = c.id
@@ -750,7 +754,7 @@ select cmt.id,
        cmt.start_number,
        cmt.place,
        cmt.places_calculated,
-       tc as timecode,
+       tc                                                                      as timecode,
        cmt.competition_registration,
        cmt.out,
        cmt.failed,

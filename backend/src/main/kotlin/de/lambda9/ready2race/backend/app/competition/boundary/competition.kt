@@ -2,15 +2,17 @@ package de.lambda9.ready2race.backend.app.competition.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetitionRequest
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionForClubWithPropertiesSort
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionPublicSort
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
-import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
-import de.lambda9.ready2race.backend.app.competition.entity.*
-import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.competitionExecution
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionRegistration.boundary.competitionRegistration
-import de.lambda9.ready2race.backend.app.participant.boundary.ParticipantService
+import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.int
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
@@ -48,6 +50,20 @@ fun Route.competition() {
                     eventDayId,
                     optionalUserWithScope?.first,
                     optionalUserWithScope?.second
+                )
+            }
+        }
+
+        get("/registration") {
+            call.respondComprehension {
+                val eventId = !pathParam("eventId", uuid)
+                val birthYear = !queryParam("birthYear", int)
+                val gender = !queryParam("gender")
+
+                CompetitionService.getForRegistration(
+                    eventId,
+                    birthYear,
+                    gender = Gender.valueOf(gender)
                 )
             }
         }

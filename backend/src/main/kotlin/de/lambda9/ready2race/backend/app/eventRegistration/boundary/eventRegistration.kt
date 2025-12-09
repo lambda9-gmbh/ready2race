@@ -3,13 +3,10 @@ package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationUpsertDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationViewSort
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.ParticipantRegisterRequest
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
-import de.lambda9.ready2race.backend.calls.requests.pagination
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -54,6 +51,22 @@ fun Route.eventRegistration() {
                 }
             }
         }
+
+        get("/eventDocumentsAccepted") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.ReadRegistrationOwn)
+                val eventId = !pathParam("eventId", uuid)
+                EventRegistrationService.getEventDocumentsOfficiallyAccepted(eventId, user)
+            }
+        }
+
+        post("/acceptDocuments") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateRegistrationOwn)
+                val eventId = !pathParam("eventId", uuid)
+                EventRegistrationService.acceptEventDocuments(eventId, user)
+            }
+        }
     }
 
     get("/registrationTemplate") {
@@ -69,6 +82,7 @@ fun Route.eventRegistration() {
             val user = !authenticate(Privilege.CreateRegistrationOwn)
             val eventId = !pathParam("eventId", uuid)
             val payload = !receiveKIO(EventRegistrationUpsertDto.example)
+
             EventRegistrationService.upsertRegistrationForEvent(eventId, payload, user)
         }
     }
@@ -82,7 +96,7 @@ fun Route.eventRegistration() {
         }
     }
 
-    get("/missingTeamNumbers"){
+    get("/missingTeamNumbers") {
         call.respondComprehension {
             !authenticate(Privilege.ReadRegistrationGlobal)
             val eventId = !pathParam("eventId", uuid)
@@ -95,6 +109,16 @@ fun Route.eventRegistration() {
             !authenticate(Privilege.ReadRegistrationGlobal)
             val eventId = !pathParam("eventId", uuid)
             EventRegistrationService.downloadResult(eventId)
+        }
+    }
+
+    post("/selfRegister") {
+        call.respondComprehension {
+            !checkCaptcha()
+            val eventId = !pathParam("eventId", uuid)
+            val payload = !receiveKIO(ParticipantRegisterRequest.example)
+
+            EventRegistrationService.participantSelfRegister(eventId, payload)
         }
     }
 }

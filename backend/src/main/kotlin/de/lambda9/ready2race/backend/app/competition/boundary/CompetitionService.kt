@@ -15,19 +15,24 @@ import de.lambda9.ready2race.backend.app.competitionProperties.control.Competiti
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toRecord
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toUpdateFunction
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationValidation
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasCompetitionRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -233,5 +238,53 @@ object CompetitionService {
         }).orDie()
 
         noData
+    }
+
+    fun getForRegistration(
+        eventId: UUID,
+        birthYear: Int,
+        gender: Gender,
+    ): App<ServiceError, ApiResponse.ListDto<CompetitionDto>> = KIO.comprehension {
+        !EventService.checkEventExisting(eventId)
+
+        val competitions = !CompetitionRepo.getPublicCompetitions(eventId).orDie()
+
+        // Rating categories / age
+        val (ratingCategoryAgeRestrictions) =
+            !CompetitionRegistrationValidation.getRatingCategoryRestrictions(eventId)
+        val validRatingCategoryAge = ratingCategoryAgeRestrictions.any { (_, ageRestriction) ->
+            ((ageRestriction.from != null && ageRestriction.from <= birthYear) || ageRestriction.from == null) &&
+                ((ageRestriction.to != null && ageRestriction.to >= birthYear) || ageRestriction.to == null)
+        }
+
+        // Handle late/closed registration
+        !EventService.getOpenForRegistrationType(eventId).failIf({
+            it == OpenForRegistrationType.CLOSED
+        }) { EventRegistrationError.RegistrationClosed }
+
+        val filtered = competitions
+            .filter { competition ->
+                competition.namedParticipants!!.size == 1
+                    &&
+                    competition.namedParticipants!!.first()
+                        .let {// Single competitions only
+                            it!!.countMales!! + it.countFemales!! + it.countNonBinary!! + it.countMixed!!
+                        } == 1
+                    &&
+                    competition.namedParticipants!!.first().let { namedParticipant -> // Correct gender
+                        namedParticipant!!.countMixed!! > 0 || when (gender) {
+                            Gender.M -> namedParticipant.countMales!! > 0
+                            Gender.F -> namedParticipant.countFemales!! > 0
+                            Gender.D -> namedParticipant.countNonBinary!! > 0
+                        }
+                    }
+                    && if (competition.ratingCategoryRequired!!) {
+                    validRatingCategoryAge
+                } else true
+            }
+
+        val dtoList = !filtered.traverse { it.toDto() }
+
+        KIO.ok(ApiResponse.ListDto(dtoList))
     }
 }

@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.participant.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.control.*
 import de.lambda9.ready2race.backend.app.participant.entity.*
@@ -16,8 +15,6 @@ import de.lambda9.ready2race.backend.app.ratingcategory.entity.AgeRestriction
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryError
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
-import de.lambda9.ready2race.backend.pagination.Direction
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.ToApiError
@@ -28,7 +25,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Participa
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.onTrueFail
-import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
+import de.lambda9.ready2race.backend.pagination.Direction
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.int
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.andThen
@@ -255,11 +253,15 @@ object ParticipantService {
 
         // Sort
         val sortedPs = params.sort?.let { orders ->
-            val comparator = orders
-                .map { if (it.direction == Direction.ASC) it.field.comparator() else it.field.comparator().reversed() }
-                .reduce { acc, comparator -> acc.thenComparing(comparator) }
+            if (orders.isNotEmpty()) {
+                val comparator = orders
+                    .map {
+                        if (it.direction == Direction.ASC) it.field.comparator() else it.field.comparator().reversed()
+                    }
+                    .reduce { acc, comparator -> acc.thenComparing(comparator) }
 
-            searchedPs.sortedWith(comparator)
+                searchedPs.sortedWith(comparator)
+            } else searchedPs
         } ?: searchedPs
 
         // Page

@@ -56,7 +56,7 @@ fun InviteRequest.toRecord(inviterId: UUID, lifeTime: Duration): App<Nothing, Ap
         )
     )
 
-fun RegisterRequest.toRecord(lifeTime: Duration): App<Nothing, AppUserRegistrationRecord> =
+fun AppUserRegisterRequest.toAppUserRegistrationRecord(lifeTime: Duration): App<Nothing, AppUserRegistrationRecord> =
     PasswordUtilities.hash(password).map {
         AppUserRegistrationRecord(
             id = UUID.randomUUID(),
@@ -68,7 +68,10 @@ fun RegisterRequest.toRecord(lifeTime: Duration): App<Nothing, AppUserRegistrati
             clubname = clubname,
             language = language.name,
             expiresAt = lifeTime.afterNow(),
-            createdAt = LocalDateTime.now()
+            createdAt = LocalDateTime.now(),
+            clubId = clubId,
+            year = birthYear,
+            gender = gender,
         )
     }
 

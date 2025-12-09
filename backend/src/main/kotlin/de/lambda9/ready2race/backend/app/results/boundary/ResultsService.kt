@@ -15,13 +15,13 @@ import de.lambda9.ready2race.backend.app.results.control.toDto
 import de.lambda9.ready2race.backend.app.results.entity.*
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.fileResponse
 import de.lambda9.ready2race.backend.calls.responses.pageResponse
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.lexiNumberComp
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
@@ -32,7 +32,7 @@ import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.awt.Color
 import java.io.ByteArrayOutputStream
-import java.util.UUID
+import java.util.*
 
 object ResultsService {
 
@@ -168,14 +168,16 @@ object ResultsService {
 
         // Sort (if provided)
         val sortedClubs = params.sort?.let { orders ->
-            val comparator = orders
-                .map {
-                    if (it.direction == de.lambda9.ready2race.backend.pagination.Direction.ASC) it.field.comparator() else it.field.comparator()
-                        .reversed()
-                }
-                .reduce { acc, comparator -> acc.thenComparing(comparator) }
+            if (orders.isNotEmpty()) {
+                val comparator = orders
+                    .map {
+                        if (it.direction == de.lambda9.ready2race.backend.pagination.Direction.ASC) it.field.comparator() else it.field.comparator()
+                            .reversed()
+                    }
+                    .reduce { acc, comparator -> acc.thenComparing(comparator) }
 
-            searchedClubs.sortedWith(comparator)
+                searchedClubs.sortedWith(comparator)
+            } else searchedClubs
         } ?: searchedClubs
 
         // Pagination
@@ -276,14 +278,16 @@ object ResultsService {
 
             // Sort (if provided)
             val sortedParticipants = params.sort?.let { orders ->
-                val comparator = orders
-                    .map {
-                        if (it.direction == de.lambda9.ready2race.backend.pagination.Direction.ASC) it.field.comparator() else it.field.comparator()
-                            .reversed()
-                    }
-                    .reduce { acc, comparator -> acc.thenComparing(comparator) }
+                if (orders.isNotEmpty()) {
+                    val comparator = orders
+                        .map {
+                            if (it.direction == de.lambda9.ready2race.backend.pagination.Direction.ASC) it.field.comparator() else it.field.comparator()
+                                .reversed()
+                        }
+                        .reduce { acc, comparator -> acc.thenComparing(comparator) }
 
-                searchedParticipants.sortedWith(comparator)
+                    searchedParticipants.sortedWith(comparator)
+                } else searchedParticipants
             } ?: searchedParticipants
 
             // Pagination

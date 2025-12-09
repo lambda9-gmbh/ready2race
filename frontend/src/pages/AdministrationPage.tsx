@@ -14,7 +14,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {updateSmtpConfigGlobal} from '@authorization/privileges.ts'
+import {updateAdministrationConfigGlobal} from '@authorization/privileges.ts'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 
 type Form = SmtpConfigOverrideDto
@@ -24,7 +24,7 @@ const AdministrationPage = () => {
     const feedback = useFeedback()
     const user = useUser()
 
-    const allowedToUpdate = user.checkPrivilege(updateSmtpConfigGlobal)
+    const allowedToUpdate = user.checkPrivilege(updateAdministrationConfigGlobal)
     const formContext = useForm<Form>()
     const smtpStrategyArray: smtpStrategy[] = ['SMTP', 'SMTP_TLS', 'SMTPS']
     const smtpStrategyOptions = smtpStrategyArray.map(strategy => ({

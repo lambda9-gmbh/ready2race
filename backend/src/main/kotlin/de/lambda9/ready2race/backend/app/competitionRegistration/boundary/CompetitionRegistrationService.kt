@@ -35,11 +35,7 @@ import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryS
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationNamedParticipantRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationOptionalFeeRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventParticipantRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
@@ -95,10 +91,22 @@ object CompetitionRegistrationService {
             !KIO.failOn(!isChallengeEvent && onlyUnverified) { CompetitionExecutionChallengeError.NotAChallengeEvent }
 
             val total =
-                !CompetitionRegistrationTeamRepo.teamCountForCompetition(competitionId, params.search, scope, user, onlyUnverified)
+                !CompetitionRegistrationTeamRepo.teamCountForCompetition(
+                    competitionId,
+                    params.search,
+                    scope,
+                    user,
+                    onlyUnverified
+                )
                     .orDie()
             val page =
-                !CompetitionRegistrationTeamRepo.teamPageForCompetition(competitionId, params, scope, user, onlyUnverified).orDie()
+                !CompetitionRegistrationTeamRepo.teamPageForCompetition(
+                    competitionId,
+                    params,
+                    scope,
+                    user,
+                    onlyUnverified
+                ).orDie()
 
             val requirementsForEvent = !ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie()
 
@@ -280,7 +288,7 @@ object CompetitionRegistrationService {
                 namedParticipantDto,
                 request.callbackUrl!!,
                 competitionRegistrationId,
-                request.clubId
+                request.clubId,
             )
         }
 
@@ -345,7 +353,7 @@ object CompetitionRegistrationService {
                 namedParticipantDto,
                 request.callbackUrl!!,
                 competitionRegistrationId,
-                request.clubId
+                request.clubId,
             )
         }
 
@@ -402,7 +410,7 @@ object CompetitionRegistrationService {
         namedParticipantDto: CompetitionRegistrationNamedParticipantUpsertDto,
         callbackUrl: String,
         competitionRegistrationId: UUID,
-        clubId: UUID
+        clubId: UUID,
     ) = KIO.comprehension {
 
         val event = !EventRepo.get(eventId).orDie().onNullDie("Referenced entity must exist.")
@@ -447,36 +455,15 @@ object CompetitionRegistrationService {
                 ).orDie()
 
                 if (participant.email != null && event.challengeEvent == true && event.selfSubmission == true) {
-                    val accessTokenExists = !EventParticipantRepo.exists(eventId, participantId).orDie()
-                    if (!accessTokenExists) {
-
-                        val newAccessToken = RandomUtilities.token()
-
-                        !EventParticipantRepo.create(
-                            EventParticipantRecord(
-                                event = eventId,
-                                participant = participantId,
-                                accessToken = newAccessToken,
-                            )
-                        ).orDie()
-
-                        val content = !EmailService.getTemplate(
-                            EmailTemplateKey.PARTICIPANT_CHALLENGE_REGISTERED,
-                            EmailLanguage.DE, // TODO: somehow get a language
-                        ).map { template ->
-                            template.toContent(
-                                EmailTemplatePlaceholder.RECIPIENT to participant.firstname + " " + participant.lastname,
-                                EmailTemplatePlaceholder.EVENT to event.name,
-                                EmailTemplatePlaceholder.LINK to callbackUrl + newAccessToken,
-                            )
-                        }
-
-                        !EmailService.enqueue(
-                            recipient = participant.email!!,
-                            content = content,
-                        )
-                    }
-
+                    !createParticipantAccess(
+                        participantId = participant.id,
+                        participantFirstName = participant.firstname,
+                        participantLastName = participant.lastname,
+                        participantEmail = participant.email!!,
+                        event,
+                        emailLanguage = EmailLanguage.DE, // TODO: somehow get a language,
+                        callbackUrl
+                    )
                 }
 
                 unit
@@ -553,6 +540,47 @@ object CompetitionRegistrationService {
         }
 
         noData
+    }
+
+    fun createParticipantAccess(
+        participantId: UUID,
+        participantFirstName: String,
+        participantLastName: String,
+        participantEmail: String,
+        event: EventRecord,
+        emailLanguage: EmailLanguage,
+        callbackUrl: String
+    ) = KIO.comprehension {
+        val accessTokenExists = !EventParticipantRepo.exists(event.id, participantId).orDie()
+        if (!accessTokenExists) {
+
+            val newAccessToken = RandomUtilities.token()
+
+            !EventParticipantRepo.create(
+                EventParticipantRecord(
+                    event = event.id,
+                    participant = participantId,
+                    accessToken = newAccessToken,
+                )
+            ).orDie()
+
+            val content = !EmailService.getTemplate(
+                EmailTemplateKey.PARTICIPANT_CHALLENGE_REGISTERED,
+                emailLanguage,
+            ).map { template ->
+                template.toContent(
+                    EmailTemplatePlaceholder.RECIPIENT to "$participantFirstName $participantLastName",
+                    EmailTemplatePlaceholder.EVENT to event.name,
+                    EmailTemplatePlaceholder.LINK to callbackUrl + newAccessToken,
+                )
+            }
+
+            !EmailService.enqueue(
+                recipient = participantEmail,
+                content = content,
+            )
+        }
+        unit
     }
 
 }
