@@ -401,6 +401,7 @@ object EventRegistrationRepo {
         EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED
     ).from(EVENT_DOCUMENT)
         .where(EVENT_DOCUMENT.EVENT_DOCUMENT_TYPE.eq(EVENT_DOCUMENT_TYPE.ID))
+        .and(EVENT_DOCUMENT.EVENT.eq(EVENT.ID))
         .asMultiset("documents")
         .convertFrom {
             it.map {
