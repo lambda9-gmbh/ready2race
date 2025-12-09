@@ -275,6 +275,10 @@ const RegistrationPage = () => {
 
             const result = await participantSelfRegister({
                 path: {eventId: formData.event.id},
+                query: {
+                    challenge: captcha.data!.id,
+                    input: formData.captcha,
+                },
                 body: mapFormToParticipantRegisterRequest(formData),
             })
             error = result.error
@@ -365,7 +369,7 @@ const RegistrationPage = () => {
 
             case RegistrationStep.COMPETITIONS:
                 if (watchIsParticipant) {
-                    if (formContext.getValues('competitions').length < 1) {
+                    if (!formContext.getValues('competitions').some(val => val.checked)) {
                         feedback.error(t('user.registration.error.selectAtLeastOneCompetition'))
                         return false
                     }
@@ -434,7 +438,6 @@ const RegistrationPage = () => {
                 return (
                     <Step4Confirmation
                         watchIsParticipant={watchIsParticipant}
-                        watchIsChallengeManager={watchIsChallengeManager}
                         watchEvent={watchEvent}
                         registrationDocuments={registrationDocuments ?? undefined}
                         captcha={captcha}

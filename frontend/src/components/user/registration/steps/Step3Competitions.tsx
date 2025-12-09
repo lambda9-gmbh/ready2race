@@ -106,7 +106,39 @@ export const Step3Competitions = ({
                                             name={field.name}
                                             label={competition.properties.name}
                                             checked={field.value}
-                                            onChange={field.onChange}
+                                            onChange={(val, checked) => {
+                                                field.onChange(val)
+                                                if (checked) {
+                                                    // Determine the rating category to use
+                                                    let selectedRatingCategory = competition
+                                                        .properties.ratingCategoryRequired
+                                                        ? ''
+                                                        : 'none'
+
+                                                    // If rating category is required, check if there's exactly one valid option
+                                                    if (
+                                                        competition.properties
+                                                            .ratingCategoryRequired
+                                                    ) {
+                                                        const validRatingCategories =
+                                                            ratingCategories?.filter(rc =>
+                                                                isRatingCategoryValid(rc),
+                                                            )
+
+                                                        // Auto-select if there's exactly one valid rating category
+                                                        if (validRatingCategories?.length === 1) {
+                                                            selectedRatingCategory =
+                                                                validRatingCategories[0]
+                                                                    .ratingCategory.id
+                                                        }
+                                                    }
+
+                                                    formContext.setValue(
+                                                        `competitions.${index}.ratingCategory`,
+                                                        selectedRatingCategory,
+                                                    )
+                                                }
+                                            }}
                                         />
                                     )}
                                 />

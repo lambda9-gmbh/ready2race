@@ -6,11 +6,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrat
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.ParticipantRegisterRequest
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
-import de.lambda9.ready2race.backend.calls.requests.pagination
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -118,6 +114,7 @@ fun Route.eventRegistration() {
 
     post("/selfRegister") {
         call.respondComprehension {
+            !checkCaptcha()
             val eventId = !pathParam("eventId", uuid)
             val payload = !receiveKIO(ParticipantRegisterRequest.example)
 

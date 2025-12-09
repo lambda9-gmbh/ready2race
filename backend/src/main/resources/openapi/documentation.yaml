@@ -3077,6 +3077,8 @@ paths:
 
   /event/{eventId}/selfRegister:
     parameters:
+      - $ref: '#/components/parameters/challenge'
+      - $ref: '#/components/parameters/input'
       - $ref: '#/components/parameters/eventId'
     post:
       operationId: participantSelfRegister

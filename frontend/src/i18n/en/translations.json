@@ -1263,7 +1263,7 @@
       "pendingRegistrations": "Pending registrations",
       "registrationType": "Registration Type",
       "asParticipant": "As Participant",
-      "asChallengeManager": "As Challenge Manager",
+      "asClubRepresentative": "As Challenge Manager",
       "step": {
         "competitionsNotApplicable": "No competition selection required for challenge manager registrations",
         "emailToSubmitResults": "To submit a result yourself, an email address is required. Otherwise, a club representative will need to enter the result on your behalf."

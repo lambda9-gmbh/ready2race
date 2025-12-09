@@ -3774,6 +3774,16 @@ export type ParticipantSelfRegisterData = {
     path: {
         eventId: string
     }
+    query: {
+        /**
+         * Captcha challenge id
+         */
+        challenge: string
+        /**
+         * Captcha solution
+         */
+        input: number
+    }
 }
 
 export type ParticipantSelfRegisterResponse = unknown

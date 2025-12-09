@@ -7,7 +7,6 @@ import {AutocompleteOption} from '@utils/types.ts'
 
 interface Step4ConfirmationProps {
     watchIsParticipant: boolean
-    watchIsChallengeManager: boolean
     watchEvent: AutocompleteOption | null
     registrationDocuments?: GetRegistrationDocumentsResponse
     captcha: UseFetchReturn<CaptchaDto, ApiError>
@@ -15,7 +14,6 @@ interface Step4ConfirmationProps {
 
 export const Step4Confirmation = ({
     watchIsParticipant,
-    watchIsChallengeManager,
     watchEvent,
     registrationDocuments,
     captcha,
@@ -32,7 +30,7 @@ export const Step4Confirmation = ({
                     />
                 )}
 
-            {watchIsChallengeManager && <FormInputCaptcha captchaProps={captcha} />}
+            <FormInputCaptcha captchaProps={captcha} />
         </Stack>
     )
 }

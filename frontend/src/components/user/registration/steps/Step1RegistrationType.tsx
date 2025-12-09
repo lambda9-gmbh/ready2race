@@ -3,6 +3,8 @@ import {useTranslation} from 'react-i18next'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {EventPublicDto} from '@api/types.gen.ts'
+import {useFormContext} from 'react-hook-form-mui'
+import {RegistrationForm} from '@components/user/registration/common.ts'
 
 interface Step1RegistrationTypeProps {
     availableEvents?: EventPublicDto[]
@@ -10,6 +12,10 @@ interface Step1RegistrationTypeProps {
 
 export const Step1RegistrationType = ({availableEvents}: Step1RegistrationTypeProps) => {
     const {t} = useTranslation()
+
+    const formContext = useFormContext<RegistrationForm>()
+
+    const watchIsParticipant = formContext.watch('isParticipant')
 
     return (
         <Stack spacing={2}>
@@ -21,19 +27,19 @@ export const Step1RegistrationType = ({availableEvents}: Step1RegistrationTypePr
                 direction={{xs: 'column', sm: 'row'}}
                 sx={{justifyContent: 'space-between'}}>
                 <FormInputCheckbox
-                    name="isChallengeManager"
-                    label={t('user.registration.asChallengeManager')}
-                    horizontal
-                    reverse
-                />
-                <FormInputCheckbox
                     name="isParticipant"
                     label={t('user.registration.asParticipant')}
                     horizontal
                     reverse
                 />
+                <FormInputCheckbox
+                    name="isChallengeManager"
+                    label={t('user.registration.asClubRepresentative')}
+                    horizontal
+                    reverse
+                />
             </Stack>
-            {availableEvents && availableEvents.length > 0 && (
+            {availableEvents && availableEvents.length > 0 && watchIsParticipant && (
                 <FormInputAutocomplete
                     name="event"
                     label={t('event.event')}
