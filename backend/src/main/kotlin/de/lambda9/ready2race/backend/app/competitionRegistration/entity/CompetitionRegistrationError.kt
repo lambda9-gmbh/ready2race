@@ -11,7 +11,8 @@ enum class CompetitionRegistrationError : ServiceError {
     DuplicateParticipant,
     NotFound,
     RatingCategoryMissing,
-    ParticipantOutOfAgeRestriction;
+    ParticipantOutOfAgeRestriction,
+    RoundAlreadyExisting;
 
     override fun respond(): ApiError = when (this) {
 
@@ -48,6 +49,11 @@ enum class CompetitionRegistrationError : ServiceError {
         ParticipantOutOfAgeRestriction -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "A participant is outside of the age restriction of the rating category"
+        )
+
+        RoundAlreadyExisting -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "A round has already been created."
         )
     }
 }

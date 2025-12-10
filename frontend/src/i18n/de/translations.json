@@ -561,8 +561,15 @@
         "ratingCategory": "Wertungskategorie",
         "ratingCategoryInvalid": "Die ausgewählte Wertungskategorie ist für die Teilnehmer in diesem Team nicht gültig",
         "infos": "Infos",
+        "delete": {
+          "error": {
+            "roundExisting": "Der Wettkampf hat bereits begonnen."
+          }
+        },
         "deregister": {
           "deregister": "Abmelden",
+          "error": "Beim Abmelden ist ein Fehler aufgetreten.",
+          "success": "Abmeldung erfolgreich",
           "revertDeregistration": {
             "revertDeregistration": "Abmeldung zurücknehmen",
             "revert": "Zurücknehmen",

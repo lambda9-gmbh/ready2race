@@ -561,8 +561,15 @@
         "ratingCategory": "Rating category",
         "ratingCategoryInvalid": "The selected rating category is not valid for the participants in this team",
         "infos": "Infos",
+        "delete": {
+          "error": {
+            "roundExisting": "The competition has already started."
+          }
+        },
         "deregister": {
           "deregister": "Deregister",
+          "error": "An error has occurred on deregistration",
+          "success": "Deregistration successful",
           "revertDeregistration": {
             "revertDeregistration": "Revert deregistration",
             "revert": "Revert",

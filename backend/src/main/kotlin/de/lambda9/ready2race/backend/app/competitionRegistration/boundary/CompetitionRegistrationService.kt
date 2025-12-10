@@ -520,7 +520,8 @@ object CompetitionRegistrationService {
             val changeIsLate = type == OpenForRegistrationType.LATE
             !KIO.failOn(registration.isLate != changeIsLate) { CompetitionRegistrationError.RegistrationClosed }
         } else {
-            // TODO check no race exists yet
+            !CompetitionExecutionService.getRoundExistingForCompetition(competitionId).orDie()
+                .onTrueFail { CompetitionRegistrationError.RoundAlreadyExisting }
         }
 
         registration.delete()

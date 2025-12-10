@@ -53,9 +53,9 @@ const CompetitionDeregistrationDialog = (props: Props) => {
         setSubmitting(false)
 
         if (error) {
-            feedback.error('todo ERROR')
+            feedback.error(t('event.competition.registration.deregister.error'))
         } else {
-            feedback.success('todo Saved')
+            feedback.success(t('event.competition.registration.deregister.success'))
             props.onClose()
             formContext.reset()
             props.reloadData()
@@ -63,14 +63,17 @@ const CompetitionDeregistrationDialog = (props: Props) => {
     }
 
     return (
-        <BaseDialog open={props.open} onClose={handleClose} >
+        <BaseDialog open={props.open} onClose={handleClose}>
             <DialogTitle>
                 {t('event.competition.registration.deregister.deregister')}{' '}
                 {props.competitionRegistration?.teamName ?? ''}
             </DialogTitle>
             <FormContainer formContext={formContext} onSuccess={onSubmit}>
                 <DialogContent>
-                    <FormInputText name={'reason'} label={t('event.competition.registration.deregister.reason')} />
+                    <FormInputText
+                        name={'reason'}
+                        label={t('event.competition.registration.deregister.reason')}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>{t('common.close')}</Button>
