@@ -102,7 +102,16 @@ const RegistrationPage = () => {
         formContext.setValue('captcha', start)
     }
 
-    const {captcha, onSubmitResult} = useCaptcha(setCaptchaStart)
+    const {captcha, onReloadCaptcha} = useCaptcha(setCaptchaStart, {
+        preCondition: () => activeStep === RegistrationStep.CONFIRMATION,
+    })
+
+    // Reload captcha when entering step 4
+    useEffect(() => {
+        if (activeStep === RegistrationStep.CONFIRMATION) {
+            onReloadCaptcha()
+        }
+    }, [activeStep, onReloadCaptcha])
 
     const {data: createClubOnRegistrationAllowed} = useFetch(
         signal => getCreateClubOnRegistrationAllowed({signal}),
@@ -292,7 +301,7 @@ const RegistrationPage = () => {
         }
 
         setSubmitting(false)
-        onSubmitResult()
+        onReloadCaptcha()
         formContext.resetField('captcha')
 
         if (error) {

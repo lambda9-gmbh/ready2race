@@ -1,5 +1,5 @@
 import {RequestResult} from '@hey-api/client-fetch'
-import {DependencyList, useEffect, useLayoutEffect, useState} from 'react'
+import {DependencyList, useCallback, useEffect, useLayoutEffect, useState} from 'react'
 import {useSnackbar} from 'notistack'
 import {GridValidRowModel} from '@mui/x-data-grid'
 import {useTranslation} from 'react-i18next'
@@ -235,14 +235,18 @@ export const useWindowSize = (delay?: number) => {
 
 type CaptchaFetchProps = {
     captcha: UseFetchReturn<CaptchaDto, ApiError>
-    onSubmitResult: () => void
+    onReloadCaptcha: () => void
 }
-export const useCaptcha = (onSuccess: (captcha: CaptchaDto) => void): CaptchaFetchProps => {
+export const useCaptcha = (
+    onSuccess: (captcha: CaptchaDto) => void,
+    options?: Omit<UseFetchOptions<CaptchaDto, ApiError, CaptchaDto>, 'onResponse' | 'deps'>,
+): CaptchaFetchProps => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const [lastRequested, setLastRequested] = useState(Date.now())
 
     const captchaData = useFetch(signal => newCaptcha({signal}), {
+        ...options,
         onResponse: ({data, error}) => {
             if (error) {
                 feedback.error(t('common.error.unexpected'))
@@ -253,10 +257,12 @@ export const useCaptcha = (onSuccess: (captcha: CaptchaDto) => void): CaptchaFet
         deps: [lastRequested],
     })
 
+    const onReloadCaptcha = useCallback(() => {
+        setLastRequested(Date.now())
+    }, [])
+
     return {
         captcha: captchaData,
-        onSubmitResult: () => {
-            setLastRequested(Date.now())
-        },
+        onReloadCaptcha,
     }
 }
