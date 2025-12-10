@@ -523,7 +523,7 @@
         "description": "Description",
         "amount": "Amount",
         "lateAmount": "Different amount for late registration",
-        "add": "Add Fee",
+        "add": "Add fee",
         "type": "Fee type",
         "tableHint": "Defines possible fees for a competition.",
         "required": {
@@ -531,7 +531,14 @@
           "required": "Fee is mandatory"
         },
         "asRegular": "registered in time: {{amount}}€",
-        "asLate": "registered late: {{amount}}€"
+        "asLate": "registered late: {{amount}}€",
+        "error": {
+          "duplicates": {
+            "one": "The fee type {{label}} is used several times.",
+            "multiple": "The fee types {{labels}} are used several times.",
+            "message": "Please select a unique fee type for each fee."
+          }
+        }
       },
       "template": {
         "template": "Competition Template",

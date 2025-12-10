@@ -28,7 +28,6 @@ type Props = {
     isChallengeEvent: boolean
 }
 
-// todo: rework styling
 export const CompetitionPropertiesFormInputs = (props: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
@@ -196,6 +195,8 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
         }
     }
 
+    const [feesError, setFeesError] = useState<string | null>(null)
+
     const {
         fields: feeFields,
         append: appendFee,
@@ -204,6 +205,32 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
         control: props.formContext.control,
         name: 'fees',
         keyName: 'fieldId',
+        rules: {
+            validate: values => {
+                const duplicates = Array.from(groupBy(values, val => val.fee?.id))
+                    .filter(([, items]) => items.length > 1)
+                    .map(([, items]) => items[0].fee?.label)
+                    .filter(label => label !== undefined)
+
+                if (duplicates.length > 0) {
+                    setFeesError(
+                        duplicates.length > 1
+                            ? t('event.competition.fee.error.duplicates.multiple', {
+                                  labels: duplicates.reduce((acc, val) => acc + val + ' '),
+                              })
+                            : t('event.competition.fee.error.duplicates.one', {
+                                  label: duplicates[0],
+                              }) +
+                                  ' ' +
+                                  t('event.competition.fee.error.duplicates.message'),
+                    )
+                    return 'duplicates'
+                }
+
+                setNamedParticipantsError(null)
+                return undefined
+            },
+        },
     })
 
     return (
@@ -282,7 +309,6 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             <Card
                                 sx={{
                                     p: 2,
-                                    boxSizing: 'border-box',
                                     flex: 1,
                                 }}>
                                 <Stack spacing={4}>
@@ -292,14 +318,6 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         label={t('event.competition.namedParticipant.role')}
                                         loading={namedParticipantsPending}
                                         required
-                                        rules={{
-                                            validate: val => {
-                                                // Extra Required Check (the normal rule wasn't consistent when a new entry was created)
-                                                if (val.id === '') {
-                                                    return t('common.form.required')
-                                                }
-                                            },
-                                        }}
                                     />
                                     <Stack direction="row" spacing={2} sx={{alignItems: 'end'}}>
                                         <FormInputNumber
@@ -380,6 +398,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             </Box>
             <Divider />
             <FormInputLabel label={t('event.competition.fee.fees')}>
+                {feesError && <Typography color={'error'}>{feesError}</Typography>}
                 <Stack spacing={2}>
                     {feeFields.map((field, index) => (
                         <Stack
@@ -390,7 +409,6 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             <Card
                                 sx={{
                                     p: 2,
-                                    boxSizing: 'border-box',
                                     flex: 1,
                                 }}>
                                 <Stack spacing={4}>

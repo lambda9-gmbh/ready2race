@@ -357,19 +357,12 @@ object CompetitionExecutionService {
 
         } else {
 
-            // TODO: @Evaluate: is this not implicitly checked by the following check?
-            val currentRoundPlaces =
-                currentRound.matches.flatMap { match ->
-                    match.teams.filter { !it.deregistered && !it.failed && !it.out }.map { team -> team.place }
-                }
-
-            val placesAreMissing = currentRound.matches.map { match ->
-                match.teams.map { it.place }
+            val placesAreMissing = currentRound.matches.any { match ->
+                !match.teams.map { it.place }
                     .containsAll((1..match.teams.filter { !it.deregistered && !it.failed && !it.out }.size).toList())
-            }.any { !it }
+            }
 
-
-            if (currentRoundPlaces.contains(null) || placesAreMissing)
+            if (placesAreMissing)
                 reasons.add(CompetitionExecutionCanNotCreateRoundReason.NOT_ALL_PLACES_SET to CompetitionExecutionError.NotAllPlacesSet)
         }
 
@@ -495,7 +488,17 @@ object CompetitionExecutionService {
         !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
 
-        // TODO: validate places continuous
+        val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
+
+        // Validate places are continuous when provided
+        if (!noPlaces) {
+            val places = request.teamResults.filter { !it.failed }.mapNotNull { it.place }.sorted()
+            places.forEachIndexed { index, place ->
+                val expected = index + 1
+                !KIO.failOn(expected != place) { CompetitionExecutionError.PlacesNotContinuous }
+            }
+        }
+
         val calculatedPlaces: List<Pair<UUID, Timecode?>> =
             request.teamResults.filter { !it.failed }
                 .map { result ->
@@ -503,8 +506,6 @@ object CompetitionExecutionService {
                 }
                 .sortedBy { it.second?.millis }
 
-        val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
-        println(calculatedPlaces)
         request.teamResults.traverse { result ->
             KIO.comprehension {
 
@@ -629,23 +630,23 @@ object CompetitionExecutionService {
             oneOf(
                 collection(
                     oneOf(
-                        Validator.Companion.select(notNull, ParsedTeamResult::place),
-                        Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+                        Validator.select(notNull, ParsedTeamResult::place),
+                        Validator.select(notNull, ParsedTeamResult::noResultReason)
                     )
                 ),
                 collection(
-                    Validator.Companion.select(isNull, ParsedTeamResult::place)
+                    Validator.select(isNull, ParsedTeamResult::place)
                 ),
             ),
             oneOf(
                 collection(
                     oneOf(
-                        Validator.Companion.select(notNull, ParsedTeamResult::time),
-                        Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+                        Validator.select(notNull, ParsedTeamResult::time),
+                        Validator.select(notNull, ParsedTeamResult::noResultReason)
                     )
                 ),
                 collection(
-                    Validator.Companion.select(isNull, ParsedTeamResult::time)
+                    Validator.select(isNull, ParsedTeamResult::time)
                 ),
             )
         )(teams).fold(
@@ -658,10 +659,10 @@ object CompetitionExecutionService {
         !collection(
             oneOf(
                 anyOf(
-                    Validator.Companion.select(notNull, ParsedTeamResult::place),
-                    Validator.Companion.select(notNull, ParsedTeamResult::time)
+                    Validator.select(notNull, ParsedTeamResult::place),
+                    Validator.select(notNull, ParsedTeamResult::time)
                 ),
-                Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+                Validator.select(notNull, ParsedTeamResult::noResultReason)
             )
         )(teams).fold(
             onValid = { unit },

@@ -531,7 +531,14 @@
           "required": "Gebühr ist verpflichtend"
         },
         "asRegular": "bei Meldung: {{amount}}€",
-        "asLate": "bei Nachmeldung: {{amount}}€"
+        "asLate": "bei Nachmeldung: {{amount}}€",
+        "error": {
+          "duplicates": {
+            "one": "Die Gebührenart {{label}} wird mehrfach verwendet.",
+            "multiple": "Die Gebührenarten {{labels}} werden mehrfach verwendet.",
+            "message": "Bitte wählen Sie für jede Gebühr eine einzigartige Gebührenart aus."
+          }
+        }
       },
       "template": {
         "template": "Wettkampf Vorlage",
