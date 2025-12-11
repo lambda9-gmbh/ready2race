@@ -44,7 +44,7 @@ const InitResetPasswordPage = () => {
         formContext.setValue('captcha', start)
     }
 
-    const {captcha, onSubmitResult} = useCaptcha(setCaptchaStart)
+    const {captcha, onReloadCaptcha} = useCaptcha(setCaptchaStart)
 
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)
@@ -62,7 +62,7 @@ const InitResetPasswordPage = () => {
         })
 
         setSubmitting(false)
-        onSubmitResult()
+        onReloadCaptcha()
         formContext.resetField('captcha')
 
         if (result.error) {
@@ -108,7 +108,7 @@ const InitResetPasswordPage = () => {
                             ) : (
                                 <Alert severity="error">
                                     {t('common.error.tooManyRequests', {
-                                        val: Math.ceil(tooManyRequestsTimer / 60), // todo: under 1min show seconds
+                                        val: Math.ceil(tooManyRequestsTimer / 60),
                                     })}
                                 </Alert>
                             )}

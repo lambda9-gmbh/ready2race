@@ -58,7 +58,7 @@ fun Application.module(env: JEnv) {
     configureSessions()
     configureRequests()
     configureResponses()
-    configureRouting()
+    configureRouting(env.env.config)
 }
 
 private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
