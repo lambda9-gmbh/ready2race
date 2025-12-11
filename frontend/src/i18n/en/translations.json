@@ -1781,6 +1781,11 @@
     }
   },
   "administration": {
+    "title": "Administration",
+    "tabs": {
+      "smtp": "SMTP Configuration",
+      "theme": "Theme Customization"
+    },
     "smtp": {
       "title": "SMTP Configuration",
       "host": "SMTP Host",
@@ -1800,6 +1805,38 @@
       "errors": {
         "loading": "An error has occurred when loading the SMTP configuration.",
         "submit": "An error has occurred when changing the SMTP configuration."
+      }
+    },
+    "theme": {
+      "title": "Theme Customization",
+      "info": "Customize the application's appearance. Changes will take effect immediately after saving.",
+      "primaryColor": "Primary Color",
+      "textColor": "Text Color",
+      "backgroundColor": "Background Color",
+      "customFont": "Custom Font",
+      "fontHint": "Upload a .woff or .woff2 file (max 5MB)",
+      "currentFont": "Current Font",
+      "enableCustomFont": "Enable Custom Font",
+      "selectFontFile": "No file selected",
+      "submit": "Save Theme",
+      "reset": "Reset to Default",
+      "confirmUpdate": {
+        "title": "Update Theme",
+        "message": "Are you sure you want to change the theme settings?"
+      },
+      "confirmReset": {
+        "title": "Reset Theme",
+        "message": "Are you sure you want to reset the theme to default settings? All customizations will be lost."
+      },
+      "success": {
+        "updated": "Theme updated successfully",
+        "reset": "Theme reset successfully"
+      },
+      "errors": {
+        "invalidFontFormat": "Invalid file format. Please use .woff or .woff2 files.",
+        "fontTooLarge": "Font file is too large. Maximum size: 5MB",
+        "updateFailed": "Failed to update theme",
+        "resetFailed": "Failed to reset theme"
       }
     }
   },

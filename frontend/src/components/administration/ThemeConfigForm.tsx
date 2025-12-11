@@ -4,12 +4,12 @@ import {useThemeConfig} from '../../contexts/theme/ThemeContext';
 import {useConfirmation} from '../../contexts/confirmation/ConfirmationContext';
 import {useSnackbar} from 'notistack';
 import {useTranslation} from 'react-i18next';
-import {getThemeConfig, updateThemeConfig, resetThemeConfig} from '../../api';
+import {updateThemeConfig, resetThemeConfig} from '../../api';
 
 export function ThemeConfigForm() {
     const {t} = useTranslation();
     const {themeConfig, reloadTheme} = useThemeConfig();
-    const {showConfirmation} = useConfirmation();
+    const {confirmAction} = useConfirmation();
     const {enqueueSnackbar} = useSnackbar();
 
     const [primaryColor, setPrimaryColor] = useState('#4d9f85');
@@ -46,63 +46,78 @@ export function ThemeConfigForm() {
         }
     };
 
-    const handleSubmit = async () => {
-        const confirmed = await showConfirmation({
-            title: t('administration.theme.confirmUpdate.title'),
-            message: t('administration.theme.confirmUpdate.message'),
-        });
-
-        if (!confirmed) return;
-
+    const handleSubmit = () => {
         setLoading(true);
-        try {
-            const formData = new FormData();
+        confirmAction(
+            async () => {
+                try {
+                    const requestData = {
+                        primaryColor,
+                        textColor,
+                        backgroundColor,
+                        enableCustomFont: enableCustomFont && (fontFile !== null || currentFontFilename !== null),
+                    };
 
-            const requestData = {
-                primaryColor,
-                textColor,
-                backgroundColor,
-                enableCustomFont: enableCustomFont && (fontFile !== null || currentFontFilename !== null),
-            };
+                    const {data, error, response} = await updateThemeConfig({
+                        body: {
+                            request: JSON.stringify(requestData),
+                            fontFile: fontFile || undefined,
+                        }
+                    });
+                    setLoading(false);
 
-            formData.append('request', JSON.stringify(requestData));
-
-            if (fontFile) {
-                formData.append('fontFile', fontFile);
+                    if (response.ok && data !== undefined) {
+                        await reloadTheme();
+                        enqueueSnackbar(t('administration.theme.success.updated'), {variant: 'success'});
+                        setFontFile(null);
+                    } else if (error) {
+                        enqueueSnackbar(t('administration.theme.errors.updateFailed'), {variant: 'error'});
+                    }
+                } catch (error) {
+                    setLoading(false);
+                    console.error('Failed to update theme:', error);
+                    enqueueSnackbar(t('administration.theme.errors.updateFailed'), {variant: 'error'});
+                }
+            },
+            {
+                title: t('administration.theme.confirmUpdate.title'),
+                content: t('administration.theme.confirmUpdate.message'),
+                okText: t('administration.theme.submit'),
+                cancelText: t('common.cancel'),
+                cancelAction: () => setLoading(false),
             }
-
-            await updateThemeConfig({body: formData});
-            await reloadTheme();
-            enqueueSnackbar(t('administration.theme.success.updated'), {variant: 'success'});
-            setFontFile(null);
-        } catch (error) {
-            console.error('Failed to update theme:', error);
-            enqueueSnackbar(t('administration.theme.errors.updateFailed'), {variant: 'error'});
-        } finally {
-            setLoading(false);
-        }
+        );
     };
 
-    const handleReset = async () => {
-        const confirmed = await showConfirmation({
-            title: t('administration.theme.confirmReset.title'),
-            message: t('administration.theme.confirmReset.message'),
-        });
-
-        if (!confirmed) return;
-
+    const handleReset = () => {
         setLoading(true);
-        try {
-            await resetThemeConfig();
-            await reloadTheme();
-            enqueueSnackbar(t('administration.theme.success.reset'), {variant: 'success'});
-            setFontFile(null);
-        } catch (error) {
-            console.error('Failed to reset theme:', error);
-            enqueueSnackbar(t('administration.theme.errors.resetFailed'), {variant: 'error'});
-        } finally {
-            setLoading(false);
-        }
+        confirmAction(
+            async () => {
+                try {
+                    const {data, error, response} = await resetThemeConfig();
+                    setLoading(false);
+
+                    if (response.ok && data !== undefined) {
+                        await reloadTheme();
+                        enqueueSnackbar(t('administration.theme.success.reset'), {variant: 'success'});
+                        setFontFile(null);
+                    } else if (error) {
+                        enqueueSnackbar(t('administration.theme.errors.resetFailed'), {variant: 'error'});
+                    }
+                } catch (error) {
+                    setLoading(false);
+                    console.error('Failed to reset theme:', error);
+                    enqueueSnackbar(t('administration.theme.errors.resetFailed'), {variant: 'error'});
+                }
+            },
+            {
+                title: t('administration.theme.confirmReset.title'),
+                content: t('administration.theme.confirmReset.message'),
+                okText: t('administration.theme.reset'),
+                cancelText: t('common.cancel'),
+                cancelAction: () => setLoading(false),
+            }
+        );
     };
 
     return (

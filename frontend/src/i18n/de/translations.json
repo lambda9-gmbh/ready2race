@@ -1782,6 +1782,11 @@
     }
   },
   "administration": {
+    "title": "Administration",
+    "tabs": {
+      "smtp": "SMTP-Konfiguration",
+      "theme": "Theme-Anpassung"
+    },
     "smtp": {
       "title": "SMTP Konfiguration",
       "host": "SMTP-Host",
@@ -1801,6 +1806,38 @@
       "errors": {
         "loading": "Beim Laden der SMTP-Konfiguration ist ein Fehler aufgetreten.",
         "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."
+      }
+    },
+    "theme": {
+      "title": "Theme-Anpassung",
+      "info": "Passen Sie das Erscheinungsbild der Anwendung an. Änderungen werden nach dem Speichern sofort übernommen.",
+      "primaryColor": "Primärfarbe",
+      "textColor": "Textfarbe",
+      "backgroundColor": "Hintergrundfarbe",
+      "customFont": "Eigene Schriftart",
+      "fontHint": "Laden Sie eine .woff oder .woff2 Datei hoch (max. 5MB)",
+      "currentFont": "Aktuelle Schriftart",
+      "enableCustomFont": "Eigene Schriftart aktivieren",
+      "selectFontFile": "Keine Datei ausgewählt",
+      "submit": "Theme speichern",
+      "reset": "Auf Standard zurücksetzen",
+      "confirmUpdate": {
+        "title": "Theme aktualisieren",
+        "message": "Möchten Sie die Theme-Einstellungen wirklich ändern?"
+      },
+      "confirmReset": {
+        "title": "Theme zurücksetzen",
+        "message": "Möchten Sie das Theme wirklich auf die Standardeinstellungen zurücksetzen? Alle Anpassungen gehen verloren."
+      },
+      "success": {
+        "updated": "Theme erfolgreich aktualisiert",
+        "reset": "Theme erfolgreich zurückgesetzt"
+      },
+      "errors": {
+        "invalidFontFormat": "Ungültiges Dateiformat. Bitte verwenden Sie .woff oder .woff2 Dateien.",
+        "fontTooLarge": "Die Schriftart-Datei ist zu groß. Maximale Größe: 5MB",
+        "updateFailed": "Theme konnte nicht aktualisiert werden",
+        "resetFailed": "Theme konnte nicht zurückgesetzt werden"
       }
     }
   },
