@@ -709,6 +709,13 @@ import type {
     UpdateGlobalConfigurationsResponse,
     GetCreateClubOnRegistrationAllowedError,
     GetCreateClubOnRegistrationAllowedResponse,
+    GetThemeConfigError,
+    GetThemeConfigResponse,
+    UpdateThemeConfigData,
+    UpdateThemeConfigError,
+    UpdateThemeConfigResponse,
+    ResetThemeConfigError,
+    ResetThemeConfigResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3683,5 +3690,49 @@ export const getCreateClubOnRegistrationAllowed = <ThrowOnError extends boolean 
     >({
         ...options,
         url: '/globalConfigurations/createClubOnRegistration',
+    })
+}
+
+export const getThemeConfig = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetThemeConfigResponse,
+        GetThemeConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/globalConfigurations/theme',
+    })
+}
+
+export const updateThemeConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateThemeConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateThemeConfigResponse,
+        UpdateThemeConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/globalConfigurations/theme',
+    })
+}
+
+export const resetThemeConfig = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        ResetThemeConfigResponse,
+        ResetThemeConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/globalConfigurations/theme',
     })
 }

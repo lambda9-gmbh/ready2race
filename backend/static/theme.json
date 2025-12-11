@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "primaryColor": "#4d9f85",
+  "textColor": "#1d1d1d",
+  "backgroundColor": "#ffffff",
+  "customFont": {
+    "enabled": false,
+    "filename": null
+  }
+}

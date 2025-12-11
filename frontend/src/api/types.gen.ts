@@ -653,6 +653,11 @@ export type CreateEventRequest = {
     allowParticipantSelfRegistration: boolean
 }
 
+export type CustomFontDto = {
+    enabled: boolean
+    filename?: string | null
+}
+
 export type DocumentTemplateDto = {
     id: string
     name: string
@@ -1822,6 +1827,14 @@ export type TeamParticipantDto = {
     lastScanAt?: string
 }
 
+export type ThemeConfigDto = {
+    version: string
+    primaryColor: string
+    textColor: string
+    backgroundColor: string
+    customFont: CustomFontDto
+}
+
 export type TooManyRequestsError = ApiError & {
     details: {
         retryAfter: number
@@ -1931,6 +1944,13 @@ export type UpdateQrCodeRequirementDto = {
     requirementId: string
     namedParticipantId?: string
     qrCodeRequired: boolean
+}
+
+export type UpdateThemeRequest = {
+    primaryColor: string
+    textColor: string
+    backgroundColor: string
+    enableCustomFont: boolean
 }
 
 export type UploadMatchResultRequest = {
@@ -5459,3 +5479,28 @@ export type UpdateGlobalConfigurationsError = BadRequestError | ApiError
 export type GetCreateClubOnRegistrationAllowedResponse = boolean
 
 export type GetCreateClubOnRegistrationAllowedError = ApiError
+
+export type GetThemeConfigResponse = ThemeConfigDto
+
+export type GetThemeConfigError = ApiError
+
+export type UpdateThemeConfigData = {
+    body: {
+        /**
+         * JSON string containing UpdateThemeRequest
+         */
+        request: string
+        /**
+         * Optional font file (.woff or .woff2, max 5MB)
+         */
+        fontFile?: Blob | File
+    }
+}
+
+export type UpdateThemeConfigResponse = ThemeConfigDto
+
+export type UpdateThemeConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ResetThemeConfigResponse = ThemeConfigDto
+
+export type ResetThemeConfigError = ApiError

@@ -58,7 +58,8 @@ fun Application.module(env: JEnv) {
     configureSessions()
     configureRequests()
     configureResponses()
-    configureRouting(env.env.config)
+    configureRouting(env.env.config, env)
+    configureStaticFiles(env.env.config.staticFilesPath)
 }
 
 private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {

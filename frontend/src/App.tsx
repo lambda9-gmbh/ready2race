@@ -1,4 +1,5 @@
 import {useUser} from './contexts/user/UserContext'
+import {useThemeConfig} from './contexts/theme/ThemeContext'
 import {RouterProvider} from '@tanstack/react-router'
 import {router} from '@routes'
 import {client} from './api'
@@ -25,9 +26,10 @@ if (isLanguage(language)) {
 
 const App = () => {
     const user = useUser()
+    const {themeConfig} = useThemeConfig()
 
     const locale = locales[user.language]
-    const theme = muiTheme(locale)
+    const theme = muiTheme(locale, themeConfig)
 
     return (
         <LocalizationProvider

@@ -6509,6 +6509,71 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /globalConfigurations/theme:
+    get:
+      operationId: getThemeConfig
+      responses:
+        200:
+          description: Current theme configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemeConfigDto'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateThemeConfig
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+              properties:
+                request:
+                  type: string
+                  description: JSON string containing UpdateThemeRequest
+                fontFile:
+                  type: string
+                  format: binary
+                  description: Optional font file (.woff or .woff2, max 5MB)
+      responses:
+        200:
+          description: Theme configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemeConfigDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: resetThemeConfig
+      responses:
+        200:
+          description: Theme configuration reset to defaults
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemeConfigDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -11986,6 +12051,60 @@ components:
         - allowClubCreationOnRegistration
       properties:
         allowClubCreationOnRegistration:
+          type: boolean
+
+    ThemeConfigDto:
+      type: object
+      required:
+        - version
+        - primaryColor
+        - textColor
+        - backgroundColor
+        - customFont
+      properties:
+        version:
+          type: string
+        primaryColor:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        textColor:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        backgroundColor:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        customFont:
+          $ref: '#/components/schemas/CustomFontDto'
+
+    CustomFontDto:
+      type: object
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+        filename:
+          type: string
+          nullable: true
+
+    UpdateThemeRequest:
+      type: object
+      required:
+        - primaryColor
+        - textColor
+        - backgroundColor
+        - enableCustomFont
+      properties:
+        primaryColor:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        textColor:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        backgroundColor:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        enableCustomFont:
           type: boolean
 
     CompetitionsForRegistrationDto:

@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.plugins
 
+import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.appuser.boundary.user
 import de.lambda9.ready2race.backend.app.auth.boundary.auth
 import de.lambda9.ready2race.backend.app.bankAccount.boundary.bankAccount
@@ -35,7 +36,7 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting(config: Config) {
+fun Application.configureRouting(config: Config, env: JEnv) {
     routing {
         route("/api") {
             swaggerUI(path = "documentation")
@@ -68,7 +69,7 @@ fun Application.configureRouting(config: Config) {
             webDAV()
             email()
             challengeAccess()
-            globalConfigurations()
+            globalConfigurations(env)
         }
     }
 }

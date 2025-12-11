@@ -1,5 +1,6 @@
 import {createTheme, Theme, ThemeOptions} from '@mui/material'
 import {Locale} from './i18n/config.ts'
+import type {ThemeConfigDto} from './api'
 
 const baseThemeOptions: ThemeOptions = {
     palette: {
@@ -117,8 +118,35 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
     },
 })
 
-export const muiTheme = (locale: Locale): Theme => {
-    const theme = createTheme(baseThemeOptions)
+export const muiTheme = (locale: Locale, themeConfig: ThemeConfigDto | null): Theme => {
+    // Apply theme config overrides if available
+    const themeOptions: ThemeOptions = themeConfig
+        ? {
+              ...baseThemeOptions,
+              palette: {
+                  ...baseThemeOptions.palette,
+                  primary: {
+                      main: themeConfig.primaryColor,
+                      light: '#ecfaf7', // Keep default light variant
+                  },
+                  common: {
+                      black: themeConfig.textColor,
+                  },
+                  background: {
+                      default: themeConfig.backgroundColor,
+                      paper: themeConfig.backgroundColor,
+                  },
+              },
+              typography: {
+                  ...baseThemeOptions.typography,
+                  fontFamily: themeConfig.customFont?.enabled
+                      ? "'CustomFont', 'Roboto', 'Helvetica', 'Arial', sans-serif"
+                      : "'Roboto', 'Helvetica', 'Arial', sans-serif",
+              },
+          }
+        : baseThemeOptions
+
+    const theme = createTheme(themeOptions)
 
     return createTheme(
         {

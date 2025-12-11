@@ -26,6 +26,7 @@ data class Config(
     val smtp: Smtp?,
     val security: Security,
     val admin: Admin,
+    val staticFilesPath: String,
     val webDAV: WebDAV?
 ) {
 
@@ -185,6 +186,8 @@ data class Config(
                 Admin(email = email, password = password)
             }
 
+            val staticFilesPath = !required("STATIC_FILES_PATH")
+
             val webDAV = run {
                 val urlScheme = !optional("WEBDAV_URL_SCHEME")
                 val host = !optional("WEBDAV_HOST")
@@ -231,6 +234,7 @@ data class Config(
                 smtp = smtp,
                 security = security,
                 admin = admin,
+                staticFilesPath = staticFilesPath,
                 webDAV = webDAV
             )
 
