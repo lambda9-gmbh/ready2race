@@ -1,20 +1,26 @@
 package de.lambda9.ready2race.backend.app.globalConfigurations.boundary
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.globalConfigurations.entity.UpdateGlobalConfigurationsRequest
 import de.lambda9.ready2race.backend.app.globalConfigurations.entity.UpdateThemeRequest
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantImportRequest
+import de.lambda9.ready2race.backend.calls.requests.RequestError
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import io.ktor.utils.io.*
 
 fun Route.globalConfigurations(env: JEnv) {
-    val jsonMapper = ObjectMapper()
 
     route("/globalConfigurations") {
         put {
@@ -32,44 +38,59 @@ fun Route.globalConfigurations(env: JEnv) {
         }
 
         route("/theme") {
-            get {
-                call.respondComprehension {
-                    ThemeService.getTheme(env)
-                }
-            }
-
             put {
                 call.respondComprehension {
                     !authenticate(Privilege.UpdateAdministrationConfigGlobal)
 
-                    var request: UpdateThemeRequest? = null
-                    var fontFile: Pair<String, ByteArray>? = null
+                    val multipartData = receiveMultipart()
 
-                    val multipartData = call.receiveMultipart()
+                    var request: UpdateThemeRequest? = null
+                    var fontFile: File? = null
+
                     multipartData.forEachPart { part ->
                         when (part) {
                             is PartData.FileItem -> {
-                                fontFile = Pair(part.originalFileName!!, part.provider().readRemaining().readByteArray())
+                                if (fontFile == null) {
+                                    fontFile = File(
+                                        part.originalFileName!!,
+                                        part.provider().toByteArray(),
+                                    )
+                                } else {
+                                    KIO.fail(RequestError.File.Multiple)
+                                }
                             }
+
                             is PartData.FormItem -> {
                                 if (part.name == "request") {
                                     request = jsonMapper.readValue<UpdateThemeRequest>(part.value)
                                 }
                             }
+
                             else -> {}
                         }
                         part.dispose()
                     }
 
-                    val validatedRequest = !receiveKIO(request ?: UpdateThemeRequest.example)
-                    ThemeService.updateTheme(env, validatedRequest, fontFile)
+                    // Validate not null and Validatable
+                    val validatedRequest =
+                        !KIO.failOnNull(request) { RequestError.BodyMissing(ParticipantImportRequest.example) }
+                            .andThen { req ->
+                                val validationResult = req.validate()
+                                if (validationResult is ValidationResult.Invalid) {
+                                    KIO.fail(RequestError.BodyValidationFailed(validationResult))
+                                } else {
+                                    KIO.ok(req)
+                                }
+                            }
+
+                    ThemeService.updateTheme(validatedRequest, fontFile)
                 }
             }
 
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.UpdateAdministrationConfigGlobal)
-                    ThemeService.resetTheme(env)
+                    ThemeService.resetTheme()
                 }
             }
         }

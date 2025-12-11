@@ -6510,19 +6510,6 @@ paths:
           $ref: '#/components/responses/500'
 
   /globalConfigurations/theme:
-    get:
-      operationId: getThemeConfig
-      responses:
-        200:
-          description: Current theme configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ThemeConfigDto'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
     put:
       operationId: updateThemeConfig
       requestBody:
@@ -6535,8 +6522,7 @@ paths:
                 - request
               properties:
                 request:
-                  type: string
-                  description: JSON string containing UpdateThemeRequest
+                  $ref: '#/components/schemas/UpdateThemeRequest'
                 fontFile:
                   type: string
                   format: binary

@@ -7,6 +7,8 @@ import java.io.File
 
 fun Application.configureStaticFiles(staticFilesPath: String) {
     routing {
-        staticFiles("/static", File(staticFilesPath))
+        val file = File(staticFilesPath)
+        println(file.absolutePath)
+        staticFiles("static", File(staticFilesPath))
     }
 }

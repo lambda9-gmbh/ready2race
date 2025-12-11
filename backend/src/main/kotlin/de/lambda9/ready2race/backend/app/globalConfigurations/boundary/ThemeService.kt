@@ -1,73 +1,130 @@
 package de.lambda9.ready2race.backend.app.globalConfigurations.boundary
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.JEnv
-import de.lambda9.ready2race.backend.app.globalConfigurations.control.ThemeRepo
-import de.lambda9.ready2race.backend.app.globalConfigurations.entity.CustomFontDto
 import de.lambda9.ready2race.backend.app.globalConfigurations.entity.ThemeConfigDto
 import de.lambda9.ready2race.backend.app.globalConfigurations.entity.ThemeError
 import de.lambda9.ready2race.backend.app.globalConfigurations.entity.UpdateThemeRequest
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
-import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.kio.accessConfig
 import de.lambda9.tailwind.core.KIO
+import java.io.File
 
 object ThemeService {
 
-    fun getTheme(env: JEnv): App<ThemeError, ApiResponse.Dto<ThemeConfigDto>> = KIO.comprehension {
-        val theme = !ThemeRepo.getTheme(env.env.config.staticFilesPath)
-        KIO.ok(ApiResponse.Dto(theme))
-    }
+    private const val MAX_FONT_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
+    private val ALLOWED_FONT_EXTENSIONS = setOf("woff", "woff2")
 
     fun updateTheme(
-        env: JEnv,
         request: UpdateThemeRequest,
-        fontFile: Pair<String, ByteArray>?
-    ): App<ThemeError, ApiResponse.Dto<ThemeConfigDto>> = KIO.comprehension {
-        val currentTheme = !ThemeRepo.getTheme(env.env.config.staticFilesPath)
-        val staticFilesPath = env.env.config.staticFilesPath
+        uploadedFontFile: de.lambda9.ready2race.backend.file.File?
+    ): App<ThemeError, ApiResponse.NoData> = KIO.comprehension {
+        val config = !accessConfig()
+
+        val themeFile = File(config.staticFilesPath, "theme.json")
+        val currentTheme = if (themeFile.exists()) {
+            !KIO.effect {
+                jsonMapper.readValue<ThemeConfigDto>(themeFile)
+            }.mapError { ThemeError.ThemeFileMalformed }
+        } else null
 
         // Handle font file upload
         val newCustomFont = when {
-            fontFile != null && request.enableCustomFont -> {
+            uploadedFontFile != null && request.enableCustomFont -> {
                 // Delete old font if it exists
-                currentTheme.customFont.filename?.let { oldFilename ->
-                    !ThemeRepo.deleteFontFile(staticFilesPath, oldFilename)
+                currentTheme?.customFont?.filename?.let { oldFilename ->
+                    !deleteFontFile(config.staticFilesPath, oldFilename)
                 }
 
                 // Save new font
-                val savedFilename = !ThemeRepo.saveFontFile(staticFilesPath, fontFile.first, fontFile.second)
-                CustomFontDto(enabled = true, filename = savedFilename)
+                val extension = uploadedFontFile.name.substringAfterLast('.', "").lowercase()
+
+                !KIO.failOn(extension !in ALLOWED_FONT_EXTENSIONS) { ThemeError.FontFileInvalid }
+
+                !KIO.failOn(uploadedFontFile.bytes.size > MAX_FONT_SIZE_BYTES) { ThemeError.FontFileTooLarge }
+
+
+                val fontsDir = File(config.staticFilesPath, "fonts")
+                fontsDir.mkdirs()
+
+                val sanitizedFilename = uploadedFontFile.name.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+                val fontFile = File(fontsDir, sanitizedFilename)
+                fontFile.writeBytes(uploadedFontFile.bytes)
+
+                KIO.ok(sanitizedFilename)
+                ThemeConfigDto.CustomFontDto(enabled = true, filename = sanitizedFilename)
             }
-            request.enableCustomFont && currentTheme.customFont.filename != null -> {
+
+            request.enableCustomFont && currentTheme?.customFont?.filename != null -> {
                 // Keep existing font
                 currentTheme.customFont
             }
+
             !request.enableCustomFont -> {
                 // Delete font if disabling
-                currentTheme.customFont.filename?.let { oldFilename ->
-                    !ThemeRepo.deleteFontFile(staticFilesPath, oldFilename)
+                currentTheme?.customFont?.filename?.let { oldFilename ->
+                    !deleteFontFile(config.staticFilesPath, oldFilename)
                 }
-                CustomFontDto.default
+                ThemeConfigDto.CustomFontDto.default
             }
-            else -> CustomFontDto.default
+
+            else -> ThemeConfigDto.CustomFontDto.default
         }
 
         // Update theme
         val updatedTheme = ThemeConfigDto(
-            version = "1.0",
             primaryColor = request.primaryColor,
             textColor = request.textColor,
             backgroundColor = request.backgroundColor,
             customFont = newCustomFont
         )
 
-        !ThemeRepo.updateTheme(staticFilesPath, updatedTheme)
+        !updateTheme(config.staticFilesPath, updatedTheme)
 
-        KIO.ok(ApiResponse.Dto(updatedTheme))
+        ApiResponse.noData
     }
 
-    fun resetTheme(env: JEnv): App<ThemeError, ApiResponse.Dto<ThemeConfigDto>> = KIO.comprehension {
-        val defaultTheme = !ThemeRepo.resetToDefault(env.env.config.staticFilesPath)
-        KIO.ok(ApiResponse.Dto(defaultTheme))
+    fun resetTheme(): App<ThemeError, ApiResponse.NoData> = KIO.comprehension {
+        val config = !accessConfig()
+
+        // Delete theme.json
+        val themeFile = File(config.staticFilesPath, "theme.json")
+        if (themeFile.exists()) {
+            themeFile.delete()
+        }
+
+        // Delete all font files
+        val fontsDir = File(config.staticFilesPath, "fonts")
+        if (fontsDir.exists() && fontsDir.isDirectory) {
+            fontsDir.listFiles()?.forEach { it.delete() }
+        }
+
+        // Write default theme
+        !updateTheme(config.staticFilesPath, ThemeConfigDto.default)
+
+        ApiResponse.noData
     }
+
+    private fun deleteFontFile(staticFilesPath: String, filename: String): App<Nothing, Unit> = KIO.comprehension {
+        val fontsFolder = File(staticFilesPath, "fonts")
+        if (fontsFolder.exists()) {
+            val fontFile = File(fontsFolder, filename)
+            if (fontFile.exists()) {
+                fontFile.delete()
+            }
+        }
+        KIO.unit
+    }
+
+
+    private fun updateTheme(staticFilesPath: String, theme: ThemeConfigDto): App<ThemeError, Unit> =
+        KIO.comprehension {
+            val themeFile = File(staticFilesPath, "theme.json")
+
+            themeFile.parentFile?.mkdirs()
+            jsonMapper.writerWithDefaultPrettyPrinter().writeValue(themeFile, theme)
+
+            KIO.unit
+        }
 }

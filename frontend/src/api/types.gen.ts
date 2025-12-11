@@ -5480,16 +5480,9 @@ export type GetCreateClubOnRegistrationAllowedResponse = boolean
 
 export type GetCreateClubOnRegistrationAllowedError = ApiError
 
-export type GetThemeConfigResponse = ThemeConfigDto
-
-export type GetThemeConfigError = ApiError
-
 export type UpdateThemeConfigData = {
     body: {
-        /**
-         * JSON string containing UpdateThemeRequest
-         */
-        request: string
+        request: UpdateThemeRequest
         /**
          * Optional font file (.woff or .woff2, max 5MB)
          */

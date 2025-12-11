@@ -709,8 +709,6 @@ import type {
     UpdateGlobalConfigurationsResponse,
     GetCreateClubOnRegistrationAllowedError,
     GetCreateClubOnRegistrationAllowedResponse,
-    GetThemeConfigError,
-    GetThemeConfigResponse,
     UpdateThemeConfigData,
     UpdateThemeConfigError,
     UpdateThemeConfigResponse,
@@ -3690,19 +3688,6 @@ export const getCreateClubOnRegistrationAllowed = <ThrowOnError extends boolean 
     >({
         ...options,
         url: '/globalConfigurations/createClubOnRegistration',
-    })
-}
-
-export const getThemeConfig = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        GetThemeConfigResponse,
-        GetThemeConfigError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/globalConfigurations/theme',
     })
 }
 
