@@ -13,17 +13,20 @@ import {
     Work,
     Workspaces,
 } from '@mui/icons-material'
-import {Divider} from '@mui/material'
+import {Box, Divider, ListItem, ListItemIcon, Typography} from '@mui/material'
 import {
+    readAdministrationConfigGlobal,
     readClubGlobal,
     readClubOwn,
     readInvoiceGlobal,
-    readAdministrationConfigGlobal,
     readUserGlobal,
     updateEventGlobal,
 } from '@authorization/privileges.ts'
 import {useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
+import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
+import Config from '../../Config.ts'
+import TrendingFlatIcon from '@mui/icons-material/TrendingFlat'
 
 type Props = {
     drawerExpanded: boolean
@@ -34,6 +37,7 @@ type Props = {
 const SidebarContent = ({...props}: Props) => {
     const {t} = useTranslation()
     const user = useUser()
+    const {themeConfig} = useThemeConfig()
 
     return (
         <Sidebar
@@ -111,6 +115,27 @@ const SidebarContent = ({...props}: Props) => {
                 privilege={readAdministrationConfigGlobal}
                 to={'/administration'}
             />
+            {props.isSmallScreen &&
+                themeConfig?.customLogo?.enabled &&
+                themeConfig?.customLogo?.filename && (
+                    <ListItem sx={{marginTop: 'auto'}}>
+                        <Typography sx={{mr: 4}}>Ready2Race</Typography>
+                        <ListItemIcon>
+                            <TrendingFlatIcon />
+                        </ListItemIcon>
+                        <ListItemIcon>
+                            <Box
+                                component={'img'}
+                                src={`${Config.logosUrl}/${themeConfig.customLogo.filename}`}
+                                alt={'Custom Logo'}
+                                sx={{
+                                    height: {xs: 32, sm: 40},
+                                    width: 'auto',
+                                }}
+                            />
+                        </ListItemIcon>
+                    </ListItem>
+                )}
         </Sidebar>
     )
 }
