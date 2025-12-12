@@ -45,10 +45,7 @@ const App = () => {
                         <IconButton onClick={() => closeSnackbar(snackbarId)}>
                             <CloseIcon />
                         </IconButton>
-                    )}
-                    style={{
-                        flexWrap: 'nowrap',
-                    }}>
+                    )}>
                     <ConfirmationProvider>
                         <RouterProvider router={router} context={user}></RouterProvider>
                     </ConfirmationProvider>

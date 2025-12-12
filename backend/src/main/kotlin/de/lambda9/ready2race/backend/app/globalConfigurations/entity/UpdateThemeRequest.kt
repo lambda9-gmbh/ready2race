@@ -9,6 +9,7 @@ data class UpdateThemeRequest(
     val actionColors: ActionColorsRequest,
     val backgroundColor: String,
     val enableCustomFont: Boolean,
+    val enableCustomLogo: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult {
         val hexColorPattern = Regex("^#[0-9a-fA-F]{6}$")
@@ -79,7 +80,8 @@ data class UpdateThemeRequest(
                 info = "#6fb0d4"
             ),
             backgroundColor = "#ffffff",
-            enableCustomFont = false
+            enableCustomFont = false,
+            enableCustomLogo = false
         )
     }
 }

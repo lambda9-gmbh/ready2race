@@ -1818,6 +1818,11 @@
       "currentFont": "Current Font",
       "enableCustomFont": "Enable Custom Font",
       "selectFontFile": "No file selected",
+      "customLogo": "Custom Logo",
+      "logoHint": "Upload a .png, .jpg, .jpeg, .svg or .webp file (max 2MB)",
+      "currentLogo": "Current Logo",
+      "enableCustomLogo": "Enable Custom Logo",
+      "selectLogoFile": "No file selected",
       "submit": "Save Theme",
       "reset": "Reset to Default",
       "confirmUpdate": {
@@ -1835,6 +1840,8 @@
       "errors": {
         "invalidFontFormat": "Invalid file format. Please use .woff or .woff2 files.",
         "fontTooLarge": "Font file is too large. Maximum size: 5MB",
+        "invalidLogoFormat": "Invalid file format. Please use .png, .jpg, .jpeg, .svg or .webp files.",
+        "logoTooLarge": "Logo file is too large. Maximum size: 2MB",
         "updateFailed": "Failed to update theme",
         "resetFailed": "Failed to reset theme"
       }

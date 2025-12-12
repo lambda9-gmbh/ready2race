@@ -23,6 +23,10 @@ const DEFAULT_THEME: ThemeConfigDto = {
         enabled: false,
         filename: null,
     },
+    customLogo: {
+        enabled: false,
+        filename: null,
+    },
 }
 
 interface ThemeProviderProps {

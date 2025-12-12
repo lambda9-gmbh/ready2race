@@ -1,16 +1,16 @@
-import React, {useState, useEffect} from 'react'
-import {Box, Button, TextField, Typography, Paper, Alert} from '@mui/material'
+import React, {useEffect, useState} from 'react'
+import {Alert, Box, Button, Paper, TextField, Typography} from '@mui/material'
 import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {useSnackbar} from 'notistack'
 import {useTranslation} from 'react-i18next'
-import {updateThemeConfig, resetThemeConfig} from '../../api'
+import {resetThemeConfig, updateThemeConfig} from '../../api'
+import {useFeedback} from '@utils/hooks.ts'
 
 export function ThemeConfigForm() {
     const {t} = useTranslation()
     const {themeConfig, reloadTheme} = useThemeConfig()
     const {confirmAction} = useConfirmation()
-    const {enqueueSnackbar} = useSnackbar()
+    const feedback = useFeedback()
 
     const [primaryMain, setPrimaryMain] = useState('#4d9f85')
     const [primaryLight, setPrimaryLight] = useState('#ecfaf7')
@@ -24,6 +24,9 @@ export function ThemeConfigForm() {
     const [enableCustomFont, setEnableCustomFont] = useState(false)
     const [fontFile, setFontFile] = useState<File | null>(null)
     const [currentFontFilename, setCurrentFontFilename] = useState<string | null>(null)
+    const [enableCustomLogo, setEnableCustomLogo] = useState(false)
+    const [logoFile, setLogoFile] = useState<File | null>(null)
+    const [currentLogoFilename, setCurrentLogoFilename] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
@@ -39,76 +42,85 @@ export function ThemeConfigForm() {
             setBackgroundColor(themeConfig.backgroundColor)
             setEnableCustomFont(themeConfig.customFont?.enabled || false)
             setCurrentFontFilename(themeConfig.customFont?.filename || null)
+            setEnableCustomLogo(themeConfig.customLogo?.enabled || false)
+            setCurrentLogoFilename(themeConfig.customLogo?.filename || null)
         }
     }, [themeConfig])
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFontFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (file) {
             const extension = file.name.split('.').pop()?.toLowerCase()
             if (extension !== 'woff' && extension !== 'woff2') {
-                enqueueSnackbar(t('administration.theme.errors.invalidFontFormat'), {
-                    variant: 'error',
-                })
+                feedback.error(t('administration.theme.errors.invalidFontFormat'))
                 return
             }
             if (file.size > 5 * 1024 * 1024) {
-                enqueueSnackbar(t('administration.theme.errors.fontTooLarge'), {variant: 'error'})
+                feedback.error(t('administration.theme.errors.fontTooLarge'))
                 return
             }
             setFontFile(file)
         }
     }
 
+    const handleLogoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            const extension = file.name.split('.').pop()?.toLowerCase()
+            if (!['png', 'jpg', 'jpeg', 'svg', 'webp'].includes(extension || '')) {
+                feedback.error(t('administration.theme.errors.invalidLogoFormat'))
+                return
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                feedback.error(t('administration.theme.errors.logoTooLarge'))
+                return
+            }
+            setLogoFile(file)
+        }
+    }
+
     const handleSubmit = () => {
-        setLoading(true)
         confirmAction(
             async () => {
-                try {
-                    const {data, error, response} = await updateThemeConfig({
-                        body: {
-                            request: {
-                                primary: {
-                                    main: primaryMain,
-                                    light: primaryLight,
-                                },
-                                textColor: {
-                                    primary: textColorPrimary,
-                                    secondary: textColorSecondary,
-                                },
-                                actionColors: {
-                                    success: actionColorSuccess,
-                                    warning: actionColorWarning,
-                                    error: actionColorError,
-                                    info: actionColorInfo,
-                                },
-                                backgroundColor,
-                                enableCustomFont:
-                                    enableCustomFont &&
-                                    (fontFile !== null || currentFontFilename !== null),
+                setLoading(true)
+                const {data, error} = await updateThemeConfig({
+                    body: {
+                        request: {
+                            primary: {
+                                main: primaryMain,
+                                light: primaryLight,
                             },
-                            fontFile: fontFile || undefined,
+                            textColor: {
+                                primary: textColorPrimary,
+                                secondary: textColorSecondary,
+                            },
+                            actionColors: {
+                                success: actionColorSuccess,
+                                warning: actionColorWarning,
+                                error: actionColorError,
+                                info: actionColorInfo,
+                            },
+                            backgroundColor,
+                            enableCustomFont:
+                                enableCustomFont &&
+                                (fontFile !== null || currentFontFilename !== null),
+                            enableCustomLogo:
+                                enableCustomLogo &&
+                                (logoFile !== null || currentLogoFilename !== null),
                         },
-                    })
-                    setLoading(false)
+                        fontFile: fontFile || undefined,
+                        logoFile: logoFile || undefined,
+                    },
+                })
+                setLoading(false)
 
-                    if (response.ok && data !== undefined) {
-                        await reloadTheme()
-                        enqueueSnackbar(t('administration.theme.success.updated'), {
-                            variant: 'success',
-                        })
-                        setFontFile(null)
-                    } else if (error) {
-                        enqueueSnackbar(t('administration.theme.errors.updateFailed'), {
-                            variant: 'error',
-                        })
-                    }
-                } catch (error) {
-                    setLoading(false)
-                    console.error('Failed to update theme:', error)
-                    enqueueSnackbar(t('administration.theme.errors.updateFailed'), {
-                        variant: 'error',
-                    })
+                if (data) {
+                    await reloadTheme()
+                    feedback.success(t('administration.theme.success.updated'))
+                    setFontFile(null)
+                    setLogoFile(null)
+                } else if (error) {
+                    feedback.error(t('administration.theme.errors.updateFailed'))
                 }
             },
             {
@@ -122,30 +134,19 @@ export function ThemeConfigForm() {
     }
 
     const handleReset = () => {
-        setLoading(true)
         confirmAction(
             async () => {
-                try {
-                    const {data, error, response} = await resetThemeConfig()
-                    setLoading(false)
+                setLoading(true)
+                const {data, error} = await resetThemeConfig()
+                setLoading(false)
 
-                    if (response.ok && data !== undefined) {
-                        await reloadTheme()
-                        enqueueSnackbar(t('administration.theme.success.reset'), {
-                            variant: 'success',
-                        })
-                        setFontFile(null)
-                    } else if (error) {
-                        enqueueSnackbar(t('administration.theme.errors.resetFailed'), {
-                            variant: 'error',
-                        })
-                    }
-                } catch (error) {
-                    setLoading(false)
-                    console.error('Failed to reset theme:', error)
-                    enqueueSnackbar(t('administration.theme.errors.resetFailed'), {
-                        variant: 'error',
-                    })
+                if (data) {
+                    await reloadTheme()
+                    feedback.success(t('administration.theme.success.reset'))
+                    setFontFile(null)
+                    setLogoFile(null)
+                } else if (error) {
+                    feedback.error(t('administration.theme.errors.resetFailed'))
                 }
             },
             {
@@ -315,12 +316,46 @@ export function ThemeConfigForm() {
                     {enableCustomFont && (
                         <TextField
                             type="file"
-                            onChange={handleFileChange}
+                            onChange={handleFontFileChange}
                             fullWidth
                             sx={{mt: 2}}
                             inputProps={{accept: '.woff,.woff2'}}
                             helperText={
                                 fontFile ? fontFile.name : t('administration.theme.selectFontFile')
+                            }
+                        />
+                    )}
+                </Box>
+
+                <Box>
+                    <Typography variant="subtitle1" gutterBottom>
+                        {t('administration.theme.customLogo')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                        {t('administration.theme.logoHint')}
+                    </Typography>
+                    {currentLogoFilename && (
+                        <Typography variant="body2" sx={{mb: 1}}>
+                            {t('administration.theme.currentLogo')}: {currentLogoFilename}
+                        </Typography>
+                    )}
+                    <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                        <input
+                            type="checkbox"
+                            checked={enableCustomLogo}
+                            onChange={e => setEnableCustomLogo(e.target.checked)}
+                        />
+                        <Typography>{t('administration.theme.enableCustomLogo')}</Typography>
+                    </Box>
+                    {enableCustomLogo && (
+                        <TextField
+                            type="file"
+                            onChange={handleLogoFileChange}
+                            fullWidth
+                            sx={{mt: 2}}
+                            inputProps={{accept: '.png,.jpg,.jpeg,.svg,.webp'}}
+                            helperText={
+                                logoFile ? logoFile.name : t('administration.theme.selectLogoFile')
                             }
                         />
                     )}
@@ -334,11 +369,7 @@ export function ThemeConfigForm() {
                         disabled={loading}>
                         {t('administration.theme.submit')}
                     </Button>
-                    <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={handleReset}
-                        disabled={loading}>
+                    <Button variant="outlined" onClick={handleReset} disabled={loading}>
                         {t('administration.theme.reset')}
                     </Button>
                 </Box>

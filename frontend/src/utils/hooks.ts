@@ -6,6 +6,7 @@ import {useTranslation} from 'react-i18next'
 import {ApiError, CaptchaDto} from '@api/types.gen.ts'
 import {newCaptcha} from '@api/sdk.gen.ts'
 import {ifDefined} from '@utils/helpers.ts'
+import {useTheme} from '@mui/material'
 
 type UseFetchOptions<T, E, R> = {
     mapData?: (data: T) => R
@@ -192,12 +193,45 @@ export const useEntityAdministration = <T extends GridValidRowModel | undefined 
 
 export const useFeedback = () => {
     const {enqueueSnackbar} = useSnackbar()
+    const theme = useTheme()
 
     return {
-        success: (msg: string) => enqueueSnackbar(msg, {variant: 'success'}),
-        warning: (msg: string) => enqueueSnackbar(msg, {variant: 'warning'}),
-        error: (msg: string) => enqueueSnackbar(msg, {variant: 'error'}),
-        info: (msg: string) => enqueueSnackbar(msg, {variant: 'info'}),
+        success: (msg: string) =>
+            enqueueSnackbar(msg, {
+                variant: 'success',
+                style: {
+                    backgroundColor: theme.palette.success.main,
+                    color: theme.palette.success.contrastText,
+                    flexWrap: 'nowrap',
+                },
+            }),
+        warning: (msg: string) =>
+            enqueueSnackbar(msg, {
+                variant: 'warning',
+                style: {
+                    backgroundColor: theme.palette.warning.main,
+                    color: theme.palette.warning.contrastText,
+                    flexWrap: 'nowrap',
+                },
+            }),
+        error: (msg: string) =>
+            enqueueSnackbar(msg, {
+                variant: 'error',
+                style: {
+                    backgroundColor: theme.palette.error.main,
+                    color: theme.palette.error.contrastText,
+                    flexWrap: 'nowrap',
+                },
+            }),
+        info: (msg: string) =>
+            enqueueSnackbar(msg, {
+                variant: 'info',
+                style: {
+                    backgroundColor: theme.palette.info.main,
+                    color: theme.palette.info.contrastText,
+                    flexWrap: 'nowrap',
+                },
+            }),
     }
 }
 

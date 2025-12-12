@@ -5,7 +5,8 @@ data class ThemeConfigDto(
     val textColor: TextColors,
     val actionColors: ActionColors,
     val backgroundColor: String,
-    val customFont: CustomFontDto
+    val customFont: CustomFontDto,
+    val customLogo: CustomLogoDto
 ) {
     companion object {
         val default = ThemeConfigDto(
@@ -13,7 +14,8 @@ data class ThemeConfigDto(
             textColor = TextColors.default,
             actionColors = ActionColors.default,
             backgroundColor = "#ffffff",
-            customFont = CustomFontDto.default
+            customFont = CustomFontDto.default,
+            customLogo = CustomLogoDto.default
         )
     }
 
@@ -63,6 +65,18 @@ data class ThemeConfigDto(
     ) {
         companion object {
             val default = CustomFontDto(
+                enabled = false,
+                filename = null
+            )
+        }
+    }
+
+    data class CustomLogoDto(
+        val enabled: Boolean,
+        val filename: String?
+    ) {
+        companion object {
+            val default = CustomLogoDto(
                 enabled = false,
                 filename = null
             )

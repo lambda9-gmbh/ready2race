@@ -1819,6 +1819,11 @@
       "currentFont": "Aktuelle Schriftart",
       "enableCustomFont": "Eigene Schriftart aktivieren",
       "selectFontFile": "Keine Datei ausgewählt",
+      "customLogo": "Eigenes Logo",
+      "logoHint": "Laden Sie eine .png, .jpg, .jpeg, .svg oder .webp Datei hoch (max. 2MB)",
+      "currentLogo": "Aktuelles Logo",
+      "enableCustomLogo": "Eigenes Logo aktivieren",
+      "selectLogoFile": "Keine Datei ausgewählt",
       "submit": "Theme speichern",
       "reset": "Auf Standard zurücksetzen",
       "confirmUpdate": {
@@ -1836,6 +1841,8 @@
       "errors": {
         "invalidFontFormat": "Ungültiges Dateiformat. Bitte verwenden Sie .woff oder .woff2 Dateien.",
         "fontTooLarge": "Die Schriftart-Datei ist zu groß. Maximale Größe: 5MB",
+        "invalidLogoFormat": "Ungültiges Dateiformat. Bitte verwenden Sie .png, .jpg, .jpeg, .svg oder .webp Dateien.",
+        "logoTooLarge": "Die Logo-Datei ist zu groß. Maximale Größe: 2MB",
         "updateFailed": "Theme konnte nicht aktualisiert werden",
         "resetFailed": "Theme konnte nicht zurückgesetzt werden"
       }

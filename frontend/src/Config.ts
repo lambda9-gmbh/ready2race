@@ -5,6 +5,7 @@ const Config = {
     } as const,
     themeUrl: import.meta.env.VITE_THEME_URL,
     fontsUrl: import.meta.env.VITE_FONTS_URL,
+    logosUrl: import.meta.env.VITE_LOGOS_URL,
 } as const
 
 export default Config

@@ -15,10 +15,13 @@ object ThemeService {
 
     private const val MAX_FONT_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
     private val ALLOWED_FONT_EXTENSIONS = setOf("woff", "woff2")
+    private const val MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024 // 2MB
+    private val ALLOWED_LOGO_EXTENSIONS = setOf("png", "jpg", "jpeg", "svg", "webp")
 
     fun updateTheme(
         request: UpdateThemeRequest,
-        uploadedFontFile: de.lambda9.ready2race.backend.file.File?
+        uploadedFontFile: de.lambda9.ready2race.backend.file.File?,
+        uploadedLogoFile: de.lambda9.ready2race.backend.file.File?
     ): App<ThemeError, ApiResponse.NoData> = KIO.comprehension {
         val config = !accessConfig()
 
@@ -72,6 +75,48 @@ object ThemeService {
             else -> ThemeConfigDto.CustomFontDto.default
         }
 
+        // Handle logo file upload
+        val newCustomLogo = when {
+            uploadedLogoFile != null && request.enableCustomLogo -> {
+                // Delete old logo if it exists
+                currentTheme?.customLogo?.filename?.let { oldFilename ->
+                    !deleteLogoFile(config.staticFilesPath, oldFilename)
+                }
+
+                // Save new logo
+                val extension = uploadedLogoFile.name.substringAfterLast('.', "").lowercase()
+
+                !KIO.failOn(extension !in ALLOWED_LOGO_EXTENSIONS) { ThemeError.LogoFileInvalid }
+
+                !KIO.failOn(uploadedLogoFile.bytes.size > MAX_LOGO_SIZE_BYTES) { ThemeError.LogoFileTooLarge }
+
+                val logosDir = File(config.staticFilesPath, "logos")
+                logosDir.mkdirs()
+
+                val sanitizedFilename = uploadedLogoFile.name.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+                val logoFile = File(logosDir, sanitizedFilename)
+                logoFile.writeBytes(uploadedLogoFile.bytes)
+
+                KIO.ok(sanitizedFilename)
+                ThemeConfigDto.CustomLogoDto(enabled = true, filename = sanitizedFilename)
+            }
+
+            request.enableCustomLogo && currentTheme?.customLogo?.filename != null -> {
+                // Keep existing logo
+                currentTheme.customLogo
+            }
+
+            !request.enableCustomLogo -> {
+                // Delete logo if disabling
+                currentTheme?.customLogo?.filename?.let { oldFilename ->
+                    !deleteLogoFile(config.staticFilesPath, oldFilename)
+                }
+                ThemeConfigDto.CustomLogoDto.default
+            }
+
+            else -> ThemeConfigDto.CustomLogoDto.default
+        }
+
         // Update theme
         val updatedTheme = ThemeConfigDto(
             primary = ThemeConfigDto.PrimaryColors(
@@ -89,7 +134,8 @@ object ThemeService {
                 info = request.actionColors.info
             ),
             backgroundColor = request.backgroundColor,
-            customFont = newCustomFont
+            customFont = newCustomFont,
+            customLogo = newCustomLogo
         )
 
         !updateTheme(config.staticFilesPath, updatedTheme)
@@ -112,6 +158,12 @@ object ThemeService {
             fontsDir.listFiles()?.forEach { it.delete() }
         }
 
+        // Delete all logo files
+        val logosDir = File(config.staticFilesPath, "logos")
+        if (logosDir.exists() && logosDir.isDirectory) {
+            logosDir.listFiles()?.forEach { it.delete() }
+        }
+
         // Write default theme
         !updateTheme(config.staticFilesPath, ThemeConfigDto.default)
 
@@ -124,6 +176,17 @@ object ThemeService {
             val fontFile = File(fontsFolder, filename)
             if (fontFile.exists()) {
                 fontFile.delete()
+            }
+        }
+        KIO.unit
+    }
+
+    private fun deleteLogoFile(staticFilesPath: String, filename: String): App<Nothing, Unit> = KIO.comprehension {
+        val logosFolder = File(staticFilesPath, "logos")
+        if (logosFolder.exists()) {
+            val logoFile = File(logosFolder, filename)
+            if (logoFile.exists()) {
+                logoFile.delete()
             }
         }
         KIO.unit

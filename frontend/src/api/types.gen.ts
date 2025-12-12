@@ -665,6 +665,11 @@ export type CustomFontDto = {
     filename?: string | null
 }
 
+export type CustomLogoDto = {
+    enabled: boolean
+    filename?: string | null
+}
+
 export type DocumentTemplateDto = {
     id: string
     name: string
@@ -1850,6 +1855,7 @@ export type ThemeConfigDto = {
     actionColors: ActionColors
     backgroundColor: string
     customFont: CustomFontDto
+    customLogo: CustomLogoDto
 }
 
 export type TooManyRequestsError = ApiError & {
@@ -1969,6 +1975,7 @@ export type UpdateThemeRequest = {
     actionColors: ActionColors
     backgroundColor: string
     enableCustomFont: boolean
+    enableCustomLogo: boolean
 }
 
 export type UploadMatchResultRequest = {
@@ -5505,6 +5512,10 @@ export type UpdateThemeConfigData = {
          * Optional font file (.woff or .woff2, max 5MB)
          */
         fontFile?: Blob | File
+        /**
+         * Optional logo file (.pgn, .jpg, jpeg, .svg or .webp, max 2MB)
+         */
+        logoFile?: Blob | File
     }
 }
 

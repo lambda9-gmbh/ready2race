@@ -22,7 +22,9 @@ import {useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
 import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 import SidebarContent from '@components/sidebar/SidebarContent.tsx'
+import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
 import Config from '../Config.ts'
+import logo from '../assets/r2r_logo.png'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -32,6 +34,7 @@ const RootLayout = () => {
     const user = useUser()
     const location = useLocation()
     const matchRoute = useMatchRoute()
+    const {themeConfig} = useThemeConfig()
 
     const languageSet = Boolean(document.getElementById('ready2race-root')!.dataset.lng)
 
@@ -55,9 +58,31 @@ const RootLayout = () => {
                             position: 'static',
                         }}>
                         <Toolbar sx={{justifyContent: 'space-between'}}>
-                            <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
-                                {drawerExpanded ? <MenuOpen /> : <Menu />}
-                            </IconButton>
+                            <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                                <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
+                                    {drawerExpanded ? <MenuOpen /> : <Menu />}
+                                </IconButton>
+                                <Box
+                                    component={'img'}
+                                    src={logo}
+                                    alt={'Ready2Race Logo'}
+                                    sx={{
+                                        height: {xs: 32, sm: 40},
+                                        width: 'auto',
+                                    }}
+                                />
+                                {themeConfig?.customLogo?.enabled && themeConfig?.customLogo?.filename && (
+                                    <Box
+                                        component={'img'}
+                                        src={`${Config.logosUrl}/${themeConfig.customLogo.filename}`}
+                                        alt={'Custom Logo'}
+                                        sx={{
+                                            height: {xs: 32, sm: 40},
+                                            width: 'auto',
+                                        }}
+                                    />
+                                )}
+                            </Stack>
                             {(Config.mode === 'development' || Config.mode === 'test') && (
                                 <Chip
                                     label={Config.mode === 'development' ? 'Dev-Mode' : 'Test-Mode'}

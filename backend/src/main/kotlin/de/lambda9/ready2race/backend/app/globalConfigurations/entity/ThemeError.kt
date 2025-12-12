@@ -8,7 +8,9 @@ enum class ThemeError : ServiceError {
     ThemeFileNotFound,
     ThemeFileMalformed,
     FontFileInvalid,
-    FontFileTooLarge;
+    FontFileTooLarge,
+    LogoFileInvalid,
+    LogoFileTooLarge;
 
     override fun respond(): ApiError = when (this) {
         ThemeFileNotFound -> ApiError(
@@ -26,6 +28,14 @@ enum class ThemeError : ServiceError {
         FontFileTooLarge -> ApiError(
             HttpStatusCode.BadRequest,
             message = "Font file size must not exceed 5MB"
+        )
+        LogoFileInvalid -> ApiError(
+            HttpStatusCode.BadRequest,
+            message = "Logo file must be .png, .jpg, .jpeg, .svg, or .webp format"
+        )
+        LogoFileTooLarge -> ApiError(
+            HttpStatusCode.BadRequest,
+            message = "Logo file size must not exceed 2MB"
         )
     }
 }

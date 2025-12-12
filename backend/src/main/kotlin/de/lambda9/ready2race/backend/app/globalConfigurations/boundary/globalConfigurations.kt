@@ -46,17 +46,32 @@ fun Route.globalConfigurations(env: JEnv) {
 
                     var request: UpdateThemeRequest? = null
                     var fontFile: File? = null
+                    var logoFile: File? = null
 
                     multipartData.forEachPart { part ->
                         when (part) {
                             is PartData.FileItem -> {
-                                if (fontFile == null) {
-                                    fontFile = File(
-                                        part.originalFileName!!,
-                                        part.provider().toByteArray(),
-                                    )
-                                } else {
-                                    KIO.fail(RequestError.File.Multiple)
+                                when (part.name) {
+                                    "fontFile" -> {
+                                        if (fontFile == null) {
+                                            fontFile = File(
+                                                part.originalFileName!!,
+                                                part.provider().toByteArray(),
+                                            )
+                                        } else {
+                                            KIO.fail(RequestError.File.Multiple)
+                                        }
+                                    }
+                                    "logoFile" -> {
+                                        if (logoFile == null) {
+                                            logoFile = File(
+                                                part.originalFileName!!,
+                                                part.provider().toByteArray(),
+                                            )
+                                        } else {
+                                            KIO.fail(RequestError.File.Multiple)
+                                        }
+                                    }
                                 }
                             }
 
@@ -83,7 +98,7 @@ fun Route.globalConfigurations(env: JEnv) {
                                 }
                             }
 
-                    ThemeService.updateTheme(validatedRequest, fontFile)
+                    ThemeService.updateTheme(validatedRequest, fontFile, logoFile)
                 }
             }
 

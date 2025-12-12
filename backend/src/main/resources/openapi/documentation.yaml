@@ -6527,6 +6527,10 @@ paths:
                   type: string
                   format: binary
                   description: Optional font file (.woff or .woff2, max 5MB)
+                logoFile:
+                  type: string
+                  format: binary
+                  description: Optional logo file (.pgn, .jpg, jpeg, .svg or .webp, max 2MB)
       responses:
         200:
           description: Theme configuration updated successfully
@@ -12062,6 +12066,7 @@ components:
         - actionColors
         - backgroundColor
         - customFont
+        - customLogo
       properties:
         primary:
           $ref: '#/components/schemas/PrimaryColors'
@@ -12074,8 +12079,21 @@ components:
           pattern: '^#[0-9a-fA-F]{6}$'
         customFont:
           $ref: '#/components/schemas/CustomFontDto'
+        customLogo:
+          $ref: '#/components/schemas/CustomLogoDto'
 
     CustomFontDto:
+      type: object
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+        filename:
+          type: string
+          nullable: true
+
+    CustomLogoDto:
       type: object
       required:
         - enabled
@@ -12094,6 +12112,7 @@ components:
         - actionColors
         - backgroundColor
         - enableCustomFont
+        - enableCustomLogo
       properties:
         primary:
           $ref: '#/components/schemas/PrimaryColors'
@@ -12105,6 +12124,8 @@ components:
           type: string
           pattern: '^#[0-9a-fA-F]{6}$'
         enableCustomFont:
+          type: boolean
+        enableCustomLogo:
           type: boolean
 
     PrimaryColors:
