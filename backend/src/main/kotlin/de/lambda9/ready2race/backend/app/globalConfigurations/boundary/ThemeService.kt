@@ -74,8 +74,20 @@ object ThemeService {
 
         // Update theme
         val updatedTheme = ThemeConfigDto(
-            primaryColor = request.primaryColor,
-            textColor = request.textColor,
+            primary = ThemeConfigDto.PrimaryColors(
+                main = request.primary.main,
+                light = request.primary.light
+            ),
+            textColor = ThemeConfigDto.TextColors(
+                primary = request.textColor.primary,
+                secondary = request.textColor.secondary
+            ),
+            actionColors = ThemeConfigDto.ActionColors(
+                success = request.actionColors.success,
+                warning = request.actionColors.warning,
+                error = request.actionColors.error,
+                info = request.actionColors.info
+            ),
             backgroundColor = request.backgroundColor,
             customFont = newCustomFont
         )

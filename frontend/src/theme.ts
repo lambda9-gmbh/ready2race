@@ -20,6 +20,10 @@ const baseThemeOptions: ThemeOptions = {
         common: {
             black: '#1d1d1d',
         },
+        text: {
+            primary: '#1d1d1d',
+            secondary: '#666666',
+        },
         primary: {
             main: '#4d9f85',
             light: '#ecfaf7',
@@ -114,7 +118,7 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
                 maxWidth: 'sm',
                 fullWidth: true,
             },
-        }
+        },
     },
 })
 
@@ -126,15 +130,35 @@ export const muiTheme = (locale: Locale, themeConfig: ThemeConfigDto | null): Th
               palette: {
                   ...baseThemeOptions.palette,
                   primary: {
-                      main: themeConfig.primaryColor,
-                      light: '#ecfaf7', // Keep default light variant
+                      ...baseThemeOptions.palette?.primary,
+                      main: themeConfig.primary.main,
+                      light: themeConfig.primary.light,
                   },
-                  common: {
-                      black: themeConfig.textColor,
+                  text: {
+                      ...baseThemeOptions.palette?.text,
+                      primary: themeConfig.textColor.primary,
+                      secondary: themeConfig.textColor.secondary,
                   },
                   background: {
+                      ...baseThemeOptions.palette?.background,
                       default: themeConfig.backgroundColor,
                       paper: themeConfig.backgroundColor,
+                  },
+                  success: {
+                      ...baseThemeOptions.palette?.success,
+                      main: themeConfig.actionColors.success,
+                  },
+                  warning: {
+                      ...baseThemeOptions.palette?.warning,
+                      main: themeConfig.actionColors.warning,
+                  },
+                  error: {
+                      ...baseThemeOptions.palette?.error,
+                      main: themeConfig.actionColors.error,
+                  },
+                  info: {
+                      ...baseThemeOptions.palette?.info,
+                      main: themeConfig.actionColors.info,
                   },
               },
               typography: {

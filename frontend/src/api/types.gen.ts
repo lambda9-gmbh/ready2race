@@ -7,6 +7,13 @@ export type AcceptInvitationRequest = {
 
 export type Action = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'
 
+export type ActionColors = {
+    success: string
+    warning: string
+    error: string
+    info: string
+}
+
 export type ApiError = {
     status: {
         value: number
@@ -1476,6 +1483,11 @@ export type PossibleSubstitutionsForParticipantDto = {
     notCurrentlyParticipating: Array<PossibleSubstitutionParticipantDto>
 }
 
+export type PrimaryColors = {
+    main: string
+    light: string
+}
+
 export type Privilege = {
     action: Action
     resource: Resource
@@ -1827,10 +1839,15 @@ export type TeamParticipantDto = {
     lastScanAt?: string
 }
 
+export type TextColors = {
+    primary: string
+    secondary: string
+}
+
 export type ThemeConfigDto = {
-    version: string
-    primaryColor: string
-    textColor: string
+    primary: PrimaryColors
+    textColor: TextColors
+    actionColors: ActionColors
     backgroundColor: string
     customFont: CustomFontDto
 }
@@ -1947,8 +1964,9 @@ export type UpdateQrCodeRequirementDto = {
 }
 
 export type UpdateThemeRequest = {
-    primaryColor: string
-    textColor: string
+    primary: PrimaryColors
+    textColor: TextColors
+    actionColors: ActionColors
     backgroundColor: string
     enableCustomFont: boolean
 }

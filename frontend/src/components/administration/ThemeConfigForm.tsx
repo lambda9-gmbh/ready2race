@@ -1,82 +1,114 @@
-import {useState, useEffect} from 'react';
-import {Box, Button, TextField, Typography, Paper, Alert} from '@mui/material';
-import {useThemeConfig} from '../../contexts/theme/ThemeContext';
-import {useConfirmation} from '../../contexts/confirmation/ConfirmationContext';
-import {useSnackbar} from 'notistack';
-import {useTranslation} from 'react-i18next';
-import {updateThemeConfig, resetThemeConfig} from '../../api';
+import React, {useState, useEffect} from 'react'
+import {Box, Button, TextField, Typography, Paper, Alert} from '@mui/material'
+import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import {useSnackbar} from 'notistack'
+import {useTranslation} from 'react-i18next'
+import {updateThemeConfig, resetThemeConfig} from '../../api'
 
 export function ThemeConfigForm() {
-    const {t} = useTranslation();
-    const {themeConfig, reloadTheme} = useThemeConfig();
-    const {confirmAction} = useConfirmation();
-    const {enqueueSnackbar} = useSnackbar();
+    const {t} = useTranslation()
+    const {themeConfig, reloadTheme} = useThemeConfig()
+    const {confirmAction} = useConfirmation()
+    const {enqueueSnackbar} = useSnackbar()
 
-    const [primaryColor, setPrimaryColor] = useState('#4d9f85');
-    const [textColor, setTextColor] = useState('#1d1d1d');
-    const [backgroundColor, setBackgroundColor] = useState('#ffffff');
-    const [enableCustomFont, setEnableCustomFont] = useState(false);
-    const [fontFile, setFontFile] = useState<File | null>(null);
-    const [currentFontFilename, setCurrentFontFilename] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [primaryMain, setPrimaryMain] = useState('#4d9f85')
+    const [primaryLight, setPrimaryLight] = useState('#ecfaf7')
+    const [textColorPrimary, setTextColorPrimary] = useState('#1c71d8')
+    const [textColorSecondary, setTextColorSecondary] = useState('#666666')
+    const [actionColorSuccess, setActionColorSuccess] = useState('#cbe694')
+    const [actionColorWarning, setActionColorWarning] = useState('#f5d9b0')
+    const [actionColorError, setActionColorError] = useState('#da4d4d')
+    const [actionColorInfo, setActionColorInfo] = useState('#6fb0d4')
+    const [backgroundColor, setBackgroundColor] = useState('#ffffff')
+    const [enableCustomFont, setEnableCustomFont] = useState(false)
+    const [fontFile, setFontFile] = useState<File | null>(null)
+    const [currentFontFilename, setCurrentFontFilename] = useState<string | null>(null)
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         if (themeConfig) {
-            setPrimaryColor(themeConfig.primaryColor);
-            setTextColor(themeConfig.textColor);
-            setBackgroundColor(themeConfig.backgroundColor);
-            setEnableCustomFont(themeConfig.customFont?.enabled || false);
-            setCurrentFontFilename(themeConfig.customFont?.filename || null);
+            setPrimaryMain(themeConfig.primary.main)
+            setPrimaryLight(themeConfig.primary.light)
+            setTextColorPrimary(themeConfig.textColor.primary)
+            setTextColorSecondary(themeConfig.textColor.secondary)
+            setActionColorSuccess(themeConfig.actionColors.success)
+            setActionColorWarning(themeConfig.actionColors.warning)
+            setActionColorError(themeConfig.actionColors.error)
+            setActionColorInfo(themeConfig.actionColors.info)
+            setBackgroundColor(themeConfig.backgroundColor)
+            setEnableCustomFont(themeConfig.customFont?.enabled || false)
+            setCurrentFontFilename(themeConfig.customFont?.filename || null)
         }
-    }, [themeConfig]);
+    }, [themeConfig])
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+        const file = event.target.files?.[0]
         if (file) {
-            const extension = file.name.split('.').pop()?.toLowerCase();
+            const extension = file.name.split('.').pop()?.toLowerCase()
             if (extension !== 'woff' && extension !== 'woff2') {
-                enqueueSnackbar(t('administration.theme.errors.invalidFontFormat'), {variant: 'error'});
-                return;
+                enqueueSnackbar(t('administration.theme.errors.invalidFontFormat'), {
+                    variant: 'error',
+                })
+                return
             }
             if (file.size > 5 * 1024 * 1024) {
-                enqueueSnackbar(t('administration.theme.errors.fontTooLarge'), {variant: 'error'});
-                return;
+                enqueueSnackbar(t('administration.theme.errors.fontTooLarge'), {variant: 'error'})
+                return
             }
-            setFontFile(file);
+            setFontFile(file)
         }
-    };
+    }
 
     const handleSubmit = () => {
-        setLoading(true);
+        setLoading(true)
         confirmAction(
             async () => {
                 try {
-                    const requestData = {
-                        primaryColor,
-                        textColor,
-                        backgroundColor,
-                        enableCustomFont: enableCustomFont && (fontFile !== null || currentFontFilename !== null),
-                    };
-
                     const {data, error, response} = await updateThemeConfig({
                         body: {
-                            request: JSON.stringify(requestData),
+                            request: {
+                                primary: {
+                                    main: primaryMain,
+                                    light: primaryLight,
+                                },
+                                textColor: {
+                                    primary: textColorPrimary,
+                                    secondary: textColorSecondary,
+                                },
+                                actionColors: {
+                                    success: actionColorSuccess,
+                                    warning: actionColorWarning,
+                                    error: actionColorError,
+                                    info: actionColorInfo,
+                                },
+                                backgroundColor,
+                                enableCustomFont:
+                                    enableCustomFont &&
+                                    (fontFile !== null || currentFontFilename !== null),
+                            },
                             fontFile: fontFile || undefined,
-                        }
-                    });
-                    setLoading(false);
+                        },
+                    })
+                    setLoading(false)
 
                     if (response.ok && data !== undefined) {
-                        await reloadTheme();
-                        enqueueSnackbar(t('administration.theme.success.updated'), {variant: 'success'});
-                        setFontFile(null);
+                        await reloadTheme()
+                        enqueueSnackbar(t('administration.theme.success.updated'), {
+                            variant: 'success',
+                        })
+                        setFontFile(null)
                     } else if (error) {
-                        enqueueSnackbar(t('administration.theme.errors.updateFailed'), {variant: 'error'});
+                        enqueueSnackbar(t('administration.theme.errors.updateFailed'), {
+                            variant: 'error',
+                        })
                     }
                 } catch (error) {
-                    setLoading(false);
-                    console.error('Failed to update theme:', error);
-                    enqueueSnackbar(t('administration.theme.errors.updateFailed'), {variant: 'error'});
+                    setLoading(false)
+                    console.error('Failed to update theme:', error)
+                    enqueueSnackbar(t('administration.theme.errors.updateFailed'), {
+                        variant: 'error',
+                    })
                 }
             },
             {
@@ -85,29 +117,35 @@ export function ThemeConfigForm() {
                 okText: t('administration.theme.submit'),
                 cancelText: t('common.cancel'),
                 cancelAction: () => setLoading(false),
-            }
-        );
-    };
+            },
+        )
+    }
 
     const handleReset = () => {
-        setLoading(true);
+        setLoading(true)
         confirmAction(
             async () => {
                 try {
-                    const {data, error, response} = await resetThemeConfig();
-                    setLoading(false);
+                    const {data, error, response} = await resetThemeConfig()
+                    setLoading(false)
 
                     if (response.ok && data !== undefined) {
-                        await reloadTheme();
-                        enqueueSnackbar(t('administration.theme.success.reset'), {variant: 'success'});
-                        setFontFile(null);
+                        await reloadTheme()
+                        enqueueSnackbar(t('administration.theme.success.reset'), {
+                            variant: 'success',
+                        })
+                        setFontFile(null)
                     } else if (error) {
-                        enqueueSnackbar(t('administration.theme.errors.resetFailed'), {variant: 'error'});
+                        enqueueSnackbar(t('administration.theme.errors.resetFailed'), {
+                            variant: 'error',
+                        })
                     }
                 } catch (error) {
-                    setLoading(false);
-                    console.error('Failed to reset theme:', error);
-                    enqueueSnackbar(t('administration.theme.errors.resetFailed'), {variant: 'error'});
+                    setLoading(false)
+                    console.error('Failed to reset theme:', error)
+                    enqueueSnackbar(t('administration.theme.errors.resetFailed'), {
+                        variant: 'error',
+                    })
                 }
             },
             {
@@ -116,9 +154,9 @@ export function ThemeConfigForm() {
                 okText: t('administration.theme.reset'),
                 cancelText: t('common.cancel'),
                 cancelAction: () => setLoading(false),
-            }
-        );
-    };
+            },
+        )
+    }
 
     return (
         <Paper sx={{p: 3}}>
@@ -131,37 +169,125 @@ export function ThemeConfigForm() {
 
             <Box sx={{display: 'flex', flexDirection: 'column', gap: 3}}>
                 <Box>
-                    <Typography variant="subtitle1" gutterBottom>
-                        {t('administration.theme.primaryColor')}
+                    <Typography variant="h6" gutterBottom>
+                        Primary Colors
                     </Typography>
-                    <TextField
-                        type="color"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        fullWidth
-                    />
+                    <Box sx={{display: 'flex', gap: 2}}>
+                        <Box sx={{flex: 1}}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Main
+                            </Typography>
+                            <TextField
+                                type="color"
+                                value={primaryMain}
+                                onChange={e => setPrimaryMain(e.target.value)}
+                                fullWidth
+                            />
+                        </Box>
+                        <Box sx={{flex: 1}}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Light
+                            </Typography>
+                            <TextField
+                                type="color"
+                                value={primaryLight}
+                                onChange={e => setPrimaryLight(e.target.value)}
+                                fullWidth
+                            />
+                        </Box>
+                    </Box>
                 </Box>
 
                 <Box>
-                    <Typography variant="subtitle1" gutterBottom>
-                        {t('administration.theme.textColor')}
+                    <Typography variant="h6" gutterBottom>
+                        Text Colors
                     </Typography>
-                    <TextField
-                        type="color"
-                        value={textColor}
-                        onChange={(e) => setTextColor(e.target.value)}
-                        fullWidth
-                    />
+                    <Box sx={{display: 'flex', gap: 2}}>
+                        <Box sx={{flex: 1}}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Primary
+                            </Typography>
+                            <TextField
+                                type="color"
+                                value={textColorPrimary}
+                                onChange={e => setTextColorPrimary(e.target.value)}
+                                fullWidth
+                            />
+                        </Box>
+                        <Box sx={{flex: 1}}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Secondary
+                            </Typography>
+                            <TextField
+                                type="color"
+                                value={textColorSecondary}
+                                onChange={e => setTextColorSecondary(e.target.value)}
+                                fullWidth
+                            />
+                        </Box>
+                    </Box>
                 </Box>
 
                 <Box>
-                    <Typography variant="subtitle1" gutterBottom>
-                        {t('administration.theme.backgroundColor')}
+                    <Typography variant="h6" gutterBottom>
+                        Action Colors
+                    </Typography>
+                    <Box sx={{display: 'flex', gap: 2, flexWrap: 'wrap'}}>
+                        <Box sx={{flex: 1, minWidth: '200px'}}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Success
+                            </Typography>
+                            <TextField
+                                type="color"
+                                value={actionColorSuccess}
+                                onChange={e => setActionColorSuccess(e.target.value)}
+                                fullWidth
+                            />
+                        </Box>
+                        <Box sx={{flex: 1, minWidth: '200px'}}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Warning
+                            </Typography>
+                            <TextField
+                                type="color"
+                                value={actionColorWarning}
+                                onChange={e => setActionColorWarning(e.target.value)}
+                                fullWidth
+                            />
+                        </Box>
+                        <Box sx={{flex: 1, minWidth: '200px'}}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Error
+                            </Typography>
+                            <TextField
+                                type="color"
+                                value={actionColorError}
+                                onChange={e => setActionColorError(e.target.value)}
+                                fullWidth
+                            />
+                        </Box>
+                        <Box sx={{flex: 1, minWidth: '200px'}}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Info
+                            </Typography>
+                            <TextField
+                                type="color"
+                                value={actionColorInfo}
+                                onChange={e => setActionColorInfo(e.target.value)}
+                                fullWidth
+                            />
+                        </Box>
+                    </Box>
+                </Box>
+
+                <Box>
+                    <Typography variant="h6" gutterBottom>
+                        Background Color
                     </Typography>
                     <TextField
                         type="color"
                         value={backgroundColor}
-                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        onChange={e => setBackgroundColor(e.target.value)}
                         fullWidth
                     />
                 </Box>
@@ -182,7 +308,7 @@ export function ThemeConfigForm() {
                         <input
                             type="checkbox"
                             checked={enableCustomFont}
-                            onChange={(e) => setEnableCustomFont(e.target.checked)}
+                            onChange={e => setEnableCustomFont(e.target.checked)}
                         />
                         <Typography>{t('administration.theme.enableCustomFont')}</Typography>
                     </Box>
@@ -193,7 +319,9 @@ export function ThemeConfigForm() {
                             fullWidth
                             sx={{mt: 2}}
                             inputProps={{accept: '.woff,.woff2'}}
-                            helperText={fontFile ? fontFile.name : t('administration.theme.selectFontFile')}
+                            helperText={
+                                fontFile ? fontFile.name : t('administration.theme.selectFontFile')
+                            }
                         />
                     )}
                 </Box>
@@ -203,20 +331,18 @@ export function ThemeConfigForm() {
                         variant="contained"
                         color="primary"
                         onClick={handleSubmit}
-                        disabled={loading}
-                    >
+                        disabled={loading}>
                         {t('administration.theme.submit')}
                     </Button>
                     <Button
                         variant="outlined"
                         color="secondary"
                         onClick={handleReset}
-                        disabled={loading}
-                    >
+                        disabled={loading}>
                         {t('administration.theme.reset')}
                     </Button>
                 </Box>
             </Box>
         </Paper>
-    );
+    )
 }

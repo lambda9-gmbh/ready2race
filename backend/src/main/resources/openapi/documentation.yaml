@@ -12039,23 +12039,36 @@ components:
         allowClubCreationOnRegistration:
           type: boolean
 
+
+    CompetitionsForRegistrationDto:
+      type: object
+      required:
+        - competitions
+        - teamsEventOmitted
+      properties:
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionDto'
+        teamsEventOmitted:
+          type: boolean
+
+
     ThemeConfigDto:
       type: object
       required:
-        - version
-        - primaryColor
+        - primary
         - textColor
+        - actionColors
         - backgroundColor
         - customFont
       properties:
-        version:
-          type: string
-        primaryColor:
-          type: string
-          pattern: '^#[0-9a-fA-F]{6}$'
+        primary:
+          $ref: '#/components/schemas/PrimaryColors'
         textColor:
-          type: string
-          pattern: '^#[0-9a-fA-F]{6}$'
+          $ref: '#/components/schemas/TextColors'
+        actionColors:
+          $ref: '#/components/schemas/ActionColors'
         backgroundColor:
           type: string
           pattern: '^#[0-9a-fA-F]{6}$'
@@ -12076,32 +12089,67 @@ components:
     UpdateThemeRequest:
       type: object
       required:
-        - primaryColor
+        - primary
         - textColor
+        - actionColors
         - backgroundColor
         - enableCustomFont
       properties:
-        primaryColor:
-          type: string
-          pattern: '^#[0-9a-fA-F]{6}$'
+        primary:
+          $ref: '#/components/schemas/PrimaryColors'
         textColor:
-          type: string
-          pattern: '^#[0-9a-fA-F]{6}$'
+          $ref: '#/components/schemas/TextColors'
+        actionColors:
+          $ref: '#/components/schemas/ActionColors'
         backgroundColor:
           type: string
           pattern: '^#[0-9a-fA-F]{6}$'
         enableCustomFont:
           type: boolean
 
-    CompetitionsForRegistrationDto:
+    PrimaryColors:
       type: object
       required:
-        - competitions
-        - teamsEventOmitted
+        - main
+        - light
       properties:
-        competitions:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompetitionDto'
-        teamsEventOmitted:
-          type: boolean
+        main:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        light:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+
+    TextColors:
+      type: object
+      required:
+        - primary
+        - secondary
+      properties:
+        primary:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        secondary:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+
+    ActionColors:
+      type: object
+      required:
+        - success
+        - warning
+        - error
+        - info
+      properties:
+        success:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        warning:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        error:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        info:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'

@@ -4,9 +4,20 @@ import type {ThemeConfigDto} from '../../api'
 import Config from '../../Config.ts'
 
 const DEFAULT_THEME: ThemeConfigDto = {
-    version: '1.0',
-    primaryColor: '#4d9f85',
-    textColor: '#1d1d1d',
+    primary: {
+        main: '#4d9f85',
+        light: '#ecfaf7',
+    },
+    textColor: {
+        primary: '#1c71d8',
+        secondary: '#666666',
+    },
+    actionColors: {
+        success: '#cbe694',
+        warning: '#f5d9b0',
+        error: '#da4d4d',
+        info: '#6fb0d4',
+    },
     backgroundColor: '#ffffff',
     customFont: {
         enabled: false,
@@ -69,7 +80,7 @@ export function ThemeProvider({children}: ThemeProviderProps) {
     }, [])
 
     useEffect(() => {
-        loadTheme()
+        void loadTheme()
     }, [loadTheme])
 
     const contextValue = useMemo(
