@@ -9,7 +9,7 @@ const DEFAULT_THEME: ThemeConfigDto = {
         light: '#ecfaf7',
     },
     textColor: {
-        primary: '#1c71d8',
+        primary: '#1d1d1d',
         secondary: '#666666',
     },
     actionColors: {

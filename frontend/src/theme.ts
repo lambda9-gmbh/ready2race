@@ -5,29 +5,6 @@ import type {ThemeConfigDto} from './api'
 const baseThemeOptions: ThemeOptions = {
     palette: {
         mode: 'light',
-        success: {
-            main: '#cbe694',
-        },
-        warning: {
-            main: '#f5d9b0',
-        },
-        error: {
-            main: '#da4d4d',
-        },
-        info: {
-            main: '#6fb0d4',
-        },
-        common: {
-            black: '#1d1d1d',
-        },
-        text: {
-            primary: '#1d1d1d',
-            secondary: '#666666',
-        },
-        primary: {
-            main: '#4d9f85',
-            light: '#ecfaf7',
-        },
     },
     typography: {
         h1: {
