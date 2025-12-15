@@ -1,5 +1,7 @@
 import "@typespec/http";
 import "@typespec/rest";
+import "./common.tsp";
+import "./workShift.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
@@ -226,14 +228,12 @@ interface InvitationRoutes {
 
 @route("/user/resetPassword")
 interface PasswordResetRoutes {
-  // Initiate password reset
+
   @post
-  @route("")
   initPasswordReset(
     @body request: PasswordResetInitRequest,
   ): void;
 
-  // Reset password with token
   @put
   @route("/{passwordResetToken}")
   resetPassword(
@@ -244,11 +244,10 @@ interface PasswordResetRoutes {
 
 @route("/user/event/{eventId}")
 interface EventUserRoutes {
-  // Get all users for event
+
   @get
-  @route("")
   getUsersForEvent(
-    @path eventId: string, // UUID
-    // Pagination parameters
+    @path eventId: string,
+    ...UrlPaginationParameters,
   ): AppUserForEventDto[];
 }

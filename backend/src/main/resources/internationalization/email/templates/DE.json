@@ -96,6 +96,18 @@
         "",
         "Wir freuen uns über deine Teilnahme."
       ]
+    },
+    {
+      "key": "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT",
+      "subject": "Ready2Race - Teilnahmeurkunde",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "du hast an der Veranstaltung '##event##' teilgenommen.",
+        "Im Anhang findest du deine Teilnahmeurkunde.",
+        "",
+        "Wir wünschen weiterhin alles Gute."
+      ]
     }
   ]
 }

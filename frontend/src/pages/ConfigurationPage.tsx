@@ -10,6 +10,7 @@ import {
     DocumentTemplateDto,
     EventDocumentTypeDto,
     FeeDto,
+    GapDocumentTemplateDto,
     NamedParticipantDto,
     ParticipantRequirementDto,
     WorkTypeDto,
@@ -33,6 +34,8 @@ import {useNavigate} from '@tanstack/react-router'
 // TODO: @Improve, @Discussion: Maybe extract TabContents into several Components
 import DocumentTemplateTable from '@components/documentTemplate/DocumentTemplateTable.tsx'
 import DocumentTemplateDialog from '@components/documentTemplate/DocumentTemplateDialog.tsx'
+import GapDocumentTemplateTable from '@components/gapDocumentTemplate/GapDocumentTemplateTable.tsx'
+import GapDocumentTemplateDialog from '@components/gapDocumentTemplate/GapDocumentTemplateDialog.tsx'
 import InlineLink from '@components/InlineLink.tsx'
 import CompetitionSetupTemplateTable from '@components/event/competition/setup/template/CompetitionSetupTemplateTable.tsx'
 import CompetitionSetupTemplateDialog from '@components/event/competition/setup/template/CompetitionSetupTemplateDialog.tsx'
@@ -100,6 +103,10 @@ const ConfigurationPage = () => {
 
     const documentTemplateAdministrationProps = useEntityAdministration<DocumentTemplateDto>(
         t('document.template.template'),
+    )
+
+    const gapDocumentTemplateAdministrationProps = useEntityAdministration<GapDocumentTemplateDto>(
+        t('gap.document.template.template'),
     )
 
     const workTypeAdministrationProps = useEntityAdministration<WorkTypeDto>(t('work.type.type'))
@@ -206,6 +213,12 @@ const ConfigurationPage = () => {
                         ]}
                     />
                     <DocumentTemplateDialog {...documentTemplateAdministrationProps.dialog} />
+                    <GapDocumentTemplateTable
+                        {...gapDocumentTemplateAdministrationProps.table}
+                        title={t('gap.document.template.templates')}
+                        hints={[t('gap.document.template.tableHint')]}
+                    />
+                    <GapDocumentTemplateDialog {...gapDocumentTemplateAdministrationProps.dialog} />
                     <WorkTypeTable
                         {...workTypeAdministrationProps.table}
                         id={'worktypes'}
