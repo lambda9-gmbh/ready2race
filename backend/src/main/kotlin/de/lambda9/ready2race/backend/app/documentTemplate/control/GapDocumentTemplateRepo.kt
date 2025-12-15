@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.documentTemplate.control
 
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateViewSort
 import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.GapDocumentTemplateView
 import de.lambda9.ready2race.backend.database.generated.tables.records.GapDocumentTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.GAP_DOCUMENT_TEMPLATE
@@ -18,6 +19,8 @@ object GapDocumentTemplateRepo {
     private fun GapDocumentTemplateView.searchFields() = listOf(NAME)
 
     fun create(record: GapDocumentTemplateRecord) = GAP_DOCUMENT_TEMPLATE.insertReturning(record) { ID }
+
+    fun exists(id: UUID) = GAP_DOCUMENT_TEMPLATE.exists { ID.eq(id) }
 
     fun update(id: UUID, f: GapDocumentTemplateRecord.() -> Unit) = GAP_DOCUMENT_TEMPLATE.update(f) { ID.eq(id) }
 

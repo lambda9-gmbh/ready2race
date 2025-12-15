@@ -133,6 +133,10 @@ export type AssignedTemplateId = {
     value?: string
 }
 
+export type AssignGapDocumentTemplateRequest = {
+    template?: string
+}
+
 export type AssignRequirementToNamedParticipantDto = {
     requirementId: string
     qrCodeRequired: boolean
@@ -4396,6 +4400,21 @@ export type DownloadGapDocumentTemplateSampleData = {
 export type DownloadGapDocumentTemplateSampleResponse = Blob | File
 
 export type DownloadGapDocumentTemplateSampleError = BadRequestError | ApiError
+
+export type GetGapDocumentTemplateTypesResponse = Array<GapDocumentTypeDto>
+
+export type GetGapDocumentTemplateTypesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AssignGapDocumentTemplateData = {
+    body: AssignGapDocumentTemplateRequest
+    path: {
+        gapDocumentType: GapDocumentType
+    }
+}
+
+export type AssignGapDocumentTemplateResponse = void
+
+export type AssignGapDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetDocumentTemplatesData = {
     query?: {

@@ -3,11 +3,13 @@ package de.lambda9.ready2race.backend.app.documentTemplate.boundary
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignDocumentTemplateRequest
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateViewSort
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
@@ -111,6 +113,23 @@ fun Route.documentTemplate() {
                     val id = !pathParam("gapDocumentTemplateId", uuid)
                     GapDocumentTemplateService.getPreview(id)
                 }
+            }
+        }
+    }
+
+    route("/gapDocumentTemplateType") {
+        get {
+            call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
+                GapDocumentTemplateService.getTypes()
+            }
+        }
+        put("/{documentType}/assignTemplate") {
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateEventGlobal)
+                val docType = !pathParam("documentType", enum<GapDocumentType>())
+                val body = !receiveKIO(AssignGapDocumentTemplateRequest.example)
+                GapDocumentTemplateService.assignTemplate(docType, body)
             }
         }
     }

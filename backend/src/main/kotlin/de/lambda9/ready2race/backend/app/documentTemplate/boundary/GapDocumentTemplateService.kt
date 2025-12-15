@@ -1,24 +1,31 @@
 package de.lambda9.ready2race.backend.app.documentTemplate.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.certificate.boundary.CertificateService
 import de.lambda9.ready2race.backend.app.documentTemplate.control.GapDocumentPlaceholderRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.GapDocumentTemplateDataRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.GapDocumentTemplateRepo
+import de.lambda9.ready2race.backend.app.documentTemplate.control.GapDocumentTemplateUsageRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toDto
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toRecord
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocumentTemplateRequest
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignedTemplateId
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentPlaceholderType
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateDto
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateError
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateViewSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTypeDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.calls.responses.pageResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.GapDocumentTemplateDataRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.GapDocumentTemplateUsageRecord
 import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.pdf.AdditionalText
@@ -31,6 +38,22 @@ import java.lang.Exception
 import java.util.UUID
 
 object GapDocumentTemplateService {
+
+    fun getTypes(): App<Nothing, ApiResponse.Dto<List<GapDocumentTypeDto>>> =
+        GapDocumentTemplateUsageRepo.all().orDie().map { all ->
+            val usages = all.associate { rec ->
+                rec.type to AssignedTemplateId(rec.template)
+            }
+
+            ApiResponse.Dto(
+                GapDocumentType.entries.map { type ->
+                    GapDocumentTypeDto(
+                        type = type,
+                        assignedTemplate = usages[type.name],
+                    )
+                }
+            )
+        }
 
     fun page(
         params: PaginationParameters<GapDocumentTemplateViewSort>
@@ -148,5 +171,26 @@ object GapDocumentTemplateService {
                 )
             )
         }
+    }
+
+    fun assignTemplate(
+        type: GapDocumentType,
+        request: AssignGapDocumentTemplateRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        if (request.template == null) {
+            !GapDocumentTemplateUsageRepo.delete(type).orDie()
+        } else {
+            !GapDocumentTemplateRepo.exists(request.template).orDie().onFalseFail { GapDocumentTemplateError.NotFound }
+
+            !GapDocumentTemplateUsageRepo.upsert(
+                GapDocumentTemplateUsageRecord(
+                    type = type.name,
+                    template = request.template,
+                )
+            ).orDie()
+        }
+
+        noData
     }
 }

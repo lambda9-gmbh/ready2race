@@ -4111,6 +4111,60 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /gapDocumentTemplateType:
+    get:
+      operationId: getGapDocumentTemplateTypes
+      responses:
+        200:
+          description: Gap document types successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GapDocumentTypeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /gapDocumentTemplateType/{gapDocumentType}/assignTemplate:
+    parameters:
+      - in: path
+        name: gapDocumentType
+        required: true
+        schema:
+          $ref: '#/components/schemas/GapDocumentType'
+    put:
+      operationId: assignGapDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignGapDocumentTemplateRequest'
+      responses:
+        204:
+          description: Successfully assigned template to document type
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /documentTemplate:
     get:
       operationId: getDocumentTemplates
@@ -9728,6 +9782,13 @@ components:
           type: string
           format: uuid
         event:
+          type: string
+          format: uuid
+
+    AssignGapDocumentTemplateRequest:
+      type: object
+      properties:
+        template:
           type: string
           format: uuid
 

@@ -458,6 +458,11 @@ import type {
     DownloadGapDocumentTemplateSampleData,
     DownloadGapDocumentTemplateSampleError,
     DownloadGapDocumentTemplateSampleResponse,
+    GetGapDocumentTemplateTypesError,
+    GetGapDocumentTemplateTypesResponse,
+    AssignGapDocumentTemplateData,
+    AssignGapDocumentTemplateError,
+    AssignGapDocumentTemplateResponse,
     GetDocumentTemplatesData,
     GetDocumentTemplatesError,
     GetDocumentTemplatesResponse,
@@ -2602,6 +2607,32 @@ export const downloadGapDocumentTemplateSample = <ThrowOnError extends boolean =
     >({
         ...options,
         url: '/gapDocumentTemplate/{gapDocumentTemplateId}/preview',
+    })
+}
+
+export const getGapDocumentTemplateTypes = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetGapDocumentTemplateTypesResponse,
+        GetGapDocumentTemplateTypesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplateType',
+    })
+}
+
+export const assignGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignGapDocumentTemplateResponse,
+        AssignGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplateType/{gapDocumentType}/assignTemplate',
     })
 }
 
