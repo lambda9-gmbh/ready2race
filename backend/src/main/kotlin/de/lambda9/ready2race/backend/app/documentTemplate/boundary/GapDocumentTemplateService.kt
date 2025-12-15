@@ -136,7 +136,6 @@ object GapDocumentTemplateService {
         when (type) {
             GapDocumentType.CERTIFICATE_OF_PARTICIPATION -> CertificateService.participantForEvent(
                 additions = template.placeholders!!.mapNotNull {
-                    println("1 placeholder found")
                     val type =
                         try {
                             GapDocumentPlaceholderType.valueOf(it!!.type)
@@ -149,7 +148,6 @@ object GapDocumentTemplateService {
                             GapDocumentPlaceholderType.FIRST_NAME -> "Max"
                             GapDocumentPlaceholderType.LAST_NAME -> "Mustermann"
                             GapDocumentPlaceholderType.FULL_NAME -> "Max Mustermann"
-                            GapDocumentPlaceholderType.PLACE -> "2"
                             GapDocumentPlaceholderType.RESULT -> "3492 m"
                             GapDocumentPlaceholderType.EVENT_NAME -> "Summer Sport Festival"
                         },

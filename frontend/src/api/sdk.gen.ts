@@ -732,6 +732,8 @@ import type {
     UpdateGlobalConfigurationsResponse,
     GetCreateClubOnRegistrationAllowedError,
     GetCreateClubOnRegistrationAllowedResponse,
+    SendCertificatesToParticipantsError,
+    SendCertificatesToParticipantsResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3815,5 +3817,18 @@ export const getCreateClubOnRegistrationAllowed = <ThrowOnError extends boolean 
     >({
         ...options,
         url: '/globalConfigurations/createClubOnRegistration',
+    })
+}
+
+export const sendCertificatesToParticipants = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        SendCertificatesToParticipantsResponse,
+        SendCertificatesToParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/certificatesOfParticipation/sendToParticipants',
     })
 }

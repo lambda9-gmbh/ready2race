@@ -784,6 +784,7 @@ export type EventDto = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    challengesFinished?: boolean
 }
 
 export type EventForExportDto = {
@@ -1001,7 +1002,6 @@ export type GapDocumentPlaceholderType =
     | 'FIRST_NAME'
     | 'LAST_NAME'
     | 'FULL_NAME'
-    | 'PLACE'
     | 'RESULT'
     | 'EVENT_NAME'
 
@@ -5605,3 +5605,7 @@ export type UpdateGlobalConfigurationsError = BadRequestError | ApiError
 export type GetCreateClubOnRegistrationAllowedResponse = boolean
 
 export type GetCreateClubOnRegistrationAllowedError = ApiError
+
+export type SendCertificatesToParticipantsResponse = void
+
+export type SendCertificatesToParticipantsError = unknown

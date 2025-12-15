@@ -26,4 +26,5 @@ data class EventDto(
     val allowSelfSubmission: Boolean,
     val submissionNeedsVerification: Boolean,
     val allowParticipantSelfRegistration: Boolean,
+    val challengesFinished: Boolean?,
 )

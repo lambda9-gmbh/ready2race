@@ -1,4 +1,14 @@
-import {Box, Button, Divider, MenuItem, Paper, Select, Stack, TextField, Typography} from '@mui/material'
+import {
+    Box,
+    Button,
+    Divider,
+    MenuItem,
+    Paper,
+    Select,
+    Stack,
+    TextField,
+    Typography,
+} from '@mui/material'
 import {GapDocumentPlaceholderType, TextAlign} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {Add} from '@mui/icons-material'
@@ -27,7 +37,6 @@ const PLACEHOLDER_TYPES: GapDocumentPlaceholderType[] = [
     'FIRST_NAME',
     'LAST_NAME',
     'FULL_NAME',
-    'PLACE',
     'RESULT',
     'EVENT_NAME',
 ]
@@ -71,10 +80,15 @@ const PlaceholderSidebar = (props: Props) => {
                 {selectedPlaceholder && (
                     <>
                         <Divider />
-                        <Typography variant="h6">{t('gap.document.placeholder.properties')}</Typography>
+                        <Typography variant="h6">
+                            {t('gap.document.placeholder.properties')}
+                        </Typography>
 
                         <Box>
-                            <Typography variant="caption" color="text.secondary" sx={{mb: 0.5, display: 'block'}}>
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{mb: 0.5, display: 'block'}}>
                                 {t('gap.document.placeholder.type.label')}
                             </Typography>
                             <Typography variant="body2" fontWeight="bold">
@@ -96,7 +110,10 @@ const PlaceholderSidebar = (props: Props) => {
                         />
 
                         <Box>
-                            <Typography variant="caption" color="text.secondary" sx={{mb: 1, display: 'block'}}>
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{mb: 1, display: 'block'}}>
                                 {t('gap.document.placeholder.textAlign')}
                             </Typography>
                             <Select
@@ -108,9 +125,15 @@ const PlaceholderSidebar = (props: Props) => {
                                 }
                                 fullWidth
                                 size="small">
-                                <MenuItem value="LEFT">{t('gap.document.placeholder.align.LEFT')}</MenuItem>
-                                <MenuItem value="CENTER">{t('gap.document.placeholder.align.CENTER')}</MenuItem>
-                                <MenuItem value="RIGHT">{t('gap.document.placeholder.align.RIGHT')}</MenuItem>
+                                <MenuItem value="LEFT">
+                                    {t('gap.document.placeholder.align.LEFT')}
+                                </MenuItem>
+                                <MenuItem value="CENTER">
+                                    {t('gap.document.placeholder.align.CENTER')}
+                                </MenuItem>
+                                <MenuItem value="RIGHT">
+                                    {t('gap.document.placeholder.align.RIGHT')}
+                                </MenuItem>
                             </Select>
                         </Box>
 
@@ -121,22 +144,28 @@ const PlaceholderSidebar = (props: Props) => {
                         </Box>
 
                         <Box>
-                            <Typography variant="caption" color="text.secondary" sx={{display: 'block'}}>
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{display: 'block'}}>
                                 {t('gap.document.placeholder.position')}
                             </Typography>
                             <Typography variant="caption">
-                                X: {(selectedPlaceholder.relLeft * 100).toFixed(1)}%,
-                                Y: {(selectedPlaceholder.relTop * 100).toFixed(1)}%
+                                X: {(selectedPlaceholder.relLeft * 100).toFixed(1)}%, Y:{' '}
+                                {(selectedPlaceholder.relTop * 100).toFixed(1)}%
                             </Typography>
                         </Box>
 
                         <Box>
-                            <Typography variant="caption" color="text.secondary" sx={{display: 'block'}}>
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{display: 'block'}}>
                                 {t('gap.document.placeholder.size')}
                             </Typography>
                             <Typography variant="caption">
-                                W: {(selectedPlaceholder.relWidth * 100).toFixed(1)}%,
-                                H: {(selectedPlaceholder.relHeight * 100).toFixed(1)}%
+                                W: {(selectedPlaceholder.relWidth * 100).toFixed(1)}%, H:{' '}
+                                {(selectedPlaceholder.relHeight * 100).toFixed(1)}%
                             </Typography>
                         </Box>
                     </>

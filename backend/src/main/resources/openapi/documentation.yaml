@@ -6720,6 +6720,24 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/certificatesOfParticipation/sendToParticipants:
+    post:
+      operationId: sendCertificatesToParticipants
+      responses:
+        204:
+          204:
+            $ref: '#/components/responses/204'
+          400:
+            $ref: '#/components/responses/400'
+          401:
+            $ref: '#/components/responses/401'
+          403:
+            $ref: '#/components/responses/403'
+          404:
+            $ref: '#/components/responses/404'
+          500:
+            $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -7048,7 +7066,6 @@ components:
         - 'FIRST_NAME'
         - 'LAST_NAME'
         - 'FULL_NAME'
-        - 'PLACE'
         - 'RESULT'
         - 'EVENT_NAME'
 
@@ -7731,6 +7748,8 @@ components:
         submissionNeedsVerification:
           type: boolean
         allowParticipantSelfRegistration:
+          type: boolean
+        challengesFinished:
           type: boolean
 
     EventPublicDto:

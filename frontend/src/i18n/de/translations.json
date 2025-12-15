@@ -984,6 +984,8 @@
             }
         },
         "action": {
+            "sendCertificates": "Teilnahmeurkunden versenden",
+            "sendCertificatesSucceeded": "Versand von Teilnahmeurkunden beauftragt",
             "registrationsReport": {
                 "download": "Meldeergebnis herunterladen"
             },

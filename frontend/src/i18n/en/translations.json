@@ -984,6 +984,8 @@
             }
         },
         "action": {
+            "sendCertificates": "Send certificates of participation",
+            "sendCertificatesSucceeded": "Sending of Certificates of participation successfully engaged",
             "registrationsReport": {
                 "download": "Download registrations result"
             },
