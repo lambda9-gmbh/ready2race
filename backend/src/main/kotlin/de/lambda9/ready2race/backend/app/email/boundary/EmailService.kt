@@ -65,9 +65,10 @@ object EmailService {
 
             val fromFile = jsonMapper.readValue<DefaultEmailTemplatesFromFile>(resource)
 
-            fromFile.templates.groupingBy { it.key }.eachCount().filter { it.value > 1 }.takeIf { it.isNotEmpty() }?.let {
-                throw Exception("Following keys in $lngFile are declared multiple times: ${it.keys.joinToString(", ")}")
-            }
+            fromFile.templates.groupingBy { it.key }.eachCount().filter { it.value > 1 }.takeIf { it.isNotEmpty() }
+                ?.let {
+                    throw Exception("Following keys in $lngFile are declared multiple times: ${it.keys.joinToString(", ")}")
+                }
 
             EmailTemplateKey.entries.map { key ->
                 fromFile.templates.find { it.key == key }?.let {
@@ -128,10 +129,15 @@ object EmailService {
     }
 
     fun sendNext(): App<EmailError, Unit> = KIO.comprehension {
+
         val smtpOverride = !EmailRepo.getSMTPConfigOverride().andThenNotNull {
             it.toSmtpConfig()
         }.orDie()
-        val smtp = smtpOverride ?: !accessConfig().map { it.smtp }.onNullFail { EmailError.SmtpConfigMissing }
+        val config = !accessConfig()
+        !KIO.failOn(config.smtp == null && smtpOverride == null) {
+            EmailError.SmtpConfigMissing
+        }
+        val smtp = smtpOverride ?: config.smtp!!
 
         val email = !EmailRepo.getAndLockNext(retryAfterError).orDie().onNullFail { EmailError.NoEmailsToSend }
         val attachments = !EmailAttachmentRepo.getByEmail(email.id).orDie().map { records ->
@@ -146,32 +152,36 @@ object EmailService {
             }
         }
 
-        !KIO.effect {
-            smtp.createMailer().sendMail(
-                EmailBuilder.startingBlank()
-                    .from(smtp.from.name, smtp.from.address)
-                    .to(email.recipient)
-                    .applyNotNull(email.cc) { cc(it) }
-                    .applyNotNull(email.bcc) { bcc(it) }
-                    .withSubject(email.subject)
-                    .applyEither(
-                        email.bodyIsHtml,
-                        { withHTMLText(email.body) },
-                        { withPlainText(email.body) }
-                    )
-                    .applyNotNull(smtp.replyTo) { withReplyTo(it) }
-                    .withAttachments(attachments)
-                    .buildEmail()
-            )
-        }.mapError {
-            val now = LocalDateTime.now()
-            !EmailRepo.update(email) {
-                lastError = it.stackTraceToString()
-                lastErrorAt = now
-                updatedAt = now
-                updatedBy = SYSTEM_USER
-            }.orDie()
-            EmailError.SendingFailed(email.id, it)
+        if (config.mailReceiverWhitelist == null || config.mailReceiverWhitelist.any { email.recipient.matches(it) }) {
+            !KIO.effect {
+                smtp.createMailer().sendMail(
+                    EmailBuilder.startingBlank()
+                        .from(smtp.from.name, smtp.from.address)
+                        .to(email.recipient)
+                        .applyNotNull(email.cc) { cc(it) }
+                        .applyNotNull(email.bcc) { bcc(it) }
+                        .withSubject(email.subject)
+                        .applyEither(
+                            email.bodyIsHtml,
+                            { withHTMLText(email.body) },
+                            { withPlainText(email.body) }
+                        )
+                        .applyNotNull(smtp.replyTo) { withReplyTo(it) }
+                        .withAttachments(attachments)
+                        .buildEmail()
+                )
+            }.mapError {
+                val now = LocalDateTime.now()
+                !EmailRepo.update(email) {
+                    lastError = it.stackTraceToString()
+                    lastErrorAt = now
+                    updatedAt = now
+                    updatedBy = SYSTEM_USER
+                }.orDie()
+                EmailError.SendingFailed(email.id, it)
+            }
+        } else {
+            logger.info { "EMAIL: Receiver not in whitelist; skipping email sending..." }
         }
 
         val now = LocalDateTime.now()
@@ -201,7 +211,7 @@ object EmailService {
         EmailRepo.getSMTPConfigOverride().orDie()
             .andThenNotNull { it.toDto() }
             .onNull { accessConfig().map { it.smtp!! }.andThen { it.toDto() } }
-            .map { ApiResponse.Dto(it)}
+            .map { ApiResponse.Dto(it) }
 
     fun setSMTPConfigOverride(override: SmtpConfigOverrideDto, userId: UUID): App<Nothing, ApiResponse.NoData> =
         EmailRepo.replaceSMTPConfigOverride(

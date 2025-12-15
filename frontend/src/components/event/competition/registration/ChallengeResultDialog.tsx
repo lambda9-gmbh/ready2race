@@ -68,6 +68,7 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
     const formContext = useForm<Form>()
 
     const [confirming, setConfirming] = useState(false)
+    const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
 
     const onSubmit = async (formData: Form) => {
         if (!teamDto) return
@@ -109,8 +110,15 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
             feedback.error(t('event.competition.execution.results.challenge.error'))
         } else {
             feedback.success(t('event.competition.execution.results.challenge.success'))
-            props.reloadTeams()
             props.closeDialog()
+            props.reloadTeams()
+        }
+    }
+
+    const cleanupPreviewUrl = () => {
+        if (previewImageUrl) {
+            URL.revokeObjectURL(previewImageUrl)
+            setPreviewImageUrl(null)
         }
     }
 
@@ -118,8 +126,22 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
         formContext.reset(defaultValues)
         if (dialogOpen) {
             setConfirming(false)
+        } else {
+            cleanupPreviewUrl()
         }
     }, [dialogOpen])
+
+    useEffect(() => {
+        if (confirming) {
+            const files = formContext.getValues('files')
+            if (files?.[0]?.file) {
+                cleanupPreviewUrl()
+                setPreviewImageUrl(URL.createObjectURL(files[0].file))
+            }
+        } else {
+            cleanupPreviewUrl()
+        }
+    }, [confirming])
 
     const confirmationFormState = useMemo(() => formContext.getValues(), [confirming])
 
@@ -193,7 +215,7 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
                                 )}
                             </Stack>
                         </Container>
-                        {confirming && confirmationFormState.files.length === 1 && (
+                        {confirming && confirmationFormState.files.length === 1 && previewImageUrl && (
                             <Box
                                 sx={{
                                     flex: 1,
@@ -204,19 +226,15 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
                                     gap: 1,
                                     my: 4,
                                 }}>
-                                {formContext.watch('files')?.[0]?.file && (
-                                    <img
-                                        src={URL.createObjectURL(
-                                            formContext.watch('files')[0].file,
-                                        )}
-                                        alt="Challenge confirmation"
-                                        style={{
-                                            maxWidth: '100%',
-                                            maxHeight: '600px',
-                                            objectFit: 'contain',
-                                        }}
-                                    />
-                                )}
+                                <img
+                                    src={previewImageUrl}
+                                    alt="Challenge confirmation"
+                                    style={{
+                                        maxWidth: '100%',
+                                        maxHeight: '600px',
+                                        objectFit: 'contain',
+                                    }}
+                                />
                             </Box>
                         )}
                     </Box>

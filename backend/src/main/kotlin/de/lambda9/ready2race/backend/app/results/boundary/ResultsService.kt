@@ -540,22 +540,34 @@ object ResultsService {
                                 block {
                                     text(
                                         fontStyle = FontStyle.BOLD
-                                    ) { team.clubName }
-                                    team.teamName?.let {
+                                    ) { team.participatingClubName?: team.clubName }
+                                    block(
+                                        padding = Padding(left = 5f)
+                                    ) {
+                                        text(
+                                            fontStyle = FontStyle.BOLD,
+                                            fontSize = 8f,
+                                        ){
+                                            "gemeldet von / "
+                                        }
                                         text(
                                             newLine = false,
-                                        ) { " $it" }
+                                            fontSize = 8f,
+                                        ) { "registered by" + "   ${team.clubName}" }
+                                        team.teamName?.let {
+                                            text(
+                                                newLine = false,
+                                                fontSize = 8f,
+                                            ) { " | $it" }
+                                        }
+                                        team.ratingCategory?.let {
+                                            text(
+                                                newLine = false,
+                                                fontSize = 8f,
+                                            ) { " $it" }
+                                        }
                                     }
-                                    team.participatingClubName?.let {
-                                        text(
-                                            newLine = false,
-                                        ) { " [$it]" }
-                                    }
-                                    team.ratingCategory?.let {
-                                        text(
-                                            newLine = false,
-                                        ) { " $it" }
-                                    }
+
                                 }
 
                                 table(

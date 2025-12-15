@@ -23,7 +23,11 @@ export const EventRegistrationCompetitionFeeCard = (props: {
             }}>
             <Stack spacing={1.5}>
                 {/* Competition Header */}
-                <Stack direction={{xs: 'column', sm: 'row'}} spacing={1} alignItems={{xs: 'flex-start', sm: 'center'}} flexWrap={'wrap'}>
+                <Stack
+                    direction={{xs: 'column', sm: 'row'}}
+                    spacing={1}
+                    alignItems={{xs: 'flex-start', sm: 'center'}}
+                    flexWrap={'wrap'}>
                     <Typography variant="h6">
                         {props.competition.identifier} - {props.competition.name}
                     </Typography>
@@ -59,16 +63,22 @@ export const EventRegistrationCompetitionFeeCard = (props: {
                                     spacing={{xs: 0, sm: 1}}
                                     alignItems={{xs: 'flex-start', sm: 'center'}}>
                                     <Typography variant="body2">
-                                        {fee.label}: <strong>{Number(fee.amount).toFixed(2)}€</strong>
+                                        {fee.label}:{' '}
+                                        <strong>{Number(fee.amount).toFixed(2)}€</strong>
                                     </Typography>
-                                    {props.competition.lateRegistrationAllowed && fee.lateAmount && (
-                                        <Typography variant="caption" color="warning.main">
-                                            <Trans
-                                                i18nKey={'event.competition.fee.asLate'}
-                                                values={{amount: Number(fee.lateAmount).toFixed(2)}}
-                                            />
-                                        </Typography>
-                                    )}
+                                    {props.competition.lateRegistrationAllowed &&
+                                        fee.lateAmount && (
+                                            <Typography variant="caption">
+                                                (
+                                                <Trans
+                                                    i18nKey={'event.competition.fee.asLate'}
+                                                    values={{
+                                                        amount: Number(fee.lateAmount).toFixed(2),
+                                                    }}
+                                                />
+                                                )
+                                            </Typography>
+                                        )}
                                 </Stack>
                             ))}
                         </Stack>
@@ -95,16 +105,24 @@ export const EventRegistrationCompetitionFeeCard = (props: {
                                         spacing={{xs: 0, sm: 1}}
                                         alignItems={{xs: 'flex-start', sm: 'center'}}>
                                         <Typography variant="body2">
-                                            {fee.label}: <strong>{Number(fee.amount).toFixed(2)}€</strong>
+                                            {fee.label}:{' '}
+                                            <strong>{Number(fee.amount).toFixed(2)}€</strong>
                                         </Typography>
-                                        {props.competition.lateRegistrationAllowed && fee.lateAmount && (
-                                            <Typography variant="caption" color="warning.main">
-                                                <Trans
-                                                    i18nKey={'event.competition.fee.asLate'}
-                                                    values={{amount: Number(fee.lateAmount).toFixed(2)}}
-                                                />
-                                            </Typography>
-                                        )}
+                                        {props.competition.lateRegistrationAllowed &&
+                                            fee.lateAmount && (
+                                                <Typography variant="caption">
+                                                    (
+                                                    <Trans
+                                                        i18nKey={'event.competition.fee.asLate'}
+                                                        values={{
+                                                            amount: Number(fee.lateAmount).toFixed(
+                                                                2,
+                                                            ),
+                                                        }}
+                                                    />
+                                                    )
+                                                </Typography>
+                                            )}
                                     </Stack>
                                 ))}
                             </Stack>

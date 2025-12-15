@@ -6720,6 +6720,61 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /globalConfigurations/theme:
+    put:
+      operationId: updateThemeConfig
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+              properties:
+                request:
+                  $ref: '#/components/schemas/UpdateThemeRequest'
+                fontFile:
+                  type: string
+                  format: binary
+                  description: Optional font file (.woff or .woff2, max 5MB)
+                logoFile:
+                  type: string
+                  format: binary
+                  description: Optional logo file (.pgn, .jpg, jpeg, .svg or .webp, max 2MB)
+      responses:
+        200:
+          description: Theme configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemeConfigDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: resetThemeConfig
+      responses:
+        200:
+          description: Theme configuration reset to defaults
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemeConfigDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/certificatesOfParticipation/sendToParticipants:
     post:
       operationId: sendCertificatesToParticipants
@@ -7693,6 +7748,7 @@ components:
       required:
         - id
         - name
+        - published
         - registrationsFinalized
         - challengeEvent
         - allowSelfSubmission
@@ -10264,6 +10320,8 @@ components:
           format: uuid
         clubName:
           type: string
+        actualClubName:
+          type: string
         name:
           type: string
         startNumber:
@@ -10890,6 +10948,8 @@ components:
         namedRole:
           type: string
           nullable: true
+        externalClubName:
+          type: string
 
 
 
@@ -10990,6 +11050,8 @@ components:
         clubName:
           type: string
           nullable: true
+        actualClubName:
+          type: string
         participants:
           type: array
           items:
@@ -11082,6 +11144,8 @@ components:
         clubName:
           type: string
           nullable: true
+        actualClubName:
+          type: string
         place:
           type: integer
         timeString:
@@ -11167,6 +11231,8 @@ components:
         clubName:
           type: string
           nullable: true
+        actualClubName:
+          type: string
         currentScore:
           type: integer
           nullable: true
@@ -12235,6 +12301,7 @@ components:
         allowClubCreationOnRegistration:
           type: boolean
 
+
     CompetitionsForRegistrationDto:
       type: object
       required:
@@ -12247,6 +12314,124 @@ components:
             $ref: '#/components/schemas/CompetitionDto'
         teamsEventOmitted:
           type: boolean
+
+
+    ThemeConfigDto:
+      type: object
+      required:
+        - primary
+        - textColor
+        - actionColors
+        - backgroundColor
+        - customFont
+        - customLogo
+      properties:
+        primary:
+          $ref: '#/components/schemas/PrimaryColors'
+        textColor:
+          $ref: '#/components/schemas/TextColors'
+        actionColors:
+          $ref: '#/components/schemas/ActionColors'
+        backgroundColor:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        customFont:
+          $ref: '#/components/schemas/CustomFontDto'
+        customLogo:
+          $ref: '#/components/schemas/CustomLogoDto'
+
+    CustomFontDto:
+      type: object
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+        filename:
+          type: string
+          nullable: true
+
+    CustomLogoDto:
+      type: object
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+        filename:
+          type: string
+          nullable: true
+
+    UpdateThemeRequest:
+      type: object
+      required:
+        - primary
+        - textColor
+        - actionColors
+        - backgroundColor
+        - enableCustomFont
+        - enableCustomLogo
+      properties:
+        primary:
+          $ref: '#/components/schemas/PrimaryColors'
+        textColor:
+          $ref: '#/components/schemas/TextColors'
+        actionColors:
+          $ref: '#/components/schemas/ActionColors'
+        backgroundColor:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        enableCustomFont:
+          type: boolean
+        enableCustomLogo:
+          type: boolean
+
+    PrimaryColors:
+      type: object
+      required:
+        - main
+        - light
+      properties:
+        main:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        light:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+
+    TextColors:
+      type: object
+      required:
+        - primary
+        - secondary
+      properties:
+        primary:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        secondary:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+
+    ActionColors:
+      type: object
+      required:
+        - success
+        - warning
+        - error
+        - info
+      properties:
+        success:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        warning:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        error:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+        info:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
 
     GapDocumentPlaceholderDto:
       type: object

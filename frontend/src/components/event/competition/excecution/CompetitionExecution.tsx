@@ -770,108 +770,122 @@ const CompetitionExecution = () => {
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {controlledResultFields.map((value, fieldIndex) => (
-                                                <Controller
-                                                    key={value.id}
-                                                    name={`teamResults.${fieldIndex}.failed`}
-                                                    render={({
-                                                        field: {
-                                                            onChange: failedOnChange,
-                                                            value: failedValue = false,
-                                                        },
-                                                    }) => (
-                                                        <TableRow key={value.id}>
-                                                            <TableCell width="10%">
-                                                                {
-                                                                    selectedResultsMatch.teams[
-                                                                        fieldIndex
-                                                                    ].startNumber
-                                                                }
-                                                            </TableCell>
-                                                            <TableCell width="40%">
-                                                                {`${selectedResultsMatch.teams[fieldIndex].clubName}` +
-                                                                    (selectedResultsMatch.teams[
-                                                                        fieldIndex
-                                                                    ].name
-                                                                        ? ` - ${selectedResultsMatch.teams[fieldIndex].name}`
-                                                                        : '')}
-                                                            </TableCell>
-                                                            <TableCell width="40%">
-                                                                {!failedValue ? (
-                                                                    <Box
-                                                                        sx={{
-                                                                            width: 1,
-                                                                            display: 'flex',
-                                                                            flexDirection: 'column',
-                                                                            gap: 2,
-                                                                        }}>
-                                                                        {controlledResultFields && (
+                                            {controlledResultFields.map((value, fieldIndex) => {
+                                                const team = selectedResultsMatch.teams.find(
+                                                    val =>
+                                                        val.registrationId === value.registrationId,
+                                                )!
+
+                                                return (
+                                                    <Controller
+                                                        key={value.id}
+                                                        name={`teamResults.${fieldIndex}.failed`}
+                                                        render={({
+                                                            field: {
+                                                                onChange: failedOnChange,
+                                                                value: failedValue = false,
+                                                            },
+                                                        }) => (
+                                                            <TableRow key={value.id}>
+                                                                <TableCell width="10%">
+                                                                    {team.startNumber}
+                                                                </TableCell>
+                                                                <TableCell width="40%">
+                                                                    <Typography>
+                                                                        {team.actualClubName ??
+                                                                            team.clubName}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        color={'textSecondary'}
+                                                                        variant={'body2'}>
+                                                                        {`${t('club.registeredBy')} ` +
+                                                                            team.clubName +
+                                                                            ` | ${team.name}`}
+                                                                    </Typography>
+                                                                </TableCell>
+                                                                <TableCell width="40%">
+                                                                    {!failedValue ? (
+                                                                        <Box
+                                                                            sx={{
+                                                                                width: 1,
+                                                                                display: 'flex',
+                                                                                flexDirection:
+                                                                                    'column',
+                                                                                gap: 2,
+                                                                            }}>
+                                                                            {controlledResultFields && (
+                                                                                <Box
+                                                                                    display="flex"
+                                                                                    gap={1}
+                                                                                    alignItems={
+                                                                                        'center'
+                                                                                    }>
+                                                                                    <EmojiEventsOutlinedIcon
+                                                                                        color={
+                                                                                            'action'
+                                                                                        }
+                                                                                    />
+                                                                                    <FormInputNumber
+                                                                                        name={`teamResults.${fieldIndex}.place`}
+                                                                                        min={1}
+                                                                                        max={
+                                                                                            controlledResultFields.filter(
+                                                                                                r =>
+                                                                                                    !r.failed,
+                                                                                            ).length
+                                                                                        }
+                                                                                        integer
+                                                                                        size="small"
+                                                                                        placeholder="#"
+                                                                                    />
+                                                                                </Box>
+                                                                            )}
                                                                             <Box
                                                                                 display="flex"
                                                                                 gap={1}
                                                                                 alignItems={
                                                                                     'center'
                                                                                 }>
-                                                                                <EmojiEventsOutlinedIcon
+                                                                                <TimerOutlinedIcon
                                                                                     color={'action'}
                                                                                 />
-                                                                                <FormInputNumber
-                                                                                    name={`teamResults.${fieldIndex}.place`}
-                                                                                    min={1}
-                                                                                    max={
-                                                                                        controlledResultFields.filter(
-                                                                                            r =>
-                                                                                                !r.failed,
-                                                                                        ).length
-                                                                                    }
-                                                                                    integer
+                                                                                <FormInputTimecode
+                                                                                    name={`teamResults.${fieldIndex}.timeString`}
                                                                                     size="small"
-                                                                                    placeholder="#"
+                                                                                    placeholder="00:00:00.000"
                                                                                 />
                                                                             </Box>
-                                                                        )}
-                                                                        <Box
-                                                                            display="flex"
-                                                                            gap={1}
-                                                                            alignItems={'center'}>
-                                                                            <TimerOutlinedIcon
-                                                                                color={'action'}
-                                                                            />
-                                                                            <FormInputTimecode
-                                                                                name={`teamResults.${fieldIndex}.timeString`}
-                                                                                size="small"
-                                                                                placeholder="00:00:00.000"
-                                                                            />
                                                                         </Box>
-                                                                    </Box>
-                                                                ) : (
-                                                                    <FormInputText
-                                                                        name={`teamResults.${fieldIndex}.failedReason`}
-                                                                        label={t(
-                                                                            'event.competition.execution.results.failedReason',
-                                                                        )}
-                                                                        size="small"
+                                                                    ) : (
+                                                                        <FormInputText
+                                                                            name={`teamResults.${fieldIndex}.failedReason`}
+                                                                            label={t(
+                                                                                'event.competition.execution.results.failedReason',
+                                                                            )}
+                                                                            size="small"
+                                                                        />
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell width="10%">
+                                                                    <Checkbox
+                                                                        checked={failedValue}
+                                                                        onChange={e => {
+                                                                            failedOnChange(e)
+                                                                            resultsFormContext.setValue(
+                                                                                `teamResults.${fieldIndex}.failed`,
+                                                                                Boolean(
+                                                                                    e.target
+                                                                                        .checked,
+                                                                                ),
+                                                                            )
+                                                                        }}
                                                                     />
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell width="10%">
-                                                                <Checkbox
-                                                                    checked={failedValue}
-                                                                    onChange={e => {
-                                                                        failedOnChange(e)
-                                                                        resultsFormContext.setValue(
-                                                                            `teamResults.${fieldIndex}.failed`,
-                                                                            Boolean(
-                                                                                e.target.checked,
-                                                                            ),
-                                                                        )
-                                                                    }}
-                                                                />
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
-                                                />
-                                            ))}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )}
+                                                    />
+                                                )
+                                            })}
                                         </TableBody>
                                     </Table>
                                 </TableContainer>
@@ -939,25 +953,32 @@ const CompetitionExecution = () => {
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {editMatchFields.map((value, fieldIndex) => (
-                                                    <TableRow key={value.id}>
-                                                        <TableCell width="25%">
-                                                            <FormInputNumber
-                                                                name={`teams[${fieldIndex}.startNumber`}
-                                                                required
-                                                                min={1}
-                                                                integer
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell width="75%">
-                                                            {`${selectedEditMatch.teams[fieldIndex].clubName}` +
-                                                                (selectedEditMatch.teams[fieldIndex]
-                                                                    .name
-                                                                    ? ` - ${selectedEditMatch.teams[fieldIndex].name}`
-                                                                    : '')}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
+                                                {editMatchFields.map((value, fieldIndex) => {
+                                                    const team = selectedEditMatch.teams.find(
+                                                        val =>
+                                                            val.registrationId ===
+                                                            value.registrationId,
+                                                    )!
+
+                                                    return (
+                                                        <TableRow key={value.id}>
+                                                            <TableCell width="25%">
+                                                                <FormInputNumber
+                                                                    name={`teams[${fieldIndex}.startNumber`}
+                                                                    required
+                                                                    min={1}
+                                                                    integer
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell width="75%">
+                                                                {`${team.clubName}` +
+                                                                    (team.name
+                                                                        ? ` - ${team.name}`
+                                                                        : '')}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )
+                                                })}
                                             </TableBody>
                                         </Table>
                                     </TableContainer>

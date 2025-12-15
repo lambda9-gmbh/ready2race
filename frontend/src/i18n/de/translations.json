@@ -328,7 +328,9 @@
     },
     "club": {
         "club": "Verein",
-        "clubs": "Vereine",
+        "registrant": "Anmelder",
+    "registeredBy": "gemeldet von",
+    "clubs": "Vereine",
         "name": "Vereinsname",
         "import": "Vereine importieren",
         "error": {
@@ -590,8 +592,14 @@
                     "required": "Gebühr ist verpflichtend"
                 },
                 "asRegular": "bei Meldung: {{amount}}€",
-                "asLate": "bei Nachmeldung: {{amount}}€"
-            },
+                "asLate": "bei Nachmeldung: {{amount}}€",
+            "error": {
+          "duplicates": {
+            "one": "Die Gebührenart {{label}} wird mehrfach verwendet.",
+            "multiple": "Die Gebührenarten {{labels}} werden mehrfach verwendet.",
+            "message": "Bitte wählen Sie für jede Gebühr eine einzigartige Gebührenart aus."
+          }
+        }},
             "template": {
                 "template": "Wettkampf Vorlage",
                 "templates": "Wettkampf Vorlagen",
@@ -620,9 +628,16 @@
                 "ratingCategory": "Wertungskategorie",
                 "ratingCategoryInvalid": "Die ausgewählte Wertungskategorie ist für die Teilnehmer in diesem Team nicht gültig",
                 "infos": "Infos",
-                "deregister": {
+                "delete": {
+          "error": {
+            "roundExisting": "Der Wettkampf hat bereits begonnen."
+          }
+        },
+        "deregister": {
                     "deregister": "Abmelden",
-                    "revertDeregistration": {
+                    "error": "Beim Abmelden ist ein Fehler aufgetreten.",
+          "success": "Abmeldung erfolgreich",
+          "revertDeregistration": {
                         "revertDeregistration": "Abmeldung zurücknehmen",
                         "revert": "Zurücknehmen",
                         "confirmation": "Sind Sie sich sicher, dass die Abmeldung zurückgenommen werden soll?",
@@ -773,7 +788,8 @@
                         "short": "Nr."
                     },
                     "team": "Team",
-                    "place": "Platz",
+                    "registeredBy": "gemeldet von",
+          "place": "Platz",
                     "time": "Zeit",
                     "placeAndTime": "Platz/Zeit",
                     "manageRunning": "Laufende Partien verwalten",
@@ -1828,7 +1844,12 @@
         }
     },
     "administration": {
-        "smtp": {
+        "title": "Administration",
+    "tabs": {
+      "smtp": "SMTP-Konfiguration",
+      "theme": "Theme-Anpassung"
+    },
+    "smtp": {
             "title": "SMTP Konfiguration",
             "host": "SMTP-Host",
             "port": "SMTP-Port",
@@ -1846,7 +1867,45 @@
             },
             "errors": {
                 "loading": "Beim Laden der SMTP-Konfiguration ist ein Fehler aufgetreten.",
-                "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."
+                "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."}
+    },
+    "theme": {
+      "title": "Theme-Anpassung",
+      "info": "Passen Sie das Erscheinungsbild der Anwendung an. Änderungen werden nach dem Speichern sofort übernommen.",
+      "primaryColor": "Primärfarbe",
+      "textColor": "Textfarbe",
+      "backgroundColor": "Hintergrundfarbe",
+      "customFont": "Eigene Schriftart",
+      "fontHint": "Laden Sie eine .woff oder .woff2 Datei hoch (max. 5MB)",
+      "currentFont": "Aktuelle Schriftart",
+      "enableCustomFont": "Eigene Schriftart aktivieren",
+      "selectFontFile": "Keine Datei ausgewählt",
+      "customLogo": "Eigenes Logo",
+      "logoHint": "Laden Sie eine .png, .jpg, .jpeg, .svg oder .webp Datei hoch (max. 2MB)",
+      "currentLogo": "Aktuelles Logo",
+      "enableCustomLogo": "Eigenes Logo aktivieren",
+      "selectLogoFile": "Keine Datei ausgewählt",
+      "submit": "Theme speichern",
+      "reset": "Auf Standard zurücksetzen",
+      "confirmUpdate": {
+        "title": "Theme aktualisieren",
+        "message": "Möchten Sie die Theme-Einstellungen wirklich ändern?"
+      },
+      "confirmReset": {
+        "title": "Theme zurücksetzen",
+        "message": "Möchten Sie das Theme wirklich auf die Standardeinstellungen zurücksetzen? Alle Anpassungen gehen verloren."
+      },
+      "success": {
+        "updated": "Theme erfolgreich aktualisiert",
+        "reset": "Theme erfolgreich zurückgesetzt"
+      },
+      "errors": {
+        "invalidFontFormat": "Ungültiges Dateiformat. Bitte verwenden Sie .woff oder .woff2 Dateien.",
+        "fontTooLarge": "Die Schriftart-Datei ist zu groß. Maximale Größe: 5MB",
+        "invalidLogoFormat": "Ungültiges Dateiformat. Bitte verwenden Sie .png, .jpg, .jpeg, .svg oder .webp Dateien.",
+        "logoTooLarge": "Die Logo-Datei ist zu groß. Maximale Größe: 2MB",
+        "updateFailed": "Theme konnte nicht aktualisiert werden",
+        "resetFailed": "Theme konnte nicht zurückgesetzt werden"
             }
         }
     },

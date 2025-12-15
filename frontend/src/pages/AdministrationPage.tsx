@@ -1,5 +1,5 @@
 import {useTranslation} from 'react-i18next'
-import {Stack, Typography} from '@mui/material'
+import {Stack, Typography, Tabs, Tab, Box} from '@mui/material'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
@@ -16,6 +16,7 @@ import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateAdministrationConfigGlobal} from '@authorization/privileges.ts'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
+import {ThemeConfigForm} from '@components/administration/ThemeConfigForm.tsx'
 
 type Form = SmtpConfigOverrideDto
 
@@ -34,6 +35,7 @@ const AdministrationPage = () => {
     const [submitting, setSubmitting] = useState(true)
     const [resetting, setResetting] = useState(true)
     const {confirmAction} = useConfirmation()
+    const [tabValue, setTabValue] = useState(0)
 
     const currentConfig = useFetch(signal => getSmtpConfig({signal}), {
         onResponse: response => {
@@ -126,9 +128,16 @@ const AdministrationPage = () => {
     return (
         currentConfig.data && (
             <Stack spacing={4}>
-                <Typography variant={'h1'}>{t('administration.smtp.title')}</Typography>
-                <FormContainer formContext={formContext} onSuccess={handleSubmit}>
-                    <Stack spacing={4} maxWidth="70%">
+                <Typography variant={'h1'}>{t('administration.title')}</Typography>
+                <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
+                    <Tab label={t('administration.tabs.smtp')} />
+                    <Tab label={t('administration.tabs.theme')} />
+                </Tabs>
+
+                {tabValue === 0 && (
+                    <Box>
+                        <FormContainer formContext={formContext} onSuccess={handleSubmit}>
+                            <Stack spacing={4} maxWidth="70%">
                         <FormInputText
                             name={'host'}
                             label={t('administration.smtp.host')}
@@ -183,21 +192,29 @@ const AdministrationPage = () => {
                             label={t('administration.smtp.replyTo')}
                             disabled={!allowedToUpdate}
                         />
-                        {allowedToUpdate && (
-                            <>
-                                <SubmitButton submitting={submitting}>
-                                    {t('administration.smtp.submit')}
-                                </SubmitButton>
-                                <LoadingButton
-                                    variant={'outlined'}
-                                    pending={resetting}
-                                    onClick={handleReset}>
-                                    {t('administration.smtp.reset')}
-                                </LoadingButton>
-                            </>
-                        )}
-                    </Stack>
-                </FormContainer>
+                                {allowedToUpdate && (
+                                    <>
+                                        <SubmitButton submitting={submitting}>
+                                            {t('administration.smtp.submit')}
+                                        </SubmitButton>
+                                        <LoadingButton
+                                            variant={'outlined'}
+                                            pending={resetting}
+                                            onClick={handleReset}>
+                                            {t('administration.smtp.reset')}
+                                        </LoadingButton>
+                                    </>
+                                )}
+                            </Stack>
+                        </FormContainer>
+                    </Box>
+                )}
+
+                {tabValue === 1 && (
+                    <Box>
+                        <ThemeConfigForm />
+                    </Box>
+                )}
             </Stack>
         )
     )

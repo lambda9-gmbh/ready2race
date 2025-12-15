@@ -401,13 +401,13 @@ const CompetitionExecutionRound = ({
                                                           'event.competition.execution.match.startNumber.startNumber',
                                                       )}
                                             </TableCell>
-                                            <TableCell width="50%">
+                                            <TableCell width="55%">
                                                 {t('event.competition.execution.match.team')}
                                             </TableCell>
                                             <TableCell width="10%">
                                                 {t('event.competition.execution.match.place')}
                                             </TableCell>
-                                            <TableCell width="25%">
+                                            <TableCell width="20%">
                                                 {t('event.competition.execution.match.time')}
                                             </TableCell>
                                         </TableRow>
@@ -420,9 +420,17 @@ const CompetitionExecutionRound = ({
                                                     <TableCell width="15%">
                                                         {team.startNumber}
                                                     </TableCell>
-                                                    <TableCell width="50%">
-                                                        {team.clubName +
-                                                            (team.name ? ` ${team.name}` : '')}
+                                                    <TableCell width="55%">
+                                                        <Typography>
+                                                            {team.actualClubName ?? team.clubName}
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="textSecondary">
+                                                            {`${t('club.registeredBy')} ` +
+                                                                team.clubName +
+                                                                ` | ${team.name}`}
+                                                        </Typography>
                                                     </TableCell>
                                                     <TableCell width="10%">
                                                         {team.deregistered
@@ -441,7 +449,7 @@ const CompetitionExecutionRound = ({
                                                                     : '')
                                                               : team.place}
                                                     </TableCell>
-                                                    <TableCell width="25%">
+                                                    <TableCell width="20%">
                                                         {team.timeString}
                                                     </TableCell>
                                                 </TableRow>

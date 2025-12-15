@@ -7,5 +7,6 @@ data class UpcomingMatchTeamInfo(
     val teamName: String?,
     val startNumber: Int?,
     val clubName: String?,
+    val actualClubName: String?,
     val participants: List<UpcomingMatchParticipantInfo>
 )

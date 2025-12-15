@@ -4,6 +4,7 @@ import {competitionRoute, eventRoute} from '@routes'
 import {
     CompetitionRegistrationDto,
     deleteCompetitionRegistration,
+    DeleteCompetitionRegistrationError,
     getCompetitionRegistrations,
     OpenForRegistrationType,
     revertCompetitionDeregistration,
@@ -90,11 +91,19 @@ const CompetitionRegistrationTable = ({
             },
         })
 
+    const onDeleteError = (error: DeleteCompetitionRegistrationError) => {
+        if (error.status.value === 409) {
+            feedback.error(t('event.competition.registration.delete.error.roundExisting'))
+        } else {
+            feedback.error(t('entity.delete.error', {entity: props.entityName}))
+        }
+    }
+
     const columns: GridColDef<CompetitionRegistrationDto>[] = useMemo(
         () => [
             {
                 field: 'clubName',
-                headerName: t('club.club'),
+                headerName: t('club.registrant'),
                 minWidth: 150,
             },
             {
@@ -130,17 +139,18 @@ const CompetitionRegistrationTable = ({
                 field: 'namedParticipants',
                 headerName: t('event.registration.teamMembers'),
                 flex: 2,
-                minWidth: 300,
+                minWidth: 350,
                 sortable: false,
                 renderCell: ({row}) => {
                     return (
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{width: '40%'}}>{t('entity.name')}</TableCell>
-                                    <TableCell sx={{width: '40%'}}>
+                                    <TableCell sx={{width: '26%'}}>{t('entity.name')}</TableCell>
+                                    <TableCell sx={{width: '26%'}}>
                                         {t('event.competition.namedParticipant.namedParticipant')}
                                     </TableCell>
+                                    <TableCell sx={{width: '26%'}}>{t('club.club')}</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -149,10 +159,14 @@ const CompetitionRegistrationTable = ({
                                         <TableRow key={participant.id}>
                                             <TableCell
                                                 sx={{
-                                                    width: '40%',
+                                                    width: '26%',
                                                 }}>{`${participant.firstname} ${participant.lastname}`}</TableCell>
-                                            <TableCell sx={{width: '40%'}}>
+                                            <TableCell sx={{width: '26%'}}>
                                                 {np.namedParticipantName}
+                                            </TableCell>
+                                            <TableCell sx={{width: '26%'}}>
+                                                {participant.externalClubName ??
+                                                    participant.clubName}
                                             </TableCell>
                                         </TableRow>
                                     )),
@@ -260,9 +274,6 @@ const CompetitionRegistrationTable = ({
         )
     }
 
-    // todo: only allow revert if no next round has been created since
-    // comment: validated in api?
-
     const afterRegistration = (isLate: boolean) =>
         isLate ? registrationState === 'CLOSED' : registrationState !== 'REGULAR'
 
@@ -305,6 +316,7 @@ const CompetitionRegistrationTable = ({
                 columns={columns}
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
+                onDeleteError={onDeleteError}
                 entityName={t('event.registration.registration')}
                 creatable={props.registrationInitialized && (props.documentsAccepted ?? false)}
                 deletableIf={writable}

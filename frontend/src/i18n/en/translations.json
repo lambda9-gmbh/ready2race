@@ -328,7 +328,9 @@
     },
     "club": {
         "club": "Club",
-        "clubs": "Clubs",
+        "registrant": "Registrant",
+    "registeredBy": "registered by",
+    "clubs": "Clubs",
         "name": "Club name",
         "import": "Import clubs",
         "error": {
@@ -582,7 +584,7 @@
                 "description": "Description",
                 "amount": "Amount",
                 "lateAmount": "Different amount for late registration",
-                "add": "Add Fee",
+                "add": "Add fee",
                 "type": "Fee type",
                 "tableHint": "Defines possible fees for a competition.",
                 "required": {
@@ -590,8 +592,14 @@
                     "required": "Fee is mandatory"
                 },
                 "asRegular": "registered in time: {{amount}}€",
-                "asLate": "registered late: {{amount}}€"
-            },
+                "asLate": "registered late: {{amount}}€",
+            "error": {
+          "duplicates": {
+            "one": "The fee type {{label}} is used several times.",
+            "multiple": "The fee types {{labels}} are used several times.",
+            "message": "Please select a unique fee type for each fee."
+          }
+        }},
             "template": {
                 "template": "Competition Template",
                 "templates": "Competition Templates",
@@ -619,10 +627,16 @@
                 "isLate": "registered late",
                 "ratingCategory": "Rating category",
                 "ratingCategoryInvalid": "The selected rating category is not valid for the participants in this team",
-                "infos": "Infos",
+                "infos": "Infos","delete": {
+          "error": {
+            "roundExisting": "The competition has already started."
+          }
+        },
                 "deregister": {
                     "deregister": "Deregister",
-                    "revertDeregistration": {
+                    "error": "An error has occurred on deregistration",
+          "success": "Deregistration successful",
+          "revertDeregistration": {
                         "revertDeregistration": "Revert deregistration",
                         "revert": "Revert",
                         "confirmation": "Are you sure you want to revert this deregistration?",
@@ -773,7 +787,8 @@
                         "short": "No."
                     },
                     "team": "Team",
-                    "place": "Place",
+                    "registeredBy": "registered by",
+          "place": "Place",
                     "time": "Time",
                     "placeAndTime": "Place/Time",
                     "manageRunning": "Manage Running Matches",
@@ -1827,7 +1842,12 @@
         }
     },
     "administration": {
-        "smtp": {
+        "title": "Administration",
+    "tabs": {
+      "smtp": "SMTP Configuration",
+      "theme": "Theme Customization"
+    },
+    "smtp": {
             "title": "SMTP Configuration",
             "host": "SMTP Host",
             "port": "SMTP Port",
@@ -1845,7 +1865,45 @@
             },
             "errors": {
                 "loading": "An error has occurred when loading the SMTP configuration.",
-                "submit": "An error has occurred when changing the SMTP configuration."
+                "submit": "An error has occurred when changing the SMTP configuration."}
+    },
+    "theme": {
+      "title": "Theme Customization",
+      "info": "Customize the application's appearance. Changes will take effect immediately after saving.",
+      "primaryColor": "Primary Color",
+      "textColor": "Text Color",
+      "backgroundColor": "Background Color",
+      "customFont": "Custom Font",
+      "fontHint": "Upload a .woff or .woff2 file (max 5MB)",
+      "currentFont": "Current Font",
+      "enableCustomFont": "Enable Custom Font",
+      "selectFontFile": "No file selected",
+      "customLogo": "Custom Logo",
+      "logoHint": "Upload a .png, .jpg, .jpeg, .svg or .webp file (max 2MB)",
+      "currentLogo": "Current Logo",
+      "enableCustomLogo": "Enable Custom Logo",
+      "selectLogoFile": "No file selected",
+      "submit": "Save Theme",
+      "reset": "Reset to Default",
+      "confirmUpdate": {
+        "title": "Update Theme",
+        "message": "Are you sure you want to change the theme settings?"
+      },
+      "confirmReset": {
+        "title": "Reset Theme",
+        "message": "Are you sure you want to reset the theme to default settings? All customizations will be lost."
+      },
+      "success": {
+        "updated": "Theme updated successfully",
+        "reset": "Theme reset successfully"
+      },
+      "errors": {
+        "invalidFontFormat": "Invalid file format. Please use .woff or .woff2 files.",
+        "fontTooLarge": "Font file is too large. Maximum size: 5MB",
+        "invalidLogoFormat": "Invalid file format. Please use .png, .jpg, .jpeg, .svg or .webp files.",
+        "logoTooLarge": "Logo file is too large. Maximum size: 2MB",
+        "updateFailed": "Failed to update theme",
+        "resetFailed": "Failed to reset theme"
             }
         }
     },

@@ -1,28 +1,10 @@
 import {createTheme, Theme, ThemeOptions} from '@mui/material'
 import {Locale} from './i18n/config.ts'
+import type {ThemeConfigDto} from './api'
 
 const baseThemeOptions: ThemeOptions = {
     palette: {
         mode: 'light',
-        success: {
-            main: '#cbe694',
-        },
-        warning: {
-            main: '#f5d9b0',
-        },
-        error: {
-            main: '#da4d4d',
-        },
-        info: {
-            main: '#6fb0d4',
-        },
-        common: {
-            black: '#1d1d1d',
-        },
-        primary: {
-            main: '#4d9f85',
-            light: '#ecfaf7',
-        },
     },
     typography: {
         h1: {
@@ -113,12 +95,59 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
                 maxWidth: 'sm',
                 fullWidth: true,
             },
-        }
+        },
     },
 })
 
-export const muiTheme = (locale: Locale): Theme => {
-    const theme = createTheme(baseThemeOptions)
+export const muiTheme = (locale: Locale, themeConfig: ThemeConfigDto | null): Theme => {
+    // Apply theme config overrides if available
+    const themeOptions: ThemeOptions = themeConfig
+        ? {
+              ...baseThemeOptions,
+              palette: {
+                  ...baseThemeOptions.palette,
+                  primary: {
+                      ...baseThemeOptions.palette?.primary,
+                      main: themeConfig.primary.main,
+                      light: themeConfig.primary.light,
+                  },
+                  text: {
+                      ...baseThemeOptions.palette?.text,
+                      primary: themeConfig.textColor.primary,
+                      secondary: themeConfig.textColor.secondary,
+                  },
+                  background: {
+                      ...baseThemeOptions.palette?.background,
+                      default: themeConfig.backgroundColor,
+                      paper: themeConfig.backgroundColor,
+                  },
+                  success: {
+                      ...baseThemeOptions.palette?.success,
+                      main: themeConfig.actionColors.success,
+                  },
+                  warning: {
+                      ...baseThemeOptions.palette?.warning,
+                      main: themeConfig.actionColors.warning,
+                  },
+                  error: {
+                      ...baseThemeOptions.palette?.error,
+                      main: themeConfig.actionColors.error,
+                  },
+                  info: {
+                      ...baseThemeOptions.palette?.info,
+                      main: themeConfig.actionColors.info,
+                  },
+              },
+              typography: {
+                  ...baseThemeOptions.typography,
+                  fontFamily: themeConfig.customFont?.enabled
+                      ? "'CustomFont', 'Roboto', 'Helvetica', 'Arial', sans-serif"
+                      : "'Roboto', 'Helvetica', 'Arial', sans-serif",
+              },
+          }
+        : baseThemeOptions
+
+    const theme = createTheme(themeOptions)
 
     return createTheme(
         {

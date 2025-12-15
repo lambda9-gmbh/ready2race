@@ -1,10 +1,14 @@
 package de.lambda9.ready2race.backend.config
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.applyNotNull
+import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.parsing.Parser
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.int
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.json
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.jsonEscaped
 import de.lambda9.tailwind.core.Cause
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
@@ -12,6 +16,7 @@ import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrElse
 import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import de.lambda9.tailwind.core.extensions.kio.andThenNotNull
+import de.lambda9.tailwind.core.extensions.kio.mapNotNull
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.recover
 import io.github.cdimascio.dotenv.Dotenv
@@ -24,8 +29,10 @@ data class Config(
     val http: Http,
     val database: Database,
     val smtp: Smtp?,
+    val mailReceiverWhitelist: List<Regex>?,
     val security: Security,
     val admin: Admin,
+    val staticFilesPath: String,
     val webDAV: WebDAV?
 ) {
 
@@ -168,8 +175,15 @@ data class Config(
                     strategy = strategy,
                     from = from,
                     replyTo = replyTo,
-                    localhost = localhost
+                    localhost = localhost,
                 )
+            }
+
+            val receiverWhitelist = run {
+                !optional("WHITELIST_EMAIL_RECEIVER", jsonEscaped<List<String>>())
+                    .mapNotNull { list ->
+                        list.map { it.toRegex() }
+                    }
             }
 
             val security = run {
@@ -184,6 +198,8 @@ data class Config(
 
                 Admin(email = email, password = password)
             }
+
+            val staticFilesPath = !required("STATIC_FILES_PATH")
 
             val webDAV = run {
                 val urlScheme = !optional("WEBDAV_URL_SCHEME")
@@ -229,8 +245,10 @@ data class Config(
                 http = http,
                 database = database,
                 smtp = smtp,
+                mailReceiverWhitelist = receiverWhitelist,
                 security = security,
                 admin = admin,
+                staticFilesPath = staticFilesPath,
                 webDAV = webDAV
             )
 

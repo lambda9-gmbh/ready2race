@@ -1145,12 +1145,15 @@ object EventRegistrationService {
                                 ) {
 
                                     block(
-                                        padding = Padding(bottom = 5f)
+                                        padding = Padding(bottom = 10f),
                                     ) {
                                         text(
                                             fontStyle = FontStyle.BOLD,
-                                            centered = true,
-                                        ) { category?.name ?: "Unkategorisiert" }
+                                            newLine = false,
+                                            ) { category?.name ?: "Unkategorisiert / " }
+                                        text(
+                                            newLine = false,
+                                        ) { "uncategorized" }
                                     }
 
                                     categoryTeams.groupBy { it.clubId }.forEach { (_, clubTeams) ->
@@ -1161,11 +1164,26 @@ object EventRegistrationService {
 
                                                 text(
                                                     fontStyle = FontStyle.BOLD
-                                                ) { team.clubName }
-                                                team.name?.let {
+                                                ) { team.actualClubName?: team.clubName }
+                                                block (
+                                                    padding = Padding(left = 5f)
+                                                ) {
+                                                    text(
+                                                        fontStyle = FontStyle.BOLD,
+                                                        fontSize = 8f,
+                                                    ) {
+                                                        "gemeldet von / "
+                                                    }
                                                     text(
                                                         newLine = false,
-                                                    ) { " $it" }
+                                                        fontSize = 8f,
+                                                    ) { "registered by" + "   ${team.clubName}" }
+                                                    team.name?.let {
+                                                        text(
+                                                            newLine = false,
+                                                            fontSize = 8f,
+                                                        ) { " | $it" }
+                                                    }
                                                 }
 
                                                 table(

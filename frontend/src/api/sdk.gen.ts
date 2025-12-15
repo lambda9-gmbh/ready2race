@@ -440,29 +440,6 @@ import type {
     DeleteCompetitionSetupTemplateResponse,
     GetCompetitionSetupTemplateOverviewError,
     GetCompetitionSetupTemplateOverviewResponse,
-    GetGapDocumentTemplatesData,
-    GetGapDocumentTemplatesError,
-    GetGapDocumentTemplatesResponse,
-    AddGapDocumentTemplateData,
-    AddGapDocumentTemplateError,
-    AddGapDocumentTemplateResponse,
-    UpdateGapDocumentTemplateData,
-    UpdateGapDocumentTemplateError,
-    UpdateGapDocumentTemplateResponse,
-    DeleteGapDocumentTemplateData,
-    DeleteGapDocumentTemplateError,
-    DeleteGapDocumentTemplateResponse,
-    DownloadGapDocumentTemplateOriginalData,
-    DownloadGapDocumentTemplateOriginalError,
-    DownloadGapDocumentTemplateOriginalResponse,
-    DownloadGapDocumentTemplateSampleData,
-    DownloadGapDocumentTemplateSampleError,
-    DownloadGapDocumentTemplateSampleResponse,
-    GetGapDocumentTemplateTypesError,
-    GetGapDocumentTemplateTypesResponse,
-    AssignGapDocumentTemplateData,
-    AssignGapDocumentTemplateError,
-    AssignGapDocumentTemplateResponse,
     GetDocumentTemplatesData,
     GetDocumentTemplatesError,
     GetDocumentTemplatesResponse,
@@ -732,8 +709,11 @@ import type {
     UpdateGlobalConfigurationsResponse,
     GetCreateClubOnRegistrationAllowedError,
     GetCreateClubOnRegistrationAllowedResponse,
-    SendCertificatesToParticipantsError,
-    SendCertificatesToParticipantsResponse,
+    UpdateThemeConfigData,
+    UpdateThemeConfigError,
+    UpdateThemeConfigResponse,
+    ResetThemeConfigError,
+    ResetThemeConfigResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2529,115 +2509,6 @@ export const getCompetitionSetupTemplateOverview = <ThrowOnError extends boolean
     })
 }
 
-export const getGapDocumentTemplates = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<GetGapDocumentTemplatesData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        GetGapDocumentTemplatesResponse,
-        GetGapDocumentTemplatesError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/gapDocumentTemplate',
-    })
-}
-
-export const addGapDocumentTemplate = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AddGapDocumentTemplateData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).post<
-        AddGapDocumentTemplateResponse,
-        AddGapDocumentTemplateError,
-        ThrowOnError
-    >({
-        ...options,
-        ...formDataBodySerializer,
-        headers: {
-            'Content-Type': null,
-            ...options?.headers,
-        },
-        url: '/gapDocumentTemplate',
-    })
-}
-
-export const updateGapDocumentTemplate = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateGapDocumentTemplateData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<
-        UpdateGapDocumentTemplateResponse,
-        UpdateGapDocumentTemplateError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/gapDocumentTemplate/{gapDocumentTemplateId}',
-    })
-}
-
-export const deleteGapDocumentTemplate = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteGapDocumentTemplateData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).delete<
-        DeleteGapDocumentTemplateResponse,
-        DeleteGapDocumentTemplateError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/gapDocumentTemplate/{gapDocumentTemplateId}',
-    })
-}
-
-export const downloadGapDocumentTemplateOriginal = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DownloadGapDocumentTemplateOriginalData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        DownloadGapDocumentTemplateOriginalResponse,
-        DownloadGapDocumentTemplateOriginalError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/gapDocumentTemplate/{gapDocumentTemplateId}',
-    })
-}
-
-export const downloadGapDocumentTemplateSample = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DownloadGapDocumentTemplateSampleData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        DownloadGapDocumentTemplateSampleResponse,
-        DownloadGapDocumentTemplateSampleError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/gapDocumentTemplate/{gapDocumentTemplateId}/preview',
-    })
-}
-
-export const getGapDocumentTemplateTypes = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        GetGapDocumentTemplateTypesResponse,
-        GetGapDocumentTemplateTypesError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/gapDocumentTemplateType',
-    })
-}
-
-export const assignGapDocumentTemplate = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AssignGapDocumentTemplateData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<
-        AssignGapDocumentTemplateResponse,
-        AssignGapDocumentTemplateError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/gapDocumentTemplateType/{gapDocumentType}/assignTemplate',
-    })
-}
-
 export const getDocumentTemplates = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<GetDocumentTemplatesData, ThrowOnError>,
 ) => {
@@ -3820,15 +3691,33 @@ export const getCreateClubOnRegistrationAllowed = <ThrowOnError extends boolean 
     })
 }
 
-export const sendCertificatesToParticipants = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+export const updateThemeConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateThemeConfigData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).post<
-        SendCertificatesToParticipantsResponse,
-        SendCertificatesToParticipantsError,
+    return (options?.client ?? client).put<
+        UpdateThemeConfigResponse,
+        UpdateThemeConfigError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/certificatesOfParticipation/sendToParticipants',
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/globalConfigurations/theme',
+    })
+}
+
+export const resetThemeConfig = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        ResetThemeConfigResponse,
+        ResetThemeConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/globalConfigurations/theme',
     })
 }
