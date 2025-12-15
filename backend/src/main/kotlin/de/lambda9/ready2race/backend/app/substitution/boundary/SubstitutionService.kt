@@ -405,6 +405,9 @@ object SubstitutionService {
         if (substitution == null) {
             return@comprehension KIO.fail(SubstitutionError.NotFound)
         }
+        !KIO.failOn(substitution.inheritedFrom != null) {
+            SubstitutionError.CreatedInPreviousRound
+        }
 
         val swapSubstitution = getSwapSubstitution(substitution, substitutions)
         val swapRecord = substitutions.find { it.id == swapSubstitution }

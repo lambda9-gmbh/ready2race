@@ -16,5 +16,6 @@ data class SubstitutionDto(
     val namedParticipantName: String,
     val participantOut: SubstitutionParticipantDto,
     val participantIn: SubstitutionParticipantDto,
-    val swapSubstitution: UUID?
+    val swapSubstitution: UUID?,
+    val inheritedFrom: UUID?,
 )

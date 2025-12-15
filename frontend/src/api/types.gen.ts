@@ -1830,6 +1830,7 @@ export type SubstitutionDto = {
     participantOut: SubstitutionParticipantDto
     participantIn: SubstitutionParticipantDto
     swapSubstitution?: string
+    inheritedFrom?: string
 }
 
 export type SubstitutionParticipantDto = {

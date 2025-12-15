@@ -310,7 +310,8 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                     {sub.substitution.reason}
                                 </Typography>
                                 {roundIndex === 0 &&
-                                    user.checkPrivilege(deleteSubstitutionGlobal) && (
+                                    user.checkPrivilege(deleteSubstitutionGlobal) &&
+                                    sub.substitution.inheritedFrom == null && (
                                         <IconButton
                                             sx={{ml: 2}}
                                             onClick={() =>
