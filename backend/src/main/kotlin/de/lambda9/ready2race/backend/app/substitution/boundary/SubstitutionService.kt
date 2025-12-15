@@ -200,9 +200,6 @@ object SubstitutionService {
         val registrationParticipants = !getParticipantsInRound(competitionSetupRoundId)
         val subbedInParticipants = !getSubbedInParticipants(substitutions)
 
-        val participantWithData = registrationParticipants.find { it.id == participantId }
-            ?: subbedInParticipants.find { it.id == participantId }!!
-
 
         val namedParticipantsForCompetition =
             !NamedParticipantForCompetitionPropertiesRepo.getByCompetition(competitionId).orDie()
@@ -217,6 +214,8 @@ object SubstitutionService {
                         substitutionsForRegistration = substitutions.filter { it.competitionRegistrationId == registrationId }
                     )
                 }
+
+        val participantWithData = actualRegistrationTeams.flatMap { it.value }.first { it.id == participantId }
 
         // Registered Participants
 

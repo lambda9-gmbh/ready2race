@@ -993,6 +993,9 @@ object CompetitionExecutionService {
             }
 
             val subbedInParticipants = orderedSubs
+                .asReversed()
+                .distinctBy { it.participantIn!!.id }
+                .asReversed()
                 .filter { sub ->
                     val participantInId = sub.participantIn!!.id
                     // Filter subIns by participantsStillInToRole
@@ -1011,7 +1014,7 @@ object CompetitionExecutionService {
                     !it.toParticipantForExecutionDto(it.participantIn!!)
                 }
 
-            // todo: clean up
+            
             // NamedParticipant comes from the substitution (p.second) so it cant be mapped via the normal conversion
             val mappedParticipantsStillIn = participantsStillInToRole.map { p ->
                 ParticipantForExecutionDto(

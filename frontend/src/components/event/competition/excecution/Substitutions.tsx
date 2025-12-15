@@ -102,8 +102,11 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
     }
 
     const closeDialog = () => {
+        formContext.reset()
         setDialogOpen(false)
     }
+
+    const [reloadSubOuts, setReloadSubOuts] = useState<boolean>(false)
 
     const {data: subOutsData} = useFetch(
         signal =>
@@ -115,8 +118,8 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                 },
             }),
         {
-            deps: [eventId, competitionId],
-            preCondition: () => roundIndex === 0
+            deps: [eventId, competitionId, reloadSubOuts],
+            preCondition: () => roundIndex === 0,
         },
     )
 
@@ -166,8 +169,10 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
         if (error) {
             feedback.error(t('event.competition.execution.substitution.add.error'))
         } else {
-            closeDialog()
+            formContext.reset()
             feedback.success(t('event.competition.execution.substitution.add.success'))
+            setReloadSubOuts(prev => !prev)
+            closeDialog()
         }
         reloadRoundDto()
     }
@@ -211,6 +216,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                     feedback.success(t('event.competition.execution.substitution.delete.success'))
                 }
                 reloadRoundDto()
+                setReloadSubOuts(prev => !prev)
             },
             {
                 content: t('event.competition.execution.substitution.delete.confirmation'),
