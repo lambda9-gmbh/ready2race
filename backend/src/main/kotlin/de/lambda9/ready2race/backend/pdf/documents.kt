@@ -41,9 +41,17 @@ fun document(
 
         content.setFont(font, fontSize)
         content.setNonStrokingColor(Color.DARK_GRAY)
+
+        val textWidth = font.getStringWidth(text) / 1000 * fontSize
+        val xOffset = when (addition.textAlign) {
+            de.lambda9.ready2race.backend.text.TextAlign.LEFT -> x
+            de.lambda9.ready2race.backend.text.TextAlign.CENTER -> x + (w - textWidth) / 2
+            de.lambda9.ready2race.backend.text.TextAlign.RIGHT -> x + w - textWidth
+        }
+
         content.beginText()
         content.newLineAtOffset(
-            x,
+            xOffset,
             y + h * 0.5f - fontSize * font.fontDescriptor.capHeight / 1000 / 2,
         )
         content.showText(text)

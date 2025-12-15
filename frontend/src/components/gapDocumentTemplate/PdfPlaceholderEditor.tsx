@@ -142,9 +142,10 @@ const PdfPlaceholderEditor = (props: Props) => {
                         Math.min(1 - placeholder.relLeft, placeholder.relWidth + relDeltaX),
                     )
                 } else if (edge.includes('w')) {
-                    const maxLeftDelta = placeholder.relLeft
-                    const minLeftDelta = -(1 - placeholder.relLeft - placeholder.relWidth)
-                    const adjustedDelta = Math.max(minLeftDelta, Math.min(maxLeftDelta, relDeltaX))
+                    const adjustedDelta = Math.max(
+                        -placeholder.relLeft,
+                        Math.min(placeholder.relWidth - 0.01, relDeltaX),
+                    )
                     newLeft = placeholder.relLeft + adjustedDelta
                     newWidth = placeholder.relWidth - adjustedDelta
                 }
@@ -155,9 +156,10 @@ const PdfPlaceholderEditor = (props: Props) => {
                         Math.min(1 - placeholder.relTop, placeholder.relHeight + relDeltaY),
                     )
                 } else if (edge.includes('n')) {
-                    const maxTopDelta = placeholder.relTop
-                    const minTopDelta = -(1 - placeholder.relTop - placeholder.relHeight)
-                    const adjustedDelta = Math.max(minTopDelta, Math.min(maxTopDelta, relDeltaY))
+                    const adjustedDelta = Math.max(
+                        -placeholder.relTop,
+                        Math.min(placeholder.relHeight - 0.01, relDeltaY),
+                    )
                     newTop = placeholder.relTop + adjustedDelta
                     newHeight = placeholder.relHeight - adjustedDelta
                 }
