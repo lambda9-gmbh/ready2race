@@ -5,6 +5,8 @@ import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
+import de.lambda9.ready2race.backend.app.certificate.boundary.CertificateService
+import de.lambda9.ready2race.backend.app.certificate.entity.CertificateJobError
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
@@ -89,6 +91,28 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                         when (error) {
                             is ProduceInvoiceError.MissingRecipient, ProduceInvoiceError.NoPositions -> DynamicIntervalJobState.Processed
                             ProduceInvoiceError.NoOpenJobs -> DynamicIntervalJobState.Empty
+                        }
+                    }
+            }
+
+            scheduleDynamic("Send next certificate of participation", 5.minutes, defectDelay = 1.hours) {
+                CertificateService.sendNextCertificateOfParticipation()
+                    .map { DynamicIntervalJobState.Processed }
+                    .recoverDefault { error ->
+                        when (error) {
+                            is CertificateJobError.MissingParticipantEmail -> {
+                                logger.warn { "Skipping sending of certificate of participation: No email address for participant '${error.participant}'" }
+                                DynamicIntervalJobState.Processed
+                            }
+                            is CertificateJobError.MissingTemplate -> {
+                                logger.error { "Sending of certificate of participation failed: no template assigned" }
+                                DynamicIntervalJobState.Defect
+                            }
+                            CertificateJobError.NoOpenJobs -> DynamicIntervalJobState.Empty
+                            is CertificateJobError.NoResults -> {
+                                logger.warn { "Skipping sending of certificate of participation: No results for participant '${error.participantId}'" }
+                                DynamicIntervalJobState.Processed
+                            }
                         }
                     }
             }

@@ -1,1812 +1,1873 @@
 {
-  "common": {
-    "no": "Nein",
-    "cancel": "Abbrechen",
-    "close": "Schließen",
-    "confirmation": {
-      "title": "Bestätigung erforderlich",
-      "content": "Bitte bestätigen Sie das Ausführen der gewählten Aktion"
-    },
-    "delete": "Löschen",
-    "edit": "Bearbeiten",
-    "selected": "Ausgewählt",
-    "manage": "Verwalten",
-    "all": "Alle",
-    "selectAll": "Alles auswählen",
-    "deselectAll": "Alle abwählen",
-    "error": {
-      "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
-      "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut.",
-      "upload": {
-        "unsupportedType": "Dieser Dateityp wird nicht unterstützt.",
-        "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
-        "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
-        "SPREADSHEET_MALFORMED": "Der Inhalt der Datei konnte nicht gelesen werden.",
-        "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
-        "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
-        "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
-        "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'"
-      },
-      "notFound": "{{entity}} nicht gefunden.",
-      "unauthorized": "Nicht autorisiert"
-    },
-    "organisation": "Organisation",
-    "form": {
-      "autocomplete": {
-        "noOptions": "Keine Auswahl",
-        "add": "{{entity}} hinzufügen"
-      },
-      "currency": {
-        "invalid": "Bitte geben Sie einen gültigen Betrag ein."
-      },
-      "dateTime": {
-        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
-      },
-      "email": {
-        "invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
-      },
-      "number": {
-        "invalid": {
-          "pattern": {
-            "integer": "Bitte geben Sie eine ganze Zahl ein.",
-            "number": "Bitte geben Sie eine gültige Zahl ein."
-          },
-          "value": {
-            "messageStart": "Bitte wählen Sie eine Zahl ",
-            "min": "über {{min}}.",
-            "max": "unter {{max}}.",
-            "range": "zwischen {{min}} und {{max}}."
-          },
-          "minOrUndefined": "Bitte wählen Sie eine Zahl über {{min}} oder lassen Sie das Feld leer."
-        }
-      },
-      "seconds": "Sekunden",
-      "optional": "Optional",
-      "required": "Bitte füllen Sie dieses Feld aus.",
-      "requiredCheck": "Zum Fortfahren muss dies akzeptiert werden.",
-      "selectFile": "Datei auswählen",
-      "select": {
-        "none": "Keine"
-      },
-      "timecode": {
-        "invalid": "Bitte geben Sie einen gültigen Zeitcode (HH:mm:ss.SSS) ein."
-      }
-    },
-    "load": {
-      "error": {
-        "multiple": {
-          "short": "{{entity}} konnten nicht geladen werden",
-          "detailed": "Beim Laden von {{entity}} ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
+    "common": {
+        "no": "Nein",
+        "cancel": "Abbrechen",
+        "close": "Schließen",
+        "confirmation": {
+            "title": "Bestätigung erforderlich",
+            "content": "Bitte bestätigen Sie das Ausführen der gewählten Aktion"
         },
-        "single": "{{entity}} konnte nicht geladen werden"
-      }
+        "delete": "Löschen",
+        "edit": "Bearbeiten",
+        "selected": "Ausgewählt",
+        "manage": "Verwalten",
+        "all": "Alle",
+        "selectAll": "Alles auswählen",
+        "deselectAll": "Alle abwählen",
+        "error": {
+            "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+            "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut.",
+            "upload": {
+                "unsupportedType": "Dieser Dateityp wird nicht unterstützt.",
+                "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
+                "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
+                "SPREADSHEET_MALFORMED": "Der Inhalt der Datei konnte nicht gelesen werden.",
+                "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
+                "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
+                "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
+                "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'"
+            },
+            "notFound": "{{entity}} nicht gefunden.",
+            "unauthorized": "Nicht autorisiert"
+        },
+        "organisation": "Organisation",
+        "form": {
+            "autocomplete": {
+                "noOptions": "Keine Auswahl",
+                "add": "{{entity}} hinzufügen"
+            },
+            "currency": {
+                "invalid": "Bitte geben Sie einen gültigen Betrag ein."
+            },
+            "dateTime": {
+                "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
+            },
+            "email": {
+                "invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
+            },
+            "number": {
+                "invalid": {
+                    "pattern": {
+                        "integer": "Bitte geben Sie eine ganze Zahl ein.",
+                        "number": "Bitte geben Sie eine gültige Zahl ein."
+                    },
+                    "value": {
+                        "messageStart": "Bitte wählen Sie eine Zahl ",
+                        "min": "über {{min}}.",
+                        "max": "unter {{max}}.",
+                        "range": "zwischen {{min}} und {{max}}."
+                    },
+                    "minOrUndefined": "Bitte wählen Sie eine Zahl über {{min}} oder lassen Sie das Feld leer."
+                }
+            },
+            "seconds": "Sekunden",
+            "optional": "Optional",
+            "required": "Bitte füllen Sie dieses Feld aus.",
+            "requiredCheck": "Zum Fortfahren muss dies akzeptiert werden.",
+            "selectFile": "Datei auswählen",
+            "select": {
+                "none": "Keine"
+            },
+            "timecode": {
+                "invalid": "Bitte geben Sie einen gültigen Zeitcode (HH:mm:ss.SSS) ein."
+            }
+        },
+        "load": {
+            "error": {
+                "multiple": {
+                    "short": "{{entity}} konnten nicht geladen werden",
+                    "detailed": "Beim Laden von {{entity}} ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
+                },
+                "single": "{{entity}} konnte nicht geladen werden"
+            }
+        },
+        "ok": "Ok",
+        "save": "Speichern",
+        "saveAndNew": "Speichern und Neu",
+        "saveAndNext": "Speichern und weiter",
+        "search": "Suchen",
+        "back": "Zurück",
+        "next": "Weiter",
+        "and": "und",
+        "remove": "Entfernen",
+        "assign": "Zuweisen",
+        "noResults": "Keine Ergebnisse",
+        "tryDifferentSearch": "Versuchen Sie eine andere Suche",
+        "items": "Elemente",
+        "more": "weitere",
+        "create": "Erstellen",
+        "seconds": "Sekunden",
+        "update": "Aktualisieren",
+        "lastUpdate": "Letzte Aktualisierung",
+        "confirmDelete": "Löschen bestätigen",
+        "fullscreen": "Vollbild",
+        "exitFullscreen": "Vollbild beenden",
+        "language": {
+            "menu": "Sprache auswählen"
+        },
+        "actions": "Aktionen",
+        "hide": "Ausblenden",
+        "show": "Anzeigen",
+        "name": "Name",
+        "by": "Von",
+        "continue": "Weiter",
+        "file": {
+            "download": "Herunterladen",
+            "view": "Anzeigen"
+        },
+        "add": "Hinzufügen",
+        "submit": "Absenden"
     },
-    "ok": "Ok",
-    "save": "Speichern",
-    "saveAndNew": "Speichern und Neu",
-    "saveAndNext": "Speichern und weiter",
-    "search": "Suchen",
-    "back": "Zurück",
-    "next": "Weiter",
-    "and": "und",
-    "remove": "Entfernen",
-    "assign": "Zuweisen",
-    "noResults": "Keine Ergebnisse",
-    "tryDifferentSearch": "Versuchen Sie eine andere Suche",
-    "items": "Elemente",
-    "more": "weitere",
-    "create": "Erstellen",
-    "seconds": "Sekunden",
-    "update": "Aktualisieren",
-    "lastUpdate": "Letzte Aktualisierung",
-    "confirmDelete": "Löschen bestätigen",
-    "fullscreen": "Vollbild",
-    "exitFullscreen": "Vollbild beenden",
-    "language": {
-      "menu": "Sprache auswählen"
+    "csv": {
+        "wizard": {
+            "step1": {
+                "title": "Dateiauswahl",
+                "info": "Wählen Sie Ihre CSV-Datei aus und konfigurieren Sie die Parsing-Optionen.",
+                "fileSelection": "Dateiauswahl",
+                "selectFile": "Datei auswählen",
+                "changeFile": "Datei ändern",
+                "parsingOptions": "Parsing-Optionen",
+                "separator": "Trennzeichen",
+                "separatorHelp": "Zeichen zur Trennung von Spalten (z.B. ',' oder ';')",
+                "charset": "Zeichensatz",
+                "charsetHelp": "Zeichenkodierung der Datei (z.B. 'UTF-8' oder 'ISO-8859-1')",
+                "detectingCharset": "Zeichensatz wird erkannt...",
+                "hasHeader": "Erste Zeile enthält Spaltennamen"
+            },
+            "step2": {
+                "title": "Spaltenzuordnung",
+                "info": "Ordnen Sie die Spalten aus Ihrer CSV-Datei den erwarteten Feldern zu. Gesamtzeilen: {{totalRows}}",
+                "noParsedData": "Keine Daten verfügbar. Bitte gehen Sie zurück und wählen Sie eine Datei.",
+                "columnMapping": "Spaltenzuordnung",
+                "columnIndex": "Spalte {{index}}",
+                "notMapped": "Nicht zugeordnet",
+                "dataPreview": "Datenvorschau",
+                "noData": "Keine Daten zur Vorschau verfügbar",
+                "moreRows": "Zeige {{shown}} von {{total}} Zeilen"
+            },
+            "step3": {
+                "title": "Wertzuordnungen",
+                "info": "Konfigurieren Sie, wie Werte in Ihrer CSV interpretiert werden sollen.",
+                "valueMappings": "Wertzuordnungen"
+            },
+            "error": {
+                "noConfig": "Konfiguration ist unvollständig",
+                "missingMappings": "Bitte ordnen Sie die folgenden erforderlichen Felder zu: {{fields}}",
+                "missingValueMappings": "Bitte geben Sie Werte für die folgenden erforderlichen Felder an: {{fields}}"
+            }
+        }
     },
-    "actions": "Aktionen",
-    "hide": "Ausblenden",
-    "show": "Anzeigen",
-    "name": "Name",
-    "by": "Von",
-    "continue": "Weiter",
-    "file": {
-      "download": "Herunterladen",
-      "view": "Anzeigen"
+    "format": {
+        "date": "dd.MM.yyyy",
+        "datetime": "dd.MM.yyyy, HH:mm",
+        "time": "HH:mm"
     },
-    "add": "Hinzufügen",
-    "submit": "Absenden"
-  },
-  "csv": {
-    "wizard": {
-      "step1": {
-        "title": "Dateiauswahl",
-        "info": "Wählen Sie Ihre CSV-Datei aus und konfigurieren Sie die Parsing-Optionen.",
-        "fileSelection": "Dateiauswahl",
-        "selectFile": "Datei auswählen",
-        "changeFile": "Datei ändern",
-        "parsingOptions": "Parsing-Optionen",
-        "separator": "Trennzeichen",
-        "separatorHelp": "Zeichen zur Trennung von Spalten (z.B. ',' oder ';')",
-        "charset": "Zeichensatz",
-        "charsetHelp": "Zeichenkodierung der Datei (z.B. 'UTF-8' oder 'ISO-8859-1')",
-        "detectingCharset": "Zeichensatz wird erkannt...",
-        "hasHeader": "Erste Zeile enthält Spaltennamen"
-      },
-      "step2": {
-        "title": "Spaltenzuordnung",
-        "info": "Ordnen Sie die Spalten aus Ihrer CSV-Datei den erwarteten Feldern zu. Gesamtzeilen: {{totalRows}}",
-        "noParsedData": "Keine Daten verfügbar. Bitte gehen Sie zurück und wählen Sie eine Datei.",
-        "columnMapping": "Spaltenzuordnung",
-        "columnIndex": "Spalte {{index}}",
-        "notMapped": "Nicht zugeordnet",
-        "dataPreview": "Datenvorschau",
-        "noData": "Keine Daten zur Vorschau verfügbar",
-        "moreRows": "Zeige {{shown}} von {{total}} Zeilen"
-      },
-      "step3": {
-        "title": "Wertzuordnungen",
-        "info": "Konfigurieren Sie, wie Werte in Ihrer CSV interpretiert werden sollen.",
-        "valueMappings": "Wertzuordnungen"
-      },
-      "error": {
-        "noConfig": "Konfiguration ist unvollständig",
-        "missingMappings": "Bitte ordnen Sie die folgenden erforderlichen Felder zu: {{fields}}",
-        "missingValueMappings": "Bitte geben Sie Werte für die folgenden erforderlichen Felder an: {{fields}}"
-      }
-    }
-  },
-  "format": {
-    "date": "dd.MM.yyyy",
-    "datetime": "dd.MM.yyyy, HH:mm",
-    "time": "HH:mm"
-  },
-  "document": {
-    "template": {
-      "tableHint": {
-        "1": "Können vom System generierten Dokumenten hinzugefügt werden, um die Darstellung anzupassen.",
-        "2": "In den ",
-        "3": "globalen Einstellungen",
-        "4": " können die Zuweisungen vorgenommen werden."
-      },
-      "template": "Dokumentvorlage",
-      "templates": "Dokumentvorlagen",
-      "type": {
-        "INVOICE": "Rechnung",
-        "REGISTRATION_REPORT": "Meldeergebnis",
-        "START_LIST": "Startliste"
-      },
-      "none": "Keine Vorlage",
-      "name": "Name",
-      "file": {
-        "choose": "Vorlage auswählen",
-        "change": "Vorlage ändern",
-        "missing": "Bitte wählen Sie ein Dokument aus."
-      },
-      "pagePadding": {
-        "top": "Rand oben",
-        "left": "Rand links",
-        "right": "Rand rechts",
-        "bottom": "Rand unten"
-      },
-      "assignments": {
-        "global": "Global zugewiesene Vorlagen",
-        "event": "Für Veranstaltung zugewiesene Vorlagen"
-      },
-      "preview": {
-        "title": "Mustervorschau",
-        "type": "Dokumenttyp",
-        "show": "Mustervorschau",
-        "error": "Fehler beim Laden der Vorschau"
-      }
-    }
-  },
-  "decimal": {
-    "point": ","
-  },
-  "entity": {
-    "entity": "Objekt",
-    "add": {
-      "action": "{{entity}} anlegen",
-      "success": "{{entity}} angelegt",
-      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht angelegt"
+    "document": {
+        "template": {
+            "tableHint": {
+                "1": "Können vom System generierten Dokumenten hinzugefügt werden, um die Darstellung anzupassen.",
+                "2": "In den ",
+                "3": "globalen Einstellungen",
+                "4": " können die Zuweisungen vorgenommen werden."
+            },
+            "template": "Dokumentvorlage",
+            "templates": "Dokumentvorlagen",
+            "type": {
+                "INVOICE": "Rechnung",
+                "REGISTRATION_REPORT": "Meldeergebnis",
+                "START_LIST": "Startliste"
+            },
+            "none": "Keine Vorlage",
+            "name": "Name",
+            "file": {
+                "choose": "Vorlage auswählen",
+                "change": "Vorlage ändern",
+                "missing": "Bitte wählen Sie ein Dokument aus."
+            },
+            "pagePadding": {
+                "top": "Rand oben",
+                "left": "Rand links",
+                "right": "Rand rechts",
+                "bottom": "Rand unten"
+            },
+            "assignments": {
+                "global": "Global zugewiesene Vorlagen",
+                "event": "Für Veranstaltung zugewiesene Vorlagen"
+            },
+            "preview": {
+                "title": "Mustervorschau",
+                "type": "Dokumenttyp",
+                "show": "Mustervorschau",
+                "error": "Fehler beim Laden der Vorschau"
+            }
+        }
     },
-    "delete": {
-      "success": "{{entity}} gelöscht",
-      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
+    "gap": {
+        "document": {
+            "template": {
+                "assignments": {
+                    "global": "Global zugewiesene Urkundenvorlagen"
+                },
+                "loading": "Lade...",
+                "template": "Urkundenvorlage",
+                "templates": "Urkundenvorlagen",
+                "tableHint": "Werden verwendet, um Urkunden mit Platzhaltern für Teilnehmerdaten zu generieren.",
+                "name": "Dateiname",
+                "type": "Urkundentyp",
+                "types": {
+                    "CERTIFICATE_OF_PARTICIPATION": "Teilnahmeurkunde"
+                },
+                "file": {
+                    "choose": "PDF-Vorlage auswählen",
+                    "change": "PDF-Vorlage ändern",
+                    "missing": "Bitte wählen Sie ein PDF-Dokument aus."
+                },
+                "noPdfSelected": "Kein PDF ausgewählt. Bitte laden Sie eine PDF-Vorlage hoch.",
+                "page": "Seite {{page}}",
+                "placeholders": {
+                    "title": "Platzhalter auf PDF platzieren"
+                },
+                "loadPdf": {
+                    "error": "PDF konnte nicht geladen werden."
+                },
+                "preview": {
+                    "title": "Urkundenvorlagenvorschau",
+                    "error": "Vorschau konnte nicht geladen werden.",
+                    "show": "Urkunde in der Vorschau anzeigen"
+                }
+            },
+            "placeholder": {
+                "available": "Verfügbare Platzhalter",
+                "addInstructions": "Klicken Sie auf einen Platzhaltertyp, um ihn der aktuellen Seite hinzuzufügen. Ziehen und skalieren Sie, um zu positionieren.",
+                "properties": "Platzhalter-Eigenschaften",
+                "type": {
+                    "label": "Platzhaltertyp",
+                    "FIRST_NAME": "Vorname",
+                    "LAST_NAME": "Nachname",
+                    "FULL_NAME": "Vollständiger Name",
+                    "PLACE": "Platzierung",
+                    "RESULT": "Ergebnis",
+                    "EVENT_NAME": "Veranstaltungsname"
+                },
+                "name": "Eigene Bezeichnung (optional)",
+                "nameHelp": "Eine eigene Bezeichnung, um diesen Platzhalter zu identifizieren",
+                "textAlign": "Textausrichtung",
+                "align": {
+                    "LEFT": "Links",
+                    "CENTER": "Zentriert",
+                    "RIGHT": "Rechts"
+                },
+                "page": "Seite",
+                "position": "Position",
+                "size": "Größe"
+            }
+        }
     },
-    "description": "Beschreibung",
-    "createdAt": "Erstellt am",
-    "updatedAt": "Letzte Änderung",
-    "edit": {
-      "action": "{{entity}} bearbeiten",
-      "success": "{{entity}} aktualisiert",
-      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
+    "decimal": {
+        "point": ","
     },
-    "optional": "Optional",
-    "name": "Name",
-    "firstname": "Vorname",
-    "lastname": "Nachname",
-    "gender": "Geschlecht",
-    "phone": "Telefon",
-    "remark": "Anmerkung",
-    "color": "Farbe"
-  },
-  "navigation": {
-    "titles": {
-      "landing": "Start",
-      "dashboard": "Dashboard",
-      "events": "Veranstaltungen",
-      "competitionConfig": "Wettkampf Einstellungen",
-      "roles": "Rollen",
-      "users": "Benutzer",
-      "config": "Konfigurationen",
-      "clubs": "Vereine",
-      "myClub": "Mein Verein",
-      "invoices": "Rechnungen",
-      "administration": "Administration"
-    }
-  },
-  "dashboard": {
-    "registration": {
-      "showMessage": "Nachricht anzeigen"
+    "entity": {
+        "entity": "Objekt",
+        "add": {
+            "action": "{{entity}} anlegen",
+            "success": "{{entity}} angelegt",
+            "error": "Ein Fehler ist aufgetreten - {{entity}} nicht angelegt"
+        },
+        "delete": {
+            "success": "{{entity}} gelöscht",
+            "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
+        },
+        "description": "Beschreibung",
+        "createdAt": "Erstellt am",
+        "updatedAt": "Letzte Änderung",
+        "edit": {
+            "action": "{{entity}} bearbeiten",
+            "success": "{{entity}} aktualisiert",
+            "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
+        },
+        "optional": "Optional",
+        "name": "Name",
+        "firstname": "Vorname",
+        "lastname": "Nachname",
+        "gender": "Geschlecht",
+        "phone": "Telefon",
+        "remark": "Anmerkung",
+        "color": "Farbe"
     },
-    "upcomingEvents": {
-      "empty": "Keine anstehenden Veranstaltungen"
+    "navigation": {
+        "titles": {
+            "landing": "Start",
+            "dashboard": "Dashboard",
+            "events": "Veranstaltungen",
+            "competitionConfig": "Wettkampf Einstellungen",
+            "roles": "Rollen",
+            "users": "Benutzer",
+            "config": "Konfigurationen",
+            "clubs": "Vereine",
+            "myClub": "Mein Verein",
+            "invoices": "Rechnungen",
+            "administration": "Administration"
+        }
     },
-    "registrations": {
-      "empty": "Keine neuen Anmeldungen"
+    "dashboard": {
+        "registration": {
+            "showMessage": "Nachricht anzeigen"
+        },
+        "upcomingEvents": {
+            "empty": "Keine anstehenden Veranstaltungen"
+        },
+        "registrations": {
+            "empty": "Keine neuen Anmeldungen"
+        },
+        "shifts": {
+            "empty": "Keine anstehenden Schichten"
+        },
+        "tasks": {
+            "empty": "Keine offenen Aufgaben"
+        }
     },
-    "shifts": {
-      "empty": "Keine anstehenden Schichten"
-    },
-    "tasks": {
-      "empty": "Keine offenen Aufgaben"
-    }
-  },
-  "club": {
-    "club": "Verein",
-    "registrant": "Anmelder",
+    "club": {
+        "club": "Verein",
+        "registrant": "Anmelder",
     "registeredBy": "gemeldet von",
     "clubs": "Vereine",
-    "name": "Vereinsname",
-    "import": "Vereine importieren",
-    "error": {
-      "nameAlreadyExists": "Ein Verein mit diesem Namen existiert bereits",
-      "mustSelectExistingClub": "Bitte wählen Sie einen bestehenden Verein aus der Liste aus"
-    },
-    "settings": {
-      "title": "Vereinseinstellungen",
-      "allowClubCreationOnRegistration": "Vereinserstellung bei Anmeldung erlauben",
-      "save": "Einstellungen speichern",
-      "saved": "Einstellungen gespeichert"
-    },
-    "upload": {
-      "dialog": {
-        "submit": "Vereine importieren"
-      }
-    },
-    "participants": "Mitglieder",
-    "representative": {
-      "representatives": "Verwaltung",
-      "pendingApprovals": "Ausstehende Genehmigungen",
-      "approve": {
-        "approve": "Bestätigen",
-        "success": "Erfolgreich genehmigt",
-        "error": "Fehler beim Genehmigen",
-        "confirmation": {
-          "title": "{{username}} bestätigen?",
-          "content": "Sind Sie sicher, dass Sie {{username}} als zusätzliche Clubverwaltung bestätigen möchten? Das Konto erhält alle Rechte für diesen Club. Diese Aktion kann nicht rückgängig gemacht werden."
-        }
-      },
-      "deny": {
-        "deny": "Ablehnen",
-        "success": "Erfolgreich abgelehnt",
-        "error": "Fehler beim Ablehnen",
-        "confirmation": {
-          "title": "{{username}} ablehnen?",
-          "content": "Sind Sie sicher, dass Sie die Anfrage von {{username}} als zusätzliche Clubverwaltung ablehnen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
-        }
-      }
-    },
-    "participant": {
-      "import": "Mitglieder importieren",
-      "upload": {
-        "dialog": {
-          "error": {
-            "separatorTooLong": "Bitte geben Sie nur ein einzige Zeichen als CSV-Separator an."
-          },
-          "separator": "Separator",
-          "cols": "Spaltennamen",
-          "col": {
-            "firstname": "Vorname",
-            "lastname": "Nachname",
-            "year": "Geburtsjahr",
-            "gender": "Geschlecht",
-            "external": "Vereinszugehörigkeit",
-            "email": "E-Mail"
-          },
-          "genderValues": "Werte für Geschlechterunterscheidung",
-          "value": {
-            "gender": {
-              "male": "männlich",
-              "female": "weiblich",
-              "diverse": "divers"
+        "name": "Vereinsname",
+        "import": "Vereine importieren",
+        "error": {
+            "nameAlreadyExists": "Ein Verein mit diesem Namen existiert bereits",
+            "mustSelectExistingClub": "Bitte wählen Sie einen bestehenden Verein aus der Liste aus"
+        },
+        "settings": {
+            "title": "Vereinseinstellungen",
+            "allowClubCreationOnRegistration": "Vereinserstellung bei Anmeldung erlauben",
+            "save": "Einstellungen speichern",
+            "saved": "Einstellungen gespeichert"
+        },
+        "upload": {
+            "dialog": {
+                "submit": "Vereine importieren"
             }
-          },
-          "file": {
-            "missing": "Bitte wählen Sie eine Datei aus.",
-            "change": ".csv Datei ändern",
-            "choose": ".csv Datei auswählen"
-          },
-          "submit": "Mitglieder importieren"
+        },
+        "participants": "Mitglieder",
+        "representative": {
+            "representatives": "Verwaltung",
+            "pendingApprovals": "Ausstehende Genehmigungen",
+            "approve": {
+                "approve": "Bestätigen",
+                "success": "Erfolgreich genehmigt",
+                "error": "Fehler beim Genehmigen",
+                "confirmation": {
+                    "title": "{{username}} bestätigen?",
+                    "content": "Sind Sie sicher, dass Sie {{username}} als zusätzliche Clubverwaltung bestätigen möchten? Das Konto erhält alle Rechte für diesen Club. Diese Aktion kann nicht rückgängig gemacht werden."
+                }
+            },
+            "deny": {
+                "deny": "Ablehnen",
+                "success": "Erfolgreich abgelehnt",
+                "error": "Fehler beim Ablehnen",
+                "confirmation": {
+                    "title": "{{username}} ablehnen?",
+                    "content": "Sind Sie sicher, dass Sie die Anfrage von {{username}} als zusätzliche Clubverwaltung ablehnen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+                }
+            }
+        },
+        "participant": {
+            "import": "Mitglieder importieren",
+            "upload": {
+                "dialog": {
+                    "error": {
+                        "separatorTooLong": "Bitte geben Sie nur ein einzige Zeichen als CSV-Separator an."
+                    },
+                    "separator": "Separator",
+                    "cols": "Spaltennamen",
+                    "col": {
+                        "firstname": "Vorname",
+                        "lastname": "Nachname",
+                        "year": "Geburtsjahr",
+                        "gender": "Geschlecht",
+                        "external": "Vereinszugehörigkeit",
+                        "email": "E-Mail"
+                    },
+                    "genderValues": "Werte für Geschlechterunterscheidung",
+                    "value": {
+                        "gender": {
+                            "male": "männlich",
+                            "female": "weiblich",
+                            "diverse": "divers"
+                        }
+                    },
+                    "file": {
+                        "missing": "Bitte wählen Sie eine Datei aus.",
+                        "change": ".csv Datei ändern",
+                        "choose": ".csv Datei auswählen"
+                    },
+                    "submit": "Mitglieder importieren"
+                }
+            },
+            "title": "Mitglied",
+            "name": "Name",
+            "yearOfBirth": "Geburtsjahr",
+            "gender": "Geschlecht",
+            "role": "Rolle",
+            "year": "Geburtsjahr",
+            "external": "Extern",
+            "externalClub": "Externer Verein",
+            "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
+            "usedInRegistration": "In Meldung",
+            "qrCodeId": "Qr Code Wert",
+            "qrCodeEdit": "QR Code Wert bearbeiten",
+            "qrCodeDelete": "QR Code Wert löschen",
+            "qrCodeDeleteConfirm": "Möchten Sie den QR Code wirklich löschen?",
+            "qrCodeEditDescription": "Bitte geben Sie den neuen QR Code Wert ein.",
+            "resendAccessToken": "Neuen Zugangstoken versenden",
+            "resendAccessTokenSuccess": "Neuer Token versendet.",
+            "userQrCode": "Benutzer QR-Code",
+            "qrCode": "QR-Code",
+            "id": "Teilnehmer-ID",
+            "cateringNotAllowed": "Diese Person ist nicht berechtigt",
+            "tracking": {
+                "log": "Status Protokoll der Teilnehmenden",
+                "entry": "Protokolleintrag",
+                "status": "Status",
+                "in": "Drin",
+                "out": "Draußen",
+                "teams": "Teams",
+                "lastScan": {
+                    "at": "Letzter Scan am",
+                    "by": "Gescanned von"
+                },
+                "checkInText": "Einchecken",
+                "checkOutText": "Auschecken",
+                "checkIn": {
+                    "success": "Teilnehmer erfolgreich eingecheckt",
+                    "error": "Fehler beim Einchecken des Teilnehmenden"
+                },
+                "checkOut": {
+                    "success": "Teilnehmer erfolgreich ausgecheckt",
+                    "error": "Fehler beim Auschecken des Teilnehmenden"
+                },
+                "noTeamsFound": "Keine Teams gefunden",
+                "participantNotFound": "Teilnehmer nicht gefunden"
+            }
         }
-      },
-      "title": "Mitglied",
-      "name": "Name",
-      "yearOfBirth": "Geburtsjahr",
-      "gender": "Geschlecht",
-      "role": "Rolle",
-      "year": "Geburtsjahr",
-      "external": "Extern",
-      "externalClub": "Externer Verein",
-      "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
-      "usedInRegistration": "In Meldung",
-      "qrCodeId": "Qr Code Wert",
-      "qrCodeEdit": "QR Code Wert bearbeiten",
-      "qrCodeDelete": "QR Code Wert löschen",
-      "qrCodeDeleteConfirm": "Möchten Sie den QR Code wirklich löschen?",
-      "qrCodeEditDescription": "Bitte geben Sie den neuen QR Code Wert ein.",
-      "resendAccessToken": "Neuen Zugangstoken versenden",
-      "resendAccessTokenSuccess": "Neuer Token versendet.",
-      "userQrCode": "Benutzer QR-Code",
-      "qrCode": "QR-Code",
-      "id": "Teilnehmer-ID",
-      "cateringNotAllowed": "Diese Person ist nicht berechtigt",
-      "tracking": {
-        "log": "Status Protokoll der Teilnehmenden",
-        "entry": "Protokolleintrag",
-        "status": "Status",
-        "in": "Drin",
-        "out": "Draußen",
-        "teams": "Teams",
-        "lastScan": {
-          "at": "Letzter Scan am",
-          "by": "Gescanned von"
-        },
-        "checkInText": "Einchecken",
-        "checkOutText": "Auschecken",
-        "checkIn": {
-          "success": "Teilnehmer erfolgreich eingecheckt",
-          "error": "Fehler beim Einchecken des Teilnehmenden"
-        },
-        "checkOut": {
-          "success": "Teilnehmer erfolgreich ausgecheckt",
-          "error": "Fehler beim Auschecken des Teilnehmenden"
-        },
-        "noTeamsFound": "Keine Teams gefunden",
-        "participantNotFound": "Teilnehmer nicht gefunden"
-      }
-    }
-  },
-  "event": {
-    "event": "Veranstaltung",
-    "events": "Veranstaltungen",
-    "name": "Name",
-    "description": "Beschreibung",
-    "registerNow": "Zur Meldung",
-    "registerHere": {
-      "1": " ",
-      "2": "Hier",
-      "3": " kannst du für die gesamte Veranstaltung melden."
     },
-    "challengeEvent": {
-      "challengeEvent": "Challenge Modus",
-      "explanation": "\"Challenge\" ist ein Veranstaltungsmodus, bei dem die Ergebnisse aus Wettbewerben über die gesamte Veranstaltung hinweg zusammengefasst werden. Teams können pro Wettbewerb maximal ein Ergebnis erzielen, und es gibt keine Turnierbäume.",
-      "unchangeable": "Dass \"Challenge-Modus\" aktiviert ist oder nicht, kann nach der Erstellung nicht mehr geändert werden."
-    },
-    "challengeResultType": "Challenge Ergebnistyp",
-    "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
-    "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
-    "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
-    "invoice": {
-      "prefix": "Rechnungspräfix",
-      "paymentDueBy": "Zahlungstermin Meldegebühren",
-      "latePaymentDueBy": "Zahlungstermin Nachmeldegebühren"
-    },
-    "invoices": {
-      "infoCard": {
-        "totalAmount": "Summe aller in Rechnung gestellter Beträge: {{amount}}€",
-        "paidAmount": "Davon bereits bezahlt: {{amount}}€",
-        "alert": "Die Rechnungserstellung ist noch nicht abgeschlossen."
-      }
-    },
-    "location": "Ort",
-    "mixedTeamTerm": "Bezeichnung vereins-gemischter Teams",
-    "upcoming": "Anstehende Veranstaltungen",
-    "toResults": "Zur Ergebnisübersicht",
-    "registrationAvailable": {
-      "timespan": "Anmeldezeitraum",
-      "timespanFrom": "Anmeldezeitraum von",
-      "timespanTo": "Anmeldezeitraum bis",
-      "lateTimespan": "Nachmeldezeitraum",
-      "lateTo": "Nachmeldezeitraum bis",
-      "from": "ab",
-      "to": "bis",
-      "unknown": "Noch nicht bekannt gegeben"
-    },
-    "published": {
-      "published": "Veröffentlicht",
-      "not": "Nicht veröffentlicht"
-    },
-    "eventDay": {
-      "eventDay": "Tag",
-      "eventDays": "Tage",
-      "date": "Datum",
-      "name": "Name",
-      "description": "Beschreibung",
-      "assignedCompetitions": "Wettkämpfe an diesem Tag"
-    },
-    "competition": {
-      "competition": "Wettkampf",
-      "competitions": "Wettkämpfe",
-      "noCompetitionsAvailable": "Keine Wettkämpfe verfügbar",
-      "identifier": "Kennung",
-      "name": "Name",
-      "description": "Beschreibung",
-      "lateRegistrationAllowed": "Nachmeldung erlaubt",
-      "ratingCategoryRequired": "Wertungskategorie erforderlich",
-      "registrationCount": "Meldungen",
-      "shortName": "Kurzname",
-      "challenge": {
-        "configs": "Challenge Einstellungen",
-        "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
-        "start": "Challenge Start",
-        "end": "Challenge Ende"
-      },
-      "tableHint": {
-        "competitionComponents": {
-          "part1": "Kategorien, Teilnehmertypen und Gebührenarten für die Wettkämpfe können ",
-          "part2Link": "hier",
-          "part3": " definiert werden."
-        },
-        "templates": {
-          "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
-          "part2Link": "Vorlagen",
-          "part3": " definiert werden."
-        },
-        "registration": "Für die einzelnen Wettkämpfe können Teams angemeldet werden."
-      },
-      "category": {
-        "category": "Kategorie",
-        "categories": "Kategorien",
+    "event": {
+        "event": "Veranstaltung",
+        "events": "Veranstaltungen",
         "name": "Name",
         "description": "Beschreibung",
-        "tableHint": "Ermöglichen das Kategorisieren und damit Sortieren und Filtern von Wettkämpfen."
-      },
-      "count": {
-        "males": "Anzahl Männer",
-        "females": "Anzahl Frauen",
-        "nonBinary": "Anzahl nicht-binäre Personen",
-        "mixed": "Anzahl Beliebige"
-      },
-      "gender": {
-        "male": "Männlich",
-        "female": "Weiblich",
-        "nonBinary": "Nicht-binär",
-        "mixed": "Beliebig"
-      },
-      "namedParticipant": {
-        "namedParticipant": "Teilnehmertyp",
-        "namedParticipants": "Teilnehmertypen",
-        "name": "Name",
-        "description": "Beschreibung",
-        "role": "Rolle",
-        "add": "Teilnehmertyp hinzufügen",
-        "tableHint": "Rollen, die Teilnehmende in einem Wettkampf einnehmen können.",
-        "error": {
-          "emptyList": "Bitte fügen Sie mindestens einen Teilnehmertyp hinzu",
-          "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
-          "duplicates": {
-            "one": "Die Rolle {{label}} wird mehrfach verwendet.",
-            "multiple": "Die Rollen {{labels}} werden mehrfach verwendet.",
-            "message": "Bitte wählen Sie für jeden Teilnehmertyp eine einzigartige Rolle aus."
-          }
-        }
-      },
-      "teamComposition": "Teamzusammensetzung",
-      "fee": {
-        "fee": "Gebühr",
-        "fees": "Gebühren",
-        "name": "Name",
-        "description": "Beschreibung",
-        "amount": "Betrag",
-        "lateAmount": "Abweichender Betrag bei Nachmeldung",
-        "add": "Gebühr hinzufügen",
-        "type": "Gebührenart",
-        "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
-        "required": {
-          "notRequired": "Gebühr ist nicht verpflichtend",
-          "required": "Gebühr ist verpflichtend"
+        "registerNow": "Zur Meldung",
+        "registerHere": {
+            "1": " ",
+            "2": "Hier",
+            "3": " kannst du für die gesamte Veranstaltung melden."
         },
-        "asRegular": "bei Meldung: {{amount}}€",
-        "asLate": "bei Nachmeldung: {{amount}}€",
-        "error": {
+        "challengeEvent": {
+            "challengeEvent": "Challenge Modus",
+            "explanation": "\"Challenge\" ist ein Veranstaltungsmodus, bei dem die Ergebnisse aus Wettbewerben über die gesamte Veranstaltung hinweg zusammengefasst werden. Teams können pro Wettbewerb maximal ein Ergebnis erzielen, und es gibt keine Turnierbäume.",
+            "unchangeable": "Dass \"Challenge-Modus\" aktiviert ist oder nicht, kann nach der Erstellung nicht mehr geändert werden."
+        },
+        "challengeResultType": "Challenge Ergebnistyp",
+        "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
+        "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
+        "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
+        "invoice": {
+            "prefix": "Rechnungspräfix",
+            "paymentDueBy": "Zahlungstermin Meldegebühren",
+            "latePaymentDueBy": "Zahlungstermin Nachmeldegebühren"
+        },
+        "invoices": {
+            "infoCard": {
+                "totalAmount": "Summe aller in Rechnung gestellter Beträge: {{amount}}€",
+                "paidAmount": "Davon bereits bezahlt: {{amount}}€",
+                "alert": "Die Rechnungserstellung ist noch nicht abgeschlossen."
+            }
+        },
+        "location": "Ort",
+        "mixedTeamTerm": "Bezeichnung vereins-gemischter Teams",
+        "upcoming": "Anstehende Veranstaltungen",
+        "toResults": "Zur Ergebnisübersicht",
+        "registrationAvailable": {
+            "timespan": "Anmeldezeitraum",
+            "timespanFrom": "Anmeldezeitraum von",
+            "timespanTo": "Anmeldezeitraum bis",
+            "lateTimespan": "Nachmeldezeitraum",
+            "lateTo": "Nachmeldezeitraum bis",
+            "from": "ab",
+            "to": "bis",
+            "unknown": "Noch nicht bekannt gegeben"
+        },
+        "published": {
+            "published": "Veröffentlicht",
+            "not": "Nicht veröffentlicht"
+        },
+        "eventDay": {
+            "eventDay": "Tag",
+            "eventDays": "Tage",
+            "date": "Datum",
+            "name": "Name",
+            "description": "Beschreibung",
+            "assignedCompetitions": "Wettkämpfe an diesem Tag"
+        },
+        "competition": {
+            "competition": "Wettkampf",
+            "competitions": "Wettkämpfe",
+            "noCompetitionsAvailable": "Keine Wettkämpfe verfügbar",
+            "identifier": "Kennung",
+            "name": "Name",
+            "description": "Beschreibung",
+            "lateRegistrationAllowed": "Nachmeldung erlaubt",
+            "ratingCategoryRequired": "Wertungskategorie erforderlich",
+            "registrationCount": "Meldungen",
+            "shortName": "Kurzname",
+            "challenge": {
+                "configs": "Challenge Einstellungen",
+                "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
+                "start": "Challenge Start",
+                "end": "Challenge Ende"
+            },
+            "tableHint": {
+                "competitionComponents": {
+                    "part1": "Kategorien, Teilnehmertypen und Gebührenarten für die Wettkämpfe können ",
+                    "part2Link": "hier",
+                    "part3": " definiert werden."
+                },
+                "templates": {
+                    "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
+                    "part2Link": "Vorlagen",
+                    "part3": " definiert werden."
+                },
+                "registration": "Für die einzelnen Wettkämpfe können Teams angemeldet werden."
+            },
+            "category": {
+                "category": "Kategorie",
+                "categories": "Kategorien",
+                "name": "Name",
+                "description": "Beschreibung",
+                "tableHint": "Ermöglichen das Kategorisieren und damit Sortieren und Filtern von Wettkämpfen."
+            },
+            "count": {
+                "males": "Anzahl Männer",
+                "females": "Anzahl Frauen",
+                "nonBinary": "Anzahl nicht-binäre Personen",
+                "mixed": "Anzahl Beliebige"
+            },
+            "gender": {
+                "male": "Männlich",
+                "female": "Weiblich",
+                "nonBinary": "Nicht-binär",
+                "mixed": "Beliebig"
+            },
+            "namedParticipant": {
+                "namedParticipant": "Teilnehmertyp",
+                "namedParticipants": "Teilnehmertypen",
+                "name": "Name",
+                "description": "Beschreibung",
+                "role": "Rolle",
+                "add": "Teilnehmertyp hinzufügen",
+                "tableHint": "Rollen, die Teilnehmende in einem Wettkampf einnehmen können.",
+                "error": {
+                    "emptyList": "Bitte fügen Sie mindestens einen Teilnehmertyp hinzu",
+                    "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
+                    "duplicates": {
+                        "one": "Die Rolle {{label}} wird mehrfach verwendet.",
+                        "multiple": "Die Rollen {{labels}} werden mehrfach verwendet.",
+                        "message": "Bitte wählen Sie für jeden Teilnehmertyp eine einzigartige Rolle aus."
+                    }
+                }
+            },
+            "teamComposition": "Teamzusammensetzung",
+            "fee": {
+                "fee": "Gebühr",
+                "fees": "Gebühren",
+                "name": "Name",
+                "description": "Beschreibung",
+                "amount": "Betrag",
+                "lateAmount": "Abweichender Betrag bei Nachmeldung",
+                "add": "Gebühr hinzufügen",
+                "type": "Gebührenart",
+                "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
+                "required": {
+                    "notRequired": "Gebühr ist nicht verpflichtend",
+                    "required": "Gebühr ist verpflichtend"
+                },
+                "asRegular": "bei Meldung: {{amount}}€",
+                "asLate": "bei Nachmeldung: {{amount}}€",
+            "error": {
           "duplicates": {
             "one": "Die Gebührenart {{label}} wird mehrfach verwendet.",
             "multiple": "Die Gebührenarten {{labels}} werden mehrfach verwendet.",
             "message": "Bitte wählen Sie für jede Gebühr eine einzigartige Gebührenart aus."
           }
-        }
-      },
-      "template": {
-        "template": "Wettkampf Vorlage",
-        "templates": "Wettkampf Vorlagen",
-        "name": "Name",
-        "description": "Beschreibung",
-        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung.",
-        "select": "Vorlage auswählen"
-      },
-      "assignedDays": "Wettkampftage",
-      "error": {
-        "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
-      },
-      "registration": {
-        "challenge": {
-          "includeResult": "direkte Ergebniseingabe"
-        },
-        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben.",
-        "dialog": {
-          "registrationType": {
-            "label": "Hinzufügen als",
-            "REGULAR": "Meldung",
-            "LATE": "Nachmeldung"
-          }
-        },
-        "isLate": "als Nachmeldung",
-        "ratingCategory": "Wertungskategorie",
-        "ratingCategoryInvalid": "Die ausgewählte Wertungskategorie ist für die Teilnehmer in diesem Team nicht gültig",
-        "infos": "Infos",
-        "delete": {
+        }},
+            "template": {
+                "template": "Wettkampf Vorlage",
+                "templates": "Wettkampf Vorlagen",
+                "name": "Name",
+                "description": "Beschreibung",
+                "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung.",
+                "select": "Vorlage auswählen"
+            },
+            "assignedDays": "Wettkampftage",
+            "error": {
+                "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
+            },
+            "registration": {
+                "challenge": {
+                    "includeResult": "direkte Ergebniseingabe"
+                },
+                "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben.",
+                "dialog": {
+                    "registrationType": {
+                        "label": "Hinzufügen als",
+                        "REGULAR": "Meldung",
+                        "LATE": "Nachmeldung"
+                    }
+                },
+                "isLate": "als Nachmeldung",
+                "ratingCategory": "Wertungskategorie",
+                "ratingCategoryInvalid": "Die ausgewählte Wertungskategorie ist für die Teilnehmer in diesem Team nicht gültig",
+                "infos": "Infos",
+                "delete": {
           "error": {
             "roundExisting": "Der Wettkampf hat bereits begonnen."
           }
         },
         "deregister": {
-          "deregister": "Abmelden",
-          "error": "Beim Abmelden ist ein Fehler aufgetreten.",
+                    "deregister": "Abmelden",
+                    "error": "Beim Abmelden ist ein Fehler aufgetreten.",
           "success": "Abmeldung erfolgreich",
           "revertDeregistration": {
-            "revertDeregistration": "Abmeldung zurücknehmen",
-            "revert": "Zurücknehmen",
-            "confirmation": "Sind Sie sich sicher, dass die Abmeldung zurückgenommen werden soll?",
-            "error": {
-              "locked": "Die Abmeldung wurde vor der aktuellen Runde erstellt und ist daher gesperrt",
-              "unexpected": "Beim Zurücknehmen der Abmeldung ist ein Fehler aufgetreten"
+                        "revertDeregistration": "Abmeldung zurücknehmen",
+                        "revert": "Zurücknehmen",
+                        "confirmation": "Sind Sie sich sicher, dass die Abmeldung zurückgenommen werden soll?",
+                        "error": {
+                            "locked": "Die Abmeldung wurde vor der aktuellen Runde erstellt und ist daher gesperrt",
+                            "unexpected": "Beim Zurücknehmen der Abmeldung ist ein Fehler aufgetreten"
+                        },
+                        "success": "Abmeldung erfolgreich zurückgenommen"
+                    },
+                    "deregistered": "Abgemeldet",
+                    "reason": "Begründung"
+                }
             },
-            "success": "Abmeldung erfolgreich zurückgenommen"
-          },
-          "deregistered": "Abgemeldet",
-          "reason": "Begründung"
-        }
-      },
-      "setup": {
-        "setup": "Wettbewerbsablauf",
-        "save": {
-          "save": "Speichern",
-          "error": "Ein Fehler ist aufgetreten - Der Wettbewerbsablauf konnte nicht gespeichert werden",
-          "success": "Wettbewerbsablauf erfolgreich gespeichert"
-        },
-        "reset": "Ablauf zurücksetzen",
-        "round": {
-          "round": "Runde",
-          "name": "Name",
-          "useDefaultSeeding": "Normales Seeding für Matchups nutzen",
-          "required": "Runde muss durchgeführt werden",
-          "finals": {
-            "long": {
-              "final": {
-                "round": "Finalrunde",
-                "final": "Finale",
-                "matchForThirdPlace": "Partie um Platz 3"
-              },
-              "semifinal": "Halbfinale",
-              "quarterfinal": "Viertelfinale",
-              "roundOf16": "Achtelfinale",
-              "roundOf32": "Sechzehntelfinale"
+            "setup": {
+                "setup": "Wettbewerbsablauf",
+                "save": {
+                    "save": "Speichern",
+                    "error": "Ein Fehler ist aufgetreten - Der Wettbewerbsablauf konnte nicht gespeichert werden",
+                    "success": "Wettbewerbsablauf erfolgreich gespeichert"
+                },
+                "reset": "Ablauf zurücksetzen",
+                "round": {
+                    "round": "Runde",
+                    "name": "Name",
+                    "useDefaultSeeding": "Normales Seeding für Matchups nutzen",
+                    "required": "Runde muss durchgeführt werden",
+                    "finals": {
+                        "long": {
+                            "final": {
+                                "round": "Finalrunde",
+                                "final": "Finale",
+                                "matchForThirdPlace": "Partie um Platz 3"
+                            },
+                            "semifinal": "Halbfinale",
+                            "quarterfinal": "Viertelfinale",
+                            "roundOf16": "Achtelfinale",
+                            "roundOf32": "Sechzehntelfinale"
+                        },
+                        "short": {
+                            "semifinal": "HF",
+                            "quarterfinal": "VF",
+                            "roundOf16": "AF",
+                            "roundOf32": "SF"
+                        }
+                    },
+                    "remove": "Runde entfernen"
+                },
+                "match": {
+                    "match": "Partie",
+                    "participants": "Matchup",
+                    "name": "Name",
+                    "executionOrder": "Durchführungsreihenfolge",
+                    "teams": {
+                        "teams": "Teamanzahl",
+                        "unlimited": "Unbegrenzt"
+                    },
+                    "outcome": {
+                        "outcome": "Setzung",
+                        "outcomes": "Setzungen",
+                        "tooltip": "Resultierende Setzungen dieser Partie",
+                        "result": "Ergebnis"
+                    },
+                    "remove": "Partie entfernen",
+                    "info": {
+                        "roundOneFillMatches": "Die Partien werden gleichmäßig mit zufällig gewählten Teams befüllt."
+                    }
+                },
+                "place": {
+                    "place": "Platz",
+                    "places": "Gesamtplatzierungen",
+                    "placesOption": {
+                        "equal": "Gleichgestellt (Platz = {{place}})",
+                        "ascending": "Aufsteigend (Platz = Setzung)",
+                        "custom": "Benutzerdefiniert"
+                    }
+                },
+                "tournamentTree": {
+                    "generate": "Generieren",
+                    "generateTree": "Turnierbaum generieren",
+                    "participatingTeams": "Teilnehmende Teams",
+                    "includeMatchForThirdPlace": "Partie um Platz 3 erstellen",
+                    "overwriteSetup": "Bisherigen Ablauf überschreiben",
+                    "info": {
+                        "noOverwrite": "Die generierten Runden werden an das Ende des bisherigen Ablaufs angehängt."
+                    }
+                },
+                "template": {
+                    "template": "Vorlage für Wettbewerbsablauf",
+                    "templates": "Vorlagen für Wettbewerbsabläufe",
+                    "name": "Name",
+                    "description": "Beschreibung",
+                    "select": "Vorlage auswählen"
+                },
+                "startTimeOffset": {
+                    "startTimeOffset": "Versetzte Startzeit",
+                    "enable": "Versetzte Startzeiten erlauben"
+                },
+                "validation": {
+                    "duplicateParticipants": {
+                        "one": "Das Team: {{participants}} wird mehrfach verwendet.",
+                        "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
+                        "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
+                    },
+                    "duplicatePositions": {
+                        "one": "In der Durchführungsreihenfolge wird {{positions}} mehrfach verwendet.",
+                        "multiple": "In der Durchführungsreihenfolge werden {{positions}} mehrfach verwendet.",
+                        "message": "Bitte fügen Sie jeden Wert nur je einer Partie pro Runde hinzu."
+                    }
+                },
+                "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
             },
-            "short": {
-              "semifinal": "HF",
-              "quarterfinal": "VF",
-              "roundOf16": "AF",
-              "roundOf32": "SF"
+            "execution": {
+                "tabTitle": "Durchführung",
+                "progress": {
+                    "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
+                },
+                "nextRound": {
+                    "create": "Erstelle nächste Runde",
+                    "error": "Nächste Runde konnte nicht erstellt werden",
+                    "success": "Nächste Runde erstellt",
+                    "reasons": {
+                        "noRoundsInSetup": "In dem Wettbewerbsablauf sind keine Runden festgelegt.",
+                        "noSetupMatches": "In der nächsten Runde des Wettbewerbsablaufs sind keine Partien festgelegt.",
+                        "noRegistrations": "Es gibt keine Meldungen für diesen Wettbewerb.",
+                        "registrationsNotFinalized": {
+                            "textStart": "Die Meldungen für diese Veranstaltung sind noch nicht finalisiert. Die Meldungen können ",
+                            "link": "hier",
+                            "textEnd": " finalisiert werden."
+                        },
+                        "notEnoughTeamSpace": "Es gibt mehr Meldungen für diesen Wettbewerb als Teams in dem Wettbewerbsablauf definiert sind. Bitte vergewissern Sie sich, dass genügend Teams oder Partien für die erste Runde des Wettbewerbs definiert sind.",
+                        "notAllPlacesSet": "Es fehlen Ergebnisse. Bitte geben Sie alle Plätze für die Partien an."
+                    }
+                },
+                "deleteRound": {
+                    "delete": "Runde löschen",
+                    "confirmation": {
+                        "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?"
+                    },
+                    "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
+                    "success": "Runde erfolgreich gelöscht"
+                },
+                "teamsWithBye": "Teams mit Freilos",
+                "match": {
+                    "startTime": "Startzeit",
+                    "startTimeOffset": "Versetzte Startzeit",
+                    "startNumber": {
+                        "startNumber": "Startnummer",
+                        "short": "Nr."
+                    },
+                    "team": "Team",
+                    "registeredBy": "gemeldet von",
+          "place": "Platz",
+                    "time": "Zeit",
+                    "placeAndTime": "Platz/Zeit",
+                    "manageRunning": "Laufende Partien verwalten",
+                    "running": "Läuft",
+                    "roundAndMatch": "Runde {{round}}, Partie {{match}}",
+                    "currentlyRunning": "Aktuell laufend",
+                    "availableMatches": "Verfügbare Partien",
+                    "noRunningMatches": "Keine Partien laufen gerade",
+                    "noAvailableMatches": "Keine Partien zum Starten verfügbar"
+                },
+                "running": {
+                    "error": {
+                        "hasPlaces": "Der Laufstatus kann nicht für Spiele mit Ergebnissen geändert werden",
+                        "update": "Fehler beim Aktualisieren des Laufstatus"
+                    },
+                    "success": "Laufstatus erfolgreich aktualisiert"
+                },
+                "results": {
+                    "enter": "Ergebnis eintragen",
+                    "title": {
+                        "named": "Ergebnis für {{matchName}}",
+                        "unnamed": "Partie Ergebnis"
+                    },
+                    "failed": "Ausgeschieden",
+                    "failedReason": "Grund für Ausscheiden",
+                    "validation": {
+                        "duplicates": {
+                            "single": "Der Platz: {{places}} wird mehrfach verwendet.",
+                            "multiple": "Die Plätze: {{places}} werden mehrfach verwendet.",
+                            "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
+                        },
+                        "noResultsEntered": "Bitte geben Sie mindestens alle Plätze oder alle Zeiten für alle Teams in dieser Partie an.",
+                        "missingPlaces": "Bitte geben Sie Plätze für alle Teams in dieser Partie an.",
+                        "missingTimes": "Bitte geben Sie Zeiten für alle Teams in dieser Partie an."
+                    },
+                    "submit": {
+                        "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+                        "success": "Ergebnis gespeichert"
+                    },
+                    "dialog": {
+                        "title": "Konfiguration auswählen",
+                        "config": "Konfiguration",
+                        "alert": {
+                            "1": "Konfigurationen können ",
+                            "2": "hier",
+                            "3": " erstellt und bearbeitet werden."
+                        },
+                        "file": {
+                            "missing": "Bitte wählen Sie eine Datei aus.",
+                            "change": ".xls Datei ändern",
+                            "choose": ".xls Datei auswählen"
+                        }
+                    },
+                    "upload": "Ergebnisse hochladen",
+                    "type": {
+                        "form": "mit Eingabeformular",
+                        "XLS": "als XLS-Datei"
+                    },
+                    "error": {
+                        "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
+                        "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
+                        "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
+                        "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}",
+                        "LIST_DATA_INCOMPLETE": "Die Spalten für die Plätze oder Zeiten sind unvollständig.",
+                        "RESULT_NOT_FAILED_AND_NO_DATA": "Ein Ergebnis hat keinen Ausscheidungsgrund und keinen Platz und keine Zeit."
+                    },
+                    "resultType": {
+                        "distance": "Distanz"
+                    },
+                    "challenge": {
+                        "challengeResults": "Challenge Ergebnis",
+                        "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+                        "success": "Das Ergebnis wurde erfolgreich übermittelt.",
+                        "confirmTitle": "Bestätigung erforderlich",
+                        "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
+                        "confirm": "Ergebnis bestätigen",
+                        "verify": "Ergebnis verifizieren",
+                        "delete": "Ergebnis löschen",
+                        "confirmAction": {
+                            "verify": "Einmal verifizierte Ergebnisse können nicht verändert werden. Stellen Sie bitte sicher, dass alles korrekt ist.",
+                            "delete": "Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?"
+                        },
+                        "verified": "Ergebnis verifiziert",
+                        "unverified": "Ergebnis nicht verifiziert",
+                        "onlyUnverified": "Zeige nur nicht verifizierte Ergebnisse",
+                        "proof": "Nachweis vorhanden",
+                        "download": "Nachweis herunterladen",
+                        "view": "Nachweis ansehen",
+                        "submitResults": "Ergebnis einreichen",
+                        "outsideOfTime": "Sie befinden sich derzeit außerhalb des Challenge Zeitraums."
+                    },
+                    "confirmationImage": {
+                        "confirmationImage": "Bestätigungsbild",
+                        "select": "Bild auswählen",
+                        "change": "Bild Datei ändern",
+                        "error": {
+                            "empty": "Bitte wählen Sie ein Bild aus",
+                            "tooMany": "Bitte wählen Sie maximal 1 Bild aus"
+                        }
+                    },
+                    "document": {
+                        "download": {
+                            "error": "Beim herunterladen des Ergebnisdokuments ist ein Fehler aufgetreten."
+                        }
+                    }
+                },
+                "matchData": {
+                    "edit": "Partie bearbeiten",
+                    "title": {
+                        "named": "Details für {{matchName}}",
+                        "unnamed": "Details für Partie"
+                    },
+                    "randomizeStartNumbers": "Startnummern zufällig vergeben",
+                    "validation": {
+                        "duplicates": {
+                            "single": "Die Startnummer: {{startNumbers}} wird mehrfach verwendet.",
+                            "multiple": "Die Startnummern: {{startNumbers}} werden mehrfach verwendet.",
+                            "message": "Bitte wählen Sie einzigartige Startnummern pro Partie."
+                        }
+                    },
+                    "submit": {
+                        "error": "Beim speichern der Details ist ein Fehler aufgetreten",
+                        "success": "Partie gespeichert"
+                    }
+                },
+                "startList": {
+                    "download": "Startliste herunterladen",
+                    "dialog": {
+                        "title": "Konfiguration auswählen",
+                        "config": "Konfiguration",
+                        "alert": {
+                            "1": "Konfigurationen können ",
+                            "2": "hier",
+                            "3": " erstellt und bearbeitet werden."
+                        }
+                    },
+                    "type": {
+                        "PDF": "als PDF",
+                        "CSV": "als CSV"
+                    },
+                    "error": {
+                        "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
+                    }
+                },
+                "substitution": {
+                    "substitutions": "Ummeldungen",
+                    "inFor": "ersetzt durch",
+                    "participant": "Teilnehmer",
+                    "substituteFor": {
+                        "substituteFor": "Ersetzen durch",
+                        "currentlyParticipating": "Im selben Wettkampf (Teams tauschen)",
+                        "notCurrentlyParticipating": "Frei verfügbar",
+                        "team": "Team",
+                        "load": {
+                            "error": "Beim Laden der möglichen Teilnehmer für eine Ummeldung ist ein Fehler aufgetreten"
+                        }
+                    },
+                    "reason": "Begründung",
+                    "add": {
+                        "add": "Ummeldungen hinzufügen",
+                        "error": {
+                            "conflict": "Später erzeugte Ummeldungen hängen von dieser ab. Diese müssten zuerst gelöscht werden.",
+                            "unexpected": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten"
+                        },
+                        "success": "Ummeldungen erfolgreich hinzugefügt"
+                    },
+                    "delete": {
+                        "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
+                        "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
+                        "success": "Ummeldungen erfolgreich gelöscht"
+                    }
+                }
+            },
+            "places": {
+                "places": "Platzierungen",
+                "tabTitle": "Platzierungen",
+                "noPlaces": "Für diesen Wettbewerb gibt es noch keine Platzierungen."
             }
-          },
-          "remove": "Runde entfernen"
         },
-        "match": {
-          "match": "Partie",
-          "participants": "Matchup",
-          "name": "Name",
-          "executionOrder": "Durchführungsreihenfolge",
-          "teams": {
-            "teams": "Teamanzahl",
-            "unlimited": "Unbegrenzt"
-          },
-          "outcome": {
-            "outcome": "Setzung",
-            "outcomes": "Setzungen",
-            "tooltip": "Resultierende Setzungen dieser Partie",
-            "result": "Ergebnis"
-          },
-          "remove": "Partie entfernen",
-          "info": {
-            "roundOneFillMatches": "Die Partien werden gleichmäßig mit zufällig gewählten Teams befüllt."
-          }
-        },
-        "place": {
-          "place": "Platz",
-          "places": "Gesamtplatzierungen",
-          "placesOption": {
-            "equal": "Gleichgestellt (Platz = {{place}})",
-            "ascending": "Aufsteigend (Platz = Setzung)",
-            "custom": "Benutzerdefiniert"
-          }
-        },
-        "tournamentTree": {
-          "generate": "Generieren",
-          "generateTree": "Turnierbaum generieren",
-          "participatingTeams": "Teilnehmende Teams",
-          "includeMatchForThirdPlace": "Partie um Platz 3 erstellen",
-          "overwriteSetup": "Bisherigen Ablauf überschreiben",
-          "info": {
-            "noOverwrite": "Die generierten Runden werden an das Ende des bisherigen Ablaufs angehängt."
-          }
-        },
-        "template": {
-          "template": "Vorlage für Wettbewerbsablauf",
-          "templates": "Vorlagen für Wettbewerbsabläufe",
-          "name": "Name",
-          "description": "Beschreibung",
-          "select": "Vorlage auswählen"
-        },
-        "startTimeOffset": {
-          "startTimeOffset": "Versetzte Startzeit",
-          "enable": "Versetzte Startzeiten erlauben"
-        },
-        "validation": {
-          "duplicateParticipants": {
-            "one": "Das Team: {{participants}} wird mehrfach verwendet.",
-            "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
-            "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
-          },
-          "duplicatePositions": {
-            "one": "In der Durchführungsreihenfolge wird {{positions}} mehrfach verwendet.",
-            "multiple": "In der Durchführungsreihenfolge werden {{positions}} mehrfach verwendet.",
-            "message": "Bitte fügen Sie jeden Wert nur je einer Partie pro Runde hinzu."
-          }
-        },
-        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
-      },
-      "execution": {
-        "tabTitle": "Durchführung",
-        "progress": {
-          "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
-        },
-        "nextRound": {
-          "create": "Erstelle nächste Runde",
-          "error": "Nächste Runde konnte nicht erstellt werden",
-          "success": "Nächste Runde erstellt",
-          "reasons": {
-            "noRoundsInSetup": "In dem Wettbewerbsablauf sind keine Runden festgelegt.",
-            "noSetupMatches": "In der nächsten Runde des Wettbewerbsablaufs sind keine Partien festgelegt.",
-            "noRegistrations": "Es gibt keine Meldungen für diesen Wettbewerb.",
-            "registrationsNotFinalized": {
-              "textStart": "Die Meldungen für diese Veranstaltung sind noch nicht finalisiert. Die Meldungen können ",
-              "link": "hier",
-              "textEnd": " finalisiert werden."
+        "participantRequirement": {
+            "info": "Wird keine explizite Spalte für die Prüfung der Teilnahmebedingung angegeben, werden alle übereinstimmenden Teilnehmer der Datei genehmigt.",
+            "approved": "Überprüfte Bedingungen",
+            "checkUpload": "Bedingungen abgleichen",
+            "checkManually": "\"{{name}}\" überprüfen",
+            "file": "CSV-Datei",
+            "charset": "Charset",
+            "separator": "Trennzeichen",
+            "firstnameColName": "Spalte mit Vornamen",
+            "lastnameColName": "Spalte mit Nachnamen",
+            "yearsColName": "Spalte mit Jahrgang",
+            "clubColName": "Spalte mit Vereinsnamen",
+            "requirementColName": "Spalte mit Teilnahmebedingung",
+            "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
+            "participantsOpen": "Offen",
+            "participantsApproved": "Überprüft",
+            "tableHint": {
+                "part1": "Bedingungen können ",
+                "part2Link": "hier",
+                "part3": " erstellt oder bearbeitet werden."
             },
-            "notEnoughTeamSpace": "Es gibt mehr Meldungen für diesen Wettbewerb als Teams in dem Wettbewerbsablauf definiert sind. Bitte vergewissern Sie sich, dass genügend Teams oder Partien für die erste Runde des Wettbewerbs definiert sind.",
-            "notAllPlacesSet": "Es fehlen Ergebnisse. Bitte geben Sie alle Plätze für die Partien an."
-          }
+            "checkInApp": "Per App prüfbar",
+            "approve": "Bestätigen",
+            "checkedNote": "Bemerkung",
+            "confirmDelete": {
+                "content": "Soll die Bestätigung der überprüften Teilnahmebedingung wirklich storniert werden?",
+                "ok": "Ja",
+                "cancel": "Nein"
+            }
         },
-        "deleteRound": {
-          "delete": "Runde löschen",
-          "confirmation": {
-            "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?"
-          },
-          "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
-          "success": "Runde erfolgreich gelöscht"
+        "action": {
+            "sendCertificates": "Teilnahmeurkunden versenden",
+            "sendCertificatesSucceeded": "Versand von Teilnahmeurkunden beauftragt",
+            "registrationsReport": {
+                "download": "Meldeergebnis herunterladen"
+            },
+            "produceInvoices": "Rechnungen erstellen",
+            "finalizeRegistrations": {
+                "finalize": "Meldungen finalisieren",
+                "newRegistrations": {
+                    "altertTitle": "Es gibt neue Meldungen",
+                    "hint": "Seit der letzten Finalisierung wurden neue Meldungen abgegeben. Die neu gemeldeten Teilnehmer nehmen nicht an den Wettkämpfen teil, bis die Meldungen erneut finalisiert wurden."
+                },
+                "refinalize": "Refinalisieren",
+                "refinalizeRegistrations": "Meldungen refinalisieren",
+                "keepTeamNumbers": {
+                    "keep": "Gesetzte Startnummern beibehalten",
+                    "hint": "Bei Beibehaltung der Startnummern erhalten nur die neuen Teams/Teilnehmer zufällige Startnummern. Diese werden höher sein als die derzeit höchste des Wettbewerbs. Wenn sie nicht beibehalten werden, werden alle Startnummern neu gemischt."
+                },
+                "reshuffle": "Dies würfelt alle Startnummern neu aus",
+                "success": "Meldungen finalisiert"
+            }
         },
-        "teamsWithBye": "Teams mit Freilos",
-        "match": {
-          "startTime": "Startzeit",
-          "startTimeOffset": "Versetzte Startzeit",
-          "startNumber": {
-            "startNumber": "Startnummer",
-            "short": "Nr."
-          },
-          "team": "Team",
-          "registeredBy": "gemeldet von",
-          "place": "Platz",
-          "time": "Zeit",
-          "placeAndTime": "Platz/Zeit",
-          "manageRunning": "Laufende Partien verwalten",
-          "running": "Läuft",
-          "roundAndMatch": "Runde {{round}}, Partie {{match}}",
-          "currentlyRunning": "Aktuell laufend",
-          "availableMatches": "Verfügbare Partien",
-          "noRunningMatches": "Keine Partien laufen gerade",
-          "noAvailableMatches": "Keine Partien zum Starten verfügbar"
+        "assign": {
+            "save": {
+                "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
+                "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
+            }
         },
-        "running": {
-          "error": {
-            "hasPlaces": "Der Laufstatus kann nicht für Spiele mit Ergebnissen geändert werden",
-            "update": "Fehler beim Aktualisieren des Laufstatus"
-          },
-          "success": "Laufstatus erfolgreich aktualisiert"
+        "document": {
+            "document": "Dokument",
+            "documents": "Dokumente",
+            "name": "Name",
+            "tableHint": {
+                "description": "Werden bei der Meldung zur Verfügung gestellt.",
+                "part1": "Zum Gruppieren und Konfigurieren können ",
+                "part2Link": "Dokumenttypen",
+                "part3": " definiert werden."
+            },
+            "type": {
+                "type": "Typ",
+                "documentType": "Dokumenttyp",
+                "documentTypes": "Dokumenttypen",
+                "name": "Name",
+                "description": "Beschreibung",
+                "tableHint": "Ermöglichen das Kategorisieren verschiedener Dokumente einer Veranstaltung.",
+                "required": {
+                    "forEvent": "Erforderlich für Veranstaltung",
+                    "confirmation": "Bestätigung erforderlich"
+                }
+            },
+            "add": {
+                "add": "Dokument hinzufügen"
+            },
+            "download": {
+                "download": "Herunterladen",
+                "error": "Beim Herunterladen des Dokuments ist ein Fehler aufgetreten"
+            },
+            "error": {
+                "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
+            }
+        },
+        "registration": {
+            "initialize": {
+                "header": "Meldung initialisieren",
+                "submit": "Meldung initialisieren",
+                "info": {
+                    "1": "Um Teams für Wettkämpfe zu melden, muss einmalig pro Veranstaltung die Meldung initialisiert werden.",
+                    "2": "Für diese Veranstaltung wurden die folgenden Dokumente zur Verfügung gestellt."
+                }
+            },
+            "registration": "Anmeldung",
+            "registrations": "Anmeldungen",
+            "addParticipant": "Mitglied hinzufügen",
+            "singleCompetition": "Einzelwettkampf",
+            "teamCompetition": "Teamwettkampf",
+            "males": "Männer",
+            "females": "Frauen",
+            "nonBinary": "Nicht-binäre Personen",
+            "mixed": "Beliebig",
+            "summary": "Zusammenfassung",
+            "schedule": "Programm",
+            "message": "Nachricht",
+            "optionalFee": "Optional",
+            "totalFees": "Meldegebühr",
+            "lateTotalFees": "Nachmeldegebühr",
+            "acceptDocuments": "Ich akzeptiere Folgendes:",
+            "infoDocuments": "Weitere Informationen",
+            "finish": "Anmeldung abschicken",
+            "success": {
+                "title": "Erfolgreich angemeldet!",
+                "subtitle": "Sie bekommen eine Bestätigung per Mail."
+            },
+            "error": {
+                "closed": "Die Anmeldung für diese Veranstaltung ist geschlossen",
+                "participantUpsertNotFound": "Teilnehmer aus der Teilnehmerliste nicht gefunden",
+                "teamParticipantNotFound": "Team-Teilnehmer konnte nicht gefunden werden",
+                "competitionNotFound": "Wettkampf nicht gefunden",
+                "namedParticipantNotFound": "Teilnehmertyp nicht gefunden",
+                "feeNotFound": "Gebühr nicht gefunden",
+                "ratingCategoryNotFound": "Wertungskategorie nicht gefunden",
+                "ratingCategoryMissing": "Wertungskategorie bei Team nicht angegeben, wo sie erforderlich ist",
+                "ageRequirementNotMet": "Altersanforderung einer Wertungskategorie von einem Teilnehmer nicht erfüllt",
+                "participantDuplicateInCompetition": "Teilnehmer ist in einem Wettkampf mehrfach gemeldet"
+            },
+            "mostRecent": "Neuste Anmeldungen",
+            "teams": "Teams",
+            "teamMembers": "Teammitglieder"
+        },
+        "participants": "Teilnehmende",
+        "tabs": {
+            "general": "Allgemein",
+            "registrations": "Meldungen",
+            "settings": "Einstellungen",
+            "actions": "Aktionen",
+            "organisation": "Organisation",
+            "invoices": "Rechnungen"
+        },
+        "info": {
+            "infoPage": "Info-Anzeige",
+            "sectionTitle": "Öffentliche Informationsanzeige",
+            "pageDescription": "Konfigurieren und betrachten Sie Informationsanzeigen für öffentliche Bildschirme, die Veranstaltungsinformationen wie anstehende Läufe und Ergebnisse anzeigen.",
+            "manageInfoViews": "Info-Anzeigen ansehen und konfigurieren",
+            "configure": "Konfigurieren",
+            "noViews": "Keine Ansichten konfiguriert",
+            "configureViews": "Klicken Sie auf das Einstellungssymbol, um Ansichten zu konfigurieren",
+            "viewType": "Ansichtstyp",
+            "viewTypes": {
+                "upcomingMatches": "Anstehend",
+                "latestMatchResults": "Neueste Ergebnisse",
+                "runningMatches": "Aktuell laufend"
+            },
+            "configuration": "Ansichtskonfiguration",
+            "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
+            "noViewsConfigured": "Keine Ansichten konfiguriert",
+            "editView": "Ansicht bearbeiten",
+            "addView": "Ansicht hinzufügen",
+            "displayDuration": "Anzeigedauer",
+            "dataLimit": "Datenlimit",
+            "filtersComingSoon": "Filter werden in Kürze verfügbar sein",
+            "viewCreated": "Ansicht erfolgreich erstellt",
+            "viewUpdated": "Ansicht erfolgreich aktualisiert",
+            "viewDeleted": "Ansicht erfolgreich gelöscht",
+            "createError": "Fehler beim Erstellen der Ansicht",
+            "updateError": "Fehler beim Aktualisieren der Ansicht",
+            "deleteError": "Fehler beim Löschen der Ansicht",
+            "confirmDeleteView": "Sind Sie sicher, dass Sie diese Ansicht löschen möchten?",
+            "noUpcomingMatches": "Keine anstehenden Läufe",
+            "noLatestMatchResults": "Keine aktuellen Laufergebnisse vorhanden",
+            "noRunningMatches": "Keine laufenden Wettkämpfe",
+            "live": "LIVE",
+            "minutes": "Min.",
+            "justStarted": "Gerade gestartet",
+            "unnamed": "Unbenannt",
+            "matchStatus": {
+                "pending": "Ausstehend",
+                "inProgress": "Läuft",
+                "completed": "Abgeschlossen"
+            },
+            "rank": "Rang",
+            "place": "Platz",
+            "team": "Team",
+            "participants": "Teilnehmer",
+            "result": "Ergebnis",
+            "points": "Punkte",
+            "matchTeams": "Lauf-Teams",
+            "executionOrder": "Ausführungsreihenfolge: {{order}}"
         },
         "results": {
-          "enter": "Ergebnis eintragen",
-          "title": {
-            "named": "Ergebnis für {{matchName}}",
-            "unnamed": "Partie Ergebnis"
-          },
-          "failed": "Ausgeschieden",
-          "failedReason": "Grund für Ausscheiden",
-          "validation": {
-            "duplicates": {
-              "single": "Der Platz: {{places}} wird mehrfach verwendet.",
-              "multiple": "Die Plätze: {{places}} werden mehrfach verwendet.",
-              "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
-            },
-            "noResultsEntered": "Bitte geben Sie mindestens alle Plätze oder alle Zeiten für alle Teams in dieser Partie an.",
-            "missingPlaces": "Bitte geben Sie Plätze für alle Teams in dieser Partie an.",
-            "missingTimes": "Bitte geben Sie Zeiten für alle Teams in dieser Partie an."
-          },
-          "submit": {
-            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
-            "success": "Ergebnis gespeichert"
-          },
-          "dialog": {
-            "title": "Konfiguration auswählen",
-            "config": "Konfiguration",
-            "alert": {
-              "1": "Konfigurationen können ",
-              "2": "hier",
-              "3": " erstellt und bearbeitet werden."
-            },
-            "file": {
-              "missing": "Bitte wählen Sie eine Datei aus.",
-              "change": ".xls Datei ändern",
-              "choose": ".xls Datei auswählen"
-            }
-          },
-          "upload": "Ergebnisse hochladen",
-          "type": {
-            "form": "mit Eingabeformular",
-            "XLS": "als XLS-Datei"
-          },
-          "error": {
-            "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
-            "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
-            "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
-            "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}",
-            "LIST_DATA_INCOMPLETE": "Die Spalten für die Plätze oder Zeiten sind unvollständig.",
-            "RESULT_NOT_FAILED_AND_NO_DATA": "Ein Ergebnis hat keinen Ausscheidungsgrund und keinen Platz und keine Zeit."
-          },
-          "resultType": {
-            "distance": "Distanz"
-          },
-          "challenge": {
-            "challengeResults": "Challenge Ergebnis",
-            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
-            "success": "Das Ergebnis wurde erfolgreich übermittelt.",
-            "confirmTitle": "Bestätigung erforderlich",
-            "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
-            "confirm": "Ergebnis bestätigen",
-            "verify": "Ergebnis verifizieren",
-            "delete": "Ergebnis löschen",
-            "confirmAction": {
-              "verify": "Einmal verifizierte Ergebnisse können nicht verändert werden. Stellen Sie bitte sicher, dass alles korrekt ist.",
-              "delete": "Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?"
-            },
-            "verified": "Ergebnis verifiziert",
-            "unverified": "Ergebnis nicht verifiziert",
-            "onlyUnverified": "Zeige nur nicht verifizierte Ergebnisse",
-            "proof": "Nachweis vorhanden",
-            "download": "Nachweis herunterladen",
-            "view": "Nachweis ansehen",
-            "submitResults": "Ergebnis einreichen",
-            "outsideOfTime": "Sie befinden sich derzeit außerhalb des Challenge Zeitraums."
-          },
-          "confirmationImage": {
-            "confirmationImage": "Bestätigungsbild",
-            "select": "Bild auswählen",
-            "change": "Bild Datei ändern",
-            "error": {
-              "empty": "Bitte wählen Sie ein Bild aus",
-              "tooMany": "Bitte wählen Sie maximal 1 Bild aus"
-            }
-          },
-          "document": {
-            "download": {
-              "error": "Beim herunterladen des Ergebnisdokuments ist ein Fehler aufgetreten."
-            }
-          }
+            "download": "Bisherige Ergebnisse herunterladen",
+            "downloadError": "Die datei konnte nicht heruntergeladen werden."
         },
-        "matchData": {
-          "edit": "Partie bearbeiten",
-          "title": {
-            "named": "Details für {{matchName}}",
-            "unnamed": "Details für Partie"
-          },
-          "randomizeStartNumbers": "Startnummern zufällig vergeben",
-          "validation": {
-            "duplicates": {
-              "single": "Die Startnummer: {{startNumbers}} wird mehrfach verwendet.",
-              "multiple": "Die Startnummern: {{startNumbers}} werden mehrfach verwendet.",
-              "message": "Bitte wählen Sie einzigartige Startnummern pro Partie."
-            }
-          },
-          "submit": {
-            "error": "Beim speichern der Details ist ein Fehler aufgetreten",
-            "success": "Partie gespeichert"
-          }
-        },
-        "startList": {
-          "download": "Startliste herunterladen",
-          "dialog": {
-            "title": "Konfiguration auswählen",
-            "config": "Konfiguration",
-            "alert": {
-              "1": "Konfigurationen können ",
-              "2": "hier",
-              "3": " erstellt und bearbeitet werden."
-            }
-          },
-          "type": {
-            "PDF": "als PDF",
-            "CSV": "als CSV"
-          },
-          "error": {
-            "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
-          }
-        },
-        "substitution": {
-          "substitutions": "Ummeldungen",
-          "inFor": "ersetzt durch",
-          "participant": "Teilnehmer",
-          "substituteFor": {
-            "substituteFor": "Ersetzen durch",
-            "currentlyParticipating": "Im selben Wettkampf (Teams tauschen)",
-            "notCurrentlyParticipating": "Frei verfügbar",
-            "team": "Team",
-            "load": {
-              "error": "Beim Laden der möglichen Teilnehmer für eine Ummeldung ist ein Fehler aufgetreten"
-            }
-          },
-          "reason": "Begründung",
-          "add": {
-            "add": "Ummeldungen hinzufügen",
-            "error": {
-              "conflict": "Später erzeugte Ummeldungen hängen von dieser ab. Diese müssten zuerst gelöscht werden.",
-              "unexpected": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten"
+        "ratingCategory": {
+            "title": "Wertungskategorien",
+            "yearFrom": "Von",
+            "yearTo": "Bis",
+            "noEntries": "Keine Wertungskategorien zugewiesen",
+            "ageRestriction": "Altersklasse",
+            "year": "Jahrgang",
+            "delete": {
+                "confirm": {
+                    "title": "Zuweisung wirklich entfernen?"
+                },
+                "success": "Wertungskategorie erfolgreich entfernt",
+                "error": "Beim Löschen der Wertungskategorie in diesem Event ist ein Fehler aufgetreten"
             },
-            "success": "Ummeldungen erfolgreich hinzugefügt"
-          },
-          "delete": {
-            "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
-            "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
-            "success": "Ummeldungen erfolgreich gelöscht"
-          }
+            "add": {
+                "title": "Wertungskategorie zuweisen",
+                "success": "Wertungskategorie erfolgreich hinzugefügt",
+                "error": "Beim Hinzufügen der Wertungskategorie zu diesem Event ist ein Fehler aufgetreten"
+            }
         }
-      },
-      "places": {
-        "places": "Platzierungen",
-        "tabTitle": "Platzierungen",
-        "noPlaces": "Für diesen Wettbewerb gibt es noch keine Platzierungen."
-      }
+    },
+    "task": {
+        "task": "Aufgabe",
+        "tasks": "Aufgaben",
+        "myTasks": "Meine Aufgaben",
+        "name": "Titel",
+        "dueDate": "Fälligkeitsdatum",
+        "state": "Status",
+        "OPEN": "Offen",
+        "IN_PROGRESS": "In Bearbeitung",
+        "DONE": "Erledigt",
+        "CANCELED": "Abgebrochen",
+        "responsibleUsers": "Verantwortlich"
+    },
+    "work": {
+        "type": {
+            "type": "Arbeitsart",
+            "types": "Arbeitsarten",
+            "tableHint": "Ermöglichen das Planen von Schichten für eine Veranstaltung.",
+            "noneAvailable": "Es wurden noch keine Arbeitsarten angelegt."
+        },
+        "shift": {
+            "shift": "Schicht",
+            "shifts": "Schichten",
+            "myShifts": "Meine Schichten",
+            "plan": "Schichtplan",
+            "timeFrom": "Beginn",
+            "timeTo": "Ende",
+            "minUser": "Min. Personen",
+            "maxUser": "Max. Personen",
+            "remark": "Anmerkung",
+            "assignedUsers": "Eingeteilte Personen"
+        }
     },
     "participantRequirement": {
-      "info": "Wird keine explizite Spalte für die Prüfung der Teilnahmebedingung angegeben, werden alle übereinstimmenden Teilnehmer der Datei genehmigt.",
-      "approved": "Überprüfte Bedingungen",
-      "checkUpload": "Bedingungen abgleichen",
-      "checkManually": "\"{{name}}\" überprüfen",
-      "file": "CSV-Datei",
-      "charset": "Charset",
-      "separator": "Trennzeichen",
-      "firstnameColName": "Spalte mit Vornamen",
-      "lastnameColName": "Spalte mit Nachnamen",
-      "yearsColName": "Spalte mit Jahrgang",
-      "clubColName": "Spalte mit Vereinsnamen",
-      "requirementColName": "Spalte mit Teilnahmebedingung",
-      "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
-      "participantsOpen": "Offen",
-      "participantsApproved": "Überprüft",
-      "tableHint": {
-        "part1": "Bedingungen können ",
-        "part2Link": "hier",
-        "part3": " erstellt oder bearbeitet werden."
-      },
-      "checkInApp": "Per App prüfbar",
-      "approve": "Bestätigen",
-      "checkedNote": "Bemerkung",
-      "confirmDelete": {
-        "content": "Soll die Bestätigung der überprüften Teilnahmebedingung wirklich storniert werden?",
-        "ok": "Ja",
-        "cancel": "Nein"
-      }
+        "participantRequirement": "Teilnahmebedingung",
+        "participantRequirements": "Teilnahmebedingungen",
+        "active": "Aktiv",
+        "activate": "Event zuweisen (für alle Rollen)",
+        "remove": "Von Event entfernen",
+        "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" vom Event entfernen? Dies betrifft alle zugewiesenen Teilnehmer und entfernt alle erfolgreichen Überprüfungen.",
+        "confirmRemoveGlobal": "Möchten Sie die globale Zuweisung der Bedingung \"{{requirement}}\" entfernen? Die Bedingung bleibt für individuell zugewiesene Teilnehmer bestehen.",
+        "tableHint": "Können bei Veranstaltungen aktiviert werden.",
+        "namedParticipantAssignments": "Zuordnungen",
+        "qrCodeRequirement": "QR-Code",
+        "global": "Global",
+        "toggleQrCode": "QR-Code-Pflicht umschalten",
+        "assignTo": "Zu {{name}} zuweisen",
+        "assignToWithQr": "Zu {{name}} zuweisen (mit QR-Code)",
+        "toggleQrCodeFor": "QR-Code für {{name}} umschalten",
+        "toggleQrCodeForGlobal": "QR-Code für globale Zuordnung umschalten",
+        "assignedToNamedParticipant": "Bedingung zu Named Participant zugewiesen",
+        "assignToParticipant": "Named Participant zuweisen",
+        "manageParticipants": "Named Participants verwalten",
+        "assignedParticipants": "Zugewiesene Named Participants",
+        "availableParticipants": "Verfügbare Named Participants",
+        "requireQrCode": "QR-Code erforderlich",
+        "allParticipantsAssigned": "Alle Named Participants sind bereits zugewiesen",
+        "removeFrom": "Von {{name}} entfernen",
+        "removedFromNamedParticipant": "Bedingung von Named Participant entfernt",
+        "assignGlobal": "Global zuweisen",
+        "assignGlobalWithQr": "Global zuweisen (mit QR-Code)",
+        "removeGlobal": "Globale Zuordnung entfernen",
+        "removedGlobal": "Globale Zuordnung entfernt",
+        "checkRequirements": "Bedingungen prüfen",
+        "checkInApp": "Per App prüfbar",
+        "namedParticipantRequirements": {
+            "title": "Named Participant Bedingungen",
+            "description": "Verwalten Sie spezifische Bedingungen für Named Participants",
+            "noNamedParticipants": "Keine Named Participants verfügbar",
+            "qrCodeRequired": "QR-Code erforderlich",
+            "assignedRequirements": "Zugewiesene Bedingungen",
+            "noRequirementsAssigned": "Keine Bedingungen zugewiesen",
+            "availableRequirements": "Verfügbare Bedingungen",
+            "allRequirementsAssigned": "Alle Bedingungen zugewiesen"
+        }
     },
-    "action": {
-      "registrationsReport": {
-        "download": "Meldeergebnis herunterladen"
-      },
-      "produceInvoices": "Rechnungen erstellen",
-      "finalizeRegistrations": {
-        "finalize": "Meldungen finalisieren",
-        "newRegistrations": {
-          "altertTitle": "Es gibt neue Meldungen",
-          "hint": "Seit der letzten Finalisierung wurden neue Meldungen abgegeben. Die neu gemeldeten Teilnehmer nehmen nicht an den Wettkämpfen teil, bis die Meldungen erneut finalisiert wurden."
+    "user": {
+        "user": "Benutzer",
+        "users": "Benutzer",
+        "email": {
+            "email": "E-Mail",
+            "inUse": {
+                "statement": "Die eingegebene E-Mail-Adresse ist bereits in Verwendung.",
+                "callToAction": {
+                    "invitation": "Bitte prüfen Sie die derzeitige Verwendung der E-Mail-Adresse oder wählen Sie eine andere.",
+                    "registration": "Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit der bestehenden an."
+                }
+            }
         },
-        "refinalize": "Refinalisieren",
-        "refinalizeRegistrations": "Meldungen refinalisieren",
-        "keepTeamNumbers": {
-          "keep": "Gesetzte Startnummern beibehalten",
-          "hint": "Bei Beibehaltung der Startnummern erhalten nur die neuen Teams/Teilnehmer zufällige Startnummern. Diese werden höher sein als die derzeit höchste des Wettbewerbs. Wenn sie nicht beibehalten werden, werden alle Startnummern neu gemischt."
+        "firstname": "Vorname",
+        "lastname": "Nachname",
+        "birthYear": "Geburtsjahr",
+        "password": {
+            "password": "Passwort",
+            "confirm": "Passwort bestätigen",
+            "minLength": "{{min}} oder mehr Zeichen",
+            "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
+            "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
         },
-        "reshuffle": "Dies würfelt alle Startnummern neu aus",
-        "success": "Meldungen finalisiert"
-      }
+        "login": {
+            "login": "Anmelden",
+            "password": "Passwort",
+            "forgotPassword": "Passwort vergessen?",
+            "signUp": {
+                "message": "Sie haben noch kein Konto?",
+                "link": "Hier registrieren"
+            },
+            "submit": "Anmelden",
+            "error": {
+                "credentials": "Logindaten inkorrekt",
+                "tooManyRequests": "Zu viele Anmeldeversuche. Versuchen Sie es später erneut."
+            }
+        },
+        "settings": {
+            "menu": "Nutzereinstellungen",
+            "profile": "Profil",
+            "logout": "Abmelden"
+        },
+        "page": {
+            "error": {
+                "load": "Profile could not be loaded"
+            }
+        },
+        "update": {
+            "error": "Beim Aktualisieren des Benutzers ist ein Fehler aufgetreten",
+            "success": "Benutzer erfolgreich aktualisiert"
+        },
+        "invitation": {
+            "invitation": "Einladung",
+            "pendingInvitations": "Ausstehende Einladungen",
+            "accept": "Einladung annehmen",
+            "hint": "Bitte vergeben Sie noch ein Passwort für das zu erstellende Benutzerkonto.",
+            "submitPassword": "Einladung annehmen",
+            "userCreated": {
+                "text": "Ihr Konto wurde erfolgreich erstellt und Sie können sich ab sofort anmelden.",
+                "toLogin": "Zum Login"
+            },
+            "error": {
+                "header": "Es ist ein Fehler aufgetreten",
+                "message": {
+                    "notFound": "Für diesen Link gibt es keine offene Einladung. Bitte überprüfen Sie, ob der Link korrekt ist.",
+                    "unexpected": "Ihr Konto konnte nicht angelegt werden. Bitte versuchen Sie es später erneut."
+                }
+            }
+        },
+        "registration": {
+            "register": "Registrieren",
+            "pendingRegistrations": "Ausstehende Registrierungen",
+            "registrationType": "Registrierungstyp",
+            "asParticipant": "Als Teilnehmer:in",
+            "asClubRepresentative": "Als Vereinsverwaltung",
+            "step": {
+                "competitionsNotApplicable": "Keine Wettkampfauswahl erforderlich",
+                "emailToSubmitResults": "Um ein Ergebnis selbst hochzuladen, ist eine E-Mail-Adresse erforderlich. Andernfalls muss die Vereinsverwaltung das Ergebnis für Sie eingeben."
+            },
+            "teamCompetitionsOmitted": "Mit diesem Formular können Sie sich nur für Einzelwettkämpfe anmelden. Um an Mannschaftswettkämpfen teilzunehmen, wenden Sie sich bitte an Ihre Vereinsverwaltung.",
+            "error": {
+                "generic": "Beim Registrieren ist ein Fehler aufgetreten",
+                "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
+                "selectAtLeastOneCompetition": "Bitte wählen Sie mindestens einen Wettkampf aus"
+            },
+            "requested": {
+                "emailSent": {
+                    "header": "Bestätigen Sie Ihre E-Mail-Adresse",
+                    "message": {
+                        "part1": "Wir haben Ihnen eine E-Mail geschickt, um Ihre E-Mail-Adresse zu verifizieren und Ihr Konto zu aktivieren.",
+                        "part2": "Klicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+                    }
+                },
+                "participating": {
+                    "header": "Erfolgreich angemeldet",
+                    "message": {
+                        "part1": "Sie haben sich erfolgreich für die Veranstaltung {{eventName}} angemeldet.",
+                        "part2Email": "Wenn Sie eine E-Mail-Adresse angegeben haben, erhalten Sie in Kürze eine E-Mail mit einem Link, der Sie zum Ergebnis Portal weiterleitet.",
+                        "part3ClubRep": "Ansonsten ist Ihre Vereinsverwaltung für das Eintragen der Ergebnisse verantwortlich."
+                    }
+                },
+                "verified": {
+                    "header": "E-Mail bestätigt",
+                    "message": "Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
+                },
+                "verificationError": {
+                    "header": "Es ist ein Fehler aufgetreten",
+                    "message": {
+                        "notFound": "Für diesen Link gibt es keine offene Registrierung. Bitte überprüfen Sie, ob der Link korrekt ist oder ob die E-Mail-Adresse bereits bestätigt wurde.",
+                        "unexpected": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuchen Sie es später erneut."
+                    }
+                }
+            }
+        },
+        "resetPassword": {
+            "resetPassword": "Passwort zurücksetzen",
+            "forgotPassword": "Passwort vergessen?",
+            "newPassword": "Neues Passwort",
+            "init": {
+                "instruction": "Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link, mit dem Sie Ihr Passwort zurücksetzen können.",
+                "submit": "Passwort zurücksetzen"
+            },
+            "emailSent": {
+                "header": "Prüfen Sie Ihr Postfach",
+                "message": {
+                    "part1": "Wir haben Ihnen eine E-Mail mit weiteren Anweisungen zum Zurücksetzen Ihres Passworts geschickt.",
+                    "part2": "Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+                }
+            },
+            "success": {
+                "header": "Passwort geändert!",
+                "message": "Ihr Passwort wurde erfolgreich geändert."
+            },
+            "error": {
+                "header": "Ein Fehler ist aufgetreten",
+                "message": {
+                    "part1": "Beim Zurücksetzen Ihres Passworts ist ein Fehler aufgetreten.",
+                    "part2": "Prüfen Sie, ob Sie den korrekten und vollständigen Link aus der E-Mail verwenden. Nur der zuletzt versendete Link ist gültig. Der Link ist 24 Stunden lang gültig."
+                },
+                "invalid": "Das versendete Formular war fehlerhaft"
+            }
+        }
     },
-    "assign": {
-      "save": {
-        "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
-        "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
-      }
-    },
-    "document": {
-      "document": "Dokument",
-      "documents": "Dokumente",
-      "name": "Name",
-      "tableHint": {
-        "description": "Werden bei der Meldung zur Verfügung gestellt.",
-        "part1": "Zum Gruppieren und Konfigurieren können ",
-        "part2Link": "Dokumenttypen",
-        "part3": " definiert werden."
-      },
-      "type": {
-        "type": "Typ",
-        "documentType": "Dokumenttyp",
-        "documentTypes": "Dokumenttypen",
+    "role": {
+        "role": "Rolle",
+        "roles": "Rollen",
+        "userRoles": "Benutzerrollen",
         "name": "Name",
         "description": "Beschreibung",
-        "tableHint": "Ermöglichen das Kategorisieren verschiedener Dokumente einer Veranstaltung.",
-        "required": {
-          "forEvent": "Erforderlich für Veranstaltung",
-          "confirmation": "Bestätigung erforderlich"
+        "rights": "Rechte",
+        "error": {
+            "cannotAssign": "Rolle(n) konnte(n) dem Benutzer nicht zugewiesen werden"
         }
-      },
-      "add": {
-        "add": "Dokument hinzufügen"
-      },
-      "download": {
+    },
+    "configuration": {
+        "configuration": "Konfigurationen",
+        "tabs": {
+            "competitionTemplates": "Vorlagen Wettkampf",
+            "eventElements": "Komponenten Veranstaltung",
+            "competitionElements": "Komponenten Wettkampf",
+            "globalSettings": "Globale Einstellungen",
+            "exportData": "Export / Import"
+        },
+        "ratingCategory": {
+            "ratingCategory": "Wertungskategorie",
+            "ratingCategories": "Wertungskategorien",
+            "name": "Name",
+            "description": "Beschreibung",
+            "tableHint": "Können Wettkampf-Teams zugewiesen werden."
+        },
+        "import": {
+            "matchResult": {
+                "config": "Rennergebnisse Import",
+                "configs": "Rennergebnisse Imports",
+                "tableHint": "Definieren die Spalten für den XLS-Import von Rennergebnissen bei der Durchführung von Wettkämpfen.",
+                "name": "Name",
+                "col": {
+                    "team": {
+                        "startNumber": "Startnummer",
+                        "place": "Platz",
+                        "time": "Zeit"
+                    }
+                },
+                "error": {
+                    "noPlaceOrTime": "Bitte geben Sie die Spalte für Plätze oder Zeiten an."
+                }
+            }
+        },
+        "export": {
+            "startlist": {
+                "startlist": "Startlisten Export",
+                "startlists": "Startlisten Exports",
+                "tableHint": "Definieren die Spalten für den CSV-Export von Startlisten bei der Durchführung von Wettkämpfen.",
+                "name": "Name",
+                "col": {
+                    "heading": "Spalten",
+                    "participant": {
+                        "heading": "Teilnehmende",
+                        "firstname": "Vornamen",
+                        "lastname": "Nachnamen",
+                        "gender": "Geschlecht",
+                        "role": "Rolle",
+                        "year": "Geburtsjahr",
+                        "club": "Verein"
+                    },
+                    "club": {
+                        "heading": "Meldender Verein",
+                        "name": "Name"
+                    },
+                    "team": {
+                        "heading": "Team",
+                        "name": "Name",
+                        "startNumber": "Startnummer",
+                        "ratingCategory": "Wertungskategorie",
+                        "club": "Verein (zusammengefasst)",
+                        "deregistered": "Abgemeldet",
+                        "deregisteredValue": "Abgemeldet Wert"
+                    },
+                    "match": {
+                        "heading": "Partie",
+                        "name": "Name",
+                        "startTime": "Startzeit"
+                    },
+                    "round": {
+                        "heading": "Runde",
+                        "name": "Name"
+                    },
+                    "competition": {
+                        "heading": "Wettkampf",
+                        "identifier": "Kennung",
+                        "name": "Name",
+                        "shortName": "Kurzname",
+                        "category": "Kategorie"
+                    }
+                },
+                "error": {
+                    "tooFewCols": "Geben Sie bitte mindestens für eine Spalte die Bezeichnung an."
+                }
+            }
+        }
+    },
+    "contact": {
+        "name": "Name",
+        "zip": "PLZ",
+        "city": "Ort",
+        "street": "Straße (mit Hausnummer)",
+        "email": "E-Mail",
+        "information": "Kontaktinformation",
+        "contacts": "Kontaktinformationen",
+        "global": "Global zugewiesene Kontaktinformation",
+        "tableHint": {
+            "1": "Werden für die Rechnungsstellung als Absender verwendet.",
+            "2": "In den ",
+            "3": "globalen Einstellungen",
+            "4": " können die Zuweisungen vorgenommen werden."
+        }
+    },
+    "invoice": {
+        "invoice": "Rechnung",
+        "invoices": "Rechnungen",
         "download": "Herunterladen",
-        "error": "Beim Herunterladen des Dokuments ist ein Fehler aufgetreten"
-      },
-      "error": {
-        "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
-      }
-    },
-    "registration": {
-      "initialize": {
-        "header": "Meldung initialisieren",
-        "submit": "Meldung initialisieren",
-        "info": {
-          "1": "Um Teams für Wettkämpfe zu melden, muss einmalig pro Veranstaltung die Meldung initialisiert werden.",
-          "2": "Für diese Veranstaltung wurden die folgenden Dokumente zur Verfügung gestellt."
+        "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
+        "invoiceNumber": "Rechnungsnummer",
+        "amount": "Rechnungsbetrag",
+        "paid": "Bezahlt",
+        "tableHint": {
+            "1": "Rechnungen können hier einmalig für alle Meldungen eines Events erstellt werden.",
+            "2": "Konten für Zahlungsempfänger und Absenderdaten können ",
+            "3": "hier",
+            "4": " definiert werden.",
+            "5": "Vor dem Erstellen von Rechnungen müssen in den ",
+            "6": "globalen Einstellungen",
+            "7": " die zu verwendenden Daten zugewiesen werden."
+        },
+        "action": {
+            "setPaid": "Zahlungseingang feststellen",
+            "setNotPaid": "Zahlungseingang zurücknehmen"
+        },
+        "produce": {
+            "for": "für {{type}}",
+            "type": {
+                "REGULAR": "Meldungen",
+                "LATE": "Nachmeldungen"
+            },
+            "info": {
+                "paymentDueBy": {
+                    "title": "Standard Zahlungsziel für Rechnungen",
+                    "content": "Wenn für diese Veranstaltung kein Fälligkeitsdatum zur Begleichung der Rechnung definiert ist, wird ein Standardwert von 14 Tagen ab Erstellung der Rechnung verwendet."
+                }
+            },
+            "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
+            "error": {
+                "notFound": "",
+                "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
+                "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
+                "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",
+                "EVENT_REGISTRATION_ONGOING": "Der Meldezeitraum für diese Veranstaltung ist noch im Gange."
+            }
+        },
+        "bank": {
+            "accountData": {
+                "holder": "Kontoinhaber",
+                "iban": "IBAN",
+                "bic": "BIC",
+                "bank": "Bank"
+            },
+            "account": "Bankverbindung",
+            "accounts": "Bankverbindungen",
+            "global": "Global zugewiesene Bankverbindung",
+            "tableHint": {
+                "1": "Werden für die Rechnungsstellung als Empfängerkonto verwendet.",
+                "2": "In den ",
+                "3": "globalen Einstellungen",
+                "4": " können die Zuweisungen vorgenommen werden."
+            }
         }
-      },
-      "registration": "Anmeldung",
-      "registrations": "Anmeldungen",
-      "addParticipant": "Mitglied hinzufügen",
-      "singleCompetition": "Einzelwettkampf",
-      "teamCompetition": "Teamwettkampf",
-      "males": "Männer",
-      "females": "Frauen",
-      "nonBinary": "Nicht-binäre Personen",
-      "mixed": "Beliebig",
-      "summary": "Zusammenfassung",
-      "schedule": "Programm",
-      "message": "Nachricht",
-      "optionalFee": "Optional",
-      "totalFees": "Meldegebühr",
-      "lateTotalFees": "Nachmeldegebühr",
-      "acceptDocuments": "Ich akzeptiere Folgendes:",
-      "infoDocuments": "Weitere Informationen",
-      "finish": "Anmeldung abschicken",
-      "success": {
-        "title": "Erfolgreich angemeldet!",
-        "subtitle": "Sie bekommen eine Bestätigung per Mail."
-      },
-      "error": {
-        "closed": "Die Anmeldung für diese Veranstaltung ist geschlossen",
-        "participantUpsertNotFound": "Teilnehmer aus der Teilnehmerliste nicht gefunden",
-        "teamParticipantNotFound": "Team-Teilnehmer konnte nicht gefunden werden",
-        "competitionNotFound": "Wettkampf nicht gefunden",
-        "namedParticipantNotFound": "Teilnehmertyp nicht gefunden",
-        "feeNotFound": "Gebühr nicht gefunden",
-        "ratingCategoryNotFound": "Wertungskategorie nicht gefunden",
-        "ratingCategoryMissing": "Wertungskategorie bei Team nicht angegeben, wo sie erforderlich ist",
-        "ageRequirementNotMet": "Altersanforderung einer Wertungskategorie von einem Teilnehmer nicht erfüllt",
-        "participantDuplicateInCompetition": "Teilnehmer ist in einem Wettkampf mehrfach gemeldet"
-      },
-      "mostRecent": "Neuste Anmeldungen",
-      "teams": "Teams",
-      "teamMembers": "Teammitglieder"
     },
-    "participants": "Teilnehmende",
-    "tabs": {
-      "general": "Allgemein",
-      "registrations": "Meldungen",
-      "settings": "Einstellungen",
-      "actions": "Aktionen",
-      "organisation": "Organisation",
-      "invoices": "Rechnungen"
+    "captcha": {
+        "instruction": {
+            "desktop": "Verschieben Sie mit der Maus das Logo in den kleinen Kreis",
+            "mobile": "Verschieben Sie mit dem Finger das Logo in den kleinen Kreis"
+        },
+        "error": {
+            "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
+            "incorrect": "CAPTCHA wurde nicht korrekt gelöst",
+            "notFound": "Der CAPTCHA ist veraltet"
+        },
+        "loading": "Lade CAPTCHA..."
     },
-    "info": {
-      "infoPage": "Info-Anzeige",
-      "sectionTitle": "Öffentliche Informationsanzeige",
-      "pageDescription": "Konfigurieren und betrachten Sie Informationsanzeigen für öffentliche Bildschirme, die Veranstaltungsinformationen wie anstehende Läufe und Ergebnisse anzeigen.",
-      "manageInfoViews": "Info-Anzeigen ansehen und konfigurieren",
-      "configure": "Konfigurieren",
-      "noViews": "Keine Ansichten konfiguriert",
-      "configureViews": "Klicken Sie auf das Einstellungssymbol, um Ansichten zu konfigurieren",
-      "viewType": "Ansichtstyp",
-      "viewTypes": {
-        "upcomingMatches": "Anstehend",
-        "latestMatchResults": "Neueste Ergebnisse",
-        "runningMatches": "Aktuell laufend"
-      },
-      "configuration": "Ansichtskonfiguration",
-      "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
-      "noViewsConfigured": "Keine Ansichten konfiguriert",
-      "editView": "Ansicht bearbeiten",
-      "addView": "Ansicht hinzufügen",
-      "displayDuration": "Anzeigedauer",
-      "dataLimit": "Datenlimit",
-      "filtersComingSoon": "Filter werden in Kürze verfügbar sein",
-      "viewCreated": "Ansicht erfolgreich erstellt",
-      "viewUpdated": "Ansicht erfolgreich aktualisiert",
-      "viewDeleted": "Ansicht erfolgreich gelöscht",
-      "createError": "Fehler beim Erstellen der Ansicht",
-      "updateError": "Fehler beim Aktualisieren der Ansicht",
-      "deleteError": "Fehler beim Löschen der Ansicht",
-      "confirmDeleteView": "Sind Sie sicher, dass Sie diese Ansicht löschen möchten?",
-      "noUpcomingMatches": "Keine anstehenden Läufe",
-      "noLatestMatchResults": "Keine aktuellen Laufergebnisse vorhanden",
-      "noRunningMatches": "Keine laufenden Wettkämpfe",
-      "live": "LIVE",
-      "minutes": "Min.",
-      "justStarted": "Gerade gestartet",
-      "unnamed": "Unbenannt",
-      "matchStatus": {
-        "pending": "Ausstehend",
-        "inProgress": "Läuft",
-        "completed": "Abgeschlossen"
-      },
-      "rank": "Rang",
-      "place": "Platz",
-      "team": "Team",
-      "participants": "Teilnehmer",
-      "result": "Ergebnis",
-      "points": "Punkte",
-      "matchTeams": "Lauf-Teams",
-      "executionOrder": "Ausführungsreihenfolge: {{order}}"
+    "qrAssign": {
+        "title": "QR-Code zuweisen",
+        "participant": "Teilnehmer",
+        "user": "Benutzer",
+        "clubs": "Vereine",
+        "participants": "Teilnehmer",
+        "users": "Benutzer",
+        "noData": "Keine Daten",
+        "team": "Team",
+        "scanSystemUser": "Benutzer aus System scannen",
+        "scanUserQr": "Benutzer QR-Code scannen",
+        "invalidUserQr": "Ungültiger Benutzer QR-Code",
+        "invalidQrFormat": "Ungültiges QR-Code Format",
+        "userAssigned": "Benutzer {{userId}} zugewiesen",
+        "participantQrDetected": "Teilnehmer-QR-Code erkannt",
+        "appUserQrDetected": "Benutzer-QR-Code erkannt",
+        "notAssigned": "Dieser QR-Code konnte nicht zugewiesen werden.",
+        "successParticipant": "QR-Code erfolgreich dem Teilnehmer zugewiesen",
+        "successUser": "QR-Code erfolgreich dem Benutzer zugewiesen",
+        "selectClub": "Verein auswählen",
+        "search": "Suchen...",
+        "confirmSelection": "Auswahl bestätigen",
+        "confirm": "Hinzufügen",
+        "success": "QR-Code erfolgreich zugewiesen",
+        "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben"
+    },
+    "qrCode": {
+        "qrCode": "QR-Code",
+        "value": "QR-Code-Wert",
+        "appUsersWithQrCode": "Benutzer mit QR-Codes",
+        "edit": "QR-Code bearbeiten",
+        "delete": "QR-Code löschen",
+        "show": "QR-Code anzeigen",
+        "deleteConfirm": "Möchten Sie den QR-Code wirklich löschen?",
+        "noQrCodeAssigned": "Kein QR-Code zugewiesen",
+        "cameraError": "Kamera kann nicht gestartet werden"
+    },
+    "qrAppuser": {
+        "title": "QR-Appuser",
+        "user": "User",
+        "underConstruction": "Seite im Aufbau",
+        "removeAssignment": "Qr Code Zuweisung aufheben",
+        "removeAssignmentTitle": "QR-Code-Zuweisung aufheben",
+        "removeAssignmentConfirm": "Möchten Sie die QR-Code-Zuweisung wirklich aufheben?",
+        "deleteError": "Fehler beim Löschen",
+        "assignmentInfo": "Zuordnungsinformationen"
+    },
+    "qrParticipant": {
+        "title": "Teilnehmer",
+        "noRight": "Sie haben für diesen QR-Code-Typ keine Berechtigung.",
+        "loading": "Lade...",
+        "noRequirements": "Keine Bedingungen mit CheckInApp vorhanden.",
+        "enterArea": "Eintritt Wettkampfbereich",
+        "leaveArea": "Austritt Wettkampfbereich",
+        "removeAssignment": "QR-Code-Zuordnung entfernen",
+        "removeAssignmentTitle": "Zuordnung entfernen",
+        "removeAssignmentConfirm": "Möchten Sie die Zuordnung wirklich entfernen?",
+        "deleteError": "Fehler beim Löschen des QR-Codes.",
+        "assignmentInfo": "Zuordnungsinformationen"
+    },
+    "qrScanner": {
+        "title": "Scanner"
+    },
+    "qrEvents": {
+        "title": "Events",
+        "switchApp": "App wechseln"
+    },
+    "app": {
+        "functionSelect": {
+            "title": "Deine Aufgabe",
+            "functions": {
+                "qrManagement": "QR-Code Verwaltung",
+                "competitionCheck": "Wettkampf-Check",
+                "eventRequirement": "Bedingungen prüfen",
+                "caterer": "Verpflegung"
+            },
+            "switchEvent": "Event wechseln"
+        },
+        "forbidden": {
+            "title": "Nicht berechtigt",
+            "message": "Du bist für diese Seite nicht berechtigt.",
+            "backButton": "Zurück zum Login"
+        }
+    },
+    "caterer": {
+        "canReceiveFood": "Benutzer kann Essen erhalten",
+        "cannotReceiveFood": "Benutzer kann kein Essen erhalten",
+        "price": "Preis (€)",
+        "priceHelper": "Optional",
+        "confirm": "Bestätigen",
+        "previousTransactions": "Vorherige Transaktionen",
+        "scanError": "Fehler beim Scannen des Benutzers",
+        "transactionError": "Fehler beim Erstellen der Transaktion",
+        "transactionSuccess": "Transaktion erfolgreich durchgeführt"
+    },
+    "catererTransaction": {
+        "catererTransaction": "Caterer Transaktion",
+        "catererTransactions": "Caterer Transaktionen",
+        "catererName": "Caterer",
+        "userName": "Benutzer",
+        "price": "Betrag",
+        "createdAt": "Zeitpunkt"
+    },
+    "landing": {
+        "smallScreen": {
+            "to": {
+                "where": "Was möchten Sie sehen?",
+                "app": "Helfer App",
+                "results": "Live Events",
+                "desktop": "Desktopansicht"
+            }
+        },
+        "liveEventsLink": "Laufende Ergebnisse"
+    },
+    "panic": {
+        "title": "Fehler",
+        "text": "Der API-Server ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut. Sollte dieser Zustand sich nicht ändern, wenden Sie sich bitte an einen Verantwortlichen. Vielen Dank."
     },
     "results": {
-      "download": "Bisherige Ergebnisse herunterladen",
-      "downloadError": "Die datei konnte nicht heruntergeladen werden."
-    },
-    "ratingCategory": {
-      "title": "Wertungskategorien",
-      "yearFrom": "Von",
-      "yearTo": "Bis",
-      "noEntries": "Keine Wertungskategorien zugewiesen",
-      "ageRestriction": "Altersklasse",
-      "year": "Jahrgang",
-      "delete": {
-        "confirm": {
-          "title": "Zuweisung wirklich entfernen?"
+        "tabs": {
+            "results": "Ergebnisse",
+            "live": "Live"
         },
-        "success": "Wertungskategorie erfolgreich entfernt",
-        "error": "Beim Löschen der Wertungskategorie in diesem Event ist ein Fehler aufgetreten"
-      },
-      "add": {
-        "title": "Wertungskategorie zuweisen",
-        "success": "Wertungskategorie erfolgreich hinzugefügt",
-        "error": "Beim Hinzufügen der Wertungskategorie zu diesem Event ist ein Fehler aufgetreten"
-      }
-    }
-  },
-  "task": {
-    "task": "Aufgabe",
-    "tasks": "Aufgaben",
-    "myTasks": "Meine Aufgaben",
-    "name": "Titel",
-    "dueDate": "Fälligkeitsdatum",
-    "state": "Status",
-    "OPEN": "Offen",
-    "IN_PROGRESS": "In Bearbeitung",
-    "DONE": "Erledigt",
-    "CANCELED": "Abgebrochen",
-    "responsibleUsers": "Verantwortlich"
-  },
-  "work": {
-    "type": {
-      "type": "Arbeitsart",
-      "types": "Arbeitsarten",
-      "tableHint": "Ermöglichen das Planen von Schichten für eine Veranstaltung.",
-      "noneAvailable": "Es wurden noch keine Arbeitsarten angelegt."
+        "matchResults": {
+            "matchResults": "Ergebnisse",
+            "noResults": "Es existieren noch keine Ergebnisse für diesen Wettkampf."
+        },
+        "liveMatches": {
+            "liveMatches": "Laufende Partien",
+            "noMatches": "Momentan finden keine Partien statt."
+        },
+        "clubRanking": {
+            "error": "Fehler beim Laden der Vereinsrangliste"
+        },
+        "individualRanking": {
+            "error": "Fehler beim Laden der Individualrangliste"
+        },
+        "noResults": "Keine Ergebnisse",
+        "challengeTabs": {
+            "club": "Verein",
+            "relative": "Relativ",
+            "individual": "Individuell"
+        },
+        "noEvents": "Keine Veranstaltungen verfügbar"
     },
-    "shift": {
-      "shift": "Schicht",
-      "shifts": "Schichten",
-      "myShifts": "Meine Schichten",
-      "plan": "Schichtplan",
-      "timeFrom": "Beginn",
-      "timeTo": "Ende",
-      "minUser": "Min. Personen",
-      "maxUser": "Max. Personen",
-      "remark": "Anmerkung",
-      "assignedUsers": "Eingeteilte Personen"
-    }
-  },
-  "participantRequirement": {
-    "participantRequirement": "Teilnahmebedingung",
-    "participantRequirements": "Teilnahmebedingungen",
-    "active": "Aktiv",
-    "activate": "Event zuweisen (für alle Rollen)",
-    "remove": "Von Event entfernen",
-    "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" vom Event entfernen? Dies betrifft alle zugewiesenen Teilnehmer und entfernt alle erfolgreichen Überprüfungen.",
-    "confirmRemoveGlobal": "Möchten Sie die globale Zuweisung der Bedingung \"{{requirement}}\" entfernen? Die Bedingung bleibt für individuell zugewiesene Teilnehmer bestehen.",
-    "tableHint": "Können bei Veranstaltungen aktiviert werden.",
-    "namedParticipantAssignments": "Zuordnungen",
-    "qrCodeRequirement": "QR-Code",
-    "global": "Global",
-    "toggleQrCode": "QR-Code-Pflicht umschalten",
-    "assignTo": "Zu {{name}} zuweisen",
-    "assignToWithQr": "Zu {{name}} zuweisen (mit QR-Code)",
-    "toggleQrCodeFor": "QR-Code für {{name}} umschalten",
-    "toggleQrCodeForGlobal": "QR-Code für globale Zuordnung umschalten",
-    "assignedToNamedParticipant": "Bedingung zu Named Participant zugewiesen",
-    "assignToParticipant": "Named Participant zuweisen",
-    "manageParticipants": "Named Participants verwalten",
-    "assignedParticipants": "Zugewiesene Named Participants",
-    "availableParticipants": "Verfügbare Named Participants",
-    "requireQrCode": "QR-Code erforderlich",
-    "allParticipantsAssigned": "Alle Named Participants sind bereits zugewiesen",
-    "removeFrom": "Von {{name}} entfernen",
-    "removedFromNamedParticipant": "Bedingung von Named Participant entfernt",
-    "assignGlobal": "Global zuweisen",
-    "assignGlobalWithQr": "Global zuweisen (mit QR-Code)",
-    "removeGlobal": "Globale Zuordnung entfernen",
-    "removedGlobal": "Globale Zuordnung entfernt",
-    "checkRequirements": "Bedingungen prüfen",
-    "checkInApp": "Per App prüfbar",
-    "namedParticipantRequirements": {
-      "title": "Named Participant Bedingungen",
-      "description": "Verwalten Sie spezifische Bedingungen für Named Participants",
-      "noNamedParticipants": "Keine Named Participants verfügbar",
-      "qrCodeRequired": "QR-Code erforderlich",
-      "assignedRequirements": "Zugewiesene Bedingungen",
-      "noRequirementsAssigned": "Keine Bedingungen zugewiesen",
-      "availableRequirements": "Verfügbare Bedingungen",
-      "allRequirementsAssigned": "Alle Bedingungen zugewiesen"
-    }
-  },
-  "user": {
-    "user": "Benutzer",
-    "users": "Benutzer",
-    "email": {
-      "email": "E-Mail",
-      "inUse": {
-        "statement": "Die eingegebene E-Mail-Adresse ist bereits in Verwendung.",
-        "callToAction": {
-          "invitation": "Bitte prüfen Sie die derzeitige Verwendung der E-Mail-Adresse oder wählen Sie eine andere.",
-          "registration": "Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit der bestehenden an."
+    "webDAV": {
+        "infoText": {
+            "part1": "Die Export-/Import-Funktion ermöglicht es, Dokumente (systemgenerierte oder hochgeladene PDFs) und/oder in der Anwendung erstellte Konfigurationen auf einen externen Server (z.B. Nextcloud über WebDAV) zu speichern.",
+            "part2": "Diese exportierten Daten können später wieder importiert werden, um Ihre Veranstaltungskonfigurationen, Vorlagen und Einstellungen wiederherzustellen."
+        },
+        "export": {
+            "export": "Daten exportieren",
+            "confirm": "Exportieren",
+            "folderName": "Export Ordnername",
+            "events": "Veranstaltungen",
+            "data": "Zu exportierende Daten",
+            "applicationData": "Anwendungsdaten und Einstellungen",
+            "types": {
+                "registrationResults": "Meldeergebnisse",
+                "invoices": "Rechnungen",
+                "documents": "Veranstaltungsdokumente",
+                "results": "Ergebnisse",
+                "startLists": "Startlisten",
+                "users": "Benutzer",
+                "participants": "Teilnehmer",
+                "bankAccounts": "Bankkonten",
+                "contactInformation": "Kontaktinformationen",
+                "emailIndividualTemplates": "Individuelle E-Mail-Vorlagen",
+                "eventDocumentTypes": "Veranstaltungsdokumenttypen",
+                "matchResultImportConfigs": "Wettkampfergebnis-Importkonfigurationen",
+                "startlistExportConfigs": "Startlisten-Exportkonfigurationen",
+                "workTypes": "Arbeitstypen",
+                "participantRequirements": "Teilnehmeranforderungen",
+                "ratingCategories": "Wertungskategorien",
+                "competitionCategories": "Wettkampfkategorien",
+                "fees": "Gebühren",
+                "namedParticipants": "Benannte Teilnehmer",
+                "competitionSetupTemplates": "Wettkampf-Setup-Vorlagen",
+                "competitionTemplates": "Wettkampfvorlagen",
+                "event": "Veranstaltungsdaten",
+                "competition": "Wettkampfdaten"
+            },
+            "steps": {
+                "name": "Name",
+                "documents": "Dokumente",
+                "data": "Daten"
+            },
+            "error": {
+                "nameConflict": "Der eingegebene Ordnername existiert bereits. Bitte wählen Sie einen anderen Namen.",
+                "thirdPartyError": "Der externe WebDAV-Server hat einen Fehler gemeldet. Bitte wenden Sie sich an den Administrator.",
+                "noDocumentTypeSelected": "Bitte wählen Sie mindestens einen Dokumenttyp für diese Veranstaltung aus."
+            },
+            "noEventsAvailable": "Keine Veranstaltungen zum Exportieren verfügbar",
+            "success": "Export erfolgreich gestartet",
+            "status": {
+                "status": "Exportstatus",
+                "error": {
+                    "title": "Fehler beim Export",
+                    "body": "{{files}} / {{total}} Dateien erfolgreich exportiert.",
+                    "info": {
+                        "files": "{{errors}} Fehler bei PDF-Exports",
+                        "data": "{{errors}} Fehler bei Daten-Exports"
+                    }
+                },
+                "success": {
+                    "title": "Export erfolgreich",
+                    "body_one": "{{count}} Datei exportiert.",
+                    "body_other": "{{count}} Dateien exportiert."
+                },
+                "pending": {
+                    "title": "Wird exportiert...",
+                    "body": "{{files}} / {{total}} Dateien exportiert."
+                }
+            }
+        },
+        "import": {
+            "import": "Daten importieren",
+            "confirm": "Importieren",
+            "folderName": "Import Ordnername",
+            "selectData": "Zu importierende Daten auswählen",
+            "error": {
+                "noSelection": "Bitte wählen Sie mindestens einen Datentyp zum Importieren aus",
+                "failed": "Beim Importieren der Daten ist ein Fehler aufgetreten",
+                "loadFolders": "Beim Laden der verfügbaren Ordner vom WebDAV-Server ist ein Fehler aufgetreten",
+                "loadOptions": "Beim Laden der verfügbaren Importoptionen ist ein Fehler aufgetreten"
+            },
+            "noEventsAvailable": "Keine Veranstaltungen zum Importieren verfügbar",
+            "success": "Import erfolgreich gestartet",
+            "status": {
+                "status": "Importstatus",
+                "error": {
+                    "title": "Fehler beim Import",
+                    "body": "{{files}} / {{total}} Dateien erfolgreich importiert."
+                },
+                "success": {
+                    "title": "Import erfolgreich",
+                    "body_one": "{{count}} Datei importiert.",
+                    "body_other": "{{count}} Dateien importiert."
+                },
+                "pending": {
+                    "title": "Wird importiert...",
+                    "body": "{{files}} / {{total}} Dateien importiert."
+                }
+            }
         }
-      }
     },
-    "firstname": "Vorname",
-    "lastname": "Nachname",
-    "birthYear": "Geburtsjahr",
-    "password": {
-      "password": "Passwort",
-      "confirm": "Passwort bestätigen",
-      "minLength": "{{min}} oder mehr Zeichen",
-      "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
-      "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
-    },
-    "login": {
-      "login": "Anmelden",
-      "password": "Passwort",
-      "forgotPassword": "Passwort vergessen?",
-      "signUp": {
-        "message": "Sie haben noch kein Konto?",
-        "link": "Hier registrieren"
-      },
-      "submit": "Anmelden",
-      "error": {
-        "credentials": "Logindaten inkorrekt",
-        "tooManyRequests": "Zu viele Anmeldeversuche. Versuchen Sie es später erneut."
-      }
-    },
-    "settings": {
-      "menu": "Nutzereinstellungen",
-      "profile": "Profil",
-      "logout": "Abmelden"
-    },
-    "page": {
-      "error": {
-        "load": "Profile could not be loaded"
-      }
-    },
-    "update": {
-      "error": "Beim Aktualisieren des Benutzers ist ein Fehler aufgetreten",
-      "success": "Benutzer erfolgreich aktualisiert"
-    },
-    "invitation": {
-      "invitation": "Einladung",
-      "pendingInvitations": "Ausstehende Einladungen",
-      "accept": "Einladung annehmen",
-      "hint": "Bitte vergeben Sie noch ein Passwort für das zu erstellende Benutzerkonto.",
-      "submitPassword": "Einladung annehmen",
-      "userCreated": {
-        "text": "Ihr Konto wurde erfolgreich erstellt und Sie können sich ab sofort anmelden.",
-        "toLogin": "Zum Login"
-      },
-      "error": {
-        "header": "Es ist ein Fehler aufgetreten",
-        "message": {
-          "notFound": "Für diesen Link gibt es keine offene Einladung. Bitte überprüfen Sie, ob der Link korrekt ist.",
-          "unexpected": "Ihr Konto konnte nicht angelegt werden. Bitte versuchen Sie es später erneut."
-        }
-      }
-    },
-    "registration": {
-      "register": "Registrieren",
-      "pendingRegistrations": "Ausstehende Registrierungen",
-      "registrationType": "Registrierungstyp",
-      "asParticipant": "Als Teilnehmer:in",
-      "asClubRepresentative": "Als Vereinsverwaltung",
-      "step": {
-        "competitionsNotApplicable": "Keine Wettkampfauswahl erforderlich",
-        "emailToSubmitResults": "Um ein Ergebnis selbst hochzuladen, ist eine E-Mail-Adresse erforderlich. Andernfalls muss die Vereinsverwaltung das Ergebnis für Sie eingeben."
-      },
-      "teamCompetitionsOmitted": "Mit diesem Formular können Sie sich nur für Einzelwettkämpfe anmelden. Um an Mannschaftswettkämpfen teilzunehmen, wenden Sie sich bitte an Ihre Vereinsverwaltung.",
-      "error": {
-        "generic": "Beim Registrieren ist ein Fehler aufgetreten",
-        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
-        "selectAtLeastOneCompetition": "Bitte wählen Sie mindestens einen Wettkampf aus"
-      },
-      "requested": {
-        "emailSent": {
-          "header": "Bestätigen Sie Ihre E-Mail-Adresse",
-          "message": {
-            "part1": "Wir haben Ihnen eine E-Mail geschickt, um Ihre E-Mail-Adresse zu verifizieren und Ihr Konto zu aktivieren.",
-            "part2": "Klicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
-          }
-        },
-        "participating": {
-          "header": "Erfolgreich angemeldet",
-          "message": {
-            "part1": "Sie haben sich erfolgreich für die Veranstaltung {{eventName}} angemeldet.",
-            "part2Email": "Wenn Sie eine E-Mail-Adresse angegeben haben, erhalten Sie in Kürze eine E-Mail mit einem Link, der Sie zum Ergebnis Portal weiterleitet.",
-            "part3ClubRep": "Ansonsten ist Ihre Vereinsverwaltung für das Eintragen der Ergebnisse verantwortlich."
-          }
-        },
-        "verified": {
-          "header": "E-Mail bestätigt",
-          "message": "Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
-        },
-        "verificationError": {
-          "header": "Es ist ein Fehler aufgetreten",
-          "message": {
-            "notFound": "Für diesen Link gibt es keine offene Registrierung. Bitte überprüfen Sie, ob der Link korrekt ist oder ob die E-Mail-Adresse bereits bestätigt wurde.",
-            "unexpected": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuchen Sie es später erneut."
-          }
-        }
-      }
-    },
-    "resetPassword": {
-      "resetPassword": "Passwort zurücksetzen",
-      "forgotPassword": "Passwort vergessen?",
-      "newPassword": "Neues Passwort",
-      "init": {
-        "instruction": "Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link, mit dem Sie Ihr Passwort zurücksetzen können.",
-        "submit": "Passwort zurücksetzen"
-      },
-      "emailSent": {
-        "header": "Prüfen Sie Ihr Postfach",
-        "message": {
-          "part1": "Wir haben Ihnen eine E-Mail mit weiteren Anweisungen zum Zurücksetzen Ihres Passworts geschickt.",
-          "part2": "Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
-        }
-      },
-      "success": {
-        "header": "Passwort geändert!",
-        "message": "Ihr Passwort wurde erfolgreich geändert."
-      },
-      "error": {
-        "header": "Ein Fehler ist aufgetreten",
-        "message": {
-          "part1": "Beim Zurücksetzen Ihres Passworts ist ein Fehler aufgetreten.",
-          "part2": "Prüfen Sie, ob Sie den korrekten und vollständigen Link aus der E-Mail verwenden. Nur der zuletzt versendete Link ist gültig. Der Link ist 24 Stunden lang gültig."
-        },
-        "invalid": "Das versendete Formular war fehlerhaft"
-      }
-    }
-  },
-  "role": {
-    "role": "Rolle",
-    "roles": "Rollen",
-    "userRoles": "Benutzerrollen",
-    "name": "Name",
-    "description": "Beschreibung",
-    "rights": "Rechte",
-    "error": {
-      "cannotAssign": "Rolle(n) konnte(n) dem Benutzer nicht zugewiesen werden"
-    }
-  },
-  "configuration": {
-    "configuration": "Konfigurationen",
-    "tabs": {
-      "competitionTemplates": "Vorlagen Wettkampf",
-      "eventElements": "Komponenten Veranstaltung",
-      "competitionElements": "Komponenten Wettkampf",
-      "globalSettings": "Globale Einstellungen",
-      "exportData": "Export / Import"
-    },
-    "ratingCategory": {
-      "ratingCategory": "Wertungskategorie",
-      "ratingCategories": "Wertungskategorien",
-      "name": "Name",
-      "description": "Beschreibung",
-      "tableHint": "Können Wettkampf-Teams zugewiesen werden."
-    },
-    "import": {
-      "matchResult": {
-        "config": "Rennergebnisse Import",
-        "configs": "Rennergebnisse Imports",
-        "tableHint": "Definieren die Spalten für den XLS-Import von Rennergebnissen bei der Durchführung von Wettkämpfen.",
-        "name": "Name",
-        "col": {
-          "team": {
-            "startNumber": "Startnummer",
-            "place": "Platz",
-            "time": "Zeit"
-          }
-        },
-        "error": {
-          "noPlaceOrTime": "Bitte geben Sie die Spalte für Plätze oder Zeiten an."
-        }
-      }
-    },
-    "export": {
-      "startlist": {
-        "startlist": "Startlisten Export",
-        "startlists": "Startlisten Exports",
-        "tableHint": "Definieren die Spalten für den CSV-Export von Startlisten bei der Durchführung von Wettkämpfen.",
-        "name": "Name",
-        "col": {
-          "heading": "Spalten",
-          "participant": {
-            "heading": "Teilnehmende",
-            "firstname": "Vornamen",
-            "lastname": "Nachnamen",
-            "gender": "Geschlecht",
-            "role": "Rolle",
-            "year": "Geburtsjahr",
-            "club": "Verein"
-          },
-          "club": {
-            "heading": "Meldender Verein",
-            "name": "Name"
-          },
-          "team": {
-            "heading": "Team",
-            "name": "Name",
-            "startNumber": "Startnummer",
-            "ratingCategory": "Wertungskategorie",
-            "club": "Verein (zusammengefasst)",
-            "deregistered": "Abgemeldet",
-            "deregisteredValue": "Abgemeldet Wert"
-          },
-          "match": {
-            "heading": "Partie",
-            "name": "Name",
-            "startTime": "Startzeit"
-          },
-          "round": {
-            "heading": "Runde",
-            "name": "Name"
-          },
-          "competition": {
-            "heading": "Wettkampf",
-            "identifier": "Kennung",
-            "name": "Name",
-            "shortName": "Kurzname",
-            "category": "Kategorie"
-          }
-        },
-        "error": {
-          "tooFewCols": "Geben Sie bitte mindestens für eine Spalte die Bezeichnung an."
-        }
-      }
-    }
-  },
-  "contact": {
-    "name": "Name",
-    "zip": "PLZ",
-    "city": "Ort",
-    "street": "Straße (mit Hausnummer)",
-    "email": "E-Mail",
-    "information": "Kontaktinformation",
-    "contacts": "Kontaktinformationen",
-    "global": "Global zugewiesene Kontaktinformation",
-    "tableHint": {
-      "1": "Werden für die Rechnungsstellung als Absender verwendet.",
-      "2": "In den ",
-      "3": "globalen Einstellungen",
-      "4": " können die Zuweisungen vorgenommen werden."
-    }
-  },
-  "invoice": {
-    "invoice": "Rechnung",
-    "invoices": "Rechnungen",
-    "download": "Herunterladen",
-    "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
-    "invoiceNumber": "Rechnungsnummer",
-    "amount": "Rechnungsbetrag",
-    "paid": "Bezahlt",
-    "tableHint": {
-      "1": "Rechnungen können hier einmalig für alle Meldungen eines Events erstellt werden.",
-      "2": "Konten für Zahlungsempfänger und Absenderdaten können ",
-      "3": "hier",
-      "4": " definiert werden.",
-      "5": "Vor dem Erstellen von Rechnungen müssen in den ",
-      "6": "globalen Einstellungen",
-      "7": " die zu verwendenden Daten zugewiesen werden."
-    },
-    "action": {
-      "setPaid": "Zahlungseingang feststellen",
-      "setNotPaid": "Zahlungseingang zurücknehmen"
-    },
-    "produce": {
-      "for": "für {{type}}",
-      "type": {
-        "REGULAR": "Meldungen",
-        "LATE": "Nachmeldungen"
-      },
-      "info": {
-        "paymentDueBy": {
-          "title": "Standard Zahlungsziel für Rechnungen",
-          "content": "Wenn für diese Veranstaltung kein Fälligkeitsdatum zur Begleichung der Rechnung definiert ist, wird ein Standardwert von 14 Tagen ab Erstellung der Rechnung verwendet."
-        }
-      },
-      "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
-      "error": {
-        "notFound": "",
-        "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
-        "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
-        "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",
-        "EVENT_REGISTRATION_ONGOING": "Der Meldezeitraum für diese Veranstaltung ist noch im Gange."
-      }
-    },
-    "bank": {
-      "accountData": {
-        "holder": "Kontoinhaber",
-        "iban": "IBAN",
-        "bic": "BIC",
-        "bank": "Bank"
-      },
-      "account": "Bankverbindung",
-      "accounts": "Bankverbindungen",
-      "global": "Global zugewiesene Bankverbindung",
-      "tableHint": {
-        "1": "Werden für die Rechnungsstellung als Empfängerkonto verwendet.",
-        "2": "In den ",
-        "3": "globalen Einstellungen",
-        "4": " können die Zuweisungen vorgenommen werden."
-      }
-    }
-  },
-  "captcha": {
-    "instruction": {
-      "desktop": "Verschieben Sie mit der Maus das Logo in den kleinen Kreis",
-      "mobile": "Verschieben Sie mit dem Finger das Logo in den kleinen Kreis"
-    },
-    "error": {
-      "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
-      "incorrect": "CAPTCHA wurde nicht korrekt gelöst",
-      "notFound": "Der CAPTCHA ist veraltet"
-    },
-    "loading": "Lade CAPTCHA..."
-  },
-  "qrAssign": {
-    "title": "QR-Code zuweisen",
-    "participant": "Teilnehmer",
-    "user": "Benutzer",
-    "clubs": "Vereine",
-    "participants": "Teilnehmer",
-    "users": "Benutzer",
-    "noData": "Keine Daten",
-    "team": "Team",
-    "scanSystemUser": "Benutzer aus System scannen",
-    "scanUserQr": "Benutzer QR-Code scannen",
-    "invalidUserQr": "Ungültiger Benutzer QR-Code",
-    "invalidQrFormat": "Ungültiges QR-Code Format",
-    "userAssigned": "Benutzer {{userId}} zugewiesen",
-    "participantQrDetected": "Teilnehmer-QR-Code erkannt",
-    "appUserQrDetected": "Benutzer-QR-Code erkannt",
-    "notAssigned": "Dieser QR-Code konnte nicht zugewiesen werden.",
-    "successParticipant": "QR-Code erfolgreich dem Teilnehmer zugewiesen",
-    "successUser": "QR-Code erfolgreich dem Benutzer zugewiesen",
-    "selectClub": "Verein auswählen",
-    "search": "Suchen...",
-    "confirmSelection": "Auswahl bestätigen",
-    "confirm": "Hinzufügen",
-    "success": "QR-Code erfolgreich zugewiesen",
-    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben"
-  },
-  "qrCode": {
-    "qrCode": "QR-Code",
-    "value": "QR-Code-Wert",
-    "appUsersWithQrCode": "Benutzer mit QR-Codes",
-    "edit": "QR-Code bearbeiten",
-    "delete": "QR-Code löschen",
-    "show": "QR-Code anzeigen",
-    "deleteConfirm": "Möchten Sie den QR-Code wirklich löschen?",
-    "noQrCodeAssigned": "Kein QR-Code zugewiesen",
-    "cameraError": "Kamera kann nicht gestartet werden"
-  },
-  "qrAppuser": {
-    "title": "QR-Appuser",
-    "user": "User",
-    "underConstruction": "Seite im Aufbau",
-    "removeAssignment": "Qr Code Zuweisung aufheben",
-    "removeAssignmentTitle": "QR-Code-Zuweisung aufheben",
-    "removeAssignmentConfirm": "Möchten Sie die QR-Code-Zuweisung wirklich aufheben?",
-    "deleteError": "Fehler beim Löschen",
-    "assignmentInfo": "Zuordnungsinformationen"
-  },
-  "qrParticipant": {
-    "title": "Teilnehmer",
-    "noRight": "Sie haben für diesen QR-Code-Typ keine Berechtigung.",
-    "loading": "Lade...",
-    "noRequirements": "Keine Bedingungen mit CheckInApp vorhanden.",
-    "enterArea": "Eintritt Wettkampfbereich",
-    "leaveArea": "Austritt Wettkampfbereich",
-    "removeAssignment": "QR-Code-Zuordnung entfernen",
-    "removeAssignmentTitle": "Zuordnung entfernen",
-    "removeAssignmentConfirm": "Möchten Sie die Zuordnung wirklich entfernen?",
-    "deleteError": "Fehler beim Löschen des QR-Codes.",
-    "assignmentInfo": "Zuordnungsinformationen"
-  },
-  "qrScanner": {
-    "title": "Scanner"
-  },
-  "qrEvents": {
-    "title": "Events",
-    "switchApp": "App wechseln"
-  },
-  "app": {
-    "functionSelect": {
-      "title": "Deine Aufgabe",
-      "functions": {
-        "qrManagement": "QR-Code Verwaltung",
-        "competitionCheck": "Wettkampf-Check",
-        "eventRequirement": "Bedingungen prüfen",
-        "caterer": "Verpflegung"
-      },
-      "switchEvent": "Event wechseln"
-    },
-    "forbidden": {
-      "title": "Nicht berechtigt",
-      "message": "Du bist für diese Seite nicht berechtigt.",
-      "backButton": "Zurück zum Login"
-    }
-  },
-  "caterer": {
-    "canReceiveFood": "Benutzer kann Essen erhalten",
-    "cannotReceiveFood": "Benutzer kann kein Essen erhalten",
-    "price": "Preis (€)",
-    "priceHelper": "Optional",
-    "confirm": "Bestätigen",
-    "previousTransactions": "Vorherige Transaktionen",
-    "scanError": "Fehler beim Scannen des Benutzers",
-    "transactionError": "Fehler beim Erstellen der Transaktion",
-    "transactionSuccess": "Transaktion erfolgreich durchgeführt"
-  },
-  "catererTransaction": {
-    "catererTransaction": "Caterer Transaktion",
-    "catererTransactions": "Caterer Transaktionen",
-    "catererName": "Caterer",
-    "userName": "Benutzer",
-    "price": "Betrag",
-    "createdAt": "Zeitpunkt"
-  },
-  "landing": {
-    "smallScreen": {
-      "to": {
-        "where": "Was möchten Sie sehen?",
-        "app": "Helfer App",
-        "results": "Live Events",
-        "desktop": "Desktopansicht"
-      }
-    },
-    "liveEventsLink": "Laufende Ergebnisse"
-  },
-  "panic": {
-    "title": "Fehler",
-    "text": "Der API-Server ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut. Sollte dieser Zustand sich nicht ändern, wenden Sie sich bitte an einen Verantwortlichen. Vielen Dank."
-  },
-  "results": {
-    "tabs": {
-      "results": "Ergebnisse",
-      "live": "Live"
-    },
-    "matchResults": {
-      "matchResults": "Ergebnisse",
-      "noResults": "Es existieren noch keine Ergebnisse für diesen Wettkampf."
-    },
-    "liveMatches": {
-      "liveMatches": "Laufende Partien",
-      "noMatches": "Momentan finden keine Partien statt."
-    },
-    "clubRanking": {
-      "error": "Fehler beim Laden der Vereinsrangliste"
-    },
-    "individualRanking": {
-      "error": "Fehler beim Laden der Individualrangliste"
-    },
-    "noResults": "Keine Ergebnisse",
-    "challengeTabs": {
-      "club": "Verein",
-      "relative": "Relativ",
-      "individual": "Individuell"
-    },
-    "noEvents": "Keine Veranstaltungen verfügbar"
-  },
-  "webDAV": {
-    "infoText": {
-      "part1": "Die Export-/Import-Funktion ermöglicht es, Dokumente (systemgenerierte oder hochgeladene PDFs) und/oder in der Anwendung erstellte Konfigurationen auf einen externen Server (z.B. Nextcloud über WebDAV) zu speichern.",
-      "part2": "Diese exportierten Daten können später wieder importiert werden, um Ihre Veranstaltungskonfigurationen, Vorlagen und Einstellungen wiederherzustellen."
-    },
-    "export": {
-      "export": "Daten exportieren",
-      "confirm": "Exportieren",
-      "folderName": "Export Ordnername",
-      "events": "Veranstaltungen",
-      "data": "Zu exportierende Daten",
-      "applicationData": "Anwendungsdaten und Einstellungen",
-      "types": {
-        "registrationResults": "Meldeergebnisse",
-        "invoices": "Rechnungen",
-        "documents": "Veranstaltungsdokumente",
-        "results": "Ergebnisse",
-        "startLists": "Startlisten",
-        "users": "Benutzer",
-        "participants": "Teilnehmer",
-        "bankAccounts": "Bankkonten",
-        "contactInformation": "Kontaktinformationen",
-        "emailIndividualTemplates": "Individuelle E-Mail-Vorlagen",
-        "eventDocumentTypes": "Veranstaltungsdokumenttypen",
-        "matchResultImportConfigs": "Wettkampfergebnis-Importkonfigurationen",
-        "startlistExportConfigs": "Startlisten-Exportkonfigurationen",
-        "workTypes": "Arbeitstypen",
-        "participantRequirements": "Teilnehmeranforderungen",
-        "ratingCategories": "Wertungskategorien",
-        "competitionCategories": "Wettkampfkategorien",
-        "fees": "Gebühren",
-        "namedParticipants": "Benannte Teilnehmer",
-        "competitionSetupTemplates": "Wettkampf-Setup-Vorlagen",
-        "competitionTemplates": "Wettkampfvorlagen",
-        "event": "Veranstaltungsdaten",
-        "competition": "Wettkampfdaten"
-      },
-      "steps": {
-        "name": "Name",
-        "documents": "Dokumente",
-        "data": "Daten"
-      },
-      "error": {
-        "nameConflict": "Der eingegebene Ordnername existiert bereits. Bitte wählen Sie einen anderen Namen.",
-        "thirdPartyError": "Der externe WebDAV-Server hat einen Fehler gemeldet. Bitte wenden Sie sich an den Administrator.",
-        "noDocumentTypeSelected": "Bitte wählen Sie mindestens einen Dokumenttyp für diese Veranstaltung aus."
-      },
-      "noEventsAvailable": "Keine Veranstaltungen zum Exportieren verfügbar",
-      "success": "Export erfolgreich gestartet",
-      "status": {
-        "status": "Exportstatus",
-        "error": {
-          "title": "Fehler beim Export",
-          "body": "{{files}} / {{total}} Dateien erfolgreich exportiert.",
-          "info": {
-            "files": "{{errors}} Fehler bei PDF-Exports",
-            "data": "{{errors}} Fehler bei Daten-Exports"
-          }
-        },
-        "success": {
-          "title": "Export erfolgreich",
-          "body_one": "{{count}} Datei exportiert.",
-          "body_other": "{{count}} Dateien exportiert."
-        },
-        "pending": {
-          "title": "Wird exportiert...",
-          "body": "{{files}} / {{total}} Dateien exportiert."
-        }
-      }
-    },
-    "import": {
-      "import": "Daten importieren",
-      "confirm": "Importieren",
-      "folderName": "Import Ordnername",
-      "selectData": "Zu importierende Daten auswählen",
-      "error": {
-        "noSelection": "Bitte wählen Sie mindestens einen Datentyp zum Importieren aus",
-        "failed": "Beim Importieren der Daten ist ein Fehler aufgetreten",
-        "loadFolders": "Beim Laden der verfügbaren Ordner vom WebDAV-Server ist ein Fehler aufgetreten",
-        "loadOptions": "Beim Laden der verfügbaren Importoptionen ist ein Fehler aufgetreten"
-      },
-      "noEventsAvailable": "Keine Veranstaltungen zum Importieren verfügbar",
-      "success": "Import erfolgreich gestartet",
-      "status": {
-        "status": "Importstatus",
-        "error": {
-          "title": "Fehler beim Import",
-          "body": "{{files}} / {{total}} Dateien erfolgreich importiert."
-        },
-        "success": {
-          "title": "Import erfolgreich",
-          "body_one": "{{count}} Datei importiert.",
-          "body_other": "{{count}} Dateien importiert."
-        },
-        "pending": {
-          "title": "Wird importiert...",
-          "body": "{{files}} / {{total}} Dateien importiert."
-        }
-      }
-    }
-  },
-  "administration": {
-    "title": "Administration",
+    "administration": {
+        "title": "Administration",
     "tabs": {
       "smtp": "SMTP-Konfiguration",
       "theme": "Theme-Anpassung"
     },
     "smtp": {
-      "title": "SMTP Konfiguration",
-      "host": "SMTP-Host",
-      "port": "SMTP-Port",
-      "username": "SMTP-Benutzername",
-      "password": "SMTP-Passwort",
-      "smtpStrategy": "SMTP-Strategie",
-      "fromAddress": "Absenderadresse",
-      "fromName": "Absendername",
-      "localhost": "Local Host",
-      "replyTo": "Antwortadresse",
-      "submit": "Konfiguration speichern",
-      "reset": "Konfiguration zurücksetzen",
-      "confirmation": {
-        "content": "Möchten Sie die SMTP-Konfiguration wirklich ändern?"
-      },
-      "errors": {
-        "loading": "Beim Laden der SMTP-Konfiguration ist ein Fehler aufgetreten.",
-        "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."
-      }
+            "title": "SMTP Konfiguration",
+            "host": "SMTP-Host",
+            "port": "SMTP-Port",
+            "username": "SMTP-Benutzername",
+            "password": "SMTP-Passwort",
+            "smtpStrategy": "SMTP-Strategie",
+            "fromAddress": "Absenderadresse",
+            "fromName": "Absendername",
+            "localhost": "Local Host",
+            "replyTo": "Antwortadresse",
+            "submit": "Konfiguration speichern",
+            "reset": "Konfiguration zurücksetzen",
+            "confirmation": {
+                "content": "Möchten Sie die SMTP-Konfiguration wirklich ändern?"
+            },
+            "errors": {
+                "loading": "Beim Laden der SMTP-Konfiguration ist ein Fehler aufgetreten.",
+                "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."}
     },
     "theme": {
       "title": "Theme-Anpassung",
@@ -1845,18 +1906,18 @@
         "logoTooLarge": "Die Logo-Datei ist zu groß. Maximale Größe: 2MB",
         "updateFailed": "Theme konnte nicht aktualisiert werden",
         "resetFailed": "Theme konnte nicht zurückgesetzt werden"
-      }
+            }
+        }
+    },
+    "challenge": {
+        "challenge": "Challenge",
+        "title": "Challenge-Informationen",
+        "team": "Team",
+        "period": "Challenge-Zeitraum",
+        "result": "Ergebnis",
+        "proofSubmitted": "Nachweis-Dokument eingereicht",
+        "proofRequired": "Nachweis-Dokument erforderlich für diesen Wettbewerb",
+        "notFound": "Challenge nicht gefunden",
+        "submitResult": "Ergebnis einreichen"
     }
-  },
-  "challenge": {
-    "challenge": "Challenge",
-    "title": "Challenge-Informationen",
-    "team": "Team",
-    "period": "Challenge-Zeitraum",
-    "result": "Ergebnis",
-    "proofSubmitted": "Nachweis-Dokument eingereicht",
-    "proofRequired": "Nachweis-Dokument erforderlich für diesen Wettbewerb",
-    "notFound": "Challenge nicht gefunden",
-    "submitResult": "Ergebnis einreichen"
-  }
 }

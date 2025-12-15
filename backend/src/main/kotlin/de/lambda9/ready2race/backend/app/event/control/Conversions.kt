@@ -72,6 +72,7 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         allowSelfSubmission = selfSubmission!!,
         submissionNeedsVerification = submissionNeedsVerification!!,
         allowParticipantSelfRegistration = participantSelfRegistration!!,
+        challengesFinished = challengeEnd?.let { it < LocalDateTime.now() },
     )
 )
 

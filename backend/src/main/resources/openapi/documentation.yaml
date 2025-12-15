@@ -3954,6 +3954,217 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+
+  /gapDocumentTemplate:
+    get:
+      operationId: getGapDocumentTemplates
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Gap Document templates page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GapDocumentTemplateDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addGapDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/GapDocumentTemplateRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /gapDocumentTemplate/{gapDocumentTemplateId}:
+    parameters:
+      - in: path
+        name: gapDocumentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateGapDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GapDocumentTemplateRequest'
+      responses:
+        204:
+          description: Successfully updates template
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteGapDocumentTemplate
+      responses:
+        204:
+          description: Template successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: downloadGapDocumentTemplateOriginal
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /gapDocumentTemplate/{gapDocumentTemplateId}/preview:
+    parameters:
+      - in: path
+        name: gapDocumentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadGapDocumentTemplateSample
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /gapDocumentTemplateType:
+    get:
+      operationId: getGapDocumentTemplateTypes
+      responses:
+        200:
+          description: Gap document types successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GapDocumentTypeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /gapDocumentTemplateType/{gapDocumentType}/assignTemplate:
+    parameters:
+      - in: path
+        name: gapDocumentType
+        required: true
+        schema:
+          $ref: '#/components/schemas/GapDocumentType'
+    put:
+      operationId: assignGapDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignGapDocumentTemplateRequest'
+      responses:
+        204:
+          description: Successfully assigned template to document type
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /documentTemplate:
     get:
       operationId: getDocumentTemplates
@@ -6564,6 +6775,24 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/certificatesOfParticipation/sendToParticipants:
+    post:
+      operationId: sendCertificatesToParticipants
+      responses:
+        204:
+          204:
+            $ref: '#/components/responses/204'
+          400:
+            $ref: '#/components/responses/400'
+          401:
+            $ref: '#/components/responses/401'
+          403:
+            $ref: '#/components/responses/403'
+          404:
+            $ref: '#/components/responses/404'
+          500:
+            $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -6881,6 +7110,26 @@ components:
       enum:
         - 'DISTANCE'
 
+    GapDocumentType:
+      type: string
+      enum:
+        - 'CERTIFICATE_OF_PARTICIPATION'
+
+    GapDocumentPlaceholderType:
+      type: string
+      enum:
+        - 'FIRST_NAME'
+        - 'LAST_NAME'
+        - 'FULL_NAME'
+        - 'RESULT'
+        - 'EVENT_NAME'
+
+    TextAlign:
+      type: string
+      enum:
+        - 'LEFT'
+        - 'CENTER'
+        - 'RIGHT'
 
     # error
 
@@ -7555,6 +7804,8 @@ components:
         submissionNeedsVerification:
           type: boolean
         allowParticipantSelfRegistration:
+          type: boolean
+        challengesFinished:
           type: boolean
 
     EventPublicDto:
@@ -9606,6 +9857,13 @@ components:
           type: string
           format: uuid
         event:
+          type: string
+          format: uuid
+
+    AssignGapDocumentTemplateRequest:
+      type: object
+      properties:
+        template:
           type: string
           format: uuid
 
@@ -12174,3 +12432,106 @@ components:
         info:
           type: string
           pattern: '^#[0-9a-fA-F]{6}$'
+
+    GapDocumentPlaceholderDto:
+      type: object
+      required:
+        - id
+        - type
+        - page
+        - relLeft
+        - relTop
+        - relWidth
+        - relHeight
+        - textAlign
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/GapDocumentPlaceholderType'
+        page:
+          type: integer
+        relLeft:
+          type: number
+        relTop:
+          type: number
+        relWidth:
+          type: number
+        relHeight:
+          type: number
+        textAlign:
+          $ref: '#/components/schemas/TextAlign'
+
+    GapDocumentTemplateDto:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - placeholders
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/GapDocumentType'
+        placeholders:
+          type: array
+          items:
+            $ref: '#/components/schemas/GapDocumentPlaceholderDto'
+
+    GapDocumentTypeDto:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/GapDocumentType'
+        assignedTemplate:
+          $ref: '#/components/schemas/AssignedTemplateId'
+
+    GapDocumentPlaceholderRequest:
+      type: object
+      required:
+        - type
+        - page
+        - relLeft
+        - relTop
+        - relWidth
+        - relHeight
+        - textAlign
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/GapDocumentPlaceholderType'
+        page:
+          type: integer
+        relLeft:
+          type: number
+        relTop:
+          type: number
+        relWidth:
+          type: number
+        relHeight:
+          type: number
+        textAlign:
+          $ref: '#/components/schemas/TextAlign'
+
+    GapDocumentTemplateRequest:
+      type: object
+      required:
+        - type
+        - placeholders
+      properties:
+        type:
+          $ref: '#/components/schemas/GapDocumentType'
+        placeholders:
+          type: array
+          items:
+            $ref: '#/components/schemas/GapDocumentPlaceholderRequest'

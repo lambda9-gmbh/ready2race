@@ -1,5 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists gap_document_template_assignment;
+drop view if exists gap_document_template_view;
 drop view if exists event_rating_category_view;
 drop view if exists challenge_result_participant_view;
 drop view if exists challenge_result_team_view;
@@ -542,9 +544,12 @@ select e.id,
        e.submission_needs_verification,
        e.participant_self_registration,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
+       max(cpcc.end_at)                                                                 as challenge_end,
        err.event is not null                                                            as registrations_finalized
 from event e
          left join competition c on e.id = c.event
+         left join competition_properties cp on c.id = cp.competition
+         left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
          left join event_day ed on e.id = ed.event
          left join event_registration er on e.id = er.event
          left join event_registration_report err on e.id = err.event
@@ -1248,6 +1253,7 @@ create view challenge_result_participant_view as
 select p.id,
        p.firstname,
        p.lastname,
+       p.email,
        cmt.result_value as team_result_value,
        cmt.result_verified_at,
        cr.id            as competition_registration_id,
@@ -1281,4 +1287,25 @@ select erc.event,
        erc.year_restriction_to
 from event_rating_category erc
          join rating_category rc on rc.id = erc.rating_category
+;
+
+create view gap_document_template_view as
+select gdt.id,
+       gdt.name,
+       gdt.type,
+       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
+from gap_document_template gdt
+         left join gap_document_placeholder gdp on gdp.template = gdt.id
+group by gdt.id
+;
+
+create view gap_document_template_assignment as
+select u.type,
+       td.data,
+       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
+from gap_document_template_usage u
+         join gap_document_template gdt on gdt.id = u.template
+         join gap_document_template_data td on gdt.id = td.template
+         left join gap_document_placeholder gdp on gdt.id = gdp.template
+group by u.type, td.data
 ;
