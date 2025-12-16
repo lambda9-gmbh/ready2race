@@ -1,6 +1,7 @@
 import {useTranslation} from 'react-i18next'
 import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {
+    downloadCertificateOfParticipation,
     EventDto,
     getActiveParticipantRequirementsForEvent,
     getNamedParticipantsForEvent,
@@ -12,22 +13,32 @@ import {
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../EntityTable.tsx'
-import {Cancel, CheckCircle, Delete, Edit, Email, Info, VerifiedUser} from '@mui/icons-material'
+import {
+    Cancel,
+    CheckCircle,
+    Delete,
+    Edit,
+    Email,
+    Info,
+    VerifiedUser,
+    WorkspacePremium,
+} from '@mui/icons-material'
 import SplitButton, {SplitButtonOption} from '@components/SplitButton.tsx'
-import {Fragment, useMemo, useState} from 'react'
+import {Fragment, useMemo, useRef, useState} from 'react'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import ParticipantRequirementApproveManuallyForEventDialog, {
     ParticipantRequirementApproveManuallyForEventForm,
 } from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
 import ParticipantRequirementCheckForEventUploadFileDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
-import {Box, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
+import {Box, Link, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {deleteQrCode} from '@api/sdk.gen.ts'
 import {QrCodeEditDialog} from '@components/participant/QrCodeEditDialog.tsx'
 import QrCodeIcon from '@mui/icons-material/QrCode'
+import {getFilename} from '@utils/helpers.ts'
 
 // TODO: validate/sanitize basepath (also in routes.tsx)
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
@@ -50,6 +61,8 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
     const feedback = useFeedback()
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('lg'))
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [editQrParticipant, setEditQrParticipant] = useState<ParticipantForEventDto | null>(null)
@@ -414,6 +427,29 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
         })
     }
 
+    const handleCOPDownload = async (entity: ParticipantForEventDto) => {
+        const {data, error, response} = await downloadCertificateOfParticipation({
+            path: {
+                eventId,
+                participantId: entity.id,
+            },
+        })
+
+        const anchor = downloadRef.current
+
+        if (error) {
+            feedback.error(error.message)
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
+            anchor.download =
+                getFilename(response) ??
+                `certificate_of_participation_${eventData.name}_${entity.firstname}_${entity.lastname}.pdf`
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
     const customEntityActions = (entity: ParticipantForEventDto) => {
         return [
             <GridActionsCellItem
@@ -434,6 +470,18 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                           icon={<Email />}
                           label={t('club.participant.resendAccessToken')}
                           onClick={() => handleResendAccessToken(entity)}
+                          showInMenu
+                      />,
+                  ]
+                : []),
+            ...(eventData.challengeEvent &&
+            eventData.challengesFinished &&
+            entity.hasChallengeResults
+                ? [
+                      <GridActionsCellItem
+                          icon={<WorkspacePremium />}
+                          label={t('club.participant.downloadCOP')}
+                          onClick={() => handleCOPDownload(entity)}
                           showInMenu
                       />,
                   ]
@@ -488,6 +536,7 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 entityName={t('club.participant.title')}
                 mobileBreakpoint={'lg'}
             />
+            <Link ref={downloadRef} display={'none'}></Link>
         </Fragment>
     )
 }

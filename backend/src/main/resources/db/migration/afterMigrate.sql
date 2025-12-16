@@ -471,10 +471,10 @@ from participant_requirement pr
 ;
 
 create view participant_for_event as
-select er.event                                                                    as event_id,
-       c.id                                                                        as club_id,
-       c.name                                                                      as club_name,
-       p.id                                                                        as id,
+select er.event                                                                                                        as event_id,
+       c.id                                                                                                            as club_id,
+       c.name                                                                                                          as club_name,
+       p.id                                                                                                            as id,
        p.firstname,
        p.lastname,
        p.year,
@@ -482,9 +482,23 @@ select er.event                                                                 
        p.external,
        p.external_club_name,
        p.email,
-       coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ), '{}') as participant_requirements_checked,
+       coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ),
+                '{}')                                                                                                  as participant_requirements_checked,
        qc.qr_code_id,
-       array_agg(distinct crnp.named_participant)                                  as named_participant_ids
+       array_agg(distinct crnp.named_participant)                                                                      as named_participant_ids,
+       exists(select 1
+              from competition_match_team cmt
+              where exists(select 1
+                           from competition_registration c_r
+                                    join competition_registration_named_participant c_r_n_p
+                                         on c_r.id = c_r_n_p.competition_registration
+                           where c_r.id = cmt.competition_registration
+                             and c_r_n_p.participant = p.id)
+                and cmt.result_value is not null
+                and (cmt.result_verified_at is not null or exists(select 1
+                                                                  from event e
+                                                                  where e.id = er.event
+                                                                    and e.submission_needs_verification is not true))) as has_challenge_results
 from event_registration er
          join club c on er.club = c.id
          join competition_registration cr on er.id = cr.event_registration

@@ -28,6 +28,24 @@ object ChallengeResultParticipantViewRepo {
             )
         }
 
+    fun getByEventIdAndClubId(eventId: UUID, clubId: UUID, verifiedIfNeededOnly: Boolean) =
+        CHALLENGE_RESULT_PARTICIPANT_VIEW.select {
+            DSL.and(
+                EVENT_ID.eq(eventId),
+                CLUB_ID.eq(clubId),
+                if (verifiedIfNeededOnly) {
+                    DSL.or(
+                        RESULT_VERIFIED_AT.isNotNull,
+                        DSL.exists(
+                            DSL.selectOne().from(EVENT)
+                                .where(EVENT.ID.eq(EVENT_ID))
+                                .and(EVENT.SUBMISSION_NEEDS_VERIFICATION.isFalse)
+                        )
+                    )
+                } else DSL.trueCondition()
+            )
+        }
+
     fun getForCertificates(eventId: UUID) = Jooq.query {
         with (CHALLENGE_RESULT_PARTICIPANT_VIEW) {
             selectDistinct(ID)

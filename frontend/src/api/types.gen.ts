@@ -1355,6 +1355,7 @@ export type ParticipantForEventDto = {
     qrCodeId?: string
     namedParticipantIds?: Array<string>
     email?: string
+    hasChallengeResults?: boolean
 }
 
 export type ParticipantForExecutionDto = {
@@ -5679,6 +5680,33 @@ export type ResetThemeConfigResponse = ThemeConfigDto
 
 export type ResetThemeConfigError = ApiError
 
+export type SendCertificatesToParticipantsData = {
+    path: {
+        eventId: string
+    }
+}
+
 export type SendCertificatesToParticipantsResponse = void
 
-export type SendCertificatesToParticipantsError = unknown
+export type SendCertificatesToParticipantsError = BadRequestError | ApiError
+
+export type DownloadCertificateOfParticipationData = {
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type DownloadCertificateOfParticipationResponse = Blob | File
+
+export type DownloadCertificateOfParticipationError = BadRequestError | ApiError
+
+export type DownloadCertificatesOfParticipationData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type DownloadCertificatesOfParticipationResponse = Blob | File
+
+export type DownloadCertificatesOfParticipationError = BadRequestError | ApiError

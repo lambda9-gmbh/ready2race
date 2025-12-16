@@ -18,4 +18,5 @@ data class ParticipantForEventDto(
     val qrCodeId: String?,
     val namedParticipantIds: List<UUID>,
     val email: String?,
+    val hasChallengeResults: Boolean?,
 )

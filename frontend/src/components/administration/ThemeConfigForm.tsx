@@ -236,7 +236,7 @@ export function ThemeConfigForm() {
                     <Box sx={{display: 'flex', gap: 2, flexWrap: 'wrap'}}>
                         <Box sx={{flex: 1, minWidth: '200px'}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                {t('administration.theme.colors.secondary')}
+                                {t('administration.theme.colors.success')}
                             </Typography>
                             <TextField
                                 type="color"

@@ -423,6 +423,7 @@ object CompetitionRegistrationRepo {
                         namedParticipantIds = it[PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS]?.filterNotNull()
                             ?: emptyList(),
                         email = it[PARTICIPANT_FOR_EVENT.EMAIL],
+                        hasChallengeResults = it[PARTICIPANT_FOR_EVENT.HAS_CHALLENGE_RESULTS]
                     )
                 }
             }

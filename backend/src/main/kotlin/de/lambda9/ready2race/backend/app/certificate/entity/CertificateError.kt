@@ -5,6 +5,8 @@ import de.lambda9.ready2race.backend.calls.responses.ApiError
 import io.ktor.http.HttpStatusCode
 
 enum class CertificateError : ServiceError {
+    NoResults,
+    MissingTemplate,
     NotAChallengeEvent,
     ChallengeStillInProgress;
 
@@ -17,6 +19,16 @@ enum class CertificateError : ServiceError {
         ChallengeStillInProgress -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Challenge Event is still in progress"
+        )
+
+        NoResults -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "No results in this event for this participant"
+        )
+
+        MissingTemplate -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "There is no template assigned for this type of certificate"
         )
     }
 }

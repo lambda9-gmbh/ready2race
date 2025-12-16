@@ -737,8 +737,15 @@ import type {
     UpdateThemeConfigResponse,
     ResetThemeConfigError,
     ResetThemeConfigResponse,
+    SendCertificatesToParticipantsData,
     SendCertificatesToParticipantsError,
     SendCertificatesToParticipantsResponse,
+    DownloadCertificateOfParticipationData,
+    DownloadCertificateOfParticipationError,
+    DownloadCertificateOfParticipationResponse,
+    DownloadCertificatesOfParticipationData,
+    DownloadCertificatesOfParticipationError,
+    DownloadCertificatesOfParticipationResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3857,7 +3864,7 @@ export const resetThemeConfig = <ThrowOnError extends boolean = false>(
 }
 
 export const sendCertificatesToParticipants = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<SendCertificatesToParticipantsData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).post<
         SendCertificatesToParticipantsResponse,
@@ -3866,5 +3873,31 @@ export const sendCertificatesToParticipants = <ThrowOnError extends boolean = fa
     >({
         ...options,
         url: '/event/{eventId}/certificatesOfParticipation/sendToParticipants',
+    })
+}
+
+export const downloadCertificateOfParticipation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadCertificateOfParticipationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadCertificateOfParticipationResponse,
+        DownloadCertificateOfParticipationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/certificatesOfParticipation/{participantId}',
+    })
+}
+
+export const downloadCertificatesOfParticipation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadCertificatesOfParticipationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadCertificatesOfParticipationResponse,
+        DownloadCertificatesOfParticipationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/certificatesOfParticipation',
     })
 }

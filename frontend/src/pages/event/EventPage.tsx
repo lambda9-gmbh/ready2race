@@ -15,7 +15,12 @@ import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventIndexRoute, eventRoute} from '@routes'
 import {Trans, useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
-import {downloadEventResults, getEvent, sendCertificatesToParticipants} from '@api/sdk.gen.ts'
+import {
+    downloadCertificatesOfParticipation,
+    downloadEventResults,
+    getEvent,
+    sendCertificatesToParticipants,
+} from '@api/sdk.gen.ts'
 import {
     EventDocumentDto,
     ParticipantForEventDto,
@@ -34,6 +39,7 @@ import ParticipantForEventTable from '@components/participant/ParticipantForEven
 import {useUser} from '@contexts/user/UserContext.ts'
 import {
     createInvoiceGlobal,
+    readClubOwn,
     readEventGlobal,
     readRegistrationGlobal,
     readRegistrationOwn,
@@ -170,6 +176,24 @@ const EventPage = () => {
             feedback.error(t('common.error.unexpected'))
         } else {
             feedback.success(t('event.action.sendCertificatesSucceeded'))
+        }
+    }
+
+    const handleClubCertificatesDownload = async () => {
+        const {data, error, response} = await downloadCertificatesOfParticipation({
+            path: {eventId},
+        })
+
+        const anchor = downloadRef.current
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(data)
+            anchor.download = getFilename(response) ?? 'certificates_of_participation.zip'
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
         }
     }
 
@@ -326,6 +350,19 @@ const EventPage = () => {
                                                     confirmAction(handleCertificateSending)
                                                 }>
                                                 <Trans i18nKey={'event.action.sendCertificates'} />
+                                            </Button>
+                                        )}
+                                    {user.checkPrivilege(readClubOwn) &&
+                                        user.loggedIn &&
+                                        user.clubId &&
+                                        data.challengeEvent &&
+                                        data.challengesFinished && (
+                                            <Button
+                                                variant={'outlined'}
+                                                onClick={handleClubCertificatesDownload}>
+                                                <Trans
+                                                    i18nKey={'event.action.downloadCertificates'}
+                                                />
                                             </Button>
                                         )}
                                 </Card>

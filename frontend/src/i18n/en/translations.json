@@ -426,6 +426,7 @@
       "qrCodeEditDescription": "Please enter the new QR Code value.",
       "resendAccessToken": "Send new access token",
       "resendAccessTokenSuccess": "New token sent.",
+      "downloadCOP": "Download certificate of participation",
       "userQrCode": "User QR Code",
       "qrCode": "QR Code",
       "id": "Participant ID",
@@ -1006,6 +1007,7 @@
       }
     },
     "action": {
+      "downloadCertificates": "Download certificated of participation",
       "sendCertificates": "Send certificates of participation",
       "sendCertificatesSucceeded": "Sending of Certificates of participation successfully engaged",
       "registrationsReport": {
@@ -1881,7 +1883,7 @@
       "colors": {
         "primaryColors": "Primary Colors",
         "textColors": "Text Colors",
-        "actionColors": "Action Colors",
+        "actionColors": "Feedback Colors",
         "backgroundColor": "Background Color",
         "main": "Main",
         "light": "Background",

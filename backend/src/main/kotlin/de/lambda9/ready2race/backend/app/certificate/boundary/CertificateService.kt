@@ -2,6 +2,9 @@ package de.lambda9.ready2race.backend.app.certificate.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege.Scope
 import de.lambda9.ready2race.backend.app.certificate.entity.CertificateError
 import de.lambda9.ready2race.backend.app.certificate.entity.CertificateJobError
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
@@ -16,12 +19,16 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.event.entity.MatchResultType
 import de.lambda9.ready2race.backend.app.participant.control.CertificateOfEventParticipationSendingJobRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.results.control.ChallengeResultParticipantViewRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithPrivileges
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CertificateOfEventParticipationSendingJobRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onNullDie
@@ -56,6 +63,152 @@ object CertificateService {
         out.close()
 
         return bytes
+    }
+
+    fun downloadCertificatesOfParticipation(
+        eventId: UUID,
+        clubId: UUID,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        val type = GapDocumentType.CERTIFICATE_OF_PARTICIPATION
+
+        val template = !GapDocumentTemplateRepo.getAssigned(type).orDie()
+            .onNullFail { CertificateError.MissingTemplate }
+
+        val event = !EventRepo.get(eventId).orDie().onNullFail{ EventError.NotFound }
+            .failIf({ it.challengeEvent != true }) { CertificateError.NotAChallengeEvent }
+
+        !CompetitionRepo.getByEvent(eventId).orDie()
+            .failIf({it.any { c -> c.challengeEndAt!! > LocalDateTime.now() }}) { CertificateError.ChallengeStillInProgress }
+
+        val results = !ChallengeResultParticipantViewRepo.getByEventIdAndClubId(
+            eventId = eventId,
+            clubId = clubId,
+            verifiedIfNeededOnly = true,
+        ).orDie()
+
+        val participantResults = results.groupBy { it.id }
+
+        val resultUnit = MatchResultType.valueOf(event.challengeMatchResultType!!).unit
+
+        val zipOutputStream = ByteArrayOutputStream()
+        java.util.zip.ZipOutputStream(zipOutputStream).use { zip ->
+            participantResults.forEach { (_, participantResultList) ->
+                if (participantResultList.isEmpty()) return@forEach
+
+                val result = participantResultList.first()
+
+                val resultTotal = participantResultList.sumOf { it.teamResultValue ?: 0 }
+
+                val bytes = participantForEvent(
+                    additions = template.placeholders!!.mapNotNull {
+                        val placeholderType =
+                            try {
+                                GapDocumentPlaceholderType.valueOf(it!!.type)
+                            } catch (ex: Exception) {
+                                return@mapNotNull null
+                            }
+
+                        AdditionalText(
+                            content = when (placeholderType) {
+                                GapDocumentPlaceholderType.FIRST_NAME -> result.firstname ?: ""
+                                GapDocumentPlaceholderType.LAST_NAME -> result.lastname ?: ""
+                                GapDocumentPlaceholderType.FULL_NAME -> "${result.firstname ?: ""} ${result.lastname ?: ""}"
+                                GapDocumentPlaceholderType.RESULT -> "$resultTotal $resultUnit"
+                                GapDocumentPlaceholderType.EVENT_NAME -> event.name
+                            },
+                            page = it.page,
+                            relLeft = it.relLeft,
+                            relTop = it.relTop,
+                            relWidth = it.relWidth,
+                            relHeight = it.relHeight,
+                            textAlign = TextAlign.valueOf(it.textAlign),
+                        )
+                    },
+                    template = template.data!!,
+                )
+
+                // Add PDF to ZIP
+                val fileName = "certificate_of_participation_${event.name}_${result.firstname}_${result.lastname}.pdf"
+                val zipEntry = java.util.zip.ZipEntry(fileName)
+                zip.putNextEntry(zipEntry)
+                zip.write(bytes)
+                zip.closeEntry()
+            }
+        }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "certificates_of_participation_${event.name}.zip",
+                bytes = zipOutputStream.toByteArray(),
+            )
+        )
+    }
+
+    fun downloadCertificateOfParticipation(
+        eventId: UUID,
+        participantId: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Scope,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        val type = GapDocumentType.CERTIFICATE_OF_PARTICIPATION
+
+        val template = !GapDocumentTemplateRepo.getAssigned(type).orDie()
+            .onNullFail { CertificateError.MissingTemplate }
+
+        val participant = !ParticipantRepo.get(participantId).orDie().onNullFail { ParticipantError.ParticipantNotFound }
+
+        !KIO.failOn(scope != Scope.GLOBAL && user.club != participant.club) { AuthError.PrivilegeMissing }
+
+        val event = !EventRepo.get(eventId).orDie().onNullFail{ EventError.NotFound }
+            .failIf({ it.challengeEvent != true }) { CertificateError.NotAChallengeEvent }
+
+        !CompetitionRepo.getByEvent(eventId).orDie()
+            .failIf({it.any { c -> c.challengeEndAt!! > LocalDateTime.now() }}) { CertificateError.ChallengeStillInProgress }
+
+        val result = !ChallengeResultParticipantViewRepo.getByEventIdAndParticipantId(
+            eventId = eventId,
+            participantId = participantId,
+            verifiedIfNeededOnly = true,
+        ).orDie()
+            .onNullFail { CertificateError.NoResults }
+
+        val resultTotal = result.sumOf { it.teamResultValue ?: 0 }
+        val resultUnit = MatchResultType.valueOf(event.challengeMatchResultType!!).unit
+
+        val bytes = participantForEvent(
+            additions = template.placeholders!!.mapNotNull {
+                val type =
+                    try {
+                        GapDocumentPlaceholderType.valueOf(it!!.type)
+                    } catch (ex: Exception) {
+                        return@mapNotNull null
+                    }
+
+                AdditionalText(
+                    content = when (type) {
+                        GapDocumentPlaceholderType.FIRST_NAME -> participant.firstname
+                        GapDocumentPlaceholderType.LAST_NAME -> participant.lastname
+                        GapDocumentPlaceholderType.FULL_NAME -> "${participant.firstname} ${participant.lastname}"
+                        GapDocumentPlaceholderType.RESULT -> "$resultTotal $resultUnit"
+                        GapDocumentPlaceholderType.EVENT_NAME -> event.name
+                    },
+                    page = it.page,
+                    relLeft = it.relLeft,
+                    relTop = it.relTop,
+                    relWidth = it.relWidth,
+                    relHeight = it.relHeight,
+                    textAlign = TextAlign.valueOf(it.textAlign),
+                )
+            },
+            template = template.data!!,
+        )
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "certificate_of_participation_${event.name}_${participant.firstname}_${participant.lastname}.pdf",
+                bytes = bytes,
+            )
+        )
     }
 
     fun createCertificateOfParticipationJobs(
@@ -148,7 +301,7 @@ object CertificateService {
             content = content,
             attachments = listOf(
                 EmailAttachment(
-                    name = "certificate_of_participation_${participant.firstname}_${participant.lastname}.pdf",
+                    name = "certificate_of_participation_${event.name}_${participant.firstname}_${participant.lastname}.pdf",
                     data = bytes,
                 )
             )

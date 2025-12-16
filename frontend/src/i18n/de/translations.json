@@ -426,6 +426,7 @@
       "qrCodeEditDescription": "Bitte geben Sie den neuen QR Code Wert ein.",
       "resendAccessToken": "Neuen Zugangstoken versenden",
       "resendAccessTokenSuccess": "Neuer Token versendet.",
+      "downloadCOP": "Teilnahmeurkunde herunterladen",
       "userQrCode": "Benutzer QR-Code",
       "qrCode": "QR-Code",
       "id": "Teilnehmer-ID",
@@ -1006,6 +1007,7 @@
       }
     },
     "action": {
+      "downloadCertificates": "Teilnahmeurkunden herunterladen",
       "sendCertificates": "Teilnahmeurkunden versenden",
       "sendCertificatesSucceeded": "Versand von Teilnahmeurkunden beauftragt",
       "registrationsReport": {
@@ -1881,7 +1883,7 @@
       "colors": {
         "primaryColors": "Akzentfarben",
         "textColors": "Textfarben",
-        "actionColors": "Aktionsfarben",
+        "actionColors": "Feedbackfarben",
         "backgroundColor": "Hintergrundfarbe",
         "main": "Primär",
         "light": "Hintergrund",
