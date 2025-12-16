@@ -40,6 +40,11 @@ const SidebarContent = ({...props}: Props) => {
     const user = useUser()
     const {themeConfig} = useThemeConfig()
 
+    const showCustomLogo =
+        themeConfig?.customLogo?.enabled === true &&
+        themeConfig.customLogo?.filename !== null &&
+        themeConfig.customLogo.filename !== undefined
+
     return (
         <Sidebar
             isOpen={props.drawerExpanded}
@@ -141,30 +146,24 @@ const SidebarContent = ({...props}: Props) => {
                 privilege={readAdministrationConfigGlobal}
                 to={'/administration'}
             />
-            {props.isSmallScreen &&
-                themeConfig?.customLogo?.enabled &&
-                themeConfig?.customLogo?.filename && (
-                    <Box
-                        sx={{
-                            marginTop: 'auto',
-                            px: 3,
-                            py: 3,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                        }}>
-                        <Typography
-                            variant="subtitle1"
-                            sx={{
-                                fontWeight: 700,
-                                mb: 1.5,
-                            }}>
-                            Ready2Race
-                        </Typography>
+            <Box
+                sx={{
+                    marginTop: 'auto',
+                    px: 3,
+                    py: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}>
+                <Typography variant="subtitle1" fontWeight={'bold'}>
+                    Ready2Race
+                </Typography>
+                {props.isSmallScreen && showCustomLogo && (
+                    <>
                         <Divider
                             sx={{
                                 width: '80%',
-                                mb: 1.5,
+                                my: 1.5,
                             }}
                         />
                         <Box
@@ -174,7 +173,7 @@ const SidebarContent = ({...props}: Props) => {
                                 gap: 2,
                             }}>
                             <Typography
-                                variant="caption"
+                                variant="subtitle2"
                                 sx={{
                                     color: 'text.secondary',
                                 }}>
@@ -191,8 +190,9 @@ const SidebarContent = ({...props}: Props) => {
                                 }}
                             />
                         </Box>
-                    </Box>
+                    </>
                 )}
+            </Box>
         </Sidebar>
     )
 }

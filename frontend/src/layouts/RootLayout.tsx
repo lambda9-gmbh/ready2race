@@ -24,6 +24,7 @@ import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 import SidebarContent from '@components/sidebar/SidebarContent.tsx'
 import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
 import Config from '../Config.ts'
+import logo from '../assets/r2r_logo.png'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -64,15 +65,15 @@ const RootLayout = () => {
                                     </IconButton>
                                 ) : (
                                     <>
-                                        <Typography
-                                            variant="subtitle1"
-                                            color={'text.primary'}
+                                        <Box
+                                            component={'img'}
+                                            src={logo}
+                                            alt={'Ready2Race Logo'}
                                             sx={{
-                                                fontWeight: 700,
-                                                mb: 1.5,
-                                            }}>
-                                            Ready2Race
-                                        </Typography>
+                                                height: {xs: 32, sm: 40},
+                                                width: 'auto',
+                                            }}
+                                        />
                                         {themeConfig?.customLogo?.enabled &&
                                             themeConfig?.customLogo?.filename && (
                                                 <>
