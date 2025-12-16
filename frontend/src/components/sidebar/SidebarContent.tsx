@@ -146,53 +146,55 @@ const SidebarContent = ({...props}: Props) => {
                 privilege={readAdministrationConfigGlobal}
                 to={'/administration'}
             />
-            <Box
-                sx={{
-                    marginTop: 'auto',
-                    px: 3,
-                    py: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}>
-                <Typography variant="subtitle1" fontWeight={'bold'}>
-                    Ready2Race
-                </Typography>
-                {props.isSmallScreen && showCustomLogo && (
-                    <>
-                        <Divider
-                            sx={{
-                                width: '80%',
-                                my: 1.5,
-                            }}
-                        />
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 2,
-                            }}>
-                            <Typography
-                                variant="subtitle2"
+            {props.isSmallScreen && (
+                <Box
+                    sx={{
+                        marginTop: 'auto',
+                        px: 3,
+                        py: 3,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                    }}>
+                    <Typography variant="subtitle1" fontWeight={'bold'}>
+                        Ready2Race
+                    </Typography>
+                    {showCustomLogo && (
+                        <>
+                            <Divider
                                 sx={{
-                                    color: 'text.secondary',
-                                }}>
-                                {t('common.for')}
-                            </Typography>
-                            <Box
-                                component={'img'}
-                                src={`${Config.logosUrl}/${themeConfig.customLogo.filename}`}
-                                alt={'Custom Logo'}
-                                sx={{
-                                    height: {xs: 36, sm: 44},
-                                    width: 'auto',
-                                    maxWidth: '140px',
+                                    width: '80%',
+                                    my: 1.5,
                                 }}
                             />
-                        </Box>
-                    </>
-                )}
-            </Box>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                }}>
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                        color: 'text.secondary',
+                                    }}>
+                                    {t('common.for')}
+                                </Typography>
+                                <Box
+                                    component={'img'}
+                                    src={`${Config.logosUrl}/${themeConfig.customLogo.filename}`}
+                                    alt={'Custom Logo'}
+                                    sx={{
+                                        height: {xs: 36, sm: 44},
+                                        width: 'auto',
+                                        maxWidth: '140px',
+                                    }}
+                                />
+                            </Box>
+                        </>
+                    )}
+                </Box>
+            )}
         </Sidebar>
     )
 }
