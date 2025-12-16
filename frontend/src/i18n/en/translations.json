@@ -113,6 +113,7 @@
     "continue": "Continue",
     "file": {
       "download": "Download",
+      "downloadCsv" : "Download CSV",
       "view": "View"
     },
     "add": "Add",

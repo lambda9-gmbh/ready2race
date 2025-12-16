@@ -113,6 +113,7 @@
     "continue": "Weiter",
     "file": {
       "download": "Herunterladen",
+      "downloadCsv" : "CSV herunterladen",
       "view": "Anzeigen"
     },
     "add": "Hinzufügen",

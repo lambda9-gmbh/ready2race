@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayR
 data class EventResultData(
     val name: String,
     val competitions: List<CompetitionResultData>,
+    val eventDays: List<EventDayRecord>,
 ) {
 
     data class CompetitionResultData(

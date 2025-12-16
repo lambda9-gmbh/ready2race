@@ -107,6 +107,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                         failed = team.failed!!,
                         failedReason = team.failedReason,
                         ratingCategory = team.ratingCategoryName,
+                        mixedTeamTerm = mixedTeamTerm,
                     )
                 }
             )
@@ -161,5 +162,6 @@ fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) =
         place = place,
         deregistered = deregistered,
         deregistrationReason = deregistrationReason,
+        actualClubName = singletonOrFallback(participants.map { it.externalClubName }.toSet(), mixedTeamTerm)
     )
 )

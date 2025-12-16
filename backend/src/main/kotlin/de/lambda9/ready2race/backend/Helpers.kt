@@ -1,5 +1,7 @@
 package de.lambda9.ready2race.backend
 
+import java.time.LocalDate
+
 fun <A: Any?> lexiNumberComp(stringSelector: (A) -> String?) = Comparator<A> { a, b ->
     val identA = a?.let(stringSelector)
     val identB = b?.let(stringSelector)
@@ -36,5 +38,13 @@ fun <T> singletonOrFallback(singletonSet: Set<T>, fallback: T): T {
         singletonSet.first()
     } else {
         fallback
+    }
+}
+
+fun minToMaxDatePairOrNull(dateArray: Array<LocalDate?>): Pair<LocalDate, LocalDate>?{
+    return if (dateArray.isNotEmpty()) {
+        dateArray.minBy { it!!.toEpochDay() }!! to dateArray.maxBy { it!!.toEpochDay() }!!
+    } else {
+        null
     }
 }

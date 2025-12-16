@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.anyOf
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isNull
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
@@ -20,7 +21,7 @@ data class UpdateCompetitionMatchResultRequest(
             UpdateCompetitionMatchTeamResultRequest::registrationId
         ),
         // Either all places are set or none (if not failed)
-        this::teamResults validate oneOf(
+        this::teamResults validate anyOf(
             collection(
                 oneOf(
                     select(notNull,UpdateCompetitionMatchTeamResultRequest::place),
@@ -32,7 +33,7 @@ data class UpdateCompetitionMatchResultRequest(
             ),
         ),
         // Either all timeStrings are set or none (if not failed)
-        this::teamResults validate oneOf(
+        this::teamResults validate anyOf(
             collection(
                 oneOf(
                     select(notNull,UpdateCompetitionMatchTeamResultRequest::timeString),

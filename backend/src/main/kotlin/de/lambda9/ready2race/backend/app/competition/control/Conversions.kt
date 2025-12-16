@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.competition.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionDto
+import de.lambda9.ready2race.backend.app.competition.entity.EventDataForCompetitionResultsDto
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryDto
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toDto
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionChallengeConfigDto
@@ -9,6 +10,8 @@ import de.lambda9.ready2race.backend.app.competitionProperties.entity.Competitio
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionForClubViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionViewRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventDataForCompetitionResultsRecord
+import de.lambda9.ready2race.backend.minToMaxDatePairOrNull
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -139,3 +142,10 @@ fun CompetitionPublicViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comp
         )
     )
 }
+
+fun EventDataForCompetitionResultsRecord.toDto() = EventDataForCompetitionResultsDto(
+    eventName = eventName!!,
+    competitionId = competitionId!!,
+    competitionName = competitionName!!,
+    eventDateRange = minToMaxDatePairOrNull(eventDays!!)
+)

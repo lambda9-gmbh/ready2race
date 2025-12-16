@@ -4,6 +4,10 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.competition.control.toDto
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
+import de.lambda9.ready2race.backend.app.competition.entity.EventDataForCompetitionResultsDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.*
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
@@ -47,6 +51,7 @@ import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
+import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.Validator
@@ -69,6 +74,7 @@ import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.util.UUID
 import kotlin.collections.sortedBy
 
@@ -609,7 +615,7 @@ object CompetitionExecutionService {
         )
 
         !allOf(
-            oneOf(
+            anyOf(
                 collection(
                     oneOf(
                         Validator.Companion.select(notNull, ParsedTeamResult::place),
@@ -620,7 +626,7 @@ object CompetitionExecutionService {
                     Validator.Companion.select(isNull, ParsedTeamResult::place)
                 ),
             ),
-            oneOf(
+            anyOf(
                 collection(
                     oneOf(
                         Validator.Companion.select(notNull, ParsedTeamResult::time),
@@ -1076,6 +1082,67 @@ object CompetitionExecutionService {
         KIO.ok(
             ApiResponse.File(name = startListFile.name, bytes = startListFile.bytes)
         )
+    }
+
+    fun getCompetitionPlaceCSV(
+        competitionId: UUID,
+    ): App<ServiceError, File> = KIO.comprehension {
+
+        val teamsData = !computeCompetitionPlaces(competitionId)
+        val competitionData = !CompetitionRepo.getDataForCsvResultsByCompetitionId(competitionId).orDie().onNullFail { CompetitionError.CompetitionNotFound }
+
+        val bytes = buildCompetitionPlacesCsv(teamsData, competitionData.toDto())
+
+        val fileNameDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + "-"
+
+        KIO.ok(
+            File(
+                name = "${fileNameDate}CompetitionPlaces-${competitionData.competitionName}.csv",
+                bytes = bytes,
+            )
+        )
+    }
+
+    fun downloadCompetitionPlacesCSV(
+        eventId: UUID,
+        competitionId: UUID
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val competitionPacesCSV = !getCompetitionPlaceCSV(competitionId)
+
+        KIO.ok(
+            ApiResponse.File(name = competitionPacesCSV.name, bytes = competitionPacesCSV.bytes)
+        )
+    }
+
+    fun buildCompetitionPlacesCsv(
+        teamsData:  List<Pair<CompetitionMatchTeamWithRegistration, Int>>,
+        competitionData: EventDataForCompetitionResultsDto
+    ): ByteArray {
+
+        val bytes = ByteArrayOutputStream().use { out ->
+            CSV.write(
+                out,
+                teamsData.sortedBy { it.second }
+            ) {
+
+                column("Veranstaltung") { competitionData.eventName }
+                competitionData.eventDateRange?.let {
+                    column("Veranstaltungsstart") { competitionData.eventDateRange.first.format(DateTimeFormatter.ISO_LOCAL_DATE) }
+                    column("Veranstaltungsende") { competitionData.eventDateRange.second.format(DateTimeFormatter.ISO_LOCAL_DATE) }
+                }
+                column("Wettkampf") { competitionData.competitionName }
+                column("Platz") { second.toString()}
+                column("Team") { singletonOrFallback(first.participants.map { it.externalClubName }.toSet(), first.mixedTeamTerm)?: first.clubName }
+                column("Anmelder") { first.clubName + if (first.teamNumber != null) " | ${first.teamNumber}" else "" }
+                column("Teammitglieder"){ first.participants.joinToString(", ") { "${it.firstName} ${it.lastName} [${it.namedParticipantName}] (${it.externalClubName?:first.clubName})" }}
+
+            }
+            out.toByteArray()
+        }
+
+        return bytes
     }
 
     fun buildPdf(
