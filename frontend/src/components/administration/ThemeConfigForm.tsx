@@ -171,12 +171,12 @@ export function ThemeConfigForm() {
             <Box sx={{display: 'flex', flexDirection: 'column', gap: 3}}>
                 <Box>
                     <Typography variant="h6" gutterBottom>
-                        Primary Colors
+                        {t('administration.theme.colors.primaryColors')}
                     </Typography>
                     <Box sx={{display: 'flex', gap: 2}}>
                         <Box sx={{flex: 1}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Main
+                                {t('administration.theme.colors.main')}
                             </Typography>
                             <TextField
                                 type="color"
@@ -187,7 +187,7 @@ export function ThemeConfigForm() {
                         </Box>
                         <Box sx={{flex: 1}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Light
+                                {t('administration.theme.colors.light')}
                             </Typography>
                             <TextField
                                 type="color"
@@ -201,12 +201,12 @@ export function ThemeConfigForm() {
 
                 <Box>
                     <Typography variant="h6" gutterBottom>
-                        Text Colors
+                        {t('administration.theme.colors.textColors')}
                     </Typography>
                     <Box sx={{display: 'flex', gap: 2}}>
                         <Box sx={{flex: 1}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Primary
+                                {t('administration.theme.colors.primary')}
                             </Typography>
                             <TextField
                                 type="color"
@@ -217,7 +217,7 @@ export function ThemeConfigForm() {
                         </Box>
                         <Box sx={{flex: 1}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Secondary
+                                {t('administration.theme.colors.secondary')}
                             </Typography>
                             <TextField
                                 type="color"
@@ -231,12 +231,12 @@ export function ThemeConfigForm() {
 
                 <Box>
                     <Typography variant="h6" gutterBottom>
-                        Action Colors
+                        {t('administration.theme.colors.actionColors')}
                     </Typography>
                     <Box sx={{display: 'flex', gap: 2, flexWrap: 'wrap'}}>
                         <Box sx={{flex: 1, minWidth: '200px'}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Success
+                                {t('administration.theme.colors.secondary')}
                             </Typography>
                             <TextField
                                 type="color"
@@ -247,7 +247,7 @@ export function ThemeConfigForm() {
                         </Box>
                         <Box sx={{flex: 1, minWidth: '200px'}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Warning
+                                {t('administration.theme.colors.warning')}
                             </Typography>
                             <TextField
                                 type="color"
@@ -258,7 +258,7 @@ export function ThemeConfigForm() {
                         </Box>
                         <Box sx={{flex: 1, minWidth: '200px'}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Error
+                                {t('administration.theme.colors.error')}
                             </Typography>
                             <TextField
                                 type="color"
@@ -269,7 +269,7 @@ export function ThemeConfigForm() {
                         </Box>
                         <Box sx={{flex: 1, minWidth: '200px'}}>
                             <Typography variant="subtitle1" gutterBottom>
-                                Info
+                                {t('administration.theme.colors.info')}
                             </Typography>
                             <TextField
                                 type="color"
@@ -283,7 +283,7 @@ export function ThemeConfigForm() {
 
                 <Box>
                     <Typography variant="h6" gutterBottom>
-                        Background Color
+                        {t('administration.theme.colors.backgroundColor')}
                     </Typography>
                     <TextField
                         type="color"

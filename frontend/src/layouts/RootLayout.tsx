@@ -24,7 +24,6 @@ import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 import SidebarContent from '@components/sidebar/SidebarContent.tsx'
 import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
 import Config from '../Config.ts'
-import logo from '../assets/r2r_logo.png'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -59,28 +58,41 @@ const RootLayout = () => {
                         }}>
                         <Toolbar sx={{justifyContent: 'space-between'}}>
                             <Stack direction={'row'} spacing={2} alignItems={'center'}>
-                                <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
-                                    {drawerExpanded ? <MenuOpen /> : <Menu />}
-                                </IconButton>
-                                <Box
-                                    component={'img'}
-                                    src={logo}
-                                    alt={'Ready2Race Logo'}
-                                    sx={{
-                                        height: {xs: 32, sm: 40},
-                                        width: 'auto',
-                                    }}
-                                />
-                                {themeConfig?.customLogo?.enabled && themeConfig?.customLogo?.filename && (
-                                    <Box
-                                        component={'img'}
-                                        src={`${Config.logosUrl}/${themeConfig.customLogo.filename}`}
-                                        alt={'Custom Logo'}
-                                        sx={{
-                                            height: {xs: 32, sm: 40},
-                                            width: 'auto',
-                                        }}
-                                    />
+                                {isMobile ? (
+                                    <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
+                                        {drawerExpanded ? <MenuOpen /> : <Menu />}
+                                    </IconButton>
+                                ) : (
+                                    <>
+                                        <Typography
+                                            variant="subtitle1"
+                                            color={'text.primary'}
+                                            sx={{
+                                                fontWeight: 700,
+                                                mb: 1.5,
+                                            }}>
+                                            Ready2Race
+                                        </Typography>
+                                        {themeConfig?.customLogo?.enabled &&
+                                            themeConfig?.customLogo?.filename && (
+                                                <>
+                                                    <Typography
+                                                        variant={'subtitle2'}
+                                                        color={'text.secondary'}>
+                                                        {t('common.for')}
+                                                    </Typography>
+                                                    <Box
+                                                        component={'img'}
+                                                        src={`${Config.logosUrl}/${themeConfig.customLogo.filename}`}
+                                                        alt={'Custom Logo'}
+                                                        sx={{
+                                                            height: {xs: 32, sm: 40},
+                                                            width: 'auto',
+                                                        }}
+                                                    />
+                                                </>
+                                            )}
+                                    </>
                                 )}
                             </Stack>
                             {(Config.mode === 'development' || Config.mode === 'test') && (
