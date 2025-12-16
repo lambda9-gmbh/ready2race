@@ -37,7 +37,12 @@ data class CompetitionPropertiesRequest(
                 ),
                 notEmpty
             ),
-            this::fees validate collection,
+            this::fees validate allOf(
+                collection,
+                noDuplicates(
+                    FeeForCompetitionRequestDto::fee,
+                ),
+            ),
             this::challengeConfig validate selfValidator
         )
 

@@ -8,9 +8,16 @@ type Props = SidebarProps & {
 
 const Sidebar = ({children, ...props}: PropsWithChildren<Props>) => {
     return (
-        <Box sx={{display: 'flex', width: props.isSmallScreen ? '100%' : undefined}}>
+        <Box
+            sx={{
+                display: 'flex',
+                width: props.isSmallScreen ? '100%' : undefined,
+                flex: props.isSmallScreen ? 1 : undefined,
+            }}>
             <SidebarContext.Provider value={props}>
-                <List sx={{width: '100%'}}>{children}</List>
+                <List sx={{width: '100%', flex: 1, display: 'flex', flexDirection: 'column'}}>
+                    {children}
+                </List>
             </SidebarContext.Provider>
             <Divider orientation={'vertical'} />
         </Box>

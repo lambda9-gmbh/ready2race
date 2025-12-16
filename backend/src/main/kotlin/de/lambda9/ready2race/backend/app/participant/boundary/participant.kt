@@ -100,6 +100,7 @@ fun Route.participant() {
 
                                 else -> {}
                             }
+                            part.dispose()
                         }
                     }
 

@@ -26,6 +26,7 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object ResultDocumentNotFound : CompetitionExecutionError
     data object NotInChallengeTimespan : CompetitionExecutionError
     data object PlaceAndTimeBothNull : CompetitionExecutionError
+    data object PlacesNotContinuous : CompetitionExecutionError
 
     sealed interface ResultUploadError : CompetitionExecutionError {
         data object FileError : ResultUploadError
@@ -172,6 +173,11 @@ sealed interface CompetitionExecutionError : ServiceError {
         PlaceAndTimeBothNull -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Results must have Places or Times completely filled out if not failed."
+        )
+
+        PlacesNotContinuous -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "The places are not continuous."
         )
 
         is ResultUploadError.CellBlank -> ApiError(

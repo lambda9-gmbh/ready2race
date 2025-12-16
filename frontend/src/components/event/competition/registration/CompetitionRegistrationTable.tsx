@@ -4,6 +4,7 @@ import {competitionRoute, eventRoute} from '@routes'
 import {
     CompetitionRegistrationDto,
     deleteCompetitionRegistration,
+    DeleteCompetitionRegistrationError,
     getCompetitionRegistrations,
     OpenForRegistrationType,
     revertCompetitionDeregistration,
@@ -89,6 +90,14 @@ const CompetitionRegistrationTable = ({
                 competitionRegistrationId: dto.id,
             },
         })
+
+    const onDeleteError = (error: DeleteCompetitionRegistrationError) => {
+        if (error.status.value === 409) {
+            feedback.error(t('event.competition.registration.delete.error.roundExisting'))
+        } else {
+            feedback.error(t('entity.delete.error', {entity: props.entityName}))
+        }
+    }
 
     const columns: GridColDef<CompetitionRegistrationDto>[] = useMemo(
         () => [
@@ -265,9 +274,6 @@ const CompetitionRegistrationTable = ({
         )
     }
 
-    // todo: only allow revert if no next round has been created since
-    // comment: validated in api?
-
     const afterRegistration = (isLate: boolean) =>
         isLate ? registrationState === 'CLOSED' : registrationState !== 'REGULAR'
 
@@ -310,6 +316,7 @@ const CompetitionRegistrationTable = ({
                 columns={columns}
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
+                onDeleteError={onDeleteError}
                 entityName={t('event.registration.registration')}
                 creatable={props.registrationInitialized && (props.documentsAccepted ?? false)}
                 deletableIf={writable}

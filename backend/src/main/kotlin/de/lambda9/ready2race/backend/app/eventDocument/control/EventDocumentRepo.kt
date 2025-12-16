@@ -36,9 +36,5 @@ object EventDocumentRepo {
         EVENT_DOCUMENT_DOWNLOAD.select { EVENT.eq(eventId) }
 
 
-    fun getDownloadsByEvents(
-        eventIds: List<UUID>,
-    ): JIO<List<EventDocumentDownloadRecord>> = EVENT_DOCUMENT_DOWNLOAD.select { EVENT.`in`(eventIds) }
-
     fun getByEventIds(eventIds: List<UUID>) = EVENT_DOCUMENT.select { EVENT.`in`(eventIds) }
 }

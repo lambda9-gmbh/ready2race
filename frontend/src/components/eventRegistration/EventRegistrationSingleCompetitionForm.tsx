@@ -13,7 +13,7 @@ import {
     Typography,
 } from '@mui/material'
 import * as React from 'react'
-import {ReactNode, useCallback, useEffect, useMemo, useState} from 'react'
+import {Fragment, ReactNode, useCallback, useEffect, useMemo, useState} from 'react'
 import {
     CheckBox,
     CheckBoxOutlineBlank,
@@ -22,8 +22,7 @@ import {
     Person,
 } from '@mui/icons-material'
 import {EventRegistrationCompetitionDto, RatingCategoryToEventDto} from '../../api'
-import {useTranslation} from 'react-i18next'
-import {Trans} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {
     EventRegistrationFormData,
     EventRegistrationParticipantFormData,
@@ -125,8 +124,9 @@ const EventSingleCompetitionField = (props: {
         if (competitionIndex === undefined || !props.option.fees) return []
         const competition = singleCompetitions?.[competitionIndex]
         if (!competition?.optionalFees || competition.optionalFees.length === 0) return []
-        return props.option.fees
-            .filter(f => !f.required && competition.optionalFees?.includes(f.id))
+        return props.option.fees.filter(
+            f => !f.required && competition.optionalFees?.includes(f.id),
+        )
     }, [competitionIndex, singleCompetitions, props.option.fees])
 
     // Filter rating categories based on age restrictions
@@ -184,50 +184,46 @@ const EventSingleCompetitionField = (props: {
                         {props.option.fees
                             ?.filter(f => f.required)
                             .map(fee => (
-                                <Typography key={fee.id} variant="body2" color="text.secondary">
-                                    {fee.label}: <strong>{Number(fee.amount).toFixed(2)}€</strong>
+                                <Fragment key={fee.id}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {fee.label}:{' '}
+                                        <strong>{Number(fee.amount).toFixed(2)}€</strong>
+                                    </Typography>
                                     {props.option.lateRegistrationAllowed && fee.lateAmount && (
-                                        <Typography
-                                            component="span"
-                                            variant="caption"
-                                            color="warning.main"
-                                            sx={{ml: 1}}>
+                                        <Typography variant="caption" sx={{ml: 1}}>
                                             (
                                             <Trans
                                                 i18nKey={'event.competition.fee.asLate'}
-                                                values={{amount: Number(fee.lateAmount).toFixed(2)}}
+                                                values={{
+                                                    amount: Number(fee.lateAmount).toFixed(2),
+                                                }}
                                             />
                                             )
                                         </Typography>
                                     )}
-                                </Typography>
+                                </Fragment>
                             ))}
-                        {selectedOptionalFees.length > 0 && (
-                            <>
-                                <Typography variant="caption" color="text.secondary" sx={{mt: 1}}>
-                                    {t('event.registration.optionalFee')}:
-                                </Typography>
-                                {selectedOptionalFees.map(fee => (
-                                    <Typography key={fee.id} variant="body2" color="text.secondary">
-                                        + {fee.label}: <strong>{Number(fee.amount).toFixed(2)}€</strong>
-                                        {props.option.lateRegistrationAllowed && fee.lateAmount && (
-                                            <Typography
-                                                component="span"
-                                                variant="caption"
-                                                color="warning.main"
-                                                sx={{ml: 1}}>
-                                                (
-                                                <Trans
-                                                    i18nKey={'event.competition.fee.asLate'}
-                                                    values={{amount: Number(fee.lateAmount).toFixed(2)}}
-                                                />
-                                                )
-                                            </Typography>
-                                        )}
+                        {selectedOptionalFees.length > 0 &&
+                            selectedOptionalFees.map(fee => (
+                                <Fragment key={fee.id}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        + {fee.label}:{' '}
+                                        <strong>{Number(fee.amount).toFixed(2)}€</strong>
                                     </Typography>
-                                ))}
-                            </>
-                        )}
+                                    {props.option.lateRegistrationAllowed && fee.lateAmount && (
+                                        <Typography variant="caption" sx={{ml: 1}}>
+                                            (
+                                            <Trans
+                                                i18nKey={'event.competition.fee.asLate'}
+                                                values={{
+                                                    amount: Number(fee.lateAmount).toFixed(2),
+                                                }}
+                                            />
+                                            )
+                                        </Typography>
+                                    )}
+                                </Fragment>
+                            ))}
                     </Stack>
                     <CheckboxButtonGroup
                         disabled={props.locked}

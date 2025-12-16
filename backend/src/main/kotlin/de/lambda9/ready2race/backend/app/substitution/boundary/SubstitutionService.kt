@@ -200,9 +200,6 @@ object SubstitutionService {
         val registrationParticipants = !getParticipantsInRound(competitionSetupRoundId)
         val subbedInParticipants = !getSubbedInParticipants(substitutions)
 
-        val participantWithData = registrationParticipants.find { it.id == participantId }
-            ?: subbedInParticipants.find { it.id == participantId }!!
-
 
         val namedParticipantsForCompetition =
             !NamedParticipantForCompetitionPropertiesRepo.getByCompetition(competitionId).orDie()
@@ -217,6 +214,8 @@ object SubstitutionService {
                         substitutionsForRegistration = substitutions.filter { it.competitionRegistrationId == registrationId }
                     )
                 }
+
+        val participantWithData = actualRegistrationTeams.flatMap { it.value }.first { it.id == participantId }
 
         // Registered Participants
 
@@ -405,6 +404,9 @@ object SubstitutionService {
         val substitution = substitutions.find { it.id == substitutionId }
         if (substitution == null) {
             return@comprehension KIO.fail(SubstitutionError.NotFound)
+        }
+        !KIO.failOn(substitution.inheritedFrom != null) {
+            SubstitutionError.CreatedInPreviousRound
         }
 
         val swapSubstitution = getSwapSubstitution(substitution, substitutions)

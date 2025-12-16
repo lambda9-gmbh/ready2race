@@ -61,7 +61,6 @@ const CompetitionDialog = ({
                 }
             },
         },
-        // todo: consider if the templates, competitionCategories and namedParticipants are stale data and should be reloaded
     )
 
     const formContext = useForm<CompetitionForm>()

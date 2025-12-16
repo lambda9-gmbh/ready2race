@@ -3,6 +3,8 @@ import SidebarItem from '@components/sidebar/SidebarItem.tsx'
 import {
     AdminPanelSettings,
     Assessment,
+    ChevronLeft,
+    ChevronRight,
     Dashboard,
     Event,
     Home,
@@ -13,17 +15,19 @@ import {
     Work,
     Workspaces,
 } from '@mui/icons-material'
-import {Divider} from '@mui/material'
+import {Box, Divider, IconButton, Tooltip, Typography} from '@mui/material'
 import {
+    readAdministrationConfigGlobal,
     readClubGlobal,
     readClubOwn,
     readInvoiceGlobal,
-    readAdministrationConfigGlobal,
     readUserGlobal,
     updateEventGlobal,
 } from '@authorization/privileges.ts'
 import {useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
+import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
+import Config from '../../Config.ts'
 
 type Props = {
     drawerExpanded: boolean
@@ -34,6 +38,12 @@ type Props = {
 const SidebarContent = ({...props}: Props) => {
     const {t} = useTranslation()
     const user = useUser()
+    const {themeConfig} = useThemeConfig()
+
+    const showCustomLogo =
+        themeConfig?.customLogo?.enabled === true &&
+        themeConfig.customLogo?.filename !== null &&
+        themeConfig.customLogo.filename !== undefined
 
     return (
         <Sidebar
@@ -41,6 +51,31 @@ const SidebarContent = ({...props}: Props) => {
             open={() => props.setDrawerExpanded(true)}
             close={() => props.setDrawerExpanded(false)}
             isSmallScreen={props.isSmallScreen}>
+            {!props.isSmallScreen && (
+                <>
+                    <Tooltip
+                        title={t(
+                            props.drawerExpanded
+                                ? 'navigation.sidebar.collapse'
+                                : 'navigation.sidebar.expand',
+                        )}
+                        placement="right"
+                        arrow>
+                        <IconButton
+                            onClick={() => props.setDrawerExpanded(!props.drawerExpanded)}
+                            sx={{
+                                width: '100%',
+                                borderRadius: 0,
+                                py: 1.5,
+                                justifyContent: 'flex-end',
+                                px: 2,
+                            }}>
+                            {props.drawerExpanded ? <ChevronLeft /> : <ChevronRight />}
+                        </IconButton>
+                    </Tooltip>
+                    <Divider sx={{my: 1}} />
+                </>
+            )}
             {props.isSmallScreen && (
                 <>
                     <SidebarItem
@@ -111,6 +146,55 @@ const SidebarContent = ({...props}: Props) => {
                 privilege={readAdministrationConfigGlobal}
                 to={'/administration'}
             />
+            {props.isSmallScreen && (
+                <Box
+                    sx={{
+                        marginTop: 'auto',
+                        px: 3,
+                        py: 3,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                    }}>
+                    <Typography variant="subtitle1" fontWeight={'bold'}>
+                        Ready2Race
+                    </Typography>
+                    {showCustomLogo && (
+                        <>
+                            <Divider
+                                sx={{
+                                    width: '80%',
+                                    my: 1.5,
+                                }}
+                            />
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                }}>
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                        color: 'text.secondary',
+                                    }}>
+                                    {t('common.for')}
+                                </Typography>
+                                <Box
+                                    component={'img'}
+                                    src={`${Config.logosUrl}/${themeConfig.customLogo.filename}`}
+                                    alt={'Custom Logo'}
+                                    sx={{
+                                        height: {xs: 36, sm: 44},
+                                        width: 'auto',
+                                        maxWidth: '140px',
+                                    }}
+                                />
+                            </Box>
+                        </>
+                    )}
+                </Box>
+            )}
         </Sidebar>
     )
 }

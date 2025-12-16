@@ -206,7 +206,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         registrationAvailableTo: dto.registrationAvailableTo ?? '',
         lateRegistrationAvailableTo: dto.lateRegistrationAvailableTo ?? '',
         invoicePrefix: dto.invoicePrefix ?? '',
-        published: dto.published ?? false,
+        published: dto.published,
         paymentDueBy: dto.paymentDueBy ?? '',
         latePaymentDueBy: dto.latePaymentDueBy ?? '',
         mixedTeamTerm: dto.mixedTeamTerm ?? '',

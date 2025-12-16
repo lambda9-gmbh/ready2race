@@ -2,16 +2,21 @@ package de.lambda9.ready2race.backend.app.competitionDeregistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
 import de.lambda9.ready2race.backend.app.competitionDeregistration.control.toRecord
 import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationError
 import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationRequest
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.getCurrentAndNextRound
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationError
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.kio.onFalseFail
@@ -20,7 +25,7 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 object CompetitionDeregistrationService {
 
@@ -33,29 +38,32 @@ object CompetitionDeregistrationService {
         !CompetitionRegistrationRepo.exists(competitionRegistrationId).orDie()
             .onFalseFail { CompetitionRegistrationError.NotFound }
 
-        // todo: Dont allow this action if results are all set
-        // todo: ??? fail if registration is still open?
+        !CompetitionDeregistrationRepo.exists(competitionRegistrationId).orDie().onTrueFail {
+            CompetitionDeregistrationError.NotFound
+        }
 
         val rounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
         val (currentRound, _) = getCurrentAndNextRound(rounds)
 
-        // Remove a potential place from the Registered Team - This is to prevent duplicate keys if the place is left unattended
-        val matchTeam = currentRound?.matches?.flatMap { match -> match.teams }
-            ?.find { it.competitionRegistration == competitionRegistrationId }
+        val match = currentRound?.matches
+            ?.find { match -> match.teams.any { it.competitionRegistration == competitionRegistrationId } }
 
-        if (matchTeam != null) {
-            !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(
-                matchTeam.competitionMatch,
-                competitionRegistrationId
-            ) {
-                place = null
-                updatedBy = userId
-                updatedAt = LocalDateTime.now()
-            }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+        // Team is not present in current round (if the first round is already created)
+        !KIO.failOn(currentRound != null && match == null) {
+            CompetitionDeregistrationError.NotInCurrentRound
         }
 
-        !CompetitionDeregistrationRepo.exists(competitionRegistrationId).orDie().onTrueFail {
-            CompetitionDeregistrationError.NotFound
+        // Results already exist in current match of this team
+        !KIO.failOn(match?.teams?.any { it.place != null || !it.failed } ?: false) {
+            CompetitionDeregistrationError.ResultsAlreadyExists
+        }
+
+        // If registration is still open
+        val competition = !CompetitionRepo.getById(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
+        val openForRegistrationType = !EventService.getOpenForRegistrationType(competition.event!!)
+        !KIO.failOn(openForRegistrationType != OpenForRegistrationType.CLOSED) {
+            CompetitionDeregistrationError.RegistrationStillOpen
         }
 
         val record = !request.toRecord(userId, competitionRegistrationId, currentRound?.setupRoundId)
@@ -68,22 +76,26 @@ object CompetitionDeregistrationService {
         competitionRegistrationId: UUID
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        !CompetitionRegistrationRepo.exists(competitionRegistrationId).orDie()
-            .onFalseFail { CompetitionRegistrationError.NotFound }
+        val deregistration = !CompetitionDeregistrationRepo.get(competitionRegistrationId).orDie()
+            .onNullFail { CompetitionDeregistrationError.NotFound }
 
-        // Fail if there was a new round created since the creation of this deregistration
         val rounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
         val (currentRound, _) = getCurrentAndNextRound(rounds)
-        val deregistration = !CompetitionDeregistrationRepo.get(competitionRegistrationId).orDie()
-        !KIO.failOn(deregistration != null && deregistration.competitionSetupRound != currentRound?.setupRoundId) { CompetitionDeregistrationError.IsLocked }
 
-        val deleted = !CompetitionDeregistrationRepo.delete(competitionRegistrationId).orDie()
+        if (currentRound != null) {
+            val sortedRounds = CompetitionExecutionService.sortRounds(rounds).map { it.setupRoundId }
+            val previousRounds = sortedRounds
+                .filterIndexed { index, _ -> index < sortedRounds.indexOf(currentRound.setupRoundId) }
 
-        if (deleted < 1) {
-            KIO.fail(CompetitionDeregistrationError.NotFound)
-        } else {
-            noData
+            // Fail if there was a new round created since the creation of this deregistration
+            !KIO.failOn(deregistration.competitionSetupRound == null || previousRounds.contains(deregistration.competitionSetupRound)) {
+                CompetitionDeregistrationError.IsLocked
+            }
         }
+
+        !CompetitionDeregistrationRepo.delete(competitionRegistrationId).orDie()
+
+        noData
     }
 
 }

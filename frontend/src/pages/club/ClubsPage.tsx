@@ -2,13 +2,12 @@ import {ClubDto, getCreateClubOnRegistrationAllowed, updateGlobalConfigurations}
 import {Box, Card, CardContent, CardHeader, Stack} from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
-import ClubTable from '../../components/club/ClubTable.tsx'
-import ClubDialog from '../../components/club/ClubDialog.tsx'
+import ClubTable from '@components/club/ClubTable.tsx'
+import ClubDialog from '@components/club/ClubDialog.tsx'
 import {FormContainer, useForm} from 'react-hook-form-mui'
-import FormInputSwitch from '../../components/form/input/FormInputSwitch.tsx'
-import {SubmitButton} from '../../components/form/SubmitButton.tsx'
-import {useCallback, useState} from 'react'
-import {useSnackbar} from 'notistack'
+import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
+import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {useState} from 'react'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateAdministrationConfigGlobal} from '@authorization/privileges.ts'
 
@@ -19,7 +18,6 @@ type GlobalConfigForm = {
 const ClubsPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
-    const {enqueueSnackbar} = useSnackbar()
     const [submitting, setSubmitting] = useState(false)
     const user = useUser()
 
@@ -46,27 +44,20 @@ const ClubsPage = () => {
         deps: [],
     })
 
-    const onSubmit = useCallback(
-        (data: GlobalConfigForm) => {
-            setSubmitting(true)
-            updateGlobalConfigurations({
-                body: {
-                    allowClubCreationOnRegistration: data.allowClubCreationOnRegistration,
-                },
-            })
-                .then(() => {
-                    enqueueSnackbar(t('club.settings.saved'), {variant: 'success'})
-                })
-                .catch(error => {
-                    console.error('Failed to update global configurations', error)
-                    enqueueSnackbar(t('common.error.unexpected'), {variant: 'error'})
-                })
-                .finally(() => {
-                    setSubmitting(false)
-                })
-        },
-        [t, enqueueSnackbar],
-    )
+    const onSubmit = async (data: GlobalConfigForm) => {
+        setSubmitting(true)
+        const {error} = await updateGlobalConfigurations({
+            body: {
+                allowClubCreationOnRegistration: data.allowClubCreationOnRegistration,
+            },
+        })
+        setSubmitting(false)
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else {
+            feedback.success(t('club.settings.saved'))
+        }
+    }
 
     return (
         <Box>

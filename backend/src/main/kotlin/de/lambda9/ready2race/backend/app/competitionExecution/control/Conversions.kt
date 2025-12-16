@@ -25,7 +25,10 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String
                             teamNumber = team.teamNumber!!, // This should not be null because competition_match_teams are not created if the registration teamNumber is missing
                             clubId = team.clubId,
                             clubName = team.clubName,
-                            actualClubName = singletonOrFallback(team.participants.map { it.externalClubName }.toSet(), mixedTeamTerm),
+                            actualClubName = singletonOrFallback(
+                                team.participants.map { it.externalClubName }.toSet(),
+                                mixedTeamTerm
+                            ),
                             name = team.registrationName,
                             startNumber = team.startNumber,
                             place = team.place,
@@ -127,7 +130,8 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 namedParticipantName = sub.namedParticipantName!!,
                 participantOut = sub.participantOut!!.toSubstituteParticipantDto(),
                 participantIn = sub.participantIn!!.toSubstituteParticipantDto(),
-                swapSubstitution = getSwapSubstitution(sub, substitutions!!.filterNotNull())
+                swapSubstitution = getSwapSubstitution(sub, substitutions!!.filterNotNull()),
+                inheritedFrom = sub.inheritedFrom,
             )
         }
     )

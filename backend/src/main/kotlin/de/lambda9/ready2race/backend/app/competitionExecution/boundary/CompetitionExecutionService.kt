@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.control.toDto
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competition.entity.EventDataForCompetitionResultsDto
+import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.*
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
@@ -39,8 +40,11 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noDat
 import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.data.Timecode
+import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_FOR_EVENT
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
@@ -110,12 +114,22 @@ object CompetitionExecutionService {
 
                 !checkRoundCreation(true, setupRounds, null, nextRound, registrations)
 
+                val deregisteredRegistrationIds =
+                    !CompetitionDeregistrationRepo.getByRegistrations(registrations.map { it.id }).orDie()
+                        .map { list -> list.map { it.competitionRegistration } }
+
                 val nextRoundSetupMatches =
                     nextRound!!.setupMatches.sortedBy { it.weighting }
 
                 val sortedRegistrations = registrations
-                    .filter { it.teamNumber != null } // Registrations without teamNumber are ignored. A confirmation Dialog makes aware of this behaviour
-                    .sortedBy { it.teamNumber }
+                    .filter {
+                        it.teamNumber != null  // Registrations without teamNumber are ignored. A confirmation Dialog makes aware of this behaviour
+                    }
+                    .sortedWith(
+                        compareBy(
+                            { deregisteredRegistrationIds.contains(it.id) },  // false (active) before true (deregistered)
+                            { it.teamNumber }  // then sort by teamNumber within each group
+                        ))
 
 
                 val matchRecords = nextRoundSetupMatches
@@ -141,7 +155,7 @@ object CompetitionExecutionService {
                         competitionRegistration = reg.id,
                         startNumber = seedingList[matchIndex].indexOfFirst { it == index + 1 } + 1,
                         place = if (automaticFirstPlace) 1 else null,
-                        out = false,
+                        out = deregisteredRegistrationIds.contains(reg.id),
                         failed = false,
                         failedReason = null,
                         createdAt = LocalDateTime.now(),
@@ -289,7 +303,7 @@ object CompetitionExecutionService {
             }
         }
 
-    private fun sortRounds(
+    fun sortRounds(
         setupRounds: List<CompetitionSetupRoundWithMatches>
     ): List<CompetitionSetupRoundWithMatches> {
         val sortedRounds: MutableList<CompetitionSetupRoundWithMatches> = mutableListOf()
@@ -349,19 +363,12 @@ object CompetitionExecutionService {
 
         } else {
 
-            // TODO: @Evaluate: is this not implicitly checked by the following check?
-            val currentRoundPlaces =
-                currentRound.matches.flatMap { match ->
-                    match.teams.filter { !it.deregistered && !it.failed && !it.out }.map { team -> team.place }
-                }
-
-            val placesAreMissing = currentRound.matches.map { match ->
-                match.teams.map { it.place }
+            val placesAreMissing = currentRound.matches.any { match ->
+                !match.teams.map { it.place }
                     .containsAll((1..match.teams.filter { !it.deregistered && !it.failed && !it.out }.size).toList())
-            }.any { !it }
+            }
 
-
-            if (currentRoundPlaces.contains(null) || placesAreMissing)
+            if (placesAreMissing)
                 reasons.add(CompetitionExecutionCanNotCreateRoundReason.NOT_ALL_PLACES_SET to CompetitionExecutionError.NotAllPlacesSet)
         }
 
@@ -487,11 +494,21 @@ object CompetitionExecutionService {
         !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
 
-        // TODO: validate places continuous
-        val calculatedPlaces : List<Pair<UUID, Timecode?>> =
+        val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
+
+        // Validate places are continuous when provided
+        if (!noPlaces) {
+            val places = request.teamResults.filter { !it.failed }.mapNotNull { it.place }.sorted()
+            places.forEachIndexed { index, place ->
+                val expected = index + 1
+                !KIO.failOn(expected != place) { CompetitionExecutionError.PlacesNotContinuous }
+            }
+        }
+
+        val calculatedPlaces: List<Pair<UUID, Timecode?>> =
             request.teamResults.filter { !it.failed }
                 .map { result ->
-                result.registrationId to result.timeString?.let { timestring -> (!Parser.timecode(timestring) {it.orDie()})}
+                    result.registrationId to result.timeString?.let { timestring -> (!Parser.timecode(timestring) { it.orDie() }) }
                 }
                 .sortedBy { it.second?.millis }
 
@@ -549,7 +566,10 @@ object CompetitionExecutionService {
         val teams = !XLS.read(iStream) {
             val place = !optionalCell(config.colTeamPlace, maybe(int))
             val time = (!optionalCell(config.colTeamTime, string))?.takeIf { it.isNotBlank() }
-            val noResultReason = (!optionalCell(config.colTeamPlace, maybe(string)))?.takeIf { (it.isNotBlank() || time == null) && place == null  }
+            val noResultReason = (!optionalCell(
+                config.colTeamPlace,
+                maybe(string)
+            ))?.takeIf { (it.isNotBlank() || time == null) && place == null }
             ParsedTeamResult(
                 startNumber = !cell(config.colTeamStartNumber, int),
                 place = place,
@@ -618,27 +638,27 @@ object CompetitionExecutionService {
             anyOf(
                 collection(
                     oneOf(
-                        Validator.Companion.select(notNull, ParsedTeamResult::place),
-                        Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+                        Validator.select(notNull, ParsedTeamResult::place),
+                        Validator.select(notNull, ParsedTeamResult::noResultReason)
                     )
                 ),
                 collection(
-                    Validator.Companion.select(isNull, ParsedTeamResult::place)
+                    Validator.select(isNull, ParsedTeamResult::place)
                 ),
             ),
             anyOf(
                 collection(
                     oneOf(
-                        Validator.Companion.select(notNull, ParsedTeamResult::time),
-                        Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+                        Validator.select(notNull, ParsedTeamResult::time),
+                        Validator.select(notNull, ParsedTeamResult::noResultReason)
                     )
                 ),
                 collection(
-                    Validator.Companion.select(isNull, ParsedTeamResult::time)
+                    Validator.select(isNull, ParsedTeamResult::time)
                 ),
             )
         )(teams).fold(
-            onValid = { unit},
+            onValid = { unit },
             onInvalid = {
                 KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DataInListIncomplete(it))
             }
@@ -647,10 +667,10 @@ object CompetitionExecutionService {
         !collection(
             oneOf(
                 anyOf(
-                    Validator.Companion.select(notNull, ParsedTeamResult::place),
-                    Validator.Companion.select(notNull, ParsedTeamResult::time)
+                    Validator.select(notNull, ParsedTeamResult::place),
+                    Validator.select(notNull, ParsedTeamResult::time)
                 ),
-                Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+                Validator.select(notNull, ParsedTeamResult::noResultReason)
             )
         )(teams).fold(
             onValid = { unit },
@@ -675,11 +695,11 @@ object CompetitionExecutionService {
             .mapIndexed { idx, res -> res.copy(place = idx + 1) }
 
 
-        val calculatedPlaces : List<Pair<Int, Timecode?>> =
+        val calculatedPlaces: List<Pair<Int, Timecode?>> =
             correctedTeams.filter { it.noResultReason == null }
                 .map { result ->
-                result.startNumber to result.time?.let { timeString -> (!Parser.timecode(timeString) {it.orDie()})}
-            }.sortedBy { it.second?.millis }
+                    result.startNumber to result.time?.let { timeString -> (!Parser.timecode(timeString) { it.orDie() }) }
+                }.sortedBy { it.second?.millis }
 
         val noPlaces = correctedTeams.filter { it.noResultReason == null }.any { it.place == null }
 
@@ -716,7 +736,6 @@ object CompetitionExecutionService {
                 }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
             }
         }.noDataResponse()
-
 
 
     }
@@ -982,6 +1001,9 @@ object CompetitionExecutionService {
             }
 
             val subbedInParticipants = orderedSubs
+                .asReversed()
+                .distinctBy { it.participantIn!!.id }
+                .asReversed()
                 .filter { sub ->
                     val participantInId = sub.participantIn!!.id
                     // Filter subIns by participantsStillInToRole
@@ -1000,7 +1022,7 @@ object CompetitionExecutionService {
                     !it.toParticipantForExecutionDto(it.participantIn!!)
                 }
 
-            // todo: clean up
+
             // NamedParticipant comes from the substitution (p.second) so it cant be mapped via the normal conversion
             val mappedParticipantsStillIn = participantsStillInToRole.map { p ->
                 ParticipantForExecutionDto(
@@ -1267,18 +1289,19 @@ object CompetitionExecutionService {
                             ) { team.actualClubName ?: team.registeringClubName }
                             block(
                                 padding = Padding(left = 5f),
-                            ){
+                            ) {
                                 text(
                                     fontStyle = FontStyle.BOLD,
                                     fontSize = 8f,
-                                ){
+                                ) {
                                     "gemeldet von / "
                                 }
                                 text(
                                     newLine = false,
                                     fontSize = 8f,
                                 ) {
-                                    "registered by" + "   ${team.registeringClubName}${if (team.teamName != null) " | ${team.teamName}" else ""}" }
+                                    "registered by" + "   ${team.registeringClubName}${if (team.teamName != null) " | ${team.teamName}" else ""}"
+                                }
                             }
                             team.ratingCategory?.let {
                                 text(
@@ -1449,7 +1472,8 @@ object CompetitionExecutionService {
         val document = !CompetitionMatchTeamDocumentDataRepo.getDownload(documentId).orDie()
             .onNullFail { CompetitionExecutionError.ResultDocumentNotFound }
 
-        val eventParticipant = !EventParticipantRepo.getByToken(accessToken).orDie().onNullFail { EventParticipantError.TokenNotFound }
+        val eventParticipant =
+            !EventParticipantRepo.getByToken(accessToken).orDie().onNullFail { EventParticipantError.TokenNotFound }
 
         val participant = !ParticipantRepo.get(eventParticipant.participant).orDie().onNullDie("Referenced entity")
 
@@ -1467,4 +1491,7 @@ object CompetitionExecutionService {
         )
 
     }
+
+    fun getRoundExistingForCompetition(competitionId: UUID) =
+        COMPETITION_MATCH_FOR_EVENT.exists { COMPETITION_ID.eq(competitionId) }
 }

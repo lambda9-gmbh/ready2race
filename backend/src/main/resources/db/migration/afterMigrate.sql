@@ -1,6 +1,8 @@
 set search_path to ready2race, pg_catalog, public;
 
 drop view if exists event_data_for_competition_results;
+drop view if exists gap_document_template_assignment;
+drop view if exists gap_document_template_view;
 drop view if exists event_rating_category_view;
 drop view if exists challenge_result_participant_view;
 drop view if exists challenge_result_team_view;
@@ -470,10 +472,10 @@ from participant_requirement pr
 ;
 
 create view participant_for_event as
-select er.event                                                                    as event_id,
-       c.id                                                                        as club_id,
-       c.name                                                                      as club_name,
-       p.id                                                                        as id,
+select er.event                                                                                                        as event_id,
+       c.id                                                                                                            as club_id,
+       c.name                                                                                                          as club_name,
+       p.id                                                                                                            as id,
        p.firstname,
        p.lastname,
        p.year,
@@ -481,9 +483,23 @@ select er.event                                                                 
        p.external,
        p.external_club_name,
        p.email,
-       coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ), '{}') as participant_requirements_checked,
+       coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ),
+                '{}')                                                                                                  as participant_requirements_checked,
        qc.qr_code_id,
-       array_agg(distinct crnp.named_participant)                                  as named_participant_ids
+       array_agg(distinct crnp.named_participant)                                                                      as named_participant_ids,
+       exists(select 1
+              from competition_match_team cmt
+              where exists(select 1
+                           from competition_registration c_r
+                                    join competition_registration_named_participant c_r_n_p
+                                         on c_r.id = c_r_n_p.competition_registration
+                           where c_r.id = cmt.competition_registration
+                             and c_r_n_p.participant = p.id)
+                and cmt.result_value is not null
+                and (cmt.result_verified_at is not null or exists(select 1
+                                                                  from event e
+                                                                  where e.id = er.event
+                                                                    and e.submission_needs_verification is not true))) as has_challenge_results
 from event_registration er
          join club c on er.club = c.id
          join competition_registration cr on er.id = cr.event_registration
@@ -543,9 +559,12 @@ select e.id,
        e.submission_needs_verification,
        e.participant_self_registration,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
+       max(cpcc.end_at)                                                                 as challenge_end,
        err.event is not null                                                            as registrations_finalized
 from event e
          left join competition c on e.id = c.event
+         left join competition_properties cp on c.id = cp.competition
+         left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
          left join event_day ed on e.id = ed.event
          left join event_registration er on e.id = er.event
          left join event_registration_report err on e.id = err.event
@@ -1254,6 +1273,7 @@ create view challenge_result_participant_view as
 select p.id,
        p.firstname,
        p.lastname,
+       p.email,
        cmt.result_value as team_result_value,
        cmt.result_verified_at,
        cr.id            as competition_registration_id,
@@ -1299,3 +1319,24 @@ from competition c
         left join event_day ed on e.id = ed.event
         join competition_properties cp on c.id = cp.competition
 group by c.id, e.name, cp.name
+
+create view gap_document_template_view as
+select gdt.id,
+       gdt.name,
+       gdt.type,
+       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
+from gap_document_template gdt
+         left join gap_document_placeholder gdp on gdp.template = gdt.id
+group by gdt.id
+;
+
+create view gap_document_template_assignment as
+select u.type,
+       td.data,
+       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
+from gap_document_template_usage u
+         join gap_document_template gdt on gdt.id = u.template
+         join gap_document_template_data td on gdt.id = td.template
+         left join gap_document_placeholder gdp on gdt.id = gdp.template
+group by u.type, td.data
+;

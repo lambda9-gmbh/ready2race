@@ -96,6 +96,18 @@
         "",
         "We look forward to your participation."
       ]
+    },
+    {
+      "key": "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT",
+      "subject": "Ready2Race - Certificate of participation",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "You participated in the event '##event##'.",
+        "Your certificate of participation is attached.",
+        "",
+        "We wish you all the best."
+      ]
     }
   ]
 }

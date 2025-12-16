@@ -1,11 +1,12 @@
 import {RequestResult} from '@hey-api/client-fetch'
-import {DependencyList, useEffect, useLayoutEffect, useState} from 'react'
+import {DependencyList, useCallback, useEffect, useLayoutEffect, useState} from 'react'
 import {useSnackbar} from 'notistack'
 import {GridValidRowModel} from '@mui/x-data-grid'
 import {useTranslation} from 'react-i18next'
 import {ApiError, CaptchaDto} from '@api/types.gen.ts'
 import {newCaptcha} from '@api/sdk.gen.ts'
 import {ifDefined} from '@utils/helpers.ts'
+import {useTheme} from '@mui/material'
 
 type UseFetchOptions<T, E, R> = {
     mapData?: (data: T) => R
@@ -192,12 +193,45 @@ export const useEntityAdministration = <T extends GridValidRowModel | undefined 
 
 export const useFeedback = () => {
     const {enqueueSnackbar} = useSnackbar()
+    const theme = useTheme()
 
     return {
-        success: (msg: string) => enqueueSnackbar(msg, {variant: 'success'}),
-        warning: (msg: string) => enqueueSnackbar(msg, {variant: 'warning'}),
-        error: (msg: string) => enqueueSnackbar(msg, {variant: 'error'}),
-        info: (msg: string) => enqueueSnackbar(msg, {variant: 'info'}),
+        success: (msg: string) =>
+            enqueueSnackbar(msg, {
+                variant: 'success',
+                style: {
+                    backgroundColor: theme.palette.success.main,
+                    color: theme.palette.success.contrastText,
+                    flexWrap: 'nowrap',
+                },
+            }),
+        warning: (msg: string) =>
+            enqueueSnackbar(msg, {
+                variant: 'warning',
+                style: {
+                    backgroundColor: theme.palette.warning.main,
+                    color: theme.palette.warning.contrastText,
+                    flexWrap: 'nowrap',
+                },
+            }),
+        error: (msg: string) =>
+            enqueueSnackbar(msg, {
+                variant: 'error',
+                style: {
+                    backgroundColor: theme.palette.error.main,
+                    color: theme.palette.error.contrastText,
+                    flexWrap: 'nowrap',
+                },
+            }),
+        info: (msg: string) =>
+            enqueueSnackbar(msg, {
+                variant: 'info',
+                style: {
+                    backgroundColor: theme.palette.info.main,
+                    color: theme.palette.info.contrastText,
+                    flexWrap: 'nowrap',
+                },
+            }),
     }
 }
 
@@ -235,14 +269,18 @@ export const useWindowSize = (delay?: number) => {
 
 type CaptchaFetchProps = {
     captcha: UseFetchReturn<CaptchaDto, ApiError>
-    onSubmitResult: () => void
+    onReloadCaptcha: () => void
 }
-export const useCaptcha = (onSuccess: (captcha: CaptchaDto) => void): CaptchaFetchProps => {
+export const useCaptcha = (
+    onSuccess: (captcha: CaptchaDto) => void,
+    options?: Omit<UseFetchOptions<CaptchaDto, ApiError, CaptchaDto>, 'onResponse' | 'deps'>,
+): CaptchaFetchProps => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const [lastRequested, setLastRequested] = useState(Date.now())
 
     const captchaData = useFetch(signal => newCaptcha({signal}), {
+        ...options,
         onResponse: ({data, error}) => {
             if (error) {
                 feedback.error(t('common.error.unexpected'))
@@ -253,10 +291,12 @@ export const useCaptcha = (onSuccess: (captcha: CaptchaDto) => void): CaptchaFet
         deps: [lastRequested],
     })
 
+    const onReloadCaptcha = useCallback(() => {
+        setLastRequested(Date.now())
+    }, [])
+
     return {
         captcha: captchaData,
-        onSubmitResult: () => {
-            setLastRequested(Date.now())
-        },
+        onReloadCaptcha,
     }
 }

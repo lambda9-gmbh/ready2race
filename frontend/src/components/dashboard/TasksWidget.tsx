@@ -154,7 +154,7 @@ export function TasksWidget({userId}: {userId: string}) {
                                                             <ClockIcon fontSize={'small'} />
                                                             <Typography
                                                                 fontSize={'small'}
-                                                                color={'textSecondary'}>
+                                                                color={'text.secondary'}>
                                                                 {new Date(
                                                                     task.createdAt,
                                                                 ).toLocaleString()}

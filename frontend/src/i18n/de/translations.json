@@ -117,7 +117,8 @@
       "view": "Anzeigen"
     },
     "add": "Hinzufügen",
-    "submit": "Absenden"
+    "submit": "Absenden",
+    "for": "für"
   },
   "csv": {
     "wizard": {
@@ -203,6 +204,67 @@
       }
     }
   },
+  "gap": {
+    "document": {
+      "template": {
+        "assignments": {
+          "global": "Global zugewiesene Urkundenvorlagen"
+        },
+        "loading": "Lade...",
+        "template": "Urkundenvorlage",
+        "templates": "Urkundenvorlagen",
+        "tableHint": "Werden verwendet, um Urkunden mit Platzhaltern für Teilnehmerdaten zu generieren.",
+        "name": "Dateiname",
+        "type": "Urkundentyp",
+        "types": {
+          "CERTIFICATE_OF_PARTICIPATION": "Teilnahmeurkunde"
+        },
+        "file": {
+          "choose": "PDF-Vorlage auswählen",
+          "change": "PDF-Vorlage ändern",
+          "missing": "Bitte wählen Sie ein PDF-Dokument aus."
+        },
+        "noPdfSelected": "Kein PDF ausgewählt. Bitte laden Sie eine PDF-Vorlage hoch.",
+        "page": "Seite {{page}}",
+        "placeholders": {
+          "title": "Platzhalter auf PDF platzieren"
+        },
+        "loadPdf": {
+          "error": "PDF konnte nicht geladen werden."
+        },
+        "preview": {
+          "title": "Urkundenvorlagenvorschau",
+          "error": "Vorschau konnte nicht geladen werden.",
+          "show": "Urkunde in der Vorschau anzeigen"
+        }
+      },
+      "placeholder": {
+        "available": "Verfügbare Platzhalter",
+        "addInstructions": "Klicken Sie auf einen Platzhaltertyp, um ihn der aktuellen Seite hinzuzufügen. Ziehen und skalieren Sie, um zu positionieren.",
+        "properties": "Platzhalter-Eigenschaften",
+        "type": {
+          "label": "Platzhaltertyp",
+          "FIRST_NAME": "Vorname",
+          "LAST_NAME": "Nachname",
+          "FULL_NAME": "Vollständiger Name",
+          "PLACE": "Platzierung",
+          "RESULT": "Ergebnis",
+          "EVENT_NAME": "Veranstaltungsname"
+        },
+        "name": "Eigene Bezeichnung (optional)",
+        "nameHelp": "Eine eigene Bezeichnung, um diesen Platzhalter zu identifizieren",
+        "textAlign": "Textausrichtung",
+        "align": {
+          "LEFT": "Links",
+          "CENTER": "Zentriert",
+          "RIGHT": "Rechts"
+        },
+        "page": "Seite",
+        "position": "Position",
+        "size": "Größe"
+      }
+    }
+  },
   "decimal": {
     "point": ","
   },
@@ -247,6 +309,10 @@
       "myClub": "Mein Verein",
       "invoices": "Rechnungen",
       "administration": "Administration"
+    },
+    "sidebar": {
+      "expand": "Seitenleiste ausklappen",
+      "collapse": "Seitenleiste einklappen"
     }
   },
   "dashboard": {
@@ -361,6 +427,7 @@
       "qrCodeEditDescription": "Bitte geben Sie den neuen QR Code Wert ein.",
       "resendAccessToken": "Neuen Zugangstoken versenden",
       "resendAccessTokenSuccess": "Neuer Token versendet.",
+      "downloadCOP": "Teilnahmeurkunde herunterladen",
       "userQrCode": "Benutzer QR-Code",
       "qrCode": "QR-Code",
       "id": "Teilnehmer-ID",
@@ -532,7 +599,14 @@
           "required": "Gebühr ist verpflichtend"
         },
         "asRegular": "bei Meldung: {{amount}}€",
-        "asLate": "bei Nachmeldung: {{amount}}€"
+        "asLate": "bei Nachmeldung: {{amount}}€",
+        "error": {
+          "duplicates": {
+            "one": "Die Gebührenart {{label}} wird mehrfach verwendet.",
+            "multiple": "Die Gebührenarten {{labels}} werden mehrfach verwendet.",
+            "message": "Bitte wählen Sie für jede Gebühr eine einzigartige Gebührenart aus."
+          }
+        }
       },
       "template": {
         "template": "Wettkampf Vorlage",
@@ -562,8 +636,15 @@
         "ratingCategory": "Wertungskategorie",
         "ratingCategoryInvalid": "Die ausgewählte Wertungskategorie ist für die Teilnehmer in diesem Team nicht gültig",
         "infos": "Infos",
+        "delete": {
+          "error": {
+            "roundExisting": "Der Wettkampf hat bereits begonnen."
+          }
+        },
         "deregister": {
           "deregister": "Abmelden",
+          "error": "Beim Abmelden ist ein Fehler aufgetreten.",
+          "success": "Abmeldung erfolgreich",
           "revertDeregistration": {
             "revertDeregistration": "Abmeldung zurücknehmen",
             "revert": "Zurücknehmen",
@@ -927,6 +1008,9 @@
       }
     },
     "action": {
+      "downloadCertificates": "Teilnahmeurkunden herunterladen",
+      "sendCertificates": "Teilnahmeurkunden versenden",
+      "sendCertificatesSucceeded": "Versand von Teilnahmeurkunden beauftragt",
       "registrationsReport": {
         "download": "Meldeergebnis herunterladen"
       },
@@ -1485,7 +1569,6 @@
       },
       "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
       "error": {
-        "notFound": "",
         "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
         "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
         "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",
@@ -1769,6 +1852,11 @@
     }
   },
   "administration": {
+    "title": "Administration",
+    "tabs": {
+      "smtp": "SMTP-Konfiguration",
+      "theme": "Theme-Anpassung"
+    },
     "smtp": {
       "title": "SMTP Konfiguration",
       "host": "SMTP-Host",
@@ -1788,6 +1876,56 @@
       "errors": {
         "loading": "Beim Laden der SMTP-Konfiguration ist ein Fehler aufgetreten.",
         "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."
+      }
+    },
+    "theme": {
+      "title": "Theme-Anpassung",
+      "info": "Passen Sie das Erscheinungsbild der Anwendung an. Änderungen werden nach dem Speichern sofort übernommen.",
+      "colors": {
+        "primaryColors": "Akzentfarben",
+        "textColors": "Textfarben",
+        "actionColors": "Feedbackfarben",
+        "backgroundColor": "Hintergrundfarbe",
+        "main": "Primär",
+        "light": "Hintergrund",
+        "primary": "Primär",
+        "secondary": "Sekundär",
+        "success": "Erfolg",
+        "warning": "Warnung",
+        "error": "Fehler",
+        "info": "Info"
+      },
+      "customFont": "Eigene Schriftart",
+      "fontHint": "Laden Sie eine .woff oder .woff2 Datei hoch (max. 5MB)",
+      "currentFont": "Aktuelle Schriftart",
+      "enableCustomFont": "Eigene Schriftart aktivieren",
+      "selectFontFile": "Keine Datei ausgewählt",
+      "customLogo": "Eigenes Logo",
+      "logoHint": "Laden Sie eine .png, .jpg, .jpeg, .svg oder .webp Datei hoch (max. 2MB)",
+      "currentLogo": "Aktuelles Logo",
+      "enableCustomLogo": "Eigenes Logo aktivieren",
+      "selectLogoFile": "Keine Datei ausgewählt",
+      "submit": "Theme speichern",
+      "reset": "Auf Standard zurücksetzen",
+      "confirmUpdate": {
+        "title": "Theme aktualisieren",
+        "message": "Möchten Sie die Theme-Einstellungen wirklich ändern?"
+      },
+      "confirmReset": {
+        "title": "Theme zurücksetzen",
+        "message": "Möchten Sie das Theme wirklich auf die Standardeinstellungen zurücksetzen? Alle Anpassungen gehen verloren."
+      },
+      "success": {
+        "updated": "Theme erfolgreich aktualisiert",
+        "reset": "Theme erfolgreich zurückgesetzt"
+      },
+      "errors": {
+        "invalidFontFormat": "Ungültiges Dateiformat. Bitte verwenden Sie .woff oder .woff2 Dateien.",
+        "fontTooLarge": "Die Schriftart-Datei ist zu groß. Maximale Größe: 5MB",
+        "invalidLogoFormat": "Ungültiges Dateiformat. Bitte verwenden Sie .png, .jpg, .jpeg, .svg oder .webp Dateien.",
+        "logoTooLarge": "Die Logo-Datei ist zu groß. Maximale Größe: 2MB",
+        "updateFailed": "Theme konnte nicht aktualisiert werden",
+        "resetFailed": "Theme konnte nicht zurückgesetzt werden"
       }
     }
   },

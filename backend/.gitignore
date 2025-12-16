@@ -42,3 +42,4 @@ testOutputs/
 ### Local configuration ###
 .env
 local.env
+/static/

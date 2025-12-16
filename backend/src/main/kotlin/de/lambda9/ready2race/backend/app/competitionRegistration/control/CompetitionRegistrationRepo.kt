@@ -107,7 +107,7 @@ object CompetitionRegistrationRepo {
         fetchCount(
             COMPETITION_REGISTRATION
                 .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
-                .join(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY)),
+                .leftJoin(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY)),
             COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
                 .and(filterScope(scope, user.club))
                 .and(search.metaSearch(searchFieldsForCompetition))
@@ -423,6 +423,7 @@ object CompetitionRegistrationRepo {
                         namedParticipantIds = it[PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS]?.filterNotNull()
                             ?: emptyList(),
                         email = it[PARTICIPANT_FOR_EVENT.EMAIL],
+                        hasChallengeResults = it[PARTICIPANT_FOR_EVENT.HAS_CHALLENGE_RESULTS]
                     )
                 }
             }

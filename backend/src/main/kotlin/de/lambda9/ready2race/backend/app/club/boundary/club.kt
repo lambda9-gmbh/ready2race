@@ -151,6 +151,7 @@ fun Route.club() {
 
                             else -> {}
                         }
+                        part.dispose()
                     }
                 }
 

@@ -7,6 +7,13 @@ export type AcceptInvitationRequest = {
 
 export type Action = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'
 
+export type ActionColors = {
+    success: string
+    warning: string
+    error: string
+    info: string
+}
+
 export type ApiError = {
     status: {
         value: number
@@ -131,6 +138,10 @@ export type AssignedEmailDto = {
 
 export type AssignedTemplateId = {
     value?: string
+}
+
+export type AssignGapDocumentTemplateRequest = {
+    template?: string
 }
 
 export type AssignRequirementToNamedParticipantDto = {
@@ -654,6 +665,16 @@ export type CreateEventRequest = {
     allowParticipantSelfRegistration: boolean
 }
 
+export type CustomFontDto = {
+    enabled: boolean
+    filename?: string | null
+}
+
+export type CustomLogoDto = {
+    enabled: boolean
+    filename?: string | null
+}
+
 export type DocumentTemplateDto = {
     id: string
     name: string
@@ -769,7 +790,7 @@ export type EventDto = {
     registrationAvailableTo?: string
     lateRegistrationAvailableTo?: string
     invoicePrefix?: string
-    published?: boolean
+    published: boolean
     invoicesProduced?: string
     lateInvoicesProduced?: string
     paymentDueBy?: string
@@ -782,6 +803,7 @@ export type EventDto = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    challengesFinished?: boolean
 }
 
 export type EventForExportDto = {
@@ -970,6 +992,55 @@ export type FeeRequest = {
 export type FileExportEventStatusDto = {
     eventName: string
     fileExportTypes: WebDAVExportType
+}
+
+export type GapDocumentPlaceholderDto = {
+    id: string
+    name?: string
+    type: GapDocumentPlaceholderType
+    page: number
+    relLeft: number
+    relTop: number
+    relWidth: number
+    relHeight: number
+    textAlign: TextAlign
+}
+
+export type GapDocumentPlaceholderRequest = {
+    name?: string
+    type: GapDocumentPlaceholderType
+    page: number
+    relLeft: number
+    relTop: number
+    relWidth: number
+    relHeight: number
+    textAlign: TextAlign
+}
+
+export type GapDocumentPlaceholderType =
+    | 'FIRST_NAME'
+    | 'LAST_NAME'
+    | 'FULL_NAME'
+    | 'RESULT'
+    | 'EVENT_NAME'
+
+export type GapDocumentTemplateDto = {
+    id: string
+    name: string
+    type: GapDocumentType
+    placeholders: Array<GapDocumentPlaceholderDto>
+}
+
+export type GapDocumentTemplateRequest = {
+    type: GapDocumentType
+    placeholders: Array<GapDocumentPlaceholderRequest>
+}
+
+export type GapDocumentType = 'CERTIFICATE_OF_PARTICIPATION'
+
+export type GapDocumentTypeDto = {
+    type: GapDocumentType
+    assignedTemplate?: AssignedTemplateId
 }
 
 export type Gender = 'M' | 'F' | 'D'
@@ -1285,6 +1356,7 @@ export type ParticipantForEventDto = {
     qrCodeId?: string
     namedParticipantIds?: Array<string>
     email?: string
+    hasChallengeResults?: boolean
 }
 
 export type ParticipantForExecutionDto = {
@@ -1470,6 +1542,11 @@ export type PossibleSubstitutionParticipantDto = {
 export type PossibleSubstitutionsForParticipantDto = {
     currentlyParticipating: Array<PossibleSubstitutionParticipantDto>
     notCurrentlyParticipating: Array<PossibleSubstitutionParticipantDto>
+}
+
+export type PrimaryColors = {
+    main: string
+    light: string
 }
 
 export type Privilege = {
@@ -1755,6 +1832,7 @@ export type SubstitutionDto = {
     participantOut: SubstitutionParticipantDto
     participantIn: SubstitutionParticipantDto
     swapSubstitution?: string
+    inheritedFrom?: string
 }
 
 export type SubstitutionParticipantDto = {
@@ -1821,6 +1899,22 @@ export type TeamParticipantDto = {
     role: string
     currentStatus?: ParticipantScanType
     lastScanAt?: string
+}
+
+export type TextAlign = 'LEFT' | 'CENTER' | 'RIGHT'
+
+export type TextColors = {
+    primary: string
+    secondary: string
+}
+
+export type ThemeConfigDto = {
+    primary: PrimaryColors
+    textColor: TextColors
+    actionColors: ActionColors
+    backgroundColor: string
+    customFont: CustomFontDto
+    customLogo: CustomLogoDto
 }
 
 export type TooManyRequestsError = ApiError & {
@@ -1932,6 +2026,15 @@ export type UpdateQrCodeRequirementDto = {
     requirementId: string
     namedParticipantId?: string
     qrCodeRequired: boolean
+}
+
+export type UpdateThemeRequest = {
+    primary: PrimaryColors
+    textColor: TextColors
+    actionColors: ActionColors
+    backgroundColor: string
+    enableCustomFont: boolean
+    enableCustomLogo: boolean
 }
 
 export type UploadMatchResultRequest = {
@@ -4282,6 +4385,101 @@ export type GetCompetitionSetupTemplateOverviewResponse = Array<CompetitionSetup
 
 export type GetCompetitionSetupTemplateOverviewError = ApiError
 
+export type GetGapDocumentTemplatesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetGapDocumentTemplatesResponse = {
+    data: Array<GapDocumentTemplateDto>
+    pagination: Pagination
+}
+
+export type GetGapDocumentTemplatesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddGapDocumentTemplateData = {
+    body: {
+        request: GapDocumentTemplateRequest
+        files: Array<Blob | File>
+    }
+}
+
+export type AddGapDocumentTemplateResponse = void
+
+export type AddGapDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateGapDocumentTemplateData = {
+    body: GapDocumentTemplateRequest
+    path: {
+        gapDocumentTemplateId: string
+    }
+}
+
+export type UpdateGapDocumentTemplateResponse = void
+
+export type UpdateGapDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteGapDocumentTemplateData = {
+    path: {
+        gapDocumentTemplateId: string
+    }
+}
+
+export type DeleteGapDocumentTemplateResponse = void
+
+export type DeleteGapDocumentTemplateError = BadRequestError | ApiError
+
+export type DownloadGapDocumentTemplateOriginalData = {
+    path: {
+        gapDocumentTemplateId: string
+    }
+}
+
+export type DownloadGapDocumentTemplateOriginalResponse = Blob | File
+
+export type DownloadGapDocumentTemplateOriginalError = BadRequestError | ApiError
+
+export type DownloadGapDocumentTemplateSampleData = {
+    path: {
+        gapDocumentTemplateId: string
+    }
+}
+
+export type DownloadGapDocumentTemplateSampleResponse = Blob | File
+
+export type DownloadGapDocumentTemplateSampleError = BadRequestError | ApiError
+
+export type GetGapDocumentTemplateTypesResponse = Array<GapDocumentTypeDto>
+
+export type GetGapDocumentTemplateTypesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AssignGapDocumentTemplateData = {
+    body: AssignGapDocumentTemplateRequest
+    path: {
+        gapDocumentType: GapDocumentType
+    }
+}
+
+export type AssignGapDocumentTemplateResponse = void
+
+export type AssignGapDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type GetDocumentTemplatesData = {
     query?: {
         /**
@@ -5471,3 +5669,56 @@ export type UpdateGlobalConfigurationsError = BadRequestError | ApiError
 export type GetCreateClubOnRegistrationAllowedResponse = boolean
 
 export type GetCreateClubOnRegistrationAllowedError = ApiError
+
+export type UpdateThemeConfigData = {
+    body: {
+        request: UpdateThemeRequest
+        /**
+         * Optional font file (.woff or .woff2, max 5MB)
+         */
+        fontFile?: Blob | File
+        /**
+         * Optional logo file (.pgn, .jpg, jpeg, .svg or .webp, max 2MB)
+         */
+        logoFile?: Blob | File
+    }
+}
+
+export type UpdateThemeConfigResponse = ThemeConfigDto
+
+export type UpdateThemeConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ResetThemeConfigResponse = ThemeConfigDto
+
+export type ResetThemeConfigError = ApiError
+
+export type SendCertificatesToParticipantsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type SendCertificatesToParticipantsResponse = void
+
+export type SendCertificatesToParticipantsError = BadRequestError | ApiError
+
+export type DownloadCertificateOfParticipationData = {
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type DownloadCertificateOfParticipationResponse = Blob | File
+
+export type DownloadCertificateOfParticipationError = BadRequestError | ApiError
+
+export type DownloadCertificatesOfParticipationData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type DownloadCertificatesOfParticipationResponse = Blob | File
+
+export type DownloadCertificatesOfParticipationError = BadRequestError | ApiError
