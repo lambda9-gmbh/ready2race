@@ -1319,6 +1319,7 @@ from competition c
         left join event_day ed on e.id = ed.event
         join competition_properties cp on c.id = cp.competition
 group by c.id, e.name, cp.name
+;
 
 create view gap_document_template_view as
 select gdt.id,

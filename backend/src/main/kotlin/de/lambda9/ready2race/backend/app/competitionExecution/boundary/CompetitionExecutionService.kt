@@ -512,8 +512,6 @@ object CompetitionExecutionService {
                 }
                 .sortedBy { it.second?.millis }
 
-        val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
-        println(calculatedPlaces)
         request.teamResults.traverse { result ->
             KIO.comprehension {
 

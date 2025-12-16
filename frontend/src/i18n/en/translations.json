@@ -1177,7 +1177,7 @@
       "executionOrder": "Execution Order: {{order}}"
     },
     "results": {
-      "download": "Bisherige Ergebnisse herunterladen",
+      "download": "Download previous results",
       "downloadError": "Die datei konnte nicht heruntergeladen werden."
     },
     "ratingCategory": {
