@@ -99,7 +99,9 @@ private object TestRunner {
                 folderPath = "Ready2Race",
                 authUser = "admin",
                 authPassword = "admin",
-            )
+            ),
+            mailReceiverWhitelist = null,
+            staticFilesPath = "teststatic"
         )
 
         val hikariProps = Properties().apply {
