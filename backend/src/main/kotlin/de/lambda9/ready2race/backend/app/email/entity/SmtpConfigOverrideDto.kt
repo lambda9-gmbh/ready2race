@@ -9,9 +9,11 @@ import de.lambda9.ready2race.backend.validation.validators.IntValidators.notNega
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.pattern
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.oneOf
 import org.simplejavamail.api.mailer.config.TransportStrategy
 
-data class SmtpConfigOverrideDto (
+data class SmtpConfigOverrideDto(
     val host: String,
     val port: Int,
     val username: String,
@@ -27,11 +29,17 @@ data class SmtpConfigOverrideDto (
         this::port validate allOf(notNegative, max(65535)),
         this::username validate notBlank,
         this::password validate notBlank,
+        this::smtpStrategy validate oneOf(
+            isValue(TransportStrategy.SMTP),
+            isValue(TransportStrategy.SMTP_TLS),
+            isValue(TransportStrategy.SMTPS)
+        ),
         this::fromAddress validate pattern(emailPattern),
         this::fromName validate notBlank,
         this::localhost validate notBlank,
         this::replyTo validate pattern(emailPattern),
     )
+
     companion object {
         val example
             get() = SmtpConfigOverrideDto(

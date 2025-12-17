@@ -4,7 +4,84 @@ namespace Ready2Race;
 
 using Http;
 
+@format("uuid")
 scalar uuid extends string;
+
+@format("date-time")
+scalar dateTime extends string;
+
+enum Gender {
+  M;
+  F;
+  D;
+}
+
+enum ErrorCode {
+  CANNOT_ASSIGN_ROLES;
+  CAPTCHA_WRONG;
+  EMAIL_IN_USE;
+  INVOICES_ALREADY_PRODUCED;
+  NO_ASSIGNED_PAYEE_INFORMATION;
+  NO_ASSIGNED_CONTACT_INFORMATION;
+  EVENT_REGISTRATION_ONGOING;
+  EVENT_REGISTRATION_CLOSED;
+  EVENT_REGISTRATION_UPSERT_PARTICIPANT_NOT_FOUND;
+  EVENT_REGISTRATION_TEAM_PARTICIPANT_NOT_FOUND;
+  EVENT_REGISTRATION_COMPETITION_NOT_FOUND;
+  EVENT_REGISTRATION_NAMED_PARTICIPANT_NOT_FOUND;
+  EVENT_REGISTRATION_FEE_NOT_FOUND;
+  EVENT_REGISTRATION_RATING_CATEGORY_NOT_FOUND;
+  EVENT_REGISTRATION_RATING_CATEGORY_MISSING;
+  EVENT_REGISTRATION_AGE_REQUIREMENT_NOT_MET;
+  EVENT_REGISTRATION_PARTICIPANT_DUPLICATE_IN_COMPETITION;
+  FILE_ERROR;
+  SPREADSHEET_MALFORMED;
+  SPREADSHEET_NO_HEADERS;
+  SPREADSHEET_COLUMN_UNKNOWN;
+  SPREADSHEET_CELL_BLANK;
+  SPREADSHEET_WRONG_CELL_TYPE;
+  SPREADSHEET_UNPARSABLE_STRING;
+  WRONG_TEAM_COUNT;
+  DUPLICATE_START_NUMBERS;
+  DUPLICATE_PLACES;
+  PLACES_UNCONTINUOUS;
+  LIST_DATA_INCOMPLETE;
+  RESULT_NOT_FAILED_AND_NO_DATA;
+  PARTICIPANT_IMPORT_UNKNOWN_GENDER_VALUE;
+  CLUB_NAME_ALREADY_EXISTS;
+}
+
+model ApiResponse<Status, Body> {
+  @statusCode status: Status;
+  @body body: Body;
+}
+
+model ApiError<Status> {
+  status: Status;
+  message: string;
+  details?: Record<string>;
+  errorCode?: ErrorCode;
+}
+
+alias ApiErrorResponse<Status> = ApiResponse<Status, ApiError<Status>>;
+
+alias BadRequest = ApiErrorResponse<400>;
+alias Unauthorized = ApiErrorResponse<401>;
+alias Forbidden = ApiErrorResponse<403>;
+alias NotFound = ApiErrorResponse<404>;
+alias Conflict = ApiErrorResponse<409>;
+alias UnprocessableContent = ApiErrorResponse<422>;
+alias TooManyRequests = ApiErrorResponse<429>;
+
+alias InternalServerError = ApiErrorResponse<500>;
+alias NotImplemented = ApiErrorResponse<501>;
+alias BadGateway = ApiErrorResponse<502>;
+
+alias ServerError = InternalServerError | NotImplemented | BadGateway;
+
+alias OK<Body> = ApiResponse<200, Body> | ServerError;
+alias Created = ApiResponse<201, uuid> | ServerError;
+alias NoContent = ApiResponse<204, never> | ServerError;
 
 model UrlPaginationParameters {
     @query limit?: int32;
