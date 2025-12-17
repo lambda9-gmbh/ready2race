@@ -184,6 +184,9 @@ import type {
     GetCompetitionPlacesData,
     GetCompetitionPlacesError,
     GetCompetitionPlacesResponse,
+    DownloadCompetitionPlacesCsvData,
+    DownloadCompetitionPlacesCsvError,
+    DownloadCompetitionPlacesCsvResponse,
     AddSubstitutionData,
     AddSubstitutionError,
     AddSubstitutionResponse,
@@ -1447,6 +1450,19 @@ export const getCompetitionPlaces = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/places',
+    })
+}
+
+export const downloadCompetitionPlacesCsv = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadCompetitionPlacesCsvData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadCompetitionPlacesCsvResponse,
+        DownloadCompetitionPlacesCsvError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/places/csv',
     })
 }
 

@@ -171,9 +171,9 @@ const CompetitionExecution = () => {
                 const partiallyFilledTimes =
                     validValues.some(val => val.timeString === '') &&
                     validValues.some(val => val.timeString !== '')
-                const neitherPlaceNorTimeFilled = validValues.every(
-                    val => val.place === '' && val.timeString === '',
-                )
+                const neitherPlaceNorTimeFilled =
+                    validValues.length > 0 &&
+                    validValues.every(val => val.place === '' && val.timeString === '')
 
                 if (neitherPlaceNorTimeFilled) {
                     setTeamResultsError(

@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_data_for_competition_results;
 drop view if exists gap_document_template_assignment;
 drop view if exists gap_document_template_view;
 drop view if exists event_rating_category_view;
@@ -785,7 +786,8 @@ select cmt.id,
        coalesce(array_agg(rctp) filter (where rctp.team_id is not null), '{}') as participants,
        (cd.competition_registration is not null)                               as deregistered,
        cd.reason                                                               as deregistration_reason,
-       rc.name                                                                 as rating_category_name
+       rc.name                                                                 as rating_category_name,
+       e.mixed_team_term                                                       as mixed_team_term
 from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id
          left join competition_registration cr on cr.id = cmt.competition_registration
@@ -795,19 +797,22 @@ from competition_match_team cmt
                    on cr.id = cd.competition_registration and cd.competition_setup_round = csm.competition_setup_round
          left join rating_category rc on cr.rating_category = rc.id
          left join timecode tc on cmt.timecode = tc.id
+         left join event_registration er on cr.event_registration = er.id
+         left join event e on er.event = e.id
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.competition_registration, cr.club, c.name,
-         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id
+         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, e.mixed_team_term
 ;
 
 create view competition_match_with_teams as
 select cm.competition_setup_match,
        cm.start_time,
        cm.currently_running,
-       coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams
+       coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams,
+       cmtwr.mixed_team_term                                                as mixed_team_term
 from competition_match cm
          left join competition_match_team_with_registration cmtwr
                    on cm.competition_setup_match = cmtwr.competition_match
-group by cm.competition_setup_match
+group by cm.competition_setup_match, cmtwr.mixed_team_term
 ;
 
 create view substitution_view as
@@ -847,13 +852,14 @@ select sr.id                                                                    
        coalesce(array_agg(distinct sm) filter (where sm.id is not null),
                 '{}')                                                                                   as setup_matches,
        coalesce(array_agg(distinct mwt) filter (where mwt.competition_setup_match is not null), '{}')   as matches,
-       coalesce(array_agg(distinct sv) filter ( where sv.id is not null ), '{}')                        as substitutions
+       coalesce(array_agg(distinct sv) filter ( where sv.id is not null ), '{}')                        as substitutions,
+       mwt.mixed_team_term                                                                              as mixed_team_term
 from competition_setup_round sr
          left join competition_setup_place csp on sr.id = csp.competition_setup_round
          left join competition_setup_match sm on sr.id = sm.competition_setup_round
          left join competition_match_with_teams mwt on sm.id = mwt.competition_setup_match
          left join substitution_view sv on sr.id = sv.competition_setup_round_id
-group by sr.id
+group by sr.id, mwt.mixed_team_term
 ;
 
 create view invoice_for_event_registration as
@@ -1301,6 +1307,19 @@ select erc.event,
        erc.year_restriction_to
 from event_rating_category erc
          join rating_category rc on rc.id = erc.rating_category
+;
+
+create view event_data_for_competition_results as
+select e.name   as event_name,
+       c.id     as competition_id,
+       cp.name  as competition_name,
+       min(ed.date) as event_start_date,
+       max(ed.date) as event_end_date
+from competition c
+        join event e on c.event = e.id
+        left join event_day ed on e.id = ed.event
+        join competition_properties cp on c.id = cp.competition
+group by c.id, e.name, cp.name
 ;
 
 create view gap_document_template_view as

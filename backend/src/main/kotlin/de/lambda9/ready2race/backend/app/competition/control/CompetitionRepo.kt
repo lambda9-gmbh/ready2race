@@ -241,4 +241,11 @@ object CompetitionRepo {
 
     fun insertJsonData(data: String) = COMPETITION.insertJsonData(data)
 
+    fun getDataForCsvResultsByCompetitionId(competitionId: UUID): JIO<EventDataForCompetitionResultsRecord?> = Jooq.query {
+        with(EVENT_DATA_FOR_COMPETITION_RESULTS) {
+            selectFrom(this)
+                .where(COMPETITION_ID.eq(competitionId))
+                .fetchOne()
+        }
+    }
 }

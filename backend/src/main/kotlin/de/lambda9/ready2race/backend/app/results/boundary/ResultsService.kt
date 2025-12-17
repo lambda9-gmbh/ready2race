@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.boundary.Competiti
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
 import de.lambda9.ready2race.backend.app.results.control.ChallengeResultParticipantViewRepo
 import de.lambda9.ready2race.backend.app.results.control.ChallengeResultTeamViewRepo
@@ -21,6 +22,7 @@ import de.lambda9.ready2race.backend.calls.responses.pageResponse
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.lexiNumberComp
+import de.lambda9.ready2race.backend.minToMaxDatePairOrNull
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -32,6 +34,7 @@ import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.awt.Color
 import java.io.ByteArrayOutputStream
+import java.time.LocalDate
 import java.util.*
 
 object ResultsService {
@@ -425,7 +428,8 @@ object ResultsService {
                 }
             }
 
-        val bytes = buildPdf(EventResultData(event.name, competitionsData), null)
+        val eventDays = !EventRepo.getEventTimespan(eventId).orDie()
+        val bytes = buildPdf(EventResultData(event.name, competitionsData, eventDays), null)
 
         KIO.ok(
             File(
@@ -458,6 +462,22 @@ object ResultsService {
                 ) {
                     data.name
                 }
+                if (data.eventDays != null) {
+                    text(
+                        fontSize = 13f,
+                        centered = true,
+                    ) {""}
+                    text(
+                        fontSize = 13f,
+                        centered = true,
+                    ) {
+                        if (data.eventDays.first == data.eventDays.second) {
+                            data.eventDays.first.hr()
+                        } else
+                        "${data.eventDays.first.hr()} - ${data.eventDays.second.hr()}"
+                    }
+                }
+
             }
 
             data.competitions.forEach { competition ->

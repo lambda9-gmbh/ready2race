@@ -207,6 +207,18 @@ fun Route.competitionExecution() {
                     )
                 }
             }
+            get("/csv") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+
+                    CompetitionExecutionService.downloadCompetitionPlacesCSV(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                    )
+                }
+            }
         }
         route("/challenge") {
             route("/team-results/{competitionRegistrationId}") {

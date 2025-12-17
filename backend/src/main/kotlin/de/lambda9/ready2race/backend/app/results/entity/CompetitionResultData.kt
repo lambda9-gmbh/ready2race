@@ -2,10 +2,12 @@ package de.lambda9.ready2race.backend.app.results.entity
 
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
+import java.time.LocalDate
 
 data class EventResultData(
     val name: String,
     val competitions: List<CompetitionResultData>,
+    val eventDays: Pair<LocalDate, LocalDate>?,
 ) {
 
     data class CompetitionResultData(

@@ -4,6 +4,10 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.competition.control.toDto
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
+import de.lambda9.ready2race.backend.app.competition.entity.EventDataForCompetitionResultsData
 import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.*
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
@@ -39,7 +43,6 @@ import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
-import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_FOR_EVENT
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
@@ -51,6 +54,7 @@ import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
+import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.Validator
@@ -627,7 +631,7 @@ object CompetitionExecutionService {
         )
 
         !allOf(
-            oneOf(
+            anyOf(
                 collection(
                     oneOf(
                         Validator.select(notNull, ParsedTeamResult::place),
@@ -638,7 +642,7 @@ object CompetitionExecutionService {
                     Validator.select(isNull, ParsedTeamResult::place)
                 ),
             ),
-            oneOf(
+            anyOf(
                 collection(
                     oneOf(
                         Validator.select(notNull, ParsedTeamResult::time),
@@ -1014,7 +1018,7 @@ object CompetitionExecutionService {
                     !it.toParticipantForExecutionDto(it.participantIn!!)
                 }
 
-            
+
             // NamedParticipant comes from the substitution (p.second) so it cant be mapped via the normal conversion
             val mappedParticipantsStillIn = participantsStillInToRole.map { p ->
                 ParticipantForExecutionDto(
@@ -1096,6 +1100,67 @@ object CompetitionExecutionService {
         KIO.ok(
             ApiResponse.File(name = startListFile.name, bytes = startListFile.bytes)
         )
+    }
+
+    fun getCompetitionPlaceCSV(
+        competitionId: UUID,
+    ): App<ServiceError, File> = KIO.comprehension {
+
+        val teamsData = !computeCompetitionPlaces(competitionId)
+        val competitionData = !CompetitionRepo.getDataForCsvResultsByCompetitionId(competitionId).orDie().onNullFail { CompetitionError.CompetitionNotFound }
+
+        val bytes = buildCompetitionPlacesCsv(teamsData, competitionData.toDto())
+
+        val fileNameDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + "-"
+
+        KIO.ok(
+            File(
+                name = "${fileNameDate}CompetitionPlaces-${competitionData.competitionName}.csv",
+                bytes = bytes,
+            )
+        )
+    }
+
+    fun downloadCompetitionPlacesCSV(
+        eventId: UUID,
+        competitionId: UUID
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val competitionPacesCSV = !getCompetitionPlaceCSV(competitionId)
+
+        KIO.ok(
+            ApiResponse.File(name = competitionPacesCSV.name, bytes = competitionPacesCSV.bytes)
+        )
+    }
+
+    fun buildCompetitionPlacesCsv(
+        teamsData:  List<Pair<CompetitionMatchTeamWithRegistration, Int>>,
+        competitionData: EventDataForCompetitionResultsData
+    ): ByteArray {
+
+        val bytes = ByteArrayOutputStream().use { out ->
+            CSV.write(
+                out,
+                teamsData.sortedBy { it.second }
+            ) {
+
+                column("Veranstaltung") { competitionData.eventName }
+                competitionData.eventDateRange?.let {
+                    column("Veranstaltungsstart") { competitionData.eventDateRange.first.format(DateTimeFormatter.ISO_LOCAL_DATE) }
+                    column("Veranstaltungsende") { competitionData.eventDateRange.second.format(DateTimeFormatter.ISO_LOCAL_DATE) }
+                }
+                column("Wettkampf") { competitionData.competitionName }
+                column("Platz") { second.toString()}
+                column("Team") { singletonOrFallback(first.participants.map { it.externalClubName }.toSet(), first.mixedTeamTerm)?: first.clubName }
+                column("Anmelder") { first.clubName + if (first.teamNumber != null) " | ${first.teamNumber}" else "" }
+                column("Teammitglieder"){ first.participants.joinToString(", ") { "${it.firstName} ${it.lastName} [${it.namedParticipantName}] (${it.externalClubName?:first.clubName})" }}
+
+            }
+            out.toByteArray()
+        }
+
+        return bytes
     }
 
     fun buildPdf(

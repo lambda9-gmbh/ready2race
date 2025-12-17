@@ -616,6 +616,7 @@ export type CompetitionTeamPlaceDto = {
     teamName?: string
     clubId: string
     clubName: string
+    actualClubName?: string
     namedParticipants: Array<CompetitionTeamNamedParticipantDto>
     place: number
     deregistered: boolean
@@ -3143,6 +3144,17 @@ export type GetCompetitionPlacesData = {
 export type GetCompetitionPlacesResponse = Array<CompetitionTeamPlaceDto>
 
 export type GetCompetitionPlacesError = BadRequestError | ApiError
+
+export type DownloadCompetitionPlacesCsvData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type DownloadCompetitionPlacesCsvResponse = Blob | File
+
+export type DownloadCompetitionPlacesCsvError = BadRequestError | ApiError
 
 export type AddSubstitutionData = {
     body: SubstitutionRequest
