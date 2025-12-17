@@ -1313,7 +1313,8 @@ create view event_data_for_competition_results as
 select e.name   as event_name,
        c.id     as competition_id,
        cp.name  as competition_name,
-       coalesce(array_agg(distinct (ed.date)) filter ( where ed.date is not null ), '{}') as event_days
+       min(ed.date) as event_start_date,
+       max(ed.date) as event_end_date
 from competition c
         join event e on c.event = e.id
         left join event_day ed on e.id = ed.event

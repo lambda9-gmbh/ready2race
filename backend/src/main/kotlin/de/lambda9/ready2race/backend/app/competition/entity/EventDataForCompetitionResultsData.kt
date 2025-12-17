@@ -4,7 +4,7 @@ package de.lambda9.ready2race.backend.app.competition.entity
 import java.time.LocalDate
 import java.util.UUID
 
-data class EventDataForCompetitionResultsDto (
+data class EventDataForCompetitionResultsData (
     val eventName: String,
     val competitionId: UUID,
     val competitionName: String,

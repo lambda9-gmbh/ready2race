@@ -7,7 +7,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.control.toDto
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
-import de.lambda9.ready2race.backend.app.competition.entity.EventDataForCompetitionResultsDto
+import de.lambda9.ready2race.backend.app.competition.entity.EventDataForCompetitionResultsData
 import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.*
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
@@ -43,7 +43,6 @@ import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
-import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_FOR_EVENT
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
@@ -78,7 +77,6 @@ import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatterBuilder
 import java.util.UUID
 import kotlin.collections.sortedBy
 
@@ -1138,7 +1136,7 @@ object CompetitionExecutionService {
 
     fun buildCompetitionPlacesCsv(
         teamsData:  List<Pair<CompetitionMatchTeamWithRegistration, Int>>,
-        competitionData: EventDataForCompetitionResultsDto
+        competitionData: EventDataForCompetitionResultsData
     ): ByteArray {
 
         val bytes = ByteArrayOutputStream().use { out ->

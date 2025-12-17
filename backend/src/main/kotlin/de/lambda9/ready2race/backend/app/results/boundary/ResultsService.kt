@@ -428,7 +428,7 @@ object ResultsService {
                 }
             }
 
-        val eventDays = !EventDayRepo.getByEvent(event.id).orDie()
+        val eventDays = !EventRepo.getEventTimespan(eventId).orDie()
         val bytes = buildPdf(EventResultData(event.name, competitionsData, eventDays), null)
 
         KIO.ok(
@@ -443,7 +443,6 @@ object ResultsService {
         data: EventResultData,
         template: PageTemplate?,
     ): ByteArray {
-        val dateRange = minToMaxDatePairOrNull(data.eventDays.map { it.date }.distinct().toTypedArray())
         val doc = document(template) {
             page {
                 block(
@@ -463,7 +462,7 @@ object ResultsService {
                 ) {
                     data.name
                 }
-                if (dateRange != null) {
+                if (data.eventDays != null) {
                     text(
                         fontSize = 13f,
                         centered = true,
@@ -472,7 +471,10 @@ object ResultsService {
                         fontSize = 13f,
                         centered = true,
                     ) {
-                        "${dateRange.first.hr()} - ${dateRange.second.hr()}"
+                        if (data.eventDays.first == data.eventDays.second) {
+                            data.eventDays.first.hr()
+                        } else
+                        "${data.eventDays.first.hr()} - ${data.eventDays.second.hr()}"
                     }
                 }
 

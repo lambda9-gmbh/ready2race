@@ -144,4 +144,20 @@ object EventRepo {
     fun getEventsForExport() = EVENT_FOR_EXPORT.select()
 
     fun getEventsForExportByIds(ids: List<UUID>) = EVENT_FOR_EXPORT.select { ID.`in`(ids) }
+
+    fun getEventTimespan(eventId: UUID) = Jooq.query {
+        select(
+            DSL.min(EVENT_DAY.DATE),
+            DSL.max(EVENT_DAY.DATE)
+        )
+            .from(EVENT_DAY)
+            .where(EVENT_DAY.EVENT.eq(eventId))
+            .fetchOne { (min, max) ->
+                if (min != null) {
+                    min to max!!
+                } else {
+                    null
+                }
+            }
+    }
 }

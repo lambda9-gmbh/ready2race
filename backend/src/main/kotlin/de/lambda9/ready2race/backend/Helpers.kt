@@ -40,11 +40,3 @@ fun <T> singletonOrFallback(singletonSet: Set<T>, fallback: T): T {
         fallback
     }
 }
-
-fun minToMaxDatePairOrNull(dateArray: Array<LocalDate?>): Pair<LocalDate, LocalDate>?{
-    return if (dateArray.isNotEmpty()) {
-        dateArray.minBy { it!!.toEpochDay() }!! to dateArray.maxBy { it!!.toEpochDay() }!!
-    } else {
-        null
-    }
-}

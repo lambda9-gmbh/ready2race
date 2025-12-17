@@ -2,7 +2,7 @@ package de.lambda9.ready2race.backend.app.competition.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionDto
-import de.lambda9.ready2race.backend.app.competition.entity.EventDataForCompetitionResultsDto
+import de.lambda9.ready2race.backend.app.competition.entity.EventDataForCompetitionResultsData
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryDto
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toDto
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionChallengeConfigDto
@@ -143,9 +143,11 @@ fun CompetitionPublicViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comp
     )
 }
 
-fun EventDataForCompetitionResultsRecord.toDto() = EventDataForCompetitionResultsDto(
+fun EventDataForCompetitionResultsRecord.toDto() = EventDataForCompetitionResultsData(
     eventName = eventName!!,
     competitionId = competitionId!!,
     competitionName = competitionName!!,
-    eventDateRange = minToMaxDatePairOrNull(eventDays!!)
+    eventDateRange = if (eventStartDate != null) {
+        eventStartDate!! to eventEndDate!!
+    } else null
 )
