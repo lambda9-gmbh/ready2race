@@ -29,6 +29,13 @@ const FormInputDateTime = ({sx, ...props}: FormInputDateTimeProps) => {
                 }}
                 label={null}
                 sx={{width: 1, ...sx}}
+                textReadOnly={true}
+                inputProps={{
+                    onClick: e => {
+                        const button = e.currentTarget.querySelector('button')
+                        if (button) button.click()
+                    },
+                }}
             />
         </FormInputLabel>
     )
