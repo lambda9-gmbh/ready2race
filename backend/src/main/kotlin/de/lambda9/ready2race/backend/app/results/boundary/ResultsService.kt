@@ -22,7 +22,6 @@ import de.lambda9.ready2race.backend.calls.responses.pageResponse
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.lexiNumberComp
-import de.lambda9.ready2race.backend.minToMaxDatePairOrNull
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -34,7 +33,6 @@ import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.awt.Color
 import java.io.ByteArrayOutputStream
-import java.time.LocalDate
 import java.util.*
 
 object ResultsService {
@@ -466,7 +464,7 @@ object ResultsService {
                     text(
                         fontSize = 13f,
                         centered = true,
-                    ) {""}
+                    ) { "" }
                     text(
                         fontSize = 13f,
                         centered = true,
@@ -474,7 +472,7 @@ object ResultsService {
                         if (data.eventDays.first == data.eventDays.second) {
                             data.eventDays.first.hr()
                         } else
-                        "${data.eventDays.first.hr()} - ${data.eventDays.second.hr()}"
+                            "${data.eventDays.first.hr()} - ${data.eventDays.second.hr()}"
                     }
                 }
 
@@ -560,14 +558,14 @@ object ResultsService {
                                 block {
                                     text(
                                         fontStyle = FontStyle.BOLD
-                                    ) { team.participatingClubName?: team.clubName }
+                                    ) { team.participatingClubName ?: team.clubName }
                                     block(
                                         padding = Padding(left = 5f)
                                     ) {
                                         text(
                                             fontStyle = FontStyle.BOLD,
                                             fontSize = 8f,
-                                        ){
+                                        ) {
                                             "gemeldet von / "
                                         }
                                         text(

@@ -11,7 +11,6 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDataForCompetitionResultsRecord
-import de.lambda9.ready2race.backend.minToMaxDatePairOrNull
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
