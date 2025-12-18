@@ -40,7 +40,7 @@
         <kotlin.dotenv.version>6.5.1</kotlin.dotenv.version>
         <kotlin.logging.version>7.0.4</kotlin.logging.version>
         <tailwind.version>0.2.0</tailwind.version>
-        <testcontainers.version>1.20.6</testcontainers.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
         <simple.mail.version>8.12.4</simple.mail.version>
         <password4j.version>1.8.2</password4j.version>
         <pdfbox.version>3.0.4</pdfbox.version>
