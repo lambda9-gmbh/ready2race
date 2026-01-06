@@ -6611,7 +6611,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  /smtp-override:
+  /email/smtp-override:
     get:
       operationId: getSmtpConfig
       summary: Get SMTP configuration
@@ -6662,10 +6662,125 @@ paths:
 
     delete:
       operationId: deleteSmtpOverride
+      responses:
+        204:
+          description: EmailTemplate override deleted
+        401:
+          description: Unauthorized
+          $ref: '#/components/responses/401'
+        403:
+          description: Forbidden
+          $ref: '#/components/responses/403'
+        500:
+          description: Internal server error
+          $ref: '#/components/responses/500'
+
+  /email/template:
+    get:
+      parameters:
+        - in: query
+          name: key
+          required: true
+          schema:
+            $ref: '#/components/schemas/EmailTemplateKey'
+        - in: query
+          name: language
+          required: true
+          schema:
+            $ref: '#/components/schemas/EmailLanguage'
+      operationId: getEmailTemplate
+      responses:
+        200:
+          description: EmailTemplate configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateDto'
+        401:
+          description: Unauthorized
+          $ref: '#/components/responses/401'
+        403:
+          description: Forbidden
+          $ref: '#/components/responses/403'
+        500:
+          description: Internal server error
+          $ref: '#/components/responses/500'
+
+    put:
+      parameters:
+          - in: query
+            name: key
+            required: true
+            schema:
+              $ref: '#/components/schemas/EmailTemplateKey'
+          - in: query
+            name: language
+            required: true
+            schema:
+              $ref: '#/components/schemas/EmailLanguage'
+      operationId: setEmailTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+      responses:
+        204:
+          description: EmailTemplate override updated
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        401:
+          description: Unauthorized
+          $ref: '#/components/responses/401'
+        403:
+          description: Forbidden
+          $ref: '#/components/responses/403'
+        422:
+          description: Validation error
+          $ref: '#/components/responses/422'
+        500:
+          description: Internal server error
+          $ref: '#/components/responses/500'
+
+    delete:
+      parameters:
+          - in: query
+            name: key
+            required: true
+            schema:
+              $ref: '#/components/schemas/EmailTemplateKey'
+          - in: query
+            name: language
+            required: true
+            schema:
+              $ref: '#/components/schemas/EmailLanguage'
+      operationId: deleteEmailTemplate
       summary: Delete SMTP override configuration
       responses:
         204:
           description: SMTP override deleted
+        401:
+          description: Unauthorized
+          $ref: '#/components/responses/401'
+        403:
+          description: Forbidden
+          $ref: '#/components/responses/403'
+        500:
+          description: Internal server error
+          $ref: '#/components/responses/500'
+  
+  /email/template/list:
+    get:
+      operationId: getEmailTemplateList
+      responses:
+        200:
+          description: gets List of EmailTemplates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailPlaceholdersDto'
         401:
           description: Unauthorized
           $ref: '#/components/responses/401'
@@ -12190,7 +12305,82 @@ components:
         result:
           type: integer
 
+    EmailTemplateKey:
+      type: string
+      enum:
+        - USER_REGISTRATION
+        - USER_INVITATION
+        - USER_RESET_PASSWORD
+        - EVENT_REGISTRATION_CONFIRMATION
+        - EVENT_REGISTRATION_INVOICE
+        - PARTICIPANT_CHALLENGE_REGISTERED
+        - CERTIFICATE_OF_PARTICIPATION_PARTICIPANT
+      
+    EmailTemplaplatePlaceholder:
+      type: string
+      enum:
+       - RECIPIENT
+       - SENDER
+       - LINK
+       - EVENT
+       - CLUB
+       - PARTICIPANTS
+       - COMPETITIONS
+       - DATE
+    
+    EmailTemplateRequest:
+      type: object
+      required:
+        - subject
+        - body
+        - bodyIsHtml
+      properties:
+        subject:
+          type: string
+        body:
+          type: string
+        bodyIsHtml:
+          type: boolean
 
+    EmailTemplateDto:
+      type: object
+      required:
+        - key
+        - language
+        - subject
+        - body
+        - bodyIsHtml
+      properties:
+        key:
+          $ref: '#/components/schemas/EmailTemplateKey'
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        subject:
+          type: string
+        body:
+          type: string
+        bodyIsHtml:
+          type: boolean
+
+    EmailPlaceholdersDtoList:
+      type: array
+      items:
+        type: object
+        required:
+          - key
+          - required
+          - optional
+        properties:
+          key:
+            $ref: '#/components/schemas/EmailTemplateKey'
+          required:
+            type: array
+            items: string
+          optional:
+            type: array
+            items: string
+
+    
     SmtpConfigOverrideDto:
       type: object
       required:

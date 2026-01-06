@@ -3772,7 +3772,7 @@ export const getSmtpConfig = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).get<GetSmtpConfigResponse, GetSmtpConfigError, ThrowOnError>(
         {
             ...options,
-            url: '/smtp-override',
+            url: '/email/smtp-override',
         },
     )
 }
@@ -3789,7 +3789,7 @@ export const setSmtpOverride = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/smtp-override',
+        url: '/email/smtp-override',
     })
 }
 
@@ -3805,7 +3805,7 @@ export const deleteSmtpOverride = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/smtp-override',
+        url: '/email/smtp-override',
     })
 }
 

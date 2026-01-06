@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.email.boundary
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService.fullName
 import de.lambda9.ready2race.backend.app.email.control.EmailAttachmentRepo
 import de.lambda9.ready2race.backend.app.email.control.EmailIndividualTemplateRepo
 import de.lambda9.ready2race.backend.app.email.control.EmailRepo
@@ -16,6 +17,7 @@ import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailAttachmentRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EmailIndividualTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SmtpConfigOverrideRecord
 import de.lambda9.ready2race.backend.kio.accessConfig
@@ -197,6 +199,19 @@ object EmailService {
     fun deleteSent(): App<Nothing, Int> =
         EmailRepo.deleteSent().orDie()
 
+
+
+    fun getTemplateKeysWithPlaceholders(): App<Nothing, List<EmailPlaceholdersDto>> =
+        KIO.ok(
+            emailPlaceholderMapping.map { (key, value) ->
+                EmailPlaceholdersDto(
+                    key = key,
+                    required = value.required,
+                    optional = value.optional
+                )
+            }
+        )
+
     fun getTemplate(
         key: EmailTemplateKey,
         language: EmailLanguage,
@@ -206,6 +221,34 @@ object EmailService {
                 it?.let { EmailContentTemplate.Individual(it) }
                     ?: defaultTemplates[key to language]!!
             }
+
+    fun deleteTemplate(
+        key: EmailTemplateKey,
+        language: EmailLanguage,
+    ): App<Nothing, ApiResponse.NoData> =
+        EmailIndividualTemplateRepo.delete(key, language).orDie().map { ApiResponse.NoData }
+
+    fun setTemplate(
+        key: EmailTemplateKey,
+        language: EmailLanguage,
+        userId: UUID,
+        template: EmailTemplateRequest
+    ): App<Nothing, ApiResponse.NoData> =
+        EmailIndividualTemplateRepo.replaceIndividualTemplate(
+            key,
+            language,
+            EmailIndividualTemplateRecord(
+                key = key.name,
+                language = language.name,
+                subject = template.subject,
+                body = template.body,
+                bodyIsHtml = template.bodyIsHtml,
+                createdAt = LocalDateTime.now(),
+                createdBy = userId,
+                updatedAt = LocalDateTime.now(),
+                updatedBy = userId,
+            )
+        ).orDie().map { ApiResponse.NoData }
 
     fun getSMTPConfigOverride(): App<Nothing, ApiResponse.Dto<SmtpConfigOverrideDto>> =
         EmailRepo.getSMTPConfigOverride().orDie()

@@ -1,6 +1,8 @@
 package de.lambda9.ready2race.backend.parsing
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.validation.timecodePattern
@@ -22,6 +24,8 @@ fun interface Parser<A : Any> {
         val uuid get() = Parser { UUID.fromString(it) }
         val datetime get() = Parser { LocalDateTime.parse(it) }
         val boolean get() = Parser { it.toBooleanStrict() }
+        val emailTemplateKey get() = Parser { EmailTemplateKey.valueOf(it) }
+        val emailLanguage get() = Parser { EmailLanguage.valueOf(it) }
         val timecode
             get() = Parser {
                 val match = timecodePattern.find(it)
