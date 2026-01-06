@@ -3,21 +3,9 @@ import "@typespec/rest";
 import "./common.tsp";
 import "./workShift.tsp";
 
-using TypeSpec.Http;
-using TypeSpec.Rest;
+using Http;
 
 namespace Ready2Race;
-
-enum EmailLanguage {
-  EN,
-  DE,
-}
-
-enum Gender {
-  M,
-  F,
-  D,
-}
 
 model AppUserDto {
   id: string; // UUID

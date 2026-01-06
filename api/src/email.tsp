@@ -1,40 +1,73 @@
 import "@typespec/http";
-import "@typespec/rest";
+import "@typespec/openapi";
 
-using TypeSpec.Http;
-using TypeSpec.Rest;
-
+using Http;
+using OpenAPI;
 namespace Ready2Race;
 
-// ============================================================================
-// Models
-// ============================================================================
-
-model SmtpConfigOverrideDto {
-  // SMTP configuration
+enum EmailLanguage {
+  EN;
+  DE;
 }
 
-// ============================================================================
-// Routes
-// ============================================================================
+enum EmailTemplateKey {
+  USER_REGISTRATION;
+  USER_INVITATION;
+  USER_RESET_PASSWORD;
+  EVENT_REGISTRATION_CONFIRMATION;
+  EVENT_REGISTRATION_INVOICE;
+  PARTICIPANT_CHALLENGE_REGISTERED;
+  CERTIFICATE_OF_PARTICIPATION_PARTICIPANT;
+}
+
+model AssignedEmailDto {
+  recipient: string;
+  sentAt?: dateTime;
+  lastErrorAt?: dateTime;
+  lastError?: string;
+}
+
+model EmailTemplateDto {
+  key: EmailTemplateKey;
+  language: EmailLanguage;
+  subject: string;
+  body: string;
+  bodyIsHtml: boolean;
+}
+
+enum TransportStrategy {
+  SMTP;
+  SMTP_TLS;
+  SMTPS;
+}
+
+model SmtpConfigOverrideDto {
+  host: string;
+  port: int32;
+  username: string;
+  password: string;
+  smtpStrategy: TransportStrategy;
+  fromAddress: string;
+  fromName?: string;
+  localhost?: string;
+  replyTo?: string;
+}
 
 @route("/smtp-override")
 @tag("Email")
 interface EmailRoutes {
-  // Get SMTP config override
+
   @get
-  @route("")
-  getSmtpOverride(): SmtpConfigOverrideDto;
+  @operationId("getSmtpConfig")
+  op getSmtpConfig(): OK<SmtpConfigOverrideDto> | Unauthorized | Forbidden;
 
-  // Set SMTP config override
   @put
-  @route("")
-  setSmtpOverride(
-    @body request: SmtpConfigOverrideDto,
-  ): SmtpConfigOverrideDto;
+  @operationId("setSmtpOverride")
+  op setSmtpOverride(
+    @body request: SmtpConfigOverrideDto;
+  ): NoContent | BadRequest | Unauthorized | Forbidden | UnprocessableContent;
 
-  // Delete SMTP config override
   @delete
-  @route("")
-  deleteSmtpOverride(): void;
+  @operationId("deleteSmtpOverride")
+  op deleteSmtpOverride(): NoContent | Unauthorized | Forbidden;
 }

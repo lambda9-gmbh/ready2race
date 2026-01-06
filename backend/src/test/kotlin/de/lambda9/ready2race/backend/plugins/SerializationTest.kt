@@ -19,7 +19,7 @@ import kotlin.test.assertEquals
 class SerializationTest {
 
     // TODO: reenable after docker mess is cleared
-    /*@Test
+    @Test
     fun primitiveNullsDeserialize() = testApplicationComprehension {
 
         data class Primitives(
@@ -51,5 +51,5 @@ class SerializationTest {
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-    }*/
+    }
 }

@@ -1,26 +1,43 @@
 import "@typespec/http";
-import "@typespec/rest";
+import "@typespec/openapi";
 
-using TypeSpec.Http;
-using TypeSpec.Rest;
-
+using Http;
+using OpenAPI;
 namespace Ready2Race;
 
-// ============================================================================
-// Models
-// ============================================================================
+enum Action {
+  CREATE;
+  READ;
+  UPDATE;
+  DELETE;
+}
 
-model LoginDto {
-  id: string; // UUID
-  clubId?: string; // UUID
-  privileges: PrivilegeDto[];
+enum Resource {
+  USER;
+  EVENT;
+  CLUB;
+  REGISTRATION;
+  INVOICE;
+  SUBSTITUTION;
+  APP_EVENT_REQUIREMENT;
+  APP_QR_MANAGEMENT;
+  APP_COMPETITION_CHECK;
+  APP_CATERER;
+  WEB_DAV;
+  RESULT;
+  ADMINISTRATION;
+}
+
+enum Scope {
+  OWN;
+  GLOBAL;
 }
 
 model PrivilegeDto {
-  id: string; // UUID
-  action: string;
-  resource: string;
-  scope: string;
+  id: uuid;
+  action: Action;
+  resource: Resource;
+  scope: Scope;
 }
 
 model LoginRequest {
@@ -28,68 +45,34 @@ model LoginRequest {
   password: string;
 }
 
-// ============================================================================
-// Enums
-// ============================================================================
-
-enum PrivilegeAction {
-  CREATE,
-  READ,
-  UPDATE,
-  DELETE,
+model LoginDto {
+  id: uuid;
+  clubId?: uuid;
+  privileges: PrivilegeDto[];
 }
 
-enum PrivilegeResource {
-  USER,
-  EVENT,
-  CLUB,
-  REGISTRATION,
-  INVOICE,
-  SUBSTITUTION,
-  APP_EVENT_REQUIREMENT,
-  APP_QR_MANAGEMENT,
-  APP_COMPETITION_CHECK,
-  APP_CATERER,
-  WEB_DAV,
-  RESULT,
-  ADMINISTRATION,
-}
-
-enum PrivilegeScope {
-  OWN,
-  GLOBAL,
-}
-
-// ============================================================================
-// Routes
-// ============================================================================
-
-@route("/login")
 @tag("Auth")
-interface LoginRoutes {
-  // Login
+interface AuthRoutes {
+
   @post
-  @route("")
-  login(
-    @body request: LoginRequest,
-  ): LoginDto;
+  @route("/login")
+  @operationId("userLogin")
+  op login(
+    @body request: LoginRequest;
+  ): OK<LoginDto> | BadRequest | Unauthorized | UnprocessableContent | TooManyRequests;
 
-  // Check login status
   @get
-  @route("")
-  checkLogin(): LoginDto;
+  @route("/login")
+  @operationId("checkUserLogin")
+  op checkLogin(): OK<LoginDto> | NoContent;
 
-  // Logout
   @delete
-  @route("")
-  logout(): void;
-}
+  @route("/login")
+  @operationId("userLogout")
+  op logout(): NoContent;
 
-@route("/privileges")
-@tag("Auth")
-interface PrivilegeRoutes {
-  // Get all privileges
   @get
-  @route("")
-  getAllPrivileges(): PrivilegeDto[];
+  @route("/privileges")
+  @operationId("getPrivileges")
+  op getAllPrivileges(): OK<PrivilegeDto[]> | Unauthorized | Forbidden;
 }
