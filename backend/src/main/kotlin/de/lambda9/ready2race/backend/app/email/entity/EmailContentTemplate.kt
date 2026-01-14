@@ -7,6 +7,8 @@ sealed interface EmailContentTemplate {
     data class Default(
         val subject: String,
         val body: String,
+        val key: EmailTemplateKey,
+        val language: EmailLanguage,
     ) : EmailContentTemplate
 
     @JvmInline

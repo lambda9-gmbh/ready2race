@@ -1855,7 +1855,41 @@
     "title": "Administration",
     "tabs": {
       "smtp": "SMTP Configuration",
-      "theme": "Theme Customization"
+      "theme": "Theme Customization",
+      "emailTemplates": "Email templates"
+    },
+    "emailTemplates": {
+      "placeholders":{
+        "recipient": "John Doe",
+        "sender": "Jane Doe",
+        "link": "ready2race.info/example-link",
+        "event": "Example-Event",
+        "club": "Example-Club",
+        "participants": "",
+        "competitions": "",
+        "date": "01.01.1970"
+      },
+      "templateKeys": {
+        "USER_REGISTRATION":"User Registration",
+        "USER_INVITATION":"User Invitation",
+        "USER_RESET_PASSWORD":"Password Reset",
+        "EVENT_REGISTRATION_CONFIRMATION":"Event Registration Confirmation",
+        "EVENT_REGISTRATION_INVOICE":"Event Registration Invoice",
+        "PARTICIPANT_CHALLENGE_REGISTERED":"Challenge Registration Confirmed",
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT":"Certificate of Participation"
+      },
+      "requiredPlaceholders": "Required Placeholders:",
+      "optionalPlaceholders": "Optional Placeholders:",
+      "requiredPlaceholdersMissing": "All required Placeholders must be used",
+      "response": {
+        "changeSuccessful": "{{key}} template changed successfully",
+        "resetSuccessful": "{{key}} template reset successfully",
+        "changeFailed": "{{key}} template could not be changed"
+      },
+      "formActions": {
+        "reset": "Reset template",
+        "change": "Change template"
+      }
     },
     "smtp": {
       "title": "SMTP Configuration",

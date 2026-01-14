@@ -79,6 +79,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.collections.sortedBy
+import de.lambda9.ready2race.backend.validation.fold
 
 object CompetitionExecutionService {
 

@@ -6,4 +6,6 @@ data class EmailTemplateDto(
     val subject: String,
     val body: String,
     val bodyIsHtml: Boolean,
+    val requiredPlaceholders: List<String> = emptyList(),
+    val optionalPlaceholders: List<String> = emptyList(),
 )

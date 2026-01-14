@@ -727,6 +727,15 @@ import type {
     SetSmtpOverrideResponse,
     DeleteSmtpOverrideError,
     DeleteSmtpOverrideResponse,
+    GetEmailTemplatesData,
+    GetEmailTemplatesError,
+    GetEmailTemplatesResponse,
+    SetEmailTemplateData,
+    SetEmailTemplateError,
+    SetEmailTemplateResponse,
+    DeleteEmailTemplateData,
+    DeleteEmailTemplateError,
+    DeleteEmailTemplateResponse,
     ResendAccessTokenData,
     ResendAccessTokenError,
     ResendAccessTokenResponse,
@@ -3793,9 +3802,6 @@ export const setSmtpOverride = <ThrowOnError extends boolean = false>(
     })
 }
 
-/**
- * Delete SMTP override configuration
- */
 export const deleteSmtpOverride = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
@@ -3806,6 +3812,48 @@ export const deleteSmtpOverride = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/email/smtp-override',
+    })
+}
+
+export const getEmailTemplates = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEmailTemplatesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEmailTemplatesResponse,
+        GetEmailTemplatesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/email/templates',
+    })
+}
+
+export const setEmailTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetEmailTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SetEmailTemplateResponse,
+        SetEmailTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/email/templates',
+    })
+}
+
+/**
+ * Delete SMTP override configuration
+ */
+export const deleteEmailTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteEmailTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteEmailTemplateResponse,
+        DeleteEmailTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/email/templates',
     })
 }
 

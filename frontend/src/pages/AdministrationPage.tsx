@@ -17,6 +17,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {updateAdministrationConfigGlobal} from '@authorization/privileges.ts'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {ThemeConfigForm} from '@components/administration/ThemeConfigForm.tsx'
+import {EmailTemplates} from '@components/administration/emailTemplates/EmailTemplates.tsx'
 
 type Form = SmtpConfigOverrideDto
 
@@ -132,66 +133,67 @@ const AdministrationPage = () => {
                 <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
                     <Tab label={t('administration.tabs.smtp')} />
                     <Tab label={t('administration.tabs.theme')} />
+                    <Tab label={t('administration.tabs.emailTemplates')} />
                 </Tabs>
 
                 {tabValue === 0 && (
                     <Box>
                         <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                             <Stack spacing={4} maxWidth="70%">
-                        <FormInputText
-                            name={'host'}
-                            label={t('administration.smtp.host')}
-                            required
-                            disabled={!allowedToUpdate}
-                        />
-                        <FormInputNumber
-                            name={'port'}
-                            label={t('administration.smtp.port')}
-                            required
-                            min={1}
-                            max={65535}
-                            disabled={!allowedToUpdate}
-                        />
-                        <FormInputText
-                            name={'username'}
-                            label={t('administration.smtp.username')}
-                            required
-                            disabled={!allowedToUpdate}
-                        />
-                        <FormInputPassword
-                            name={'password'}
-                            label={t('administration.smtp.password')}
-                            required
-                            disabled={!allowedToUpdate}
-                        />
-                        <FormInputRadioButtonGroup
-                            options={smtpStrategyOptions}
-                            name={'smtpStrategy'}
-                            label={t('administration.smtp.smtpStrategy')}
-                            required
-                            disabled={!allowedToUpdate}
-                        />
-                        <FormInputEmail
-                            name={'fromAddress'}
-                            label={t('administration.smtp.fromAddress')}
-                            required
-                            disabled={!allowedToUpdate}
-                        />
-                        <FormInputText
-                            name={'fromName'}
-                            label={t('administration.smtp.fromName')}
-                            disabled={!allowedToUpdate}
-                        />
-                        <FormInputText
-                            name={'localhost'}
-                            label={t('administration.smtp.localhost')}
-                            disabled={!allowedToUpdate}
-                        />
-                        <FormInputEmail
-                            name={'replyTo'}
-                            label={t('administration.smtp.replyTo')}
-                            disabled={!allowedToUpdate}
-                        />
+                                <FormInputText
+                                    name={'host'}
+                                    label={t('administration.smtp.host')}
+                                    required
+                                    disabled={!allowedToUpdate}
+                                />
+                                <FormInputNumber
+                                    name={'port'}
+                                    label={t('administration.smtp.port')}
+                                    required
+                                    min={1}
+                                    max={65535}
+                                    disabled={!allowedToUpdate}
+                                />
+                                <FormInputText
+                                    name={'username'}
+                                    label={t('administration.smtp.username')}
+                                    required
+                                    disabled={!allowedToUpdate}
+                                />
+                                <FormInputPassword
+                                    name={'password'}
+                                    label={t('administration.smtp.password')}
+                                    required
+                                    disabled={!allowedToUpdate}
+                                />
+                                <FormInputRadioButtonGroup
+                                    options={smtpStrategyOptions}
+                                    name={'smtpStrategy'}
+                                    label={t('administration.smtp.smtpStrategy')}
+                                    required
+                                    disabled={!allowedToUpdate}
+                                />
+                                <FormInputEmail
+                                    name={'fromAddress'}
+                                    label={t('administration.smtp.fromAddress')}
+                                    required
+                                    disabled={!allowedToUpdate}
+                                />
+                                <FormInputText
+                                    name={'fromName'}
+                                    label={t('administration.smtp.fromName')}
+                                    disabled={!allowedToUpdate}
+                                />
+                                <FormInputText
+                                    name={'localhost'}
+                                    label={t('administration.smtp.localhost')}
+                                    disabled={!allowedToUpdate}
+                                />
+                                <FormInputEmail
+                                    name={'replyTo'}
+                                    label={t('administration.smtp.replyTo')}
+                                    disabled={!allowedToUpdate}
+                                />
                                 {allowedToUpdate && (
                                     <>
                                         <SubmitButton submitting={submitting}>
@@ -213,6 +215,12 @@ const AdministrationPage = () => {
                 {tabValue === 1 && (
                     <Box>
                         <ThemeConfigForm />
+                    </Box>
+                )}
+
+                {tabValue === 2 && (
+                    <Box>
+                        <EmailTemplates />
                     </Box>
                 )}
             </Stack>

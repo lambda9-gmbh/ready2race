@@ -30,6 +30,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.sessions.*
 import kotlin.reflect.KClass
+import de.lambda9.ready2race.backend.validation.fold
 
 val logger = KotlinLogging.logger {}
 

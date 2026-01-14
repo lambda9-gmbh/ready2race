@@ -53,6 +53,16 @@ object EmailIndividualTemplateRepo {
         }
     }
 
+    fun getAll(
+        language: EmailLanguage,
+    ): JIO<List<EmailIndividualTemplateRecord>> = Jooq.query {
+        with(EMAIL_INDIVIDUAL_TEMPLATE) {
+            selectFrom(this)
+                .where(LANGUAGE.eq(language.name))
+                .fetch()
+        }
+    }
+
     fun allAsJson() = EMAIL_INDIVIDUAL_TEMPLATE.selectAsJson()
 
     fun insertJsonData(data: String) = EMAIL_INDIVIDUAL_TEMPLATE.insertJsonData(data)

@@ -6675,27 +6675,24 @@ paths:
           description: Internal server error
           $ref: '#/components/responses/500'
 
-  /email/template:
+  /email/templates:
     get:
       parameters:
-        - in: query
-          name: key
-          required: true
-          schema:
-            $ref: '#/components/schemas/EmailTemplateKey'
         - in: query
           name: language
           required: true
           schema:
             $ref: '#/components/schemas/EmailLanguage'
-      operationId: getEmailTemplate
+      operationId: getEmailTemplates
       responses:
         200:
           description: EmailTemplate configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmailTemplateDto'
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmailTemplateDto'
         401:
           description: Unauthorized
           $ref: '#/components/responses/401'
@@ -6761,26 +6758,6 @@ paths:
       responses:
         204:
           description: SMTP override deleted
-        401:
-          description: Unauthorized
-          $ref: '#/components/responses/401'
-        403:
-          description: Forbidden
-          $ref: '#/components/responses/403'
-        500:
-          description: Internal server error
-          $ref: '#/components/responses/500'
-  
-  /email/template/list:
-    get:
-      operationId: getEmailTemplateList
-      responses:
-        200:
-          description: gets List of EmailTemplates
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EmailPlaceholdersDto'
         401:
           description: Unauthorized
           $ref: '#/components/responses/401'
@@ -12319,14 +12296,14 @@ components:
     EmailTemplaplatePlaceholder:
       type: string
       enum:
-       - RECIPIENT
-       - SENDER
-       - LINK
-       - EVENT
-       - CLUB
-       - PARTICIPANTS
-       - COMPETITIONS
-       - DATE
+       - recipient
+       - sender
+       - link
+       - event
+       - club
+       - participants
+       - competitions
+       - date
     
     EmailTemplateRequest:
       type: object
@@ -12350,6 +12327,8 @@ components:
         - subject
         - body
         - bodyIsHtml
+        - requiredPlaceholders
+        - optionalPlaceholders
       properties:
         key:
           $ref: '#/components/schemas/EmailTemplateKey'
@@ -12361,25 +12340,14 @@ components:
           type: string
         bodyIsHtml:
           type: boolean
-
-    EmailPlaceholdersDtoList:
-      type: array
-      items:
-        type: object
-        required:
-          - key
-          - required
-          - optional
-        properties:
-          key:
-            $ref: '#/components/schemas/EmailTemplateKey'
-          required:
+        requiredPlaceholders:
             type: array
-            items: string
-          optional:
-            type: array
-            items: string
-
+            items: 
+              $ref: '#/components/schemas/EmailTemplaplatePlaceholder'
+        optionalPlaceholders:
+          type: array
+          items: 
+            $ref: '#/components/schemas/EmailTemplaplatePlaceholder'
     
     SmtpConfigOverrideDto:
       type: object

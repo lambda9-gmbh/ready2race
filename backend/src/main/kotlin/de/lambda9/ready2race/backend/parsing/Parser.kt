@@ -24,8 +24,6 @@ fun interface Parser<A : Any> {
         val uuid get() = Parser { UUID.fromString(it) }
         val datetime get() = Parser { LocalDateTime.parse(it) }
         val boolean get() = Parser { it.toBooleanStrict() }
-        val emailTemplateKey get() = Parser { EmailTemplateKey.valueOf(it) }
-        val emailLanguage get() = Parser { EmailLanguage.valueOf(it) }
         val timecode
             get() = Parser {
                 val match = timecodePattern.find(it)
