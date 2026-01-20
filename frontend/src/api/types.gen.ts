@@ -705,6 +705,41 @@ export type Duplicate = {
 
 export type EmailLanguage = 'DE' | 'EN'
 
+export type EmailTemplaplatePlaceholder =
+    | 'recipient'
+    | 'sender'
+    | 'link'
+    | 'event'
+    | 'club'
+    | 'participants'
+    | 'competitions'
+    | 'date'
+
+export type EmailTemplateDto = {
+    key: EmailTemplateKey
+    language: EmailLanguage
+    subject: string
+    body: string
+    bodyIsHtml: boolean
+    requiredPlaceholders: Array<EmailTemplaplatePlaceholder>
+    optionalPlaceholders: Array<EmailTemplaplatePlaceholder>
+}
+
+export type EmailTemplateKey =
+    | 'USER_REGISTRATION'
+    | 'USER_INVITATION'
+    | 'USER_RESET_PASSWORD'
+    | 'EVENT_REGISTRATION_CONFIRMATION'
+    | 'EVENT_REGISTRATION_INVOICE'
+    | 'PARTICIPANT_CHALLENGE_REGISTERED'
+    | 'CERTIFICATE_OF_PARTICIPATION_PARTICIPANT'
+
+export type EmailTemplateRequest = {
+    subject: string
+    body: string
+    bodyIsHtml: boolean
+}
+
 export type ErrorCode =
     | 'CAPTCHA_WRONG'
     | 'EMAIL_IN_USE'
@@ -5645,6 +5680,39 @@ export type SetSmtpOverrideError = BadRequestError | ApiError | UnprocessableEnt
 export type DeleteSmtpOverrideResponse = void
 
 export type DeleteSmtpOverrideError = ApiError
+
+export type GetEmailTemplatesData = {
+    query: {
+        language: EmailLanguage
+    }
+}
+
+export type GetEmailTemplatesResponse = Array<EmailTemplateDto>
+
+export type GetEmailTemplatesError = ApiError
+
+export type SetEmailTemplateData = {
+    body: EmailTemplateRequest
+    query: {
+        key: EmailTemplateKey
+        language: EmailLanguage
+    }
+}
+
+export type SetEmailTemplateResponse = void
+
+export type SetEmailTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteEmailTemplateData = {
+    query: {
+        key: EmailTemplateKey
+        language: EmailLanguage
+    }
+}
+
+export type DeleteEmailTemplateResponse = void
+
+export type DeleteEmailTemplateError = ApiError
 
 export type ResendAccessTokenData = {
     body: ResendAccessTokenRequest

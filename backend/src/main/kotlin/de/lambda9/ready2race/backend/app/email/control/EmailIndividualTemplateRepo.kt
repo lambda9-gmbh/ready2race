@@ -4,10 +4,14 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailIndividualTemplateRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.SmtpConfigOverrideRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EMAIL_INDIVIDUAL_TEMPLATE
+import de.lambda9.ready2race.backend.database.generated.tables.references.SMTP_CONFIG_OVERRIDE
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.selectAsJson
 import de.lambda9.ready2race.backend.database.insertJsonData
+import de.lambda9.ready2race.backend.database.selectOne
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -49,7 +53,23 @@ object EmailIndividualTemplateRepo {
         }
     }
 
+    fun getAll(
+        language: EmailLanguage,
+    ): JIO<List<EmailIndividualTemplateRecord>> = Jooq.query {
+        with(EMAIL_INDIVIDUAL_TEMPLATE) {
+            selectFrom(this)
+                .where(LANGUAGE.eq(language.name))
+                .fetch()
+        }
+    }
+
     fun allAsJson() = EMAIL_INDIVIDUAL_TEMPLATE.selectAsJson()
 
     fun insertJsonData(data: String) = EMAIL_INDIVIDUAL_TEMPLATE.insertJsonData(data)
+
+    fun replaceIndividualTemplate(key: EmailTemplateKey, language: EmailLanguage, record: EmailIndividualTemplateRecord) =
+        delete(key, language).andThen {
+            create(record)
+        }
+
 }

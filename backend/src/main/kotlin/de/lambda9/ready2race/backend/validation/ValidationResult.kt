@@ -1,6 +1,8 @@
 package de.lambda9.ready2race.backend.validation
 
 import com.fasterxml.jackson.annotation.JsonValue
+import de.lambda9.ready2race.backend.validation.ValidationResult.Invalid
+import de.lambda9.ready2race.backend.validation.ValidationResult.Valid
 
 sealed interface ValidationResult {
     data object Valid : ValidationResult // todo: serialize
@@ -22,13 +24,7 @@ sealed interface ValidationResult {
         data class OneOf(val oneOf: List<ValidationResult>) : Invalid
     }
 
-    fun <A> fold(
-        onValid: () -> A,
-        onInvalid: (Invalid) -> A,
-    ): A = when (this) {
-        is Invalid -> onInvalid(this)
-        Valid -> onValid()
-    }
+
 
     companion object {
 
@@ -59,4 +55,12 @@ sealed interface ValidationResult {
             }
 
     }
+}
+
+fun <A> ValidationResult.fold(
+    onValid: () -> A,
+    onInvalid: (Invalid) -> A,
+): A = when (this) {
+    is Invalid -> onInvalid(this)
+    Valid -> onValid()
 }

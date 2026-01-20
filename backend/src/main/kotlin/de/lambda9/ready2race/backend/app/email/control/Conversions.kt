@@ -1,33 +1,46 @@
 package de.lambda9.ready2race.backend.app.email.control
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.email.entity.EmailContentTemplate
-import de.lambda9.ready2race.backend.app.email.entity.AssignedEmailDto
-import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateDto
-import de.lambda9.ready2race.backend.app.email.entity.SmtpConfigOverrideDto
+import de.lambda9.ready2race.backend.app.email.boundary.EmailService.emailPlaceholderMapping
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
+import de.lambda9.ready2race.backend.app.email.entity.*
 import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SmtpConfigOverrideRecord
 import de.lambda9.tailwind.core.KIO
 import org.simplejavamail.api.mailer.config.TransportStrategy
 
-fun EmailContentTemplate.toDto(): App<Nothing, EmailTemplateDto> = KIO.ok(
+fun EmailContentTemplate.toDto(): EmailTemplateDto =
     when (this) {
-        is EmailContentTemplate.Default ->
+        is EmailContentTemplate.Default -> {
+            val emailPlaceholders = emailPlaceholderMapping[key]
+
             EmailTemplateDto(
                 subject = subject,
                 body = body,
                 bodyIsHtml = false,
+                key = key,
+                language = language,
+                requiredPlaceholders = emailPlaceholders?.required ?: emptyList(),
+                optionalPlaceholders = emailPlaceholders?.optional ?: emptyList(),
             )
+        }
 
-        is EmailContentTemplate.Individual ->
+
+        is EmailContentTemplate.Individual -> {
+            val emailPlaceholders = emailPlaceholderMapping[EmailTemplateKey.valueOf(template.key)]
             EmailTemplateDto(
                 subject = template.subject,
                 body = template.body,
                 bodyIsHtml = template.bodyIsHtml,
+                key = EmailTemplateKey.valueOf(template.key),
+                language = EmailLanguage.valueOf(template.language),
+                requiredPlaceholders = emailPlaceholders?.required ?: emptyList(),
+                optionalPlaceholders = emailPlaceholders?.optional ?: emptyList(),
             )
+        }
     }
-)
+
 
 fun EmailRecord.toAssignedDto(): App<Nothing, AssignedEmailDto> =
     KIO.ok(
@@ -59,7 +72,7 @@ fun SmtpConfigOverrideRecord.toSmtpConfig(): App<Nothing, Config.Smtp> = KIO.ok(
         port = port,
         user = username,
         password = password,
-        strategy = TransportStrategy.valueOf(smtpStrategy,),
+        strategy = TransportStrategy.valueOf(smtpStrategy),
         from = Config.Smtp.From(
             address = fromAddress,
             name = fromName

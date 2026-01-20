@@ -1,12 +1,14 @@
 package de.lambda9.ready2race.backend.app.email.entity
 
-enum class EmailTemplatePlaceholder(val key: String) {
-    RECIPIENT("##recipient##"),
-    SENDER("##sender##"),
-    LINK("##link##"),
-    EVENT("##event##"),
-    CLUB("##club##"),
-    PARTICIPANTS("##participants##"),
-    COMPETITIONS("##competitions##"),
-    DATE("##date##"),
+enum class EmailTemplatePlaceholder {
+    RECIPIENT,
+    SENDER,
+    LINK,
+    EVENT,
+    CLUB,
+    PARTICIPANTS,
+    COMPETITIONS,
+    DATE;
+
+    val key get() = "##${name.lowercase()}##"
 }

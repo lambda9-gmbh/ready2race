@@ -1,6 +1,8 @@
 package de.lambda9.ready2race.backend.parsing
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.validation.timecodePattern

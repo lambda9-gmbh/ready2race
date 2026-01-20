@@ -1855,7 +1855,43 @@
     "title": "Administration",
     "tabs": {
       "smtp": "SMTP-Konfiguration",
-      "theme": "Theme-Anpassung"
+      "theme": "Theme-Anpassung",
+      "emailTemplates": "Email-Vorlagen"
+    },
+    "emailTemplates": {
+      "placeholders":{
+        "recipient": "Max Mustermann",
+        "sender": "Erika Mustermann",
+        "link": "ready2race.info/beispiel-link",
+        "event": "Beispiel-Veranstaltung",
+        "club": "Beispiel-Verein e.V.",
+        "participants": "",
+        "competitions": "",
+        "date": "01.01.1970"
+      },
+      "templateKeys": {
+        "USER_REGISTRATION":"Benutzerregistrierung",
+        "USER_INVITATION":"Benutzereinladung",
+        "USER_RESET_PASSWORD":"Passwort zurücksetzen",
+        "EVENT_REGISTRATION_CONFIRMATION":"Anmeldebestätigung für Veranstaltung",
+        "EVENT_REGISTRATION_INVOICE":"Rechnung zur Veranstaltungsanmeldung",
+        "PARTICIPANT_CHALLENGE_REGISTERED":"Anmeldebestätigung für Challenge",
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT":"Teilnahmezertifikat"
+      },
+      "requiredPlaceholders": "Benötigte Platzhalter:",
+      "optionalPlaceholders": "Optionale Platzhalter:",
+      "requiredPlaceholdersMissing": "Alle benötigten Platzhalter müssen verwendet werden",
+      "resetTemplate":"Vorlage zurücksetzten",
+      "resetTemplateConfirmationText":"Sind Sie sicher, dass Sie die Vorlage zurücksetzen wollen?",
+      "response":{
+        "changeSuccessful": "{{key}}-Vorlage erfolgreich geändert",
+        "resetSuccessful": "{{key}}-Vorlage erfolgreich zurückgesetzt",
+        "changeFailed": "{{key}}-Vorlage konnte nicht verändert werden"
+      },
+      "formActions":{
+        "reset": "Template zurücksetzten",
+        "change": "Template ändern"
+      }
     },
     "smtp": {
       "title": "SMTP Konfiguration",

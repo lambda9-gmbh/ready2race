@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.email.boundary
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService.fullName
 import de.lambda9.ready2race.backend.app.email.control.EmailAttachmentRepo
 import de.lambda9.ready2race.backend.app.email.control.EmailIndividualTemplateRepo
 import de.lambda9.ready2race.backend.app.email.control.EmailRepo
@@ -16,6 +17,7 @@ import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailAttachmentRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EmailIndividualTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SmtpConfigOverrideRecord
 import de.lambda9.ready2race.backend.kio.accessConfig
@@ -73,7 +75,7 @@ object EmailService {
             EmailTemplateKey.entries.map { key ->
                 fromFile.templates.find { it.key == key }?.let {
                     val body = it.body.joinToString("\n") + "\n\n" + fromFile.footer.joinToString("\n")
-                    (it.key to lng) to EmailContentTemplate.Default(it.subject, body)
+                    (it.key to lng) to EmailContentTemplate.Default(it.subject, body, it.key, lng)
                 } ?: throw Exception("Missing key in $lngFile: $key")
             }
         }.toMap()
@@ -197,6 +199,7 @@ object EmailService {
     fun deleteSent(): App<Nothing, Int> =
         EmailRepo.deleteSent().orDie()
 
+
     fun getTemplate(
         key: EmailTemplateKey,
         language: EmailLanguage,
@@ -206,6 +209,52 @@ object EmailService {
                 it?.let { EmailContentTemplate.Individual(it) }
                     ?: defaultTemplates[key to language]!!
             }
+
+    fun getTemplates(
+        language: EmailLanguage,
+    ): App<Nothing, ApiResponse.ListDto<EmailTemplateDto>> = KIO.comprehension {
+        val individuals = !EmailIndividualTemplateRepo.getAll(language).orDie()
+            .map {
+                it.map { EmailContentTemplate.Individual(it).toDto() }
+            }
+        val defaults = EmailTemplateKey.entries.mapNotNull { key ->
+            if (individuals.any {it.key == key}){
+                null
+            } else {
+                defaultTemplates[key to language]!!.toDto()
+            }
+        }
+        val list = (individuals + defaults).sortedBy { it.key.name }
+        KIO.ok(ApiResponse.ListDto(list))
+    }
+
+    fun deleteTemplate(
+        key: EmailTemplateKey,
+        language: EmailLanguage,
+    ): App<Nothing, ApiResponse.NoData> =
+        EmailIndividualTemplateRepo.delete(key, language).orDie().map { ApiResponse.NoData }
+
+    fun setTemplate(
+        key: EmailTemplateKey,
+        language: EmailLanguage,
+        userId: UUID,
+        template: EmailTemplateRequest
+    ): App<Nothing, ApiResponse.NoData> =
+        EmailIndividualTemplateRepo.replaceIndividualTemplate(
+            key,
+            language,
+            EmailIndividualTemplateRecord(
+                key = key.name,
+                language = language.name,
+                subject = template.subject,
+                body = template.body,
+                bodyIsHtml = template.bodyIsHtml,
+                createdAt = LocalDateTime.now(),
+                createdBy = userId,
+                updatedAt = LocalDateTime.now(),
+                updatedBy = userId,
+            )
+        ).orDie().map { ApiResponse.NoData }
 
     fun getSMTPConfigOverride(): App<Nothing, ApiResponse.Dto<SmtpConfigOverrideDto>> =
         EmailRepo.getSMTPConfigOverride().orDie()
@@ -233,4 +282,42 @@ object EmailService {
 
     fun deleteSMTPConfigOverride(): App<Nothing, ApiResponse.NoData> =
         EmailRepo.deleteSMTPConfigOverride().orDie().map { ApiResponse.NoData }
+
+    val emailPlaceholderMapping: Map<EmailTemplateKey, EmailPlaceholders> = mapOf(
+        EmailTemplateKey.USER_REGISTRATION to EmailPlaceholders(
+            required = listOf(EmailTemplatePlaceholder.LINK.name.lowercase()),
+            optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase())
+        ),
+        EmailTemplateKey.USER_INVITATION to EmailPlaceholders(
+            required = listOf(EmailTemplatePlaceholder.LINK.name.lowercase()),
+            optional = listOf(EmailTemplatePlaceholder.SENDER.name.lowercase(),
+                EmailTemplatePlaceholder.RECIPIENT.name.lowercase() )
+        ),
+        EmailTemplateKey.USER_RESET_PASSWORD to EmailPlaceholders(
+            required = listOf(EmailTemplatePlaceholder.LINK.name.lowercase()),
+            optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase())
+        ),
+        EmailTemplateKey.EVENT_REGISTRATION_CONFIRMATION to EmailPlaceholders(
+            optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
+                EmailTemplatePlaceholder.EVENT.name.lowercase(),
+                EmailTemplatePlaceholder.CLUB.name.lowercase(),
+                EmailTemplatePlaceholder.PARTICIPANTS.name.lowercase(),
+                EmailTemplatePlaceholder.COMPETITIONS.name.lowercase())
+        ),
+        EmailTemplateKey.EVENT_REGISTRATION_INVOICE to EmailPlaceholders(
+            optional = listOf(EmailTemplatePlaceholder.EVENT.name.lowercase(),
+                EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
+                EmailTemplatePlaceholder.DATE.name.lowercase())
+        ),
+        EmailTemplateKey.PARTICIPANT_CHALLENGE_REGISTERED to EmailPlaceholders(
+            required = listOf(EmailTemplatePlaceholder.LINK.name.lowercase()),
+            optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
+                EmailTemplatePlaceholder.EVENT.name.lowercase())
+        ),
+        EmailTemplateKey.CERTIFICATE_OF_PARTICIPATION_PARTICIPANT to EmailPlaceholders(
+            optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
+                EmailTemplatePlaceholder.EVENT.name.lowercase())
+        )
+    )
+
 }
