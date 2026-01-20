@@ -1,9 +1,10 @@
 import {
+    Accordion,
+    AccordionActions,
+    AccordionDetails,
+    AccordionSummary,
     Box,
     Button,
-    Card,
-    CardActions,
-    CardContent,
     MenuItem,
     Select,
     SelectChangeEvent,
@@ -19,6 +20,7 @@ import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined'
 import {EmailTemplatePreview} from '@components/administration/emailTemplates/EmailTemplatePreview.tsx'
 import {useTranslation} from 'react-i18next'
 import {EmailTemplateEditor} from '@components/administration/emailTemplates/EmailTemplateEditor.tsx'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 export function EmailTemplates() {
     const {t} = useTranslation()
@@ -67,10 +69,6 @@ export function EmailTemplates() {
             </Box>
             <Box
                 sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    flexWrap: 'wrap',
-                    gap: 2,
                     mt: 2,
                 }}>
                 {templates &&
@@ -79,15 +77,12 @@ export function EmailTemplates() {
                             template?.optionalPlaceholders,
                         )
                         return (
-                            <Card
+                            <Accordion
                                 sx={{
-                                    width: 'auto',
-                                    flex: '1 45%',
-                                    minWidth: '400px',
                                     height: 'fit-content',
                                 }}
                                 key={template.key}>
-                                <CardContent>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                     <Typography
                                         gutterBottom
                                         sx={{fontSize: 16, fontWeight: 'bold'}}>
@@ -95,21 +90,23 @@ export function EmailTemplates() {
                                             `administration.emailTemplates.templateKeys.${template.key}`,
                                         )}
                                     </Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
                                     <EmailTemplatePreview
                                         body={template.body}
                                         subject={template.subject}
                                         placeholders={combinedPlaceholders}
                                     />
-                                </CardContent>
-                                <CardActions>
+                                </AccordionDetails>
+                                <AccordionActions>
                                     <Button
                                         size="small"
                                         startIcon={<BorderColorOutlinedIcon />}
                                         onClick={() => setSelectedTemplate(template)}>
                                         {t('common.edit')}
                                     </Button>
-                                </CardActions>
-                            </Card>
+                                </AccordionActions>
+                            </Accordion>
                         )
                     })}
             </Box>

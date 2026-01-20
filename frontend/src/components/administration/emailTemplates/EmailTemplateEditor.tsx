@@ -39,7 +39,7 @@ export function EmailTemplateEditor({open, onClose, template, lng}: PropsWithChi
             body: {
                 subject: formData.subject,
                 body: formData.body,
-                bodyIsHtml: true,
+                bodyIsHtml: false,
             },
             query: {
                 key: template.key,
@@ -173,23 +173,6 @@ export function EmailTemplateEditor({open, onClose, template, lng}: PropsWithChi
                                         fontFamily: 'monospace',
                                     },
                                 }}
-                                // rules={{
-                                //     validate: (value: string) => {
-                                //         let placeholderMissing = false
-                                //         template.requiredPlaceholders.forEach(placeholder => {
-                                //             if (!value.includes(`##${placeholder}##`)) {
-                                //                 placeholderMissing = true
-                                //             }
-                                //         })
-                                //         if (placeholderMissing) {
-                                //             return t(
-                                //                 'administration.emailTemplates.requiredPlaceholdersMissing',
-                                //             )
-                                //         } else {
-                                //             return true
-                                //         }
-                                //     },
-                                // }}
                             />
                         </Stack>
                         <Box
@@ -209,13 +192,13 @@ export function EmailTemplateEditor({open, onClose, template, lng}: PropsWithChi
                         </Box>
                     </Stack>
                 </DialogContent>
-                <DialogActions>
-                    <SubmitButton submitting={submitting}>
-                        {t('administration.smtp.submit')}
-                    </SubmitButton>
+                <DialogActions sx={{pb: 2, pr: 3}}>
                     <LoadingButton variant={'outlined'} pending={resetting} onClick={handleReset}>
                         {t('administration.smtp.reset')}
                     </LoadingButton>
+                    <SubmitButton submitting={submitting}>
+                        {t('administration.smtp.submit')}
+                    </SubmitButton>
                 </DialogActions>
             </FormContainer>
         </BaseDialog>
