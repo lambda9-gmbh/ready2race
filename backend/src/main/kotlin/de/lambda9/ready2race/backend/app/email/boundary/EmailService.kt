@@ -298,14 +298,14 @@ object EmailService {
             optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase())
         ),
         EmailTemplateKey.EVENT_REGISTRATION_CONFIRMATION to EmailPlaceholders(
-            required = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
+            optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
                 EmailTemplatePlaceholder.EVENT.name.lowercase(),
                 EmailTemplatePlaceholder.CLUB.name.lowercase(),
                 EmailTemplatePlaceholder.PARTICIPANTS.name.lowercase(),
                 EmailTemplatePlaceholder.COMPETITIONS.name.lowercase())
         ),
         EmailTemplateKey.EVENT_REGISTRATION_INVOICE to EmailPlaceholders(
-            required = listOf(EmailTemplatePlaceholder.EVENT.name.lowercase(),
+            optional = listOf(EmailTemplatePlaceholder.EVENT.name.lowercase(),
                 EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
                 EmailTemplatePlaceholder.DATE.name.lowercase())
         ),

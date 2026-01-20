@@ -24,13 +24,13 @@ export function EmailTemplateTemplatePlaceholderTable({title, placeholders}: Pro
                                             width: '1%',
                                             whiteSpace: 'nowrap',
                                             pr: 4,
-                                            pb: 0.5,
                                             pl: 2,
+                                            pb: 0.5,
                                             borderBottom: 'none',
                                         }}>
                                         {`##${placeholder}##`}
                                     </TableCell>
-                                    <TableCell align={'left'} sx={{borderBottom: 'none'}}>
+                                    <TableCell align={'left'} sx={{borderBottom: 'none', pb: 0.5}}>
                                         {t(
                                             `administration.emailTemplates.placeholders.${placeholder}`,
                                         )}

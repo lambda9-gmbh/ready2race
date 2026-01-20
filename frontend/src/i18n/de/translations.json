@@ -1881,6 +1881,8 @@
       "requiredPlaceholders": "Benötigte Platzhalter:",
       "optionalPlaceholders": "Optionale Platzhalter:",
       "requiredPlaceholdersMissing": "Alle benötigten Platzhalter müssen verwendet werden",
+      "resetTemplate":"Vorlage zurücksetzten",
+      "resetTemplateConfirmationText":"Sind Sie sicher, dass Sie die Vorlage zurücksetzen wollen?",
       "response":{
         "changeSuccessful": "{{key}}-Vorlage erfolgreich geändert",
         "resetSuccessful": "{{key}}-Vorlage erfolgreich zurückgesetzt",

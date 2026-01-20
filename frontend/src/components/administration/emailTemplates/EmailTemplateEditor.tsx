@@ -8,8 +8,7 @@ import {EmailTemplateTemplatePlaceholderTable} from '@components/administration/
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
-import LoadingButton from '@components/form/LoadingButton.tsx'
-import {deleteEmailTemplate, setEmailTemplate} from '@api/sdk.gen.ts'
+import {setEmailTemplate} from '@api/sdk.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
 
 type Props = {
@@ -22,7 +21,7 @@ type Form = EmailTemplateDto
 
 export function EmailTemplateEditor({open, onClose, template, lng}: PropsWithChildren<Props>) {
     const [submitting, setSubmitting] = useState(true)
-    const [resetting, setResetting] = useState(true)
+
     const {t} = useTranslation()
     const feedback = useFeedback()
     const formContext = useForm<Form>({
@@ -30,7 +29,6 @@ export function EmailTemplateEditor({open, onClose, template, lng}: PropsWithChi
     })
     useEffect(() => {
         setSubmitting(false)
-        setResetting(false)
     }, [template])
 
     const handleSubmit = async (formData: Form) => {
@@ -66,34 +64,7 @@ export function EmailTemplateEditor({open, onClose, template, lng}: PropsWithChi
             }
         }
     }
-    const handleReset = async () => {
-        setResetting(true)
-        const {error, response} = await deleteEmailTemplate({
-            query: {
-                key: template.key,
-                language: lng as EmailLanguage,
-            },
-        })
-        setResetting(false)
-        if (response.status === 204) {
-            feedback.success(
-                t('administration.emailTemplates.response.resetSuccessful', {
-                    key: t(`administration.emailTemplates.templateKeys.${template.key}`),
-                }),
-            )
-            onClose()
-        } else if (error) {
-            if (error.status.value === 500) {
-                feedback.error(t('common.error.unexpected'))
-            } else {
-                feedback.success(
-                    t('administration.emailTemplates.response.changeFailed', {
-                        key: t(`administration.emailTemplates.templateKeys.${template.key}`),
-                    }),
-                )
-            }
-        }
-    }
+
     return (
         <BaseDialog open={open} onClose={onClose} maxWidth={'lg'}>
             <FormContainer formContext={formContext} onSuccess={handleSubmit}>
@@ -193,9 +164,6 @@ export function EmailTemplateEditor({open, onClose, template, lng}: PropsWithChi
                     </Stack>
                 </DialogContent>
                 <DialogActions sx={{pb: 2, pr: 3}}>
-                    <LoadingButton variant={'outlined'} pending={resetting} onClick={handleReset}>
-                        {t('administration.smtp.reset')}
-                    </LoadingButton>
                     <SubmitButton submitting={submitting}>
                         {t('administration.smtp.submit')}
                     </SubmitButton>
