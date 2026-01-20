@@ -27,6 +27,7 @@ export const touchSupported = () => {
 export const languageMapping: Record<Language, EmailLanguage> = {
     de: 'DE',
     en: 'EN',
+    da: 'DA',
 }
 
 export const i18nLanguage = (): Language =>

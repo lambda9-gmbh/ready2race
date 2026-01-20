@@ -8,6 +8,7 @@ namespace Ready2Race;
 enum EmailLanguage {
   EN;
   DE;
+  DA;
 }
 
 enum EmailTemplateKey {

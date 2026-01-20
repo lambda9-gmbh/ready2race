@@ -7177,6 +7177,7 @@ components:
       enum:
         - DE
         - EN
+        - DA
 
     ErrorCode:
       type: string

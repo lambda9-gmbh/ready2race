@@ -3,19 +3,23 @@ import {initReactI18next} from 'react-i18next'
 import I18nextBrowserLanguageDetector from 'i18next-browser-languagedetector'
 import enTrans from './en/translations.json'
 import deTrans from './de/translations.json'
+import daTrans from './da/translations.json'
 import {Locale as DateLocale} from 'date-fns'
 import {de} from 'date-fns/locale/de'
+import {da} from 'date-fns/locale/da'
 import {Localization as MaterialLocale} from '@mui/material/locale'
 import {Localization as DataGridLocale} from '@mui/x-data-grid/internals'
-import {deDE as deMaterial, enUS as enMaterial} from '@mui/material/locale'
+import {deDE as deMaterial, enUS as enMaterial, daDK as daMaterial} from '@mui/material/locale'
 import {enUS as enDataGrid} from '@mui/x-data-grid/locales/enUS'
 import {deDE as deDataGrid} from '@mui/x-data-grid/locales/deDE'
+import {daDK as daDataGrid} from '@mui/x-data-grid/locales/daDK'
 import {enUS as enDatePicker} from '@mui/x-date-pickers/locales/enUS'
 import {deDE as deDatePicker} from '@mui/x-date-pickers/locales/deDE'
+import {daDK as daDatePicker} from '@mui/x-date-pickers/locales/daDK'
 import {PickersLocaleText} from '@mui/x-date-pickers'
 import {isFromUnion} from '@utils/helpers.ts'
 
-export const LANGUAGES = ['de', 'en'] as const
+export const LANGUAGES = ['de', 'en', 'da'] as const
 export type Language = (typeof LANGUAGES)[number]
 export const isLanguage = (s: string | undefined) => isFromUnion(s, LANGUAGES)
 
@@ -33,6 +37,12 @@ export const locales: Record<Language, Locale> = {
         dataGrid: deDataGrid,
         datePicker: deDatePicker.components.MuiLocalizationProvider.defaultProps.localeText,
     },
+    da: {
+        date: da,
+        material: daMaterial,
+        dataGrid: daDataGrid,
+        datePicker: daDatePicker.components.MuiLocalizationProvider.defaultProps.localeText,
+    },
     en: {
         date: undefined,
         material: enMaterial,
@@ -44,6 +54,7 @@ export const locales: Record<Language, Locale> = {
 export const languageNames: Record<Language, string> = {
     de: 'deutsch',
     en: 'english',
+    da: 'dansk',
 }
 
 export const fallbackLng: Language = 'en'
@@ -54,6 +65,9 @@ export const resources = {
     },
     de: {
         translations: deTrans,
+    },
+    da: {
+        translations: daTrans,
     },
 } as const
 

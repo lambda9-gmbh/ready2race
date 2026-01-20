@@ -1,0 +1,113 @@
+{
+  "footer": [
+    "P.S.: Bemærk: Denne e-mail er blevet genereret og sendt automatisk."
+  ],
+  "templates": [
+    {
+      "key": "USER_REGISTRATION",
+      "subject": "Ready2Race – Fuldfør din registrering",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "Der er blevet oprettet en anmodning om at oprette en brugerkonto til Ready2Race med denne e-mailadresse.",
+        "Hvis du ikke selv har foretaget denne handling, kan du blot se bort fra denne e-mail.",
+        "",
+        "For at fuldføre din registrering skal du klikke på linket nedenfor eller kopiere det ind i adresselinjen i din webbrowser.",
+        "",
+        "##link##",
+        "",
+        "Bemærk venligst, at registreringen kun kan fuldføres inden for 24 timer."
+      ]
+    },
+    {
+      "key": "USER_INVITATION",
+      "subject": "Ready2Race – Invitation",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "Du er blevet inviteret af ##sender## til at bruge Ready2Race.",
+        "",
+        "For at acceptere invitationen skal du klikke på linket nedenfor eller kopiere det ind i adresselinjen i din webbrowser.",
+        "",
+        "##link##",
+        "",
+        "Bemærk venligst, at invitationen kun kan accepteres inden for 7 dage."
+      ]
+    },
+    {
+      "key": "USER_RESET_PASSWORD",
+      "subject": "Ready2Race – Nulstil adgangskode",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "Vi har modtaget en anmodning om at nulstille din adgangskode.",
+        "Hvis du ikke selv har anmodet om dette, kan du se bort fra denne e-mail – din adgangskode vil ikke blive ændret.",
+        "",
+        "For at nulstille din adgangskode skal du klikke på linket nedenfor eller kopiere det ind i adresselinjen i din webbrowser.",
+        "",
+        "##link##",
+        "",
+        "Bemærk venligst, at nulstilling af adgangskoden kun er mulig inden for 24 timer."
+      ]
+    },
+    {
+      "key": "EVENT_REGISTRATION_CONFIRMATION",
+      "subject": "Ready2Race – Bekræftelse på tilmelding til ##event##",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "Mange tak for jeres tilmelding til vores arrangement (##event##). Vi bekræfter hermed modtagelsen.",
+        "Indtil tilmeldingsfristen udløber, har du mulighed for at foretage ændringer via den oprettede adgang.",
+        "",
+        "Din aktuelle tilmelding for ##club## opsummeret:",
+        "",
+        "Tilmeldte deltagere:",
+        "##participants##",
+        "",
+        "Tilmeldte konkurrencer:",
+        "##competitions##",
+        "",
+        "",
+        "Alle relevante dokumenter finder du vedhæftet denne e-mail."
+      ]
+    },
+    {
+      "key": "EVENT_REGISTRATION_INVOICE",
+      "subject": "Ready2Race – Faktura for tilmelding til ##event##",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "Mange tak for jeres tilmelding til vores arrangement (##event##).",
+        "Den tilhørende faktura (bedes betalt senest ##date##) er vedhæftet denne e-mail.",
+        "",
+        "Vi glæder os til at se jer."
+      ]
+    },
+    {
+      "key": "PARTICIPANT_CHALLENGE_REGISTERED",
+      "subject": "Ready2Race – Registrering af challenge-resultater",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "Du er blevet tilmeldt en challenge i forbindelse med arrangementet \"##event##\".",
+        "Via linket nedenfor kan du selv indtaste dine resultater inden for de gældende frister.",
+        "",
+        "##link##",
+        "",
+        "Vi ser frem til din deltagelse."
+      ]
+    },
+    {
+      "key": "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT",
+      "subject": "Ready2Race – Deltagerbevis",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "Du har deltaget i arrangementet \"##event##\".",
+        "Dit deltagerbevis er vedhæftet denne e-mail.",
+        "",
+        "Vi ønsker dig fortsat held og lykke."
+      ]
+    }
+  ]
+}

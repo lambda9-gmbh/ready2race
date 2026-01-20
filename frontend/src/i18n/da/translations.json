@@ -1,0 +1,1979 @@
+{
+  "common": {
+    "no": "Nej",
+    "cancel": "Annuller",
+    "close": "Luk",
+    "confirmation": {
+      "title": "Bekræftelse påkrævet",
+      "content": "Bekræft venligst udførelsen af den valgte handling"
+    },
+    "delete": "Slet",
+    "edit": "Rediger",
+    "selected": "Valgt",
+    "manage": "Administrer",
+    "all": "Alle",
+    "selectAll": "Vælg alle",
+    "deselectAll": "Fravælg alle",
+    "error": {
+      "unexpected": "Der opstod en uventet fejl. Prøv venligst igen senere.",
+      "tooManyRequests": "For mange forsøg. Prøv igen om {{val, relativetime(minute)}}.",
+      "upload": {
+        "unsupportedType": "Denne filtype understøttes ikke.",
+        "FILE_ERROR": "Filen kunne ikke læses.",
+        "NO_HEADERS": "Der blev ikke fundet nogen gyldige kolonner i filen.",
+        "SPREADSHEET_MALFORMED": "Indholdet af filen kunne ikke læses.",
+        "COLUMN_UNKNOWN": "Den forventede kolonne '{{expected}}' blev ikke fundet.",
+        "CELL_BLANK": "Tom celle i række {{row}}, kolonne '{{column}}'",
+        "WRONG_CELL_TYPE": "Forkert celletype i række {{row}}, kolonne '{{column}}' - faktisk: {{actual}}, forventet: {{expected}}",
+        "UNPARSABLE_STRING": "Værdien '{{value}}' kunne ikke fortolkes i række {{row}}, kolonne '{{column}}'"
+      },
+      "notFound": "{{entity}} blev ikke fundet.",
+      "unauthorized": "Ikke autoriseret"
+    },
+    "organisation": "Organisation",
+    "form": {
+      "autocomplete": {
+        "noOptions": "Ingen valgmuligheder",
+        "add": "Tilføj {{entity}}"
+      },
+      "currency": {
+        "invalid": "Angiv venligst et gyldigt beløb."
+      },
+      "dateTime": {
+        "invalid": "Vælg venligst et gyldigt tidspunkt."
+      },
+      "email": {
+        "invalid": "Angiv venligst en gyldig e-mailadresse."
+      },
+      "number": {
+        "invalid": {
+          "pattern": {
+            "integer": "Angiv venligst et heltal.",
+            "number": "Angiv venligst et gyldigt tal."
+          },
+          "value": {
+            "messageStart": "Vælg venligst et tal ",
+            "min": "over {{min}}.",
+            "max": "under {{max}}.",
+            "range": "mellem {{min}} og {{max}}."
+          },
+          "minOrUndefined": "Vælg venligst et tal over {{min}} eller lad feltet være tomt."
+        }
+      },
+      "seconds": "Sekunder",
+      "optional": "Valgfrit",
+      "required": "Udfyld venligst dette felt.",
+      "requiredCheck": "Dette skal accepteres for at fortsætte.",
+      "selectFile": "Vælg fil",
+      "select": {
+        "none": "Ingen"
+      },
+      "timecode": {
+        "invalid": "Angiv venligst en gyldig timecode (HH:mm:ss.SSS)."
+      }
+    },
+    "load": {
+      "error": {
+        "multiple": {
+          "short": "{{entity}} kunne ikke indlæses",
+          "detailed": "Der opstod en fejl under indlæsning af {{entity}}. Prøv venligst igen senere."
+        },
+        "single": "{{entity}} kunne ikke indlæses"
+      }
+    },
+    "ok": "OK",
+    "save": "Gem",
+    "saveAndNew": "Gem og ny",
+    "saveAndNext": "Gem og fortsæt",
+    "search": "Søg",
+    "back": "Tilbage",
+    "next": "Næste",
+    "and": "og",
+    "remove": "Fjern",
+    "assign": "Tildel",
+    "noResults": "Ingen resultater",
+    "tryDifferentSearch": "Prøv en anden søgning",
+    "items": "Elementer",
+    "more": "flere",
+    "create": "Opret",
+    "seconds": "Sekunder",
+    "update": "Opdater",
+    "lastUpdate": "Seneste opdatering",
+    "confirmDelete": "Bekræft sletning",
+    "fullscreen": "Fuld skærm",
+    "exitFullscreen": "Afslut fuld skærm",
+    "language": {
+      "menu": "Vælg sprog"
+    },
+    "actions": "Handlinger",
+    "hide": "Skjul",
+    "show": "Vis",
+    "name": "Navn",
+    "by": "Af",
+    "continue": "Fortsæt",
+    "file": {
+      "download": "Download",
+      "downloadCsv": "Download CSV",
+      "view": "Vis"
+    },
+    "add": "Tilføj",
+    "submit": "Indsend",
+    "for": "for"
+  },
+  "csv": {
+    "wizard": {
+      "step1": {
+        "title": "Filvalg",
+        "info": "Vælg din CSV-fil og konfigurer parsing-indstillingerne.",
+        "fileSelection": "Filvalg",
+        "selectFile": "Vælg fil",
+        "changeFile": "Skift fil",
+        "parsingOptions": "Parsing-indstillinger",
+        "separator": "Separator",
+        "separatorHelp": "Tegn til at adskille kolonner (f.eks. ',' eller ';')",
+        "charset": "Tegnsæt",
+        "charsetHelp": "Filens tegnkodning (f.eks. 'UTF-8' eller 'ISO-8859-1')",
+        "detectingCharset": "Registrerer tegnsæt...",
+        "hasHeader": "Første linje indeholder kolonnenavne"
+      },
+      "step2": {
+        "title": "Kolonnemapping",
+        "info": "Match kolonnerne fra din CSV-fil til de forventede felter. Samlede rækker: {{totalRows}}",
+        "noParsedData": "Ingen data tilgængelige. Gå venligst tilbage og vælg en fil.",
+        "columnMapping": "Kolonnemapping",
+        "columnIndex": "Kolonne {{index}}",
+        "notMapped": "Ikke matchet",
+        "dataPreview": "Datavisning",
+        "noData": "Ingen data til forhåndsvisning",
+        "moreRows": "Viser {{shown}} af {{total}} rækker"
+      },
+      "step3": {
+        "title": "Værdimappinger",
+        "info": "Konfigurer, hvordan værdier i din CSV skal fortolkes.",
+        "valueMappings": "Værdimappinger"
+      },
+      "error": {
+        "noConfig": "Konfigurationen er ufuldstændig",
+        "missingMappings": "Match venligst følgende påkrævede felter: {{fields}}",
+        "missingValueMappings": "Angiv venligst værdier for følgende påkrævede felter: {{fields}}"
+      }
+    }
+  },
+  "format": {
+    "date": "dd.MM.yyyy",
+    "datetime": "dd.MM.yyyy, HH:mm",
+    "time": "HH:mm"
+  },
+  "document": {
+    "template": {
+      "tableHint": {
+        "1": "Kan tilføjes til systemgenererede dokumenter for at tilpasse visningen.",
+        "2": "I de ",
+        "3": "globale indstillinger",
+        "4": " kan tildelingerne foretages."
+      },
+      "template": "Dokumentskabelon",
+      "templates": "Dokumentskabeloner",
+      "type": {
+        "INVOICE": "Faktura",
+        "REGISTRATION_REPORT": "Tilmeldingsrapport",
+        "START_LIST": "Startliste"
+      },
+      "none": "Ingen skabelon",
+      "name": "Navn",
+      "file": {
+        "choose": "Vælg skabelon",
+        "change": "Skift skabelon",
+        "missing": "Vælg venligst et dokument."
+      },
+      "pagePadding": {
+        "top": "Topmargin",
+        "left": "Venstremargin",
+        "right": "Højremargin",
+        "bottom": "Bundmargin"
+      },
+      "assignments": {
+        "global": "Globalt tildelte skabeloner",
+        "event": "Skabeloner tildelt til arrangement"
+      },
+      "preview": {
+        "title": "Eksempelvisning",
+        "type": "Dokumenttype",
+        "show": "Vis eksempel",
+        "error": "Fejl ved indlæsning af forhåndsvisning"
+      }
+    }
+  },
+  "gap": {
+    "document": {
+      "template": {
+        "assignments": {
+          "global": "Globalt tildelte diplomskabeloner"
+        },
+        "loading": "Indlæser...",
+        "template": "Diplomskabelon",
+        "templates": "Diplomskabeloner",
+        "tableHint": "Bruges til at generere diplomer med pladsholdere for deltagerdata.",
+        "name": "Filnavn",
+        "type": "Diplomtype",
+        "types": {
+          "CERTIFICATE_OF_PARTICIPATION": "Deltagelsesbevis"
+        },
+        "file": {
+          "choose": "Vælg PDF-skabelon",
+          "change": "Skift PDF-skabelon",
+          "missing": "Vælg venligst et PDF-dokument."
+        },
+        "noPdfSelected": "Ingen PDF valgt. Upload venligst en PDF-skabelon.",
+        "page": "Side {{page}}",
+        "placeholders": {
+          "title": "Placér pladsholdere på PDF"
+        },
+        "loadPdf": {
+          "error": "PDF kunne ikke indlæses."
+        },
+        "preview": {
+          "title": "Forhåndsvisning af diplomskabeloner",
+          "error": "Forhåndsvisningen kunne ikke indlæses.",
+          "show": "Vis diplom i forhåndsvisning"
+        }
+      },
+      "placeholder": {
+        "available": "Tilgængelige pladsholdere",
+        "addInstructions": "Klik på en pladsholdertype for at tilføje den til den aktuelle side. Træk og skalér for at placere.",
+        "properties": "Egenskaber for pladsholder",
+        "type": {
+          "label": "Pladsholdertype",
+          "FIRST_NAME": "Fornavn",
+          "LAST_NAME": "Efternavn",
+          "FULL_NAME": "Fulde navn",
+          "PLACE": "Placering",
+          "RESULT": "Resultat",
+          "EVENT_NAME": "Arrangementnavn"
+        },
+        "name": "Egen betegnelse (valgfrit)",
+        "nameHelp": "En egen betegnelse til at identificere denne pladsholder",
+        "textAlign": "Tekstjustering",
+        "align": {
+          "LEFT": "Venstre",
+          "CENTER": "Centreret",
+          "RIGHT": "Højre"
+        },
+        "page": "Side",
+        "position": "Position",
+        "size": "Størrelse"
+      }
+    }
+  },
+  "decimal": {
+    "point": ","
+  },
+  "entity": {
+    "entity": "Objekt",
+    "add": {
+      "action": "Opret {{entity}}",
+      "success": "{{entity}} oprettet",
+      "error": "Der opstod en fejl - {{entity}} blev ikke oprettet"
+    },
+    "delete": {
+      "success": "{{entity}} slettet",
+      "error": "Der opstod en fejl - {{entity}} blev ikke slettet"
+    },
+    "description": "Beskrivelse",
+    "createdAt": "Oprettet den",
+    "updatedAt": "Seneste ændring",
+    "edit": {
+      "action": "Rediger {{entity}}",
+      "success": "{{entity}} opdateret",
+      "error": "Der opstod en fejl - {{entity}} blev ikke opdateret"
+    },
+    "optional": "Valgfrit",
+    "name": "Navn",
+    "firstname": "Fornavn",
+    "lastname": "Efternavn",
+    "gender": "Køn",
+    "phone": "Telefon",
+    "remark": "Bemærkning",
+    "color": "Farve"
+  },
+  "navigation": {
+    "titles": {
+      "landing": "Start",
+      "dashboard": "Dashboard",
+      "events": "Arrangementer",
+      "competitionConfig": "Konkurrenceindstillinger",
+      "roles": "Roller",
+      "users": "Brugere",
+      "config": "Konfigurationer",
+      "clubs": "Klubber",
+      "myClub": "Min klub",
+      "invoices": "Fakturaer",
+      "administration": "Administration"
+    },
+    "sidebar": {
+      "expand": "Udvid sidebjælke",
+      "collapse": "Sammenfold sidebjælke"
+    }
+  },
+  "dashboard": {
+    "registration": {
+      "showMessage": "Vis besked"
+    },
+    "upcomingEvents": {
+      "empty": "Ingen kommende arrangementer"
+    },
+    "registrations": {
+      "empty": "Ingen nye tilmeldinger"
+    },
+    "shifts": {
+      "empty": "Ingen kommende vagter"
+    },
+    "tasks": {
+      "empty": "Ingen åbne opgaver"
+    }
+  },
+  "club": {
+    "club": "Klub",
+    "registrant": "Tilmeldende",
+    "registeredBy": "tilmeldt af",
+    "clubs": "Klubber",
+    "name": "Klubnavn",
+    "import": "Importer klubber",
+    "error": {
+      "nameAlreadyExists": "En klub med dette navn findes allerede",
+      "mustSelectExistingClub": "Vælg venligst en eksisterende klub fra listen"
+    },
+    "settings": {
+      "title": "Klubindstillinger",
+      "allowClubCreationOnRegistration": "Tillad oprettelse af klub ved tilmelding",
+      "save": "Gem indstillinger",
+      "saved": "Indstillinger gemt"
+    },
+    "upload": {
+      "dialog": {
+        "submit": "Importer klubber"
+      }
+    },
+    "participants": "Medlemmer",
+    "representative": {
+      "representatives": "Administration",
+      "pendingApprovals": "Afventer godkendelser",
+      "approve": {
+        "approve": "Godkend",
+        "success": "Godkendt",
+        "error": "Fejl ved godkendelse",
+        "confirmation": {
+          "title": "Godkend {{username}}?",
+          "content": "Er du sikker på, at du vil godkende {{username}} som ekstra klubadministration? Kontoen får alle rettigheder for denne klub. Denne handling kan ikke fortrydes."
+        }
+      },
+      "deny": {
+        "deny": "Afvis",
+        "success": "Afvist",
+        "error": "Fejl ved afvisning",
+        "confirmation": {
+          "title": "Afvis {{username}}?",
+          "content": "Er du sikker på, at du vil afvise anmodningen fra {{username}} som ekstra klubadministration? Denne handling kan ikke fortrydes."
+        }
+      }
+    },
+    "participant": {
+      "import": "Importer medlemmer",
+      "upload": {
+        "dialog": {
+          "error": {
+            "separatorTooLong": "Angiv venligst kun ét tegn som CSV-separator."
+          },
+          "separator": "Separator",
+          "cols": "Kolonnenavne",
+          "col": {
+            "firstname": "Fornavn",
+            "lastname": "Efternavn",
+            "year": "Fødselsår",
+            "gender": "Køn",
+            "external": "Klubtilhørsforhold",
+            "email": "E-mail"
+          },
+          "genderValues": "Værdier til kønsangivelse",
+          "value": {
+            "gender": {
+              "male": "mand",
+              "female": "kvinde",
+              "diverse": "andet"
+            }
+          },
+          "file": {
+            "missing": "Vælg venligst en fil.",
+            "change": "Skift .csv-fil",
+            "choose": "Vælg .csv-fil"
+          },
+          "submit": "Importer medlemmer"
+        }
+      },
+      "title": "Medlem",
+      "name": "Navn",
+      "yearOfBirth": "Fødselsår",
+      "gender": "Køn",
+      "role": "Rolle",
+      "year": "Fødselsår",
+      "external": "Ekstern",
+      "externalClub": "Ekstern klub",
+      "externalHint": "Vælg denne mulighed, hvis du vil tilmelde et medlem af en anden klub.",
+      "usedInRegistration": "I tilmelding",
+      "qrCodeId": "QR-kodeværdi",
+      "qrCodeEdit": "Rediger QR-kodeværdi",
+      "qrCodeDelete": "Slet QR-kodeværdi",
+      "qrCodeDeleteConfirm": "Vil du virkelig slette QR-koden?",
+      "qrCodeEditDescription": "Angiv venligst den nye QR-kodeværdi.",
+      "resendAccessToken": "Send ny adgangstoken",
+      "resendAccessTokenSuccess": "Ny token sendt.",
+      "downloadCOP": "Download deltagelsesbevis",
+      "userQrCode": "Bruger-QR-kode",
+      "qrCode": "QR-kode",
+      "id": "Deltager-ID",
+      "cateringNotAllowed": "Denne person er ikke berettiget",
+      "tracking": {
+        "log": "Statuslog for deltagere",
+        "entry": "Logindgang",
+        "status": "Status",
+        "in": "Inde",
+        "out": "Ude",
+        "teams": "Hold",
+        "lastScan": {
+          "at": "Seneste scanning den",
+          "by": "Scannet af"
+        },
+        "checkInText": "Check ind",
+        "checkOutText": "Check ud",
+        "checkIn": {
+          "success": "Deltageren blev checket ind",
+          "error": "Fejl ved check-in af deltager"
+        },
+        "checkOut": {
+          "success": "Deltageren blev checket ud",
+          "error": "Fejl ved check-out af deltager"
+        },
+        "noTeamsFound": "Ingen hold fundet",
+        "participantNotFound": "Deltager ikke fundet"
+      }
+    }
+  },
+  "event": {
+    "event": "Arrangement",
+    "events": "Arrangementer",
+    "name": "Navn",
+    "description": "Beskrivelse",
+    "registerNow": "Til tilmelding",
+    "registerHere": {
+      "1": " ",
+      "2": "Her",
+      "3": " kan du tilmelde til hele arrangementet."
+    },
+    "challengeEvent": {
+      "challengeEvent": "Challenge-tilstand",
+      "explanation": "\"Challenge\" er en arrangements-tilstand, hvor resultater fra konkurrencer opsummeres på tværs af hele arrangementet. Hold kan maksimalt opnå ét resultat pr. konkurrence, og der er ingen turneringstræer.",
+      "unchangeable": "Om \"Challenge-tilstand\" er aktiveret eller ej, kan ikke ændres efter oprettelsen."
+    },
+    "challengeResultType": "Challenge-resultattype",
+    "allowSelfSubmission": "Tillad selvstændig indsendelse af resultater",
+    "submissionNeedsVerification": "Indsendte resultater skal verificeres",
+    "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
+    "invoice": {
+      "prefix": "Fakturapræfiks",
+      "paymentDueBy": "Betalingsfrist for tilmeldingsgebyrer",
+      "latePaymentDueBy": "Betalingsfrist for eftertilmeldingsgebyrer"
+    },
+    "invoices": {
+      "infoCard": {
+        "totalAmount": "Samlet faktureret beløb: {{amount}}€",
+        "paidAmount": "Heraf allerede betalt: {{amount}}€",
+        "alert": "Faktureringen er endnu ikke afsluttet."
+      }
+    },
+    "location": "Sted",
+    "mixedTeamTerm": "Betegnelse for klub-mixede hold",
+    "upcoming": "Kommende arrangementer",
+    "toResults": "Til resultatoversigt",
+    "registrationAvailable": {
+      "timespan": "Tilmeldingsperiode",
+      "timespanFrom": "Tilmeldingsperiode fra",
+      "timespanTo": "Tilmeldingsperiode til",
+      "lateTimespan": "Eftertilmeldingsperiode",
+      "lateTo": "Eftertilmeldingsperiode til",
+      "from": "fra",
+      "to": "til",
+      "unknown": "Endnu ikke offentliggjort"
+    },
+    "published": {
+      "published": "Udgivet",
+      "not": "Ikke udgivet"
+    },
+    "eventDay": {
+      "eventDay": "Dag",
+      "eventDays": "Dage",
+      "date": "Dato",
+      "name": "Navn",
+      "description": "Beskrivelse",
+      "assignedCompetitions": "Konkurrencer på denne dag"
+    },
+    "competition": {
+      "competition": "Konkurrence",
+      "competitions": "Konkurrencer",
+      "noCompetitionsAvailable": "Ingen konkurrencer tilgængelige",
+      "identifier": "Identifikator",
+      "name": "Navn",
+      "description": "Beskrivelse",
+      "lateRegistrationAllowed": "Eftertilmelding tilladt",
+      "ratingCategoryRequired": "Rangeringskategori påkrævet",
+      "registrationCount": "Tilmeldinger",
+      "shortName": "Kort navn",
+      "challenge": {
+        "configs": "Challenge-indstillinger",
+        "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",
+        "start": "Challenge start",
+        "end": "Challenge slut"
+      },
+      "tableHint": {
+        "competitionComponents": {
+          "part1": "Kategorier, deltagertyper og gebyrtyper for konkurrencer kan ",
+          "part2Link": "her",
+          "part3": " defineres."
+        },
+        "templates": {
+          "part1": "Til genbrug i forskellige arrangementer kan ",
+          "part2Link": "skabeloner",
+          "part3": " defineres."
+        },
+        "registration": "For de enkelte konkurrencer kan hold tilmeldes."
+      },
+      "category": {
+        "category": "Kategori",
+        "categories": "Kategorier",
+        "name": "Navn",
+        "description": "Beskrivelse",
+        "tableHint": "Muliggør kategorisering og dermed sortering og filtrering af konkurrencer."
+      },
+      "count": {
+        "males": "Antal mænd",
+        "females": "Antal kvinder",
+        "nonBinary": "Antal ikke-binære personer",
+        "mixed": "Antal vilkårlige"
+      },
+      "gender": {
+        "male": "Mand",
+        "female": "Kvinde",
+        "nonBinary": "Ikke-binær",
+        "mixed": "Vilkårlig"
+      },
+      "namedParticipant": {
+        "namedParticipant": "Deltagertype",
+        "namedParticipants": "Deltagertyper",
+        "name": "Navn",
+        "description": "Beskrivelse",
+        "role": "Rolle",
+        "add": "Tilføj deltagertype",
+        "tableHint": "Roller, som deltagere kan indtage i en konkurrence.",
+        "error": {
+          "emptyList": "Tilføj venligst mindst én deltagertype",
+          "noCount": "Angiv venligst mindst én deltager af vilkårlig type for denne rolle",
+          "duplicates": {
+            "one": "Rollen {{label}} bruges flere gange.",
+            "multiple": "Rollerne {{labels}} bruges flere gange.",
+            "message": "Vælg venligst en unik rolle for hver deltagertype."
+          }
+        }
+      },
+      "teamComposition": "Holdopstilling",
+      "fee": {
+        "fee": "Gebyr",
+        "fees": "Gebyrer",
+        "name": "Navn",
+        "description": "Beskrivelse",
+        "amount": "Beløb",
+        "lateAmount": "Afvigende beløb ved eftertilmelding",
+        "add": "Tilføj gebyr",
+        "type": "Gebyrtype",
+        "tableHint": "Definerer mulige gebyrer for en konkurrence.",
+        "required": {
+          "notRequired": "Gebyr er ikke obligatorisk",
+          "required": "Gebyr er obligatorisk"
+        },
+        "asRegular": "ved tilmelding: {{amount}}€",
+        "asLate": "ved eftertilmelding: {{amount}}€",
+        "error": {
+          "duplicates": {
+            "one": "Gebyrtypen {{label}} bruges flere gange.",
+            "multiple": "Gebyrtyperne {{labels}} bruges flere gange.",
+            "message": "Vælg venligst en unik gebyrtype for hvert gebyr."
+          }
+        }
+      },
+      "template": {
+        "template": "Konkurrenceskabelon",
+        "templates": "Konkurrenceskabeloner",
+        "name": "Navn",
+        "description": "Beskrivelse",
+        "tableHint": "Muliggør hurtig oprettelse af konkurrencer for et arrangement.",
+        "select": "Vælg skabelon"
+      },
+      "assignedDays": "Konkurrencedage",
+      "error": {
+        "referenced": "{{entity}} kunne ikke slettes på grund af referencer i konkurrencer og/eller skabeloner"
+      },
+      "registration": {
+        "challenge": {
+          "includeResult": "direkte resultatinastning"
+        },
+        "noEventRegistration": "Der er endnu ikke afgivet nogen tilmelding til dette arrangement fra din klub.",
+        "dialog": {
+          "registrationType": {
+            "label": "Tilføj som",
+            "REGULAR": "Tilmelding",
+            "LATE": "Eftertilmelding"
+          }
+        },
+        "isLate": "som eftertilmelding",
+        "ratingCategory": "Rangeringskategori",
+        "ratingCategoryInvalid": "Den valgte rangeringskategori er ikke gyldig for deltagerne på dette hold",
+        "infos": "Info",
+        "delete": {
+          "error": {
+            "roundExisting": "Konkurrencen er allerede startet."
+          }
+        },
+        "deregister": {
+          "deregister": "Afmeld",
+          "error": "Der opstod en fejl ved afmelding.",
+          "success": "Afmelding lykkedes",
+          "revertDeregistration": {
+            "revertDeregistration": "Fortryd afmelding",
+            "revert": "Fortryd",
+            "confirmation": "Er du sikker på, at afmeldingen skal fortrydes?",
+            "error": {
+              "locked": "Afmeldingen blev oprettet før den aktuelle runde og er derfor låst",
+              "unexpected": "Der opstod en fejl ved fortrydelse af afmeldingen"
+            },
+            "success": "Afmelding blev fortrudt"
+          },
+          "deregistered": "Afmeldt",
+          "reason": "Begrundelse"
+        }
+      },
+      "setup": {
+        "setup": "Konkurrenceforløb",
+        "save": {
+          "save": "Gem",
+          "error": "Der opstod en fejl - konkurrenceforløbet kunne ikke gemmes",
+          "success": "Konkurrenceforløbet blev gemt"
+        },
+        "reset": "Nulstil forløb",
+        "round": {
+          "round": "Runde",
+          "name": "Navn",
+          "useDefaultSeeding": "Brug standard seedning til matchups",
+          "required": "Runden skal gennemføres",
+          "finals": {
+            "long": {
+              "final": {
+                "round": "Finalerunde",
+                "final": "Finale",
+                "matchForThirdPlace": "Kamp om 3. plads"
+              },
+              "semifinal": "Semifinale",
+              "quarterfinal": "Kvartfinale",
+              "roundOf16": "Ottendedelsfinale",
+              "roundOf32": "Sekstendedelsfinale"
+            },
+            "short": {
+              "semifinal": "SF",
+              "quarterfinal": "KF",
+              "roundOf16": "OF",
+              "roundOf32": "SF"
+            }
+          },
+          "remove": "Fjern runde"
+        },
+        "match": {
+          "match": "Kamp",
+          "participants": "Matchup",
+          "name": "Navn",
+          "executionOrder": "Udførelsesrækkefølge",
+          "teams": {
+            "teams": "Antal hold",
+            "unlimited": "Ubegrænset"
+          },
+          "outcome": {
+            "outcome": "Seedning",
+            "outcomes": "Seedninger",
+            "tooltip": "Resulterende seedninger for denne kamp",
+            "result": "Resultat"
+          },
+          "remove": "Fjern kamp",
+          "info": {
+            "roundOneFillMatches": "Kampene fyldes jævnt med tilfældigt valgte hold."
+          }
+        },
+        "place": {
+          "place": "Placering",
+          "places": "Samlede placeringer",
+          "placesOption": {
+            "equal": "Ligestillet (placering = {{place}})",
+            "ascending": "Stigende (placering = seedning)",
+            "custom": "Brugerdefineret"
+          }
+        },
+        "tournamentTree": {
+          "generate": "Generér",
+          "generateTree": "Generér turneringstræ",
+          "participatingTeams": "Deltagende hold",
+          "includeMatchForThirdPlace": "Opret kamp om 3. plads",
+          "overwriteSetup": "Overskriv eksisterende forløb",
+          "info": {
+            "noOverwrite": "De genererede runder tilføjes til slutningen af det eksisterende forløb."
+          }
+        },
+        "template": {
+          "template": "Skabelon for konkurrenceforløb",
+          "templates": "Skabeloner for konkurrenceforløb",
+          "name": "Navn",
+          "description": "Beskrivelse",
+          "select": "Vælg skabelon"
+        },
+        "startTimeOffset": {
+          "startTimeOffset": "Forskudt starttid",
+          "enable": "Tillad forskudte starttider"
+        },
+        "validation": {
+          "duplicateParticipants": {
+            "one": "Holdet: {{participants}} bruges flere gange.",
+            "multiple": "Holdene: {{participants}} bruges flere gange.",
+            "message": "Tilføj venligst hvert hold til højst ét matchup pr. runde."
+          },
+          "duplicatePositions": {
+            "one": "I udførelsesrækkefølgen bruges {{positions}} flere gange.",
+            "multiple": "I udførelsesrækkefølgen bruges {{positions}} flere gange.",
+            "message": "Tilføj venligst hver værdi til højst én kamp pr. runde."
+          }
+        },
+        "tableHint": "Muliggør hurtig oprettelse af konkurrenceforløb for forskellige konkurrencer."
+      },
+      "execution": {
+        "tabTitle": "Afvikling",
+        "progress": {
+          "error": "Kampene i konkurrencen kunne ikke indlæses."
+        },
+        "nextRound": {
+          "create": "Opret næste runde",
+          "error": "Næste runde kunne ikke oprettes",
+          "success": "Næste runde oprettet",
+          "reasons": {
+            "noRoundsInSetup": "Der er ingen runder defineret i konkurrenceforløbet.",
+            "noSetupMatches": "Der er ingen kampe defineret i næste runde af konkurrenceforløbet.",
+            "noRegistrations": "Der er ingen tilmeldinger til denne konkurrence.",
+            "registrationsNotFinalized": {
+              "textStart": "Tilmeldingerne til dette arrangement er endnu ikke afsluttet. Tilmeldingerne kan ",
+              "link": "her",
+              "textEnd": " afsluttes."
+            },
+            "notEnoughTeamSpace": "Der er flere tilmeldinger til denne konkurrence end der er hold i konkurrenceforløbet. Sørg for, at der er nok hold eller kampe defineret til første runde.",
+            "notAllPlacesSet": "Der mangler resultater. Indtast venligst alle placeringer for kampene."
+          }
+        },
+        "deleteRound": {
+          "delete": "Slet runde",
+          "confirmation": {
+            "content": "Er du sikker på, at den sidste runde skal slettes?"
+          },
+          "error": "Der opstod en fejl ved sletning af runden",
+          "success": "Runden blev slettet"
+        },
+        "teamsWithBye": "Hold med frirunde",
+        "match": {
+          "startTime": "Starttid",
+          "startTimeOffset": "Forskudt starttid",
+          "startNumber": {
+            "startNumber": "Startnummer",
+            "short": "Nr."
+          },
+          "team": "Hold",
+          "registeredBy": "tilmeldt af",
+          "place": "Placering",
+          "time": "Tid",
+          "placeAndTime": "Placering/tid",
+          "manageRunning": "Administrer igangværende kampe",
+          "running": "Kører",
+          "roundAndMatch": "Runde {{round}}, kamp {{match}}",
+          "currentlyRunning": "Kører lige nu",
+          "availableMatches": "Tilgængelige kampe",
+          "noRunningMatches": "Ingen kampe kører i øjeblikket",
+          "noAvailableMatches": "Ingen kampe klar til start"
+        },
+        "running": {
+          "error": {
+            "hasPlaces": "Kørselstatus kan ikke ændres for kampe med resultater",
+            "update": "Fejl ved opdatering af kørselstatus"
+          },
+          "success": "Kørselstatus opdateret"
+        },
+        "results": {
+          "enter": "Indtast resultat",
+          "title": {
+            "named": "Resultat for {{matchName}}",
+            "unnamed": "Kampresultat"
+          },
+          "failed": "Udgået",
+          "failedReason": "Årsag til udgåelse",
+          "validation": {
+            "duplicates": {
+              "single": "Placeringen: {{places}} bruges flere gange.",
+              "multiple": "Placeringerne: {{places}} bruges flere gange.",
+              "message": "Vælg venligst unikke placeringer pr. kamp."
+            },
+            "noResultsEntered": "Angiv venligst mindst enten alle placeringer eller alle tider for alle hold i denne kamp.",
+            "missingPlaces": "Angiv venligst placeringer for alle hold i denne kamp.",
+            "missingTimes": "Angiv venligst tider for alle hold i denne kamp."
+          },
+          "submit": {
+            "error": "Der opstod en fejl ved lagring af resultatet",
+            "success": "Resultat gemt"
+          },
+          "dialog": {
+            "title": "Vælg konfiguration",
+            "config": "Konfiguration",
+            "alert": {
+              "1": "Konfigurationer kan ",
+              "2": "her",
+              "3": " oprettes og redigeres."
+            },
+            "file": {
+              "missing": "Vælg venligst en fil.",
+              "change": "Skift .xls-fil",
+              "choose": "Vælg .xls-fil"
+            }
+          },
+          "upload": "Upload resultater",
+          "type": {
+            "form": "med indtastningsformular",
+            "XLS": "som XLS-fil"
+          },
+          "error": {
+            "WRONG_TEAM_COUNT": "Antallet af hold stemmer ikke - læst: {{actual}}, forventet: {{expected}}",
+            "DUPLICATE_PLACES": "Placeringer er tildelt flere gange til holdene",
+            "DUPLICATE_START_NUMBERS": "Startnumre er tildelt flere gange til holdene",
+            "PLACES_UNCONTINUOUS": "De angivne placeringer er ikke fortløbende - faktisk: {{actual}}, forventet: {{expected}}",
+            "LIST_DATA_INCOMPLETE": "Kolonnerne for placeringer eller tider er ufuldstændige.",
+            "RESULT_NOT_FAILED_AND_NO_DATA": "Et resultat har ingen udgåelsesgrund og ingen placering og ingen tid."
+          },
+          "resultType": {
+            "distance": "Distance"
+          },
+          "challenge": {
+            "challengeResults": "Challenge-resultat",
+            "error": "Der opstod en fejl ved lagring af resultatet",
+            "success": "Resultatet blev sendt.",
+            "confirmTitle": "Bekræftelse påkrævet",
+            "confirmBody": "Resultatet kan ikke ændres efter indsendelse. Sørg venligst for, at resultatet er korrekt.",
+            "confirm": "Bekræft resultat",
+            "verify": "Verificér resultat",
+            "delete": "Slet resultat",
+            "confirmAction": {
+              "verify": "Når et resultat er verificeret, kan det ikke ændres. Sørg venligst for, at alt er korrekt.",
+              "delete": "Denne handling kan ikke fortrydes. Er du sikker?"
+            },
+            "verified": "Resultat verificeret",
+            "unverified": "Resultat ikke verificeret",
+            "onlyUnverified": "Vis kun ikke-verificerede resultater",
+            "proof": "Dokumentation tilgængelig",
+            "download": "Download dokumentation",
+            "view": "Vis dokumentation",
+            "submitResults": "Indsend resultat",
+            "outsideOfTime": "Du befinder dig i øjeblikket uden for challenge-perioden."
+          },
+          "confirmationImage": {
+            "confirmationImage": "Bekræftelsesbillede",
+            "select": "Vælg billede",
+            "change": "Skift billedfil",
+            "error": {
+              "empty": "Vælg venligst et billede",
+              "tooMany": "Vælg venligst maks. 1 billede"
+            }
+          },
+          "document": {
+            "download": {
+              "error": "Der opstod en fejl ved download af resultatdokumentet."
+            }
+          }
+        },
+        "matchData": {
+          "edit": "Rediger kamp",
+          "title": {
+            "named": "Detaljer for {{matchName}}",
+            "unnamed": "Detaljer for kamp"
+          },
+          "randomizeStartNumbers": "Tildel startnumre tilfældigt",
+          "validation": {
+            "duplicates": {
+              "single": "Startnummeret: {{startNumbers}} bruges flere gange.",
+              "multiple": "Startnumrene: {{startNumbers}} bruges flere gange.",
+              "message": "Vælg venligst unikke startnumre pr. kamp."
+            }
+          },
+          "submit": {
+            "error": "Der opstod en fejl ved lagring af detaljerne",
+            "success": "Kamp gemt"
+          }
+        },
+        "startList": {
+          "download": "Download startliste",
+          "dialog": {
+            "title": "Vælg konfiguration",
+            "config": "Konfiguration",
+            "alert": {
+              "1": "Konfigurationer kan ",
+              "2": "her",
+              "3": " oprettes og redigeres."
+            }
+          },
+          "type": {
+            "PDF": "som PDF",
+            "CSV": "som CSV"
+          },
+          "error": {
+            "missingStartTime": "Der er endnu ikke sat en starttid for denne kamp."
+          }
+        },
+        "substitution": {
+          "substitutions": "Ombytninger",
+          "inFor": "erstattes af",
+          "participant": "Deltager",
+          "substituteFor": {
+            "substituteFor": "Erstat med",
+            "currentlyParticipating": "I samme konkurrence (byt hold)",
+            "notCurrentlyParticipating": "Frit tilgængelig",
+            "team": "Hold",
+            "load": {
+              "error": "Der opstod en fejl ved indlæsning af mulige deltagere til en ombytning"
+            }
+          },
+          "reason": "Begrundelse",
+          "add": {
+            "add": "Tilføj ombytninger",
+            "error": {
+              "conflict": "Senere oprettede ombytninger afhænger af denne. De skal slettes først.",
+              "unexpected": "Der opstod en fejl ved tilføjelse af ombytningerne"
+            },
+            "success": "Ombytninger tilføjet"
+          },
+          "delete": {
+            "confirmation": "Er du sikker på, at den sidste ombytning skal slettes?",
+            "error": "Der opstod en fejl ved sletning af ombytningerne",
+            "success": "Ombytninger slettet"
+          }
+        }
+      },
+      "places": {
+        "places": "Placeringer",
+        "tabTitle": "Placeringer",
+        "noPlaces": "Der er endnu ingen placeringer for denne konkurrence."
+      }
+    },
+    "participantRequirement": {
+      "info": "Hvis der ikke angives en eksplicit kolonne til kontrol af deltagelsesbetingelsen, godkendes alle matchende deltagere i filen.",
+      "approved": "Kontrollerede betingelser",
+      "checkUpload": "Sammenlign betingelser",
+      "checkManually": "Kontrollér \"{{name}}\"",
+      "file": "CSV-fil",
+      "charset": "Tegnsæt",
+      "separator": "Separator",
+      "firstnameColName": "Kolonne med fornavne",
+      "lastnameColName": "Kolonne med efternavne",
+      "yearsColName": "Kolonne med årgang",
+      "clubColName": "Kolonne med klubnavn",
+      "requirementColName": "Kolonne med deltagelsesbetingelse",
+      "requirementIsValidValue": "Gyldig værdi for deltagelsesbetingelse",
+      "participantsOpen": "Åben",
+      "participantsApproved": "Kontrolleret",
+      "tableHint": {
+        "part1": "Betingelser kan ",
+        "part2Link": "her",
+        "part3": " oprettes eller redigeres."
+      },
+      "checkInApp": "Kan kontrolleres i app",
+      "approve": "Godkend",
+      "checkedNote": "Bemærkning",
+      "confirmDelete": {
+        "content": "Skal godkendelsen af den kontrollerede deltagelsesbetingelse virkelig annulleres?",
+        "ok": "Ja",
+        "cancel": "Nej"
+      }
+    },
+    "action": {
+      "downloadCertificates": "Download deltagelsesbeviser",
+      "sendCertificates": "Send deltagelsesbeviser",
+      "sendCertificatesSucceeded": "Afsendelse af deltagelsesbeviser igangsat",
+      "registrationsReport": {
+        "download": "Download tilmeldingsrapport"
+      },
+      "produceInvoices": "Opret fakturaer",
+      "finalizeRegistrations": {
+        "finalize": "Afslut tilmeldinger",
+        "newRegistrations": {
+          "altertTitle": "Der er nye tilmeldinger",
+          "hint": "Siden sidste afslutning er der kommet nye tilmeldinger. De nytilmeldte deltagere deltager ikke i konkurrencerne, før tilmeldingerne afsluttes igen."
+        },
+        "refinalize": "Afslut igen",
+        "refinalizeRegistrations": "Afslut tilmeldinger igen",
+        "keepTeamNumbers": {
+          "keep": "Behold tildelte startnumre",
+          "hint": "Hvis startnumrene beholdes, får kun de nye hold/deltagere tilfældige startnumre. Disse vil være højere end den nuværende højeste i konkurrencen. Hvis de ikke beholdes, blandes alle startnumre på ny."
+        },
+        "reshuffle": "Dette blander alle startnumre på ny",
+        "success": "Tilmeldinger afsluttet"
+      }
+    },
+    "assign": {
+      "save": {
+        "error": "Der opstod en fejl - {{toBeAssigned}} kunne ikke tildeles til {{assignedTo}}",
+        "success": "{{toBeAssigned}} blev tildelt til {{assignedTo}}"
+      }
+    },
+    "document": {
+      "document": "Dokument",
+      "documents": "Dokumenter",
+      "name": "Navn",
+      "tableHint": {
+        "description": "Stilles til rådighed ved tilmelding.",
+        "part1": "Til gruppering og konfiguration kan ",
+        "part2Link": "dokumenttyper",
+        "part3": " defineres."
+      },
+      "type": {
+        "type": "Type",
+        "documentType": "Dokumenttype",
+        "documentTypes": "Dokumenttyper",
+        "name": "Navn",
+        "description": "Beskrivelse",
+        "tableHint": "Muliggør kategorisering af forskellige dokumenter i et arrangement.",
+        "required": {
+          "forEvent": "Påkrævet for arrangement",
+          "confirmation": "Bekræftelse påkrævet"
+        }
+      },
+      "add": {
+        "add": "Tilføj dokument"
+      },
+      "download": {
+        "download": "Download",
+        "error": "Der opstod en fejl ved download af dokumentet"
+      },
+      "error": {
+        "emptyList": "Tilføj venligst mindst ét dokument"
+      }
+    },
+    "registration": {
+      "initialize": {
+        "header": "Initialiser tilmelding",
+        "submit": "Initialiser tilmelding",
+        "info": {
+          "1": "For at tilmelde hold til konkurrencer skal tilmeldingen initialiseres én gang pr. arrangement.",
+          "2": "For dette arrangement er følgende dokumenter stillet til rådighed."
+        }
+      },
+      "registration": "Tilmelding",
+      "registrations": "Tilmeldinger",
+      "addParticipant": "Tilføj medlem",
+      "singleCompetition": "Individuel konkurrence",
+      "teamCompetition": "Holdkonkurrence",
+      "males": "Mænd",
+      "females": "Kvinder",
+      "nonBinary": "Ikke-binære personer",
+      "mixed": "Vilkårlig",
+      "summary": "Opsummering",
+      "schedule": "Program",
+      "message": "Besked",
+      "optionalFee": "Valgfrit",
+      "totalFees": "Tilmeldingsgebyr",
+      "lateTotalFees": "Eftertilmeldingsgebyr",
+      "acceptDocuments": "Jeg accepterer følgende:",
+      "infoDocuments": "Yderligere information",
+      "finish": "Indsend tilmelding",
+      "success": {
+        "title": "Tilmeldt!",
+        "subtitle": "Du modtager en bekræftelse via e-mail."
+      },
+      "error": {
+        "closed": "Tilmeldingen til dette arrangement er lukket",
+        "participantUpsertNotFound": "Deltager ikke fundet i deltagerlisten",
+        "teamParticipantNotFound": "Hold-deltager kunne ikke findes",
+        "competitionNotFound": "Konkurrence ikke fundet",
+        "namedParticipantNotFound": "Deltagertype ikke fundet",
+        "feeNotFound": "Gebyr ikke fundet",
+        "ratingCategoryNotFound": "Rangeringskategori ikke fundet",
+        "ratingCategoryMissing": "Rangeringskategori mangler for hold, hvor den er påkrævet",
+        "ageRequirementNotMet": "Alderskrav for en rangeringskategori er ikke opfyldt af en deltager",
+        "participantDuplicateInCompetition": "Deltager er tilmeldt flere gange i samme konkurrence"
+      },
+      "mostRecent": "Nyeste tilmeldinger",
+      "teams": "Hold",
+      "teamMembers": "Holdmedlemmer"
+    },
+    "participants": "Deltagere",
+    "tabs": {
+      "general": "Generelt",
+      "registrations": "Tilmeldinger",
+      "settings": "Indstillinger",
+      "actions": "Handlinger",
+      "organisation": "Organisation",
+      "invoices": "Fakturaer"
+    },
+    "info": {
+      "infoPage": "Info-visning",
+      "sectionTitle": "Offentlig info-visning",
+      "pageDescription": "Konfigurer og se informationsvisninger til offentlige skærme, der viser arrangementsinfo som kommende løb og resultater.",
+      "manageInfoViews": "Se og konfigurer info-visninger",
+      "configure": "Konfigurer",
+      "noViews": "Ingen visninger konfigureret",
+      "configureViews": "Klik på indstillingsikonet for at konfigurere visninger",
+      "viewType": "Visningstype",
+      "viewTypes": {
+        "upcomingMatches": "Kommende",
+        "latestMatchResults": "Nyeste resultater",
+        "runningMatches": "Igangværende"
+      },
+      "configuration": "Visningskonfiguration",
+      "configurationHelp": "Træk visningerne for at ændre rækkefølgen. Hver visning vises i den angivne varighed.",
+      "noViewsConfigured": "Ingen visninger konfigureret",
+      "editView": "Rediger visning",
+      "addView": "Tilføj visning",
+      "displayDuration": "Visningsvarighed",
+      "dataLimit": "Datalimit",
+      "filtersComingSoon": "Filtre kommer snart",
+      "viewCreated": "Visning oprettet",
+      "viewUpdated": "Visning opdateret",
+      "viewDeleted": "Visning slettet",
+      "createError": "Fejl ved oprettelse af visning",
+      "updateError": "Fejl ved opdatering af visning",
+      "deleteError": "Fejl ved sletning af visning",
+      "confirmDeleteView": "Er du sikker på, at du vil slette denne visning?",
+      "noUpcomingMatches": "Ingen kommende løb",
+      "noLatestMatchResults": "Ingen aktuelle løbsresultater",
+      "noRunningMatches": "Ingen igangværende konkurrencer",
+      "live": "LIVE",
+      "minutes": "min.",
+      "justStarted": "Lige startet",
+      "unnamed": "Unavngivet",
+      "matchStatus": {
+        "pending": "Afventer",
+        "inProgress": "Kører",
+        "completed": "Afsluttet"
+      },
+      "rank": "Rang",
+      "place": "Placering",
+      "team": "Hold",
+      "participants": "Deltagere",
+      "result": "Resultat",
+      "points": "Point",
+      "matchTeams": "Løbshold",
+      "executionOrder": "Udførelsesrækkefølge: {{order}}"
+    },
+    "results": {
+      "download": "Download tidligere resultater",
+      "downloadError": "Filen kunne ikke downloades."
+    },
+    "ratingCategory": {
+      "title": "Rangeringskategorier",
+      "yearFrom": "Fra",
+      "yearTo": "Til",
+      "noEntries": "Ingen rangeringskategorier tildelt",
+      "ageRestriction": "Aldersklasse",
+      "year": "Årgang",
+      "delete": {
+        "confirm": {
+          "title": "Fjern tildelingen?"
+        },
+        "success": "Rangeringskategori fjernet",
+        "error": "Der opstod en fejl ved sletning af rangeringskategorien i dette arrangement"
+      },
+      "add": {
+        "title": "Tildel rangeringskategori",
+        "success": "Rangeringskategori tilføjet",
+        "error": "Der opstod en fejl ved tilføjelse af rangeringskategorien til dette arrangement"
+      }
+    }
+  },
+  "task": {
+    "task": "Opgave",
+    "tasks": "Opgaver",
+    "myTasks": "Mine opgaver",
+    "name": "Titel",
+    "dueDate": "Forfaldsdato",
+    "state": "Status",
+    "OPEN": "Åben",
+    "IN_PROGRESS": "I gang",
+    "DONE": "Udført",
+    "CANCELED": "Annulleret",
+    "responsibleUsers": "Ansvarlige"
+  },
+  "work": {
+    "type": {
+      "type": "Arbejdstype",
+      "types": "Arbejdstyper",
+      "tableHint": "Muliggør planlægning af vagter til et arrangement.",
+      "noneAvailable": "Der er endnu ikke oprettet nogen arbejdstyper."
+    },
+    "shift": {
+      "shift": "Vagt",
+      "shifts": "Vagter",
+      "myShifts": "Mine vagter",
+      "plan": "Vagtplan",
+      "timeFrom": "Start",
+      "timeTo": "Slut",
+      "minUser": "Min. personer",
+      "maxUser": "Maks. personer",
+      "remark": "Bemærkning",
+      "assignedUsers": "Tildelte personer"
+    }
+  },
+  "participantRequirement": {
+    "participantRequirement": "Deltagelsesbetingelse",
+    "participantRequirements": "Deltagelsesbetingelser",
+    "active": "Aktiv",
+    "activate": "Tildel til arrangement (for alle roller)",
+    "remove": "Fjern fra arrangement",
+    "confirmRemove": "Vil du fjerne betingelsen \"{{requirement}}\" fra arrangementet? Dette påvirker alle tildelte deltagere og fjerner alle succesfulde kontroller.",
+    "confirmRemoveGlobal": "Vil du fjerne den globale tildeling af betingelsen \"{{requirement}}\"? Betingelsen forbliver for individuelt tildelte deltagere.",
+    "tableHint": "Kan aktiveres ved arrangementer.",
+    "namedParticipantAssignments": "Tildelinger",
+    "qrCodeRequirement": "QR-kode",
+    "global": "Global",
+    "toggleQrCode": "Slå QR-kode-krav til/fra",
+    "assignTo": "Tildel til {{name}}",
+    "assignToWithQr": "Tildel til {{name}} (med QR-kode)",
+    "toggleQrCodeFor": "Slå QR-kode til/fra for {{name}}",
+    "toggleQrCodeForGlobal": "Slå QR-kode til/fra for global tildeling",
+    "assignedToNamedParticipant": "Betingelse tildelt Named Participant",
+    "assignToParticipant": "Tildel Named Participant",
+    "manageParticipants": "Administrer Named Participants",
+    "assignedParticipants": "Tildelte Named Participants",
+    "availableParticipants": "Tilgængelige Named Participants",
+    "requireQrCode": "QR-kode påkrævet",
+    "allParticipantsAssigned": "Alle Named Participants er allerede tildelt",
+    "removeFrom": "Fjern fra {{name}}",
+    "removedFromNamedParticipant": "Betingelse fjernet fra Named Participant",
+    "assignGlobal": "Tildel globalt",
+    "assignGlobalWithQr": "Tildel globalt (med QR-kode)",
+    "removeGlobal": "Fjern global tildeling",
+    "removedGlobal": "Global tildeling fjernet",
+    "checkRequirements": "Kontrollér betingelser",
+    "checkInApp": "Kan kontrolleres i app",
+    "namedParticipantRequirements": {
+      "title": "Named Participant-betingelser",
+      "description": "Administrer specifikke betingelser for Named Participants",
+      "noNamedParticipants": "Ingen Named Participants tilgængelige",
+      "qrCodeRequired": "QR-kode påkrævet",
+      "assignedRequirements": "Tildelte betingelser",
+      "noRequirementsAssigned": "Ingen betingelser tildelt",
+      "availableRequirements": "Tilgængelige betingelser",
+      "allRequirementsAssigned": "Alle betingelser tildelt"
+    }
+  },
+  "user": {
+    "user": "Bruger",
+    "users": "Brugere",
+    "email": {
+      "email": "E-mail",
+      "inUse": {
+        "statement": "Den indtastede e-mailadresse er allerede i brug.",
+        "callToAction": {
+          "invitation": "Kontrollér venligst den aktuelle brug af e-mailadressen eller vælg en anden.",
+          "registration": "Brug venligst en anden e-mailadresse eller log ind med den eksisterende."
+        }
+      }
+    },
+    "firstname": "Fornavn",
+    "lastname": "Efternavn",
+    "birthYear": "Fødselsår",
+    "password": {
+      "password": "Adgangskode",
+      "confirm": "Bekræft adgangskode",
+      "minLength": "{{min}} eller flere tegn",
+      "notMatching": "De to indtastede adgangskoder stemmer ikke overens. Sørg venligst for, at de er identiske.",
+      "tooShort": "Angiv venligst en adgangskode med mindst {{min}} tegn"
+    },
+    "login": {
+      "login": "Log ind",
+      "password": "Adgangskode",
+      "forgotPassword": "Glemt adgangskode?",
+      "signUp": {
+        "message": "Har du ikke en konto?",
+        "link": "Registrér her"
+      },
+      "submit": "Log ind",
+      "error": {
+        "credentials": "Loginoplysninger er forkerte",
+        "tooManyRequests": "For mange loginforsøg. Prøv igen senere."
+      }
+    },
+    "settings": {
+      "menu": "Brugerindstillinger",
+      "profile": "Profil",
+      "logout": "Log ud"
+    },
+    "page": {
+      "error": {
+        "load": "Profilen kunne ikke indlæses"
+      }
+    },
+    "update": {
+      "error": "Der opstod en fejl ved opdatering af brugeren",
+      "success": "Bruger opdateret"
+    },
+    "invitation": {
+      "invitation": "Invitation",
+      "pendingInvitations": "Afventende invitationer",
+      "accept": "Accepter invitation",
+      "hint": "Angiv venligst en adgangskode for den konto, der skal oprettes.",
+      "submitPassword": "Accepter invitation",
+      "userCreated": {
+        "text": "Din konto blev oprettet, og du kan nu logge ind.",
+        "toLogin": "Til login"
+      },
+      "error": {
+        "header": "Der opstod en fejl",
+        "message": {
+          "notFound": "Der findes ingen åben invitation for dette link. Kontrollér venligst, om linket er korrekt.",
+          "unexpected": "Din konto kunne ikke oprettes. Prøv venligst igen senere."
+        }
+      }
+    },
+    "registration": {
+      "register": "Registrér",
+      "pendingRegistrations": "Afventende registreringer",
+      "registrationType": "Registreringstype",
+      "asParticipant": "Som deltager",
+      "asClubRepresentative": "Som klubadministration",
+      "step": {
+        "competitionsNotApplicable": "Ingen konkurrencevalg nødvendigt",
+        "emailToSubmitResults": "For selv at uploade et resultat kræves en e-mailadresse. Ellers skal klubadministrationen indtaste resultatet for dig."
+      },
+      "teamCompetitionsOmitted": "Med denne formular kan du kun tilmelde dig individuelle konkurrencer. For at deltage i holdkonkurrencer skal du kontakte din klubadministration.",
+      "error": {
+        "generic": "Der opstod en fejl ved registrering",
+        "selectAtLeastOneType": "Vælg venligst mindst én registreringstype",
+        "selectAtLeastOneCompetition": "Vælg venligst mindst én konkurrence"
+      },
+      "requested": {
+        "emailSent": {
+          "header": "Bekræft din e-mailadresse",
+          "message": {
+            "part1": "Vi har sendt dig en e-mail for at verificere din e-mailadresse og aktivere din konto.",
+            "part2": "Klik på linket i e-mailen for at fuldføre din registrering. Hvis du ikke kan se e-mailen, så tjek venligst din spam-mappe."
+          }
+        },
+        "participating": {
+          "header": "Tilmelding gennemført",
+          "message": {
+            "part1": "Du er nu tilmeldt arrangementet {{eventName}}.",
+            "part2Email": "Hvis du har angivet en e-mailadresse, modtager du snart en e-mail med et link til resultatportalen.",
+            "part3ClubRep": "Ellers er din klubadministration ansvarlig for at indtaste resultaterne."
+          }
+        },
+        "verified": {
+          "header": "E-mail bekræftet",
+          "message": "Din e-mailadresse blev bekræftet. Din konto er nu aktiveret."
+        },
+        "verificationError": {
+          "header": "Der opstod en fejl",
+          "message": {
+            "notFound": "Der findes ingen åben registrering for dette link. Kontrollér venligst, om linket er korrekt, eller om e-mailadressen allerede er bekræftet.",
+            "unexpected": "Din e-mailadresse kunne ikke bekræftes. Prøv venligst igen senere."
+          }
+        }
+      }
+    },
+    "resetPassword": {
+      "resetPassword": "Nulstil adgangskode",
+      "forgotPassword": "Glemt adgangskode?",
+      "newPassword": "Ny adgangskode",
+      "init": {
+        "instruction": "Angiv venligst din e-mailadresse. Vi sender dig et link, så du kan nulstille din adgangskode.",
+        "submit": "Nulstil adgangskode"
+      },
+      "emailSent": {
+        "header": "Tjek din indbakke",
+        "message": {
+          "part1": "Vi har sendt dig en e-mail med yderligere instruktioner til nulstilling af din adgangskode.",
+          "part2": "Hvis du ikke kan se e-mailen, så tjek venligst din spam-mappe."
+        }
+      },
+      "success": {
+        "header": "Adgangskode ændret!",
+        "message": "Din adgangskode blev ændret."
+      },
+      "error": {
+        "header": "Der opstod en fejl",
+        "message": {
+          "part1": "Der opstod en fejl ved nulstilling af din adgangskode.",
+          "part2": "Kontrollér, at du bruger det korrekte og komplette link fra e-mailen. Kun det senest sendte link er gyldigt. Linket er gyldigt i 24 timer."
+        },
+        "invalid": "Den sendte formular var ugyldig"
+      }
+    }
+  },
+  "role": {
+    "role": "Rolle",
+    "roles": "Roller",
+    "userRoles": "Brugerroller",
+    "name": "Navn",
+    "description": "Beskrivelse",
+    "rights": "Rettigheder",
+    "error": {
+      "cannotAssign": "Rolle(r) kunne ikke tildeles brugeren"
+    }
+  },
+  "configuration": {
+    "configuration": "Konfigurationer",
+    "tabs": {
+      "competitionTemplates": "Skabeloner konkurrence",
+      "eventElements": "Komponenter arrangement",
+      "competitionElements": "Komponenter konkurrence",
+      "globalSettings": "Globale indstillinger",
+      "exportData": "Eksport / Import"
+    },
+    "ratingCategory": {
+      "ratingCategory": "Rangeringskategori",
+      "ratingCategories": "Rangeringskategorier",
+      "name": "Navn",
+      "description": "Beskrivelse",
+      "tableHint": "Kan tildeles konkurrencehold."
+    },
+    "import": {
+      "matchResult": {
+        "config": "Import af løbsresultater",
+        "configs": "Imports af løbsresultater",
+        "tableHint": "Definerer kolonnerne til XLS-import af løbsresultater under afvikling af konkurrencer.",
+        "name": "Navn",
+        "col": {
+          "team": {
+            "startNumber": "Startnummer",
+            "place": "Placering",
+            "time": "Tid"
+          }
+        },
+        "error": {
+          "noPlaceOrTime": "Angiv venligst kolonnen for placeringer eller tider."
+        }
+      }
+    },
+    "export": {
+      "startlist": {
+        "startlist": "Eksport af startlister",
+        "startlists": "Eksports af startlister",
+        "tableHint": "Definerer kolonnerne til CSV-eksport af startlister under afvikling af konkurrencer.",
+        "name": "Navn",
+        "col": {
+          "heading": "Kolonner",
+          "participant": {
+            "heading": "Deltagere",
+            "firstname": "Fornavne",
+            "lastname": "Efternavne",
+            "gender": "Køn",
+            "role": "Rolle",
+            "year": "Fødselsår",
+            "club": "Klub"
+          },
+          "club": {
+            "heading": "Tilmeldende klub",
+            "name": "Navn"
+          },
+          "team": {
+            "heading": "Hold",
+            "name": "Navn",
+            "startNumber": "Startnummer",
+            "ratingCategory": "Rangeringskategori",
+            "club": "Klub (samlet)",
+            "deregistered": "Afmeldt",
+            "deregisteredValue": "Afmeldt-værdi"
+          },
+          "match": {
+            "heading": "Kamp",
+            "name": "Navn",
+            "startTime": "Starttid"
+          },
+          "round": {
+            "heading": "Runde",
+            "name": "Navn"
+          },
+          "competition": {
+            "heading": "Konkurrence",
+            "identifier": "Identifikator",
+            "name": "Navn",
+            "shortName": "Kort navn",
+            "category": "Kategori"
+          }
+        },
+        "error": {
+          "tooFewCols": "Angiv venligst mindst et navn for en kolonne."
+        }
+      }
+    }
+  },
+  "contact": {
+    "name": "Navn",
+    "zip": "Postnummer",
+    "city": "By",
+    "street": "Gade (med husnummer)",
+    "email": "E-mail",
+    "information": "Kontaktinformation",
+    "contacts": "Kontaktinformationer",
+    "global": "Globalt tildelt kontaktinformation",
+    "tableHint": {
+      "1": "Bruges som afsender til fakturering.",
+      "2": "I de ",
+      "3": "globale indstillinger",
+      "4": " kan tildelingerne foretages."
+    }
+  },
+  "invoice": {
+    "invoice": "Faktura",
+    "invoices": "Fakturaer",
+    "download": "Download",
+    "downloadError": "Der opstod en fejl under forsøget på at downloade fakturaen.",
+    "invoiceNumber": "Fakturanummer",
+    "amount": "Fakturabeløb",
+    "paid": "Betalt",
+    "tableHint": {
+      "1": "Fakturaer kan oprettes her én gang for alle tilmeldinger til et arrangement.",
+      "2": "Konti for betalingsmodtager og afsenderdata kan ",
+      "3": "her",
+      "4": " defineres.",
+      "5": "Før fakturaer oprettes, skal de data, der skal bruges, tildeles i de ",
+      "6": "globale indstillinger",
+      "7": "."
+    },
+    "action": {
+      "setPaid": "Registrér betaling",
+      "setNotPaid": "Fortryd registreret betaling"
+    },
+    "produce": {
+      "for": "for {{type}}",
+      "type": {
+        "REGULAR": "Tilmeldinger",
+        "LATE": "Eftertilmeldinger"
+      },
+      "info": {
+        "paymentDueBy": {
+          "title": "Standard betalingsfrist for fakturaer",
+          "content": "Hvis der ikke er defineret en forfaldsdato for betaling af fakturaen for dette arrangement, bruges en standardværdi på 14 dage fra oprettelse af fakturaen."
+        }
+      },
+      "success": "Fakturaer oprettes og sendes via e-mail. Dette kan tage et par minutter.",
+      "error": {
+        "NO_ASSIGNED_PAYEE_INFORMATION": "Tilføj venligst en betalingsmodtager.",
+        "NO_ASSIGNED_CONTACT_INFORMATION": "Tilføj venligst kontaktinformation (afsender).",
+        "INVOICES_ALREADY_PRODUCED": "Oprettelsen af fakturaer er allerede startet.",
+        "EVENT_REGISTRATION_ONGOING": "Tilmeldingsperioden for dette arrangement er stadig i gang."
+      }
+    },
+    "bank": {
+      "accountData": {
+        "holder": "Kontohaver",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "bank": "Bank"
+      },
+      "account": "Bankforbindelse",
+      "accounts": "Bankforbindelser",
+      "global": "Globalt tildelt bankforbindelse",
+      "tableHint": {
+        "1": "Bruges som modtagerkonto ved fakturering.",
+        "2": "I de ",
+        "3": "globale indstillinger",
+        "4": " kan tildelingerne foretages."
+      }
+    }
+  },
+  "captcha": {
+    "instruction": {
+      "desktop": "Flyt logoet med musen ind i den lille cirkel",
+      "mobile": "Flyt logoet med fingeren ind i den lille cirkel"
+    },
+    "error": {
+      "createCaptcha": "Der opstod en uventet fejl ved oprettelse af CAPTCHA",
+      "incorrect": "CAPTCHA blev ikke løst korrekt",
+      "notFound": "CAPTCHA er udløbet"
+    },
+    "loading": "Indlæser CAPTCHA..."
+  },
+  "qrAssign": {
+    "title": "Tildel QR-kode",
+    "participant": "Deltager",
+    "user": "Bruger",
+    "clubs": "Klubber",
+    "participants": "Deltagere",
+    "users": "Brugere",
+    "noData": "Ingen data",
+    "team": "Hold",
+    "scanSystemUser": "Scan bruger fra system",
+    "scanUserQr": "Scan bruger-QR-kode",
+    "invalidUserQr": "Ugyldig bruger-QR-kode",
+    "invalidQrFormat": "Ugyldigt QR-kodeformat",
+    "userAssigned": "Bruger {{userId}} tildelt",
+    "participantQrDetected": "Deltager-QR-kode registreret",
+    "appUserQrDetected": "Bruger-QR-kode registreret",
+    "notAssigned": "Denne QR-kode kunne ikke tildeles.",
+    "successParticipant": "QR-kode tildelt deltageren",
+    "successUser": "QR-kode tildelt brugeren",
+    "selectClub": "Vælg klub",
+    "search": "Søg...",
+    "confirmSelection": "Bekræft valg",
+    "confirm": "Tilføj",
+    "success": "QR-kode tildelt",
+    "deleteSuccess": "QR-kode-tildeling ophævet"
+  },
+  "qrCode": {
+    "qrCode": "QR-kode",
+    "value": "QR-kodeværdi",
+    "appUsersWithQrCode": "Brugere med QR-koder",
+    "edit": "Rediger QR-kode",
+    "delete": "Slet QR-kode",
+    "show": "Vis QR-kode",
+    "deleteConfirm": "Vil du virkelig slette QR-koden?",
+    "noQrCodeAssigned": "Ingen QR-kode tildelt",
+    "cameraError": "Kameraet kan ikke startes"
+  },
+  "qrAppuser": {
+    "title": "QR-appbruger",
+    "user": "Bruger",
+    "underConstruction": "Side under opbygning",
+    "removeAssignment": "Ophæv QR-kode-tildeling",
+    "removeAssignmentTitle": "Ophæv QR-kode-tildeling",
+    "removeAssignmentConfirm": "Vil du virkelig ophæve QR-kode-tildelingen?",
+    "deleteError": "Fejl ved sletning",
+    "assignmentInfo": "Tildelingsinformation"
+  },
+  "qrParticipant": {
+    "title": "Deltager",
+    "noRight": "Du har ikke tilladelse til denne QR-kodetype.",
+    "loading": "Indlæser...",
+    "noRequirements": "Ingen betingelser med CheckInApp tilgængelige.",
+    "enterArea": "Indgang til konkurrenceområde",
+    "leaveArea": "Udgang fra konkurrenceområde",
+    "removeAssignment": "Fjern QR-kode-tildeling",
+    "removeAssignmentTitle": "Fjern tildeling",
+    "removeAssignmentConfirm": "Vil du virkelig fjerne tildelingen?",
+    "deleteError": "Fejl ved sletning af QR-koden.",
+    "assignmentInfo": "Tildelingsinformation"
+  },
+  "qrScanner": {
+    "title": "Scanner"
+  },
+  "qrEvents": {
+    "title": "Arrangementer",
+    "switchApp": "Skift app"
+  },
+  "app": {
+    "functionSelect": {
+      "title": "Din opgave",
+      "functions": {
+        "qrManagement": "QR-kodeadministration",
+        "competitionCheck": "Konkurrence-check",
+        "eventRequirement": "Kontrollér betingelser",
+        "caterer": "Forplejning"
+      },
+      "switchEvent": "Skift arrangement"
+    },
+    "forbidden": {
+      "title": "Ingen adgang",
+      "message": "Du har ikke adgang til denne side.",
+      "backButton": "Tilbage til login"
+    }
+  },
+  "caterer": {
+    "canReceiveFood": "Bruger kan modtage mad",
+    "cannotReceiveFood": "Bruger kan ikke modtage mad",
+    "price": "Pris (€)",
+    "priceHelper": "Valgfrit",
+    "confirm": "Bekræft",
+    "previousTransactions": "Tidligere transaktioner",
+    "scanError": "Fejl ved scanning af brugeren",
+    "transactionError": "Fejl ved oprettelse af transaktion",
+    "transactionSuccess": "Transaktion gennemført"
+  },
+  "catererTransaction": {
+    "catererTransaction": "Forplejningstransaktion",
+    "catererTransactions": "Forplejningstransaktioner",
+    "catererName": "Forplejer",
+    "userName": "Bruger",
+    "price": "Beløb",
+    "createdAt": "Tidspunkt"
+  },
+  "landing": {
+    "smallScreen": {
+      "to": {
+        "where": "Hvad vil du se?",
+        "app": "Hjælper-app",
+        "results": "Live-arrangementer",
+        "desktop": "Desktopvisning"
+      }
+    },
+    "liveEventsLink": "Igangværende resultater"
+  },
+  "panic": {
+    "title": "Fejl",
+    "text": "API-serveren kan ikke nås i øjeblikket. Prøv venligst igen senere. Hvis dette ikke ændrer sig, kontakt venligst en ansvarlig. Mange tak."
+  },
+  "results": {
+    "tabs": {
+      "results": "Resultater",
+      "live": "Live"
+    },
+    "matchResults": {
+      "matchResults": "Resultater",
+      "noResults": "Der findes endnu ingen resultater for denne konkurrence."
+    },
+    "liveMatches": {
+      "liveMatches": "Igangværende kampe",
+      "noMatches": "Der afvikles ingen kampe i øjeblikket."
+    },
+    "clubRanking": {
+      "error": "Fejl ved indlæsning af klubrangliste"
+    },
+    "individualRanking": {
+      "error": "Fejl ved indlæsning af individuel rangliste"
+    },
+    "noResults": "Ingen resultater",
+    "challengeTabs": {
+      "club": "Klub",
+      "relative": "Relativ",
+      "individual": "Individuel"
+    },
+    "noEvents": "Ingen arrangementer tilgængelige"
+  },
+  "webDAV": {
+    "infoText": {
+      "part1": "Eksport-/importfunktionen gør det muligt at gemme dokumenter (systemgenererede eller uploadede PDF'er) og/eller konfigurationer oprettet i applikationen på en ekstern server (f.eks. Nextcloud via WebDAV).",
+      "part2": "Disse eksporterede data kan senere importeres igen for at gendanne dine arrangements-konfigurationer, skabeloner og indstillinger."
+    },
+    "export": {
+      "export": "Eksportér data",
+      "confirm": "Eksportér",
+      "folderName": "Eksportmappenavn",
+      "events": "Arrangementer",
+      "data": "Data der skal eksporteres",
+      "applicationData": "Applikationsdata og indstillinger",
+      "types": {
+        "registrationResults": "Tilmeldingsresultater",
+        "invoices": "Fakturaer",
+        "documents": "Arrangementsdokumenter",
+        "results": "Resultater",
+        "startLists": "Startlister",
+        "users": "Brugere",
+        "participants": "Deltagere",
+        "bankAccounts": "Bankkonti",
+        "contactInformation": "Kontaktinformation",
+        "emailIndividualTemplates": "Individuelle e-mail-skabeloner",
+        "eventDocumentTypes": "Arrangementsdokumenttyper",
+        "matchResultImportConfigs": "Importkonfigurationer for konkurrenceresultater",
+        "startlistExportConfigs": "Eksportkonfigurationer for startlister",
+        "workTypes": "Arbejdstyper",
+        "participantRequirements": "Deltagerkrav",
+        "ratingCategories": "Rangeringskategorier",
+        "competitionCategories": "Konkurrencekategorier",
+        "fees": "Gebyrer",
+        "namedParticipants": "Navngivne deltagere",
+        "competitionSetupTemplates": "Skabeloner for konkurrenceforløb",
+        "competitionTemplates": "Konkurrenceskabeloner",
+        "event": "Arrangementsdata",
+        "competition": "Konkurrencedata"
+      },
+      "steps": {
+        "name": "Navn",
+        "documents": "Dokumenter",
+        "data": "Data"
+      },
+      "error": {
+        "nameConflict": "Det angivne mappenavn findes allerede. Vælg venligst et andet navn.",
+        "thirdPartyError": "Den eksterne WebDAV-server meldte en fejl. Kontakt venligst administratoren.",
+        "noDocumentTypeSelected": "Vælg venligst mindst én dokumenttype for dette arrangement."
+      },
+      "noEventsAvailable": "Ingen arrangementer tilgængelige til eksport",
+      "success": "Eksport startet",
+      "status": {
+        "status": "Eksportstatus",
+        "error": {
+          "title": "Fejl ved eksport",
+          "body": "{{files}} / {{total}} filer eksporteret.",
+          "info": {
+            "files": "{{errors}} fejl ved PDF-eksport",
+            "data": "{{errors}} fejl ved data-eksport"
+          }
+        },
+        "success": {
+          "title": "Eksport fuldført",
+          "body_one": "{{count}} fil eksporteret.",
+          "body_other": "{{count}} filer eksporteret."
+        },
+        "pending": {
+          "title": "Eksporterer...",
+          "body": "{{files}} / {{total}} filer eksporteret."
+        }
+      }
+    },
+    "import": {
+      "import": "Importér data",
+      "confirm": "Importér",
+      "folderName": "Importmappenavn",
+      "selectData": "Vælg data til import",
+      "error": {
+        "noSelection": "Vælg venligst mindst én datatype til import",
+        "failed": "Der opstod en fejl ved import af data",
+        "loadFolders": "Der opstod en fejl ved indlæsning af tilgængelige mapper fra WebDAV-serveren",
+        "loadOptions": "Der opstod en fejl ved indlæsning af tilgængelige importmuligheder"
+      },
+      "noEventsAvailable": "Ingen arrangementer tilgængelige til import",
+      "success": "Import startet",
+      "status": {
+        "status": "Importstatus",
+        "error": {
+          "title": "Fejl ved import",
+          "body": "{{files}} / {{total}} filer importeret."
+        },
+        "success": {
+          "title": "Import fuldført",
+          "body_one": "{{count}} fil importeret.",
+          "body_other": "{{count}} filer importeret."
+        },
+        "pending": {
+          "title": "Importerer...",
+          "body": "{{files}} / {{total}} filer importeret."
+        }
+      }
+    }
+  },
+  "administration": {
+    "title": "Administration",
+    "tabs": {
+      "smtp": "SMTP-konfiguration",
+      "theme": "Tema-tilpasning",
+      "emailTemplates": "E-mail-skabeloner"
+    },
+    "emailTemplates": {
+      "placeholders": {
+        "recipient": "Max Mustermann",
+        "sender": "Erika Mustermann",
+        "link": "ready2race.info/beispiel-link",
+        "event": "Eksempel-arrangement",
+        "club": "Eksempel-klub e.V.",
+        "participants": "",
+        "competitions": "",
+        "date": "01.01.1970"
+      },
+      "templateKeys": {
+        "USER_REGISTRATION": "Brugerregistrering",
+        "USER_INVITATION": "Brugerinvitation",
+        "USER_RESET_PASSWORD": "Nulstil adgangskode",
+        "EVENT_REGISTRATION_CONFIRMATION": "Bekræftelse på arrangementstilmelding",
+        "EVENT_REGISTRATION_INVOICE": "Faktura for arrangementstilmelding",
+        "PARTICIPANT_CHALLENGE_REGISTERED": "Bekræftelse på challenge-tilmelding",
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Deltagelsesbevis"
+      },
+      "requiredPlaceholders": "Påkrævede pladsholdere:",
+      "optionalPlaceholders": "Valgfrie pladsholdere:",
+      "requiredPlaceholdersMissing": "Alle påkrævede pladsholdere skal bruges",
+      "resetTemplate": "Nulstil skabelon",
+      "resetTemplateConfirmationText": "Er du sikker på, at du vil nulstille skabelonen?",
+      "response": {
+        "changeSuccessful": "{{key}}-skabelon ændret",
+        "resetSuccessful": "{{key}}-skabelon nulstillet",
+        "changeFailed": "{{key}}-skabelon kunne ikke ændres"
+      },
+      "formActions": {
+        "reset": "Nulstil skabelon",
+        "change": "Ændr skabelon"
+      }
+    },
+    "smtp": {
+      "title": "SMTP-konfiguration",
+      "host": "SMTP-host",
+      "port": "SMTP-port",
+      "username": "SMTP-brugernavn",
+      "password": "SMTP-adgangskode",
+      "smtpStrategy": "SMTP-strategi",
+      "fromAddress": "Afsenderadresse",
+      "fromName": "Afsendernavn",
+      "localhost": "Localhost",
+      "replyTo": "Svaradresse",
+      "submit": "Gem konfiguration",
+      "reset": "Nulstil konfiguration",
+      "confirmation": {
+        "content": "Vil du virkelig ændre SMTP-konfigurationen?"
+      },
+      "errors": {
+        "loading": "Der opstod en fejl ved indlæsning af SMTP-konfigurationen.",
+        "submit": "Der opstod en fejl ved ændring af SMTP-konfigurationen."
+      }
+    },
+    "theme": {
+      "title": "Tema-tilpasning",
+      "info": "Tilpas applikationens udseende. Ændringer træder i kraft straks efter gem.",
+      "colors": {
+        "primaryColors": "Akcentfarver",
+        "textColors": "Tekstfarver",
+        "actionColors": "Feedbackfarver",
+        "backgroundColor": "Baggrundsfarve",
+        "main": "Primær",
+        "light": "Baggrund",
+        "primary": "Primær",
+        "secondary": "Sekundær",
+        "success": "Succes",
+        "warning": "Advarsel",
+        "error": "Fejl",
+        "info": "Info"
+      },
+      "customFont": "Egen skrifttype",
+      "fontHint": "Upload en .woff eller .woff2 fil (maks. 5MB)",
+      "currentFont": "Aktuel skrifttype",
+      "enableCustomFont": "Aktivér egen skrifttype",
+      "selectFontFile": "Ingen fil valgt",
+      "customLogo": "Eget logo",
+      "logoHint": "Upload en .png, .jpg, .jpeg, .svg eller .webp fil (maks. 2MB)",
+      "currentLogo": "Aktuelt logo",
+      "enableCustomLogo": "Aktivér eget logo",
+      "selectLogoFile": "Ingen fil valgt",
+      "submit": "Gem tema",
+      "reset": "Nulstil til standard",
+      "confirmUpdate": {
+        "title": "Opdater tema",
+        "message": "Vil du virkelig ændre temaindstillingerne?"
+      },
+      "confirmReset": {
+        "title": "Nulstil tema",
+        "message": "Vil du virkelig nulstille temaet til standardindstillingerne? Alle tilpasninger går tabt."
+      },
+      "success": {
+        "updated": "Tema opdateret",
+        "reset": "Tema nulstillet"
+      },
+      "errors": {
+        "invalidFontFormat": "Ugyldigt filformat. Brug venligst .woff eller .woff2 filer.",
+        "fontTooLarge": "Skrifttypefilen er for stor. Maksimal størrelse: 5MB",
+        "invalidLogoFormat": "Ugyldigt filformat. Brug venligst .png, .jpg, .jpeg, .svg eller .webp filer.",
+        "logoTooLarge": "Logofilen er for stor. Maksimal størrelse: 2MB",
+        "updateFailed": "Temaet kunne ikke opdateres",
+        "resetFailed": "Temaet kunne ikke nulstilles"
+      }
+    }
+  },
+  "challenge": {
+    "challenge": "Challenge",
+    "title": "Challenge-information",
+    "team": "Hold",
+    "period": "Challenge-periode",
+    "result": "Resultat",
+    "proofSubmitted": "Dokumentation indsendt",
+    "proofRequired": "Dokumentation påkrævet for denne konkurrence",
+    "notFound": "Challenge ikke fundet",
+    "submitResult": "Indsend resultat"
+  }
+}
