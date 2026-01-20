@@ -22,6 +22,7 @@ import {
 } from '@mui/material'
 import {de} from 'date-fns/locale/de'
 import {enGB} from 'date-fns/locale/en-GB'
+import {da} from 'date-fns/locale/da'
 import withDragAndDrop, {EventInteractionArgs} from 'react-big-calendar/lib/addons/dragAndDrop'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import ShiftDialog from '@components/event/shiftplan/ShiftDialog.tsx'
@@ -41,6 +42,7 @@ const DragAndDropCalendar = withDragAndDrop<WorkShiftWithAssignedUsersDto, WorkT
 const locales = {
     'de-DE': de,
     'en-GB': enGB,
+    'da-DK': da,
 }
 
 const lang = {
@@ -61,6 +63,21 @@ const lang = {
         event: 'Schicht',
         allDay: 'ganztägig',
         showMore: (total: number) => `+${total} weitere`,
+    },
+    'da-DK': {
+        date: 'Dato',
+        time: 'Tid',
+        week: 'Uge',
+        day: 'Dag',
+        month: 'Måned',
+        previous: 'Forrige',
+        next: 'Næste',
+        today: 'I dag',
+        agenda: 'Agenda',
+        noEventsInRange: 'Ingen vagter i denne periode',
+        event: 'Vagt',
+        allDay: 'Hele dagen',
+        showMore: (total: number) => `+${total} flere`,
     },
 }
 
@@ -123,6 +140,8 @@ export const Shiftplan = () => {
     const {messages, culture} = useMemo(() => {
         if (user.language === 'de') {
             return {messages: lang['de-DE'], culture: 'de-DE'}
+        } else if (user.language === 'da') {
+            return {messages: lang['da-DK'], culture: 'da-DK'}
         } else {
             return {messages: lang['en-GB'], culture: 'en-GB'}
         }

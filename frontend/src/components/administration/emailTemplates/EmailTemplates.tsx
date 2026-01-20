@@ -31,6 +31,7 @@ export function EmailTemplates() {
     const lngsRec: Record<EmailLanguage, null> = {
         DE: null,
         EN: null,
+        DA: null,
     }
     const lngs = Object.entries(lngsRec).map(([key]) => key)
     const userLng = useUser().language

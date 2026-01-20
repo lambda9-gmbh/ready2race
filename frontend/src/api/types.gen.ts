@@ -703,7 +703,7 @@ export type Duplicate = {
     count: number
 }
 
-export type EmailLanguage = 'DE' | 'EN'
+export type EmailLanguage = 'DE' | 'EN' | 'DA'
 
 export type EmailTemplaplatePlaceholder =
     | 'recipient'
