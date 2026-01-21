@@ -3,7 +3,10 @@ package de.lambda9.ready2race.backend.app.eventDay.control
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayDto
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
+import de.lambda9.ready2race.backend.app.eventDay.entity.TimeslotDto
+import de.lambda9.ready2race.backend.app.eventDay.entity.TimeslotRequest
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.TimeslotRecord
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
@@ -34,3 +37,14 @@ fun EventDayRecord.eventDayDto(): App<Nothing, EventDayDto> = KIO.ok(
         description = description,
     )
 )
+
+fun TimeslotRecord.toDto(): TimeslotDto =
+    TimeslotDto(
+        id = id,
+        eventDay = eventDay,
+        name = name,
+        description = description,
+        startTime = startTime,
+        endTime = endTime
+    )
+

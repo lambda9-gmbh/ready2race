@@ -1,6 +1,6 @@
 import {Box, Card, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventDayRoute, eventRoute} from '@routes'
 import Throbber from '@components/Throbber.tsx'
 import CompetitionAndDayAssignment from '@components/event/CompetitionAndDayAssignment.tsx'
@@ -8,6 +8,9 @@ import {AutocompleteOption} from '@utils/types.ts'
 import {competitionLabelName} from '@components/event/competition/common.ts'
 import {useState} from 'react'
 import {getEventDay, getCompetitions} from '@api/sdk.gen.ts'
+import {TimeslotPage} from '@components/event/eventDay/timeslots/TimeslotPage.tsx'
+import TimeslotTable from '@components/event/eventDay/timeslots/TimeslotTable.tsx'
+import {EventDto, TimeslotDto} from '@api/types.gen.ts'
 
 const EventDayPage = () => {
     const {t} = useTranslation()
@@ -72,6 +75,8 @@ const EventDayPage = () => {
             label: competitionLabelName(value.properties.identifier, value.properties.name),
         })) ?? []
 
+    const administrationProps = useEntityAdministration<TimeslotDto>(t('event.event'))
+
     return (
         <Box>
             {(eventDayData && (
@@ -94,6 +99,12 @@ const EventDayPage = () => {
                             />
                         )) ||
                             ((competitionsPending || assignedCompetitionsPending) && <Throbber />)}
+                    </Card>
+                    <Card sx={{p: 2}}>
+                        <Typography variant="h6">Wambo</Typography>
+                        <TimeslotPage eventId={eventId} eventDayId={eventDayId} />
+                        {/*Durch entityTable ersetzen*/}
+                        {/*<TimeslotTable {...administrationProps.table} title={'wambo'} />*/}
                     </Card>
                 </Box>
             )) ||

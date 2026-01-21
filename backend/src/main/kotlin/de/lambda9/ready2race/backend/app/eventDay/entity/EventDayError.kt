@@ -9,6 +9,7 @@ import java.util.*
 sealed interface EventDayError : ServiceError {
     data object EventDayNotFound : EventDayError
     data object IsChallengeEvent : EventDayError
+    data object TimeslotNotFound : EventDayError
 
     data class CompetitionsNotFound(val competitions: List<UUID>) : EventDayError
 
@@ -18,6 +19,7 @@ sealed interface EventDayError : ServiceError {
             HttpStatusCode.BadRequest,
             message = "EventDays are not supported for challenge events"
         )
+        TimeslotNotFound -> ApiError(HttpStatusCode.NotFound, message = "Timeslot not found")
 
         is CompetitionsNotFound -> ApiError(
             HttpStatusCode.BadRequest,

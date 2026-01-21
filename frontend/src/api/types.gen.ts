@@ -1347,6 +1347,8 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
+export type ParametertimeslotId = string
+
 export type ParticipantDto = {
     id: string
     firstname: string
@@ -1950,6 +1952,23 @@ export type ThemeConfigDto = {
     backgroundColor: string
     customFont: CustomFontDto
     customLogo: CustomLogoDto
+}
+
+export type TimeslotDto = {
+    id: string
+    eventDay: string
+    name: string
+    description?: string
+    startTime: string
+    endTime: string
+}
+
+export type TimeslotRequest = {
+    eventDay: string
+    name: string
+    description?: string
+    startTime: string
+    endTime: string
 }
 
 export type TooManyRequestsError = ApiError & {
@@ -2804,6 +2823,54 @@ export type DeleteEventDayData = {
 export type DeleteEventDayResponse = void
 
 export type DeleteEventDayError = BadRequestError | ApiError
+
+export type GetTimeslotsData = {
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
+
+export type GetTimeslotsResponse = Array<TimeslotDto>
+
+export type GetTimeslotsError = BadRequestError | ApiError
+
+export type CreateTimeslotData = {
+    body: TimeslotRequest
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
+
+export type CreateTimeslotResponse = void
+
+export type CreateTimeslotError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateTimeslotData = {
+    body: TimeslotRequest
+    path: {
+        eventDayId: string
+        eventId: string
+        timeslotId: string
+    }
+}
+
+export type UpdateTimeslotResponse = void
+
+export type UpdateTimeslotError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteTimeslotData = {
+    path: {
+        eventDayId: string
+        eventId: string
+        timeslotId: string
+    }
+}
+
+export type DeleteTimeslotResponse = void
+
+export type DeleteTimeslotError = BadRequestError | ApiError
 
 export type AssignCompetitionsToEventDayData = {
     body: AssignCompetitionsToDayRequest

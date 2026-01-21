@@ -966,6 +966,100 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventDay/{eventDayId}/timeslot:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+    get:
+      operationId: getTimeslots
+      responses:
+        200:
+          description: Timeslots ofr Eventday successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeslotDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: createTimeslot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeslotRequest'
+      responses:
+        204:
+          description: Timeslot successfully created
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  
+  /event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+      - $ref: '#/components/parameters/timeslotId'
+    put:
+      operationId: updateTimeslot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeslotRequest'
+      responses:
+        204:
+          description: EventDay successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteTimeslot
+      responses:
+        204:
+          description: Timeslot successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventDay/{eventDayId}/competitions:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7023,6 +7117,14 @@ components:
         type: string
         format: uuid
 
+    timeslotId:
+      name: timeslotId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
     competitionId:
       name: competitionId
       in: path
@@ -8188,6 +8290,54 @@ components:
           type: string
         description:
           type: string
+
+    TimeslotDto:
+      type: object
+      required:
+        - id
+        - eventDay
+        - name
+        - startTime
+        - endTime
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventDay:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    TimeslotRequest:
+      type: object
+      required:
+        - eventDay
+        - name
+        - startTime
+        - endTime
+      properties:
+        eventDay:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
 
 
     AssignCompetitionsToDayRequest:

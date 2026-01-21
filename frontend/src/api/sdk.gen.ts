@@ -112,6 +112,18 @@ import type {
     DeleteEventDayData,
     DeleteEventDayError,
     DeleteEventDayResponse,
+    GetTimeslotsData,
+    GetTimeslotsError,
+    GetTimeslotsResponse,
+    CreateTimeslotData,
+    CreateTimeslotError,
+    CreateTimeslotResponse,
+    UpdateTimeslotData,
+    UpdateTimeslotError,
+    UpdateTimeslotResponse,
+    DeleteTimeslotData,
+    DeleteTimeslotError,
+    DeleteTimeslotResponse,
     AssignCompetitionsToEventDayData,
     AssignCompetitionsToEventDayError,
     AssignCompetitionsToEventDayResponse,
@@ -1147,6 +1159,54 @@ export const deleteEventDay = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventDay/{eventDayId}',
+    })
+}
+
+export const getTimeslots = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetTimeslotsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetTimeslotsResponse, GetTimeslotsError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot',
+    })
+}
+
+export const createTimeslot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateTimeslotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CreateTimeslotResponse,
+        CreateTimeslotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot',
+    })
+}
+
+export const updateTimeslot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateTimeslotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateTimeslotResponse,
+        UpdateTimeslotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}',
+    })
+}
+
+export const deleteTimeslot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteTimeslotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteTimeslotResponse,
+        DeleteTimeslotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}',
     })
 }
 
