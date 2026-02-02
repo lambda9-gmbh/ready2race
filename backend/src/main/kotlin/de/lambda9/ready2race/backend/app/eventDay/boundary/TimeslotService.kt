@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.eventDay.control.toDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.TimeslotRecord
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -17,12 +18,31 @@ import java.util.*
 
 object TimeslotService {
 
-    fun getTimeslotsByEventDay(
-        eventDayId: UUID
-    ): App<Nothing, ApiResponse.ListDto<TimeslotDto>> = KIO.comprehension {
-        val timeslots = !TimeslotRepo.getByEventDay(eventDayId).orDie()
-        val dtoList = timeslots.map { it.toDto() }
-        KIO.ok(ApiResponse.ListDto(dtoList))
+    fun pageByEventDay(
+        eventDayId: UUID,
+        params: PaginationParameters<TimeslotSort>,
+    ): App<Nothing, ApiResponse.Page<TimeslotDto, TimeslotSort>> = KIO.comprehension {
+
+        val total = !TimeslotRepo.countByEventDay(eventDayId, params.search).orDie()
+
+        val page =
+            !TimeslotRepo.pageByEventDay(eventDayId, params).orDie()
+
+        val list = page.map { it.toDto() }
+        KIO.ok(ApiResponse.Page(
+            data = list,
+            pagination = params.toPagination(total)
+        ))
+    }
+
+    fun getTimeslot(
+        timeslotId: UUID
+    ): App<ServiceError, ApiResponse> = KIO.comprehension {
+
+        val timeslot = !TimeslotRepo.getTimeslot(timeslotId).orDie()
+            .onNullFail { EventDayError.TimeslotNotFound }
+
+        KIO.ok(ApiResponse.Dto(timeslot.toDto()))
     }
 
     fun addTimeslotToEventDay(

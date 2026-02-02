@@ -514,7 +514,14 @@
       "date": "Date",
       "name": "Name",
       "description": "Description",
-      "assignedCompetitions": "Competitions on this day"
+      "assignedCompetitions": "Competitions on this day",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "from":"From",
+      "to":"To",
+      "schedule":"Schedule",
+      "timeslot":"Timeslot",
+      "downloadSchedule": "Download schedule"
     },
     "competition": {
       "competition": "Competition",

@@ -2829,13 +2829,34 @@ export type GetTimeslotsData = {
         eventDayId: string
         eventId: string
     }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
 }
 
-export type GetTimeslotsResponse = Array<TimeslotDto>
+export type GetTimeslotsResponse = {
+    data: Array<TimeslotDto>
+    pagination: Pagination
+}
 
 export type GetTimeslotsError = BadRequestError | ApiError
 
-export type CreateTimeslotData = {
+export type AddTimeslotData = {
     body: TimeslotRequest
     path: {
         eventDayId: string
@@ -2843,9 +2864,20 @@ export type CreateTimeslotData = {
     }
 }
 
-export type CreateTimeslotResponse = void
+export type AddTimeslotResponse = void
 
-export type CreateTimeslotError = BadRequestError | ApiError | UnprocessableEntityError
+export type AddTimeslotError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DownloadSchedulePdfForEventDayData = {
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
+
+export type DownloadSchedulePdfForEventDayResponse = Blob | File
+
+export type DownloadSchedulePdfForEventDayError = BadRequestError | ApiError
 
 export type UpdateTimeslotData = {
     body: TimeslotRequest

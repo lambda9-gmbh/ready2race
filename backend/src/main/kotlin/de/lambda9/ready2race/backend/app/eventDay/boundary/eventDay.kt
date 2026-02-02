@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.AssignCompetitionsToDay
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.app.eventDay.entity.TimeslotRequest
+import de.lambda9.ready2race.backend.app.eventDay.entity.TimeslotSort
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -75,12 +76,21 @@ fun Route.eventDay() {
                 }
             }
 
+            get("/schedulePdf") {
+                call.respondComprehension {
+                    val eventDayId = !pathParam("eventDayId", uuid)
+
+                    EventDayService.downloadEventDaySchedulePdf(eventDayId)
+                }
+            }
+
             route("/timeslot") {
                 get(){
                     call.respondComprehension {
                         val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                         val eventDayId = !pathParam("eventDayId", uuid)
-                        TimeslotService.getTimeslotsByEventDay(eventDayId)
+                        val params = !pagination<TimeslotSort>()
+                        TimeslotService.pageByEventDay(eventDayId, params)
                     }
                 }
 
@@ -94,22 +104,32 @@ fun Route.eventDay() {
                     }
                 }
 
-                put("/{timeslotId}") {
-                    call.respondComprehension {
-                        val user = !authenticate(Privilege.UpdateEventGlobal)
-                        val timeslotId = !pathParam("timeslotId", uuid)
-
-                        val body = !receiveKIO<TimeslotRequest>(TimeslotRequest.example)
-                        TimeslotService.updateTimeslot(body, user.id!!, timeslotId)
+                route("/{timeslotId}") {
+                    get(){
+                        call.respondComprehension {
+                            val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                            val timeslotId = !pathParam("timeslotId", uuid)
+                            TimeslotService.getTimeslot(timeslotId)
+                        }
                     }
-                }
 
-                delete("/{timeslotId}") {
-                    call.respondComprehension {
-                        !authenticate(Privilege.UpdateEventGlobal)
-                        val timeslotId = !pathParam("timeslotId", uuid)
+                    put() {
+                        call.respondComprehension {
+                            val user = !authenticate(Privilege.UpdateEventGlobal)
+                            val timeslotId = !pathParam("timeslotId", uuid)
 
-                        TimeslotService.deleteTimeslot(timeslotId)
+                            val body = !receiveKIO<TimeslotRequest>(TimeslotRequest.example)
+                            TimeslotService.updateTimeslot(body, user.id!!, timeslotId)
+                        }
+                    }
+
+                    delete() {
+                        call.respondComprehension {
+                            !authenticate(Privilege.UpdateEventGlobal)
+                            val timeslotId = !pathParam("timeslotId", uuid)
+
+                            TimeslotService.deleteTimeslot(timeslotId)
+                        }
                     }
                 }
             }

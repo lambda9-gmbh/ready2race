@@ -514,7 +514,14 @@
       "date": "Datum",
       "name": "Name",
       "description": "Beschreibung",
-      "assignedCompetitions": "Wettkämpfe an diesem Tag"
+      "assignedCompetitions": "Wettkämpfe an diesem Tag",
+      "startTime": "Startzeit",
+      "endTime": "Endzeit",
+      "from":"Von",
+      "to":"Bis",
+      "schedule":"Zeitplan",
+      "timeslot":"Zeitfenster",
+      "downloadSchedule": "Zeitplanung herunterladen"
     },
     "competition": {
       "competition": "Wettkampf",

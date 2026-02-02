@@ -973,15 +973,29 @@ paths:
       - $ref: '#/components/parameters/eventDayId'
     get:
       operationId: getTimeslots
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
       responses:
         200:
-          description: Timeslots ofr Eventday successfully retrieved
+          description: Timeslot page successfully retrieved
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TimeslotDto'
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TimeslotDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -993,7 +1007,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
     post:
-      operationId: createTimeslot
+      operationId: addTimeslot
       requestBody:
         required: true
         content:
@@ -1013,6 +1027,26 @@ paths:
           $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventDay/{eventDayId}/schedulePdf:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+    get:
+      operationId: downloadSchedulePdfForEventDay
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
   

@@ -1,4 +1,4 @@
-import {RefAttributes} from 'react'
+import {RefAttributes, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {DatePickerElement, DatePickerElementProps} from 'react-hook-form-mui/date-pickers'
 import {formatISO} from 'date-fns'
@@ -8,6 +8,7 @@ type FormInputDateProps = DatePickerElementProps & RefAttributes<HTMLDivElement>
 
 const FormInputDate = ({sx, ...props}: FormInputDateProps) => {
     const {t} = useTranslation()
+    const [open, setOpen] = useState(false)
 
     return (
         <FormInputLabel
@@ -27,10 +28,11 @@ const FormInputDate = ({sx, ...props}: FormInputDateProps) => {
                 label={null}
                 sx={{width: 1, ...sx}}
                 textReadOnly={true}
+                open={open}
+                onClose={() => setOpen(false)}
                 inputProps={{
-                    onClick: e => {
-                        const button = e.currentTarget.querySelector('button')
-                        if (button) button.click()
+                    onClick: () => {
+                        setOpen(true)
                     },
                 }}
             />

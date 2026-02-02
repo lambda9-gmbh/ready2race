@@ -1,21 +1,20 @@
 import {RefAttributes, useState} from 'react'
 import {useTranslation} from 'react-i18next'
-import {DateTimePickerElement, DateTimePickerElementProps} from 'react-hook-form-mui/date-pickers'
-import {formatISO} from 'date-fns'
+import {TimePickerElement, TimePickerElementProps} from 'react-hook-form-mui/date-pickers'
 import FormInputLabel from './FormInputLabel.tsx'
 
-type FormInputDateTimeProps = DateTimePickerElementProps & RefAttributes<HTMLDivElement>
+type FormInputTimeProps = TimePickerElementProps & RefAttributes<HTMLDivElement>
 
-const FormInputDateTime = ({sx, ...props}: FormInputDateTimeProps) => {
+const FormInputTime = ({sx, ...props}: FormInputTimeProps) => {
     const {t} = useTranslation()
     const [open, setOpen] = useState(false)
 
-    // todo? "overwriteErrorMessages" to translate the error msg: "Date is invalid" if the Input is invalid
+    // todo? "overwriteErrorMessages" to translate the error msg: "Time is invalid" if the Input is invalid
     return (
         <FormInputLabel
             label={props.label}
             required={props.required === true || props.rules?.required !== undefined}>
-            <DateTimePickerElement
+            <TimePickerElement
                 {...props}
                 ampm={false}
                 rules={{
@@ -25,12 +24,8 @@ const FormInputDateTime = ({sx, ...props}: FormInputDateTimeProps) => {
                             required: t('common.form.required'),
                         }),
                 }}
-                transform={{
-                    output: value => (value === null ? undefined : formatISO(value).slice(0, 19)),
-                }}
                 label={null}
                 sx={{width: 1, ...sx}}
-                textReadOnly={true}
                 open={open}
                 onClose={() => setOpen(false)}
                 inputProps={{
@@ -42,4 +37,4 @@ const FormInputDateTime = ({sx, ...props}: FormInputDateTimeProps) => {
         </FormInputLabel>
     )
 }
-export default FormInputDateTime
+export default FormInputTime

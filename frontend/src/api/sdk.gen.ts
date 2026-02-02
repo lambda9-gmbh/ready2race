@@ -115,9 +115,12 @@ import type {
     GetTimeslotsData,
     GetTimeslotsError,
     GetTimeslotsResponse,
-    CreateTimeslotData,
-    CreateTimeslotError,
-    CreateTimeslotResponse,
+    AddTimeslotData,
+    AddTimeslotError,
+    AddTimeslotResponse,
+    DownloadSchedulePdfForEventDayData,
+    DownloadSchedulePdfForEventDayError,
+    DownloadSchedulePdfForEventDayResponse,
     UpdateTimeslotData,
     UpdateTimeslotError,
     UpdateTimeslotResponse,
@@ -1171,16 +1174,25 @@ export const getTimeslots = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const createTimeslot = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<CreateTimeslotData, ThrowOnError>,
+export const addTimeslot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddTimeslotData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).post<
-        CreateTimeslotResponse,
-        CreateTimeslotError,
+    return (options?.client ?? client).post<AddTimeslotResponse, AddTimeslotError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot',
+    })
+}
+
+export const downloadSchedulePdfForEventDay = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadSchedulePdfForEventDayData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadSchedulePdfForEventDayResponse,
+        DownloadSchedulePdfForEventDayError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot',
+        url: '/event/{eventId}/eventDay/{eventDayId}/schedulePdf',
     })
 }
 

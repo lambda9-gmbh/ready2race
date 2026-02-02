@@ -1,4 +1,4 @@
-import {Box, Card, Typography} from '@mui/material'
+import {Box, Button, Card, Link, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventDayRoute, eventRoute} from '@routes'
@@ -6,15 +6,19 @@ import Throbber from '@components/Throbber.tsx'
 import CompetitionAndDayAssignment from '@components/event/CompetitionAndDayAssignment.tsx'
 import {AutocompleteOption} from '@utils/types.ts'
 import {competitionLabelName} from '@components/event/competition/common.ts'
-import {useState} from 'react'
-import {getEventDay, getCompetitions} from '@api/sdk.gen.ts'
-import {TimeslotPage} from '@components/event/eventDay/timeslots/TimeslotPage.tsx'
+import {useRef, useState} from 'react'
+import {getEventDay, getCompetitions, downloadSchedulePdfForEventDay} from '@api/sdk.gen.ts'
 import TimeslotTable from '@components/event/eventDay/timeslots/TimeslotTable.tsx'
-import {EventDto, TimeslotDto} from '@api/types.gen.ts'
+import {TimeslotDto} from '@api/types.gen.ts'
+import TimeslotDialog from '@components/event/eventDay/timeslots/TimeslotDialog.tsx'
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
+import {getFilename} from '@utils/helpers.ts'
 
 const EventDayPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
     const {eventId} = eventRoute.useParams()
     const {eventDayId} = eventDayRoute.useParams()
@@ -68,6 +72,29 @@ const EventDayPage = () => {
             deps: [eventId, reloadData],
         },
     )
+    const downloadRef = useRef<HTMLAnchorElement>(null)
+
+    const handleDownloadSchedulePdf = async () => {
+        const {data, error, response} = await downloadSchedulePdfForEventDay({
+            path: {
+                eventId,
+                eventDayId,
+            },
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else if (data !== undefined && anchor) {
+            // need Blob constructor for text/csv
+            anchor.href = URL.createObjectURL(new Blob([data]))
+            anchor.download =
+                getFilename(response) ?? `schedule-${eventDayData?.date.toString()}.pdf}`
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
 
     const selection: AutocompleteOption[] =
         competitionsData?.data.map(value => ({
@@ -75,10 +102,11 @@ const EventDayPage = () => {
             label: competitionLabelName(value.properties.identifier, value.properties.name),
         })) ?? []
 
-    const administrationProps = useEntityAdministration<TimeslotDto>(t('event.event'))
+    const administrationProps = useEntityAdministration<TimeslotDto>(t('event.eventDay.timeslot'))
 
     return (
         <Box>
+            <Link ref={downloadRef} display={'none'}></Link>
             {(eventDayData && (
                 <Box sx={{display: 'flex', flexDirection: 'column', gap: 4}}>
                     <Typography variant={'h1'}>
@@ -100,11 +128,20 @@ const EventDayPage = () => {
                         )) ||
                             ((competitionsPending || assignedCompetitionsPending) && <Throbber />)}
                     </Card>
-                    <Card sx={{p: 2}}>
-                        <Typography variant="h6">Wambo</Typography>
-                        <TimeslotPage eventId={eventId} eventDayId={eventDayId} />
-                        {/*Durch entityTable ersetzen*/}
-                        {/*<TimeslotTable {...administrationProps.table} title={'wambo'} />*/}
+                    <Card sx={{p: 2, display: 'flex', flexDirection: 'column'}}>
+                        <Typography variant="h6">{t('event.eventDay.schedule')}</Typography>
+                        <Button
+                            startIcon={<FileDownloadOutlinedIcon />}
+                            variant={'outlined'}
+                            sx={{
+                                width: 'fit-content',
+                                ...(!isMobile ? {ml: 'auto'} : {mt: 2}),
+                            }}
+                            onClick={handleDownloadSchedulePdf}>
+                            {t('event.eventDay.downloadSchedule')}
+                        </Button>
+                        <TimeslotTable {...administrationProps.table} />
+                        <TimeslotDialog {...administrationProps.dialog} />
                     </Card>
                 </Box>
             )) ||
