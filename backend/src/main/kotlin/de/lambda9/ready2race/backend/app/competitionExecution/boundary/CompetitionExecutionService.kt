@@ -85,6 +85,14 @@ import de.lambda9.ready2race.backend.validation.fold
 
 object CompetitionExecutionService {
 
+    private fun occurringTeamCount(match: CompetitionMatchWithTeams): Int =
+        match.teams.count { !it.out && !it.deregistered && !it.failed }
+
+    private fun isOccurringMatch(roundRequired: Boolean, match: CompetitionMatchWithTeams): Boolean {
+        val activeTeams = occurringTeamCount(match)
+        return if (roundRequired) activeTeams > 0 else activeTeams > 1
+    }
+
     fun getMatchesByEvent(
         eventId: UUID,
         currentlyRunning: Boolean? = null,
@@ -297,8 +305,14 @@ object CompetitionExecutionService {
             val competitionTimeData = !TimeslotService.getOwnTimeslotById(competitionId)
             var tmpStartTime: LocalTime? = competitionTimeData?.startTime
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
-                val foo = round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
-                val dee = if (competitionTimeData != null) {
+                val roundForDisplay = round.copy(
+                    matches = round.matches.map { match ->
+                        match.copy(
+                            teams = match.teams.filter { !it.out }
+                        )
+                    }
+                )
+                val fallbackRoundTimeData = if (competitionTimeData != null) {
                     MinimalTimeslotDurationData(
                         date = competitionTimeData.date,
                         startTime = tmpStartTime!!,
@@ -306,20 +320,20 @@ object CompetitionExecutionService {
                         matchGapsDuration = competitionTimeData.matchGapsDuration
                     )
                 } else null
-                val bar = foo.toCompetitionRoundDto(
+                val roundDto = roundForDisplay.toCompetitionRoundDto(
                     event.mixedTeamTerm,
-                    dee
+                    fallbackRoundTimeData
                     )
-                val tmpSize = foo.matches.size
-                if (competitionTimeData != null) {
-                    tmpStartTime = tmpStartTime?.plusMinutes((tmpSize * competitionTimeData.matchDuration + tmpSize * competitionTimeData.matchGapsDuration).toLong())
+                val occurringMatchCount = round.matches.count { match ->
+                    isOccurringMatch(round.required, match)
                 }
-//                println("###foo###")
-//                print(foo.setupRoundName)
-//                foo.matches.mapIndexed { idx, match ->
-//                    println("$idx: " + match)
-//                }
-                bar
+                if (competitionTimeData != null) {
+                    val roundDurationMinutes =
+                        occurringMatchCount * competitionTimeData.matchDuration +
+                            occurringMatchCount * competitionTimeData.matchGapsDuration
+                    tmpStartTime = tmpStartTime?.plusMinutes(roundDurationMinutes.toLong())
+                }
+                roundDto
             }.map {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(

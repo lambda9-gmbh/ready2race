@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.competitionExecution.control
 import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.eventDay.boundary.TimeslotService
-import de.lambda9.ready2race.backend.app.eventDay.control.TimeslotRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.toMinimalTimeslotDurationData
 import de.lambda9.ready2race.backend.app.eventDay.entity.MinimalTimeslotDurationData
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
@@ -17,6 +16,7 @@ import de.lambda9.tailwind.core.extensions.kio.onNull
 
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String?, timeDataFromCompetition: MinimalTimeslotDurationData?) = KIO.comprehension {
     val roundTimeData = (!TimeslotService.getOwnTimeslotById(setupRoundId))?.toMinimalTimeslotDurationData() ?: timeDataFromCompetition
+    var occurringMatchesBefore = 0
 
     KIO.ok(
         CompetitionRoundDto(
@@ -24,7 +24,26 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String
             name = setupRoundName,
             startTime = roundTimeData?.startTime?.atDate(roundTimeData.date),
             matches = matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
-                .mapIndexed { idx, match ->
+                .map { match ->
+                    val activeTeams = match.first.teams.count { !it.out && !it.deregistered && !it.failed }
+                    val isOccurringMatch = if (required) activeTeams > 0 else activeTeams > 1
+                    val matchFallbackStartTime = if (isOccurringMatch) {
+                        if (roundTimeData != null) {
+                            roundTimeData.startTime.atDate(roundTimeData.date).plusMinutes(
+                                (
+                                    occurringMatchesBefore * roundTimeData.matchGapsDuration +
+                                        occurringMatchesBefore * roundTimeData.matchDuration
+                                    ).toLong()
+                            )
+                        } else {
+                            null
+                        }
+                    } else {
+                        null
+                    }
+                    if (isOccurringMatch) {
+                        occurringMatchesBefore += 1
+                    }
                     val matchTimeData = !TimeslotService.getOwnTimeslotById(match.second.id)
                     CompetitionMatchDto(
                         id = match.second.id,
@@ -52,7 +71,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String
                         },
                         weighting = match.second.weighting,
                         executionOrder = match.second.executionOrder,
-                        startTime = match.first.startTime ?: matchTimeData?.startTime?.atDate(matchTimeData.date) ?: roundTimeData?.startTime?.atDate(roundTimeData.date)?.plusMinutes( (idx*roundTimeData.matchGapsDuration + idx * roundTimeData.matchDuration).toLong()),
+                        startTime = match.first.startTime ?: matchTimeData?.startTime?.atDate(matchTimeData.date) ?: matchFallbackStartTime,
                         startTimeOffset = match.second.startTimeOffset,
                         currentlyRunning = match.first.currentlyRunning,
                     )
