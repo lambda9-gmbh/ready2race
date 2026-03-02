@@ -6,7 +6,7 @@ import io.ktor.http.*
 
 sealed interface CompetitionExecutionChallengeError : ServiceError {
 
-    data object NotAChallengeEvent : CompetitionExecutionChallengeError
+    data object IsAChallengeEvent : CompetitionExecutionChallengeError
     data object ChallengeAlreadyStarted : CompetitionExecutionChallengeError
     data object ChallengeNotStartedYet : CompetitionExecutionChallengeError
     data object CorruptedSetup : CompetitionExecutionChallengeError
@@ -15,9 +15,9 @@ sealed interface CompetitionExecutionChallengeError : ServiceError {
     data object SelfSubmissionNotAllowed : CompetitionExecutionChallengeError
 
     override fun respond(): ApiError = when (this) {
-        NotAChallengeEvent -> ApiError(
+        IsAChallengeEvent -> ApiError(
             status = HttpStatusCode.BadRequest,
-            message = "Event is not a challenge event"
+            message = "Event is a challenge event"
         )
 
         ChallengeAlreadyStarted -> ApiError(

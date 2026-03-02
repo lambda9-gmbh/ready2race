@@ -2,6 +2,10 @@ package de.lambda9.ready2race.backend.app.competitionExecution.control
 
 import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
+import de.lambda9.ready2race.backend.app.eventDay.boundary.TimeslotService
+import de.lambda9.ready2race.backend.app.eventDay.control.TimeslotRepo
+import de.lambda9.ready2race.backend.app.eventDay.control.toMinimalTimeslotDurationData
+import de.lambda9.ready2race.backend.app.eventDay.entity.MinimalTimeslotDurationData
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
@@ -9,48 +13,55 @@ import de.lambda9.ready2race.backend.app.timecode.control.toTimecode
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.onNull
 
-fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String?) = KIO.ok(
-    CompetitionRoundDto(
-        setupRoundId = setupRoundId,
-        name = setupRoundName,
-        matches = matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
-            .map { match ->
-                CompetitionMatchDto(
-                    id = match.second.id,
-                    name = match.second.name,
-                    teams = match.first.teams.map { team ->
-                        CompetitionMatchTeamDto(
-                            registrationId = team.competitionRegistration,
-                            teamNumber = team.teamNumber!!, // This should not be null because competition_match_teams are not created if the registration teamNumber is missing
-                            clubId = team.clubId,
-                            clubName = team.clubName,
-                            actualClubName = singletonOrFallback(
-                                team.participants.map { it.externalClubName }.toSet(),
-                                mixedTeamTerm
-                            ),
-                            name = team.registrationName,
-                            startNumber = team.startNumber,
-                            place = team.place,
-                            timeString = team.timeString,
-                            placesCalculated = team.placesCalculated,
-                            deregistered = team.deregistered,
-                            deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
-                            failed = team.failed,
-                            failedReason = team.failedReason,
-                        )
-                    },
-                    weighting = match.second.weighting,
-                    executionOrder = match.second.executionOrder,
-                    startTime = match.first.startTime,
-                    startTimeOffset = match.second.startTimeOffset,
-                    currentlyRunning = match.first.currentlyRunning,
-                )
-            },
-        required = required,
-        substitutions = substitutions
+fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String?, timeDataFromCompetition: MinimalTimeslotDurationData?) = KIO.comprehension {
+    val roundTimeData = (!TimeslotService.getOwnTimeslotById(setupRoundId))?.toMinimalTimeslotDurationData() ?: timeDataFromCompetition
+
+    KIO.ok(
+        CompetitionRoundDto(
+            setupRoundId = setupRoundId,
+            name = setupRoundName,
+            startTime = roundTimeData?.startTime?.atDate(roundTimeData.date),
+            matches = matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
+                .mapIndexed { idx, match ->
+                    val matchTimeData = !TimeslotService.getOwnTimeslotById(match.second.id)
+                    CompetitionMatchDto(
+                        id = match.second.id,
+                        name = match.second.name,
+                        teams = match.first.teams.map { team ->
+                            CompetitionMatchTeamDto(
+                                registrationId = team.competitionRegistration,
+                                teamNumber = team.teamNumber!!, // This should not be null because competition_match_teams are not created if the registration teamNumber is missing
+                                clubId = team.clubId,
+                                clubName = team.clubName,
+                                actualClubName = singletonOrFallback(
+                                    team.participants.map { it.externalClubName }.toSet(),
+                                    mixedTeamTerm
+                                ),
+                                name = team.registrationName,
+                                startNumber = team.startNumber,
+                                place = team.place,
+                                timeString = team.timeString,
+                                placesCalculated = team.placesCalculated,
+                                deregistered = team.deregistered,
+                                deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
+                                failed = team.failed,
+                                failedReason = team.failedReason,
+                            )
+                        },
+                        weighting = match.second.weighting,
+                        executionOrder = match.second.executionOrder,
+                        startTime = match.first.startTime ?: matchTimeData?.startTime?.atDate(matchTimeData.date) ?: roundTimeData?.startTime?.atDate(roundTimeData.date)?.plusMinutes( (idx*roundTimeData.matchGapsDuration + idx * roundTimeData.matchDuration).toLong()),
+                        startTimeOffset = match.second.startTimeOffset,
+                        currentlyRunning = match.first.currentlyRunning,
+                    )
+                },
+            required = required,
+            substitutions = substitutions
+        )
     )
-)
+}
 
 fun ParticipantRecord.toSubstituteParticipantDto() = SubstitutionParticipantDto(
     id = id,

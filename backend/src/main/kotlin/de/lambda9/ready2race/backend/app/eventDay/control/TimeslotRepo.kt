@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.TimeslotSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Timeslot
 import de.lambda9.ready2race.backend.database.generated.tables.records.TimeslotRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.TimeslotWithCompetitionDurationDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
@@ -48,4 +49,34 @@ object TimeslotRepo {
                 .fetch()
         }
     }
+
+    fun timeslotForCompetitionUnitExists(id: UUID?): JIO<Boolean> =
+        TIMESLOT_WITH_COMPETITION_DURATION_DATA
+            .exists { MATCH_REFERENCE.eq(id)
+                .or(ROUND_REFERENCE.eq(id)
+                    .and(MATCH_REFERENCE.isNull))
+                .or(COMPETITION_REFERENCE.eq(id)
+                    .and(MATCH_REFERENCE.isNull)
+                    .and(ROUND_REFERENCE.isNull))
+            }
+
+    fun findSelfIncludingTimeslotById(id: UUID?): JIO<TimeslotWithCompetitionDurationDataRecord?> =
+        TIMESLOT_WITH_COMPETITION_DURATION_DATA
+            .selectOne { MATCH_REFERENCE.eq(id)
+                    .or(ROUND_REFERENCE.eq(id)
+                        .and(MATCH_REFERENCE.isNull))
+                    .or(COMPETITION_REFERENCE.eq(id)
+                        .and(MATCH_REFERENCE.isNull)
+                        .and(ROUND_REFERENCE.isNull))
+            }
+
+    fun lowerCompetitionUnitTimeslotAlreadyExists(id: UUID?): JIO<Boolean> =
+        TIMESLOT_WITH_COMPETITION_DURATION_DATA
+            .exists {
+                DSL.or(
+                    ROUND_REFERENCE.eq(id).and(MATCH_REFERENCE.isNotNull),
+                    COMPETITION_REFERENCE.eq(id).and(ROUND_REFERENCE.isNotNull)
+                )
+            }
+
 }

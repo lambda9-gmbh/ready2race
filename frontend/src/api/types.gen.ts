@@ -378,6 +378,8 @@ export type CompetitionPropertiesDto = {
     lateRegistrationAllowed: boolean
     challengeConfig?: CompetitionChallengeConfigDto
     ratingCategoryRequired: boolean
+    matchDuration?: number
+    matchGapsDuration?: number
 }
 
 export type CompetitionPropertiesRequest = {
@@ -392,6 +394,8 @@ export type CompetitionPropertiesRequest = {
     setupTemplate?: string
     challengeConfig?: CompetitionChallengeConfigRequest
     ratingCategoryRequired: boolean
+    matchDuration?: number
+    matchGapsDuration?: number
 }
 
 export type CompetitionRegistrationDto = {
@@ -519,6 +523,7 @@ export type CompetitionRoundDto = {
     matches: Array<CompetitionMatchDto>
     required: boolean
     substitutions: Array<SubstitutionDto>
+    startTime?: string
 }
 
 export type CompetitionSetupDto = {
@@ -772,6 +777,8 @@ export type ErrorCode =
     | 'LIST_DATA_INCOMPLETE'
     | 'RESULT_NOT_FAILED_AND_NO_DATA'
     | 'CLUB_NAME_ALREADY_EXISTS'
+    | 'DUPLICATE_TIMESLOT'
+    | 'CHILD_TIMESLOT_ALREADY_EXISTS'
 
 export type EventDayDto = {
     id: string
@@ -785,6 +792,28 @@ export type EventDayRequest = {
     date: string
     name?: string
     description?: string
+}
+
+export type EventDayScheduleCompetitionDataDto = {
+    eventDayId: string
+    competitionId: string
+    competitionName: string
+    matchDuration?: number
+    matchGapsDuration?: number
+    matchCount: number
+    rounds: Array<EventDayScheduleCompetitionRoundDataDto>
+}
+
+export type EventDayScheduleCompetitionMatchDataDto = {
+    matchId: string
+    matchName: string
+}
+
+export type EventDayScheduleCompetitionRoundDataDto = {
+    roundName: string
+    roundId: string
+    matchCount: number
+    matches: Array<EventDayScheduleCompetitionMatchDataDto>
 }
 
 export type EventDocumentDto = {
@@ -1959,6 +1988,9 @@ export type TimeslotDto = {
     eventDay: string
     name: string
     description?: string
+    competitionReference?: string
+    roundReference?: string
+    matchReference?: string
     startTime: string
     endTime: string
 }
@@ -1967,6 +1999,9 @@ export type TimeslotRequest = {
     eventDay: string
     name: string
     description?: string
+    competitionReference?: string
+    roundReference?: string
+    matchReference?: string
     startTime: string
     endTime: string
 }
@@ -2744,6 +2779,16 @@ export type GetEventCatererTransactionsResponse = {
 
 export type GetEventCatererTransactionsError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type DownloadSchedulePdfForEventData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type DownloadSchedulePdfForEventResponse = Blob | File
+
+export type DownloadSchedulePdfForEventError = BadRequestError | ApiError
+
 export type AddEventDayData = {
     body: EventDayRequest
     path: {
@@ -2823,6 +2868,17 @@ export type DeleteEventDayData = {
 export type DeleteEventDayResponse = void
 
 export type DeleteEventDayError = BadRequestError | ApiError
+
+export type GetCompetitionMatchDataData = {
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
+
+export type GetCompetitionMatchDataResponse = Array<EventDayScheduleCompetitionDataDto>
+
+export type GetCompetitionMatchDataError = unknown
 
 export type GetTimeslotsData = {
     path: {

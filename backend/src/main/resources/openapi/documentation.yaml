@@ -835,6 +835,26 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedulePdf:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: downloadSchedulePdfForEvent
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventDay:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -905,6 +925,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
   /event/{eventId}/eventDay/{eventDayId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -967,6 +988,23 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/eventDay/{eventDayId}/competitionMatchData:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+    get:
+      operationId: getCompetitionMatchData
+      responses:
+        200:
+          description: Competition data successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventDayScheduleCompetitionDataDto'
+
+    
   /event/{eventId}/eventDay/{eventDayId}/timeslot:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -1025,6 +1063,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -1121,6 +1161,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
   /event/{eventId}/competition:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7349,6 +7390,8 @@ components:
         - LIST_DATA_INCOMPLETE
         - RESULT_NOT_FAILED_AND_NO_DATA
         - CLUB_NAME_ALREADY_EXISTS
+        - DUPLICATE_TIMESLOT
+        - CHILD_TIMESLOT_ALREADY_EXISTS
 
     Gender:
       type: string
@@ -8344,6 +8387,12 @@ components:
           type: string
         description:
           type: string
+        competitionReference:
+          type: string
+        roundReference:
+          type: string
+        matchReference:
+          type: string
         startTime:
           type: string
           format: time
@@ -8365,6 +8414,12 @@ components:
         name:
           type: string
         description:
+          type: string
+        competitionReference:
+          type: string
+        roundReference:
+          type: string
+        matchReference:
           type: string
         startTime:
           type: string
@@ -8424,6 +8479,10 @@ components:
           $ref: '#/components/schemas/CompetitionChallengeConfigDto'
         ratingCategoryRequired:
           type: boolean
+        matchDuration:
+          type: integer
+        matchGapsDuration:
+          type: integer
 
 
     NamedParticipantForCompetitionDto:
@@ -8536,6 +8595,10 @@ components:
           $ref: '#/components/schemas/CompetitionChallengeConfigRequest'
         ratingCategoryRequired:
           type: boolean
+        matchDuration:
+          type: integer
+        matchGapsDuration:
+          type: integer
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -10610,6 +10673,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SubstitutionDto'
+        startTime:
+          type: string
+          format: date-time
 
     CompetitionMatchDto:
       type: object
@@ -12948,3 +13014,59 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GapDocumentPlaceholderRequest'
+
+    EventDayScheduleCompetitionDataDto:
+      type: object
+      required:
+        - eventDayId
+        - competitionName
+        - competitionId
+        - matchCount
+        - rounds
+      properties:
+        eventDayId:
+          type: string
+        competitionId:
+          type: string
+        competitionName:
+          type: string
+        matchDuration:
+          type: integer
+        matchGapsDuration:
+          type: integer
+        matchCount:
+          type: integer
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDayScheduleCompetitionRoundDataDto'
+    
+    EventDayScheduleCompetitionRoundDataDto:
+      type: object
+      required:
+        - roundName
+        - roundId
+        - matchCount
+        - matches
+      properties:
+        roundName:
+          type: string
+        roundId:
+          type: string
+        matchCount:
+          type: integer
+        matches:
+          type: array
+          items: 
+            $ref: '#/components/schemas/EventDayScheduleCompetitionMatchDataDto'
+
+    EventDayScheduleCompetitionMatchDataDto:
+      type: object
+      required:
+        - matchId
+        - matchName
+      properties:
+        matchId:
+          type: string
+        matchName:
+          type: string

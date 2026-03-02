@@ -84,10 +84,18 @@ fun Route.eventDay() {
                 }
             }
 
+            get("/competitionMatchData") {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val eventDayId = !pathParam("eventDayId", uuid)
+
+                    EventDayService.getCompetitionsForEventDay(eventDayId)
+                }
+            }
+
             route("/timeslot") {
                 get(){
                     call.respondComprehension {
-                        val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                         val eventDayId = !pathParam("eventDayId", uuid)
                         val params = !pagination<TimeslotSort>()
                         TimeslotService.pageByEventDay(eventDayId, params)

@@ -27,7 +27,6 @@ const FormInputDate = ({sx, ...props}: FormInputDateProps) => {
                 }}
                 label={null}
                 sx={{width: 1, ...sx}}
-                textReadOnly={true}
                 open={open}
                 onClose={() => setOpen(false)}
                 inputProps={{

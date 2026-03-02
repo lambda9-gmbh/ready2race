@@ -525,6 +525,7 @@ const CompetitionExecution = () => {
             setEditMatchDialogOpen(true)
             editMatchFormContext.reset({
                 selectedMatchDto: selectedMatch,
+                startTime: selectedMatch.startTime,
                 teams: mapTeamDtoToFormTeamData(selectedMatch.teams),
             })
         }

@@ -97,6 +97,9 @@ import type {
     GetEventCatererTransactionsData,
     GetEventCatererTransactionsError,
     GetEventCatererTransactionsResponse,
+    DownloadSchedulePdfForEventData,
+    DownloadSchedulePdfForEventError,
+    DownloadSchedulePdfForEventResponse,
     AddEventDayData,
     AddEventDayError,
     AddEventDayResponse,
@@ -112,6 +115,9 @@ import type {
     DeleteEventDayData,
     DeleteEventDayError,
     DeleteEventDayResponse,
+    GetCompetitionMatchDataData,
+    GetCompetitionMatchDataError,
+    GetCompetitionMatchDataResponse,
     GetTimeslotsData,
     GetTimeslotsError,
     GetTimeslotsResponse,
@@ -1112,6 +1118,19 @@ export const getEventCatererTransactions = <ThrowOnError extends boolean = false
     })
 }
 
+export const downloadSchedulePdfForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadSchedulePdfForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadSchedulePdfForEventResponse,
+        DownloadSchedulePdfForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedulePdf',
+    })
+}
+
 export const addEventDay = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddEventDayData, ThrowOnError>,
 ) => {
@@ -1162,6 +1181,19 @@ export const deleteEventDay = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventDay/{eventDayId}',
+    })
+}
+
+export const getCompetitionMatchData = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionMatchDataData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionMatchDataResponse,
+        GetCompetitionMatchDataError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/competitionMatchData',
     })
 }
 

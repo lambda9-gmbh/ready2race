@@ -7,12 +7,18 @@ import CompetitionAndDayAssignment from '@components/event/CompetitionAndDayAssi
 import {AutocompleteOption} from '@utils/types.ts'
 import {competitionLabelName} from '@components/event/competition/common.ts'
 import {useRef, useState} from 'react'
-import {getEventDay, getCompetitions, downloadSchedulePdfForEventDay} from '@api/sdk.gen.ts'
+import {
+    getEventDay,
+    getCompetitions,
+    downloadSchedulePdfForEventDay,
+    getCompetitionMatchData,
+} from '@api/sdk.gen.ts'
 import TimeslotTable from '@components/event/eventDay/timeslots/TimeslotTable.tsx'
 import {TimeslotDto} from '@api/types.gen.ts'
 import TimeslotDialog from '@components/event/eventDay/timeslots/TimeslotDialog.tsx'
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import {getFilename} from '@utils/helpers.ts'
+import {CompetitionTimeslotForm} from '@components/event/eventDay/timeslots/CompetitionTimeslotForm.tsx'
 
 const EventDayPage = () => {
     const {t} = useTranslation()
@@ -24,6 +30,11 @@ const EventDayPage = () => {
     const {eventDayId} = eventDayRoute.useParams()
 
     const [reloadData, setReloadData] = useState(false)
+    const [openDialog, setOpenDialog] = useState(false)
+    const handleOnCLose = () => {
+        setOpenDialog(false)
+        reloadCompetitionMatchData()
+    }
 
     const {data: eventDayData, pending: eventDayPending} = useFetch(
         signal => getEventDay({signal, path: {eventId: eventId, eventDayId: eventDayId}}),
@@ -72,6 +83,26 @@ const EventDayPage = () => {
             deps: [eventId, reloadData],
         },
     )
+
+    const {data: competitionMatchData, reload: reloadCompetitionMatchData} = useFetch(
+        signal =>
+            getCompetitionMatchData({signal, path: {eventId: eventId, eventDayId: eventDayId}}),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.competition.competitions'),
+                        }),
+                    )
+                } else {
+                    administrationProps.table.reloadData()
+                }
+            },
+            deps: [eventId, eventDayId, reloadData],
+        },
+    )
+
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const handleDownloadSchedulePdf = async () => {
@@ -106,6 +137,15 @@ const EventDayPage = () => {
 
     return (
         <Box>
+            {competitionMatchData && (
+                <CompetitionTimeslotForm
+                    data={competitionMatchData}
+                    onClose={handleOnCLose}
+                    open={openDialog}
+                    eventId={eventId}
+                    eventDayId={eventDayId}
+                />
+            )}
             <Link ref={downloadRef} display={'none'}></Link>
             {(eventDayData && (
                 <Box sx={{display: 'flex', flexDirection: 'column', gap: 4}}>
@@ -140,6 +180,18 @@ const EventDayPage = () => {
                             onClick={handleDownloadSchedulePdf}>
                             {t('event.eventDay.downloadSchedule')}
                         </Button>
+                        {competitionMatchData && competitionMatchData?.length > 0 && (
+                            <Button
+                                variant={'outlined'}
+                                sx={{
+                                    width: 'fit-content',
+                                    mt: 1,
+                                    ...(!isMobile ? {ml: 'auto'} : {}),
+                                }}
+                                onClick={() => setOpenDialog(true)}>
+                                {'wambo'}
+                            </Button>
+                        )}
                         <TimeslotTable {...administrationProps.table} />
                         <TimeslotDialog {...administrationProps.dialog} />
                     </Card>

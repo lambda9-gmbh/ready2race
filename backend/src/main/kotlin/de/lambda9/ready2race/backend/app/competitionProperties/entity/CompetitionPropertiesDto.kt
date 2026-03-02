@@ -13,4 +13,6 @@ data class CompetitionPropertiesDto(
     val lateRegistrationAllowed: Boolean,
     val challengeConfig: CompetitionChallengeConfigDto?,
     val ratingCategoryRequired: Boolean,
+    val matchDuration: Int?,
+    val matchGapsDuration: Int?,
 )

@@ -1,5 +1,8 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists timeslot_with_competition_duration_data;
+drop view if exists event_day_with_matches;
+drop view if exists event_day_with_timeslots;
 drop view if exists event_data_for_competition_results;
 drop view if exists gap_document_template_assignment;
 drop view if exists gap_document_template_view;
@@ -206,6 +209,8 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
+       cp.match_duration,
+       cp.match_gaps_duration,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -257,6 +262,8 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
+       cp.match_duration,
+       cp.match_gaps_duration,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -294,7 +301,7 @@ from competition c
 group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
          cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
          fs.fees, cb.id, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at,
-         cp.rating_category_required;
+         cp.rating_category_required, cp.match_duration, cp.match_gaps_duration;
 
 create view competition_public_view as
 select c.id,
@@ -307,6 +314,8 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
+       cp.match_duration,
+       cp.match_gaps_duration,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -341,7 +350,7 @@ from competition c
 where e.published is true
 group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
          cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
-         fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at, cp.rating_category_required;
+         fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at, cp.rating_category_required, cp.match_duration, cp.match_gaps_duration;
 
 create view competition_template_view as
 select ct.id,
@@ -350,6 +359,8 @@ select ct.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
+       cp.match_duration,
+       cp.match_gaps_duration,
        cc.id                                  as category_id,
        cc.name                                as category_name,
        cc.description                         as category_description,
@@ -852,7 +863,8 @@ select sr.id                                                                    
        coalesce(array_agg(distinct sm) filter (where sm.id is not null),
                 '{}')                                                                                   as setup_matches,
        coalesce(array_agg(distinct mwt) filter (where mwt.competition_setup_match is not null), '{}')   as matches,
-       coalesce(array_agg(distinct sv) filter ( where sv.id is not null ), '{}')                        as substitutions,
+       coalesce(array_agg(distinct sv) filter ( where sv.id is not null ),
+                '{}')                                                                                   as substitutions,
        mwt.mixed_team_term                                                                              as mixed_team_term
 from competition_setup_round sr
          left join competition_setup_place csp on sr.id = csp.competition_setup_round
@@ -1310,15 +1322,15 @@ from event_rating_category erc
 ;
 
 create view event_data_for_competition_results as
-select e.name   as event_name,
-       c.id     as competition_id,
-       cp.name  as competition_name,
+select e.name       as event_name,
+       c.id         as competition_id,
+       cp.name      as competition_name,
        min(ed.date) as event_start_date,
        max(ed.date) as event_end_date
 from competition c
-        join event e on c.event = e.id
-        left join event_day ed on e.id = ed.event
-        join competition_properties cp on c.id = cp.competition
+         join event e on c.event = e.id
+         left join event_day ed on e.id = ed.event
+         join competition_properties cp on c.id = cp.competition
 group by c.id, e.name, cp.name
 ;
 
@@ -1341,4 +1353,48 @@ from gap_document_template_usage u
          join gap_document_template_data td on gdt.id = td.template
          left join gap_document_placeholder gdp on gdt.id = gdp.template
 group by u.type, td.data
+;
+
+create view event_day_with_timeslots as
+select e.id                                                             as event_id,
+       ed.id,
+       ed.name,
+       ed.date,
+       ed.description,
+       coalesce(array_agg(ts order by ts.start_time) filter ( where ts.id is not null ), '{}') as timeslots
+from event_day ed
+         join event e on ed.event = e.id
+         left join timeslot ts on ed.id = ts.event_day
+group by e.id, e.name, ed.id, ed.name, ed.date, ed.description
+;
+
+create view event_day_with_matches as
+select ed.id,
+       cp.name as competition_name,
+       cp.match_duration as match_duration,
+       cp.match_gaps_duration as match_gaps_duration,
+       cp.competition as competition_id,
+       coalesce(array_agg(csr) filter ( where csr.id is not null ), '{}') as rounds,
+       coalesce(array_agg(csm) filter ( where csm.id is not null ), '{}') as matches
+from event_day ed
+    inner join event_day_has_competition edhc on ed.id = edhc.event_day
+    left join competition_properties cp on edhc.competition = cp.competition
+    left join competition_setup_round csr on csr.competition_setup = cp.id
+    left join competition_setup_match csm on csm.competition_setup_round = csr.id
+group by ed.id, cp.name, cp.match_duration, cp.match_gaps_duration, cp.id
+;
+
+create view timeslot_with_competition_duration_data as
+select ts.id,
+       ts.competition_reference,
+       ts.round_reference,
+       ts.match_reference,
+       ts.start_time,
+       ts.end_time,
+       cp.match_duration as match_duration,
+       cp.match_gaps_duration as match_gaps_duration,
+       ed.date
+from timeslot ts
+    inner join competition_properties cp on ts.competition_reference = cp.competition
+    inner join event_day ed on ts.event_day = ed.id
 ;

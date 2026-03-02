@@ -11,6 +11,9 @@ data class TimeslotRequest(
     val eventDay: UUID,
     val name: String,
     val description: String?,
+    val competitionReference: UUID?,
+    val roundReference: UUID?,
+    val matchReference: UUID?,
     val startTime: LocalTime,
     val endTime: LocalTime
 ): Validatable {
@@ -24,6 +27,9 @@ data class TimeslotRequest(
             eventDay = UUID.randomUUID(),
             name = "Debug session",
             description = "Timeslot for debugging",
+            competitionReference = UUID.fromString("00000000-0000-0000-0000-000000000000"),
+            roundReference = UUID.fromString("00000000-0000-0000-0000-000000000000"),
+            matchReference = UUID.fromString("00000000-0000-0000-0000-000000000000"),
             startTime = LocalTime.of(6, 0),
             endTime = LocalTime.of(23, 59)
         )

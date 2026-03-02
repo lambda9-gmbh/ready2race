@@ -142,6 +142,12 @@ const CompetitionExecutionRound = ({
                     py: 2,
                 }}>
                 <Typography variant={'h2'}>{round.name}</Typography>
+                <Typography variant={'body2'}>
+                    {t('event.competition.execution.match.startTime') + ': '}
+                    {round.startTime
+                        ? format(new Date(round.startTime), t('format.datetime'))
+                        : '-'}
+                </Typography>
                 {round.required && (
                     <Typography>{t('event.competition.setup.round.required')}</Typography>
                 )}

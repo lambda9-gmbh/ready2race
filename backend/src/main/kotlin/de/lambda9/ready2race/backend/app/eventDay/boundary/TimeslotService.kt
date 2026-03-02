@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.eventDay.control.toDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.TimeslotRecord
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -50,6 +51,27 @@ object TimeslotService {
         userId: UUID,
         eventDayId: UUID
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
+        if (request.matchReference != null) {
+            !TimeslotRepo.timeslotForCompetitionUnitExists(request.matchReference).orDie().onTrueFail {
+                EventDayError.CompetitionUnitAlreadyHasTimeslot
+            }
+        } else if (request.roundReference != null) {
+            !TimeslotRepo.timeslotForCompetitionUnitExists(request.roundReference).orDie().onTrueFail {
+                EventDayError.CompetitionUnitAlreadyHasTimeslot
+            }
+            !TimeslotRepo.lowerCompetitionUnitTimeslotAlreadyExists(request.roundReference).orDie().onTrueFail {
+                EventDayError.LowerCompetitionUnitAlreadyHasTimeslot
+            }
+        } else if (request.competitionReference != null) {
+            !TimeslotRepo.timeslotForCompetitionUnitExists(request.competitionReference).orDie().onTrueFail {
+                EventDayError.CompetitionUnitAlreadyHasTimeslot
+            }
+            !TimeslotRepo.lowerCompetitionUnitTimeslotAlreadyExists(request.competitionReference).orDie().onTrueFail {
+                EventDayError.LowerCompetitionUnitAlreadyHasTimeslot
+            }
+        }
+
+
 
         !EventDayRepo.exists(eventDayId).orDie()
             .onNullFail { EventDayError.EventDayNotFound }
@@ -61,6 +83,9 @@ object TimeslotService {
             description = request.description,
             startTime = request.startTime,
             endTime = request.endTime,
+            competitionReference = request.competitionReference,
+            roundReference = request.roundReference,
+            matchReference = request.matchReference,
             createdAt = LocalDateTime.now(),
             createdBy = userId,
             updatedAt = LocalDateTime.now(),
@@ -106,5 +131,10 @@ object TimeslotService {
         } else {
             noData
         }
+    }
+
+    fun getOwnTimeslotById(id:UUID) = KIO.comprehension {
+        val data = !TimeslotRepo.findSelfIncludingTimeslotById(id).orDie()
+        KIO.ok(data?.toDto())
     }
 }
