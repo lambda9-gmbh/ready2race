@@ -779,6 +779,7 @@ export type ErrorCode =
     | 'CLUB_NAME_ALREADY_EXISTS'
     | 'DUPLICATE_TIMESLOT'
     | 'CHILD_TIMESLOT_ALREADY_EXISTS'
+    | 'PARENT_TIMESLOT_ALREADY_EXISTS'
 
 export type EventDayDto = {
     id: string

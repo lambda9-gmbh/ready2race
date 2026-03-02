@@ -521,7 +521,18 @@
       "to":"Bis",
       "schedule":"Zeitplan",
       "timeslot":"Zeitfenster",
-      "downloadSchedule": "Zeitplanung herunterladen"
+      "downloadSchedule": "Zeitplanung herunterladen",
+      "competitionTimeslot": {
+        "openButton": "Zeitfenster aus Wettkämpfen planen",
+        "dialogTitle": "Zeitfenster aus Wettkämpfen erstellen",
+        "durationMinutes": "Dauer: {{duration}} Minuten",
+        "calculatedEndTime": "Berechnete Endzeit: {{time}}",
+        "error": {
+          "duplicateTimeslot": "Für diesen Zeitraum existiert bereits ein Zeitfenster.",
+          "childTimeslotExists": "Untergeordnete Zeitfenster verhindern die Erstellung dieses Zeitfensters.",
+          "parentTimeslotExists": "Ein übergeordnetes Zeitfenster verhindert die Erstellung dieses Zeitfensters."
+        }
+      }
     },
     "competition": {
       "competition": "Wettkampf",

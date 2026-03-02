@@ -189,7 +189,7 @@ const EventDayPage = () => {
                                     ...(!isMobile ? {ml: 'auto'} : {}),
                                 }}
                                 onClick={() => setOpenDialog(true)}>
-                                {'wambo'}
+                                {t('event.eventDay.competitionTimeslot.openButton')}
                             </Button>
                         )}
                         <TimeslotTable {...administrationProps.table} />

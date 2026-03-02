@@ -52,21 +52,35 @@ object TimeslotService {
         eventDayId: UUID
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
         if (request.matchReference != null) {
-            !TimeslotRepo.timeslotForCompetitionUnitExists(request.matchReference).orDie().onTrueFail {
+            !TimeslotRepo.timeslotForCompetitionUnitExists(request.matchReference, eventDayId).orDie().onTrueFail {
                 EventDayError.CompetitionUnitAlreadyHasTimeslot
+            }
+            !TimeslotRepo.higherCompetitionUnitTimeslotAlreadyExists(
+                eventDayId,
+                request.competitionReference,
+                request.roundReference
+            ).orDie().onTrueFail {
+                EventDayError.HigherCompetitionUnitAlreadyHasTimeslot
             }
         } else if (request.roundReference != null) {
-            !TimeslotRepo.timeslotForCompetitionUnitExists(request.roundReference).orDie().onTrueFail {
+            !TimeslotRepo.timeslotForCompetitionUnitExists(request.roundReference, eventDayId).orDie().onTrueFail {
                 EventDayError.CompetitionUnitAlreadyHasTimeslot
             }
-            !TimeslotRepo.lowerCompetitionUnitTimeslotAlreadyExists(request.roundReference).orDie().onTrueFail {
+            !TimeslotRepo.lowerCompetitionUnitTimeslotAlreadyExists(request.roundReference, eventDayId).orDie().onTrueFail {
                 EventDayError.LowerCompetitionUnitAlreadyHasTimeslot
             }
+            !TimeslotRepo.higherCompetitionUnitTimeslotAlreadyExists(
+                eventDayId,
+                request.competitionReference,
+                null
+            ).orDie().onTrueFail {
+                EventDayError.HigherCompetitionUnitAlreadyHasTimeslot
+            }
         } else if (request.competitionReference != null) {
-            !TimeslotRepo.timeslotForCompetitionUnitExists(request.competitionReference).orDie().onTrueFail {
+            !TimeslotRepo.timeslotForCompetitionUnitExists(request.competitionReference, eventDayId).orDie().onTrueFail {
                 EventDayError.CompetitionUnitAlreadyHasTimeslot
             }
-            !TimeslotRepo.lowerCompetitionUnitTimeslotAlreadyExists(request.competitionReference).orDie().onTrueFail {
+            !TimeslotRepo.lowerCompetitionUnitTimeslotAlreadyExists(request.competitionReference, eventDayId).orDie().onTrueFail {
                 EventDayError.LowerCompetitionUnitAlreadyHasTimeslot
             }
         }

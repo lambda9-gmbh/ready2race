@@ -7392,6 +7392,7 @@ components:
         - CLUB_NAME_ALREADY_EXISTS
         - DUPLICATE_TIMESLOT
         - CHILD_TIMESLOT_ALREADY_EXISTS
+        - PARENT_TIMESLOT_ALREADY_EXISTS
 
     Gender:
       type: string

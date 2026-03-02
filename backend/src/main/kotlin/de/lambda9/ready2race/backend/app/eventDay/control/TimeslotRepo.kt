@@ -50,14 +50,21 @@ object TimeslotRepo {
         }
     }
 
-    fun timeslotForCompetitionUnitExists(id: UUID?): JIO<Boolean> =
-        TIMESLOT_WITH_COMPETITION_DURATION_DATA
-            .exists { MATCH_REFERENCE.eq(id)
-                .or(ROUND_REFERENCE.eq(id)
-                    .and(MATCH_REFERENCE.isNull))
-                .or(COMPETITION_REFERENCE.eq(id)
-                    .and(MATCH_REFERENCE.isNull)
-                    .and(ROUND_REFERENCE.isNull))
+    fun timeslotForCompetitionUnitExists(id: UUID?, eventDayId: UUID): JIO<Boolean> =
+        TIMESLOT
+            .exists {
+                TIMESLOT.EVENT_DAY.eq(eventDayId).and(
+                    TIMESLOT.MATCH_REFERENCE.eq(id)
+                        .or(
+                            TIMESLOT.ROUND_REFERENCE.eq(id)
+                                .and(TIMESLOT.MATCH_REFERENCE.isNull)
+                        )
+                        .or(
+                            TIMESLOT.COMPETITION_REFERENCE.eq(id)
+                                .and(TIMESLOT.MATCH_REFERENCE.isNull)
+                                .and(TIMESLOT.ROUND_REFERENCE.isNull)
+                        )
+                )
             }
 
     fun findSelfIncludingTimeslotById(id: UUID?): JIO<TimeslotWithCompetitionDurationDataRecord?> =
@@ -70,13 +77,47 @@ object TimeslotRepo {
                         .and(ROUND_REFERENCE.isNull))
             }
 
-    fun lowerCompetitionUnitTimeslotAlreadyExists(id: UUID?): JIO<Boolean> =
-        TIMESLOT_WITH_COMPETITION_DURATION_DATA
+    fun lowerCompetitionUnitTimeslotAlreadyExists(id: UUID?, eventDayId: UUID): JIO<Boolean> =
+        TIMESLOT
             .exists {
-                DSL.or(
-                    ROUND_REFERENCE.eq(id).and(MATCH_REFERENCE.isNotNull),
-                    COMPETITION_REFERENCE.eq(id).and(ROUND_REFERENCE.isNotNull)
+                TIMESLOT.EVENT_DAY.eq(eventDayId).and(
+                    DSL.or(
+                        TIMESLOT.ROUND_REFERENCE.eq(id).and(TIMESLOT.MATCH_REFERENCE.isNotNull),
+                        TIMESLOT.COMPETITION_REFERENCE.eq(id).and(TIMESLOT.ROUND_REFERENCE.isNotNull)
+                    )
                 )
             }
+
+    fun higherCompetitionUnitTimeslotAlreadyExists(
+        eventDayId: UUID,
+        competitionReference: UUID?,
+        roundReference: UUID?,
+    ): JIO<Boolean> {
+        val competitionCondition =
+            if (competitionReference != null) {
+                TIMESLOT.COMPETITION_REFERENCE.eq(competitionReference)
+                    .and(TIMESLOT.ROUND_REFERENCE.isNull)
+                    .and(TIMESLOT.MATCH_REFERENCE.isNull)
+            } else {
+                DSL.falseCondition()
+            }
+
+        val roundCondition =
+            if (roundReference != null) {
+                TIMESLOT.ROUND_REFERENCE.eq(roundReference)
+                    .and(TIMESLOT.MATCH_REFERENCE.isNull)
+            } else {
+                DSL.falseCondition()
+            }
+
+        return TIMESLOT.exists {
+            TIMESLOT.EVENT_DAY.eq(eventDayId).and(
+                DSL.or(
+                    competitionCondition,
+                    roundCondition
+                )
+            )
+        }
+    }
 
 }

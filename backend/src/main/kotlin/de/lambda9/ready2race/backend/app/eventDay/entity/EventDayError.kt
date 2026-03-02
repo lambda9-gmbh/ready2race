@@ -13,6 +13,7 @@ sealed interface EventDayError : ServiceError {
     data object TimeslotNotFound : EventDayError
     data object CompetitionUnitAlreadyHasTimeslot : EventDayError
     data object LowerCompetitionUnitAlreadyHasTimeslot : EventDayError
+    data object HigherCompetitionUnitAlreadyHasTimeslot : EventDayError
 
     data class CompetitionsNotFound(val competitions: List<UUID>) : EventDayError
 
@@ -30,8 +31,13 @@ sealed interface EventDayError : ServiceError {
         )
         LowerCompetitionUnitAlreadyHasTimeslot -> ApiError(
             HttpStatusCode.Conflict,
-            message = "Competition unit already has a timeslot assigned",
+            message = "Lower competition unit already has a timeslot assigned",
             errorCode = ErrorCode.CHILD_TIMESLOT_ALREADY_EXISTS
+        )
+        HigherCompetitionUnitAlreadyHasTimeslot -> ApiError(
+            HttpStatusCode.Conflict,
+            message = "Higher competition unit already has a timeslot assigned",
+            errorCode = ErrorCode.PARENT_TIMESLOT_ALREADY_EXISTS
         )
 
         is CompetitionsNotFound -> ApiError(

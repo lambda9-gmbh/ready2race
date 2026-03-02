@@ -514,7 +514,25 @@
       "date": "Dato",
       "name": "Navn",
       "description": "Beskrivelse",
-      "assignedCompetitions": "Konkurrencer på denne dag"
+      "assignedCompetitions": "Konkurrencer på denne dag",
+      "startTime": "Starttid",
+      "endTime": "Sluttid",
+      "from": "Fra",
+      "to": "Til",
+      "schedule": "Tidsplan",
+      "timeslot": "Tidsslot",
+      "downloadSchedule": "Download tidsplan",
+      "competitionTimeslot": {
+        "openButton": "Planlæg tidsslots ud fra kampe",
+        "dialogTitle": "Opret tidsslot ud fra kampe",
+        "durationMinutes": "Varighed: {{duration}} minutter",
+        "calculatedEndTime": "Beregnet sluttid: {{time}}",
+        "error": {
+          "duplicateTimeslot": "Der findes allerede et tidsslot i dette tidsrum.",
+          "childTimeslotExists": "Eksisterende underordnede tidsslots forhindrer oprettelse af dette tidsslot.",
+          "parentTimeslotExists": "Et eksisterende overordnet tidsslot forhindrer oprettelse af dette tidsslot."
+        }
+      }
     },
     "competition": {
       "competition": "Konkurrence",

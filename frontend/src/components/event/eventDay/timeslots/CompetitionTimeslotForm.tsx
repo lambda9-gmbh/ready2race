@@ -112,9 +112,17 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
             } else {
                 if (response.status === 409) {
                     if (resError.errorCode === 'DUPLICATE_TIMESLOT') {
-                        feedback.error('wambo wambo')
+                        feedback.error(
+                            t('event.eventDay.competitionTimeslot.error.duplicateTimeslot'),
+                        )
                     } else if (resError.errorCode === 'CHILD_TIMESLOT_ALREADY_EXISTS') {
-                        feedback.error('wambo wambo wambo')
+                        feedback.error(
+                            t('event.eventDay.competitionTimeslot.error.childTimeslotExists'),
+                        )
+                    } else if (resError.errorCode === 'PARENT_TIMESLOT_ALREADY_EXISTS') {
+                        feedback.error(
+                            t('event.eventDay.competitionTimeslot.error.parentTimeslotExists'),
+                        )
                     }
                 } else {
                     feedback.error(t('common.error.unexpected'))
@@ -133,7 +141,7 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
     return (
         <BaseDialog open={open} onClose={handleClose}>
             <FormContainer formContext={formContext} onSuccess={handleSubmit}>
-                <DialogTitle>wambo</DialogTitle>
+                <DialogTitle>{t('event.eventDay.competitionTimeslot.dialogTitle')}</DialogTitle>
                 <DialogContent>
                     <Stack spacing={4}>
                         <Select
@@ -159,7 +167,9 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
                                         {comp.competitionName}
                                     </MenuItem>
                                 ))}
-                            <MenuItem value={'none'}>{'kein wambo'}</MenuItem>
+                            <MenuItem value={'none'}>
+                                {t('common.form.select.none')}
+                            </MenuItem>
                         </Select>
 
                         <Select
@@ -180,7 +190,9 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
                                     {round.roundName}
                                 </MenuItem>
                             ))}
-                            <MenuItem value={'none'}>{'kein wambo'}</MenuItem>
+                            <MenuItem value={'none'}>
+                                {t('common.form.select.none')}
+                            </MenuItem>
                         </Select>
 
                         <Select
@@ -199,7 +211,9 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
                                     {match.matchName}
                                 </MenuItem>
                             ))}
-                            <MenuItem value={'none'}>{'kein wambo'}</MenuItem>
+                            <MenuItem value={'none'}>
+                                {t('common.form.select.none')}
+                            </MenuItem>
                         </Select>
                         <FormInputTime
                             name={'startTime'}
@@ -207,18 +221,24 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
                             timeSteps={{minutes: 1}}
                             required
                         />
-                        <Typography variant={'body2'}>{`wambo: ${duration} wambo`}</Typography>
+                        <Typography variant={'body2'}>
+                            {t('event.eventDay.competitionTimeslot.durationMinutes', {
+                                duration,
+                            })}
+                        </Typography>
                         <Typography
-                            variant={
-                                'body2'
-                            }>{`wambo: ${endTime.toTimeString().slice(0, 5)}`}</Typography>
+                            variant={'body2'}>
+                            {t('event.eventDay.competitionTimeslot.calculatedEndTime', {
+                                time: endTime.toTimeString().slice(0, 5),
+                            })}
+                        </Typography>
                     </Stack>
                 </DialogContent>
                 <DialogActions>
                     <Button variant="outlined" onClick={handleClose}>
-                        wambo
+                        {t('common.cancel')}
                     </Button>
-                    <SubmitButton submitting={false}>wambo</SubmitButton>
+                    <SubmitButton submitting={false}>{t('common.create')}</SubmitButton>
                 </DialogActions>
             </FormContainer>
         </BaseDialog>

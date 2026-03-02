@@ -521,7 +521,18 @@
       "to":"To",
       "schedule":"Schedule",
       "timeslot":"Timeslot",
-      "downloadSchedule": "Download schedule"
+      "downloadSchedule": "Download schedule",
+      "competitionTimeslot": {
+        "openButton": "Plan timeslots from matches",
+        "dialogTitle": "Create timeslot from matches",
+        "durationMinutes": "Duration: {{duration}} minutes",
+        "calculatedEndTime": "Calculated end time: {{time}}",
+        "error": {
+          "duplicateTimeslot": "A timeslot already exists for this period.",
+          "childTimeslotExists": "Existing child timeslots prevent creating this timeslot.",
+          "parentTimeslotExists": "An existing parent timeslot prevents creating this timeslot."
+        }
+      }
     },
     "competition": {
       "competition": "Competition",
