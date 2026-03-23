@@ -545,6 +545,8 @@
       "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
+      "matchDuration":"Matchduration",
+      "matchGapDuration":"Time between matches",
       "challenge": {
         "configs": "Challenge configs",
         "resultConfirmationImageRequired": "Confirmation image for results required",

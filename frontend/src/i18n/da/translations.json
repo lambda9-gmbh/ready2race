@@ -545,6 +545,8 @@
       "ratingCategoryRequired": "Rangeringskategori påkrævet",
       "registrationCount": "Tilmeldinger",
       "shortName": "Kort navn",
+      "matchDuration": "Kampvarighed",
+      "matchGapDuration": "Tid mellem kampe",
       "challenge": {
         "configs": "Challenge-indstillinger",
         "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",

@@ -45,6 +45,7 @@ import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.filter
 import kotlin.collections.isNotEmpty
@@ -518,7 +519,8 @@ object EventDayService {
                         padding = Padding(left = 8F),
                     ) {
                         text { timeslot.name }
-                        text { "${timeslot.startTime} - ${timeslot.startTime}" }
+                        text { "${timeslot.startTime.format(DateTimeFormatter.ofPattern("HH:mm"))} - ${timeslot.endTime.format(DateTimeFormatter.ofPattern("HH:mm"))}" }
+                        println(timeslot)
                         if (timeslot.description == null) {
                             text(fontSize = 8f){
                                 "Keine Beschreibung"

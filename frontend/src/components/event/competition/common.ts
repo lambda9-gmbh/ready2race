@@ -11,6 +11,8 @@ export type CompetitionForm = {
     name: string
     shortName: string
     description: string
+    matchDuration: string
+    matchGapsDuration: string
     competitionCategory: AutocompleteOption
     namedParticipants: {
         namedParticipant: AutocompleteOption
@@ -37,6 +39,8 @@ export const competitionFormDefaultValues: CompetitionForm = {
     identifier: '',
     name: '',
     shortName: '',
+    matchDuration: '',
+    matchGapsDuration: '',
     description: '',
     competitionCategory: null,
     namedParticipants: [],
@@ -58,6 +62,12 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
         name: formData.name,
         shortName: takeIfNotEmpty(formData.shortName),
         description: takeIfNotEmpty(formData.description),
+        matchDuration: takeIfNotEmpty(formData.matchDuration)
+            ? Number(formData.matchDuration)
+            : undefined,
+        matchGapsDuration: takeIfNotEmpty(formData.matchGapsDuration)
+            ? Number(formData.matchGapsDuration)
+            : undefined,
         competitionCategory: takeIfNotEmpty(formData.competitionCategory?.id),
         namedParticipants: formData.namedParticipants.map(value => ({
             namedParticipant: value.namedParticipant?.id ?? '',
@@ -90,11 +100,15 @@ export function mapCompetitionPropertiesToCompetitionForm(
     decimalPoint: string,
     setupTemplate?: CompetitionSetupTemplateOverviewDto,
 ): CompetitionForm {
+    console.log(dto.matchDuration)
+    console.log(dto.matchDuration?.toString())
     return {
         identifier: dto.identifier,
         name: dto.name,
         shortName: dto.shortName ?? '',
         description: dto.description ?? '',
+        matchDuration: dto.matchDuration?.toString() ?? '',
+        matchGapsDuration: dto.matchGapsDuration?.toString() ?? '',
         competitionCategory: dto.competitionCategory
             ? {
                   id: dto.competitionCategory.id,
