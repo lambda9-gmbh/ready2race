@@ -95,6 +95,8 @@ class CompetitionSetupTemplateServiceTest {
                 setupTemplate = null,
                 challengeConfig = null,
                 ratingCategoryRequired = false,
+                matchDuration = null,
+                matchGapsDuration = null,
             ),
             userId = SYSTEM_USER,
             eventId = event.id
