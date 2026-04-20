@@ -1134,6 +1134,27 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}/recalculateEndTime:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+      - $ref: '#/components/parameters/timeslotId'
+    post:
+      operationId: recalculateTimeslotEndTime
+      responses:
+        204:
+          description: Timeslot end time successfully recalculated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventDay/{eventDayId}/competitions:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -8388,6 +8409,8 @@ components:
           type: string
         description:
           type: string
+        descriptionManual:
+          type: string
         competitionReference:
           type: string
         roundReference:
@@ -13066,8 +13089,14 @@ components:
       required:
         - matchId
         - matchName
+        - occurringTeamCount
       properties:
         matchId:
           type: string
         matchName:
           type: string
+        occurringTeamCount:
+          type: integer
+        startTimeOffsetSeconds:
+          type: integer
+          format: int64

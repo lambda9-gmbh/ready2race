@@ -19,12 +19,14 @@ import TimeslotDialog from '@components/event/eventDay/timeslots/TimeslotDialog.
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import {getFilename} from '@utils/helpers.ts'
 import {CompetitionTimeslotForm} from '@components/event/eventDay/timeslots/CompetitionTimeslotForm.tsx'
+import {useUser} from '@contexts/user/UserContext.ts'
 
 const EventDayPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+    const user = useUser()
 
     const {eventId} = eventRoute.useParams()
     const {eventDayId} = eventDayRoute.useParams()
@@ -99,6 +101,7 @@ const EventDayPage = () => {
                     administrationProps.table.reloadData()
                 }
             },
+            preCondition: () => user.loggedIn,
             deps: [eventId, eventDayId, reloadData],
         },
     )

@@ -2,13 +2,16 @@ import {GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityTable, {ExtendedGridColDef} from '@components/EntityTable.tsx'
-import {deleteTimeslot, getTimeslots} from '@api/sdk.gen.ts'
+import {deleteTimeslot, getTimeslots, recalculateTimeslotEndTime} from '@api/sdk.gen.ts'
 import {TimeslotDto} from '@api/types.gen.ts'
 import {eventDayRoute, eventRoute} from '@routes'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {useState} from 'react'
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton} from '@mui/material'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
+import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
+import {GridActionsCellItem} from '@mui/x-data-grid'
+import {useFeedback} from '@utils/hooks.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -19,6 +22,7 @@ const initialSort: GridSortModel = [{field: 'startTime', sort: 'asc'}]
 
 const TimeslotTable = (props: BaseEntityTableProps<TimeslotDto>) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
 
     const {eventId} = eventRoute.useParams()
     const {eventDayId} = eventDayRoute.useParams()
@@ -91,10 +95,36 @@ const TimeslotTable = (props: BaseEntityTableProps<TimeslotDto>) => {
                 columns={columns}
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
+                customEntityActions={entity => [
+                    Boolean(
+                        entity.competitionReference || entity.roundReference || entity.matchReference,
+                    ) && (
+                        <GridActionsCellItem
+                            icon={<AutorenewOutlinedIcon />}
+                            label={t('event.eventDay.recalculateEndTime')}
+                            showInMenu={true}
+                            onClick={async () => {
+                                const {error} = await recalculateTimeslotEndTime({
+                                    path: {
+                                        eventId,
+                                        eventDayId,
+                                        timeslotId: entity.id,
+                                    },
+                                })
+                                if (error) {
+                                    feedback.error(t('event.eventDay.recalculateEndTimeError'))
+                                } else {
+                                    feedback.success(t('event.eventDay.recalculateEndTimeSuccess'))
+                                    props.reloadData()
+                                }
+                            }}
+                        />
+                    ),
+                ]}
             />
             <Dialog open={!!selectedDescription} onClose={() => setSelectedDescription(null)}>
                 <DialogTitle>{t('event.eventDay.description')}</DialogTitle>
-                <DialogContent>{selectedDescription}</DialogContent>
+                <DialogContent sx={{whiteSpace: 'pre-wrap'}}>{selectedDescription}</DialogContent>
                 <DialogActions>
                     <Button onClick={() => setSelectedDescription(null)}>Close</Button>
                 </DialogActions>

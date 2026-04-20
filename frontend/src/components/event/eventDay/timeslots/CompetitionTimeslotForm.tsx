@@ -16,12 +16,17 @@ import {
     Typography,
 } from '@mui/material'
 import FormInputTime from '@components/form/input/FormInputTime.tsx'
+import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {useEffect, useState} from 'react'
 import {addTimeslot} from '@api/sdk.gen.ts'
 import {addMinutes} from 'date-fns'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {useFeedback} from '@utils/hooks.ts'
+import {
+    calculateMatchDurationWithOffsetMinutes,
+    calculateTotalDurationMinutes,
+} from '@components/event/eventDay/timeslots/timeslotDuration.ts'
 
 type Props = {
     data: Array<EventDayScheduleCompetitionDataDto>
@@ -59,22 +64,22 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
         let tmpDuration = 0
         if (selectedCompetition?.matchDuration && selectedCompetition?.matchGapsDuration) {
             if (selectedMatch && selectedRound && selectedCompetition) {
-                tmpDuration = selectedCompetition.matchDuration
+                tmpDuration = calculateMatchDurationWithOffsetMinutes(
+                    selectedMatch,
+                    selectedCompetition.matchDuration,
+                )
             } else if (selectedRound && selectedCompetition) {
-                const roundMatchCount = selectedRound.matchCount ?? selectedRound.matches.length
-                tmpDuration =
-                    roundMatchCount * selectedCompetition.matchDuration +
-                    Math.max(0, roundMatchCount - 1) * selectedCompetition.matchGapsDuration
+                tmpDuration = calculateTotalDurationMinutes(
+                    selectedRound.matches,
+                    selectedCompetition.matchDuration,
+                    selectedCompetition.matchGapsDuration,
+                )
             } else if (selectedCompetition) {
-                const totalMatches =
-                    selectedCompetition.matchCount ??
-                    selectedCompetition.rounds.reduce(
-                        (sum, round) => sum + (round.matchCount ?? round.matches.length),
-                        0,
-                    )
-                tmpDuration =
-                    totalMatches * selectedCompetition.matchDuration +
-                    Math.max(0, totalMatches - 1) * selectedCompetition.matchGapsDuration
+                tmpDuration = calculateTotalDurationMinutes(
+                    selectedCompetition.rounds.flatMap(round => round.matches),
+                    selectedCompetition.matchDuration,
+                    selectedCompetition.matchGapsDuration,
+                )
             }
         } else {
             tmpDuration = 0
@@ -144,77 +149,81 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
                 <DialogTitle>{t('event.eventDay.competitionTimeslot.dialogTitle')}</DialogTitle>
                 <DialogContent>
                     <Stack spacing={4}>
-                        <Select
-                            name="competition"
-                            value={selectedCompetition?.competitionId ?? 'none'}
-                            onChange={e => {
-                                const competition =
-                                    data.find(
-                                        c =>
-                                            c.competitionId === e.target.value &&
-                                            c.matchDuration &&
-                                            c.matchGapsDuration,
-                                    ) ?? null
+                        <FormInputLabel label={t('event.competition.competition')} required>
+                            <Select
+                                name="competition"
+                                value={selectedCompetition?.competitionId ?? 'none'}
+                                sx={{width: 1}}
+                                onChange={e => {
+                                    const competition =
+                                        data.find(
+                                            c =>
+                                                c.competitionId === e.target.value &&
+                                                c.matchDuration &&
+                                                c.matchGapsDuration,
+                                        ) ?? null
 
-                                setSelectedCompetition(competition)
-                                setSelectedRound(null)
-                                setSelectedMatch(null)
-                            }}>
-                            {data
-                                .filter(c => c.matchDuration && c.matchGapsDuration)
-                                .map(comp => (
-                                    <MenuItem key={comp.competitionId} value={comp.competitionId}>
-                                        {comp.competitionName}
+                                    setSelectedCompetition(competition)
+                                    setSelectedRound(null)
+                                    setSelectedMatch(null)
+                                }}>
+                                {data
+                                    .filter(c => c.matchDuration && c.matchGapsDuration)
+                                    .map(comp => (
+                                        <MenuItem
+                                            key={comp.competitionId}
+                                            value={comp.competitionId}>
+                                            {comp.competitionName}
+                                        </MenuItem>
+                                    ))}
+                                <MenuItem value={'none'}>{t('common.form.select.none')}</MenuItem>
+                            </Select>
+                        </FormInputLabel>
+
+                        <FormInputLabel label={t('event.competition.setup.round.round')}>
+                            <Select
+                                name="round"
+                                value={selectedRound?.roundId ?? 'none'}
+                                sx={{width: 1}}
+                                disabled={!selectedCompetition}
+                                onChange={e => {
+                                    const round =
+                                        availableRounds.find(r => r.roundId === e.target.value) ??
+                                        null
+
+                                    setSelectedRound(round)
+                                    setSelectedMatch(null)
+                                }}>
+                                {availableRounds.map(round => (
+                                    <MenuItem key={round.roundId} value={round.roundId}>
+                                        {round.roundName}
                                     </MenuItem>
                                 ))}
-                            <MenuItem value={'none'}>
-                                {t('common.form.select.none')}
-                            </MenuItem>
-                        </Select>
+                                <MenuItem value={'none'}>{t('common.form.select.none')}</MenuItem>
+                            </Select>
+                        </FormInputLabel>
 
-                        <Select
-                            name="round"
-                            value={selectedRound?.roundId ?? 'none'}
-                            disabled={!selectedCompetition}
-                            onChange={e => {
-                                const round =
-                                    availableRounds.find(
-                                        r => r.roundId === e.target.value,
-                                    ) ?? null
-
-                                setSelectedRound(round)
-                                setSelectedMatch(null)
-                            }}>
-                            {availableRounds.map(round => (
-                                <MenuItem key={round.roundId} value={round.roundId}>
-                                    {round.roundName}
-                                </MenuItem>
-                            ))}
-                            <MenuItem value={'none'}>
-                                {t('common.form.select.none')}
-                            </MenuItem>
-                        </Select>
-
-                        <Select
-                            name="match"
-                            value={selectedMatch?.matchId ?? 'none'}
-                            disabled={!selectedRound}
-                            onChange={e =>
-                                setSelectedMatch(
-                                    selectedRound?.matches.find(
-                                        m => m.matchId === e.target.value,
-                                    ) ?? null,
-                                )
-                            }>
-                            {selectedRound?.matches.map(match => (
-                                <MenuItem key={match.matchId} value={match.matchId}>
-                                    {match.matchName}
-                                </MenuItem>
-                            ))}
-                            <MenuItem value={'none'}>
-                                {t('common.form.select.none')}
-                            </MenuItem>
-                        </Select>
+                        <FormInputLabel label={t('event.competition.setup.match.match')}>
+                            <Select
+                                name="match"
+                                value={selectedMatch?.matchId ?? 'none'}
+                                sx={{width: 1}}
+                                disabled={!selectedRound}
+                                onChange={e =>
+                                    setSelectedMatch(
+                                        selectedRound?.matches.find(
+                                            m => m.matchId === e.target.value,
+                                        ) ?? null,
+                                    )
+                                }>
+                                {selectedRound?.matches.map(match => (
+                                    <MenuItem key={match.matchId} value={match.matchId}>
+                                        {match.matchName}
+                                    </MenuItem>
+                                ))}
+                                <MenuItem value={'none'}>{t('common.form.select.none')}</MenuItem>
+                            </Select>
+                        </FormInputLabel>
                         <FormInputTime
                             name={'startTime'}
                             label={t('event.eventDay.startTime')}
@@ -226,8 +235,7 @@ export const CompetitionTimeslotForm = ({data, open, onClose, eventId, eventDayI
                                 duration,
                             })}
                         </Typography>
-                        <Typography
-                            variant={'body2'}>
+                        <Typography variant={'body2'}>
                             {t('event.eventDay.competitionTimeslot.calculatedEndTime', {
                                 time: endTime.toTimeString().slice(0, 5),
                             })}

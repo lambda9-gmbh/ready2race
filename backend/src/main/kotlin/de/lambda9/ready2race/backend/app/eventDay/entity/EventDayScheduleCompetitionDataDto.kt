@@ -22,4 +22,6 @@ data class EventDayScheduleCompetitionRoundDataDto(
 data class EventDayScheduleCompetitionMatchDataDto(
     val matchName: String,
     val matchId: UUID,
+    val occurringTeamCount: Int,
+    val startTimeOffsetSeconds: Long?,
 )

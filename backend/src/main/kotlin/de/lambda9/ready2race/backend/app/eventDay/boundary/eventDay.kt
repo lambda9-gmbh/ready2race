@@ -121,6 +121,15 @@ fun Route.eventDay() {
                         }
                     }
 
+                    post("/recalculateEndTime") {
+                        call.respondComprehension {
+                            val user = !authenticate(Privilege.UpdateEventGlobal)
+                            val timeslotId = !pathParam("timeslotId", uuid)
+
+                            TimeslotService.recalculateTimeslotEndTime(user.id!!, timeslotId)
+                        }
+                    }
+
                     put() {
                         call.respondComprehension {
                             val user = !authenticate(Privilege.UpdateEventGlobal)

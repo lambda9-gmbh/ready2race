@@ -808,6 +808,8 @@ export type EventDayScheduleCompetitionDataDto = {
 export type EventDayScheduleCompetitionMatchDataDto = {
     matchId: string
     matchName: string
+    occurringTeamCount: number
+    startTimeOffsetSeconds?: number
 }
 
 export type EventDayScheduleCompetitionRoundDataDto = {
@@ -1989,6 +1991,7 @@ export type TimeslotDto = {
     eventDay: string
     name: string
     description?: string
+    descriptionManual?: string
     competitionReference?: string
     roundReference?: string
     matchReference?: string
@@ -2960,6 +2963,18 @@ export type DeleteTimeslotData = {
 export type DeleteTimeslotResponse = void
 
 export type DeleteTimeslotError = BadRequestError | ApiError
+
+export type RecalculateTimeslotEndTimeData = {
+    path: {
+        eventDayId: string
+        eventId: string
+        timeslotId: string
+    }
+}
+
+export type RecalculateTimeslotEndTimeResponse = void
+
+export type RecalculateTimeslotEndTimeError = BadRequestError | ApiError
 
 export type AssignCompetitionsToEventDayData = {
     body: AssignCompetitionsToDayRequest

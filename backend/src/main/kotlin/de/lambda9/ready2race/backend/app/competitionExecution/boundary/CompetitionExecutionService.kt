@@ -93,6 +93,29 @@ object CompetitionExecutionService {
         return if (roundRequired) activeTeams > 0 else activeTeams > 1
     }
 
+    private fun calculateOffsetDurationMinutesRoundedUp(
+        occurringTeamCount: Int,
+        startTimeOffsetRaw: Long?,
+    ): Int {
+        val normalizedOffsetSeconds = when {
+            startTimeOffsetRaw == null || startTimeOffsetRaw <= 0L -> 0L
+            startTimeOffsetRaw >= 1000L && startTimeOffsetRaw % 1000L == 0L -> startTimeOffsetRaw / 1000L
+            else -> startTimeOffsetRaw
+        }
+        val nonNegativeStartTimeOffsetSeconds = maxOf(0L, normalizedOffsetSeconds)
+        if (nonNegativeStartTimeOffsetSeconds <= 0L) {
+            return 0
+        }
+
+        val additionalStartShifts = maxOf(0, occurringTeamCount - 1)
+        if (additionalStartShifts <= 0) {
+            return 0
+        }
+
+        val totalOffsetSeconds = additionalStartShifts.toLong() * nonNegativeStartTimeOffsetSeconds
+        return ((totalOffsetSeconds + 59L) / 60L).toInt()
+    }
+
     fun getMatchesByEvent(
         eventId: UUID,
         currentlyRunning: Boolean? = null,
@@ -174,9 +197,6 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
-                newTeamRecords.mapIndexed { idx, team ->
-                    println("$idx: " + team)
-                }
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
                     createFollowingRound = false
@@ -258,10 +278,6 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
-                println(newTeamRecords.size)
-                newTeamRecords.mapIndexed { idx, team ->
-                    println("$idx: " + team)
-                }
                 // Carry over all substitutions to the new round
                 val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
                 val substitutionsRelevantForNextRound = currentRoundSubstitutions.map { record ->
@@ -324,12 +340,24 @@ object CompetitionExecutionService {
                     event.mixedTeamTerm,
                     fallbackRoundTimeData
                     )
-                val occurringMatchCount = round.matches.count { match ->
-                    isOccurringMatch(round.required, match)
-                }
                 if (competitionTimeData != null) {
+                    val setupMatchById = round.setupMatches.associateBy { it.id }
+                    val occurringMatchCount = round.matches.count { match ->
+                        isOccurringMatch(round.required, match)
+                    }
+                    val totalOccurringMatchDurationMinutes = round.matches.sumOf { match ->
+                        if (!isOccurringMatch(round.required, match)) {
+                            0
+                        } else {
+                            val setupMatch = setupMatchById[match.competitionSetupMatch]
+                            competitionTimeData.matchDuration + calculateOffsetDurationMinutesRoundedUp(
+                                occurringTeamCount = occurringTeamCount(match),
+                                startTimeOffsetRaw = setupMatch?.startTimeOffset,
+                            )
+                        }
+                    }
                     val roundDurationMinutes =
-                        occurringMatchCount * competitionTimeData.matchDuration +
+                        totalOccurringMatchDurationMinutes +
                             occurringMatchCount * competitionTimeData.matchGapsDuration
                     tmpStartTime = tmpStartTime?.plusMinutes(roundDurationMinutes.toLong())
                 }

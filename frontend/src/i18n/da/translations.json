@@ -521,6 +521,9 @@
       "to": "Til",
       "schedule": "Tidsplan",
       "timeslot": "Tidsslot",
+      "recalculateEndTime": "Genberegn sluttid",
+      "recalculateEndTimeSuccess": "Sluttiden blev genberegnet.",
+      "recalculateEndTimeError": "Sluttiden kunne ikke genberegnes.",
       "downloadSchedule": "Download tidsplan",
       "competitionTimeslot": {
         "openButton": "Planlæg tidsslots ud fra kampe",
@@ -545,8 +548,8 @@
       "ratingCategoryRequired": "Rangeringskategori påkrævet",
       "registrationCount": "Tilmeldinger",
       "shortName": "Kort navn",
-      "matchDuration": "Kampvarighed",
-      "matchGapDuration": "Tid mellem kampe",
+      "matchDuration": "Kampvarighed (i minutter)",
+      "matchGapDuration": "Tid mellem kampe (i minutter)",
       "challenge": {
         "configs": "Challenge-indstillinger",
         "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",

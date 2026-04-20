@@ -8,6 +8,7 @@ data class TimeslotDto(
     val eventDay: UUID,
     val name: String,
     val description: String?,
+    val descriptionManual: String?,
     val competitionReference: UUID?,
     val roundReference: UUID?,
     val matchReference: UUID?,

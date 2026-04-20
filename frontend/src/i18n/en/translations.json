@@ -521,6 +521,9 @@
       "to":"To",
       "schedule":"Schedule",
       "timeslot":"Timeslot",
+      "recalculateEndTime": "Recalculate end time",
+      "recalculateEndTimeSuccess": "End time was recalculated.",
+      "recalculateEndTimeError": "End time could not be recalculated.",
       "downloadSchedule": "Download schedule",
       "competitionTimeslot": {
         "openButton": "Plan timeslots from matches",
@@ -545,8 +548,8 @@
       "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
-      "matchDuration":"Matchduration",
-      "matchGapDuration":"Time between matches",
+      "matchDuration":"Match duration (in minutes)",
+      "matchGapDuration":"Time between matches (in minutes)",
       "challenge": {
         "configs": "Challenge configs",
         "resultConfirmationImageRequired": "Confirmation image for results required",

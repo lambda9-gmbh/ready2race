@@ -173,6 +173,8 @@ object EventDayService {
                 rounds = sortRounds(setupRounds).map { round ->
                     val roundInfo = roundInfosById[round.setupRoundId]
                     val roundCount = roundInfo?.countedMatches ?: 0
+                    val occurringTeamCountBySetupMatchId =
+                        roundInfo?.occurringTeamCountBySetupMatchId ?: emptyMap()
                     val setupMatchById = round.setupMatches.associateBy { it.id }
                     val occurringMatches = (roundInfo?.occurringSetupMatchIds ?: emptyList())
                         .mapNotNull { setupMatchById[it] }
@@ -183,7 +185,9 @@ object EventDayService {
                         matches = occurringMatches.map { match ->
                             EventDayScheduleCompetitionMatchDataDto(
                                 matchName = match.name ?: "",
-                                matchId = match.id
+                                matchId = match.id,
+                                occurringTeamCount = occurringTeamCountBySetupMatchId[match.id] ?: 0,
+                                startTimeOffsetSeconds = match.startTimeOffset,
                             )
                         }
                     )
@@ -199,6 +203,7 @@ object EventDayService {
         val createdMatches: Int,
         val countedMatches: Int,
         val occurringSetupMatchIds: List<UUID>,
+        val occurringTeamCountBySetupMatchId: Map<UUID, Int>,
         val teamsInRoundTotal: Int,
         val teamsAdvancingTotal: Int,
         val roundName: String,
@@ -233,22 +238,35 @@ object EventDayService {
         val perRound = mutableListOf<MatchCountRoundInfo>()
         var totalCounted = 0
 
+        fun sortMatchesForExecution(matches: List<CompetitionSetupMatchRecord>): List<CompetitionSetupMatchRecord> =
+            matches.sortedWith(
+                compareBy<CompetitionSetupMatchRecord>({ it.executionOrder }, { it.weighting })
+            )
+
         fun addRoundInfo(
             round: CompetitionSetupRoundWithMatches,
-            setupMatchesSorted: List<CompetitionSetupMatchRecord>,
+            setupMatchesInExecutionOrder: List<CompetitionSetupMatchRecord>,
             activeTeamsPerMatch: Map<UUID, Int>,
             teamsAdvancingTotal: Int
         ) {
             val required = round.required
 
-            val createdMatches = setupMatchesSorted.count { sm -> (activeTeamsPerMatch[sm.id] ?: 0) > 0 }
+            val createdMatches = setupMatchesInExecutionOrder.count { setupMatch ->
+                (activeTeamsPerMatch[setupMatch.id] ?: 0) > 0
+            }
 
-            val occurringSetupMatchIds = setupMatchesSorted
-                .filter { sm -> (activeTeamsPerMatch[sm.id] ?: 0) > 0 } // nur wenn überhaupt Teams drin sind
-                .filter { sm ->
-                    val active = activeTeamsPerMatch[sm.id] ?: 0
+            val occurringSetupMatches = setupMatchesInExecutionOrder
+                .filter { setupMatch ->
+                    (activeTeamsPerMatch[setupMatch.id] ?: 0) > 0
+                } // nur wenn überhaupt Teams drin sind
+                .filter { setupMatch ->
+                    val active = activeTeamsPerMatch[setupMatch.id] ?: 0
                     required || active > 1
-                }.map { it.id }
+                }
+            val occurringSetupMatchIds = occurringSetupMatches.map { it.id }
+            val occurringTeamCountBySetupMatchId = occurringSetupMatches.associate { setupMatch ->
+                setupMatch.id to (activeTeamsPerMatch[setupMatch.id] ?: 0)
+            }
             val countedMatches = occurringSetupMatchIds.size
 
             totalCounted += countedMatches
@@ -259,6 +277,7 @@ object EventDayService {
                 createdMatches = createdMatches,
                 countedMatches = countedMatches,
                 occurringSetupMatchIds = occurringSetupMatchIds,
+                occurringTeamCountBySetupMatchId = occurringTeamCountBySetupMatchId,
                 teamsInRoundTotal = activeTeamsPerMatch.values.sum(),
                 teamsAdvancingTotal = teamsAdvancingTotal,
                 roundName = round.setupRoundName,
@@ -342,19 +361,20 @@ object EventDayService {
                 r.teamNumber != null && !deregisteredIds.contains(r.id)
             }
 
-            val setupMatches = nextRound!!.setupMatches.sortedBy { it.weighting }
-            val seeding = getSeedingList(setupMatches.map { it.teams }, startActiveTeamCount)
+            val setupMatchesByWeighting = nextRound!!.setupMatches.sortedBy { it.weighting }
+            val seeding = getSeedingList(setupMatchesByWeighting.map { it.teams }, startActiveTeamCount)
 
             val assignedByMatchId = mutableMapOf<UUID, Int>()
-            setupMatches.forEachIndexed { idx, sm ->
-                assignedByMatchId[sm.id] = seeding.getOrNull(idx)?.count { it <= startActiveTeamCount } ?: 0
+            setupMatchesByWeighting.forEachIndexed { idx, setupMatch ->
+                assignedByMatchId[setupMatch.id] =
+                    seeding.getOrNull(idx)?.count { it <= startActiveTeamCount } ?: 0
             }
 
             // Runde "nextRound" ist dann die erste, die gezählt wird
             val teamsAdvancingPlaceholder = 0
             addRoundInfo(
                 round = nextRound!!,
-                setupMatchesSorted = setupMatches,
+                setupMatchesInExecutionOrder = sortMatchesForExecution(nextRound!!.setupMatches),
                 activeTeamsPerMatch = assignedByMatchId,
                 teamsAdvancingTotal = teamsAdvancingPlaceholder
             )
@@ -367,21 +387,21 @@ object EventDayService {
             currentRound = currentRoundMaybe
             nextRound = nextRoundMaybe
 
-            val setupMatches = currentRound!!.setupMatches.sortedBy { it.weighting }
+            val setupMatchesByWeighting = currentRound!!.setupMatches.sortedBy { it.weighting }
             val matchBySetupMatchId = currentRound!!.matches.associateBy { it.competitionSetupMatch }
 
             // aktive Teams pro setupMatch aus DB
-            activeTeamsPerMatch = setupMatches.associate { sm ->
-                val match = matchBySetupMatchId[sm.id]
+            activeTeamsPerMatch = setupMatchesByWeighting.associate { setupMatch ->
+                val match = matchBySetupMatchId[setupMatch.id]
                 val active = match?.teams?.count { isActive(it) } ?: 0
-                sm.id to active
+                setupMatch.id to active
             }
 
             // Wir zählen die CURRENT Runde aus DB (jetzt Stand)
             // teamsAdvancingTotal füllen wir gleich im nächsten Schritt (nach advanceToNextRound)
             addRoundInfo(
                 round = currentRound!!,
-                setupMatchesSorted = setupMatches,
+                setupMatchesInExecutionOrder = sortMatchesForExecution(currentRound!!.setupMatches),
                 activeTeamsPerMatch = activeTeamsPerMatch,
                 teamsAdvancingTotal = 0
             )
@@ -408,10 +428,10 @@ object EventDayService {
             }
 
             // nächste Runde zählen (simuliert)
-            val nextSetupMatchesSorted = nextRound!!.setupMatches.sortedBy { it.weighting }
+            val nextSetupMatchesInExecutionOrder = sortMatchesForExecution(nextRound!!.setupMatches)
             addRoundInfo(
                 round = nextRound!!,
-                setupMatchesSorted = nextSetupMatchesSorted,
+                setupMatchesInExecutionOrder = nextSetupMatchesInExecutionOrder,
                 activeTeamsPerMatch = nextActiveTeams,
                 teamsAdvancingTotal = 0
             )
@@ -520,8 +540,31 @@ object EventDayService {
                     ) {
                         text { timeslot.name }
                         text { "${timeslot.startTime.format(DateTimeFormatter.ofPattern("HH:mm"))} - ${timeslot.endTime.format(DateTimeFormatter.ofPattern("HH:mm"))}" }
-                        println(timeslot)
-                        if (timeslot.description == null) {
+
+                        val manualDescription = (timeslot.descriptionManual ?: timeslot.description)?.takeIf { it.isNotBlank() }
+                        val autoDescription = timeslot.descriptionAuto?.takeIf { it.isNotBlank() }
+                        val cleanedManualDescription = if (manualDescription != null && autoDescription != null) {
+                            val autoSuffix = "\n\n$autoDescription"
+                            when {
+                                manualDescription == autoDescription -> null
+                                manualDescription.endsWith(autoSuffix) ->
+                                    manualDescription.removeSuffix(autoSuffix).takeIf { it.isNotBlank() }
+
+                                else -> manualDescription
+                            }
+                        } else {
+                            manualDescription
+                        }
+                        val fullDescription = when {
+                            cleanedManualDescription != null && autoDescription != null ->
+                                "$cleanedManualDescription\n\n$autoDescription"
+
+                            cleanedManualDescription != null -> cleanedManualDescription
+                            autoDescription != null -> autoDescription
+                            else -> null
+                        }
+
+                        if (fullDescription == null) {
                             text(fontSize = 8f){
                                 "Keine Beschreibung"
                             }
@@ -530,7 +573,28 @@ object EventDayService {
                                 " / No description"
                             }
                         } else {
-                            text { timeslot.description!! }
+                            fun renderDescriptionLine(line: String) {
+                                val leadingSpaces = line.takeWhile { it == ' ' }.length
+                                val indentLevel = leadingSpaces / 4
+                                val indentPadding = indentLevel * 8F
+                                val lineContent = if (leadingSpaces > 0) line.trimStart() else line
+
+                                if (indentPadding > 0F) {
+                                    block(padding = Padding(left = indentPadding)) {
+                                        text { lineContent }
+                                    }
+                                } else {
+                                    text { lineContent }
+                                }
+                            }
+
+                            fullDescription
+                                .replace("\r\n", "\n")
+                                .replace("\r", "\n")
+                                .split("\n")
+                                .forEach { descriptionLine ->
+                                    renderDescriptionLine(descriptionLine)
+                                }
                         }
                         text { "" }
                     }

@@ -521,6 +521,9 @@
       "to":"Bis",
       "schedule":"Zeitplan",
       "timeslot":"Zeitfenster",
+      "recalculateEndTime": "Endzeit neu berechnen",
+      "recalculateEndTimeSuccess": "Endzeit wurde neu berechnet.",
+      "recalculateEndTimeError": "Endzeit konnte nicht neu berechnet werden.",
       "downloadSchedule": "Zeitplanung herunterladen",
       "competitionTimeslot": {
         "openButton": "Zeitfenster aus Wettkämpfen planen",
@@ -545,8 +548,8 @@
       "ratingCategoryRequired": "Wertungskategorie erforderlich",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
-      "matchDuration":"Partiedauer",
-      "matchGapDuration":"Zeit zwischen Partien",
+      "matchDuration":"Partiedauer (in Minuten)",
+      "matchGapDuration":"Zeit zwischen Partien (in Minuten)",
       "challenge": {
         "configs": "Challenge Einstellungen",
         "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",

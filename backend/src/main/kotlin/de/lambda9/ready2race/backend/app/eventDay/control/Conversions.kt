@@ -14,6 +14,44 @@ import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
 
+private fun String?.toMeaningfulDescription(): String? = this?.takeIf { it.isNotBlank() }
+
+private fun stripAutoPartFromManualDescription(
+    manualDescription: String?,
+    autoDescription: String?,
+): String? {
+    val meaningfulManualDescription = manualDescription.toMeaningfulDescription() ?: return null
+    val meaningfulAutoDescription = autoDescription.toMeaningfulDescription() ?: return meaningfulManualDescription
+
+    if (meaningfulManualDescription == meaningfulAutoDescription) {
+        return null
+    }
+
+    val autoSuffix = "\n\n$meaningfulAutoDescription"
+    return if (meaningfulManualDescription.endsWith(autoSuffix)) {
+        meaningfulManualDescription.removeSuffix(autoSuffix).toMeaningfulDescription()
+    } else {
+        meaningfulManualDescription
+    }
+}
+
+private fun composeTimeslotDescription(
+    manualDescription: String?,
+    autoDescription: String?,
+): String? {
+    val meaningfulManualDescription = manualDescription.toMeaningfulDescription()
+    val meaningfulAutoDescription = autoDescription.toMeaningfulDescription()
+
+    return when {
+        meaningfulManualDescription != null && meaningfulAutoDescription != null ->
+            "$meaningfulManualDescription\n\n$meaningfulAutoDescription"
+
+        meaningfulManualDescription != null -> meaningfulManualDescription
+        meaningfulAutoDescription != null -> meaningfulAutoDescription
+        else -> null
+    }
+}
+
 fun EventDayRequest.toRecord(userId: UUID, eventId: UUID): App<Nothing, EventDayRecord> =
     KIO.ok(
         LocalDateTime.now().let { now ->
@@ -42,17 +80,28 @@ fun EventDayRecord.eventDayDto(): App<Nothing, EventDayDto> = KIO.ok(
 )
 
 fun TimeslotRecord.toDto(): TimeslotDto =
-    TimeslotDto(
-        id = id,
-        eventDay = eventDay,
-        name = name,
-        description = description,
-        competitionReference = competitionReference,
-        roundReference = roundReference,
-        matchReference = matchReference,
-        startTime = startTime,
-        endTime = endTime
-    )
+    (competitionReference != null || roundReference != null || matchReference != null).let { hasReference ->
+        val rawManualDescription = if (hasReference) {
+            descriptionManual
+        } else {
+            descriptionManual ?: description
+        }
+        val cleanedManualDescription = stripAutoPartFromManualDescription(rawManualDescription, descriptionAuto)
+        val fullDescription = composeTimeslotDescription(cleanedManualDescription, descriptionAuto) ?: description
+
+        TimeslotDto(
+            id = id,
+            eventDay = eventDay,
+            name = name,
+            description = fullDescription,
+            descriptionManual = cleanedManualDescription,
+            competitionReference = competitionReference,
+            roundReference = roundReference,
+            matchReference = matchReference,
+            startTime = startTime,
+            endTime = endTime
+        )
+    }
 
 fun TimeslotWithCompetitionDurationDataRecord.toDto(): TimeslotWithCompetitionDurationData =
     TimeslotWithCompetitionDurationData(
@@ -74,4 +123,3 @@ fun TimeslotWithCompetitionDurationData.toMinimalTimeslotDurationData(): Minimal
         matchDuration = matchDuration,
         matchGapsDuration = matchGapsDuration
     )
-

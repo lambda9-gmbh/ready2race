@@ -14,26 +14,54 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Participa
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNull
 
+private fun calculateOffsetDurationMinutesRoundedUp(
+    occurringTeamCount: Int,
+    startTimeOffsetRaw: Long?,
+): Long {
+    val normalizedOffsetSeconds = when {
+        startTimeOffsetRaw == null || startTimeOffsetRaw <= 0L -> 0L
+        startTimeOffsetRaw >= 1000L && startTimeOffsetRaw % 1000L == 0L -> startTimeOffsetRaw / 1000L
+        else -> startTimeOffsetRaw
+    }
+    val nonNegativeStartTimeOffsetSeconds = maxOf(0L, normalizedOffsetSeconds)
+    if (nonNegativeStartTimeOffsetSeconds <= 0L) {
+        return 0L
+    }
+
+    val additionalStartShifts = maxOf(0, occurringTeamCount - 1)
+    if (additionalStartShifts <= 0) {
+        return 0L
+    }
+
+    val totalOffsetSeconds = additionalStartShifts.toLong() * nonNegativeStartTimeOffsetSeconds
+    return (totalOffsetSeconds + 59L) / 60L
+}
+
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String?, timeDataFromCompetition: MinimalTimeslotDurationData?) = KIO.comprehension {
     val roundTimeData = (!TimeslotService.getOwnTimeslotById(setupRoundId))?.toMinimalTimeslotDurationData() ?: timeDataFromCompetition
-    var occurringMatchesBefore = 0
+    var elapsedMinutesBeforeNextMatch = 0L
+    val matchesWithSetupMatchData = matches
+        .map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
+        .sortedWith(compareBy({ it.second.executionOrder }, { it.second.weighting }))
 
     KIO.ok(
         CompetitionRoundDto(
             setupRoundId = setupRoundId,
             name = setupRoundName,
             startTime = roundTimeData?.startTime?.atDate(roundTimeData.date),
-            matches = matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
-                .map { match ->
+            matches = matchesWithSetupMatchData.map { match ->
                     val activeTeams = match.first.teams.count { !it.out && !it.deregistered && !it.failed }
                     val isOccurringMatch = if (required) activeTeams > 0 else activeTeams > 1
+                    val offsetDurationMinutes = calculateOffsetDurationMinutesRoundedUp(
+                        occurringTeamCount = activeTeams,
+                        startTimeOffsetRaw = match.second.startTimeOffset,
+                    )
+                    val simulatedMatchDurationMinutes =
+                        (roundTimeData?.matchDuration?.toLong() ?: 0L) + offsetDurationMinutes
                     val matchFallbackStartTime = if (isOccurringMatch) {
                         if (roundTimeData != null) {
                             roundTimeData.startTime.atDate(roundTimeData.date).plusMinutes(
-                                (
-                                    occurringMatchesBefore * roundTimeData.matchGapsDuration +
-                                        occurringMatchesBefore * roundTimeData.matchDuration
-                                    ).toLong()
+                                elapsedMinutesBeforeNextMatch
                             )
                         } else {
                             null
@@ -41,8 +69,8 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String
                     } else {
                         null
                     }
-                    if (isOccurringMatch) {
-                        occurringMatchesBefore += 1
+                    if (isOccurringMatch && roundTimeData != null) {
+                        elapsedMinutesBeforeNextMatch += simulatedMatchDurationMinutes + roundTimeData.matchGapsDuration
                     }
                     val matchTimeData = !TimeslotService.getOwnTimeslotById(match.second.id)
                     CompetitionMatchDto(

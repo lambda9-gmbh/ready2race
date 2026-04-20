@@ -133,6 +133,9 @@ import type {
     DeleteTimeslotData,
     DeleteTimeslotError,
     DeleteTimeslotResponse,
+    RecalculateTimeslotEndTimeData,
+    RecalculateTimeslotEndTimeError,
+    RecalculateTimeslotEndTimeResponse,
     AssignCompetitionsToEventDayData,
     AssignCompetitionsToEventDayError,
     AssignCompetitionsToEventDayResponse,
@@ -1251,6 +1254,19 @@ export const deleteTimeslot = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}',
+    })
+}
+
+export const recalculateTimeslotEndTime = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RecalculateTimeslotEndTimeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        RecalculateTimeslotEndTimeResponse,
+        RecalculateTimeslotEndTimeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}/recalculateEndTime',
     })
 }
 

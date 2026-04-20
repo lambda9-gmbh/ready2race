@@ -14,6 +14,15 @@ import java.util.*
 
 object TimeslotRepo {
 
+    data class DescriptionParts(
+        val description: String?,
+        val manual: String?,
+        val auto: String?,
+    )
+
+    private val DESCRIPTION_MANUAL_FIELD = DSL.field(DSL.name("description_manual"), String::class.java)
+    private val DESCRIPTION_AUTO_FIELD = DSL.field(DSL.name("description_auto"), String::class.java)
+
     private fun Timeslot.searchFields() = listOf(NAME, DESCRIPTION, START_TIME, END_TIME)
     fun getByEventDay(eventDayId: UUID) = TIMESLOT.select { EVENT_DAY.eq(eventDayId) }
     fun create(record: TimeslotRecord) = TIMESLOT.insertReturning(record) { ID }
@@ -21,6 +30,31 @@ object TimeslotRepo {
     fun update(id: UUID, f: TimeslotRecord.() -> Unit) = TIMESLOT.update(f) { ID.eq(id) }
     fun delete(id: UUID) = TIMESLOT.delete { ID.eq(id) }
     fun getTimeslot(id: UUID) = TIMESLOT.selectOne { ID.eq(id) }
+    fun getWithCompetitionDurationByTimeslotId(id: UUID) =
+        TIMESLOT_WITH_COMPETITION_DURATION_DATA.selectOne { ID.eq(id) }
+    fun getDescriptionParts(id: UUID): JIO<DescriptionParts?> = Jooq.query {
+        with(TIMESLOT) {
+            select(DESCRIPTION, DESCRIPTION_MANUAL_FIELD, DESCRIPTION_AUTO_FIELD)
+                .from(this)
+                .where(ID.eq(id))
+                .fetchOne { record ->
+                    DescriptionParts(
+                        description = record.get(DESCRIPTION),
+                        manual = record.get(DESCRIPTION_MANUAL_FIELD),
+                        auto = record.get(DESCRIPTION_AUTO_FIELD),
+                    )
+                }
+        }
+    }
+    fun updateDescriptionParts(id: UUID, manual: String?, auto: String?): JIO<Int> = Jooq.query {
+        with(TIMESLOT) {
+            update(this)
+                .set(DESCRIPTION_MANUAL_FIELD, manual)
+                .set(DESCRIPTION_AUTO_FIELD, auto)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 
     fun countByEventDay(
         eventDayId: UUID,
