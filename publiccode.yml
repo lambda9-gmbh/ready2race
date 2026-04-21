@@ -5,30 +5,24 @@
 publiccodeYmlVersion: "0.4"
 name: Ready2Race
 url: "https://github.com/lambda9-gmbh/ready2race"
+landingURL: "https://ready2race.info"
+softwareVersion: "1.0.1"
+releaseDate: "2025-07-01"
+logo: r2r-logo-dark.svg
 platforms:
   - web
+usedBy:
+  - "Flensburger Ruderklub"
 categories:
   - event-management
 developmentStatus: development
 softwareType: standalone/web
-softwareVersion: "1.0.1"
 dependsOn:
   open:
     - name: Postgresql
       version: "17"
     - name: Java Runtime Environment
       version: "17"
-releaseDate: "2025-07-01"
-maintenance:
-  type: contract
-  contractors:
-    - name: lambda9 GmbH
-      email: info@lambda9.de
-      website: "https://lambda9.de"
-      until: "2026-08-31"
-legal:
-  license: GPL-3.0-only
-  mainCopyrightOwner: lambda9 GmbH
 localisation:
   localisationReady: true
   availableLanguages:
@@ -36,13 +30,13 @@ localisation:
     - en
 description:
   de:
-    genericName: Veranstaltungsmanager
+    genericName: Event-Management-Plattform
     shortDescription: >
-      Ready2Race ist eine PopUp-Lösung zur Planung und Durchführung von
-      Wettkampfevents.
+      Ready2Race ist Ihre flexible All-In-One-Plattform für die professionelle Organisation von Rennen und Sportevents.
     longDescription: >
-      Ready2Race ist eine webbasierte PopUp-Lösung für Vereine zur Verwaltung
-      von Wettkämpfen. Es können Veranstaltungen mit Wettkämpfen angelegt und
+      **Ready2Race** ist eine webbasierte PopUp-Lösung für Vereine zur Verwaltung
+      von Wettkämpfen.
+      Es können Veranstaltungen mit Wettkämpfen angelegt und
       veröffentlicht werden, zu welchen Wettkampfteams durch Vereine gemeldet
       werden können. Ready2Race begleitet auch die Durchführung der Wettkämpfe
       mit vorab definierten Wettkampfmodi. In den verschiedenen Phasen können
@@ -53,5 +47,59 @@ description:
       und die Arbeit in solche Veranstaltungen vereinfachen und den zeitlichen
       Aufwand verringern.
     features:
-      - Wettkampfmanagement
-      - Veranstaltungsanmeldungen
+      - Wettkampf- und Veranstaltungsplanung
+      - Teilnehmenden- und Ressourcenmanagement
+      - Finanz- und Abrechnungsfunktionen
+      - Live-Betrieb mit Ergebnisverarbeitung
+      - Helfenden- und Aufgabenkoordination
+      - Identifikation per QR-Code
+    screenshots:
+      - frontend/pictures/mockup_light_2.png
+      - frontend/pictures/einladungen-und-registrierungen.png
+      - frontend/pictures/rollen.png
+      - frontend/pictures/schichtplan.png
+      - frontend/pictures/teilnehmendenmanagement.png
+      - frontend/pictures/turnierablauf_turnierbaum.png
+      - frontend/pictures/veranstaltungsplanung.png
+  en:
+    genericName: Sports event management platform
+    shortDescription: >
+      Ready2Race is a pop-up solution for planning and running competitions.
+    longDescription: >
+      **Ready2Race** is a web-based pop-up solution for clubs to manage
+      competitions.
+      Events with competitions can be created and published, and
+      competition teams can be registered by clubs. Ready2Race also supports
+      the execution of competitions using predefined competition modes. During
+      the different phases, documents can be generated and exported
+      automatically, for example registration summaries, entry fee invoices, or
+      start lists for individual matches. Tasks can also be assigned to
+      volunteers. Ready2Race is designed to advance digitalization in clubs and
+      to simplify the organization of such events while reducing time and
+      administrative effort.
+    features:
+      - Event planning and scheduling
+      - Participant and resource management
+      - Financial management and invoicing
+      - Live operations and result processing
+      - Volunteer and task coordination
+      - QR-code based identification
+    screenshots:
+      - frontend/pictures/mockup_light_2.png
+      - frontend/pictures/einladungen-und-registrierungen.png
+      - frontend/pictures/rollen.png
+      - frontend/pictures/schichtplan.png
+      - frontend/pictures/teilnehmendenmanagement.png
+      - frontend/pictures/turnierablauf_turnierbaum.png
+      - frontend/pictures/veranstaltungsplanung.png
+
+legal:
+  license: GPL-3.0-only
+  mainCopyrightOwner: lambda9 GmbH
+maintenance:
+  type: contract
+  contractors:
+    - name: lambda9 GmbH
+      email: info@lambda9.de
+      website: "https://lambda9.de"
+      until: "2026-08-31"
