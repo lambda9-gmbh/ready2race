@@ -18,7 +18,6 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.entity.Competit
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupMatchRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
-import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
@@ -27,7 +26,6 @@ import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
@@ -102,7 +100,7 @@ object CompetitionExecutionChallengeService {
 
         val event = !EventRepo.get(competition.event!!).orDie()
             .onNullFail { EventError.NotFound }
-        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.IsAChallengeEvent }
         !KIO.failOn(scope == Privilege.Scope.OWN && event.selfSubmission != true) { SelfSubmissionNotAllowed }
 
         !KIO.failOn(competition.challengeResultConfirmationImageRequired == true && file == null) { CompetitionExecutionError.ResultConfirmationImageMissing }
@@ -215,7 +213,7 @@ object CompetitionExecutionChallengeService {
 
         val event = !EventRepo.get(competition.event!!).orDie()
             .onNullFail { EventError.NotFound }
-        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.IsAChallengeEvent }
         !KIO.failOn(event.selfSubmission != true) { SelfSubmissionNotAllowed }
 
         !KIO.failOn(competition.challengeResultConfirmationImageRequired == true && file == null) { CompetitionExecutionError.ResultConfirmationImageMissing }
@@ -324,7 +322,7 @@ object CompetitionExecutionChallengeService {
 
         val event = !EventRepo.get(competition.event!!).orDie()
             .onNullFail { EventError.NotFound }
-        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.IsAChallengeEvent }
         !KIO.failOn(scope == Privilege.Scope.OWN && event.selfSubmission != true) { SelfSubmissionNotAllowed }
 
         val outsideChallengeTimespan =
@@ -374,7 +372,7 @@ object CompetitionExecutionChallengeService {
 
         val event = !EventRepo.get(competition.event!!).orDie()
             .onNullFail { EventError.NotFound }
-        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.IsAChallengeEvent }
         !KIO.failOn(scope == Privilege.Scope.OWN && event.selfSubmission != true) { SelfSubmissionNotAllowed }
 
         val outsideChallengeTimespan =

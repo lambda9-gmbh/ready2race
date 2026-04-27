@@ -514,7 +514,28 @@
       "date": "Date",
       "name": "Name",
       "description": "Description",
-      "assignedCompetitions": "Competitions on this day"
+      "assignedCompetitions": "Competitions on this day",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "from":"From",
+      "to":"To",
+      "schedule":"Schedule",
+      "timeslot":"Timeslot",
+      "recalculateEndTime": "Recalculate end time",
+      "recalculateEndTimeSuccess": "End time was recalculated.",
+      "recalculateEndTimeError": "End time could not be recalculated.",
+      "downloadSchedule": "Download schedule",
+      "competitionTimeslot": {
+        "openButton": "Plan timeslots from matches",
+        "dialogTitle": "Create timeslot from matches",
+        "durationMinutes": "Duration: {{duration}} minutes",
+        "calculatedEndTime": "Calculated end time: {{time}}",
+        "error": {
+          "duplicateTimeslot": "A timeslot already exists for this period.",
+          "childTimeslotExists": "Existing child timeslots prevent creating this timeslot.",
+          "parentTimeslotExists": "An existing parent timeslot prevents creating this timeslot."
+        }
+      }
     },
     "competition": {
       "competition": "Competition",
@@ -527,6 +548,8 @@
       "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
+      "matchDuration":"Match duration (in minutes)",
+      "matchGapDuration":"Time between matches (in minutes)",
       "challenge": {
         "configs": "Challenge configs",
         "resultConfirmationImageRequired": "Confirmation image for results required",

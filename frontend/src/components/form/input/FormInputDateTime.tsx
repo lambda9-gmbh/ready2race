@@ -1,4 +1,4 @@
-import {RefAttributes} from 'react'
+import {RefAttributes, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {DateTimePickerElement, DateTimePickerElementProps} from 'react-hook-form-mui/date-pickers'
 import {formatISO} from 'date-fns'
@@ -8,6 +8,7 @@ type FormInputDateTimeProps = DateTimePickerElementProps & RefAttributes<HTMLDiv
 
 const FormInputDateTime = ({sx, ...props}: FormInputDateTimeProps) => {
     const {t} = useTranslation()
+    const [open, setOpen] = useState(false)
 
     // todo? "overwriteErrorMessages" to translate the error msg: "Date is invalid" if the Input is invalid
     return (
@@ -29,11 +30,11 @@ const FormInputDateTime = ({sx, ...props}: FormInputDateTimeProps) => {
                 }}
                 label={null}
                 sx={{width: 1, ...sx}}
-                textReadOnly={true}
+                open={open}
+                onClose={() => setOpen(false)}
                 inputProps={{
-                    onClick: e => {
-                        const button = e.currentTarget.querySelector('button')
-                        if (button) button.click()
+                    onClick: () => {
+                        setOpen(true)
                     },
                 }}
             />

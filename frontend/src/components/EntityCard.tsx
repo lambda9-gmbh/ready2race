@@ -36,6 +36,7 @@ const EntityCard = <Entity extends GridValidRowModel>({
     const handleActionClick =
         (action: ReactElement<GridActionsCellItemProps>) =>
         (event: React.MouseEvent<HTMLButtonElement | HTMLLIElement>) => {
+            event.stopPropagation()
             handleMenuClose()
             if (action.props.onClick) {
                 action.props.onClick(

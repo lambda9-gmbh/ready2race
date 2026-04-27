@@ -18,6 +18,7 @@ import Throbber from '@components/Throbber.tsx'
 import {
     downloadCertificatesOfParticipation,
     downloadEventResults,
+    downloadSchedulePdfForEvent,
     getEvent,
     sendCertificatesToParticipants,
 } from '@api/sdk.gen.ts'
@@ -70,6 +71,7 @@ import EventRegistrations from '@components/event/competition/registration/Event
 import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
 import RatingCategoriesForEvent from '@components/ratingCategory/RatingCategoriesForEvent.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 
 const EVENT_TABS = [
     'general',
@@ -191,6 +193,30 @@ const EventPage = () => {
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
             anchor.download = getFilename(response) ?? 'certificates_of_participation.zip'
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
+    const handleDownloadSchedulePdf = async () => {
+        const {
+            data: fileData,
+            error,
+            response,
+        } = await downloadSchedulePdfForEvent({
+            path: {
+                eventId,
+            },
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else if (data !== undefined && anchor) {
+            // need Blob constructor for text/csv
+            anchor.href = URL.createObjectURL(new Blob([fileData]))
+            anchor.download = getFilename(response) ?? `schedule-${data?.name}.pdf}`
             anchor.click()
             anchor.href = ''
             anchor.download = ''
@@ -333,6 +359,12 @@ const EventPage = () => {
                                             <Trans i18nKey={'event.toResults'} />
                                         </Button>
                                     </Link>
+                                    <Button
+                                        startIcon={<FileDownloadOutlinedIcon />}
+                                        variant={'outlined'}
+                                        onClick={handleDownloadSchedulePdf}>
+                                        {t('event.eventDay.downloadSchedule')}
+                                    </Button>
                                     {(user.checkPrivilege(readEventGlobal) || data.published) &&
                                         !data.challengeEvent && (
                                             <Button

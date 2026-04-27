@@ -835,6 +835,26 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedulePdf:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: downloadSchedulePdfForEvent
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventDay:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -905,6 +925,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
   /event/{eventId}/eventDay/{eventDayId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -966,6 +987,174 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventDay/{eventDayId}/competitionMatchData:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+    get:
+      operationId: getCompetitionMatchData
+      responses:
+        200:
+          description: Competition data successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventDayScheduleCompetitionDataDto'
+
+    
+  /event/{eventId}/eventDay/{eventDayId}/timeslot:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+    get:
+      operationId: getTimeslots
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Timeslot page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TimeslotDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addTimeslot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeslotRequest'
+      responses:
+        204:
+          description: Timeslot successfully created
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventDay/{eventDayId}/schedulePdf:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+    get:
+      operationId: downloadSchedulePdfForEventDay
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  
+  /event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+      - $ref: '#/components/parameters/timeslotId'
+    put:
+      operationId: updateTimeslot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeslotRequest'
+      responses:
+        204:
+          description: EventDay successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteTimeslot
+      responses:
+        204:
+          description: Timeslot successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}/recalculateEndTime:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
+      - $ref: '#/components/parameters/timeslotId'
+    post:
+      operationId: recalculateTimeslotEndTime
+      responses:
+        204:
+          description: Timeslot end time successfully recalculated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventDay/{eventDayId}/competitions:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -993,6 +1182,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
   /event/{eventId}/competition:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7023,6 +7213,14 @@ components:
         type: string
         format: uuid
 
+    timeslotId:
+      name: timeslotId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
     competitionId:
       name: competitionId
       in: path
@@ -7213,6 +7411,9 @@ components:
         - LIST_DATA_INCOMPLETE
         - RESULT_NOT_FAILED_AND_NO_DATA
         - CLUB_NAME_ALREADY_EXISTS
+        - DUPLICATE_TIMESLOT
+        - CHILD_TIMESLOT_ALREADY_EXISTS
+        - PARENT_TIMESLOT_ALREADY_EXISTS
 
     Gender:
       type: string
@@ -8189,6 +8390,68 @@ components:
         description:
           type: string
 
+    TimeslotDto:
+      type: object
+      required:
+        - id
+        - eventDay
+        - name
+        - startTime
+        - endTime
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventDay:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        descriptionManual:
+          type: string
+        competitionReference:
+          type: string
+        roundReference:
+          type: string
+        matchReference:
+          type: string
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    TimeslotRequest:
+      type: object
+      required:
+        - eventDay
+        - name
+        - startTime
+        - endTime
+      properties:
+        eventDay:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        competitionReference:
+          type: string
+        roundReference:
+          type: string
+        matchReference:
+          type: string
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
 
     AssignCompetitionsToDayRequest:
       type: object
@@ -8240,6 +8503,10 @@ components:
           $ref: '#/components/schemas/CompetitionChallengeConfigDto'
         ratingCategoryRequired:
           type: boolean
+        matchDuration:
+          type: integer
+        matchGapsDuration:
+          type: integer
 
 
     NamedParticipantForCompetitionDto:
@@ -8352,6 +8619,10 @@ components:
           $ref: '#/components/schemas/CompetitionChallengeConfigRequest'
         ratingCategoryRequired:
           type: boolean
+        matchDuration:
+          type: integer
+        matchGapsDuration:
+          type: integer
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -10426,6 +10697,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SubstitutionDto'
+        startTime:
+          type: string
+          format: date-time
 
     CompetitionMatchDto:
       type: object
@@ -12764,3 +13038,65 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GapDocumentPlaceholderRequest'
+
+    EventDayScheduleCompetitionDataDto:
+      type: object
+      required:
+        - eventDayId
+        - competitionName
+        - competitionId
+        - matchCount
+        - rounds
+      properties:
+        eventDayId:
+          type: string
+        competitionId:
+          type: string
+        competitionName:
+          type: string
+        matchDuration:
+          type: integer
+        matchGapsDuration:
+          type: integer
+        matchCount:
+          type: integer
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDayScheduleCompetitionRoundDataDto'
+    
+    EventDayScheduleCompetitionRoundDataDto:
+      type: object
+      required:
+        - roundName
+        - roundId
+        - matchCount
+        - matches
+      properties:
+        roundName:
+          type: string
+        roundId:
+          type: string
+        matchCount:
+          type: integer
+        matches:
+          type: array
+          items: 
+            $ref: '#/components/schemas/EventDayScheduleCompetitionMatchDataDto'
+
+    EventDayScheduleCompetitionMatchDataDto:
+      type: object
+      required:
+        - matchId
+        - matchName
+        - occurringTeamCount
+      properties:
+        matchId:
+          type: string
+        matchName:
+          type: string
+        occurringTeamCount:
+          type: integer
+        startTimeOffsetSeconds:
+          type: integer
+          format: int64

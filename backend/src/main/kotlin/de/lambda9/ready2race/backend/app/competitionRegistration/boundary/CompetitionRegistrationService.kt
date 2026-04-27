@@ -88,7 +88,7 @@ object CompetitionRegistrationService {
 
             val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
 
-            !KIO.failOn(!isChallengeEvent && onlyUnverified) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+            !KIO.failOn(!isChallengeEvent && onlyUnverified) { CompetitionExecutionChallengeError.IsAChallengeEvent }
 
             val total =
                 !CompetitionRegistrationTeamRepo.teamCountForCompetition(

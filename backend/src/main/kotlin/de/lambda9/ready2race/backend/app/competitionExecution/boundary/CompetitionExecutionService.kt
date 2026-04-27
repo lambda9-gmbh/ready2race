@@ -21,6 +21,8 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventDay.boundary.TimeslotService
+import de.lambda9.ready2race.backend.app.eventDay.entity.MinimalTimeslotDurationData
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
 import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipantError
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
@@ -83,6 +85,37 @@ import de.lambda9.ready2race.backend.validation.fold
 
 object CompetitionExecutionService {
 
+    private fun occurringTeamCount(match: CompetitionMatchWithTeams): Int =
+        match.teams.count { !it.out && !it.deregistered && !it.failed }
+
+    private fun isOccurringMatch(roundRequired: Boolean, match: CompetitionMatchWithTeams): Boolean {
+        val activeTeams = occurringTeamCount(match)
+        return if (roundRequired) activeTeams > 0 else activeTeams > 1
+    }
+
+    private fun calculateOffsetDurationMinutesRoundedUp(
+        occurringTeamCount: Int,
+        startTimeOffsetRaw: Long?,
+    ): Int {
+        val normalizedOffsetSeconds = when {
+            startTimeOffsetRaw == null || startTimeOffsetRaw <= 0L -> 0L
+            startTimeOffsetRaw >= 1000L && startTimeOffsetRaw % 1000L == 0L -> startTimeOffsetRaw / 1000L
+            else -> startTimeOffsetRaw
+        }
+        val nonNegativeStartTimeOffsetSeconds = maxOf(0L, normalizedOffsetSeconds)
+        if (nonNegativeStartTimeOffsetSeconds <= 0L) {
+            return 0
+        }
+
+        val additionalStartShifts = maxOf(0, occurringTeamCount - 1)
+        if (additionalStartShifts <= 0) {
+            return 0
+        }
+
+        val totalOffsetSeconds = additionalStartShifts.toLong() * nonNegativeStartTimeOffsetSeconds
+        return ((totalOffsetSeconds + 59L) / 60L).toInt()
+    }
+
     fun getMatchesByEvent(
         eventId: UUID,
         currentlyRunning: Boolean? = null,
@@ -98,7 +131,7 @@ object CompetitionExecutionService {
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         !EventService.checkIsChallengeEvent(eventId)
-            .onTrueFail { CompetitionExecutionChallengeError.NotAChallengeEvent }
+            .onTrueFail { CompetitionExecutionChallengeError.IsAChallengeEvent }
 
         var createFollowingRound = true
         while (createFollowingRound) {
@@ -164,7 +197,6 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
-
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
                     createFollowingRound = false
@@ -246,7 +278,6 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
-
                 // Carry over all substitutions to the new round
                 val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
                 val substitutionsRelevantForNextRound = currentRoundSubstitutions.map { record ->
@@ -287,10 +318,50 @@ object CompetitionExecutionService {
             val sortedRounds = sortRounds(setupRounds)
 
             val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
-
+            val competitionTimeData = !TimeslotService.getOwnTimeslotById(competitionId)
+            var tmpStartTime: LocalTime? = competitionTimeData?.startTime
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
-                round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
-                    .toCompetitionRoundDto(event.mixedTeamTerm)
+                val roundForDisplay = round.copy(
+                    matches = round.matches.map { match ->
+                        match.copy(
+                            teams = match.teams.filter { !it.out }
+                        )
+                    }
+                )
+                val fallbackRoundTimeData = if (competitionTimeData != null) {
+                    MinimalTimeslotDurationData(
+                        date = competitionTimeData.date,
+                        startTime = tmpStartTime!!,
+                        matchDuration = competitionTimeData.matchDuration,
+                        matchGapsDuration = competitionTimeData.matchGapsDuration
+                    )
+                } else null
+                val roundDto = roundForDisplay.toCompetitionRoundDto(
+                    event.mixedTeamTerm,
+                    fallbackRoundTimeData
+                    )
+                if (competitionTimeData != null) {
+                    val setupMatchById = round.setupMatches.associateBy { it.id }
+                    val occurringMatchCount = round.matches.count { match ->
+                        isOccurringMatch(round.required, match)
+                    }
+                    val totalOccurringMatchDurationMinutes = round.matches.sumOf { match ->
+                        if (!isOccurringMatch(round.required, match)) {
+                            0
+                        } else {
+                            val setupMatch = setupMatchById[match.competitionSetupMatch]
+                            competitionTimeData.matchDuration + calculateOffsetDurationMinutesRoundedUp(
+                                occurringTeamCount = occurringTeamCount(match),
+                                startTimeOffsetRaw = setupMatch?.startTimeOffset,
+                            )
+                        }
+                    }
+                    val roundDurationMinutes =
+                        totalOccurringMatchDurationMinutes +
+                            occurringMatchCount * competitionTimeData.matchGapsDuration
+                    tmpStartTime = tmpStartTime?.plusMinutes(roundDurationMinutes.toLong())
+                }
+                roundDto
             }.map {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(
@@ -791,7 +862,7 @@ object CompetitionExecutionService {
         var currentRound = finalRound
         for (i in rounds) {
             if (currentRound?.matches?.isEmpty() == true) {
-                currentRound = rounds.find { it.nextRound == currentRound?.setupRoundId }
+                currentRound = rounds.find { it.nextRound == currentRound.setupRoundId }
             }
         }
 
@@ -804,7 +875,7 @@ object CompetitionExecutionService {
         return currentRound to nextRound
     }
 
-    private fun getSeedingList(
+    fun getSeedingList(
         currentRoundTeams: List<Int?>,
         maxTeamsNeeded: Int
     ): List<List<Int>> {

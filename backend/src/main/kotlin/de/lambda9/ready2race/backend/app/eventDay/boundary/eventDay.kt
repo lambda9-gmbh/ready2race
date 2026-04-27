@@ -4,6 +4,8 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDay.entity.AssignCompetitionsToDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
+import de.lambda9.ready2race.backend.app.eventDay.entity.TimeslotRequest
+import de.lambda9.ready2race.backend.app.eventDay.entity.TimeslotSort
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -71,6 +73,81 @@ fun Route.eventDay() {
 
                     val body = !receiveKIO(AssignCompetitionsToDayRequest.example)
                     EventDayService.updateEventDayHasCompetition(body, user.id!!, eventDayId)
+                }
+            }
+
+            get("/schedulePdf") {
+                call.respondComprehension {
+                    val eventDayId = !pathParam("eventDayId", uuid)
+
+                    EventDayService.downloadEventDaySchedulePdf(eventDayId)
+                }
+            }
+
+            get("/competitionMatchData") {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val eventDayId = !pathParam("eventDayId", uuid)
+
+                    EventDayService.getCompetitionsForEventDay(eventDayId)
+                }
+            }
+
+            route("/timeslot") {
+                get(){
+                    call.respondComprehension {
+                        val eventDayId = !pathParam("eventDayId", uuid)
+                        val params = !pagination<TimeslotSort>()
+                        TimeslotService.pageByEventDay(eventDayId, params)
+                    }
+                }
+
+                post(){
+                    call.respondComprehension {
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val eventDayId = !pathParam("eventDayId", uuid)
+
+                        val body = !receiveKIO<TimeslotRequest>(TimeslotRequest.example)
+                        TimeslotService.addTimeslotToEventDay(body, user.id!!, eventDayId)
+                    }
+                }
+
+                route("/{timeslotId}") {
+                    get(){
+                        call.respondComprehension {
+                            val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                            val timeslotId = !pathParam("timeslotId", uuid)
+                            TimeslotService.getTimeslot(timeslotId)
+                        }
+                    }
+
+                    post("/recalculateEndTime") {
+                        call.respondComprehension {
+                            val user = !authenticate(Privilege.UpdateEventGlobal)
+                            val timeslotId = !pathParam("timeslotId", uuid)
+
+                            TimeslotService.recalculateTimeslotEndTime(user.id!!, timeslotId)
+                        }
+                    }
+
+                    put() {
+                        call.respondComprehension {
+                            val user = !authenticate(Privilege.UpdateEventGlobal)
+                            val timeslotId = !pathParam("timeslotId", uuid)
+
+                            val body = !receiveKIO<TimeslotRequest>(TimeslotRequest.example)
+                            TimeslotService.updateTimeslot(body, user.id!!, timeslotId)
+                        }
+                    }
+
+                    delete() {
+                        call.respondComprehension {
+                            !authenticate(Privilege.UpdateEventGlobal)
+                            val timeslotId = !pathParam("timeslotId", uuid)
+
+                            TimeslotService.deleteTimeslot(timeslotId)
+                        }
+                    }
                 }
             }
         }

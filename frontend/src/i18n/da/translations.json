@@ -514,7 +514,28 @@
       "date": "Dato",
       "name": "Navn",
       "description": "Beskrivelse",
-      "assignedCompetitions": "Konkurrencer på denne dag"
+      "assignedCompetitions": "Konkurrencer på denne dag",
+      "startTime": "Starttid",
+      "endTime": "Sluttid",
+      "from": "Fra",
+      "to": "Til",
+      "schedule": "Tidsplan",
+      "timeslot": "Tidsslot",
+      "recalculateEndTime": "Genberegn sluttid",
+      "recalculateEndTimeSuccess": "Sluttiden blev genberegnet.",
+      "recalculateEndTimeError": "Sluttiden kunne ikke genberegnes.",
+      "downloadSchedule": "Download tidsplan",
+      "competitionTimeslot": {
+        "openButton": "Planlæg tidsslots ud fra kampe",
+        "dialogTitle": "Opret tidsslot ud fra kampe",
+        "durationMinutes": "Varighed: {{duration}} minutter",
+        "calculatedEndTime": "Beregnet sluttid: {{time}}",
+        "error": {
+          "duplicateTimeslot": "Der findes allerede et tidsslot i dette tidsrum.",
+          "childTimeslotExists": "Eksisterende underordnede tidsslots forhindrer oprettelse af dette tidsslot.",
+          "parentTimeslotExists": "Et eksisterende overordnet tidsslot forhindrer oprettelse af dette tidsslot."
+        }
+      }
     },
     "competition": {
       "competition": "Konkurrence",
@@ -527,6 +548,8 @@
       "ratingCategoryRequired": "Rangeringskategori påkrævet",
       "registrationCount": "Tilmeldinger",
       "shortName": "Kort navn",
+      "matchDuration": "Kampvarighed (i minutter)",
+      "matchGapDuration": "Tid mellem kampe (i minutter)",
       "challenge": {
         "configs": "Challenge-indstillinger",
         "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",

@@ -514,7 +514,28 @@
       "date": "Datum",
       "name": "Name",
       "description": "Beschreibung",
-      "assignedCompetitions": "Wettkämpfe an diesem Tag"
+      "assignedCompetitions": "Wettkämpfe an diesem Tag",
+      "startTime": "Startzeit",
+      "endTime": "Endzeit",
+      "from":"Von",
+      "to":"Bis",
+      "schedule":"Zeitplan",
+      "timeslot":"Zeitfenster",
+      "recalculateEndTime": "Endzeit neu berechnen",
+      "recalculateEndTimeSuccess": "Endzeit wurde neu berechnet.",
+      "recalculateEndTimeError": "Endzeit konnte nicht neu berechnet werden.",
+      "downloadSchedule": "Zeitplanung herunterladen",
+      "competitionTimeslot": {
+        "openButton": "Zeitfenster aus Wettkämpfen planen",
+        "dialogTitle": "Zeitfenster aus Wettkämpfen erstellen",
+        "durationMinutes": "Dauer: {{duration}} Minuten",
+        "calculatedEndTime": "Berechnete Endzeit: {{time}}",
+        "error": {
+          "duplicateTimeslot": "Für diesen Zeitraum existiert bereits ein Zeitfenster.",
+          "childTimeslotExists": "Untergeordnete Zeitfenster verhindern die Erstellung dieses Zeitfensters.",
+          "parentTimeslotExists": "Ein übergeordnetes Zeitfenster verhindert die Erstellung dieses Zeitfensters."
+        }
+      }
     },
     "competition": {
       "competition": "Wettkampf",
@@ -527,6 +548,8 @@
       "ratingCategoryRequired": "Wertungskategorie erforderlich",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
+      "matchDuration":"Partiedauer (in Minuten)",
+      "matchGapDuration":"Zeit zwischen Partien (in Minuten)",
       "challenge": {
         "configs": "Challenge Einstellungen",
         "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",

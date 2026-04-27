@@ -378,6 +378,8 @@ export type CompetitionPropertiesDto = {
     lateRegistrationAllowed: boolean
     challengeConfig?: CompetitionChallengeConfigDto
     ratingCategoryRequired: boolean
+    matchDuration?: number
+    matchGapsDuration?: number
 }
 
 export type CompetitionPropertiesRequest = {
@@ -392,6 +394,8 @@ export type CompetitionPropertiesRequest = {
     setupTemplate?: string
     challengeConfig?: CompetitionChallengeConfigRequest
     ratingCategoryRequired: boolean
+    matchDuration?: number
+    matchGapsDuration?: number
 }
 
 export type CompetitionRegistrationDto = {
@@ -519,6 +523,7 @@ export type CompetitionRoundDto = {
     matches: Array<CompetitionMatchDto>
     required: boolean
     substitutions: Array<SubstitutionDto>
+    startTime?: string
 }
 
 export type CompetitionSetupDto = {
@@ -772,6 +777,9 @@ export type ErrorCode =
     | 'LIST_DATA_INCOMPLETE'
     | 'RESULT_NOT_FAILED_AND_NO_DATA'
     | 'CLUB_NAME_ALREADY_EXISTS'
+    | 'DUPLICATE_TIMESLOT'
+    | 'CHILD_TIMESLOT_ALREADY_EXISTS'
+    | 'PARENT_TIMESLOT_ALREADY_EXISTS'
 
 export type EventDayDto = {
     id: string
@@ -785,6 +793,30 @@ export type EventDayRequest = {
     date: string
     name?: string
     description?: string
+}
+
+export type EventDayScheduleCompetitionDataDto = {
+    eventDayId: string
+    competitionId: string
+    competitionName: string
+    matchDuration?: number
+    matchGapsDuration?: number
+    matchCount: number
+    rounds: Array<EventDayScheduleCompetitionRoundDataDto>
+}
+
+export type EventDayScheduleCompetitionMatchDataDto = {
+    matchId: string
+    matchName: string
+    occurringTeamCount: number
+    startTimeOffsetSeconds?: number
+}
+
+export type EventDayScheduleCompetitionRoundDataDto = {
+    roundName: string
+    roundId: string
+    matchCount: number
+    matches: Array<EventDayScheduleCompetitionMatchDataDto>
 }
 
 export type EventDocumentDto = {
@@ -1346,6 +1378,8 @@ export type Parametersearch = string
  * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
  */
 export type Parametersort = string
+
+export type ParametertimeslotId = string
 
 export type ParticipantDto = {
     id: string
@@ -1950,6 +1984,30 @@ export type ThemeConfigDto = {
     backgroundColor: string
     customFont: CustomFontDto
     customLogo: CustomLogoDto
+}
+
+export type TimeslotDto = {
+    id: string
+    eventDay: string
+    name: string
+    description?: string
+    descriptionManual?: string
+    competitionReference?: string
+    roundReference?: string
+    matchReference?: string
+    startTime: string
+    endTime: string
+}
+
+export type TimeslotRequest = {
+    eventDay: string
+    name: string
+    description?: string
+    competitionReference?: string
+    roundReference?: string
+    matchReference?: string
+    startTime: string
+    endTime: string
 }
 
 export type TooManyRequestsError = ApiError & {
@@ -2725,6 +2783,16 @@ export type GetEventCatererTransactionsResponse = {
 
 export type GetEventCatererTransactionsError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type DownloadSchedulePdfForEventData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type DownloadSchedulePdfForEventResponse = Blob | File
+
+export type DownloadSchedulePdfForEventError = BadRequestError | ApiError
+
 export type AddEventDayData = {
     body: EventDayRequest
     path: {
@@ -2804,6 +2872,109 @@ export type DeleteEventDayData = {
 export type DeleteEventDayResponse = void
 
 export type DeleteEventDayError = BadRequestError | ApiError
+
+export type GetCompetitionMatchDataData = {
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
+
+export type GetCompetitionMatchDataResponse = Array<EventDayScheduleCompetitionDataDto>
+
+export type GetCompetitionMatchDataError = unknown
+
+export type GetTimeslotsData = {
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetTimeslotsResponse = {
+    data: Array<TimeslotDto>
+    pagination: Pagination
+}
+
+export type GetTimeslotsError = BadRequestError | ApiError
+
+export type AddTimeslotData = {
+    body: TimeslotRequest
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
+
+export type AddTimeslotResponse = void
+
+export type AddTimeslotError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DownloadSchedulePdfForEventDayData = {
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
+
+export type DownloadSchedulePdfForEventDayResponse = Blob | File
+
+export type DownloadSchedulePdfForEventDayError = BadRequestError | ApiError
+
+export type UpdateTimeslotData = {
+    body: TimeslotRequest
+    path: {
+        eventDayId: string
+        eventId: string
+        timeslotId: string
+    }
+}
+
+export type UpdateTimeslotResponse = void
+
+export type UpdateTimeslotError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteTimeslotData = {
+    path: {
+        eventDayId: string
+        eventId: string
+        timeslotId: string
+    }
+}
+
+export type DeleteTimeslotResponse = void
+
+export type DeleteTimeslotError = BadRequestError | ApiError
+
+export type RecalculateTimeslotEndTimeData = {
+    path: {
+        eventDayId: string
+        eventId: string
+        timeslotId: string
+    }
+}
+
+export type RecalculateTimeslotEndTimeResponse = void
+
+export type RecalculateTimeslotEndTimeError = BadRequestError | ApiError
 
 export type AssignCompetitionsToEventDayData = {
     body: AssignCompetitionsToDayRequest

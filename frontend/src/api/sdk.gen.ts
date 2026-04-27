@@ -97,6 +97,9 @@ import type {
     GetEventCatererTransactionsData,
     GetEventCatererTransactionsError,
     GetEventCatererTransactionsResponse,
+    DownloadSchedulePdfForEventData,
+    DownloadSchedulePdfForEventError,
+    DownloadSchedulePdfForEventResponse,
     AddEventDayData,
     AddEventDayError,
     AddEventDayResponse,
@@ -112,6 +115,27 @@ import type {
     DeleteEventDayData,
     DeleteEventDayError,
     DeleteEventDayResponse,
+    GetCompetitionMatchDataData,
+    GetCompetitionMatchDataError,
+    GetCompetitionMatchDataResponse,
+    GetTimeslotsData,
+    GetTimeslotsError,
+    GetTimeslotsResponse,
+    AddTimeslotData,
+    AddTimeslotError,
+    AddTimeslotResponse,
+    DownloadSchedulePdfForEventDayData,
+    DownloadSchedulePdfForEventDayError,
+    DownloadSchedulePdfForEventDayResponse,
+    UpdateTimeslotData,
+    UpdateTimeslotError,
+    UpdateTimeslotResponse,
+    DeleteTimeslotData,
+    DeleteTimeslotError,
+    DeleteTimeslotResponse,
+    RecalculateTimeslotEndTimeData,
+    RecalculateTimeslotEndTimeError,
+    RecalculateTimeslotEndTimeResponse,
     AssignCompetitionsToEventDayData,
     AssignCompetitionsToEventDayError,
     AssignCompetitionsToEventDayResponse,
@@ -1097,6 +1121,19 @@ export const getEventCatererTransactions = <ThrowOnError extends boolean = false
     })
 }
 
+export const downloadSchedulePdfForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadSchedulePdfForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadSchedulePdfForEventResponse,
+        DownloadSchedulePdfForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedulePdf',
+    })
+}
+
 export const addEventDay = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddEventDayData, ThrowOnError>,
 ) => {
@@ -1147,6 +1184,89 @@ export const deleteEventDay = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventDay/{eventDayId}',
+    })
+}
+
+export const getCompetitionMatchData = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionMatchDataData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionMatchDataResponse,
+        GetCompetitionMatchDataError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/competitionMatchData',
+    })
+}
+
+export const getTimeslots = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetTimeslotsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetTimeslotsResponse, GetTimeslotsError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot',
+    })
+}
+
+export const addTimeslot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddTimeslotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddTimeslotResponse, AddTimeslotError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot',
+    })
+}
+
+export const downloadSchedulePdfForEventDay = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadSchedulePdfForEventDayData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadSchedulePdfForEventDayResponse,
+        DownloadSchedulePdfForEventDayError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/schedulePdf',
+    })
+}
+
+export const updateTimeslot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateTimeslotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateTimeslotResponse,
+        UpdateTimeslotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}',
+    })
+}
+
+export const deleteTimeslot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteTimeslotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteTimeslotResponse,
+        DeleteTimeslotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}',
+    })
+}
+
+export const recalculateTimeslotEndTime = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RecalculateTimeslotEndTimeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        RecalculateTimeslotEndTimeResponse,
+        RecalculateTimeslotEndTimeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/timeslot/{timeslotId}/recalculateEndTime',
     })
 }
 

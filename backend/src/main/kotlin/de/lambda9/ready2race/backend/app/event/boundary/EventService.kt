@@ -1,13 +1,19 @@
 package de.lambda9.ready2race.backend.app.event.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.control.*
 import de.lambda9.ready2race.backend.app.event.entity.*
+import de.lambda9.ready2race.backend.app.eventDay.boundary.EventDayService
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayWithTimeslotsRepo
+import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.fileResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.discard
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -160,4 +166,37 @@ object EventService {
     ): App<EventError, Boolean> = EventRepo.isChallengeEvent(eventId)
         .orDie()
         .onNullFail { EventError.NotFound }
+
+    fun downloadEventSchedulePdf(event: UUID): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        generateEventSchedulePdf(event).fileResponse()
+    }
+
+    fun generateEventSchedulePdf(eventId: UUID)
+        : App<ServiceError, File>
+        = KIO.comprehension {
+            val event = !EventRepo.get(eventId).orDie()
+                .onNullFail { EventError.NotFound }
+            val data = !EventDayWithTimeslotsRepo.selectByEventId(eventId).orDie()
+            val scheduleData = data.map {
+                val eventDay = EventDayDto(
+                    id = it.id!!,
+                    event = it.eventId!!,
+                    date = it.date!!,
+                    name = it.name,
+                    description = it.description,
+                )
+                val timeslots = it.timeslots!!.map { ts ->
+                    ts!!
+                }
+                Pair(eventDay, timeslots)
+            }
+
+            val bytes = EventDayService.buildPdf(event.name, scheduleData)
+            KIO.ok(
+                File(
+                    name = "schedule-${event.name}_${event.name}.pdf",
+                    bytes = bytes,
+                )
+            )
+    }
 }

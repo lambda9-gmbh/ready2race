@@ -267,6 +267,18 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 name={'ratingCategoryRequired'}
                 label={t('event.competition.ratingCategoryRequired')}
             />
+            <FormInputNumber
+                name={'matchDuration'}
+                label={t('event.competition.matchDuration')}
+                min={1}
+                integer
+            />
+            <FormInputNumber
+                name={'matchGapsDuration'}
+                label={t('event.competition.matchGapDuration')}
+                min={0}
+                integer
+            />
             {props.isChallengeEvent && (
                 <Card sx={{p: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
                     <Typography variant={'subtitle2'}>

@@ -11,18 +11,44 @@ import de.lambda9.ready2race.backend.app.eventDay.control.eventDayDto
 import de.lambda9.ready2race.backend.app.eventDay.control.toRecord
 import de.lambda9.ready2race.backend.app.eventDay.entity.*
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.getCurrentAndNextRound
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.getSeedingList
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.sortRounds
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchTeamWithRegistration
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
+import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupParticipantRepo
+import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayWithMatchesRepo
+import de.lambda9.ready2race.backend.app.eventDay.control.TimeslotRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
-import de.lambda9.ready2race.backend.kio.onTrueFail
+import de.lambda9.ready2race.backend.calls.responses.fileResponse
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupMatchRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupParticipantRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.TimeslotRecord
+import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.kio.onFalseFail
+import de.lambda9.ready2race.backend.pdf.FontStyle
+import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.collections.filter
+import kotlin.collections.isNotEmpty
 
 object EventDayService {
 
@@ -125,5 +151,485 @@ object EventDayService {
         }).orDie()
 
         noData
+    }
+
+    fun getCompetitionsForEventDay(
+        eventDayId: UUID
+    ): App<ServiceError, ApiResponse.ListDto<EventDayScheduleCompetitionDataDto>> = KIO.comprehension {
+        !EventDayRepo.exists(eventDayId).orDie().onFalseFail { EventDayError.EventDayNotFound }
+        val competitions = !EventDayWithMatchesRepo.selectByEventDayId(eventDayId).orDie()
+        val dto = competitions.map { competition ->
+            val competitionId = competition.competitionId!!
+            val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+            val matchCounts = !countMatchesToFinal(competitionId)
+            val roundInfosById = matchCounts.perRound.associateBy { it.setupRoundId }
+            EventDayScheduleCompetitionDataDto(
+                eventDayId = competition.id!!,
+                competitionName = competition.competitionName!!,
+                competitionId = competitionId,
+                matchDuration = competition.matchDuration,
+                matchGapsDuration = competition.matchGapsDuration,
+                matchCount = matchCounts.totalMatches,
+                rounds = sortRounds(setupRounds).map { round ->
+                    val roundInfo = roundInfosById[round.setupRoundId]
+                    val roundCount = roundInfo?.countedMatches ?: 0
+                    val occurringTeamCountBySetupMatchId =
+                        roundInfo?.occurringTeamCountBySetupMatchId ?: emptyMap()
+                    val setupMatchById = round.setupMatches.associateBy { it.id }
+                    val occurringMatches = (roundInfo?.occurringSetupMatchIds ?: emptyList())
+                        .mapNotNull { setupMatchById[it] }
+                    EventDayScheduleCompetitionRoundDataDto(
+                        roundName = round.setupRoundName,
+                        roundId = round.setupRoundId,
+                        matchCount = roundCount,
+                        matches = occurringMatches.map { match ->
+                            EventDayScheduleCompetitionMatchDataDto(
+                                matchName = match.name ?: "",
+                                matchId = match.id,
+                                occurringTeamCount = occurringTeamCountBySetupMatchId[match.id] ?: 0,
+                                startTimeOffsetSeconds = match.startTimeOffset,
+                            )
+                        }
+                    )
+                },
+            )
+        }
+        KIO.ok(ApiResponse.ListDto(dto))
+    }
+
+    data class MatchCountRoundInfo(
+        val setupRoundId: UUID,
+        val required: Boolean,
+        val createdMatches: Int,
+        val countedMatches: Int,
+        val occurringSetupMatchIds: List<UUID>,
+        val occurringTeamCountBySetupMatchId: Map<UUID, Int>,
+        val teamsInRoundTotal: Int,
+        val teamsAdvancingTotal: Int,
+        val roundName: String,
+    )
+
+    data class MatchCountSummary(
+        val totalMatches: Int,
+        val perRound: List<MatchCountRoundInfo>,
+    )
+
+    fun countMatchesToFinal(
+        competitionId: UUID,
+    ): App<CompetitionSetupError, MatchCountSummary> = KIO.comprehension {
+
+        val setupRounds: List<CompetitionSetupRoundWithMatches> =
+            !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+
+        if (setupRounds.isEmpty()) {
+            return@comprehension KIO.ok(MatchCountSummary(0, emptyList()))
+        }
+
+        val roundById = setupRounds.associateBy { it.setupRoundId }
+
+        // wie in createNewRound: bestimmt aktuelle + nächste Runde anhand setupRounds (inkl. DB-matches)
+        val (currentRoundMaybe, nextRoundMaybe) = getCurrentAndNextRound(setupRounds)
+
+        // Passe ggf. Typ/Felder an, falls dein Team-DTO anders heißt
+        fun isActive(team: CompetitionMatchTeamWithRegistration): Boolean =
+            !team.out && !team.deregistered && !team.failed
+
+        // perRound + total
+        val perRound = mutableListOf<MatchCountRoundInfo>()
+        var totalCounted = 0
+
+        fun sortMatchesForExecution(matches: List<CompetitionSetupMatchRecord>): List<CompetitionSetupMatchRecord> =
+            matches.sortedWith(
+                compareBy<CompetitionSetupMatchRecord>({ it.executionOrder }, { it.weighting })
+            )
+
+        fun addRoundInfo(
+            round: CompetitionSetupRoundWithMatches,
+            setupMatchesInExecutionOrder: List<CompetitionSetupMatchRecord>,
+            activeTeamsPerMatch: Map<UUID, Int>,
+            teamsAdvancingTotal: Int
+        ) {
+            val required = round.required
+
+            val createdMatches = setupMatchesInExecutionOrder.count { setupMatch ->
+                (activeTeamsPerMatch[setupMatch.id] ?: 0) > 0
+            }
+
+            val occurringSetupMatches = setupMatchesInExecutionOrder
+                .filter { setupMatch ->
+                    (activeTeamsPerMatch[setupMatch.id] ?: 0) > 0
+                } // nur wenn überhaupt Teams drin sind
+                .filter { setupMatch ->
+                    val active = activeTeamsPerMatch[setupMatch.id] ?: 0
+                    required || active > 1
+                }
+            val occurringSetupMatchIds = occurringSetupMatches.map { it.id }
+            val occurringTeamCountBySetupMatchId = occurringSetupMatches.associate { setupMatch ->
+                setupMatch.id to (activeTeamsPerMatch[setupMatch.id] ?: 0)
+            }
+            val countedMatches = occurringSetupMatchIds.size
+
+            totalCounted += countedMatches
+
+            perRound += MatchCountRoundInfo(
+                setupRoundId = round.setupRoundId,
+                required = required,
+                createdMatches = createdMatches,
+                countedMatches = countedMatches,
+                occurringSetupMatchIds = occurringSetupMatchIds,
+                occurringTeamCountBySetupMatchId = occurringTeamCountBySetupMatchId,
+                teamsInRoundTotal = activeTeamsPerMatch.values.sum(),
+                teamsAdvancingTotal = teamsAdvancingTotal,
+                roundName = round.setupRoundName,
+            )
+        }
+
+        fun advanceToNextRound(
+            round: CompetitionSetupRoundWithMatches,
+            nextRound: CompetitionSetupRoundWithMatches,
+            activeTeamsPerMatch: Map<UUID, Int>,
+        ): Map<UUID, Int> {
+
+            val currentSetupMatches = round.setupMatches.sortedBy { it.weighting }
+            val nextSetupMatches = nextRound.setupMatches.sortedBy { it.weighting }
+
+            val currentMatchTeamCounts: List<Int?> =
+                currentSetupMatches.map { sm -> (activeTeamsPerMatch[sm.id] ?: 0) }
+
+            val nextRoundSlots = nextSetupMatches.sumOf { it.teams ?: 0 }
+
+            val outcomes: List<List<Int>> = getSeedingList(
+                currentMatchTeamCounts,
+                nextRoundSlots
+            )
+
+            val nextParticipants: List<CompetitionSetupParticipantRecord> =
+                !CompetitionSetupParticipantRepo.get(nextSetupMatches.map { it.id }).orDie()
+
+            val nextParticipantsWithMatch =
+                nextParticipants.filter { it.competitionSetupMatch != null }
+
+            val participantBySeed: Map<Int, CompetitionSetupParticipantRecord> =
+                nextParticipantsWithMatch.associateBy { it.seed }
+
+            val nextActiveTeamsCountByMatchId = mutableMapOf<UUID, Int>()
+
+            // Wir haben nur Counts, also iterieren wir "TeamIdx" synthetisch 0..count-1
+            currentSetupMatches.forEachIndexed { matchIdx, sm ->
+                val teamsInThisMatch = currentMatchTeamCounts.getOrNull(matchIdx) ?: 0
+                if (teamsInThisMatch <= 0) return@forEachIndexed
+
+                for (teamIdx in 0 until teamsInThisMatch) {
+                    val outcomeSeed = outcomes.getOrNull(matchIdx)?.getOrNull(teamIdx) ?: continue
+                    val participant = participantBySeed[outcomeSeed] ?: continue
+
+                    val targetSetupMatchId = participant.competitionSetupMatch!!
+                    nextActiveTeamsCountByMatchId[targetSetupMatchId] =
+                        (nextActiveTeamsCountByMatchId[targetSetupMatchId] ?: 0) + 1
+                }
+            }
+
+            return nextActiveTeamsCountByMatchId
+        }
+
+        // -------------------------
+        // Startzustand bestimmen:
+        // - Wenn currentRound == null: wir sind "vor der ersten Runde" => wie First-Round-Block zählen + dann weiter
+        // - Sonst: currentRound aus DB zählen + dann weiter
+        // -------------------------
+
+        var currentRound: CompetitionSetupRoundWithMatches?
+        var nextRound: CompetitionSetupRoundWithMatches?
+
+        // activeTeamsPerMatch für "currentRound"
+        var activeTeamsPerMatch: Map<UUID, Int>
+
+        if (currentRoundMaybe == null) {
+            // First round "trocken" wie createNewRound (nur aktive Registrations)
+            nextRound = nextRoundMaybe
+            if (nextRound == null) {
+                return@comprehension KIO.ok(MatchCountSummary(0, emptyList()))
+            }
+
+            val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
+            val deregisteredIds: Set<UUID> =
+                (!CompetitionDeregistrationRepo.getByRegistrations(registrations.map { it.id }).orDie())
+                    .map { it.competitionRegistration }
+                    .toSet()
+
+            val startActiveTeamCount = registrations.count { r ->
+                r.teamNumber != null && !deregisteredIds.contains(r.id)
+            }
+
+            val setupMatchesByWeighting = nextRound!!.setupMatches.sortedBy { it.weighting }
+            val seeding = getSeedingList(setupMatchesByWeighting.map { it.teams }, startActiveTeamCount)
+
+            val assignedByMatchId = mutableMapOf<UUID, Int>()
+            setupMatchesByWeighting.forEachIndexed { idx, setupMatch ->
+                assignedByMatchId[setupMatch.id] =
+                    seeding.getOrNull(idx)?.count { it <= startActiveTeamCount } ?: 0
+            }
+
+            // Runde "nextRound" ist dann die erste, die gezählt wird
+            val teamsAdvancingPlaceholder = 0
+            addRoundInfo(
+                round = nextRound!!,
+                setupMatchesInExecutionOrder = sortMatchesForExecution(nextRound!!.setupMatches),
+                activeTeamsPerMatch = assignedByMatchId,
+                teamsAdvancingTotal = teamsAdvancingPlaceholder
+            )
+
+            currentRound = nextRound
+            nextRound = currentRound!!.nextRound?.let { roundById[it] }
+            activeTeamsPerMatch = assignedByMatchId
+        } else {
+            // DB-Stand: currentRound exists
+            currentRound = currentRoundMaybe
+            nextRound = nextRoundMaybe
+
+            val setupMatchesByWeighting = currentRound!!.setupMatches.sortedBy { it.weighting }
+            val matchBySetupMatchId = currentRound!!.matches.associateBy { it.competitionSetupMatch }
+
+            // aktive Teams pro setupMatch aus DB
+            activeTeamsPerMatch = setupMatchesByWeighting.associate { setupMatch ->
+                val match = matchBySetupMatchId[setupMatch.id]
+                val active = match?.teams?.count { isActive(it) } ?: 0
+                setupMatch.id to active
+            }
+
+            // Wir zählen die CURRENT Runde aus DB (jetzt Stand)
+            // teamsAdvancingTotal füllen wir gleich im nächsten Schritt (nach advanceToNextRound)
+            addRoundInfo(
+                round = currentRound!!,
+                setupMatchesInExecutionOrder = sortMatchesForExecution(currentRound!!.setupMatches),
+                activeTeamsPerMatch = activeTeamsPerMatch,
+                teamsAdvancingTotal = 0
+            )
+        }
+
+        // -------------------------
+        // Ab jetzt bis Finale “weiter wie createNewRound” simulieren
+        // -------------------------
+        while (currentRound != null && nextRound != null) {
+
+            val nextActiveTeams = advanceToNextRound(
+                round = currentRound!!,
+                nextRound = nextRound!!,
+                activeTeamsPerMatch = activeTeamsPerMatch
+            )
+
+            // teamsAdvancingTotal in der vorherigen perRound-Zeile nachtragen
+            run {
+                val li = perRound.lastIndex
+                if (li >= 0) {
+                    val prev = perRound[li]
+                    perRound[li] = prev.copy(teamsAdvancingTotal = nextActiveTeams.values.sum())
+                }
+            }
+
+            // nächste Runde zählen (simuliert)
+            val nextSetupMatchesInExecutionOrder = sortMatchesForExecution(nextRound!!.setupMatches)
+            addRoundInfo(
+                round = nextRound!!,
+                setupMatchesInExecutionOrder = nextSetupMatchesInExecutionOrder,
+                activeTeamsPerMatch = nextActiveTeams,
+                teamsAdvancingTotal = 0
+            )
+
+            // weiter schieben
+            currentRound = nextRound
+            activeTeamsPerMatch = nextActiveTeams
+            nextRound = currentRound!!.nextRound?.let { roundById[it] }
+
+            // Abbruch, wenn keine Teams mehr
+            if (activeTeamsPerMatch.values.sum() <= 0) break
+        }
+
+        KIO.ok(MatchCountSummary(totalMatches = totalCounted, perRound = perRound))
+    }
+
+    fun downloadEventDaySchedulePdf(eventDay: UUID): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        generateEventDaySchedulePdf(eventDay).fileResponse()
+    }
+
+    fun generateEventDaySchedulePdf(eventDayId: UUID)
+    : App<ServiceError, File>
+    = KIO.comprehension {
+        val eventDay = !(!EventDayRepo.getEventDay(eventDayId, null).orDie()
+            .onNullFail { EventDayError.EventDayNotFound }).eventDayDto()
+        val event = !EventRepo.get(eventDay.event).orDie()
+            .onNullFail { EventError.NotFound }
+
+        val timeslots = (!TimeslotRepo.getByEventDay(eventDayId).orDie()).sortedBy { it.startTime }
+        val bytes = buildPdf(event.name, listOf(Pair(eventDay, timeslots)))
+        KIO.ok(
+            File(
+                name = "schedule-${event.name}_${eventDay.date}.pdf",
+                bytes = bytes,
+            )
+        )
+    }
+
+    fun buildPdf(eventName: String, data: List<Pair<EventDayDto, List<TimeslotRecord>>>, ): ByteArray {
+        val doc = document(null) {
+            page {
+                block {
+                    text(
+                        fontSize = 14f,
+                        fontStyle = FontStyle.BOLD,
+                        centered = true,
+                    ){
+                        "Event Zeitplan"
+                    }
+                    text(
+                        fontSize = 10f,
+                        fontStyle = FontStyle.BOLD,
+                        centered = true,
+                    ){
+                        "Event Shedule"
+                    }
+                    text(
+                        fontSize = 14f,
+                        fontStyle = FontStyle.BOLD,
+                        centered = true,
+                    ){
+                        ""
+                    }
+                    text(
+                        fontSize = 14f,
+                        fontStyle = FontStyle.BOLD,
+                        centered = true,
+                    ){
+                        eventName
+                    }
+                    text(
+                        fontSize = 14f,
+                        fontStyle = FontStyle.BOLD,
+                        centered = true,
+                    ){
+                        ""
+                    }
+                }
+                data.forEach {
+                    val firstTimeslot = it.second.firstOrNull()
+                    val rest = if (firstTimeslot != null) it.second.drop(1) else it.second
+                    fun displayDay() {
+                        block {
+                            text(
+                                fontStyle = FontStyle.BOLD
+                            ){
+                                "${it.first.date}" + (if (it.first.name != null) ":  ${it.first.name}"  else "")
+                            }
+                            if (it.first.description == null) {
+                                text(fontSize = 8f){
+                                    "Keine Beschreibung"
+                                }
+                                text(fontSize = 6f,
+                                    newLine = false){
+                                    " / No description"
+                                }
+                            } else {
+                                text { it.first.description!! }
+                            }
+                            text { "" }
+                        }
+                    }
+                    fun timeslotDisplay(timeslot: TimeslotRecord) = block (
+                        keepTogether = true,
+                        padding = Padding(left = 8F),
+                    ) {
+                        text { timeslot.name }
+                        text { "${timeslot.startTime.format(DateTimeFormatter.ofPattern("HH:mm"))} - ${timeslot.endTime.format(DateTimeFormatter.ofPattern("HH:mm"))}" }
+
+                        val manualDescription = (timeslot.descriptionManual ?: timeslot.description)?.takeIf { it.isNotBlank() }
+                        val autoDescription = timeslot.descriptionAuto?.takeIf { it.isNotBlank() }
+                        val cleanedManualDescription = if (manualDescription != null && autoDescription != null) {
+                            val autoSuffix = "\n\n$autoDescription"
+                            when {
+                                manualDescription == autoDescription -> null
+                                manualDescription.endsWith(autoSuffix) ->
+                                    manualDescription.removeSuffix(autoSuffix).takeIf { it.isNotBlank() }
+
+                                else -> manualDescription
+                            }
+                        } else {
+                            manualDescription
+                        }
+                        val fullDescription = when {
+                            cleanedManualDescription != null && autoDescription != null ->
+                                "$cleanedManualDescription\n\n$autoDescription"
+
+                            cleanedManualDescription != null -> cleanedManualDescription
+                            autoDescription != null -> autoDescription
+                            else -> null
+                        }
+
+                        if (fullDescription == null) {
+                            text(fontSize = 8f){
+                                "Keine Beschreibung"
+                            }
+                            text(fontSize = 6f,
+                                newLine = false){
+                                " / No description"
+                            }
+                        } else {
+                            fun renderDescriptionLine(line: String) {
+                                val leadingSpaces = line.takeWhile { it == ' ' }.length
+                                val indentLevel = leadingSpaces / 4
+                                val indentPadding = indentLevel * 8F
+                                val lineContent = if (leadingSpaces > 0) line.trimStart() else line
+
+                                if (indentPadding > 0F) {
+                                    block(padding = Padding(left = indentPadding)) {
+                                        text { lineContent }
+                                    }
+                                } else {
+                                    text { lineContent }
+                                }
+                            }
+
+                            fullDescription
+                                .replace("\r\n", "\n")
+                                .replace("\r", "\n")
+                                .split("\n")
+                                .forEach { descriptionLine ->
+                                    renderDescriptionLine(descriptionLine)
+                                }
+                        }
+                        text { "" }
+                    }
+                    block(
+                        keepTogether = true
+                    ) {
+                        displayDay()
+                        if (firstTimeslot != null) {
+                            timeslotDisplay(firstTimeslot)
+                        } else {
+                            block (padding = Padding(left = 8F)) {
+                                text(fontSize = 8f){
+                                    "Keine Zeitplanung vorhanden"
+                                }
+                                text(fontSize = 6f,
+                                    newLine = false){
+                                    " / No schedule available"
+                                }
+                                text { "" }
+                            }
+                        }
+                    }
+                    rest.forEach { timeslot ->
+                        timeslotDisplay(timeslot)
+                    }
+                }
+            }
+        }
+        val out = ByteArrayOutputStream()
+        doc.save(out)
+        doc.close()
+
+        val bytes = out.toByteArray()
+        out.close()
+
+        return bytes
     }
 }

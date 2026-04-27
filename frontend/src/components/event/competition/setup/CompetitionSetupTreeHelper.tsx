@@ -111,10 +111,17 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                 name: string
                 position: number
             }[] = getWeightings(matchesTeams.length).map(w => {
+                const executionOrder =
+                    r === 0 && matchForPlaceThree && matchesTeams.length === 2
+                        ? w === 1
+                            ? 2
+                            : 1
+                        : w
+
                 return r === 0
                     ? {
                           name: `${getRoundName(true, w === 2)}`,
-                          position: w,
+                          position: executionOrder,
                       }
                     : {
                           name: `${getRoundName(true)}-${w}`,

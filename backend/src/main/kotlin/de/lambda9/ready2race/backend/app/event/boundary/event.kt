@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
 import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
 import de.lambda9.ready2race.backend.app.event.entity.UpdateEventRequest
+import de.lambda9.ready2race.backend.app.eventDay.boundary.EventDayService
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService
@@ -128,6 +129,14 @@ fun Route.event() {
                     val eventId = !pathParam("eventId", uuid)
                     val params = !pagination<CatererTransactionViewSort>()
                     CatererService.pageByEventId(eventId, params)
+                }
+            }
+
+            get("/schedulePdf") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+
+                    EventService.downloadEventSchedulePdf(eventId)
                 }
             }
 
