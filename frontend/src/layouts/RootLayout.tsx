@@ -24,7 +24,6 @@ import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 import SidebarContent from '@components/sidebar/SidebarContent.tsx'
 import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
 import Config from '../Config.ts'
-import logo from '../assets/r2r_logo.png'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -35,6 +34,7 @@ const RootLayout = () => {
     const location = useLocation()
     const matchRoute = useMatchRoute()
     const {themeConfig} = useThemeConfig()
+    const logo = Config.r2rLogoUrl
 
     const languageSet = Boolean(document.getElementById('ready2race-root')!.dataset.lng)
 

@@ -5,7 +5,7 @@ import {UseFetchReturn, useWindowSize} from '@utils/hooks.ts'
 import {ApiError, CaptchaDto} from '@api/types.gen.ts'
 import {Box, Stack, Typography} from '@mui/material'
 import {touchSupported} from '@utils/helpers.ts'
-import logoUrl from '../../../assets/r2r_logo.png'
+import Config from '../../../Config.ts'
 
 type Props = {
     captchaProps: UseFetchReturn<CaptchaDto, ApiError>
@@ -19,6 +19,8 @@ type CaptchaSizes = {
 
 const FormInputCaptcha = (props: Props) => {
     const {t} = useTranslation()
+
+    const logoUrl = Config.r2rLogoUrl
 
     const windowSize = useWindowSize()
     const imgRef = useRef<HTMLDivElement>(null)
