@@ -246,8 +246,10 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                     return (
                         <Stack direction={'row'} spacing={1} alignItems={'center'}>
                             <Typography>
-                                {row.participantRequirementsChecked?.length ?? 0}/
-                                {deduplicatedRequirements.length}{' '}
+                                {row.participantRequirementsChecked?.filter(req =>
+                                    deduplicatedRequirements.some(ddReq => req.id === ddReq.id),
+                                ).length ?? 0}
+                                /{deduplicatedRequirements.length}{' '}
                             </Typography>
                             <HtmlTooltip
                                 placement={'right'}
