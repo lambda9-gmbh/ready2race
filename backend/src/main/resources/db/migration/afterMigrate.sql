@@ -552,6 +552,11 @@ select e.id,
        e.late_invoices_produced,
        e.payment_due_by,
        e.late_payment_due_by,
+       exists (select 1
+               from competition_registration cr
+                        join competition c2 on cr.competition = c2.id
+               where c2.event = e.id
+                 and cr.is_late is true)                                                as has_late_registrations,
        e.mixed_team_term,
        e.challenge_event,
        e.challenge_match_result_type,
@@ -852,7 +857,8 @@ select sr.id                                                                    
        coalesce(array_agg(distinct sm) filter (where sm.id is not null),
                 '{}')                                                                                   as setup_matches,
        coalesce(array_agg(distinct mwt) filter (where mwt.competition_setup_match is not null), '{}')   as matches,
-       coalesce(array_agg(distinct sv) filter ( where sv.id is not null ), '{}')                        as substitutions,
+       coalesce(array_agg(distinct sv) filter ( where sv.id is not null ),
+                '{}')                                                                                   as substitutions,
        mwt.mixed_team_term                                                                              as mixed_team_term
 from competition_setup_round sr
          left join competition_setup_place csp on sr.id = csp.competition_setup_round
@@ -1310,15 +1316,15 @@ from event_rating_category erc
 ;
 
 create view event_data_for_competition_results as
-select e.name   as event_name,
-       c.id     as competition_id,
-       cp.name  as competition_name,
+select e.name       as event_name,
+       c.id         as competition_id,
+       cp.name      as competition_name,
        min(ed.date) as event_start_date,
        max(ed.date) as event_end_date
 from competition c
-        join event e on c.event = e.id
-        left join event_day ed on e.id = ed.event
-        join competition_properties cp on c.id = cp.competition
+         join event e on c.event = e.id
+         left join event_day ed on e.id = ed.event
+         join competition_properties cp on c.id = cp.competition
 group by c.id, e.name, cp.name
 ;
 

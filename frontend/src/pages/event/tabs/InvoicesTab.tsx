@@ -91,7 +91,7 @@ const InvoicesTab = ({event, reloadEvent}: Props) => {
 
     const problems: Record<
         InvoiceType,
-        ('INVOICES_ALREADY_PRODUCED' | 'EVENT_REGISTRATION_ONGOING')[]
+        ('INVOICES_ALREADY_PRODUCED' | 'EVENT_REGISTRATION_ONGOING' | 'NO_LATE_REGISTRATIONS')[]
     > = {
         REGULAR: arrayOfNotNull(
             event.invoicesProduced ? 'INVOICES_ALREADY_PRODUCED' : null,
@@ -100,6 +100,7 @@ const InvoicesTab = ({event, reloadEvent}: Props) => {
         LATE: arrayOfNotNull(
             event.lateInvoicesProduced ? 'INVOICES_ALREADY_PRODUCED' : null,
             registrationState === 'LATE' ? 'EVENT_REGISTRATION_ONGOING' : null,
+            event.hasLateRegistrations ? null : 'NO_LATE_REGISTRATIONS',
         ),
     }
 
