@@ -1572,7 +1572,8 @@
         "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
         "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
         "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",
-        "EVENT_REGISTRATION_ONGOING": "Der Meldezeitraum für diese Veranstaltung ist noch im Gange."
+        "EVENT_REGISTRATION_ONGOING": "Der Meldezeitraum für diese Veranstaltung ist noch im Gange.",
+        "NO_LATE_REGISTRATIONS": "Es sind keine Nachmeldungen vorhanden."
       }
     },
     "bank": {

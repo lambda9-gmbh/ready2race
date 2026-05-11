@@ -12,6 +12,7 @@ data class EventDto(
     val registrationAvailableFrom: LocalDateTime?,
     val registrationAvailableTo: LocalDateTime?,
     val lateRegistrationAvailableTo: LocalDateTime?,
+    val hasLateRegistrations: Boolean,
     val invoicePrefix: String?,
     val published: Boolean,
     val invoicesProduced: LocalDateTime?,

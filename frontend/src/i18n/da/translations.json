@@ -1572,7 +1572,8 @@
         "NO_ASSIGNED_PAYEE_INFORMATION": "Tilføj venligst en betalingsmodtager.",
         "NO_ASSIGNED_CONTACT_INFORMATION": "Tilføj venligst kontaktinformation (afsender).",
         "INVOICES_ALREADY_PRODUCED": "Oprettelsen af fakturaer er allerede startet.",
-        "EVENT_REGISTRATION_ONGOING": "Tilmeldingsperioden for dette arrangement er stadig i gang."
+        "EVENT_REGISTRATION_ONGOING": "Tilmeldingsperioden for dette arrangement er stadig i gang.",
+        "NO_LATE_REGISTRATIONS": "Der er ingen eftertilmeldinger tilgængelige."
       }
     },
     "bank": {

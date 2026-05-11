@@ -7929,6 +7929,8 @@ components:
         lateRegistrationAvailableTo:
           type: string
           format: date-time
+        hasLateRegistrations:
+          type: boolean
         invoicePrefix:
           type: string
         published:

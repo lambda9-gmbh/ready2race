@@ -824,6 +824,7 @@ export type EventDto = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     lateRegistrationAvailableTo?: string
+    hasLateRegistrations?: boolean
     invoicePrefix?: string
     published: boolean
     invoicesProduced?: string
