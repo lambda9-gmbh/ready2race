@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.qrCodeApp.control
 
 import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeDto
 import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.QrCodesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_VIEW
@@ -26,6 +27,12 @@ object QrCodeRepo {
     fun delete(qrCodeId: String) = QR_CODES.delete { QR_CODE_ID.eq(qrCodeId) }
     fun create(record: QrCodesRecord) = QR_CODES.insertReturning(record) { ID }
 
+    fun updateParticipantQrCode(participantId: UUID, eventId: UUID, f: QrCodesRecord.() -> Unit) =
+        QR_CODES.update(f) { PARTICIPANT.eq(participantId).and(EVENT.eq(eventId)) }
+
+    fun updateAppUserQrCode(appUserId: UUID, eventId: UUID, f: QrCodesRecord.() -> Unit) =
+        QR_CODES.update(f) { APP_USER.eq(appUserId).and(EVENT.eq(eventId)) }
+
     fun getQrCodeByParticipant(participantId: UUID, eventId: UUID) =
         QR_CODES.selectOne { PARTICIPANT.eq(participantId).and(EVENT.eq(eventId)) }
 
@@ -34,6 +41,15 @@ object QrCodeRepo {
             .where(QR_CODES.QR_CODE_ID.eq(qrCodeId))
             .fetchOne()
     }
+
+    fun participantExistsWithQrCodeForEvent(participantId: UUID, eventId: UUID)=
+        QR_CODES.exists {
+            PARTICIPANT.eq(participantId).and(EVENT.eq(eventId))
+        }
+    fun appUserExistsWithQrCodeForEvent(appUserId: UUID, eventId: UUID) =
+        QR_CODES.exists {
+            APP_USER.eq(appUserId).and(EVENT.eq(eventId))
+        }
 
     fun getUserOrParticipantByQrCodeId(
         qrCodeId: String
