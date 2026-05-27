@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.qrCodeApp.control.toRecord
 import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeError
 import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeUpdateDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
@@ -45,10 +46,37 @@ object QrCodeAppService {
         !AppUserWithQrCodeRepo.exists(eventId = record.event, qrCode = record.qrCodeId).orDie()
             .onTrueFail { QrCodeError.QrCodeAlreadyInUse }
 
-        QrCodeRepo
-            .create(record)
-            .orDie()
-            .map { ApiResponse.NoData }
+        when (update) {
+            is QrCodeUpdateDto.QrCodeAppuserUpdate ->
+                if (!QrCodeRepo.appUserExistsWithQrCodeForEvent(update.id, record.event).orDie()) {
+                    !QrCodeRepo.updateAppUserQrCode(
+                        appUserId = update.id,
+                        eventId = record.event
+                    ) {
+                        qrCodeId = record.qrCodeId
+                    }.orDie()
+                } else {
+                    !QrCodeRepo
+                        .create(record)
+                        .orDie()
+                }
+            is QrCodeUpdateDto.QrCodeParticipantUpdate ->
+                if (!QrCodeRepo.participantExistsWithQrCodeForEvent(update.id, record.event).orDie()){
+                    !QrCodeRepo.updateParticipantQrCode(
+                        participantId = update.id,
+                        eventId = record.event
+                    ) {
+                        qrCodeId = record.qrCodeId
+                    }.orDie()
+                } else {
+                    !QrCodeRepo
+                        .create(record)
+                        .orDie()
+
+                }
+        }
+        noData
+
     }
 
     fun deleteQrCode(
