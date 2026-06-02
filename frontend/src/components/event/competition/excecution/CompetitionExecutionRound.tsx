@@ -431,6 +431,20 @@ const CompetitionExecutionRound = ({
                                                                 team.clubName +
                                                                 ` | ${team.name}`}
                                                         </Typography>
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="textSecondary">
+                                                            {team.namedParticipants
+                                                                .map(np =>
+                                                                    np.participants
+                                                                        .map(
+                                                                            p =>
+                                                                                `${p.firstName} ${p.lastName}`,
+                                                                        )
+                                                                        .join(', '),
+                                                                )
+                                                                .join(', ')}
+                                                        </Typography>
                                                     </TableCell>
                                                     <TableCell width="10%">
                                                         {team.deregistered

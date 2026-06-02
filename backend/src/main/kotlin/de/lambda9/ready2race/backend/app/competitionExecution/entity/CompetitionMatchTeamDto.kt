@@ -8,6 +8,7 @@ data class CompetitionMatchTeamDto(
     val clubId: UUID,
     val clubName: String,
     val actualClubName: String?,
+    val namedParticipants: List<CompetitionTeamNamedParticipantDto>,
     val name: String?,
     val startNumber: Int,
     val place: Int?,

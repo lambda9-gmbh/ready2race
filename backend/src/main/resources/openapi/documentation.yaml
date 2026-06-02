@@ -10466,6 +10466,7 @@ components:
         - teamNumber
         - clubId
         - clubName
+        - namedParticipants
         - startNumber
         - deregistered
         - failed
@@ -10482,6 +10483,10 @@ components:
           type: string
         actualClubName:
           type: string
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionTeamNamedParticipantDto'
         name:
           type: string
         startNumber:
