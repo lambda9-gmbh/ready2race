@@ -356,6 +356,7 @@ export type CompetitionMatchTeamDto = {
     clubId: string
     clubName: string
     actualClubName?: string
+    namedParticipants: Array<CompetitionTeamNamedParticipantDto>
     name?: string
     startNumber: number
     place?: number

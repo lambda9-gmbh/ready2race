@@ -10,6 +10,26 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.tailwind.core.KIO
 
+private fun List<CompetitionMatchTeamParticipant>.toNamedParticipantsDto() =
+    groupBy { it.namedParticipantId }.map { (namedParticipantId, participants) ->
+        CompetitionTeamNamedParticipantDto(
+            namedParticipantId = namedParticipantId,
+            namedParticipantName = participants.first().namedParticipantName,
+            participants = participants.map { p ->
+                CompetitionTeamParticipantDto(
+                    participantId = p.participantId,
+                    namedParticipantName = p.namedParticipantName,
+                    firstName = p.firstName,
+                    lastName = p.lastName,
+                    year = p.year,
+                    gender = p.gender,
+                    external = p.external,
+                    externalClubName = p.externalClubName,
+                )
+            }
+        )
+    }
+
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String?) = KIO.ok(
     CompetitionRoundDto(
         setupRoundId = setupRoundId,
@@ -29,6 +49,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String
                                 team.participants.map { it.externalClubName }.toSet(),
                                 mixedTeamTerm
                             ),
+                            namedParticipants = team.participants.toNamedParticipantsDto(),
                             name = team.registrationName,
                             startNumber = team.startNumber,
                             place = team.place,
@@ -145,24 +166,7 @@ fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) =
         teamName = registrationName,
         clubId = clubId,
         clubName = clubName,
-        namedParticipants = participants.groupBy { it.namedParticipantId }.map { np ->
-            CompetitionTeamNamedParticipantDto(
-                namedParticipantId = np.key,
-                namedParticipantName = np.value[0].namedParticipantName, // todo: cleaner?
-                participants = np.value.map { p ->
-                    CompetitionTeamParticipantDto(
-                        participantId = p.participantId,
-                        namedParticipantName = p.namedParticipantName,
-                        firstName = p.firstName,
-                        lastName = p.lastName,
-                        year = p.year,
-                        gender = p.gender,
-                        external = p.external,
-                        externalClubName = p.externalClubName,
-                    )
-                }
-            )
-        },
+        namedParticipants = participants.toNamedParticipantsDto(),
         place = place,
         deregistered = deregistered,
         deregistrationReason = deregistrationReason,

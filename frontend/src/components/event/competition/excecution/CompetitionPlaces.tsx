@@ -17,6 +17,7 @@ import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
 import {getFilename} from '@utils/helpers.ts'
 import {useRef} from 'react'
+import {useUser} from '@contexts/user/UserContext.ts'
 
 const CompetitionPlaces = () => {
     const {t} = useTranslation()
@@ -24,6 +25,7 @@ const CompetitionPlaces = () => {
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
+    const user = useUser()
     const {data: placesData, pending: placesPending} = useFetch(
         signal =>
             getCompetitionPlaces({
@@ -76,12 +78,14 @@ const CompetitionPlaces = () => {
             <>
                 <Link ref={downloadRef} display={'none'}></Link>
                 <Stack spacing={2}>
-                    <Button
-                        variant="contained"
-                        sx={{alignSelf: 'flex-end', display: 'flex'}}
-                        onClick={() => handleDownloadCompetitionPlacesCSV()}>
-                        {t('common.file.downloadCsv')}
-                    </Button>
+                    {user.loggedIn && (
+                        <Button
+                            variant="contained"
+                            sx={{alignSelf: 'flex-end', display: 'flex'}}
+                            onClick={() => handleDownloadCompetitionPlacesCSV()}>
+                            {t('common.file.downloadCsv')}
+                        </Button>
+                    )}
                     {placesData.map(team => (
                         <Card key={team.teamNumber}>
                             <CardContent>
