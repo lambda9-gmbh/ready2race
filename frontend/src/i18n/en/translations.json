@@ -860,6 +860,7 @@
             "WRONG_TEAM_COUNT": "The team count is different from expected - actual: {{actual}}, expected: {{expected}}",
             "DUPLICATE_PLACES": "There are duplicate places among the teams",
             "DUPLICATE_START_NUMBERS": "There are duplicate start numbers among the teams",
+            "DUPLICATE_TEAMS": "The same team id appears more than once in the file",
             "PLACES_UNCONTINUOUS": "The given places are not continuous - actual: {{actual}}, expected: {{expected}}",
             "LIST_DATA_INCOMPLETE": "The columns for the places or times are incomplete.",
             "RESULT_NOT_FAILED_AND_NO_DATA": "A result has no fail reason and no place and time."
@@ -1456,6 +1457,7 @@
         "col": {
           "team": {
             "startNumber": "Start number",
+            "registrationId": "Team identifier (Webscorer info field)",
             "place": "Place",
             "time": "Time"
           }
@@ -1490,6 +1492,7 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Start number",
+            "registrationId": "Team identifier (Webscorer info field)",
             "ratingCategory": "Rating category",
             "club": "Club (summarized)",
             "deregistered": "Deregistered",

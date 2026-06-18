@@ -860,6 +860,7 @@
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
             "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
             "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
+            "DUPLICATE_TEAMS": "In der Datei kommt dieselbe Team-ID mehrfach vor",
             "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}",
             "LIST_DATA_INCOMPLETE": "Die Spalten für die Plätze oder Zeiten sind unvollständig.",
             "RESULT_NOT_FAILED_AND_NO_DATA": "Ein Ergebnis hat keinen Ausscheidungsgrund und keinen Platz und keine Zeit."
@@ -1456,6 +1457,7 @@
         "col": {
           "team": {
             "startNumber": "Startnummer",
+            "registrationId": "Team-Kennung (Webscorer Info-Feld)",
             "place": "Platz",
             "time": "Zeit"
           }
@@ -1490,6 +1492,7 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Startnummer",
+            "registrationId": "Team-Kennung (Webscorer Info-Feld)",
             "ratingCategory": "Wertungskategorie",
             "club": "Verein (zusammengefasst)",
             "deregistered": "Abgemeldet",

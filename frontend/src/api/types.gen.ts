@@ -768,6 +768,7 @@ export type ErrorCode =
     | 'SPREADSHEET_UNPARSABLE_STRING'
     | 'WRONG_TEAM_COUNT'
     | 'DUPLICATE_START_NUMBERS'
+    | 'DUPLICATE_TEAMS'
     | 'DUPLICATE_PLACES'
     | 'PLACES_UNCONTINUOUS'
     | 'LIST_DATA_INCOMPLETE'
@@ -1211,14 +1212,19 @@ export type MatchForRunningStatusDto = {
 export type MatchResultImportConfigDto = {
     id: string
     name: string
-    colTeamStartNumber: string
+    colTeamStartNumber?: string
+    colTeamRegistrationId: string
     colTeamPlace?: string
     colTeamTime?: string
 }
 
 export type MatchResultImportConfigRequest = {
     name: string
-    colTeamStartNumber: string
+    colTeamStartNumber?: string
+    /**
+     * Header of the column carrying the stable team identifier (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
+     */
+    colTeamRegistrationId: string
     colTeamPlace?: string
     colTeamTime?: string
 }
@@ -1812,6 +1818,7 @@ export type StartListConfigDto = {
     colClubName?: string
     colTeamName?: string
     colTeamStartNumber?: string
+    colTeamRegistrationId: string
     colTeamRatingCategory?: string
     colTeamClub?: string
     colTeamDeregistered?: string
@@ -1839,6 +1846,10 @@ export type StartListConfigRequest = {
     colClubName?: string
     colTeamName?: string
     colTeamStartNumber?: string
+    /**
+     * Header of the column carrying the stable team identifier (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
+     */
+    colTeamRegistrationId: string
     colTeamRatingCategory?: string
     colTeamClub?: string
     colTeamDeregistered?: string

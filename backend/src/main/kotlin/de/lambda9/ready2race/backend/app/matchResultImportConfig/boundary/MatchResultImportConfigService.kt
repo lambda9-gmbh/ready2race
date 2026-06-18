@@ -59,6 +59,7 @@ object MatchResultImportConfigService {
         MatchResultImportConfigRepo.update(id) {
             name = request.name
             colTeamStartNumber = request.colTeamStartNumber
+            colTeamRegistrationId = request.colTeamRegistrationId
             colTeamPlace = request.colTeamPlace
             colTeamTime = request.colTeamTime
             updatedAt = LocalDateTime.now()

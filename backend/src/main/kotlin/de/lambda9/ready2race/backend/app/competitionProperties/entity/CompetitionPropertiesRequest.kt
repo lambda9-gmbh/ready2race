@@ -43,7 +43,7 @@ data class CompetitionPropertiesRequest(
                     FeeForCompetitionRequestDto::fee,
                 ),
             ),
-            this::challengeConfig validate selfValidator
+            this::challengeConfig.validate()
         )
 
     companion object {

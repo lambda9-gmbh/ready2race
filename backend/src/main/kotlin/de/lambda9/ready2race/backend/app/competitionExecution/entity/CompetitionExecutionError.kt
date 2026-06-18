@@ -43,6 +43,7 @@ sealed interface CompetitionExecutionError : ServiceError {
         sealed interface Invalid : ResultUploadError {
 
             data class DuplicatedStartNumbers(val duplicates: ValidationResult.Invalid.Duplicates) : Invalid
+            data class DuplicatedTeams(val duplicates: ValidationResult.Invalid.Duplicates) : Invalid
             data class DuplicatedPlaces(val duplicates: ValidationResult.Invalid.Duplicates) : Invalid
 
             data class PlacesUncontinuous(val actual: Int, val expected: Int) : Invalid
@@ -226,6 +227,13 @@ sealed interface CompetitionExecutionError : ServiceError {
             status = HttpStatusCode.UnprocessableEntity,
             message = "There are duplicate start numbers in the given file.",
             errorCode = ErrorCode.DUPLICATE_START_NUMBERS,
+            details = mapOf("reason" to duplicates)
+        )
+
+        is ResultUploadError.Invalid.DuplicatedTeams -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "There are duplicate team identifiers in the given file.",
+            errorCode = ErrorCode.DUPLICATE_TEAMS,
             details = mapOf("reason" to duplicates)
         )
 

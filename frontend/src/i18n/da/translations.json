@@ -860,6 +860,7 @@
             "WRONG_TEAM_COUNT": "Antallet af hold stemmer ikke - læst: {{actual}}, forventet: {{expected}}",
             "DUPLICATE_PLACES": "Placeringer er tildelt flere gange til holdene",
             "DUPLICATE_START_NUMBERS": "Startnumre er tildelt flere gange til holdene",
+            "DUPLICATE_TEAMS": "Det samme hold-id optræder flere gange i filen",
             "PLACES_UNCONTINUOUS": "De angivne placeringer er ikke fortløbende - faktisk: {{actual}}, forventet: {{expected}}",
             "LIST_DATA_INCOMPLETE": "Kolonnerne for placeringer eller tider er ufuldstændige.",
             "RESULT_NOT_FAILED_AND_NO_DATA": "Et resultat har ingen udgåelsesgrund og ingen placering og ingen tid."
@@ -1456,6 +1457,7 @@
         "col": {
           "team": {
             "startNumber": "Startnummer",
+            "registrationId": "Hold-id (Webscorer info-felt)",
             "place": "Placering",
             "time": "Tid"
           }
@@ -1490,6 +1492,7 @@
             "heading": "Hold",
             "name": "Navn",
             "startNumber": "Startnummer",
+            "registrationId": "Hold-id (Webscorer info-felt)",
             "ratingCategory": "Rangeringskategori",
             "club": "Klub (samlet)",
             "deregistered": "Afmeldt",

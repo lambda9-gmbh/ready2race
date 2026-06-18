@@ -7208,6 +7208,7 @@ components:
         - SPREADSHEET_UNPARSABLE_STRING
         - WRONG_TEAM_COUNT
         - DUPLICATE_START_NUMBERS
+        - DUPLICATE_TEAMS
         - DUPLICATE_PLACES
         - PLACES_UNCONTINUOUS
         - LIST_DATA_INCOMPLETE
@@ -10930,6 +10931,7 @@ components:
       description: At least one column must be specified.
       required:
         - name
+        - colTeamRegistrationId
       properties:
         name:
           type: string
@@ -10951,6 +10953,9 @@ components:
           type: string
         colTeamStartNumber:
           type: string
+        colTeamRegistrationId:
+          type: string
+          description: Header of the column carrying the stable team identifier (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
         colTeamRatingCategory:
           type: string
         colTeamClub:
@@ -10979,6 +10984,7 @@ components:
       required:
         - id
         - name
+        - colTeamRegistrationId
       properties:
         id:
           type: string
@@ -11002,6 +11008,8 @@ components:
         colTeamName:
           type: string
         colTeamStartNumber:
+          type: string
+        colTeamRegistrationId:
           type: string
         colTeamRatingCategory:
           type: string
@@ -11655,12 +11663,15 @@ components:
       type: object
       required:
         - name
-        - colTeamStartNumber
+        - colTeamRegistrationId
       properties:
         name:
           type: string
         colTeamStartNumber:
           type: string
+        colTeamRegistrationId:
+          type: string
+          description: Header of the column carrying the stable team identifier (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
         colTeamPlace:
           type: string
         colTeamTime:
@@ -11671,7 +11682,7 @@ components:
       required:
         - id
         - name
-        - colTeamStartNumber
+        - colTeamRegistrationId
       properties:
         id:
           type: string
@@ -11679,6 +11690,8 @@ components:
         name:
           type: string
         colTeamStartNumber:
+          type: string
+        colTeamRegistrationId:
           type: string
         colTeamPlace:
           type: string

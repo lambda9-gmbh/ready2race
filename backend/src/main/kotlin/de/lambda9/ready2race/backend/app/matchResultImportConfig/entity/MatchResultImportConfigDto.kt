@@ -5,7 +5,8 @@ import java.util.UUID
 data class MatchResultImportConfigDto(
     val id: UUID,
     val name: String,
-    val colTeamStartNumber: String,
+    val colTeamStartNumber: String?,
+    val colTeamRegistrationId: String,
     val colTeamPlace: String?,
     val colTeamTime: String?,
 )

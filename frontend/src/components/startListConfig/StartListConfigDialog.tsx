@@ -29,6 +29,7 @@ type Form = {
     colClubName: string
     colTeamName: string
     colTeamStartNumber: string
+    colTeamRegistrationId: string
     colTeamRatingCategory: string
     colTeamClub: string
     colTeamDeregistered: string
@@ -53,6 +54,7 @@ const defaultValues: Form = {
     colClubName: '',
     colTeamName: '',
     colTeamStartNumber: '',
+    colTeamRegistrationId: '',
     colTeamRatingCategory: '',
     colTeamClub: '',
     colTeamDeregistered: '',
@@ -178,6 +180,11 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
                             label={t('configuration.export.startlist.col.team.startNumber')}
                         />
                         <FormInputText
+                            name={'colTeamRegistrationId'}
+                            label={t('configuration.export.startlist.col.team.registrationId')}
+                            required
+                        />
+                        <FormInputText
                             name={'colTeamRatingCategory'}
                             label={t('configuration.export.startlist.col.team.ratingCategory')}
                         />
@@ -251,6 +258,7 @@ const mapFormToRequest = (formData: Form): StartListConfigRequest => ({
     colClubName: takeIfNotEmpty(formData.colClubName),
     colTeamName: takeIfNotEmpty(formData.colTeamName),
     colTeamStartNumber: takeIfNotEmpty(formData.colTeamStartNumber),
+    colTeamRegistrationId: formData.colTeamRegistrationId,
     colTeamRatingCategory: takeIfNotEmpty(formData.colTeamRatingCategory),
     colTeamClub: takeIfNotEmpty(formData.colTeamClub),
     colTeamDeregistered: takeIfNotEmpty(formData.colTeamDeregistered),
@@ -275,6 +283,7 @@ const mapDtoToForm = (dto: StartListConfigDto): Form => ({
     colClubName: dto.colClubName ?? '',
     colTeamName: dto.colTeamName ?? '',
     colTeamStartNumber: dto.colTeamStartNumber ?? '',
+    colTeamRegistrationId: dto.colTeamRegistrationId ?? '',
     colTeamRatingCategory: dto.colTeamRatingCategory ?? '',
     colTeamClub: dto.colTeamClub ?? '',
     colTeamDeregistered: dto.colTeamDeregistered ?? '',

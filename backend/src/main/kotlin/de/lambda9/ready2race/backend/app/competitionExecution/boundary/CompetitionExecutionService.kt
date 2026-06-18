@@ -56,6 +56,7 @@ import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.ready2race.backend.validation.timecodePattern
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.Validator
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
@@ -67,6 +68,7 @@ import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.o
 import de.lambda9.ready2race.backend.xls.CellParser.Companion.int
 import de.lambda9.ready2race.backend.xls.CellParser.Companion.maybe
 import de.lambda9.ready2race.backend.xls.CellParser.Companion.string
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.uuid
 import de.lambda9.ready2race.backend.xls.XLS
 import de.lambda9.ready2race.backend.xls.XLSReadError
 import de.lambda9.tailwind.core.KIO
@@ -558,20 +560,23 @@ object CompetitionExecutionService {
         val config = !MatchResultImportConfigRepo.get(request.config).orDie()
             .onNullFail { MatchResultImportConfigError.NotFound }
 
+        val identifierColumn = config.colTeamRegistrationId
+
         val iStream = file.bytes.inputStream()
 
         val teams = !XLS.read(iStream) {
             val place = !optionalCell(config.colTeamPlace, maybe(int))
-            val time = (!optionalCell(config.colTeamTime, string))?.takeIf { it.isNotBlank() }
-            val noResultReason = (!optionalCell(
-                config.colTeamPlace,
-                maybe(string)
-            ))?.takeIf { (it.isNotBlank() || time == null) && place == null }
+            // The timing tooling (e.g. Webscorer) writes a no-result status (DNF / DNS / DSQ / ...) into
+            // the time column in place of a finish time. A non-blank time cell that does not parse as a
+            // timecode is therefore treated as the no-result reason rather than as a time.
+            val timeCell = (!optionalCell(config.colTeamTime, string))?.takeIf { it.isNotBlank() }
+            val timeIsValid = timeCell != null && timecodePattern.matches(timeCell)
             ParsedTeamResult(
-                startNumber = !cell(config.colTeamStartNumber, int),
+                registrationId = !cell(identifierColumn, uuid),
+                startNumber = !optionalCell(config.colTeamStartNumber, int),
                 place = place,
-                time = time,
-                noResultReason = noResultReason
+                time = timeCell?.takeIf { timeIsValid },
+                noResultReason = timeCell?.takeUnless { timeIsValid }
             )
         }.mapError {
             when (it) {
@@ -599,12 +604,27 @@ object CompetitionExecutionService {
             }
         }
 
-        !noDuplicates(teams.map { it.startNumber }).fold(
+        !noDuplicates(teams.mapNotNull { it.startNumber }).fold(
             onValid = { unit },
             onInvalid = {
                 when (it) {
                     is ValidationResult.Invalid.Duplicates -> KIO.fail(
                         CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedStartNumbers(
+                            it
+                        )
+                    )
+
+                    else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+                }
+            }
+        )
+
+        !noDuplicates(teams.map { it.registrationId }).fold(
+            onValid = { unit },
+            onInvalid = {
+                when (it) {
+                    is ValidationResult.Invalid.Duplicates -> KIO.fail(
+                        CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedTeams(
                             it
                         )
                     )
@@ -686,25 +706,51 @@ object CompetitionExecutionService {
         }*/
         // TODO: instead for now, we sort the places and give first place to smallest place in expected start numbers maintaining teams with place == null
         val validTeams =
-            teams.filter { team -> match.teams.any { team.startNumber == it.startNumber && !it.deregistered } }
+            teams.filter { team -> match.teams.any { team.registrationId == it.competitionRegistration && !it.deregistered } }
         val (teamWithoutPlace, teamWithPlace) = validTeams.partition { it.place == null }
         val correctedTeams = teamWithoutPlace + teamWithPlace.sortedBy { it.place!! }
             .mapIndexed { idx, res -> res.copy(place = idx + 1) }
 
 
-        val calculatedPlaces: List<Pair<Int, Timecode?>> =
+        val calculatedPlaces: List<Pair<UUID, Timecode?>> =
             correctedTeams.filter { it.noResultReason == null }
                 .map { result ->
-                    result.startNumber to result.time?.let { timeString -> (!Parser.timecode(timeString) { it.orDie() }) }
+                    result.registrationId to result.time?.let { timeString -> (!Parser.timecode(timeString) { it.orDie() }) }
                 }.sortedBy { it.second?.millis }
 
         val noPlaces = correctedTeams.filter { it.noResultReason == null }.any { it.place == null }
 
+        // Write back the (potentially externally changed) start numbers. The stable team identifier is
+        // the source of truth for matching, so we adopt whatever start numbers the external timing tooling
+        // assigned. Start numbers are negated first to avoid transient violations of the unique
+        // (competition_match, start_number) index while reassigning. Match teams that are not part of the
+        // imported file (e.g. deregistered/out teams) keep a unique number after the highest imported one.
+        if (correctedTeams.isNotEmpty() && correctedTeams.all { it.startNumber != null }) {
+            val allMatchTeamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+            val importedStartNumberByRegistration = correctedTeams.associate { it.registrationId to it.startNumber!! }
+
+            !allMatchTeamRecords.traverse { team ->
+                CompetitionMatchTeamRepo.update(team) {
+                    startNumber = team.startNumber * -1
+                }.orDie()
+            }
+
+            var fallbackStartNumber = importedStartNumberByRegistration.values.maxOrNull() ?: 0
+            !allMatchTeamRecords.sortedBy { it.startNumber }.traverse { team ->
+                val newStartNumber = importedStartNumberByRegistration[team.competitionRegistration]
+                    ?: (++fallbackStartNumber)
+                CompetitionMatchTeamRepo.update(team) {
+                    startNumber = newStartNumber
+                    updatedBy = userId
+                    updatedAt = LocalDateTime.now()
+                }.orDie()
+            }
+        }
+
         correctedTeams.traverse { result ->
 
             KIO.comprehension {
-                val registrationId =
-                    !KIO.failOnNull(match.teams.find { it.startNumber == result.startNumber }?.competitionRegistration) { CompetitionExecutionError.MatchTeamNotFound }
+                val registrationId = result.registrationId
 
                 val record =
                     !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(matchId, registrationId).orDie()
@@ -712,7 +758,7 @@ object CompetitionExecutionService {
                 !TimecodeRepo.delete(record.id).orDie()
                 val timecode = if (result.time != null) {
                     !TimecodeRepo.create(
-                        calculatedPlaces.find { (id) -> id == result.startNumber }!!.second!!.toRecord(record.id)
+                        calculatedPlaces.find { (id) -> id == result.registrationId }!!.second!!.toRecord(record.id)
                     ).orDie()
                 } else null
 
@@ -720,7 +766,7 @@ object CompetitionExecutionService {
 
                 CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
                     this.place = if (noPlaces) {
-                        (calculatedPlaces.indexOfFirst { (id, _) -> id == result.startNumber } + 1).takeIf { it > 0 }
+                        (calculatedPlaces.indexOfFirst { (id, _) -> id == result.registrationId } + 1).takeIf { it > 0 }
                     } else {
                         result.place
                     }
@@ -1390,6 +1436,12 @@ object CompetitionExecutionService {
                 out,
                 data.teams.sortedBy { it.startNumber }
             ) {
+                // Column carrying the stable team identifier (competition registration id). It is the
+                // source of truth for re-matching results on import, independent of the (externally
+                // editable) start number. The configured header must map to a Webscorer pass-through
+                // field (e.g. "Info 1") so it survives timing into the results export.
+                column(config.colTeamRegistrationId) { registrationId.toString() }
+
                 optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
                 optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }
                 optionalColumn(config.colParticipantGender) {

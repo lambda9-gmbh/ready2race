@@ -7,10 +7,12 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {addMatchResultImportConfig, updateMatchResultImportConfig} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {MatchResultImportConfigDto, MatchResultImportConfigRequest} from '@api/types.gen.ts'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 
 type Form = {
     name: string
     colTeamStartNumber: string
+    colTeamRegistrationId: string
     colTeamPlace?: string
     colTeamTime?: string
 }
@@ -18,6 +20,7 @@ type Form = {
 const defaultValues: Form = {
     name: '',
     colTeamStartNumber: '',
+    colTeamRegistrationId: '',
     colTeamPlace: '',
     colTeamTime: '',
 }
@@ -59,6 +62,10 @@ const MatchResultImportConfigDialog = (
                 <FormInputText
                     name={'colTeamStartNumber'}
                     label={t('configuration.import.matchResult.col.team.startNumber')}
+                />
+                <FormInputText
+                    name={'colTeamRegistrationId'}
+                    label={t('configuration.import.matchResult.col.team.registrationId')}
                     required
                 />
                 <FormInputText
@@ -88,11 +95,18 @@ const MatchResultImportConfigDialog = (
     )
 }
 
-const mapFormToRequest = (formData: Form): MatchResultImportConfigRequest => formData
+const mapFormToRequest = (formData: Form): MatchResultImportConfigRequest => ({
+    name: formData.name,
+    colTeamStartNumber: takeIfNotEmpty(formData.colTeamStartNumber),
+    colTeamRegistrationId: formData.colTeamRegistrationId,
+    colTeamPlace: formData.colTeamPlace,
+    colTeamTime: formData.colTeamTime,
+})
 
 const mapDtoToForm = (dto: MatchResultImportConfigDto): Form => ({
     name: dto.name,
-    colTeamStartNumber: dto.colTeamStartNumber,
+    colTeamStartNumber: dto.colTeamStartNumber ?? '',
+    colTeamRegistrationId: dto.colTeamRegistrationId ?? '',
     colTeamPlace: dto.colTeamPlace,
     colTeamTime: dto.colTeamTime,
 })

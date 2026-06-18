@@ -31,6 +31,7 @@ data class CompetitionMatchData(
     )
 
     data class CompetitionMatchTeam(
+        val registrationId: UUID,
         val startNumber: Int,
         val registeringClubName: String,
         val actualClubName: String?,
@@ -113,6 +114,7 @@ data class CompetitionMatchData(
 
             KIO.ok(
                 CompetitionMatchTeam(
+                    registrationId = teamId!!,
                     startNumber = startNumber!!,
                     registeringClubName = clubName!!,
                     actualClubName = actualClubName,

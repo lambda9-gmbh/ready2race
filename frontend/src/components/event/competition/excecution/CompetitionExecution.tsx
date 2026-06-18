@@ -362,6 +362,11 @@ const CompetitionExecution = () => {
                             t('event.competition.execution.results.error.DUPLICATE_START_NUMBERS'),
                         )
                         break
+                    case 'DUPLICATE_TEAMS':
+                        feedback.error(
+                            t('event.competition.execution.results.error.DUPLICATE_TEAMS'),
+                        )
+                        break
                     case 'PLACES_UNCONTINUOUS':
                         feedback.error(
                             t(

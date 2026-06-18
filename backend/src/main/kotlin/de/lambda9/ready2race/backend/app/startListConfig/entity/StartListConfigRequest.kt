@@ -19,6 +19,7 @@ data class StartListConfigRequest(
     val colClubName: String?,
     val colTeamName: String?,
     val colTeamStartNumber: String?,
+    val colTeamRegistrationId: String,
     val colTeamRatingCategory: String?,
     val colTeamClub: String?,
     val colTeamDeregistered: String?,
@@ -43,6 +44,7 @@ data class StartListConfigRequest(
             this::colClubName validate notBlank,
             this::colTeamName validate notBlank,
             this::colTeamStartNumber validate notBlank,
+            this::colTeamRegistrationId validate notBlank,
             this::colTeamRatingCategory validate notBlank,
             this::colTeamClub validate notBlank,
             this::colTeamDeregistered validate notBlank,
@@ -76,13 +78,30 @@ data class StartListConfigRequest(
                 this::colCompetitionShortName validate notNull,
                 this::colCompetitionCategory validate notNull,
             ),
+            // The team identifier header must be distinct from every other configured column header.
+            run {
+                val otherHeaders = listOf(
+                    colParticipantFirstname, colParticipantLastname, colParticipantGender,
+                    colParticipantRole, colParticipantYear, colParticipantClub, colClubName,
+                    colTeamName, colTeamStartNumber, colTeamRatingCategory, colTeamClub,
+                    colTeamDeregistered, colMatchName, colMatchStartTime, colRoundName,
+                    colCompetitionIdentifier, colCompetitionName, colCompetitionShortName,
+                    colCompetitionCategory,
+                )
+                if (otherHeaders.any { it == colTeamRegistrationId }) {
+                    ValidationResult.Invalid.Message { "column header '$colTeamRegistrationId' is already used by another column" }
+                } else {
+                    ValidationResult.Valid
+                }
+            },
         )
 
     companion object {
 
         val example get() = StartListConfigRequest(
             name = "Einzelrennen",
-            colTeamStartNumber = "Start Number",
+            colTeamStartNumber = "Bib",
+            colTeamRegistrationId = "Info 1",
             colParticipantFirstname = null,
             colParticipantLastname = null,
             colParticipantGender = null,

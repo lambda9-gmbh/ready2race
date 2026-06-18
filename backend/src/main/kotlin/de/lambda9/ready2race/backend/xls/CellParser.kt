@@ -5,6 +5,7 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.recoverDefault
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.CellType
+import java.util.UUID
 
 fun interface CellParser<A> {
 
@@ -33,6 +34,20 @@ fun interface CellParser<A> {
         val string get() = CellParser<String> { input , row, col ->
             when (input.cellType) {
                 CellType.STRING, CellType.BLANK -> KIO.ok(input.stringCellValue)
+                else -> KIO.fail(XLSReadError.CellError.ParseError.WrongCellType(row, col, input.cellType, CellType.STRING))
+            }
+        }
+
+        val uuid get() = CellParser<UUID> { input, row, col ->
+            when (input.cellType) {
+                CellType.BLANK -> KIO.fail(XLSReadError.CellError.ParseError.CellBlank(row, col))
+                CellType.STRING -> input.stringCellValue.let { value ->
+                    try {
+                        KIO.ok(UUID.fromString(value.trim()))
+                    } catch (e: IllegalArgumentException) {
+                        KIO.fail(XLSReadError.CellError.ParseError.UnparsableStringValue(row, col, value))
+                    }
+                }
                 else -> KIO.fail(XLSReadError.CellError.ParseError.WrongCellType(row, col, input.cellType, CellType.STRING))
             }
         }

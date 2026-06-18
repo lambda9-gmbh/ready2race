@@ -9,7 +9,8 @@ import kotlin.String
 
 data class MatchResultImportConfigRequest(
     val name: String,
-    val colTeamStartNumber: String,
+    val colTeamStartNumber: String?,
+    val colTeamRegistrationId: String,
     val colTeamPlace: String,
     val colTeamTime: String,
 ) : Validatable {
@@ -17,6 +18,7 @@ data class MatchResultImportConfigRequest(
         ValidationResult.allOf(
             this::name validate notBlank,
             this::colTeamStartNumber validate notBlank,
+            this::colTeamRegistrationId validate notBlank,
             this::colTeamPlace validate notBlank,
         )
 
@@ -24,7 +26,8 @@ data class MatchResultImportConfigRequest(
 
         val example get() = MatchResultImportConfigRequest(
             name = "Einzelrennen",
-            colTeamStartNumber = "Start Number",
+            colTeamStartNumber = "Bib",
+            colTeamRegistrationId = "Info 1",
             colTeamPlace = "Place",
             colTeamTime = "2:31",
         )
