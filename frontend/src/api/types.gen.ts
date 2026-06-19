@@ -552,20 +552,46 @@ export type CompetitionSetupMatchDto = {
     startTimeOffset?: number
 }
 
+export type CompetitionSetupMatchNamingDto = {
+    /**
+     * Fixed bracket size N (number of teams qualifying out of the qualification round(s)).
+     */
+    participantCount: number
+    /**
+     * Identifies the match within the round (stable across edits).
+     */
+    matchWeighting: number
+    name?: string | null
+    executionOrder?: number | null
+}
+
 export type CompetitionSetupPlaceDto = {
     roundOutcome: number
     place: number
 }
 
 export type CompetitionSetupRoundDto = {
+    /**
+     * Stable identifier of an existing round. Null marks a newly added round. Sent back by the client so the update can be applied as a diff instead of recreating everything.
+     */
+    id?: string | null
     name: string
     required: boolean
+    /**
+     * Read-only. False when the round has already been created during execution and therefore must not be changed. Ignored on incoming update requests.
+     */
+    updatable: boolean
     matches?: Array<CompetitionSetupMatchDto>
     groups?: Array<CompetitionSetupGroupDto>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
     placesOption: 'EQUAL' | 'ASCENDING' | 'CUSTOM'
     places?: Array<CompetitionSetupPlaceDto>
+    /**
+     * Marks a preliminary / qualification round. The number of teams qualifying out of the qualification round(s) defines the fixed bracket size N used to resolve the match namings.
+     */
+    isQualification: boolean
+    matchNamings?: Array<CompetitionSetupMatchNamingDto>
 }
 
 export type placesOption = 'EQUAL' | 'ASCENDING' | 'CUSTOM'

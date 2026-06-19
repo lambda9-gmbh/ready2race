@@ -13,6 +13,7 @@ data class CompetitionSetupRoundWithMatches(
     val nextRound: UUID?,
     val setupRoundName: String,
     val required: Boolean,
+    val isQualification: Boolean,
     val placesOption: String,
     val places: List<CompetitionSetupPlaceRecord>,
     val setupMatches: List<CompetitionSetupMatchRecord>,

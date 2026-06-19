@@ -42,6 +42,17 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
 
     const formWatch = formContext.watch('rounds')
 
+    // Rounds that have already been created during execution are locked. They always form the leading block,
+    // so the index of the last locked round marks where new rounds may be inserted (only after it).
+    const lastLockedRoundIndex = formWatch?.reduce(
+        (acc, round, index) => (round.updatable === false ? index : acc),
+        -1,
+    ) ?? -1
+    const hasLockedRounds = lastLockedRoundIndex >= 0
+
+    // The first non-qualification round is the only one where a raw-seeding matchup preview is meaningful.
+    const firstBracketRoundIndex = formWatch?.findIndex(r => !r.isQualification) ?? -1
+
     const [allowRoundUpdates, setAllowRoundUpdates] = useState(true)
 
     // Returns the Team Count for the specified round (not always THIS round)
@@ -142,11 +153,15 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     gap: 1,
                     [theme.breakpoints.down('md')]: {flexDirection: 'column', alignItems: 'start'},
                 }}>
-                <Button variant="outlined" onClick={() => resetForm([])}>
+                <Button
+                    variant="outlined"
+                    disabled={hasLockedRounds}
+                    onClick={() => resetForm([])}>
                     {t('event.competition.setup.reset')}
                 </Button>
                 <SelectionMenu
                     buttonContent={t('event.competition.setup.template.select')}
+                    disabled={hasLockedRounds}
                     onSelectItem={id =>
                         handleSelectTemplate(templatesData?.data.find(dto => dto.id === id))
                     }
@@ -156,15 +171,17 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                         label: template.name,
                     }))}
                 />
-                <CompetitionSetupTreeHelper
-                    resetSetupForm={(formDataRounds: Array<FormSetupRound>) => {
-                        resetForm(formDataRounds)
-                    }}
-                    currentFormData={formWatch}
-                    portalContainer={
-                        props.treeHelperPortalContainer ?? ownTreeHelperPortalContainer
-                    }
-                />
+                {!hasLockedRounds && (
+                    <CompetitionSetupTreeHelper
+                        resetSetupForm={(formDataRounds: Array<FormSetupRound>) => {
+                            resetForm(formDataRounds)
+                        }}
+                        currentFormData={formWatch}
+                        portalContainer={
+                            props.treeHelperPortalContainer ?? ownTreeHelperPortalContainer
+                        }
+                    />
+                )}
                 {props.handleFormSubmission && (
                     <SubmitButton submitting={props.submitting ?? false}>
                         {t('event.competition.setup.save.save')}
@@ -172,13 +189,14 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                 )}
             </Stack>
             <Stack spacing={6}>
-                <AddRoundButton index={0} insertRound={insertRound} />
+                {lastLockedRoundIndex < 0 && <AddRoundButton index={0} insertRound={insertRound} />}
                 {roundsError && <Typography color={'error'}>{roundsError}</Typography>}
                 <Stack spacing={6}>
                     {roundFields.map((roundField, roundIndex) => (
                         <Fragment key={roundField.id}>
                             <CompetitionSetupRound
                                 round={{index: roundIndex, id: roundField.id}}
+                                locked={formWatch[roundIndex]?.updatable === false}
                                 formContext={formContext}
                                 removeRound={removeRound}
                                 teamCounts={{
@@ -202,8 +220,11 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                                     value: allowRoundUpdates,
                                     set: setAllowRoundUpdates,
                                 }}
+                                isFirstBracketRound={roundIndex === firstBracketRoundIndex}
                             />
-                            <AddRoundButton index={roundIndex + 1} insertRound={insertRound} />
+                            {roundIndex + 1 > lastLockedRoundIndex && (
+                                <AddRoundButton index={roundIndex + 1} insertRound={insertRound} />
+                            )}
                         </Fragment>
                     ))}
                 </Stack>

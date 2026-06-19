@@ -25,6 +25,8 @@ const AddRoundButton = ({index, insertRound}: Props) => {
                         places: [],
                         isGroupRound: false,
                         useStartTimeOffsets: false,
+                        isQualification: false,
+                        matchNamings: [],
                     })
                 }}
                 sx={{width: 1}}

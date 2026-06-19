@@ -90,6 +90,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
         nextRound = nextRound,
         setupRoundName = setupRoundName!!,
         required = required!!,
+        isQualification = isQualification ?: false,
         placesOption = placesOption!!,
         places = places!!.toList().filterNotNull(),
         setupMatches = setupMatches!!.toList().filterNotNull(),

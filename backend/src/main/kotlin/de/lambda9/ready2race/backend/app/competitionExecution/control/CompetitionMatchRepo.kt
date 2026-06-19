@@ -21,6 +21,10 @@ object CompetitionMatchRepo {
 
     fun exists(id: UUID) = COMPETITION_MATCH.exists { COMPETITION_SETUP_MATCH.eq(id) }
 
+    // Of the given setup match ids, returns those that have already been created during execution.
+    fun getExistingSetupMatchIds(ids: Collection<UUID>) =
+        COMPETITION_MATCH.select({ COMPETITION_SETUP_MATCH }) { COMPETITION_SETUP_MATCH.`in`(ids) }
+
     fun update(id: UUID, f: CompetitionMatchRecord.() -> Unit) =
         COMPETITION_MATCH.update(f) { COMPETITION_SETUP_MATCH.eq(id) }
 

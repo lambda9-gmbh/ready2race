@@ -9,6 +9,8 @@ sealed interface CompetitionSetupError : ServiceError {
     data object CompetitionPropertiesNotFound : CompetitionSetupError
     data object RoundNotFound : CompetitionSetupError
     data object IsChallengeEvent : CompetitionSetupError
+    data object CreatedRoundDeleted : CompetitionSetupError
+    data object CreatedRoundOrderChanged : CompetitionSetupError
 
     override fun respond(): ApiError = when (this) {
         NotFound -> ApiError(status = HttpStatusCode.NotFound, message = "CompetitionSetup not found")
@@ -21,6 +23,17 @@ sealed interface CompetitionSetupError : ServiceError {
         IsChallengeEvent -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Setup can not be modified on a challenge event"
+        )
+
+        CreatedRoundDeleted -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "A round that has already been created during execution can not be deleted"
+        )
+
+        CreatedRoundOrderChanged -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "Rounds that have already been created during execution can not be reordered, " +
+                "and no round can be inserted before them"
         )
     }
 }

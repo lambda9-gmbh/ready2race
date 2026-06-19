@@ -23,6 +23,7 @@ type Props = {
     onSelectItem: (id: string) => Promise<void>
     pending?: boolean
     anchor?: Anchor
+    disabled?: boolean
 }
 const SelectionMenu = ({items, keyLabel, anchor, ...props}: Props) => {
     const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null)
@@ -43,6 +44,7 @@ const SelectionMenu = ({items, keyLabel, anchor, ...props}: Props) => {
                 aria-haspopup={'true'}
                 aria-expanded={menuOpen ? 'true' : undefined}
                 onClick={handleMenuClick}
+                disabled={props.disabled}
                 pending={props.pending ?? false}>
                 {props.buttonContent}
             </LoadingButton>

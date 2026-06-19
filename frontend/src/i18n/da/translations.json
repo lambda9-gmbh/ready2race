@@ -672,6 +672,8 @@
           "name": "Navn",
           "useDefaultSeeding": "Brug standard seedning til matchups",
           "required": "Runden skal gennemføres",
+          "lockedInfo": "Denne runde er allerede startet og kan ikke længere redigeres. Ændringer er kun mulige for efterfølgende runder.",
+          "isQualification": "Kvalifikationsrunde (f.eks. enkeltstart)",
           "finals": {
             "long": {
               "final": {
@@ -692,6 +694,14 @@
             }
           },
           "remove": "Fjern runde"
+        },
+        "naming": {
+          "title": "Navngivning pr. deltagerantal",
+          "hint": "Definér matchnavn og rækkefølge afhængigt af deltagerantallet (N, antal kvalificerede). Kun afvigelser fra standarden gemmes.",
+          "participantCount": "Deltagerantal (N)",
+          "matchup": "Parring",
+          "name": "Navn",
+          "order": "Rækkefølge"
         },
         "match": {
           "match": "Kamp",

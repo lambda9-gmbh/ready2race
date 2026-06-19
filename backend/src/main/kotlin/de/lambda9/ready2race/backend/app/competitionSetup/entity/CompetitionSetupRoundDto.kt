@@ -13,8 +13,12 @@ import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.i
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.select
+import java.util.*
 
 data class CompetitionSetupRoundDto(
+    // Stable identifier of an existing round. Null marks a newly added round.
+    // Sent back by the client so the update can be applied as a diff instead of recreating everything.
+    val id: UUID?,
     val name: String,
     val required: Boolean,
     val matches: List<CompetitionSetupMatchDto>?,
@@ -23,6 +27,14 @@ data class CompetitionSetupRoundDto(
     val useDefaultSeeding: Boolean,
     val placesOption: CompetitionSetupPlacesOption,
     val places: List<CompetitionSetupPlaceDto>?,
+    // Marks a preliminary / qualification round (e.g. a time trial). The number of teams qualifying out of the
+    // qualification round(s) defines the fixed bracket size N used to resolve the match namings below.
+    val isQualification: Boolean = false,
+    // Per-participant-count overrides for match name / execution order (only deviations from the default).
+    val matchNamings: List<CompetitionSetupMatchNamingDto>?,
+    // Read-only: false when the round has already been created during execution and therefore must not be changed.
+    // Ignored on incoming update requests.
+    val updatable: Boolean = true,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
         this::name validate notBlank,
@@ -61,6 +73,7 @@ data class CompetitionSetupRoundDto(
             )
         ),
         this::places validate collection,
+        this::matchNamings validate collection,
         ValidationResult.oneOf(
             this::placesOption validate isValue(CompetitionSetupPlacesOption.CUSTOM),
             this::places validate isNull
@@ -80,6 +93,7 @@ data class CompetitionSetupRoundDto(
     companion object {
         val example
             get() = CompetitionSetupRoundDto(
+                id = null,
                 name = "Round name",
                 required = false,
                 matches = listOf(CompetitionSetupMatchDto.example), // todo: should provide 2 examples (one with matches, one with groups) or extra details/description
@@ -88,6 +102,9 @@ data class CompetitionSetupRoundDto(
                 useDefaultSeeding = true,
                 placesOption = CompetitionSetupPlacesOption.CUSTOM,
                 places = listOf(CompetitionSetupPlaceDto.example),
+                isQualification = false,
+                matchNamings = listOf(CompetitionSetupMatchNamingDto.example),
+                updatable = true,
             )
     }
 }

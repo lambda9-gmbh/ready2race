@@ -8774,6 +8774,25 @@ components:
         place:
           type: integer
 
+    CompetitionSetupMatchNamingDto:
+      type: object
+      required:
+        - participantCount
+        - matchWeighting
+      properties:
+        participantCount:
+          type: integer
+          description: Fixed bracket size N (number of teams qualifying out of the qualification round(s)).
+        matchWeighting:
+          type: integer
+          description: Identifies the match within the round (stable across edits).
+        name:
+          type: string
+          nullable: true
+        executionOrder:
+          type: integer
+          nullable: true
+
 
     CompetitionSetupRoundDto:
       type: object
@@ -8782,11 +8801,25 @@ components:
         - required
         - useDefaultSeeding
         - placesOption
+        - isQualification
+        - updatable
       properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+          description: >-
+            Stable identifier of an existing round. Null marks a newly added round. Sent back by the client so the
+            update can be applied as a diff instead of recreating everything.
         name:
           type: string
         required:
           type: boolean
+        updatable:
+          type: boolean
+          description: >-
+            Read-only. False when the round has already been created during execution and therefore must not be
+            changed. Ignored on incoming update requests.
         matches:
           type: array
           items:
@@ -8811,6 +8844,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionSetupPlaceDto'
+        isQualification:
+          type: boolean
+          description: >-
+            Marks a preliminary / qualification round. The number of teams qualifying out of the qualification
+            round(s) defines the fixed bracket size N used to resolve the match namings.
+        matchNamings:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupMatchNamingDto'
 
     CompetitionSetupDto:
       type: object

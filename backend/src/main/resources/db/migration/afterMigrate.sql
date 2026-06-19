@@ -852,6 +852,7 @@ select sr.id                                                                    
        sr.next_round,
        sr.name                                                                                          as setup_round_name,
        sr.required,
+       sr.is_qualification,
        sr.places_option,
        coalesce(array_agg(distinct csp) filter ( where csp.competition_setup_round is not null ), '{}') as places,
        coalesce(array_agg(distinct sm) filter (where sm.id is not null),

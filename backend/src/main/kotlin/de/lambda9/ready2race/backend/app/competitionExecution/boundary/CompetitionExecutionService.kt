@@ -108,6 +108,9 @@ object CompetitionExecutionService {
 
             val (currentRound, nextRound) = getCurrentAndNextRound(setupRounds)
 
+            // Number of teams placed into the round being created - used to resolve the bracket size N below.
+            var justPlacedCount = 0
+
             if (currentRound == null) {
                 // First Round
 
@@ -166,6 +169,7 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
+                justPlacedCount = newTeamRecords.size
 
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
@@ -248,6 +252,7 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
+                justPlacedCount = newTeamRecords.size
 
                 // Carry over all substitutions to the new round
                 val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
@@ -259,6 +264,31 @@ object CompetitionExecutionService {
                 if (newTeamRecords.filter { !it.out!! }.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
                     createFollowingRound = false
+                }
+            }
+
+            // Apply the per-participant-count name / execution-order overrides to the round just created.
+            // N (bracket size) is fixed at the qualification -> bracket transition: the number of teams entering the
+            // first non-qualification round. Drop-outs later in the bracket become byes and do not change N.
+            if (nextRound != null && !nextRound.isQualification) {
+                val bracketStart = sortRounds(setupRounds).firstOrNull { !it.isQualification }
+                val n = when {
+                    bracketStart == null -> 0
+                    bracketStart.setupRoundId == nextRound.setupRoundId -> justPlacedCount
+                    else -> bracketStart.matches.sumOf { it.teams.size }
+                }
+                if (n > 0) {
+                    val namings =
+                        !CompetitionSetupMatchNamingRepo.getForRoundAndCount(nextRound.setupRoundId, n).orDie()
+                    namings.forEach { naming ->
+                        nextRound.setupMatches.find { it.weighting == naming.matchWeighting }?.let { setupMatch ->
+                            !CompetitionSetupMatchRepo.updateNameAndOrder(
+                                setupMatch.id,
+                                naming.name,
+                                naming.executionOrder
+                            ).orDie()
+                        }
+                    }
                 }
             }
         }

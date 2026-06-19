@@ -672,6 +672,8 @@
           "name": "Name",
           "useDefaultSeeding": "Normales Seeding für Matchups nutzen",
           "required": "Runde muss durchgeführt werden",
+          "lockedInfo": "Diese Runde wurde bereits gestartet und kann nicht mehr bearbeitet werden. Änderungen sind nur für Folgerunden möglich.",
+          "isQualification": "Qualifikationsrunde (z. B. Zeitfahren)",
           "finals": {
             "long": {
               "final": {
@@ -692,6 +694,14 @@
             }
           },
           "remove": "Runde entfernen"
+        },
+        "naming": {
+          "title": "Benennung je Teilnehmerzahl",
+          "hint": "Lege Name und Reihenfolge der Matches abhängig von der Teilnehmerzahl (N, Anzahl der Qualifizierten) fest. Es werden nur Abweichungen vom Standard gespeichert.",
+          "participantCount": "Teilnehmerzahl (N)",
+          "matchup": "Paarung",
+          "name": "Name",
+          "order": "Reihenfolge"
         },
         "match": {
           "match": "Partie",

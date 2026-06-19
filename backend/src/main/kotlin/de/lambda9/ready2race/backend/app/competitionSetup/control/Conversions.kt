@@ -9,24 +9,29 @@ import java.util.*
 fun CompetitionSetupRoundDto.toRecord(
     competitionPropertiesId: UUID?,
     competitionSetupTemplateId: UUID?,
-    nextRoundId: UUID?
+    nextRoundId: UUID?,
+    roundId: UUID = UUID.randomUUID(),
 ) = CompetitionSetupRoundRecord(
-    id = UUID.randomUUID(),
+    id = roundId,
     competitionSetup = competitionPropertiesId,
     competitionSetupTemplate = competitionSetupTemplateId,
     nextRound = nextRoundId,
     name = name,
     required = required,
     useDefaultSeeding = useDefaultSeeding,
-    placesOption = placesOption.name
+    placesOption = placesOption.name,
+    isQualification = isQualification,
 )
 
 fun CompetitionSetupRoundRecord.toDto(
     matches: List<CompetitionSetupMatchDto>?,
     groups: List<CompetitionSetupGroupDto>?,
     statisticEvaluations: List<CompetitionSetupGroupStatisticEvaluationDto>?,
-    places: List<CompetitionSetupPlaceDto>?
+    places: List<CompetitionSetupPlaceDto>?,
+    matchNamings: List<CompetitionSetupMatchNamingDto>?,
+    updatable: Boolean = true,
 ) = CompetitionSetupRoundDto(
+    id = id,
     name = name,
     required = required,
     matches = matches,
@@ -34,7 +39,25 @@ fun CompetitionSetupRoundRecord.toDto(
     statisticEvaluations = statisticEvaluations,
     useDefaultSeeding = useDefaultSeeding,
     placesOption = CompetitionSetupPlacesOption.valueOf(placesOption),
-    places = places
+    places = places,
+    isQualification = isQualification ?: false,
+    matchNamings = matchNamings,
+    updatable = updatable,
+)
+
+fun CompetitionSetupMatchNamingDto.toRecord(competitionSetupRoundId: UUID) = CompetitionSetupMatchNamingRecord(
+    competitionSetupRound = competitionSetupRoundId,
+    participantCount = participantCount,
+    matchWeighting = matchWeighting,
+    name = name,
+    executionOrder = executionOrder,
+)
+
+fun CompetitionSetupMatchNamingRecord.toDto() = CompetitionSetupMatchNamingDto(
+    participantCount = participantCount,
+    matchWeighting = matchWeighting,
+    name = name,
+    executionOrder = executionOrder,
 )
 
 fun CompetitionSetupGroupDto.toRecord() = CompetitionSetupGroupRecord(

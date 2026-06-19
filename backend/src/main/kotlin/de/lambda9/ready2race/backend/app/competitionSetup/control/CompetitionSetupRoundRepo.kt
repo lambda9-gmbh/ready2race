@@ -17,6 +17,19 @@ object CompetitionSetupRoundRepo {
         COMPETITION_SETUP.eq(key).or(COMPETITION_SETUP_TEMPLATE.eq(key))
     }
 
+    fun deleteByIds(ids: Collection<UUID>) = COMPETITION_SETUP_ROUND.delete { ID.`in`(ids) }
+
+    // Clears every next_round pointer of a setup so rounds can be deleted/reinserted without violating the self FK.
+    fun clearNextRounds(key: UUID) = COMPETITION_SETUP_ROUND.updateMany(
+        f = { nextRound = null },
+        condition = { COMPETITION_SETUP.eq(key).or(COMPETITION_SETUP_TEMPLATE.eq(key)) },
+    )
+
+    fun updateNextRound(id: UUID, nextRoundId: UUID?) = COMPETITION_SETUP_ROUND.update(
+        f = { nextRound = nextRoundId },
+        condition = { ID.eq(id) },
+    )
+
     fun get(id: UUID) = COMPETITION_SETUP_ROUND.selectOne { ID.eq(id) }
 
     fun getBySetupId(key: UUID): JIO<List<CompetitionSetupRoundRecord>> = Jooq.query {

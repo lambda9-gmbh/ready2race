@@ -19,6 +19,7 @@ import {
     useTheme,
 } from '@mui/material'
 import CompetitionSetupMatch from '@components/event/competition/setup/CompetitionSetupMatch.tsx'
+import CompetitionSetupRoundNaming from '@components/event/competition/setup/CompetitionSetupRoundNaming.tsx'
 import {useEffect, useState} from 'react'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
@@ -40,6 +41,8 @@ import Add from '@mui/icons-material/Add'
 
 type Props = {
     round: {index: number; id: string}
+    // True when the round has already been created during execution: it must be displayed read-only.
+    locked: boolean
     formContext: UseFormReturn<CompetitionSetupForm>
     removeRound: (index: number) => void
     teamCounts: {
@@ -52,6 +55,8 @@ type Props = {
         value: boolean
         set: (value: boolean) => void
     }
+    // True for the first non-qualification round: only there can a meaningful raw-seeding matchup preview be shown.
+    isFirstBracketRound: boolean
 }
 const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...props}: Props) => {
     const defaultMatchTeamSize = 2
@@ -63,6 +68,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     const watchUseDefaultSeeding = formContext.watch(`rounds.${round.index}.useDefaultSeeding`)
 
     const watchIsGroupRound = formContext.watch(`rounds.${round.index}.isGroupRound`)
+
+    const watchIsQualification = formContext.watch(`rounds.${round.index}.isQualification`)
 
     const [matchesError, setMatchesError] = useState<string | null>(null)
 
@@ -354,6 +361,21 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                 pl: 4,
                                 py: 2,
                             }}>
+                            {props.locked && (
+                                <Alert severity="info">
+                                    {t('event.competition.setup.round.lockedInfo')}
+                                </Alert>
+                            )}
+                            <Box
+                                component={props.locked ? 'fieldset' : 'div'}
+                                disabled={props.locked}
+                                sx={{
+                                    border: 0,
+                                    p: 0,
+                                    m: 0,
+                                    minInlineSize: 'auto',
+                                    ...(props.locked && {pointerEvents: 'none', opacity: 0.6}),
+                                }}>
                             <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
                                 <Stack spacing={2}>
                                     <Box>
@@ -422,6 +444,18 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                         label={
                                             <FormInputLabel
                                                 label={t('event.competition.setup.round.required')}
+                                                required={true}
+                                                horizontal
+                                            />
+                                        }
+                                    />
+                                    <CheckboxElement
+                                        name={`rounds.${round.index}.isQualification`}
+                                        label={
+                                            <FormInputLabel
+                                                label={t(
+                                                    'event.competition.setup.round.isQualification',
+                                                )}
                                                 required={true}
                                                 horizontal
                                             />
@@ -672,6 +706,18 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                         )}
                                     </Box>
                                 </Stack>
+                            </Box>
+                            {!watchIsGroupRound && !watchIsQualification && (
+                                <>
+                                    <Divider />
+                                    <CompetitionSetupRoundNaming
+                                        formContext={formContext}
+                                        roundIndex={round.index}
+                                        nextRoundTeams={teamCounts.nextRound}
+                                        showMatchupPreview={props.isFirstBracketRound}
+                                    />
+                                </>
+                            )}
                             </Box>
                         </Stack>
                     )}

@@ -672,6 +672,8 @@
           "name": "Name",
           "useDefaultSeeding": "Use default seeding for matchups",
           "required": "Round must be held",
+          "lockedInfo": "This round has already been started and can no longer be edited. Changes are only possible for following rounds.",
+          "isQualification": "Qualification round (e.g. time trial)",
           "finals": {
             "long": {
               "final": {
@@ -692,6 +694,14 @@
             }
           },
           "remove": "Remove round"
+        },
+        "naming": {
+          "title": "Naming per participant count",
+          "hint": "Define match name and execution order depending on the participant count (N, number of qualifiers). Only deviations from the default are stored.",
+          "participantCount": "Participant count (N)",
+          "matchup": "Matchup",
+          "name": "Name",
+          "order": "Order"
         },
         "match": {
           "match": "Match",

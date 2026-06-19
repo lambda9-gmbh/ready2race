@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.competitionSetup.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
@@ -54,6 +55,8 @@ object CompetitionSetupService {
         competitionSetupTemplateId: UUID?
     ): App<ServiceError, Unit> = KIO.comprehension {
 
+        val setupKey = competitionPropertiesId ?: competitionSetupTemplateId!! // There has to be one of the two
+
         // Cannot edit the setup for a challenge event since the setup structure is defined by the system
         if (competitionPropertiesId != null) {
             val eventId =
@@ -61,28 +64,68 @@ object CompetitionSetupService {
                     .onNullFail { EventError.NotFound }
             !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionSetupError.IsChallengeEvent }
         }
-        // Todo: Check if a round has already been generated for the competition - that round should be locked from being updated
 
-        // Deletes all rounds for this competition - including matches, groups, places etc. by cascade
-        !CompetitionSetupRoundRepo.delete(
-            competitionPropertiesId ?: competitionSetupTemplateId!! // There has to be one of the two
-        ).orDie()
+        // Determine which existing rounds have already been created during execution. Those rounds are locked:
+        // they may neither be deleted nor changed - only following (not yet created) rounds may be edited.
+        val existingRounds = !CompetitionSetupRoundRepo.getBySetupId(setupKey).orDie()
+        val existingMatches = !CompetitionSetupMatchRepo.get(existingRounds.map { it.id }).orDie()
+        val createdSetupMatchIds = !CompetitionMatchRepo.getExistingSetupMatchIds(existingMatches.map { it.id }).orDie()
+        val createdRoundIds = existingMatches
+            .filter { createdSetupMatchIds.contains(it.id) }
+            .map { it.competitionSetupRound }
+            .toSet()
+
+        // Created rounds in execution order (first executed -> last)
+        val createdRoundsInOrder = sortRoundRecords(existingRounds).filter { createdRoundIds.contains(it.id) }
+
+        // Validate that the request leaves the created rounds untouched:
+        // none of them may be deleted, and they must stay the leading block in their original order
+        // (no reordering, no round inserted before or between them).
+        val requestRoundIds = requestRounds.mapNotNull { it.id }
+        if (!requestRoundIds.containsAll(createdRoundIds)) {
+            return@comprehension KIO.fail(CompetitionSetupError.CreatedRoundDeleted)
+        }
+        val createdIdsInOrder = createdRoundsInOrder.map { it.id }
+        val leadingRequestIds = requestRounds.take(createdIdsInOrder.size).map { it.id }
+        if (leadingRequestIds != createdIdsInOrder) {
+            return@comprehension KIO.fail(CompetitionSetupError.CreatedRoundOrderChanged)
+        }
+
+        // Resolve the final id of every requested round: created rounds keep their id, every other round is
+        // (re)created with a fresh id (their old records - if any - are deleted below).
+        val finalRoundIds = requestRounds.map { round ->
+            round.id?.takeIf { createdRoundIds.contains(it) } ?: UUID.randomUUID()
+        }
+
+        // Break all next_round pointers first so deletions and re-insertions don't violate the self FK,
+        // then delete every round that is not a locked/created round (they are replaced below).
+        !CompetitionSetupRoundRepo.clearNextRounds(setupKey).orDie()
+        val roundIdsToDelete = existingRounds.map { it.id }.filter { !createdRoundIds.contains(it) }
+        if (roundIdsToDelete.isNotEmpty()) {
+            !CompetitionSetupRoundRepo.deleteByIds(roundIdsToDelete).orDie()
+        }
 
         data class Batches(
-            val rounds: MutableList<CompetitionSetupRoundRecord> = mutableListOf(),
+            // Each round keeps its index in the request so rounds can be inserted in a FK-safe order (next_round).
+            val rounds: MutableList<Pair<Int, CompetitionSetupRoundRecord>> = mutableListOf(),
             val groups: MutableList<CompetitionSetupGroupRecord> = mutableListOf(),
             val statisticEvaluations: MutableList<CompetitionSetupGroupStatisticEvaluationRecord> = mutableListOf(),
             val matches: MutableList<CompetitionSetupMatchRecord> = mutableListOf(),
             val participants: MutableList<CompetitionSetupParticipantRecord> = mutableListOf(),
             val places: MutableList<CompetitionSetupPlaceRecord> = mutableListOf(),
+            val matchNamings: MutableList<CompetitionSetupMatchNamingRecord> = mutableListOf(),
         )
 
         val records = Batches()
 
-        requestRounds.reversed().forEach { round ->
-            val next = records.rounds.lastOrNull()
-            val roundRecord = round.toRecord(competitionPropertiesId, competitionSetupTemplateId, next?.id)
-            records.rounds.add(roundRecord)
+        requestRounds.forEachIndexed { index, round ->
+            // Created rounds and their children are kept exactly as they are in the database.
+            if (round.id != null && createdRoundIds.contains(round.id)) return@forEachIndexed
+
+            val nextRoundId = finalRoundIds.getOrNull(index + 1)
+            val roundRecord =
+                round.toRecord(competitionPropertiesId, competitionSetupTemplateId, nextRoundId, finalRoundIds[index])
+            records.rounds.add(index to roundRecord)
 
             fun addParticipants(participants: List<Int>, matchId: UUID?, groupId: UUID?) {
                 participants.mapIndexed { index, seed ->
@@ -130,9 +173,17 @@ object CompetitionSetupService {
                     records.places.add(placeRecord)
                 }
             }
+
+            // Per-participant-count name / execution-order overrides (only deviations from the defaults above)
+            round.matchNamings?.forEach { naming ->
+                records.matchNamings.add(naming.toRecord(roundRecord.id))
+            }
         }
 
-        !CompetitionSetupRoundRepo.create(records.rounds).orDie()
+        // Insert the (re)created rounds last-to-first so each next_round target already exists (self FK).
+        // Created rounds are never built here, and no new round ever precedes a created round, so a new round's
+        // next_round only ever points to another new round (inserted earlier) or to null.
+        !CompetitionSetupRoundRepo.create(records.rounds.sortedByDescending { it.first }.map { it.second }).orDie()
         if (records.groups.isNotEmpty()) {
             !CompetitionSetupGroupRepo.create(records.groups).orDie()
         }
@@ -142,8 +193,31 @@ object CompetitionSetupService {
         !CompetitionSetupMatchRepo.create(records.matches).orDie()
         !CompetitionSetupParticipantRepo.create(records.participants).orDie()
         !CompetitionSetupPlaceRepo.create(records.places).orDie()
+        if (records.matchNamings.isNotEmpty()) {
+            !CompetitionSetupMatchNamingRepo.create(records.matchNamings).orDie()
+        }
+
+        // Re-link the kept/created rounds to their (possibly new) following round. Their next_round pointers were
+        // cleared above, so they are re-set unconditionally based on the requested order.
+        createdRoundsInOrder.forEach { created ->
+            val index = requestRounds.indexOfFirst { it.id == created.id }
+            !CompetitionSetupRoundRepo.updateNextRound(created.id, finalRoundIds.getOrNull(index + 1)).orDie()
+        }
 
         unit
+    }
+
+    // Sorts setup rounds into execution order (first executed -> last) by following the next_round chain.
+    private fun sortRoundRecords(rounds: List<CompetitionSetupRoundRecord>): List<CompetitionSetupRoundRecord> {
+        val sorted = mutableListOf<CompetitionSetupRoundRecord>()
+        fun addRoundToSortedList(r: CompetitionSetupRoundRecord?) {
+            if (r != null) {
+                sorted.add(0, r)
+                addRoundToSortedList(rounds.firstOrNull { it.nextRound == r.id })
+            }
+        }
+        addRoundToSortedList(rounds.firstOrNull { it.nextRound == null })
+        return sorted
     }
 
     fun updateCompetitionSetup(
@@ -186,8 +260,16 @@ object CompetitionSetupService {
 
         val placeRecords = !CompetitionSetupPlaceRepo.get(roundRecords.map { it.id }).orDie()
 
+        val matchNamingRecords = !CompetitionSetupMatchNamingRepo.get(roundRecords.map { it.id }).orDie()
 
-        val roundDtos = roundRecords.reversed().map { round ->
+        // Rounds that already have created matches during execution are locked and must not be changed by the client.
+        val createdSetupMatchIds = !CompetitionMatchRepo.getExistingSetupMatchIds(matchRecords.map { it.id }).orDie()
+        val createdRoundIds = matchRecords
+            .filter { createdSetupMatchIds.contains(it.id) }
+            .map { it.competitionSetupRound }
+            .toSet()
+
+        val roundDtos = sortRoundRecords(roundRecords).map { round ->
             // If there are Groups in this round (every match has a group reference): round.matches = null
             // In that case the Matches are assigned to the respective group
 
@@ -239,8 +321,11 @@ object CompetitionSetupService {
                     placeRecords.filter { place -> place.competitionSetupRound == round.id }.map { it.toDto() }
                 } else {
                     null
-                }
-
+                },
+                matchNamings = matchNamingRecords
+                    .filter { naming -> naming.competitionSetupRound == round.id }
+                    .map { it.toDto() },
+                updatable = !createdRoundIds.contains(round.id),
             )
         }
 

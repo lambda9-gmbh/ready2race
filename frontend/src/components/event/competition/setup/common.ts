@@ -3,6 +3,7 @@ import {
     CompetitionSetupDto,
     CompetitionSetupGroupStatisticEvaluationDto,
     CompetitionSetupMatchDto,
+    CompetitionSetupMatchNamingDto,
     CompetitionSetupRoundDto,
     CompetitionSetupTemplateDto,
     CompetitionSetupTemplateRequest,
@@ -19,6 +20,10 @@ export type CompetitionSetupForm = {
     setupTemplateId?: string
 }
 export type FormSetupRound = {
+    // Stable id of an existing round (undefined for newly added rounds). Round-tripped so the backend can diff.
+    id?: string
+    // False when the round has already been created during execution and must therefore not be edited or deleted.
+    updatable?: boolean
     name: string
     required: boolean
     matches: Array<FormSetupMatch>
@@ -32,6 +37,10 @@ export type FormSetupRound = {
     }>
     isGroupRound: boolean
     useStartTimeOffsets: boolean
+    // Marks a preliminary / qualification round (e.g. time trial); see backend isQualification.
+    isQualification: boolean
+    // Per-participant-count overrides for match name / execution order (only deviations are stored).
+    matchNamings: Array<CompetitionSetupMatchNamingDto>
 }
 export type FormSetupMatch = {
     teams: string // String because it's easier to work with '' as an empty field instead of undefined
@@ -90,6 +99,8 @@ export function mapFormRoundsToDtoRounds(
     formData: CompetitionSetupForm,
 ): Array<CompetitionSetupRoundDto> {
     return formData.rounds.map(round => ({
+        id: round.id,
+        updatable: round.updatable ?? true,
         name: round.name,
         required: round.required,
         matches: !round.isGroupRound
@@ -117,6 +128,11 @@ export function mapFormRoundsToDtoRounds(
         useDefaultSeeding: round.useDefaultSeeding,
         placesOption: round.placesOption,
         places: round.placesOption === 'CUSTOM' ? round.places : undefined,
+        isQualification: round.isQualification,
+        // Only persist actual deviations (a name or an execution order set)
+        matchNamings: round.matchNamings.filter(
+            n => (n.name !== null && n.name !== undefined && n.name !== '') || n.executionOrder != null,
+        ),
     }))
 }
 
@@ -162,6 +178,8 @@ function mapDtoRoundsToFormRounds(
     dtoRounds: Array<CompetitionSetupRoundDto>,
 ): Array<FormSetupRound> {
     return dtoRounds.map(round => ({
+        id: round.id ?? undefined,
+        updatable: round.updatable,
         name: round.name,
         required: round.required,
         matches:
@@ -181,6 +199,8 @@ function mapDtoRoundsToFormRounds(
         placesOption: round.placesOption,
         places: round.places ?? [],
         isGroupRound: round.groups !== undefined,
+        isQualification: round.isQualification,
+        matchNamings: round.matchNamings ?? [],
         // If at least one match/group has an offset, useStartTimeOffsets is set to true
         useStartTimeOffsets:
             (round.matches?.filter(m => m.startTimeOffset !== undefined).length ?? 0) > 0 ||

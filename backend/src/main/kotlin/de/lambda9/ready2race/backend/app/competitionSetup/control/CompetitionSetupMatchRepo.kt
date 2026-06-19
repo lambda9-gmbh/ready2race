@@ -13,6 +13,15 @@ object CompetitionSetupMatchRepo {
 
     fun get(setupMatchId: UUID) = COMPETITION_SETUP_MATCH.selectOne { ID.eq(setupMatchId) }
 
+    // Overwrites name / execution order of a single setup match. Null arguments leave the respective field unchanged.
+    fun updateNameAndOrder(id: UUID, name: String?, executionOrder: Int?) = COMPETITION_SETUP_MATCH.update(
+        f = {
+            if (name != null) this.name = name
+            if (executionOrder != null) this.executionOrder = executionOrder
+        },
+        condition = { ID.eq(id) },
+    )
+
     fun get(competitionSetupRoundIds: List<UUID>): JIO<List<CompetitionSetupMatchRecord>> = Jooq.query {
         with(COMPETITION_SETUP_MATCH) {
             selectFrom(this)
