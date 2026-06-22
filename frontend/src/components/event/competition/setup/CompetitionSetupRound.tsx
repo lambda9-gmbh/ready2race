@@ -55,8 +55,9 @@ type Props = {
         value: boolean
         set: (value: boolean) => void
     }
-    // True for the first non-qualification round: only there can a meaningful raw-seeding matchup preview be shown.
-    isFirstBracketRound: boolean
+    // Best-case global seed pairings per match (weighting order) for this bracket round, at full capacity.
+    // Undefined for qualification / group rounds, which have no bracket matchup preview.
+    bracketMatchupSeedings?: number[][]
 }
 const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...props}: Props) => {
     const defaultMatchTeamSize = 2
@@ -713,8 +714,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     <CompetitionSetupRoundNaming
                                         formContext={formContext}
                                         roundIndex={round.index}
-                                        nextRoundTeams={teamCounts.nextRound}
-                                        showMatchupPreview={props.isFirstBracketRound}
+                                        matchupSeedings={props.bracketMatchupSeedings}
                                     />
                                 </>
                             )}

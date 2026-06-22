@@ -673,7 +673,7 @@
           "useDefaultSeeding": "Brug standard seedning til matchups",
           "required": "Runden skal gennemføres",
           "lockedInfo": "Denne runde er allerede startet og kan ikke længere redigeres. Ændringer er kun mulige for efterfølgende runder.",
-          "isQualification": "Kvalifikationsrunde (f.eks. enkeltstart)",
+          "isQualification": "Kvalifikationsrunde",
           "finals": {
             "long": {
               "final": {
@@ -1467,7 +1467,7 @@
         "col": {
           "team": {
             "startNumber": "Startnummer",
-            "registrationId": "Hold-id (Webscorer info-felt)",
+            "registrationId": "Intern Hold-id",
             "place": "Placering",
             "time": "Tid"
           }
@@ -1502,7 +1502,7 @@
             "heading": "Hold",
             "name": "Navn",
             "startNumber": "Startnummer",
-            "registrationId": "Hold-id (Webscorer info-felt)",
+            "registrationId": "Intern Hold-id",
             "ratingCategory": "Rangeringskategori",
             "club": "Klub (samlet)",
             "deregistered": "Afmeldt",

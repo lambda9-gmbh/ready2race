@@ -449,6 +449,62 @@ export const getMatchupsString = (participants: number[]) => {
     return participants.map(v => `#${v}`).join(' vs ')
 }
 
+/**
+ * Computes the best-case global seed pairing for every match of a single-elimination bracket, at full
+ * configured capacity (independent of the actual participant count N).
+ *
+ * `bracketRounds` holds the per-match team capacities of each bracket round (weighting order), from the
+ * first bracket round to the final. Returns, per round, per match (weighting order), the global seeds that
+ * would meet there if the higher seed always advances (e.g. semifinal -> [1, 4] / [2, 3]).
+ *
+ * To preview a specific N, filter each match's seeds to those `<= N`: seeds above N are byes/empty, which
+ * mirrors how the backend places only seeds <= N onto real teams (see CompetitionExecutionService).
+ */
+export const getBracketSeedings = (bracketRounds: number[][]): number[][][] => {
+    const result: number[][][] = []
+    // Maps this round's local (outcome) seed -> best-case global seed carried over from the previous round.
+    let localToGlobal: Map<number, number> | null = null
+
+    bracketRounds.forEach((teams, r) => {
+        const matchCount = teams.length
+        const totalCap = teams.reduce((acc, val) => acc + val, 0)
+        const localSeeds = fillSeedingList(
+            matchCount,
+            getHighestTeamsCount(teams.map(String), totalCap),
+            teams,
+            totalCap,
+        )
+
+        const map = localToGlobal
+        const globalPerMatch = localSeeds.map(slot =>
+            slot.map(seed => map?.get(seed) ?? seed).sort((a, b) => a - b),
+        )
+        result.push(globalPerMatch)
+
+        // Prepare the mapping for the next round: the best-case winner (lowest global seed) of each match
+        // advances carrying that match's first outcome seed, which is the next round's local seed.
+        const nextTeams = bracketRounds[r + 1]
+        if (nextTeams) {
+            const nextTotal = nextTeams.reduce((acc, val) => acc + val, 0)
+            const outcomes = fillSeedingList(
+                matchCount,
+                getHighestTeamsCount(teams.map(String), nextTotal),
+                teams,
+                nextTotal,
+            )
+            const nextMap = new Map<number, number>()
+            globalPerMatch.forEach((slot, i) => {
+                if (slot.length > 0 && outcomes[i]?.length > 0) {
+                    nextMap.set(outcomes[i][0], slot[0])
+                }
+            })
+            localToGlobal = nextMap
+        }
+    })
+
+    return result
+}
+
 export const onTeamsChanged = (
     roundIndex: number,
     teamsValue: number,

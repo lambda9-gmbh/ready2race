@@ -169,7 +169,7 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
-                justPlacedCount = newTeamRecords.size
+                justPlacedCount = newTeamRecords.count { !it.out!! }
 
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
@@ -252,7 +252,7 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
-                justPlacedCount = newTeamRecords.size
+                justPlacedCount = newTeamRecords.count { !it.out!! }
 
                 // Carry over all substitutions to the new round
                 val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
@@ -269,13 +269,15 @@ object CompetitionExecutionService {
 
             // Apply the per-participant-count name / execution-order overrides to the round just created.
             // N (bracket size) is fixed at the qualification -> bracket transition: the number of teams entering the
-            // first non-qualification round. Drop-outs later in the bracket become byes and do not change N.
+            // first non-qualification round. Teams eliminated during qualification are carried into the bracket only
+            // as out byes, so they must be excluded from N (justPlacedCount already counts active teams only).
+            // Drop-outs later in the bracket likewise become byes and do not change N.
             if (nextRound != null && !nextRound.isQualification) {
                 val bracketStart = sortRounds(setupRounds).firstOrNull { !it.isQualification }
                 val n = when {
                     bracketStart == null -> 0
                     bracketStart.setupRoundId == nextRound.setupRoundId -> justPlacedCount
-                    else -> bracketStart.matches.sumOf { it.teams.size }
+                    else -> bracketStart.matches.sumOf { match -> match.teams.count { !it.out } }
                 }
                 if (n > 0) {
                     val namings =

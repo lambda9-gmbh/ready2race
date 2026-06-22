@@ -673,7 +673,7 @@
           "useDefaultSeeding": "Use default seeding for matchups",
           "required": "Round must be held",
           "lockedInfo": "This round has already been started and can no longer be edited. Changes are only possible for following rounds.",
-          "isQualification": "Qualification round (e.g. time trial)",
+          "isQualification": "Qualification round",
           "finals": {
             "long": {
               "final": {
@@ -1467,7 +1467,7 @@
         "col": {
           "team": {
             "startNumber": "Start number",
-            "registrationId": "Team identifier (Webscorer info field)",
+            "registrationId": "Internal team identifier",
             "place": "Place",
             "time": "Time"
           }
@@ -1502,7 +1502,7 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Start number",
-            "registrationId": "Team identifier (Webscorer info field)",
+            "registrationId": "Internal team identifier",
             "ratingCategory": "Rating category",
             "club": "Club (summarized)",
             "deregistered": "Deregistered",

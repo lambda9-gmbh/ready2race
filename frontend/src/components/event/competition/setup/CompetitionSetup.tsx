@@ -7,6 +7,7 @@ import CompetitionSetupTreeHelper from '@components/event/competition/setup/Comp
 import {
     CompetitionSetupForm,
     FormSetupRound,
+    getBracketSeedings,
     mapCompetitionSetupTemplateDtoToForm,
 } from '@components/event/competition/setup/common.ts'
 import CompetitionSetupContainersWrapper from '@components/event/competition/setup/CompetitionSetupContainersWrapper.tsx'
@@ -50,8 +51,17 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     ) ?? -1
     const hasLockedRounds = lastLockedRoundIndex >= 0
 
-    // The first non-qualification round is the only one where a raw-seeding matchup preview is meaningful.
-    const firstBracketRoundIndex = formWatch?.findIndex(r => !r.isQualification) ?? -1
+    // The bracket consists of the non-qualification, non-group rounds (in order). Their per-match team
+    // capacities drive the best-case seed matchup preview and the participant-count cap in the naming editor.
+    const bracketRoundIndices =
+        formWatch
+            ?.map((round, index) => ({round, index}))
+            .filter(({round}) => !round.isQualification && !round.isGroupRound)
+            .map(({index}) => index) ?? []
+    const bracketCapacities = bracketRoundIndices.map(index =>
+        (formWatch?.[index]?.matches ?? []).map(m => Number(m.teams)),
+    )
+    const bracketSeedings = getBracketSeedings(bracketCapacities)
 
     const [allowRoundUpdates, setAllowRoundUpdates] = useState(true)
 
@@ -220,7 +230,11 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                                     value: allowRoundUpdates,
                                     set: setAllowRoundUpdates,
                                 }}
-                                isFirstBracketRound={roundIndex === firstBracketRoundIndex}
+                                bracketMatchupSeedings={
+                                    bracketRoundIndices.includes(roundIndex)
+                                        ? bracketSeedings[bracketRoundIndices.indexOf(roundIndex)]
+                                        : undefined
+                                }
                             />
                             {roundIndex + 1 > lastLockedRoundIndex && (
                                 <AddRoundButton index={roundIndex + 1} insertRound={insertRound} />

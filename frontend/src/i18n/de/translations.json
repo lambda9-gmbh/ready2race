@@ -673,7 +673,7 @@
           "useDefaultSeeding": "Normales Seeding für Matchups nutzen",
           "required": "Runde muss durchgeführt werden",
           "lockedInfo": "Diese Runde wurde bereits gestartet und kann nicht mehr bearbeitet werden. Änderungen sind nur für Folgerunden möglich.",
-          "isQualification": "Qualifikationsrunde (z. B. Zeitfahren)",
+          "isQualification": "Qualifikationsrunde",
           "finals": {
             "long": {
               "final": {
@@ -1467,7 +1467,7 @@
         "col": {
           "team": {
             "startNumber": "Startnummer",
-            "registrationId": "Team-Kennung (Webscorer Info-Feld)",
+            "registrationId": "Interne Team-Kennung",
             "place": "Platz",
             "time": "Zeit"
           }
@@ -1502,7 +1502,7 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Startnummer",
-            "registrationId": "Team-Kennung (Webscorer Info-Feld)",
+            "registrationId": "Interne Team-Kennung",
             "ratingCategory": "Wertungskategorie",
             "club": "Verein (zusammengefasst)",
             "deregistered": "Abgemeldet",
