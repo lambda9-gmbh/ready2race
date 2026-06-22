@@ -16,12 +16,13 @@ import {updateQrCodeAppuser, updateQrCodeParticipant} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
 import PersonIcon from '@mui/icons-material/Person'
-import ParticipantAssignment from '@components/qrApp/assign/ParticipantAssignment'
+import ParticipantAssignment, {
+    DedupedParticipant,
+} from '@components/qrApp/assign/ParticipantAssignment'
 import UserAssignment from '@components/qrApp/assign/UserAssignment'
 import SystemUserScanner from '@components/qrApp/assign/SystemUserScanner'
 import {useFeedback} from '@utils/hooks.ts'
 import AppTopTitle from '@components/qrApp/AppTopTitle.tsx'
-import {ParticipantQrAssignmentDto} from '@api/types.gen.ts'
 
 type UserTyp = 'Participant' | 'User'
 
@@ -63,15 +64,12 @@ const QrAssignPage = () => {
         setUserTyp(null) // Clear toggle group selection
     }
 
-    const handleParticipantClick = (
-        participant: ParticipantQrAssignmentDto,
-        competitionName: string,
-    ) => {
+    const handleParticipantClick = (participant: DedupedParticipant) => {
         setSelectedPerson({
             id: participant.participantId,
             name: `${participant.firstname} ${participant.lastname}`,
             type: 'participant',
-            additionalInfo: [competitionName, participant.namedParticipantName],
+            additionalInfo: participant.contexts.map(c => `${c.competitionName} (${c.role})`),
         })
         setConfirmationOpen(true)
     }

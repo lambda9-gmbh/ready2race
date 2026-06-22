@@ -108,12 +108,16 @@ select au.id,
        au.email,
        au.club,
        coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles,
-       qc.qr_code_id
+       -- qr codes are event-scoped; this event-independent view just exposes
+       -- whether the user has any code at all (arbitrary one if multiple events)
+       (select qc.qr_code_id
+        from qr_codes qc
+        where qc.app_user = au.id
+        limit 1)                                                          as qr_code_id
 from app_user au
          left join app_user_has_role auhr on au.id = auhr.app_user
          left join role_with_privileges rwp on auhr.role = rwp.id
-         left join qr_codes qc on qc.app_user = au.id
-group by au.id, qc.id;
+group by au.id;
 
 -- refactor this and similar views to use where-clause in API instead
 create view app_user_with_roles as
@@ -506,7 +510,7 @@ from event_registration er
          join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
          join participant p on crnp.participant = p.id
          left join checked_participant_requirement cpr on p.id = cpr.participant and er.event = cpr.event
-         left join qr_codes qc on qc.participant = p.id
+         left join qr_codes qc on qc.participant = p.id and qc.event = er.event
 group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name,
          qc.id, p.email
 order by c.name, p.firstname, p.lastname;
@@ -1014,7 +1018,7 @@ from competition_registration_named_participant crnp
          left join competition_registration cr on crnp.competition_registration = cr.id
          left join competition c on cr.competition = c.id
          left join participant_tracking_for_team_participant pt on p.id = pt.participant_id and c.event = pt.event_id
-         left join qr_codes qc on qc.participant = p.id
+         left join qr_codes qc on qc.participant = p.id and qc.event = c.event
          left join checked_participant_requirement cpr on p.id = cpr.participant and c.event = cpr.event
 group by crnp.competition_registration, p.id, p.firstname, p.lastname, p.year, p.gender, p.external,
          p.external_club_name, np.id, np.name, qc.qr_code_id
@@ -1140,10 +1144,11 @@ select au.id,
        au.lastname,
        au.email,
        au.club,
-       qc.event,
+       e.id as event,
        qc.qr_code_id
 from app_user au
-         left join qr_codes qc on qc.app_user = au.id
+         cross join event e
+         left join qr_codes qc on qc.app_user = au.id and qc.event = e.id
 -- TODO: maybe want to allow q-codes also for admins
 where not exists(select *
                  from app_user_has_role auhr2

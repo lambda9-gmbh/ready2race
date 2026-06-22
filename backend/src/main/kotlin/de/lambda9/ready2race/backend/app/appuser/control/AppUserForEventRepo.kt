@@ -22,7 +22,7 @@ object AppUserForEventRepo {
             fetchCount(
                 this,
                 search.metaSearch(searchFields())
-                    .and(EVENT.eq(eventId).or(EVENT.isNull))
+                    .and(EVENT.eq(eventId))
             )
         }
     }
@@ -34,7 +34,7 @@ object AppUserForEventRepo {
         with(APP_USER_FOR_EVENT) {
             selectFrom(this)
                 .page(params, searchFields()) {
-                    EVENT.eq(eventId).or(EVENT.isNull)
+                    EVENT.eq(eventId)
                 }
                 .fetch()
         }

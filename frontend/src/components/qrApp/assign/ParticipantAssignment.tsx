@@ -13,15 +13,24 @@ import {useFetch} from '@utils/hooks.ts'
 import {getClubNames, getQrAssignmentParticipants} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import PersonIcon from '@mui/icons-material/Person'
-import {ParticipantQrAssignmentDto} from "@api/types.gen.ts";
 import AssignmentSearchField from "@components/qrApp/assign/AssignmentSearchField.tsx";
+
+export interface ParticipantAssignmentContext {
+    competitionName: string
+    role: string
+}
+
+export interface DedupedParticipant {
+    participantId: string
+    firstname: string
+    lastname: string
+    qrCodeValue?: string
+    contexts: ParticipantAssignmentContext[]
+}
 
 interface ParticipantAssignmentProps {
     eventId: string
-    onSelectParticipant: (
-        participant: ParticipantQrAssignmentDto,
-        competitionName: string,
-    ) => void
+    onSelectParticipant: (participant: DedupedParticipant) => void
 }
 
 const ParticipantAssignment: React.FC<ParticipantAssignmentProps> = ({
@@ -50,21 +59,56 @@ const ParticipantAssignment: React.FC<ParticipantAssignmentProps> = ({
         setClub(newValue?.id || '')
     }
 
-    const filteredParticipants = useMemo(() =>{
-            return groupedParticipants
-                ?.map(group => ({
-                    ...group,
-                    participants: group.participants.filter(
-                        p =>
-                            searchQuery === '' ||
-                            `${p.firstname} ${p.lastname}`
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase()),
-                    ),
-                }))
-                .filter(group => group.participants.length > 0)
-                .sort((a, b) => (a.competitionName > b.competitionName ? 1 : -1)) || []
-    }, [searchQuery, groupedParticipants])
+    // The backend returns participants grouped by competition registration (a
+    // substitution-aware roster). A qr code is assigned per participant + event,
+    // so the same participantId legitimately shows up once per competition. Collapse
+    // to one entry per participant and keep the competitions/roles only as context.
+    const dedupedParticipants = useMemo<DedupedParticipant[]>(() => {
+        const byId = new Map<string, DedupedParticipant>()
+        groupedParticipants?.forEach(group => {
+            group.participants.forEach(p => {
+                const context = {
+                    competitionName: group.competitionName,
+                    role: p.namedParticipantName,
+                }
+                const existing = byId.get(p.participantId)
+                if (existing) {
+                    // qrCodeValue is event-scoped, so it is identical across occurrences
+                    existing.qrCodeValue = existing.qrCodeValue ?? p.qrCodeValue ?? undefined
+                    if (
+                        !existing.contexts.some(
+                            c => c.competitionName === context.competitionName && c.role === context.role,
+                        )
+                    ) {
+                        existing.contexts.push(context)
+                    }
+                } else {
+                    byId.set(p.participantId, {
+                        participantId: p.participantId,
+                        firstname: p.firstname,
+                        lastname: p.lastname,
+                        qrCodeValue: p.qrCodeValue ?? undefined,
+                        contexts: [context],
+                    })
+                }
+            })
+        })
+        return Array.from(byId.values())
+    }, [groupedParticipants])
+
+    const filteredParticipants = useMemo(
+        () =>
+            dedupedParticipants
+                .filter(
+                    p =>
+                        searchQuery === '' ||
+                        `${p.firstname} ${p.lastname}`.toLowerCase().includes(searchQuery.toLowerCase()),
+                )
+                .sort((a, b) =>
+                    `${a.lastname} ${a.firstname}`.localeCompare(`${b.lastname} ${b.firstname}`),
+                ),
+        [searchQuery, dedupedParticipants],
+    )
 
     return (
         <>
@@ -92,68 +136,43 @@ const ParticipantAssignment: React.FC<ParticipantAssignmentProps> = ({
                         <Typography variant="subtitle1" fontWeight="medium">
                             {t('qrAssign.participants')}
                         </Typography>
-                </Stack>
+                    </Stack>
                     <AssignmentSearchField setSearchQuery={setSearchQuery} />
 
                     {filteredParticipants.length > 0 ? (
-                        <Stack spacing={2}>
-                            {filteredParticipants.map(group => (
-                                <Box key={group.competitionRegistrationId}>
-                                    <Typography
-                                        variant="subtitle2"
-                                        color="text.secondary"
-                                        sx={{mb: 1}}>
-                                        {group.competitionName}
-                                    </Typography>
-                                    <Stack spacing={1}>
-                                        {group.participants.map(participant => (
-                                            <Card
-                                                key={participant.participantId}
-                                                sx={{
-                                                    opacity: participant.qrCodeValue ? 0.6 : 1,
-                                                    cursor: participant.qrCodeValue
-                                                        ? 'not-allowed'
-                                                        : 'pointer',
-                                                }}>
-                                                <CardActionArea
-                                                    onClick={() =>
-                                                        !participant.qrCodeValue &&
-                                                        onSelectParticipant(
-                                                            participant,
-                                                            group.competitionName,
-                                                        )
-                                                    }
-                                                    disabled={participant.qrCodeValue !== undefined}>
-                                                    <CardContent sx={{py: 2}}>
-                                                        <Box
-                                                            sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 1,
-                                                            }}>
-                                                            <PersonIcon
-                                                                sx={{color: 'text.secondary'}}
-                                                            />
-                                                            <Box sx={{flexGrow: 1}}>
-                                                                <Typography
-                                                                    variant="body1"
-                                                                    fontWeight="medium">
-                                                                    {participant.firstname}{' '}
-                                                                    {participant.lastname}
-                                                                </Typography>
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    color="text.secondary">
-                                                                    {participant.namedParticipantName}
-                                                                </Typography>
-                                                            </Box>
-                                                        </Box>
-                                                    </CardContent>
-                                                </CardActionArea>
-                                            </Card>
-                                        ))}
-                                    </Stack>
-                                </Box>
+                        <Stack spacing={1}>
+                            {filteredParticipants.map(participant => (
+                                <Card
+                                    key={participant.participantId}
+                                    sx={{
+                                        opacity: participant.qrCodeValue ? 0.6 : 1,
+                                        cursor: participant.qrCodeValue ? 'not-allowed' : 'pointer',
+                                    }}>
+                                    <CardActionArea
+                                        onClick={() =>
+                                            !participant.qrCodeValue && onSelectParticipant(participant)
+                                        }
+                                        disabled={participant.qrCodeValue !== undefined}>
+                                        <CardContent sx={{py: 2}}>
+                                            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                                                <PersonIcon sx={{color: 'text.secondary'}} />
+                                                <Box sx={{flexGrow: 1}}>
+                                                    <Typography variant="body1" fontWeight="medium">
+                                                        {participant.firstname} {participant.lastname}
+                                                    </Typography>
+                                                    {participant.contexts.map((c, i) => (
+                                                        <Typography
+                                                            key={i}
+                                                            variant="body2"
+                                                            color="text.secondary">
+                                                            {c.competitionName} ({c.role})
+                                                        </Typography>
+                                                    ))}
+                                                </Box>
+                                            </Box>
+                                        </CardContent>
+                                    </CardActionArea>
+                                </Card>
                             ))}
                         </Stack>
                     ) : (
