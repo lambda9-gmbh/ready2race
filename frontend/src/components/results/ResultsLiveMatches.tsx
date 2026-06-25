@@ -56,7 +56,9 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                 {pending ? (
                     <Throbber />
                 ) : data?.length === 0 ? (
-                    <Alert severity={'info'}>{t('results.liveMatches.noMatches')}</Alert>
+                    <Alert severity={'info'} sx={{width: 1}}>
+                        {t('results.liveMatches.noMatches')}
+                    </Alert>
                 ) : (
                     data
                         ?.sort((a, b) => ((a.startTime ?? '') > (b.startTime ?? '') ? -1 : 1))

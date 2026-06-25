@@ -92,14 +92,14 @@ const ResultsPage = () => {
                             label={t('results.tabs.results')}
                             icon={<EmojiEventsOutlinedIcon />}
                             iconPosition={smallScreenLayout ? 'top' : 'start'}
-                            sx={{flex: 1}}
+                            sx={{flex: 1, maxWidth: 'unset'}}
                             {...resultsTabProps('latest-results')}
                         />
                         <Tab
                             label={t('results.tabs.live')}
                             icon={<CellTowerOutlinedIcon />}
                             iconPosition={smallScreenLayout ? 'top' : 'start'}
-                            sx={{flex: 1}}
+                            sx={{flex: 1, maxWidth: 'unset'}}
                             {...resultsTabProps('live')}
                         />
                     </TabSelectionContainer>
