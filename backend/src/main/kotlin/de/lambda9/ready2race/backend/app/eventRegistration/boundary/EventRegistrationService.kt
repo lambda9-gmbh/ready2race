@@ -261,27 +261,43 @@ object EventRegistrationService {
         }
 
         val clubName = !ClubRepo.getName(clubId).orDie()
-        val participants = !ParticipantForEventRepo.getByClub(clubId).orDie()
+        val participants = !ParticipantForEventRepo.getByClub(eventId, clubId).orDie()
 
-        //TODO: @refactor: move to Repo, !don't! query for ALL clubs
-        val competitions = (!Jooq.query {
-            fetch(EVENT_COMPETITION_REGISTRATION)
-        }.orDie()).sortedWith(lexiNumberComp { it.identifier })
+        val competitions = (!EventRegistrationRepo.getCompetitionRegistrationsForEventAndClub(eventId, clubId).orDie())
+            .sortedWith(lexiNumberComp { it.identifier })
 
-        val summaryParticipants = participants.joinToString("\n") { p ->
+        val registeredParticipantIds = competitions
+            .flatMap { c -> c.teams }
+            .flatMap { t -> t.participants.mapNotNull { it.participantId } }
+            .toSet()
+
+        val registeredParticipants = participants.filter { registeredParticipantIds.contains(it.id) }
+
+        val summaryParticipants = if (registeredParticipants.isEmpty()) {
+            when (EmailLanguage.valueOf(user.language!!)) {
+                EmailLanguage.DE -> "    Es sind noch keine Teilnehmer gemeldet."
+                EmailLanguage.EN -> "    No participants have been registered yet."
+                EmailLanguage.DA -> "    Der er endnu ikke tilmeldt nogen deltagere."
+            }
+        } else registeredParticipants.joinToString("\n") { p ->
             """
                 |    [${p.gender}] ${p.firstname} ${p.lastname}${p.year?.let { " ($it)" } ?: ""}${p.externalClubName?.let { " - $it" } ?: ""}
             """.trimMargin()
         }.trimMargin()
 
-        val summaryCompetitions = competitions.joinToString("\n") { c ->
-            val teams = c.teams!!.filter { it!!.clubId == clubId }
+        val summaryCompetitions = if (competitions.isEmpty()) {
+            when (EmailLanguage.valueOf(user.language!!)) {
+                EmailLanguage.DE -> "    Es sind noch keine Anmeldungen für Wettkämpfe erfolgt."
+                EmailLanguage.EN -> "    No competition registrations have been made yet."
+                EmailLanguage.DA -> "    Der er endnu ikke foretaget nogen tilmeldinger til konkurrencer."
+            }
+        } else competitions.joinToString("\n") { c ->
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
                 |        ${
-                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it?.teamName })
+                c.teams.sortedWith(lexiNumberComp { it.teamName })
                     .joinToString("\n|        ") { t ->
-                        val ps = t!!.participants!!.map { it!! }.sortedBy { it.role }
+                        val ps = t.participants.sortedBy { it.role }
                         """
                         |->${t.teamName?.let { " $it" } ?: ""}
                         |            ${

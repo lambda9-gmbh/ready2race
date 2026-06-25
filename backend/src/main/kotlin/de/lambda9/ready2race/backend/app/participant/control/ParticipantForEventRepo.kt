@@ -15,11 +15,12 @@ import java.util.*
 object ParticipantForEventRepo {
 
     fun getByClub(
+        eventId: UUID,
         clubId: UUID,
     ): JIO<List<ParticipantForEventRecord>> = Jooq.query {
         with(PARTICIPANT_FOR_EVENT) {
             selectFrom(this)
-                .where(CLUB_ID.eq(clubId))
+                .where(EVENT_ID.eq(eventId).and(CLUB_ID.eq(clubId)))
                 .fetch()
         }
     }

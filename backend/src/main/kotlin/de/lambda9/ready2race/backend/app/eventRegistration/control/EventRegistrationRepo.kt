@@ -109,6 +109,56 @@ object EventRegistrationRepo {
 
     fun getRegistrationResult(eventId: UUID) = EVENT_REGISTRATION_RESULT_VIEW.selectOne { ID.eq(eventId) }
 
+    fun getCompetitionRegistrationsForEventAndClub(
+        eventId: UUID,
+        clubId: UUID,
+    ): JIO<List<EventRegistrationCompetitionSummaryData>> = Jooq.query {
+
+        val teams = DSL.multiset(
+            DSL.select(
+                REGISTERED_COMPETITION_TEAM.TEAM_NAME,
+                DSL.multiset(
+                    DSL.selectFrom(REGISTERED_COMPETITION_TEAM_PARTICIPANT)
+                        .where(REGISTERED_COMPETITION_TEAM_PARTICIPANT.TEAM_ID.eq(REGISTERED_COMPETITION_TEAM.ID))
+                ).convertFrom { it.toList() }
+            )
+                .from(REGISTERED_COMPETITION_TEAM)
+                .where(REGISTERED_COMPETITION_TEAM.COMPETITION.eq(COMPETITION_VIEW.ID))
+                .and(REGISTERED_COMPETITION_TEAM.CLUB_ID.eq(clubId))
+        ).convertFrom { result ->
+            result.map {
+                EventRegistrationCompetitionSummaryData.Team(
+                    teamName = it.value1(),
+                    participants = it.value2(),
+                )
+            }
+        }
+
+        select(
+            COMPETITION_VIEW.IDENTIFIER,
+            COMPETITION_VIEW.NAME,
+            COMPETITION_VIEW.SHORT_NAME,
+            teams,
+        )
+            .from(COMPETITION_VIEW)
+            .where(COMPETITION_VIEW.EVENT.eq(eventId))
+            .and(
+                DSL.exists(
+                    DSL.selectFrom(REGISTERED_COMPETITION_TEAM)
+                        .where(REGISTERED_COMPETITION_TEAM.COMPETITION.eq(COMPETITION_VIEW.ID))
+                        .and(REGISTERED_COMPETITION_TEAM.CLUB_ID.eq(clubId))
+                )
+            )
+            .fetch {
+                EventRegistrationCompetitionSummaryData(
+                    identifier = it[COMPETITION_VIEW.IDENTIFIER]!!,
+                    name = it[COMPETITION_VIEW.NAME]!!,
+                    shortName = it[COMPETITION_VIEW.SHORT_NAME],
+                    teams = it[teams],
+                )
+            }
+    }
+
     fun getEventRegistrationDocuments(eventId: UUID): JIO<List<EventRegistrationDocumentTypeDto>?> = Jooq.query {
 
         val documents = selectDocumentsForEventRegistrationInfo()
