@@ -63,8 +63,11 @@ import de.lambda9.tailwind.jooq.transact
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.awt.Color
 import java.io.ByteArrayOutputStream
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.Locale
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
@@ -404,6 +407,7 @@ object InvoiceService {
         type: RegistrationInvoiceType,
     ): ByteArray {
         val totalAmount = data.positions.sumOf { pos -> pos.unitPrice * pos.quantity }
+        val totalAmountFormatted = DecimalFormat("#,##0.00", DecimalFormatSymbols(Locale.GERMANY)).format(totalAmount)
         val doc = document(template) {
             page {
                 table {
@@ -476,7 +480,7 @@ object InvoiceService {
                     text { "" }
                     text { "vielen Dank für die $subject zu ${data.eventName}." }
                     text { "" }
-                    text { "Für die $subject wird ein Gesamtbetrag von $totalAmount € fällig." }
+                    text { "Für die $subject wird ein Gesamtbetrag von $totalAmountFormatted€ fällig." }
                     text { "Wir bitten um Überweisung des entsprechenden Betrags auf das nachfolgende Konto bis zum ${data.paymentDueBy.hr()}. Eine Aufschlüsselung der einzelnen Position finden Sie weiter unten." }
                     text { "" }
                     text { "" }
