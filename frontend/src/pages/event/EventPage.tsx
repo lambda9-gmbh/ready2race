@@ -34,7 +34,8 @@ import {Forward, InfoOutlined, PlayCircleOutlined} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
 import {useMemo, useRef, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
-import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
+import ParticipantRequirementForEventTable
+    from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {
@@ -212,7 +213,7 @@ const EventPage = () => {
                                 to={'/event/$eventId/register'}
                                 params={{eventId}}
                                 hidden={!canRegister}>
-                                <Button endIcon={<Forward />} variant={'contained'}>
+                                <Button endIcon={<Forward/>} variant={'contained'}>
                                     {t('event.registerNow')}
                                 </Button>
                             </Link>
@@ -275,16 +276,16 @@ const EventPage = () => {
                                             {data.location && (
                                                 <ListItem>
                                                     <ListItemIcon>
-                                                        <PlaceIcon />
+                                                        <PlaceIcon/>
                                                     </ListItemIcon>
-                                                    <ListItemText primary={data.location} />
+                                                    <ListItemText primary={data.location}/>
                                                 </ListItem>
                                             )}
                                             {(data.registrationAvailableFrom ||
                                                 data.registrationAvailableTo) && (
                                                 <ListItem>
                                                     <ListItemIcon>
-                                                        <AccessTimeIcon />
+                                                        <AccessTimeIcon/>
                                                     </ListItemIcon>
                                                     <ListItemText
                                                         primary={
@@ -299,8 +300,8 @@ const EventPage = () => {
                                                             t(
                                                                 'event.registrationAvailable.lateTimespan',
                                                             ) +
-                                                                ': ' +
-                                                                lateRegistrationPeriod
+                                                            ': ' +
+                                                            lateRegistrationPeriod
                                                         }
                                                     />
                                                 </ListItem>
@@ -308,7 +309,7 @@ const EventPage = () => {
                                             {data.paymentDueBy && (
                                                 <ListItem>
                                                     <ListItemIcon>
-                                                        <HourglassEmptyIcon />
+                                                        <HourglassEmptyIcon/>
                                                     </ListItemIcon>
                                                     <ListItemText
                                                         primary={
@@ -330,7 +331,7 @@ const EventPage = () => {
                                         to={'/results/event/$eventId'}
                                         params={{eventId: data.id}}>
                                         <Button variant={'outlined'}>
-                                            <Trans i18nKey={'event.toResults'} />
+                                            <Trans i18nKey={'event.toResults'}/>
                                         </Button>
                                     </Link>
                                     {(user.checkPrivilege(readEventGlobal) || data.published) &&
@@ -338,7 +339,7 @@ const EventPage = () => {
                                             <Button
                                                 variant={'outlined'}
                                                 onClick={handleResultsDownload}>
-                                                <Trans i18nKey={'event.results.download'} />
+                                                <Trans i18nKey={'event.results.download'}/>
                                             </Button>
                                         )}
                                     {user.checkPrivilege(updateEventGlobal) &&
@@ -349,7 +350,7 @@ const EventPage = () => {
                                                 onClick={() =>
                                                     confirmAction(handleCertificateSending)
                                                 }>
-                                                <Trans i18nKey={'event.action.sendCertificates'} />
+                                                <Trans i18nKey={'event.action.sendCertificates'}/>
                                             </Button>
                                         )}
                                     {user.checkPrivilege(readClubOwn) &&
@@ -379,14 +380,14 @@ const EventPage = () => {
                                         </Typography>
                                         <Link to={'/event/$eventId/info'} params={{eventId}}>
                                             <Button
-                                                startIcon={<InfoOutlined />}
+                                                startIcon={<InfoOutlined/>}
                                                 variant="outlined"
                                                 fullWidth>
                                                 {t('event.info.manageInfoViews')}
                                             </Button>
                                         </Link>
                                         <Button
-                                            startIcon={<PlayCircleOutlined />}
+                                            startIcon={<PlayCircleOutlined/>}
                                             variant="outlined"
                                             fullWidth
                                             sx={{mt: 1}}
@@ -398,7 +399,7 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'competitions'} activeTab={activeTab}>
-                            <CompetitionsAndEventDays isChallengeEvent={data.challengeEvent} />
+                            <CompetitionsAndEventDays isChallengeEvent={data.challengeEvent}/>
                         </TabPanel>
                         <TabPanel index={'registrations'} activeTab={activeTab}>
                             <EventRegistrations
@@ -413,10 +414,11 @@ const EventPage = () => {
                                     {...participantForEventProps.table}
                                     title={t('event.participants')}
                                 />
-                                <ParticipantTrackingLogTable
-                                    {...participantTrackingProps.table}
-                                    title={t('club.participant.tracking.log')}
-                                />
+                                {user.checkPrivilege(readRegistrationGlobal) && (
+                                    <ParticipantTrackingLogTable
+                                        {...participantTrackingProps.table}
+                                        title={t('club.participant.tracking.log')}
+                                    />)}
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'organization'} activeTab={activeTab}>
@@ -425,14 +427,14 @@ const EventPage = () => {
                                     {...appUserWithQrCodeProps.table}
                                     title={t('qrCode.appUsersWithQrCode')}
                                 />
-                                <TaskTable {...taskProps.table} title={t('task.tasks')} />
-                                <TaskDialog {...taskProps.dialog} eventId={eventId} />
-                                <Shiftplan />
+                                <TaskTable {...taskProps.table} title={t('task.tasks')}/>
+                                <TaskDialog {...taskProps.dialog} eventId={eventId}/>
+                                <Shiftplan/>
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'settings'} activeTab={activeTab}>
                             <Stack spacing={4}>
-                                <RatingCategoriesForEvent />
+                                <RatingCategoriesForEvent/>
                                 <DocumentTable
                                     {...documentAdministrationProps.table}
                                     title={t('event.document.documents')}
@@ -472,11 +474,11 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'invoices'} activeTab={activeTab}>
-                            <InvoicesTab event={data} reloadEvent={reload} />
+                            <InvoicesTab event={data} reloadEvent={reload}/>
                         </TabPanel>
                     </Stack>
                 ) : (
-                    pending && <Throbber />
+                    pending && <Throbber/>
                 )}
             </Box>
             {manageRunningMatchesOpen && (

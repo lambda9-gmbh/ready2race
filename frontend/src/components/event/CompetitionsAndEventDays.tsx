@@ -1,5 +1,5 @@
 import CompetitionTable from '@components/event/competition/CompetitionTable.tsx'
-import {updateEventGlobal} from '@authorization/privileges.ts'
+import {readEventGlobal, updateEventGlobal} from '@authorization/privileges.ts'
 import InlineLink from '@components/InlineLink.tsx'
 import CompetitionDialog from '@components/event/competition/CompetitionDialog.tsx'
 import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
@@ -66,7 +66,7 @@ const CompetitionsAndEventDays = (props: Props) => {
                 {...competitionAdministrationProps.dialog}
                 isChallengeEvent={props.isChallengeEvent}
             />
-            {!props.isChallengeEvent && (
+            {!props.isChallengeEvent && user.checkPrivilege(readEventGlobal) && (
                 <>
                     <EventDayTable
                         {...eventDayAdministrationProps.table}

@@ -140,23 +140,27 @@ const InvoicesTab = ({event, reloadEvent}: Props) => {
                     reloadData()
                 }}
                 title={t('invoice.invoices')}
-                hints={[
-                    t('invoice.tableHint.1'),
-                    <>
-                        {t('invoice.tableHint.2')}
-                        <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
-                            {t('invoice.tableHint.3')}
-                        </InlineLink>
-                        {t('invoice.tableHint.4')}
-                    </>,
-                    <>
-                        {t('invoice.tableHint.5')}
-                        <InlineLink to={'/config'} search={{tab: 'global-settings'}}>
-                            {t('invoice.tableHint.6')}
-                        </InlineLink>
-                        {t('invoice.tableHint.7')}
-                    </>,
-                ]}
+                hints={
+                    checkPrivilege(createInvoiceGlobal)
+                        ? [
+                              t('invoice.tableHint.1'),
+                              <>
+                                  {t('invoice.tableHint.2')}
+                                  <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
+                                      {t('invoice.tableHint.3')}
+                                  </InlineLink>
+                                  {t('invoice.tableHint.4')}
+                              </>,
+                              <>
+                                  {t('invoice.tableHint.5')}
+                                  <InlineLink to={'/config'} search={{tab: 'global-settings'}}>
+                                      {t('invoice.tableHint.6')}
+                                  </InlineLink>
+                                  {t('invoice.tableHint.7')}
+                              </>,
+                          ]
+                        : undefined
+                }
                 dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
                     getEventInvoices({
                         signal,

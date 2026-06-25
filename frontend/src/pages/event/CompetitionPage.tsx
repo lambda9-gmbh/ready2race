@@ -22,7 +22,7 @@ import TabPanel from '@components/tab/TabPanel.tsx'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 import {useNavigate} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {readRegistrationGlobal, updateEventGlobal} from '@authorization/privileges.ts'
+import {readRegistrationGlobal, readResultGlobal, updateEventGlobal} from '@authorization/privileges.ts'
 import CompetitionSetupForEvent from '@components/event/competition/setup/CompetitionSetupForEvent.tsx'
 import {Info} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
@@ -152,276 +152,276 @@ const CompetitionPage = () => {
 
     const challengeTimespan = competitionData?.properties.challengeConfig
         ? {
-              from: competitionData?.properties.challengeConfig?.startAt,
-              to: competitionData?.properties.challengeConfig?.endAt,
-          }
+            from: competitionData?.properties.challengeConfig?.startAt,
+            to: competitionData?.properties.challengeConfig?.endAt,
+        }
         : undefined
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {(competitionData && eventData && (
-                <Stack spacing={2}>
-                    <Typography variant={'h1'}>
-                        {competitionData.properties.identifier +
-                            ' | ' +
-                            competitionData.properties.name}
-                    </Typography>
-                    <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                        <Tab label={t('event.tabs.general')} {...tabProps('general')} />
-                        {showRegistrationsTab && (
-                            <Tab
-                                label={t('event.registration.registrations')}
-                                {...tabProps('registrations')}
-                            />
-                        )}
-                        {showRegistrationsTab && (
-                            <Tab label={t('event.registration.teams')} {...tabProps('teams')} />
-                        )}
-                        {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
-                            <Tab
-                                label={t('event.competition.setup.setup')}
-                                {...tabProps('setup')}
-                            />
-                        )}
-                        {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
-                            <Tab
-                                label={t('event.competition.execution.tabTitle')}
-                                {...tabProps('execution')}
-                            />
-                        )}
-                        {!eventData.challengeEvent && (
-                            <Tab
-                                label={t('event.competition.places.tabTitle')}
-                                {...tabProps('places')}
-                            />
-                        )}
-                    </TabSelectionContainer>
-                    <TabPanel index={'general'} activeTab={activeTab}>
-                        {(competitionData.properties.description ||
-                            competitionData.properties.competitionCategory) && (
-                            <Card
-                                sx={{
-                                    p: 2,
-                                    mb: 2,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 2,
-                                }}>
-                                {competitionData.properties.competitionCategory && (
-                                    <Stack
-                                        spacing={1}
-                                        direction={'row'}
-                                        sx={{alignItems: 'center'}}>
+                    <Stack spacing={2}>
+                        <Typography variant={'h1'}>
+                            {competitionData.properties.identifier +
+                                ' | ' +
+                                competitionData.properties.name}
+                        </Typography>
+                        <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
+                            <Tab label={t('event.tabs.general')} {...tabProps('general')} />
+                            {showRegistrationsTab && (
+                                <Tab
+                                    label={t('event.registration.registrations')}
+                                    {...tabProps('registrations')}
+                                />
+                            )}
+                            {user.checkPrivilege(readRegistrationGlobal) && (
+                                <Tab label={t('event.registration.teams')} {...tabProps('teams')} />
+                            )}
+                            {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
+                                <Tab
+                                    label={t('event.competition.setup.setup')}
+                                    {...tabProps('setup')}
+                                />
+                            )}
+                            {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
+                                <Tab
+                                    label={t('event.competition.execution.tabTitle')}
+                                    {...tabProps('execution')}
+                                />
+                            )}
+                            {user.checkPrivilege(readResultGlobal) && !eventData.challengeEvent && (
+                                <Tab
+                                    label={t('event.competition.places.tabTitle')}
+                                    {...tabProps('places')}
+                                />
+                            )}
+                        </TabSelectionContainer>
+                        <TabPanel index={'general'} activeTab={activeTab}>
+                            {(competitionData.properties.description ||
+                                competitionData.properties.competitionCategory) && (
+                                <Card
+                                    sx={{
+                                        p: 2,
+                                        mb: 2,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 2,
+                                    }}>
+                                    {competitionData.properties.competitionCategory && (
+                                        <Stack
+                                            spacing={1}
+                                            direction={'row'}
+                                            sx={{alignItems: 'center'}}>
+                                            <Typography>
+                                                {t('event.competition.category.category')}:{' '}
+                                                {competitionData.properties.competitionCategory.name}
+                                            </Typography>
+                                            {competitionData.properties.competitionCategory
+                                                    .description &&
+                                                !isMobile && (
+                                                    <HtmlTooltip
+                                                        title={
+                                                            <Typography>
+                                                                {
+                                                                    competitionData.properties
+                                                                        .competitionCategory.description
+                                                                }
+                                                            </Typography>
+                                                        }>
+                                                        <Info color={'info'} fontSize={'small'}/>
+                                                    </HtmlTooltip>
+                                                )}
+                                        </Stack>
+                                    )}
+                                    {competitionData.properties.description && (
                                         <Typography>
-                                            {t('event.competition.category.category')}:{' '}
-                                            {competitionData.properties.competitionCategory.name}
+                                            {competitionData.properties.description}
                                         </Typography>
-                                        {competitionData.properties.competitionCategory
-                                            .description &&
-                                            !isMobile && (
-                                                <HtmlTooltip
-                                                    title={
-                                                        <Typography>
-                                                            {
-                                                                competitionData.properties
-                                                                    .competitionCategory.description
-                                                            }
-                                                        </Typography>
-                                                    }>
-                                                    <Info color={'info'} fontSize={'small'} />
-                                                </HtmlTooltip>
-                                            )}
-                                    </Stack>
-                                )}
-                                {competitionData.properties.description && (
-                                    <Typography>
-                                        {competitionData.properties.description}
-                                    </Typography>
-                                )}
-                            </Card>
-                        )}
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 2,
-                                [theme.breakpoints.down('md')]: {flexDirection: 'column'},
-                            }}>
-                            <Card sx={{p: 2, flex: 1}}>
-                                <Typography sx={{mb: 1}} variant="h6">
-                                    {t('event.competition.teamComposition')}
-                                </Typography>
-                                <List>
-                                    {competitionData.properties.namedParticipants.map(np => (
-                                        <Fragment key={np.id}>
-                                            <CompetitionTeamCompositionEntry
-                                                np={np}
-                                                gender={'male'}
-                                            />
-                                            <CompetitionTeamCompositionEntry
-                                                np={np}
-                                                gender={'female'}
-                                            />
-                                            <CompetitionTeamCompositionEntry
-                                                np={np}
-                                                gender={'nonBinary'}
-                                            />
-                                            <CompetitionTeamCompositionEntry
-                                                np={np}
-                                                gender={'mixed'}
-                                            />
-                                        </Fragment>
-                                    ))}
-                                </List>
-                            </Card>
-                            {competitionData.properties.fees.length > 0 && (
+                                    )}
+                                </Card>
+                            )}
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 2,
+                                    [theme.breakpoints.down('md')]: {flexDirection: 'column'},
+                                }}>
                                 <Card sx={{p: 2, flex: 1}}>
                                     <Typography sx={{mb: 1}} variant="h6">
-                                        {t('event.competition.fee.fees')}
+                                        {t('event.competition.teamComposition')}
                                     </Typography>
                                     <List>
-                                        {competitionData.properties.fees.map((f, idx) => (
-                                            <ListItem key={f.id + idx}>
-                                                <Box>
-                                                    <Stack
-                                                        direction={'row'}
-                                                        spacing={1}
-                                                        sx={{alignItems: 'center', mb: 1}}>
-                                                        <Typography fontWeight={'bold'}>
-                                                            {f.name}
-                                                        </Typography>
-                                                        {f.description && !isMobile && (
-                                                            <HtmlTooltip
-                                                                title={
-                                                                    <Typography>
-                                                                        {f.description}
-                                                                    </Typography>
-                                                                }>
-                                                                <Info
-                                                                    color={'info'}
-                                                                    fontSize={'small'}
-                                                                />
-                                                            </HtmlTooltip>
-                                                        )}
-                                                        {!f.required && (
-                                                            <Typography>
-                                                                {t(
-                                                                    'event.registration.optionalFee',
-                                                                )}
-                                                            </Typography>
-                                                        )}
-                                                    </Stack>
-                                                    {withLateRegistration ? (
-                                                        <>
-                                                            <Typography>
-                                                                <Trans
-                                                                    i18nKey={
-                                                                        'event.competition.fee.asRegular'
-                                                                    }
-                                                                    values={{amount: f.amount}}
-                                                                />
-                                                            </Typography>
-                                                            <Typography>
-                                                                <Trans
-                                                                    i18nKey={
-                                                                        'event.competition.fee.asLate'
-                                                                    }
-                                                                    values={{
-                                                                        amount:
-                                                                            f.lateAmount ??
-                                                                            f.amount,
-                                                                    }}
-                                                                />
-                                                            </Typography>
-                                                        </>
-                                                    ) : (
-                                                        <Typography>{f.amount}€</Typography>
-                                                    )}
-                                                </Box>
-                                            </ListItem>
+                                        {competitionData.properties.namedParticipants.map(np => (
+                                            <Fragment key={np.id}>
+                                                <CompetitionTeamCompositionEntry
+                                                    np={np}
+                                                    gender={'male'}
+                                                />
+                                                <CompetitionTeamCompositionEntry
+                                                    np={np}
+                                                    gender={'female'}
+                                                />
+                                                <CompetitionTeamCompositionEntry
+                                                    np={np}
+                                                    gender={'nonBinary'}
+                                                />
+                                                <CompetitionTeamCompositionEntry
+                                                    np={np}
+                                                    gender={'mixed'}
+                                                />
+                                            </Fragment>
                                         ))}
                                     </List>
                                 </Card>
-                            )}
-                            {!eventData.challengeEvent && (
-                                <Card sx={{p: 2, flex: 1}}>
-                                    {(eventDaysData && assignedEventDaysData && (
-                                        <CompetitionAndDayAssignment
-                                            entityPathId={competitionId}
-                                            options={selection}
-                                            assignedEntities={assignedEventDays}
-                                            assignEntityLabel={t('event.eventDay.eventDay')}
-                                            competitionsToDay={false}
-                                            reloadData={() => setReloadData(!reloadData)}
-                                        />
-                                    )) ||
-                                        ((eventDaysPending || assignedEventDaysPending) && (
-                                            <Throbber />
-                                        ))}
-                                </Card>
-                            )}
-                            {eventData.challengeEvent && (
-                                <Card sx={{p: 2, flex: 1}}>
-                                    {competitionData.properties.challengeConfig
-                                        ?.resultConfirmationImageRequired && (
-                                        <Typography variant={'overline'} gutterBottom>
-                                            {t(
-                                                'event.competition.challenge.resultConfirmationImageRequired',
-                                            )}
+                                {competitionData.properties.fees.length > 0 && (
+                                    <Card sx={{p: 2, flex: 1}}>
+                                        <Typography sx={{mb: 1}} variant="h6">
+                                            {t('event.competition.fee.fees')}
                                         </Typography>
-                                    )}
-                                    {challengeTimespan && (
-                                        <Typography>
-                                            {format(
-                                                new Date(challengeTimespan.from),
-                                                t('format.datetime'),
-                                            )}{' '}
-                                            -{' '}
-                                            {format(
-                                                new Date(challengeTimespan.to),
-                                                t('format.datetime'),
-                                            )}
-                                        </Typography>
-                                    )}
-                                </Card>
-                            )}
-                        </Box>
-                    </TabPanel>
-                    {showRegistrationsTab && (
-                        <TabPanel index={'registrations'} activeTab={activeTab}>
-                            <CompetitionRegistrations
-                                eventData={eventData}
-                                competitionData={competitionData}
-                                reloadEvent={reloadEvent}
-                            />
+                                        <List>
+                                            {competitionData.properties.fees.map((f, idx) => (
+                                                <ListItem key={f.id + idx}>
+                                                    <Box>
+                                                        <Stack
+                                                            direction={'row'}
+                                                            spacing={1}
+                                                            sx={{alignItems: 'center', mb: 1}}>
+                                                            <Typography fontWeight={'bold'}>
+                                                                {f.name}
+                                                            </Typography>
+                                                            {f.description && !isMobile && (
+                                                                <HtmlTooltip
+                                                                    title={
+                                                                        <Typography>
+                                                                            {f.description}
+                                                                        </Typography>
+                                                                    }>
+                                                                    <Info
+                                                                        color={'info'}
+                                                                        fontSize={'small'}
+                                                                    />
+                                                                </HtmlTooltip>
+                                                            )}
+                                                            {!f.required && (
+                                                                <Typography>
+                                                                    {t(
+                                                                        'event.registration.optionalFee',
+                                                                    )}
+                                                                </Typography>
+                                                            )}
+                                                        </Stack>
+                                                        {withLateRegistration ? (
+                                                            <>
+                                                                <Typography>
+                                                                    <Trans
+                                                                        i18nKey={
+                                                                            'event.competition.fee.asRegular'
+                                                                        }
+                                                                        values={{amount: f.amount}}
+                                                                    />
+                                                                </Typography>
+                                                                <Typography>
+                                                                    <Trans
+                                                                        i18nKey={
+                                                                            'event.competition.fee.asLate'
+                                                                        }
+                                                                        values={{
+                                                                            amount:
+                                                                                f.lateAmount ??
+                                                                                f.amount,
+                                                                        }}
+                                                                    />
+                                                                </Typography>
+                                                            </>
+                                                        ) : (
+                                                            <Typography>{f.amount}€</Typography>
+                                                        )}
+                                                    </Box>
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    </Card>
+                                )}
+                                {!eventData.challengeEvent && (
+                                    <Card sx={{p: 2, flex: 1}}>
+                                        {(eventDaysData && assignedEventDaysData && (
+                                                <CompetitionAndDayAssignment
+                                                    entityPathId={competitionId}
+                                                    options={selection}
+                                                    assignedEntities={assignedEventDays}
+                                                    assignEntityLabel={t('event.eventDay.eventDay')}
+                                                    competitionsToDay={false}
+                                                    reloadData={() => setReloadData(!reloadData)}
+                                                />
+                                            )) ||
+                                            ((eventDaysPending || assignedEventDaysPending) && (
+                                                <Throbber/>
+                                            ))}
+                                    </Card>
+                                )}
+                                {eventData.challengeEvent && (
+                                    <Card sx={{p: 2, flex: 1}}>
+                                        {competitionData.properties.challengeConfig
+                                            ?.resultConfirmationImageRequired && (
+                                            <Typography variant={'overline'} gutterBottom>
+                                                {t(
+                                                    'event.competition.challenge.resultConfirmationImageRequired',
+                                                )}
+                                            </Typography>
+                                        )}
+                                        {challengeTimespan && (
+                                            <Typography>
+                                                {format(
+                                                    new Date(challengeTimespan.from),
+                                                    t('format.datetime'),
+                                                )}{' '}
+                                                -{' '}
+                                                {format(
+                                                    new Date(challengeTimespan.to),
+                                                    t('format.datetime'),
+                                                )}
+                                            </Typography>
+                                        )}
+                                    </Card>
+                                )}
+                            </Box>
                         </TabPanel>
-                    )}
-                    {showRegistrationsTab && (
-                        <TabPanel index={'teams'} activeTab={activeTab}>
-                            <CompetitionRegistrationTeams
-                                eventData={eventData}
-                                competitionData={competitionData}
-                            />
-                        </TabPanel>
-                    )}
-                    {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
-                        <TabPanel index={'setup'} activeTab={activeTab}>
-                            <CompetitionSetupForEvent />
-                        </TabPanel>
-                    )}
-                    {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
-                        <TabPanel index={'execution'} activeTab={activeTab}>
-                            <CompetitionExecution />
-                        </TabPanel>
-                    )}
-                    {!eventData.challengeEvent && (
-                        <TabPanel index={'places'} activeTab={activeTab}>
-                            <CompetitionPlaces />
-                        </TabPanel>
-                    )}
-                </Stack>
-            )) ||
-                (competitionPending && eventPending && <Throbber />)}
+                        {showRegistrationsTab && (
+                            <TabPanel index={'registrations'} activeTab={activeTab}>
+                                <CompetitionRegistrations
+                                    eventData={eventData}
+                                    competitionData={competitionData}
+                                    reloadEvent={reloadEvent}
+                                />
+                            </TabPanel>
+                        )}
+                        {user.checkPrivilege(readRegistrationGlobal) && (
+                            <TabPanel index={'teams'} activeTab={activeTab}>
+                                <CompetitionRegistrationTeams
+                                    eventData={eventData}
+                                    competitionData={competitionData}
+                                />
+                            </TabPanel>
+                        )}
+                        {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
+                            <TabPanel index={'setup'} activeTab={activeTab}>
+                                <CompetitionSetupForEvent/>
+                            </TabPanel>
+                        )}
+                        {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
+                            <TabPanel index={'execution'} activeTab={activeTab}>
+                                <CompetitionExecution/>
+                            </TabPanel>
+                        )}
+                        {user.checkPrivilege(readResultGlobal) && !eventData.challengeEvent && (
+                            <TabPanel index={'places'} activeTab={activeTab}>
+                                <CompetitionPlaces/>
+                            </TabPanel>
+                        )}
+                    </Stack>
+                )) ||
+                (competitionPending && eventPending && <Throbber/>)}
         </Box>
     )
 }

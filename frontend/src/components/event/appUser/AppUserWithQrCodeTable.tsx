@@ -12,6 +12,7 @@ import EntityTable from '../../EntityTable.tsx'
 import {Delete, Edit} from '@mui/icons-material'
 import {Fragment, useMemo, useState} from 'react'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import {useFeedback} from '@utils/hooks.ts'
 import {format} from 'date-fns'
 import {AppUserQrCodeEditDialog} from './AppUserQrCodeEditDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
@@ -29,6 +30,7 @@ const AppUserWithQrCodeTable = (props: BaseEntityTableProps<AppUserWithQrCodeDto
     const {t} = useTranslation()
     const {eventId} = eventIndexRoute.useParams()
     const {confirmAction} = useConfirmation()
+    const feedback = useFeedback()
 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [editQrUser, setEditQrUser] = useState<AppUserWithQrCodeDto | null>(null)
@@ -112,9 +114,14 @@ const AppUserWithQrCodeTable = (props: BaseEntityTableProps<AppUserWithQrCodeDto
     const handleDeleteQr = (appUser: AppUserWithQrCodeDto) => {
         confirmAction(
             async () => {
-                await deleteQrCodeForEvent({
+                const {error} = await deleteQrCodeForEvent({
                     path: {eventId, qrCodeId: appUser.qrCodeId},
                 })
+                if (error) {
+                    feedback.error(t('qrAppuser.deleteError'))
+                } else {
+                    feedback.success(t('qrAssign.deleteSuccess'))
+                }
                 props.reloadData()
             },
             {
