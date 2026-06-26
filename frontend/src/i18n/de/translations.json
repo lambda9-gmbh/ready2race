@@ -113,7 +113,7 @@
     "continue": "Weiter",
     "file": {
       "download": "Herunterladen",
-      "downloadCsv" : "CSV herunterladen",
+      "downloadCsv": "CSV herunterladen",
       "view": "Anzeigen"
     },
     "add": "Hinzufügen",
@@ -342,6 +342,12 @@
     "error": {
       "nameAlreadyExists": "Ein Verein mit diesem Namen existiert bereits",
       "mustSelectExistingClub": "Bitte wählen Sie einen bestehenden Verein aus der Liste aus"
+    },
+    "create": {
+      "option": "„{{name}}“ neu anlegen",
+      "existingSelected": "Bestehender Verein ausgewählt",
+      "joinRequest": "Beitrittsanfrage: Ein Administrator von „{{name}}“ muss Ihre Anfrage bestätigen, bevor Sie den Verein verwalten können.",
+      "willCreate": "Neuer Verein „{{name}}“ wird angelegt"
     },
     "settings": {
       "title": "Vereinseinstellungen",
@@ -1360,17 +1366,15 @@
     "registration": {
       "register": "Registrieren",
       "pendingRegistrations": "Ausstehende Registrierungen",
-      "registrationType": "Registrierungstyp",
       "asParticipant": "Als Teilnehmer:in",
       "asClubRepresentative": "Als Vereinsverwaltung",
       "step": {
-        "competitionsNotApplicable": "Keine Wettkampfauswahl erforderlich",
         "emailToSubmitResults": "Um ein Ergebnis selbst hochzuladen, ist eine E-Mail-Adresse erforderlich. Andernfalls muss die Vereinsverwaltung das Ergebnis für Sie eingeben."
       },
       "teamCompetitionsOmitted": "Mit diesem Formular können Sie sich nur für Einzelwettkämpfe anmelden. Um an Mannschaftswettkämpfen teilzunehmen, wenden Sie sich bitte an Ihre Vereinsverwaltung.",
       "error": {
         "generic": "Beim Registrieren ist ein Fehler aufgetreten",
-        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
+        "selectType": "Bitte wählen Sie einen Registrierungstyp aus",
         "selectAtLeastOneCompetition": "Bitte wählen Sie mindestens einen Wettkampf aus"
       },
       "requested": {
@@ -1400,7 +1404,17 @@
             "unexpected": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuchen Sie es später erneut."
           }
         }
-      }
+      },
+      "type": {
+        "club": {
+          "description": "Verwalten Sie ein Vereinskonto: Melden Sie Mitglieder für Wettkämpfe und Veranstaltungen an."
+        },
+        "participant": {
+          "description": "Melden Sie sich selbst für die Einzelwettkämpfe einer Veranstaltung an.",
+          "unavailable": "Derzeit sind keine Veranstaltungen mit Wettkämpfen zur Selbstanmeldung von Teilnehmer:innen verfügbar."
+        }
+      },
+      "competitionSelectionOptional": "Die Auswahl einer Veranstaltung und von Wettkämpfen ist optional - Sie können sich auch später über Ihr Vereinskonto anmelden."
     },
     "resetPassword": {
       "resetPassword": "Passwort zurücksetzen",
@@ -1873,7 +1887,7 @@
       "emailTemplates": "Email-Vorlagen"
     },
     "emailTemplates": {
-      "placeholders":{
+      "placeholders": {
         "recipient": "Max Mustermann",
         "sender": "Erika Mustermann",
         "link": "ready2race.info/beispiel-link",
@@ -1884,25 +1898,25 @@
         "date": "01.01.1970"
       },
       "templateKeys": {
-        "USER_REGISTRATION":"Benutzerregistrierung",
-        "USER_INVITATION":"Benutzereinladung",
-        "USER_RESET_PASSWORD":"Passwort zurücksetzen",
-        "EVENT_REGISTRATION_CONFIRMATION":"Anmeldebestätigung für Veranstaltung",
-        "EVENT_REGISTRATION_INVOICE":"Rechnung zur Veranstaltungsanmeldung",
-        "PARTICIPANT_CHALLENGE_REGISTERED":"Anmeldebestätigung für Challenge",
-        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT":"Teilnahmezertifikat"
+        "USER_REGISTRATION": "Benutzerregistrierung",
+        "USER_INVITATION": "Benutzereinladung",
+        "USER_RESET_PASSWORD": "Passwort zurücksetzen",
+        "EVENT_REGISTRATION_CONFIRMATION": "Anmeldebestätigung für Veranstaltung",
+        "EVENT_REGISTRATION_INVOICE": "Rechnung zur Veranstaltungsanmeldung",
+        "PARTICIPANT_CHALLENGE_REGISTERED": "Anmeldebestätigung für Challenge",
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Teilnahmezertifikat"
       },
       "requiredPlaceholders": "Benötigte Platzhalter:",
       "optionalPlaceholders": "Optionale Platzhalter:",
       "requiredPlaceholdersMissing": "Alle benötigten Platzhalter müssen verwendet werden",
-      "resetTemplate":"Vorlage zurücksetzten",
-      "resetTemplateConfirmationText":"Sind Sie sicher, dass Sie die Vorlage zurücksetzen wollen?",
-      "response":{
+      "resetTemplate": "Vorlage zurücksetzten",
+      "resetTemplateConfirmationText": "Sind Sie sicher, dass Sie die Vorlage zurücksetzen wollen?",
+      "response": {
         "changeSuccessful": "{{key}}-Vorlage erfolgreich geändert",
         "resetSuccessful": "{{key}}-Vorlage erfolgreich zurückgesetzt",
         "changeFailed": "{{key}}-Vorlage konnte nicht verändert werden"
       },
-      "formActions":{
+      "formActions": {
         "reset": "Template zurücksetzten",
         "change": "Template ändern"
       }

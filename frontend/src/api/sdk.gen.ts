@@ -34,6 +34,8 @@ import type {
     VerifyUserRegistrationData,
     VerifyUserRegistrationError,
     VerifyUserRegistrationResponse,
+    GetSingleCompetitionSelfRegistrationsAvailableError,
+    GetSingleCompetitionSelfRegistrationsAvailableResponse,
     InviteUserData,
     InviteUserError,
     InviteUserResponse,
@@ -863,6 +865,21 @@ export const verifyUserRegistration = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/user/registration/verify',
+    })
+}
+
+export const getSingleCompetitionSelfRegistrationsAvailable = <
+    ThrowOnError extends boolean = false,
+>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetSingleCompetitionSelfRegistrationsAvailableResponse,
+        GetSingleCompetitionSelfRegistrationsAvailableError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/registration/singleCompetitionSelfRegistrationsAvailable',
     })
 }
 

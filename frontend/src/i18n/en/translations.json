@@ -113,7 +113,7 @@
     "continue": "Continue",
     "file": {
       "download": "Download",
-      "downloadCsv" : "Download CSV",
+      "downloadCsv": "Download CSV",
       "view": "View"
     },
     "add": "Add",
@@ -342,6 +342,12 @@
     "error": {
       "nameAlreadyExists": "A club with this name already exists",
       "mustSelectExistingClub": "Please select an existing club from the list"
+    },
+    "create": {
+      "option": "Create “{{name}}”",
+      "existingSelected": "Existing club selected",
+      "joinRequest": "Join request: an administrator of “{{name}}” must approve your request before you can manage the club.",
+      "willCreate": "New club “{{name}}” will be created"
     },
     "settings": {
       "title": "Club Settings",
@@ -1360,17 +1366,15 @@
     "registration": {
       "register": "Register",
       "pendingRegistrations": "Pending registrations",
-      "registrationType": "Registration Type",
       "asParticipant": "As Participant",
       "asClubRepresentative": "As Challenge Manager",
       "step": {
-        "competitionsNotApplicable": "No competition selection required for challenge manager registrations",
         "emailToSubmitResults": "To submit a result yourself, an email address is required. Otherwise, a club representative will need to enter the result on your behalf."
       },
       "teamCompetitionsOmitted": "You can only register for individual competitions using this form. To participate in team competitions, please contact your club administration.",
       "error": {
         "generic": "Beim Registrieren ist ein Fehler aufgetreten",
-        "selectAtLeastOneType": "Bitte wählen Sie mindestens einen Registrierungstyp aus",
+        "selectType": "Please select a registration type",
         "selectAtLeastOneCompetition": "Bitte wählen Sie mindestens einen Wettkampf aus"
       },
       "requested": {
@@ -1400,7 +1404,17 @@
             "unexpected": "Your e-mail address could not be confirmed. Please try again later."
           }
         }
-      }
+      },
+      "type": {
+        "club": {
+          "description": "Manage a club account: register members for competitions and events."
+        },
+        "participant": {
+          "description": "Register yourself for the individual competitions of an event.",
+          "unavailable": "Currently no events with competitions are open for participant self-registration."
+        }
+      },
+      "competitionSelectionOptional": "Selecting an event and competitions is optional - you can also register for them later through your club account."
     },
     "resetPassword": {
       "resetPassword": "Reset password",
@@ -1873,7 +1887,7 @@
       "emailTemplates": "Email templates"
     },
     "emailTemplates": {
-      "placeholders":{
+      "placeholders": {
         "recipient": "John Doe",
         "sender": "Jane Doe",
         "link": "ready2race.info/example-link",
@@ -1884,19 +1898,19 @@
         "date": "01.01.1970"
       },
       "templateKeys": {
-        "USER_REGISTRATION":"User Registration",
-        "USER_INVITATION":"User Invitation",
-        "USER_RESET_PASSWORD":"Password Reset",
-        "EVENT_REGISTRATION_CONFIRMATION":"Event Registration Confirmation",
-        "EVENT_REGISTRATION_INVOICE":"Event Registration Invoice",
-        "PARTICIPANT_CHALLENGE_REGISTERED":"Challenge Registration Confirmed",
-        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT":"Certificate of Participation"
+        "USER_REGISTRATION": "User Registration",
+        "USER_INVITATION": "User Invitation",
+        "USER_RESET_PASSWORD": "Password Reset",
+        "EVENT_REGISTRATION_CONFIRMATION": "Event Registration Confirmation",
+        "EVENT_REGISTRATION_INVOICE": "Event Registration Invoice",
+        "PARTICIPANT_CHALLENGE_REGISTERED": "Challenge Registration Confirmed",
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Certificate of Participation"
       },
       "requiredPlaceholders": "Required Placeholders:",
       "optionalPlaceholders": "Optional Placeholders:",
       "requiredPlaceholdersMissing": "All required Placeholders must be used",
-      "resetTemplate":"Reset template",
-      "resetTemplateConfirmationText":"Are you certain, you want to reset the template?",
+      "resetTemplate": "Reset template",
+      "resetTemplateConfirmationText": "Are you certain, you want to reset the template?",
       "response": {
         "changeSuccessful": "{{key}} template changed successfully",
         "resetSuccessful": "{{key}} template reset successfully",

@@ -70,8 +70,8 @@ export type AppUserRegisterRequest = {
     language: EmailLanguage
     callbackUrl: string
     registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
-    birthYear?: number
-    gender?: Gender
+    birthYear: number
+    gender: Gender
 }
 
 export type AppUserRegistrationDto = {
@@ -2383,6 +2383,10 @@ export type VerifyUserRegistrationData = {
 export type VerifyUserRegistrationResponse = unknown
 
 export type VerifyUserRegistrationError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetSingleCompetitionSelfRegistrationsAvailableResponse = boolean
+
+export type GetSingleCompetitionSelfRegistrationsAvailableError = BadRequestError | ApiError
 
 export type InviteUserData = {
     body: InviteRequest

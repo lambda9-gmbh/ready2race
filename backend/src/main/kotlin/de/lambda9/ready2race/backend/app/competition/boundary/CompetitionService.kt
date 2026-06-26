@@ -21,6 +21,7 @@ import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasCompetition
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
+import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
@@ -288,5 +289,30 @@ object CompetitionService {
                 )
             )
         )
+    }
+
+    fun getAnyAvailableForSelfRegistration(): App<ServiceError, ApiResponse.Dto<Boolean>> = KIO.comprehension {
+
+        val allPublicEvents = !EventRepo.getAllPublic().orDie()
+        logger.info{ "All public events: ${allPublicEvents.map { it.name }}" }
+        val eventsWithSelfRegistration = allPublicEvents.filter { it.participantSelfRegistration == true }
+        logger.info{ "All events with self reg: ${eventsWithSelfRegistration.map { it.name }}" }
+
+        val competitions = !CompetitionRepo.getPublicCompetitions(eventsWithSelfRegistration.map { it.id!! }).orDie()
+        val competitionsWithoutTeamComps = competitions.filter { competition ->
+            competition.namedParticipants!!.size == 1 && competition.namedParticipants!!.first()
+                .let { it!!.countMales!! + it.countFemales!! + it.countNonBinary!! + it.countMixed!! } == 1
+        }
+        logger.info{ "Comps without team comps: ${competitionsWithoutTeamComps.map { it.name }}" }
+
+        // Handle late/closed registration
+        val openForRegistrationTypes = !competitionsWithoutTeamComps.traverse { c ->
+            EventService.getOpenForRegistrationType(c.event!!)
+        }
+        if (openForRegistrationTypes.isEmpty() || openForRegistrationTypes.all { it == OpenForRegistrationType.CLOSED }) {
+            KIO.ok(ApiResponse.Dto(false))
+        } else {
+            KIO.ok(ApiResponse.Dto(true))
+        }
     }
 }

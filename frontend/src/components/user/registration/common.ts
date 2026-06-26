@@ -12,6 +12,15 @@ export enum RegistrationStep {
     CONFIRMATION = 3,
 }
 
+/**
+ * The two mutually exclusive registration flows:
+ * - CLUB: a club administration account (AppUser) is created. The registrant is always also
+ *   created as a participant. Registering for single competitions is optional.
+ * - PARTICIPANT: only a participant is created (no account). Selecting an event and at least
+ *   one single competition is mandatory. Only available when single competitions are open.
+ */
+export type RegistrationType = 'CLUB' | 'PARTICIPANT'
+
 export type CompetitionRegistration = {
     checked: boolean
     competitionId: string
@@ -24,8 +33,7 @@ export type RegistrationForm = {
     clubId?: string
     firstname: string
     lastname: string
-    isParticipant: boolean
-    isChallengeManager: boolean
+    registrationType?: RegistrationType
     event: AutocompleteOption
     competitions: CompetitionRegistration[]
     birthYear: string
@@ -55,8 +63,8 @@ export function mapFormToAppUserRegisterRequest(
                 ratingCategory:
                     competition.ratingCategory !== 'none' ? competition.ratingCategory : undefined,
             })),
-        birthYear: formData.birthYear !== '' ? Number(formData.birthYear) : undefined,
-        gender: formData.gender,
+        birthYear: Number(formData.birthYear),
+        gender: formData.gender!,
     }
 }
 

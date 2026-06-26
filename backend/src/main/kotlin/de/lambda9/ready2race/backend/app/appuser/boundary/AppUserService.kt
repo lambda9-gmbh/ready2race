@@ -299,7 +299,7 @@ object AppUserService {
         // Competition registrations
         if (request.registerToSingleCompetitions.isNotEmpty()) {
 
-            val birthYear = request.birthYear!! // Verified in validation
+            val birthYear = request.birthYear
 
             val competitions =
                 !CompetitionRepo.getByIds(request.registerToSingleCompetitions.map { it.competitionId }).orDie()
@@ -486,27 +486,28 @@ object AppUserService {
             userId
         }
 
+        // Always create a participant with the data of the registration
+        val participantRecord = ParticipantRecord(
+            id = UUID.randomUUID(),
+            club = clubId,
+            firstname = registration.firstname,
+            lastname = registration.lastname,
+            year = registration.year!!,
+            gender = registration.gender!!,
+            phone = null,
+            external = false,
+            externalClubName = null,
+            createdAt = now,
+            createdBy = userId,
+            updatedAt = now,
+            updatedBy = userId,
+            email = registration.email,
+        )
+        val participantId = !ParticipantRepo.create(participantRecord).orDie()
+
         // Handle competition registrations if present
 
         if (competitionRegistrations.isNotEmpty()) {
-            val participantRecord = ParticipantRecord(
-                id = UUID.randomUUID(),
-                club = clubId,
-                firstname = registration.firstname,
-                lastname = registration.lastname,
-                year = registration.year!!,
-                gender = registration.gender!!,
-                phone = null,
-                external = false,
-                externalClubName = null,
-                createdAt = now,
-                createdBy = userId,
-                updatedAt = now,
-                updatedBy = userId,
-                email = registration.email,
-            )
-            val participantId = !ParticipantRepo.create(participantRecord).orDie()
-
             val competitions = !CompetitionRepo.getByIds(competitionRegistrations.map { it.competitionId }).orDie()
             val eventId = competitions.first().event!!
 

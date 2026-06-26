@@ -244,6 +244,20 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /user/registration/singleCompetitionSelfRegistrationsAvailable:
+    get:
+      operationId: getSingleCompetitionSelfRegistrationsAvailable
+      responses:
+        200:
+          description: SingleCompetitionRegistrationsAvailable successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: boolean
+        400:
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
   /user/invitation:
     post:
       operationId: inviteUser
@@ -6705,16 +6719,16 @@ paths:
 
     put:
       parameters:
-          - in: query
-            name: key
-            required: true
-            schema:
-              $ref: '#/components/schemas/EmailTemplateKey'
-          - in: query
-            name: language
-            required: true
-            schema:
-              $ref: '#/components/schemas/EmailLanguage'
+        - in: query
+          name: key
+          required: true
+          schema:
+            $ref: '#/components/schemas/EmailTemplateKey'
+        - in: query
+          name: language
+          required: true
+          schema:
+            $ref: '#/components/schemas/EmailLanguage'
       operationId: setEmailTemplate
       requestBody:
         required: true
@@ -6743,16 +6757,16 @@ paths:
 
     delete:
       parameters:
-          - in: query
-            name: key
-            required: true
-            schema:
-              $ref: '#/components/schemas/EmailTemplateKey'
-          - in: query
-            name: language
-            required: true
-            schema:
-              $ref: '#/components/schemas/EmailLanguage'
+        - in: query
+          name: key
+          required: true
+          schema:
+            $ref: '#/components/schemas/EmailTemplateKey'
+        - in: query
+          name: language
+          required: true
+          schema:
+            $ref: '#/components/schemas/EmailLanguage'
       operationId: deleteEmailTemplate
       summary: Delete SMTP override configuration
       responses:
@@ -7719,6 +7733,8 @@ components:
         - language
         - callbackUrl
         - registerToSingleCompetitions
+        - birthYear
+        - gender
       properties:
         email:
           type: string
@@ -12355,18 +12371,18 @@ components:
         - EVENT_REGISTRATION_INVOICE
         - PARTICIPANT_CHALLENGE_REGISTERED
         - CERTIFICATE_OF_PARTICIPATION_PARTICIPANT
-      
+
     EmailTemplaplatePlaceholder:
       type: string
       enum:
-       - recipient
-       - sender
-       - link
-       - event
-       - club
-       - participants
-       - competitions
-       - date
+        - recipient
+        - sender
+        - link
+        - event
+        - club
+        - participants
+        - competitions
+        - date
     
     EmailTemplateRequest:
       type: object
@@ -12404,12 +12420,12 @@ components:
         bodyIsHtml:
           type: boolean
         requiredPlaceholders:
-            type: array
-            items: 
-              $ref: '#/components/schemas/EmailTemplaplatePlaceholder'
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailTemplaplatePlaceholder'
         optionalPlaceholders:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/EmailTemplaplatePlaceholder'
     
     SmtpConfigOverrideDto:

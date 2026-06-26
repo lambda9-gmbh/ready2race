@@ -3,9 +3,10 @@ import {useMemo, useRef, useState} from 'react'
 import {SliderElement} from 'react-hook-form-mui'
 import {UseFetchReturn, useWindowSize} from '@utils/hooks.ts'
 import {ApiError, CaptchaDto} from '@api/types.gen.ts'
-import {Box, Stack, Typography} from '@mui/material'
+import {Alert, Box, Stack, Typography} from '@mui/material'
 import {touchSupported} from '@utils/helpers.ts'
 import Config from '../../../Config.ts'
+import Throbber from "@components/Throbber.tsx";
 
 type Props = {
     captchaProps: UseFetchReturn<CaptchaDto, ApiError>
@@ -37,7 +38,7 @@ const FormInputCaptcha = (props: Props) => {
     }, [windowSize, loaded])
     return (
         <Box display={'flex'} justifyContent={'center'}>
-            {data ? (
+            {data && !pending ? (
                 <Stack>
                     <Typography>
                         {touchSupported()
@@ -89,9 +90,9 @@ const FormInputCaptcha = (props: Props) => {
                     </Box>
                 </Stack>
             ) : pending ? (
-                <Typography>{t('captcha.loading')}</Typography>
+                <Throbber/>
             ) : (
-                <Typography>{t('common.error.unexpected')}</Typography>
+                <Alert severity={'error'}>{t('common.error.unexpected')}</Alert>
             )}
         </Box>
     )

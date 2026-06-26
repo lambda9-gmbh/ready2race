@@ -223,6 +223,8 @@ object CompetitionRepo {
         }
     }
 
+    fun getPublicCompetitions(eventIds: List<UUID>) = COMPETITION_PUBLIC_VIEW.select { EVENT.`in`(eventIds) }
+
     fun getPublicCompetitions(eventId: UUID) = COMPETITION_PUBLIC_VIEW.select { EVENT.eq(eventId) }
 
     fun findUnknown(
@@ -241,11 +243,12 @@ object CompetitionRepo {
 
     fun insertJsonData(data: String) = COMPETITION.insertJsonData(data)
 
-    fun getDataForCsvResultsByCompetitionId(competitionId: UUID): JIO<EventDataForCompetitionResultsRecord?> = Jooq.query {
-        with(EVENT_DATA_FOR_COMPETITION_RESULTS) {
-            selectFrom(this)
-                .where(COMPETITION_ID.eq(competitionId))
-                .fetchOne()
+    fun getDataForCsvResultsByCompetitionId(competitionId: UUID): JIO<EventDataForCompetitionResultsRecord?> =
+        Jooq.query {
+            with(EVENT_DATA_FOR_COMPETITION_RESULTS) {
+                selectFrom(this)
+                    .where(COMPETITION_ID.eq(competitionId))
+                    .fetchOne()
+            }
         }
-    }
 }

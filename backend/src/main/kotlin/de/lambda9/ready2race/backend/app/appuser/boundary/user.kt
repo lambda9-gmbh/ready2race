@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.appuser.boundary
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competition.boundary.CompetitionService
 import de.lambda9.ready2race.backend.app.task.boundary.TaskService
 import de.lambda9.ready2race.backend.app.task.entity.TaskWithResponsibleUsersSort
 import de.lambda9.ready2race.backend.app.workShift.boundary.WorkShiftService
@@ -137,6 +138,12 @@ fun Route.user() {
                 call.respondComprehension {
                     val body = !receiveKIO(VerifyRegistrationRequest.example)
                     AppUserService.verifyRegistration(body)
+                }
+            }
+
+            get("/singleCompetitionSelfRegistrationsAvailable") {
+                call.respondComprehension {
+                    CompetitionService.getAnyAvailableForSelfRegistration()
                 }
             }
         }

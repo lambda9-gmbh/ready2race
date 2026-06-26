@@ -1,4 +1,5 @@
 import {Alert, Stack, useMediaQuery, useTheme} from '@mui/material'
+import {Info} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {useFormContext} from 'react-hook-form-mui'
 import {useMemo} from 'react'
@@ -9,81 +10,92 @@ import {AutocompleteClub} from '@components/club/AutocompleteClub.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {RegistrationForm} from '@components/user/registration/common.ts'
-import {EventPublicDto} from '@api/types.gen.ts'
 
 interface Step2BasicInformationProps {
     createClubOnRegistrationAllowed: boolean | null
-    selectedEvent: EventPublicDto | undefined
 }
 
-export const Step2BasicInformation = ({
-    createClubOnRegistrationAllowed,
-    selectedEvent,
-}: Step2BasicInformationProps) => {
+export const Step2BasicInformation = ({createClubOnRegistrationAllowed}: Step2BasicInformationProps) => {
     const {t} = useTranslation()
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const formContext = useFormContext<RegistrationForm>()
 
-    const watchIsParticipant = formContext.watch('isParticipant')
-    const watchIsChallengeManager = formContext.watch('isChallengeManager')
+    const isClub = formContext.watch('registrationType') === 'CLUB'
+    const clubname = formContext.watch('clubname')
+    const clubId = formContext.watch('clubId')
+
+    const canCreateClub = createClubOnRegistrationAllowed === true && isClub
 
     const currentYear = useMemo(() => new Date().getFullYear(), [])
 
     return (
         <Stack spacing={3}>
-            <AutocompleteClub
-                name="clubname"
-                label={t('club.club')}
-                required
-                freeSolo={createClubOnRegistrationAllowed === true && watchIsChallengeManager}
-            />
+            <Stack spacing={1}>
+                <AutocompleteClub
+                    name="clubname"
+                    label={t('club.club')}
+                    required
+                    freeSolo={canCreateClub}
+                    allowCreate={canCreateClub}
+                />
+                {clubId ? (
+                    // A club admin registering against an existing club only creates a pending
+                    // join request that a club administrator (a current representative, or a
+                    // platform admin if the club has none yet) must approve. Participants are
+                    // simply filed under the club, so they get the plain confirmation.
+                    isClub ? (
+                        <Alert severity="info" icon={<Info />} sx={{py: 0}}>
+                            {t('club.create.joinRequest', {name: clubname?.trim() ?? ''})}
+                        </Alert>
+                    ) : (
+                        <Alert severity="success" icon={<Info />} sx={{py: 0}}>
+                            {t('club.create.existingSelected')}
+                        </Alert>
+                    )
+                ) : (
+                    canCreateClub &&
+                    clubname?.trim() && (
+                        <Alert severity="info" icon={<Info />} sx={{py: 0}}>
+                            {t('club.create.willCreate', {name: clubname.trim()})}
+                        </Alert>
+                    )
+                )}
+            </Stack>
 
             <FormInputText name="firstname" label={t('user.firstname')} required />
 
             <FormInputText name="lastname" label={t('user.lastname')} required />
 
-            {watchIsChallengeManager ? (
+            {isClub ? (
                 <FormInputEmail name="emailRequired" label={t('user.email.email')} required />
             ) : (
-                <>
-                    <FormInputEmail name="emailOptional" label={t('user.email.email')} />
-                    {selectedEvent && selectedEvent.allowSelfSubmission && (
-                        <Alert severity={'info'}>
-                            {t('user.registration.step.emailToSubmitResults')}
-                        </Alert>
-                    )}
-                </>
+                <FormInputEmail name="emailOptional" label={t('user.email.email')} />
             )}
 
-            {watchIsChallengeManager && (
-                <NewPassword formContext={formContext} horizontal={!isMobile} />
-            )}
+            {isClub && <NewPassword formContext={formContext} horizontal={!isMobile} />}
 
-            {watchIsParticipant && (
-                <>
-                    <FormInputRadioButtonGroup
-                        name="gender"
-                        label={t('entity.gender')}
-                        required
-                        row
-                        options={[
-                            {label: 'M', id: 'M'},
-                            {label: 'F', id: 'F'},
-                            {label: 'D', id: 'D'},
-                        ]}
-                    />
+            {/* A participant is always created - gender and birth year are mandatory for both flows */}
+            <FormInputRadioButtonGroup
+                name="gender"
+                label={t('entity.gender')}
+                required
+                row
+                options={[
+                    {label: 'M', id: 'M'},
+                    {label: 'F', id: 'F'},
+                    {label: 'D', id: 'D'},
+                ]}
+            />
 
-                    <FormInputNumber
-                        required
-                        name={'birthYear'}
-                        label={t('user.birthYear')}
-                        integer
-                        min={currentYear - 120}
-                        max={currentYear}
-                    />
-                </>
-            )}
+            <FormInputNumber
+                required
+                name={'birthYear'}
+                label={t('user.birthYear')}
+                integer
+                min={currentYear - 120}
+                max={currentYear}
+            />
         </Stack>
     )
 }

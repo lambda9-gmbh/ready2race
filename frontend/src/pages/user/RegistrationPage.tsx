@@ -8,6 +8,7 @@ import {
     getPublicEvents,
     getRatingCategoriesForEvent,
     getRegistrationDocuments,
+    getSingleCompetitionSelfRegistrationsAvailable,
     participantSelfRegister,
     registerUser,
 } from 'api/sdk.gen.ts'
@@ -19,12 +20,13 @@ import ConfirmationMailSent from '@components/user/ConfirmationMailSent.tsx'
 import {
     CaptchaDto,
     EventPublicDto,
+    GetCompetitionsForRegistrationResponse,
     type ParticipantSelfRegisterError,
     RegisterUserError,
 } from '@api/types.gen.ts'
 import {Step1RegistrationType} from '@components/user/registration/steps/Step1RegistrationType.tsx'
 import {Step2BasicInformation} from '@components/user/registration/steps/Step2BasicInformation.tsx'
-import {Step3Competitions} from '@components/user/registration/steps/Step3Competitions.tsx'
+import {Step3EventCompetitions} from '@components/user/registration/steps/Step3EventCompetitions.tsx'
 import {Step4Confirmation} from '@components/user/registration/steps/Step4Confirmation.tsx'
 import {
     CompetitionRegistration,
@@ -41,23 +43,23 @@ import {StepIconProps} from '@mui/material/StepIcon'
 import {CheckCircleOutline} from '@mui/icons-material'
 import {getRegistrationState} from '@utils/helpers.ts'
 
-const stepIcons: {[index: string]: JSX.Element} = {
-    1: <HowToRegIcon />,
-    2: <InfoIcon />,
-    3: <EmojiEventsIcon />,
-    4: <CheckCircleIcon />,
+const stepIcons: Record<RegistrationStep, JSX.Element> = {
+    [RegistrationStep.REGISTRATION_TYPE]: <HowToRegIcon />,
+    [RegistrationStep.BASIC_INFORMATION]: <InfoIcon />,
+    [RegistrationStep.COMPETITIONS]: <EmojiEventsIcon />,
+    [RegistrationStep.CONFIRMATION]: <CheckCircleIcon />,
 }
 
-function CustomStepIcon(props: StepIconProps) {
-    const {active, completed, icon} = props
+function CustomStepIcon(props: StepIconProps & {stepType: RegistrationStep}) {
+    const {active, completed, stepType} = props
     return (
         <Box
             sx={{
-                color: completed ? 'primary.main' : active ? 'primary.main' : 'text.disabled',
+                color: completed || active ? 'primary.main' : 'text.disabled',
                 display: 'flex',
                 alignItems: 'center',
             }}>
-            {stepIcons[String(icon)]}
+            {stepIcons[stepType]}
         </Box>
     )
 }
@@ -69,15 +71,17 @@ const RegistrationPage = () => {
     const [submitting, setSubmitting] = useState(false)
     const [requested, setRequested] = useState<false | 'CONFIRMATION_MAIL' | 'PARTICIPATING'>(false)
     const [activeStep, setActiveStep] = useState(0)
-    const [reloadCompetitions, setReloadCompetitions] = useState(0)
+    const [competitionsData, setCompetitionsData] =
+        useState<GetCompetitionsForRegistrationResponse>()
+    const [competitionsLoading, setCompetitionsLoading] = useState(false)
+    const [registeredForEvent, setRegisteredForEvent] = useState<EventPublicDto | null>(null)
 
     const defaultValues: RegistrationForm = {
         clubname: '',
         clubId: undefined,
         firstname: '',
         lastname: '',
-        isParticipant: false,
-        isChallengeManager: false,
+        registrationType: undefined,
         event: null,
         competitions: [],
         birthYear: '',
@@ -91,27 +95,72 @@ const RegistrationPage = () => {
 
     const formContext = useForm<RegistrationForm>({values: defaultValues})
 
-    const watchIsParticipant = formContext.watch('isParticipant')
-    const watchIsChallengeManager = formContext.watch('isChallengeManager')
+    const watchRegistrationType = formContext.watch('registrationType')
     const watchEvent = formContext.watch('event')
     const watchClubname = formContext.watch('clubname')
     const watchBirthYear = formContext.watch('birthYear')
     const watchGender = formContext.watch('gender')
+
+    const isClub = watchRegistrationType === 'CLUB'
+    const isParticipantOnly = watchRegistrationType === 'PARTICIPANT'
+
+    // If there are ANY single competitions for which self registration is enabled.
+    // If not, registering as a participant only is not possible and only the club flow remains.
+    const {data: anySingleCompetitionsAvailable} = useFetch(
+        signal => getSingleCompetitionSelfRegistrationsAvailable({signal}),
+        {
+            onResponse: ({error, data}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                } else if (data === false) {
+                    // No participant-only option exists - preselect the club flow.
+                    formContext.setValue('registrationType', 'CLUB')
+                }
+            },
+            deps: [],
+        },
+    )
+
+    // The event/competition step is shown whenever single competitions exist. For the club
+    // flow it is optional, for the participant flow it is mandatory.
+    const showCompetitionStep = anySingleCompetitionsAvailable === true
+
+    const steps: RegistrationStep[] = [
+        RegistrationStep.REGISTRATION_TYPE,
+        RegistrationStep.BASIC_INFORMATION,
+        ...(showCompetitionStep ? [RegistrationStep.COMPETITIONS] : []),
+        RegistrationStep.CONFIRMATION,
+    ]
+    const currentStep = steps[activeStep] ?? RegistrationStep.CONFIRMATION
+    const isLastStep = activeStep >= steps.length - 1
+
+    // Clear flow-specific fields when switching the registration type
+    useEffect(() => {
+        if (isParticipantOnly) {
+            formContext.setValue('emailRequired', '')
+            formContext.setValue('password', '')
+            formContext.setValue('confirmPassword', '')
+        } else if (isClub) {
+            formContext.setValue('emailOptional', '')
+        }
+    }, [watchRegistrationType, isClub, isParticipantOnly, formContext])
 
     const setCaptchaStart = ({start}: CaptchaDto) => {
         formContext.setValue('captcha', start)
     }
 
     const {captcha, onReloadCaptcha} = useCaptcha(setCaptchaStart, {
-        preCondition: () => activeStep === RegistrationStep.CONFIRMATION,
+        preCondition: () => currentStep === RegistrationStep.CONFIRMATION,
     })
 
-    // Reload captcha when entering step 4
+    // The captcha is only fetched when its precondition (being on the confirmation step) holds.
+    // useFetch re-evaluates that precondition only when its deps change, so trigger a (re)load
+    // whenever the confirmation step is entered.
     useEffect(() => {
-        if (activeStep === RegistrationStep.CONFIRMATION) {
+        if (currentStep === RegistrationStep.CONFIRMATION) {
             onReloadCaptcha()
         }
-    }, [activeStep, onReloadCaptcha])
+    }, [currentStep, onReloadCaptcha])
 
     const {data: createClubOnRegistrationAllowed} = useFetch(
         signal => getCreateClubOnRegistrationAllowed({signal}),
@@ -125,7 +174,7 @@ const RegistrationPage = () => {
         },
     )
 
-    const {data: clubsData} = useFetch(
+    useFetch(
         signal =>
             getClubs({
                 signal,
@@ -139,11 +188,7 @@ const RegistrationPage = () => {
                     feedback.error(t('common.error.unexpected'))
                 } else if (data) {
                     const foundClub = data.data.find(club => club.name === watchClubname)
-                    if (foundClub) {
-                        formContext.setValue('clubId', foundClub.id)
-                    } else {
-                        formContext.setValue('clubId', undefined)
-                    }
+                    formContext.setValue('clubId', foundClub?.id)
                 }
             },
             deps: [watchClubname],
@@ -159,43 +204,60 @@ const RegistrationPage = () => {
         deps: [],
     })
 
-    const {data: competitionsData} = useFetch(
-        signal =>
-            getCompetitionsForRegistration({
-                path: {eventId: watchEvent!.id},
+    // Load the available competitions for the currently selected event/birthYear/gender and
+    // initialize the competition form entries. Runs whenever any of those inputs change.
+    useEffect(() => {
+        let cancelled = false
+
+        const loadCompetitions = async () => {
+            if (!watchEvent || watchBirthYear === '' || watchGender === undefined) {
+                setCompetitionsData(undefined)
+                setCompetitionsLoading(false)
+                return
+            }
+
+            setCompetitionsLoading(true)
+
+            const {data, error} = await getCompetitionsForRegistration({
+                path: {eventId: watchEvent.id},
                 query: {
-                    birthYear: Number(watchBirthYear)!,
-                    gender: watchGender!,
+                    birthYear: Number(watchBirthYear),
+                    gender: watchGender,
                 },
-                signal,
-            }),
-        {
-            onResponse: ({error, data}) => {
-                if (error) {
-                    feedback.error(
-                        t('common.load.error.multiple.short', {
-                            entity: t('event.competition.competitions'),
-                        }),
-                    )
-                } else if (data) {
-                    const initialCompetitions: CompetitionRegistration[] = data.competitions.map(
-                        competition => ({
-                            checked: false,
-                            competitionId: competition.id,
-                            optionalFees: [],
-                            ratingCategory: competition.properties.ratingCategoryRequired
-                                ? ''
-                                : 'none',
-                        }),
-                    )
-                    formContext.setValue('competitions', initialCompetitions)
-                }
-            },
-            preCondition: () =>
-                watchEvent !== null && watchBirthYear !== '' && watchGender !== undefined,
-            deps: [reloadCompetitions],
-        },
-    )
+            })
+
+            if (cancelled) return
+
+            setCompetitionsLoading(false)
+
+            if (error || !data) {
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: t('event.competition.competitions'),
+                    }),
+                )
+                setCompetitionsData(undefined)
+                return
+            }
+
+            setCompetitionsData(data)
+            const initialCompetitions: CompetitionRegistration[] = data.competitions.map(
+                competition => ({
+                    checked: false,
+                    competitionId: competition.id,
+                    optionalFees: [],
+                    ratingCategory: competition.properties.ratingCategoryRequired ? '' : 'none',
+                }),
+            )
+            formContext.setValue('competitions', initialCompetitions)
+        }
+
+        void loadCompetitions()
+
+        return () => {
+            cancelled = true
+        }
+    }, [watchEvent, watchBirthYear, watchGender])
 
     const {data: ratingCategories} = useFetch(
         signal =>
@@ -230,24 +292,12 @@ const RegistrationPage = () => {
                         entity: t('event.document.documents'),
                     }),
                 ),
-            preCondition: () => watchEvent !== null && watchIsParticipant,
-            deps: [watchEvent, watchIsParticipant],
+            preCondition: () => watchEvent !== null,
+            deps: [watchEvent],
         },
     )
 
-    // Update clubId when a club name is selected from the list
-    useEffect(() => {
-        if (clubsData && watchClubname) {
-            const foundClub = clubsData.data.find(club => club.name === watchClubname)
-            if (foundClub) {
-                formContext.setValue('clubId', foundClub.id)
-            } else {
-                formContext.setValue('clubId', undefined)
-            }
-        }
-    }, [watchClubname, clubsData, formContext])
-
-    // Filter events that allow participant self-registration
+    // Filter events that allow participant self-registration and are still open
     const availableEvents = eventsData?.data.filter(
         (event: EventPublicDto) =>
             event.allowParticipantSelfRegistration &&
@@ -258,15 +308,24 @@ const RegistrationPage = () => {
             }) !== 'CLOSED',
     )
 
+    // For the participant-only flow an event must be chosen, and in most cases there is only one.
+    // Preselect the first available event so the user does not have to pick it manually.
+    const firstAvailableEventId = availableEvents?.[0]?.id
+    useEffect(() => {
+        if (isParticipantOnly && availableEvents?.[0] && !formContext.getValues('event')) {
+            const event = availableEvents[0]
+            formContext.setValue('event', {id: event.id, label: event.name})
+        }
+    }, [isParticipantOnly, firstAvailableEventId])
+
     const handleSubmit = async (formData: RegistrationForm) => {
-        // Validate at least one registration type is selected
-        if (!formData.isParticipant && !formData.isChallengeManager) {
-            feedback.error(t('user.registration.error.selectAtLeastOneType'))
+        if (!formData.registrationType) {
+            feedback.error(t('user.registration.error.selectType'))
             return
         }
 
-        // Validate that participant-only registrations have an existing club selected
-        if (formData.isParticipant && !formData.isChallengeManager && !formData.clubId) {
+        // Participant-only registrations must reference an existing club
+        if (formData.registrationType === 'PARTICIPANT' && !formData.clubId) {
             formContext.setError('clubname', {
                 type: 'validate',
                 message: t('club.error.mustSelectExistingClub'),
@@ -277,7 +336,7 @@ const RegistrationPage = () => {
         setSubmitting(true)
 
         let error: RegisterUserError | ParticipantSelfRegisterError | undefined
-        if (formData.isChallengeManager) {
+        if (formData.registrationType === 'CLUB') {
             const result = await registerUser({
                 query: {
                     challenge: captcha.data!.id,
@@ -309,17 +368,14 @@ const RegistrationPage = () => {
                 feedback.error(t('captcha.error.notFound'))
             } else if (error.status.value === 409) {
                 if (error.errorCode === 'EMAIL_IN_USE') {
-                    formContext.setError(
-                        watchIsChallengeManager ? 'emailRequired' : 'emailOptional',
-                        {
-                            type: 'validate',
-                            message:
-                                t('user.email.inUse.statement') +
-                                ' ' +
-                                t('user.email.inUse.callToAction.registration'),
-                        },
-                    )
-                    setActiveStep(1)
+                    formContext.setError(isClub ? 'emailRequired' : 'emailOptional', {
+                        type: 'validate',
+                        message:
+                            t('user.email.inUse.statement') +
+                            ' ' +
+                            t('user.email.inUse.callToAction.registration'),
+                    })
+                    setActiveStep(RegistrationStep.BASIC_INFORMATION)
                 } else if (error.errorCode === 'CAPTCHA_WRONG') {
                     feedback.error(t('captcha.error.incorrect'))
                 } else if (error.errorCode === 'CLUB_NAME_ALREADY_EXISTS') {
@@ -327,13 +383,13 @@ const RegistrationPage = () => {
                         type: 'validate',
                         message: t('club.error.nameAlreadyExists'),
                     })
-                    setActiveStep(1)
+                    setActiveStep(RegistrationStep.BASIC_INFORMATION)
                 }
             } else {
                 feedback.error(t('user.registration.error.generic'))
             }
         } else {
-            setRequested(formData.isChallengeManager ? 'CONFIRMATION_MAIL' : 'PARTICIPATING')
+            setRequested(isClub ? 'CONFIRMATION_MAIL' : 'PARTICIPATING')
             setRegisteredForEvent(
                 eventsData?.data?.find(val => val.id === formData.event?.id) || null,
             )
@@ -341,38 +397,34 @@ const RegistrationPage = () => {
     }
 
     const validateStep = async (step: RegistrationStep): Promise<boolean> => {
-        let fieldsToValidate: (keyof RegistrationForm)[] = []
-
         switch (step) {
             case RegistrationStep.REGISTRATION_TYPE: {
-                if (!watchIsParticipant && !watchIsChallengeManager) {
-                    feedback.error(t('user.registration.error.selectAtLeastOneType'))
+                if (!watchRegistrationType) {
+                    feedback.error(t('user.registration.error.selectType'))
                     return false
                 }
-                return await formContext.trigger(['event'])
+                return true
             }
 
             case RegistrationStep.BASIC_INFORMATION: {
-                fieldsToValidate = ['clubname', 'firstname', 'lastname']
+                const fieldsToValidate: (keyof RegistrationForm)[] = [
+                    'clubname',
+                    'firstname',
+                    'lastname',
+                    'gender',
+                    'birthYear',
+                ]
 
-                if (watchIsChallengeManager) {
+                if (isClub) {
                     fieldsToValidate.push('emailRequired', 'password', 'confirmPassword')
                 } else {
                     fieldsToValidate.push('emailOptional')
                 }
 
-                if (watchIsParticipant) {
-                    fieldsToValidate.push('event', 'gender', 'birthYear')
-                }
-
                 const isValid = await formContext.trigger(fieldsToValidate)
 
-                if (
-                    isValid &&
-                    watchIsParticipant &&
-                    !watchIsChallengeManager &&
-                    !formContext.getValues('clubId')
-                ) {
+                // Participant-only registrations must reference an existing club
+                if (isValid && isParticipantOnly && !formContext.getValues('clubId')) {
                     formContext.setError('clubname', {
                         type: 'validate',
                         message: t('club.error.mustSelectExistingClub'),
@@ -383,14 +435,18 @@ const RegistrationPage = () => {
                 return isValid
             }
 
-            case RegistrationStep.COMPETITIONS:
-                if (watchIsParticipant) {
+            case RegistrationStep.COMPETITIONS: {
+                if (isParticipantOnly) {
+                    if (!(await formContext.trigger(['event']))) {
+                        return false
+                    }
                     if (!formContext.getValues('competitions').some(val => val.checked)) {
                         feedback.error(t('user.registration.error.selectAtLeastOneCompetition'))
                         return false
                     }
                 }
                 return true
+            }
 
             case RegistrationStep.CONFIRMATION:
                 return true
@@ -401,15 +457,10 @@ const RegistrationPage = () => {
     }
 
     const handleNext = async () => {
-        const isValid = await validateStep(activeStep)
+        const isValid = await validateStep(currentStep)
+        if (!isValid) return
 
-        if (activeStep === RegistrationStep.BASIC_INFORMATION) {
-            setReloadCompetitions(prev => prev + 1)
-        }
-
-        if (isValid) {
-            setActiveStep(prev => prev + 1)
-        }
+        setActiveStep(prev => prev + 1)
     }
 
     const handleBack = () => {
@@ -419,41 +470,35 @@ const RegistrationPage = () => {
     const getStepContent = (step: RegistrationStep) => {
         switch (step) {
             case RegistrationStep.REGISTRATION_TYPE:
-                return <Step1RegistrationType availableEvents={availableEvents} />
+                return (
+                    <Step1RegistrationType
+                        anySingleCompetitionsAvailable={anySingleCompetitionsAvailable}
+                        onSelect={() => setActiveStep(prev => prev + 1)}
+                    />
+                )
 
             case RegistrationStep.BASIC_INFORMATION:
                 return (
                     <Step2BasicInformation
                         createClubOnRegistrationAllowed={createClubOnRegistrationAllowed ?? false}
-                        selectedEvent={availableEvents?.find(val => val.id === watchEvent?.id)}
                     />
                 )
 
             case RegistrationStep.COMPETITIONS:
-                if (!watchIsParticipant) {
-                    return (
-                        <Box sx={{textAlign: 'center', py: 4}}>
-                            <Typography variant="body1" color="text.secondary">
-                                {t('user.registration.step.competitionsNotApplicable')}
-                            </Typography>
-                        </Box>
-                    )
-                }
-
                 return (
-                    watchEvent && (
-                        <Step3Competitions
-                            competitionsData={competitionsData ?? undefined}
-                            ratingCategories={ratingCategories ?? undefined}
-                            watchBirthYear={watchBirthYear}
-                        />
-                    )
+                    <Step3EventCompetitions
+                        availableEvents={availableEvents}
+                        competitionsData={competitionsData}
+                        competitionsLoading={competitionsLoading}
+                        ratingCategories={ratingCategories ?? undefined}
+                        watchBirthYear={watchBirthYear}
+                        isParticipant={isParticipantOnly}
+                    />
                 )
 
             case RegistrationStep.CONFIRMATION:
                 return (
                     <Step4Confirmation
-                        watchIsParticipant={watchIsParticipant}
                         watchEvent={watchEvent}
                         registrationDocuments={registrationDocuments ?? undefined}
                         captcha={captcha}
@@ -464,8 +509,6 @@ const RegistrationPage = () => {
                 return null
         }
     }
-
-    const [registeredForEvent, setRegisteredForEvent] = useState<EventPublicDto | null>(null)
 
     return (
         <SimpleFormLayout maxWidth={600}>
@@ -478,39 +521,51 @@ const RegistrationPage = () => {
                     </Box>
 
                     <Stepper activeStep={activeStep} alternativeLabel sx={{mb: 4}}>
-                        {[1, 2, 3, 4].map(step => (
+                        {steps.map(step => (
                             <Step key={step}>
-                                <StepLabel slots={{stepIcon: CustomStepIcon}} />
+                                <StepLabel
+                                    slots={{
+                                        stepIcon: iconProps => (
+                                            <CustomStepIcon {...iconProps} stepType={step} />
+                                        ),
+                                    }}
+                                />
                             </Step>
                         ))}
                     </Stepper>
 
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
-                            {getStepContent(activeStep)}
+                            {getStepContent(currentStep)}
 
-                            <Box sx={{display: 'flex', justifyContent: 'space-between', mt: 3}}>
-                                <Button
-                                    disabled={activeStep === RegistrationStep.REGISTRATION_TYPE}
-                                    onClick={handleBack}
-                                    variant="outlined"
-                                    sx={{cursor: 'pointer'}}>
-                                    {t('common.back')}
-                                </Button>
-
-                                {activeStep < 3 ? (
+                            {currentStep !== RegistrationStep.REGISTRATION_TYPE && (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        mt: 3,
+                                    }}>
                                     <Button
-                                        onClick={handleNext}
-                                        variant="contained"
+                                        onClick={handleBack}
+                                        variant="outlined"
                                         sx={{cursor: 'pointer'}}>
-                                        {t('common.next')}
+                                        {t('common.back')}
                                     </Button>
-                                ) : (
-                                    <SubmitButton submitting={submitting}>
-                                        {t('user.registration.register')}
-                                    </SubmitButton>
-                                )}
-                            </Box>
+
+                                    {!isLastStep ? (
+                                        <Button
+                                            onClick={handleNext}
+                                            variant="contained"
+                                            sx={{cursor: 'pointer'}}>
+                                            {t('common.next')}
+                                        </Button>
+                                    ) : (
+                                        <SubmitButton submitting={submitting}>
+                                            {t('user.registration.register')}
+                                        </SubmitButton>
+                                    )}
+                                </Box>
+                            )}
                         </Stack>
                     </FormContainer>
                 </>
@@ -533,7 +588,9 @@ const RegistrationPage = () => {
                     </Typography>
                     <Divider />
                     <Typography textAlign="center">
-                        {t('user.registration.requested.participating.message.part1')}
+                        {t('user.registration.requested.participating.message.part1', {
+                            eventName: registeredForEvent?.name,
+                        })}
                     </Typography>
                     {registeredForEvent?.challengeEvent &&
                         registeredForEvent.allowSelfSubmission && (

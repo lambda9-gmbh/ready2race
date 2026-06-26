@@ -343,6 +343,12 @@
       "nameAlreadyExists": "En klub med dette navn findes allerede",
       "mustSelectExistingClub": "Vælg venligst en eksisterende klub fra listen"
     },
+    "create": {
+      "option": "Opret “{{name}}”",
+      "existingSelected": "Eksisterende klub valgt",
+      "joinRequest": "Anmodning om medlemskab: en administrator af “{{name}}” skal godkende din anmodning, før du kan administrere klubben.",
+      "willCreate": "Ny klub “{{name}}” oprettes"
+    },
     "settings": {
       "title": "Klubindstillinger",
       "allowClubCreationOnRegistration": "Tillad oprettelse af klub ved tilmelding",
@@ -1360,17 +1366,15 @@
     "registration": {
       "register": "Registrér",
       "pendingRegistrations": "Afventende registreringer",
-      "registrationType": "Registreringstype",
       "asParticipant": "Som deltager",
       "asClubRepresentative": "Som klubadministration",
       "step": {
-        "competitionsNotApplicable": "Ingen konkurrencevalg nødvendigt",
         "emailToSubmitResults": "For selv at uploade et resultat kræves en e-mailadresse. Ellers skal klubadministrationen indtaste resultatet for dig."
       },
       "teamCompetitionsOmitted": "Med denne formular kan du kun tilmelde dig individuelle konkurrencer. For at deltage i holdkonkurrencer skal du kontakte din klubadministration.",
       "error": {
         "generic": "Der opstod en fejl ved registrering",
-        "selectAtLeastOneType": "Vælg venligst mindst én registreringstype",
+        "selectType": "Vælg venligst en registreringstype",
         "selectAtLeastOneCompetition": "Vælg venligst mindst én konkurrence"
       },
       "requested": {
@@ -1400,7 +1404,17 @@
             "unexpected": "Din e-mailadresse kunne ikke bekræftes. Prøv venligst igen senere."
           }
         }
-      }
+      },
+      "type": {
+        "club": {
+          "description": "Administrér en klubkonto: tilmeld medlemmer til konkurrencer og arrangementer."
+        },
+        "participant": {
+          "description": "Tilmeld dig selv de individuelle konkurrencer i et arrangement.",
+          "unavailable": "Der er i øjeblikket ingen arrangementer med konkurrencer åbne for deltagernes selvtilmelding."
+        }
+      },
+      "competitionSelectionOptional": "Det er valgfrit at vælge et arrangement og konkurrencer - du kan også tilmelde dig senere via din klubkonto."
     },
     "resetPassword": {
       "resetPassword": "Nulstil adgangskode",

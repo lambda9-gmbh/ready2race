@@ -89,6 +89,9 @@ object EventRepo {
         }
     }
 
+    fun getAllPublic(): JIO<List<EventPublicViewRecord>> = EVENT_PUBLIC_VIEW.select()
+
+
     fun getScoped(
         id: UUID,
         scope: Privilege.Scope?,
