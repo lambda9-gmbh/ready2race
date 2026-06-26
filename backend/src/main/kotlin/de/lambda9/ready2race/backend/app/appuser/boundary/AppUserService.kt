@@ -722,6 +722,14 @@ object AppUserService {
         KIO.ok(ApiResponse.ListDto(pending))
     }
 
+    fun getOwnPendingClubRepresentativeApproval(
+        userId: UUID,
+    ): App<ServiceError, ApiResponse> = KIO.comprehension {
+        val pending = !AppUserClubRepresentativeApprovalRepo.getOpenByUserIdWithClub(userId).orDie()
+
+        KIO.ok(pending?.let { ApiResponse.Dto(it) } ?: ApiResponse.NoData)
+    }
+
     fun updateClubRepresentativeApproval(
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope,

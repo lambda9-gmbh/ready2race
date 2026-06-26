@@ -12,6 +12,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {updateUserGlobal} from '@authorization/privileges.ts'
 import RolesSelect from '@components/user/RolesSelect.tsx'
 import {UpdateAppUserRequest} from '@api/types.gen.ts'
+import PendingClubRepresentativeAlert from '@components/user/PendingClubRepresentativeAlert.tsx'
 
 type Form = {
     firstname: string
@@ -78,39 +79,46 @@ const UserPage = () => {
 
     return (
         <Box sx={{maxWidth: 600}}>
-            <Paper sx={{padding: 4}}>
-                {(userData && (
-                    <FormContainer formContext={formContext} onSuccess={handleSubmit}>
-                        <Stack spacing={4}>
-                            <FormInputText
-                                name={'firstname'}
-                                label={t('user.firstname')}
-                                required
-                            />
-                            <FormInputText name={'lastname'} label={t('user.lastname')} required />
-                            <Typography>{userData.email}</Typography>
-                            {user.checkPrivilege(updateUserGlobal)
-                                ? (data?.data.length ?? 0) > 0 && (
-                                      <RolesSelect availableRoles={data?.data} />
-                                  )
-                                : userData.roles.length > 0 && (
-                                      <Box>
-                                          <Typography>{t('role.roles')}</Typography>
-                                          <Typography>
-                                              {userData.roles.map(r => r.name).join(', ')}
-                                          </Typography>
-                                      </Box>
-                                  )}
-                            <SubmitButton
-                                submitting={submitting}
-                                disabled={!formContext.formState.isDirty}>
-                                {t('common.save')}
-                            </SubmitButton>
-                        </Stack>
-                    </FormContainer>
-                )) ||
-                    (pending && <Throbber />)}
-            </Paper>
+            <Stack spacing={2}>
+                {user.loggedIn && user.id === userId && <PendingClubRepresentativeAlert />}
+                <Paper sx={{padding: 4}}>
+                    {(userData && (
+                        <FormContainer formContext={formContext} onSuccess={handleSubmit}>
+                            <Stack spacing={4}>
+                                <FormInputText
+                                    name={'firstname'}
+                                    label={t('user.firstname')}
+                                    required
+                                />
+                                <FormInputText
+                                    name={'lastname'}
+                                    label={t('user.lastname')}
+                                    required
+                                />
+                                <Typography>{userData.email}</Typography>
+                                {user.checkPrivilege(updateUserGlobal)
+                                    ? (data?.data.length ?? 0) > 0 && (
+                                          <RolesSelect availableRoles={data?.data} />
+                                      )
+                                    : userData.roles.length > 0 && (
+                                          <Box>
+                                              <Typography>{t('role.roles')}</Typography>
+                                              <Typography>
+                                                  {userData.roles.map(r => r.name).join(', ')}
+                                              </Typography>
+                                          </Box>
+                                      )}
+                                <SubmitButton
+                                    submitting={submitting}
+                                    disabled={!formContext.formState.isDirty}>
+                                    {t('common.save')}
+                                </SubmitButton>
+                            </Stack>
+                        </FormContainer>
+                    )) ||
+                        (pending && <Throbber />)}
+                </Paper>
+            </Stack>
         </Box>
     )
 }

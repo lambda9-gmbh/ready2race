@@ -381,6 +381,10 @@
           "title": "Afvis {{username}}?",
           "content": "Er du sikker på, at du vil afvise anmodningen fra {{username}} som ekstra klubadministration? Denne handling kan ikke fortrydes."
         }
+      },
+      "pending": {
+        "title": "Anmodning om klubadministration",
+        "message": "Anmodningen om at tilslutte sig klubben {{club}} som klubadministration er endnu ikke besvaret. Klubbens administratorer bliver ikke kontaktet automatisk, så kontakt dem venligst direkte."
       }
     },
     "participant": {

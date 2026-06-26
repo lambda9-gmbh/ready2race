@@ -1335,6 +1335,12 @@ export type Order = {
 
 export type direction = 'ASC' | 'DESC'
 
+export type OwnPendingClubRepresentativeApprovalDto = {
+    clubId: string
+    clubName: string
+    createdAt: string
+}
+
 export type Pagination = {
     total: number
     limit: number
@@ -5065,6 +5071,11 @@ export type GetWorkShiftsForUserResponse = {
 }
 
 export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetOwnPendingClubRepresentativeApprovalResponse =
+    OwnPendingClubRepresentativeApprovalDto | void
+
+export type GetOwnPendingClubRepresentativeApprovalError = ApiError
 
 export type UpdateClubRepresentativeApprovalData = {
     path: {

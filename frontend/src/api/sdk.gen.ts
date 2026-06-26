@@ -583,6 +583,8 @@ import type {
     GetWorkShiftsForUserData,
     GetWorkShiftsForUserError,
     GetWorkShiftsForUserResponse,
+    GetOwnPendingClubRepresentativeApprovalError,
+    GetOwnPendingClubRepresentativeApprovalResponse,
     UpdateClubRepresentativeApprovalData,
     UpdateClubRepresentativeApprovalError,
     UpdateClubRepresentativeApprovalResponse,
@@ -3159,6 +3161,22 @@ export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/user/{userId}/workshift',
+    })
+}
+
+/**
+ * Returns the logged-in user's pending club representative request, if any.
+ */
+export const getOwnPendingClubRepresentativeApproval = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetOwnPendingClubRepresentativeApprovalResponse,
+        GetOwnPendingClubRepresentativeApprovalError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/clubRepresentative/approval',
     })
 }
 

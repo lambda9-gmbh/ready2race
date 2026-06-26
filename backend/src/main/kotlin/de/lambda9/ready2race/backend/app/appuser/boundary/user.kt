@@ -117,6 +117,15 @@ fun Route.user() {
             }
         }
 
+        route("/clubRepresentative/approval") {
+            get {
+                call.respondComprehension {
+                    val user = !authenticate()
+                    AppUserService.getOwnPendingClubRepresentativeApproval(user.id!!)
+                }
+            }
+        }
+
         route("/registration") {
             post {
                 call.respondComprehension {

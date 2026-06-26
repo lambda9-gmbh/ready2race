@@ -1,9 +1,11 @@
 package de.lambda9.ready2race.backend.app.appuser.control
 
+import de.lambda9.ready2race.backend.app.appuser.entity.OwnPendingClubRepresentativeApprovalDto
 import de.lambda9.ready2race.backend.app.appuser.entity.PendingClubRepresentativeApprovalDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserClubRepresentativeApprovalRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_CLUB_REPRESENTATIVE_APPROVAL
+import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
@@ -40,6 +42,25 @@ object AppUserClubRepresentativeApprovalRepo {
 
     fun getOpenByUserId(userId: UUID) =
         APP_USER_CLUB_REPRESENTATIVE_APPROVAL.selectOne { APP_USER.eq(userId).and(APPROVED.isNull) }
+
+    fun getOpenByUserIdWithClub(userId: UUID): JIO<OwnPendingClubRepresentativeApprovalDto?> = Jooq.query {
+        select(
+            APP_USER_CLUB_REPRESENTATIVE_APPROVAL.CLUB,
+            CLUB.NAME,
+            APP_USER_CLUB_REPRESENTATIVE_APPROVAL.CREATED_AT,
+        )
+            .from(APP_USER_CLUB_REPRESENTATIVE_APPROVAL)
+            .join(CLUB).on(CLUB.ID.eq(APP_USER_CLUB_REPRESENTATIVE_APPROVAL.CLUB))
+            .where(APP_USER_CLUB_REPRESENTATIVE_APPROVAL.APP_USER.eq(userId))
+            .and(APP_USER_CLUB_REPRESENTATIVE_APPROVAL.APPROVED.isNull)
+            .fetchOne {
+                OwnPendingClubRepresentativeApprovalDto(
+                    clubId = it[APP_USER_CLUB_REPRESENTATIVE_APPROVAL.CLUB]!!,
+                    clubName = it[CLUB.NAME]!!,
+                    createdAt = it[APP_USER_CLUB_REPRESENTATIVE_APPROVAL.CREATED_AT]!!,
+                )
+            }
+    }
 
     fun update(record: AppUserClubRepresentativeApprovalRecord, f: AppUserClubRepresentativeApprovalRecord.() -> Unit) =
         APP_USER_CLUB_REPRESENTATIVE_APPROVAL.update(record, f)

@@ -7,6 +7,8 @@ import {readRegistrationGlobal} from '@authorization/privileges.ts'
 import {TasksWidget} from '@components/dashboard/TasksWidget.tsx'
 import {ShiftWidget} from '@components/dashboard/ShiftWidget.tsx'
 
+import PendingClubRepresentativeAlert from '@components/user/PendingClubRepresentativeAlert.tsx'
+
 const Dashboard = () => {
     const user = useUser()
 
@@ -29,6 +31,7 @@ const Dashboard = () => {
             height={'100%'}
             alignContent={'flex-start'}
             alignItems={'stretch'}>
+            <PendingClubRepresentativeAlert gridItem />
             {userId && eventReadPrivilege && (
                 <>
                     <TasksWidget userId={userId} />

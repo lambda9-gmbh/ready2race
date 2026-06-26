@@ -381,6 +381,10 @@
           "title": "Deny {{username}}?",
           "content": "Are you sure you want to deny the request of {{username}} to be a club representative? This action cannot be undone."
         }
+      },
+      "pending": {
+        "title": "Club representative request",
+        "message": "The request to join the club {{club}} as a club representative has not been answered yet. The club's representatives are not notified automatically, so please contact them directly."
       }
     },
     "participant": {

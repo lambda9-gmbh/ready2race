@@ -381,6 +381,10 @@
           "title": "{{username}} ablehnen?",
           "content": "Sind Sie sicher, dass Sie die Anfrage von {{username}} als zusätzliche Clubverwaltung ablehnen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
         }
+      },
+      "pending": {
+        "title": "Anfrage zur Vereinsverwaltung",
+        "message": "Die Anfrage, dem Verein {{club}} als Vereinsvertretung beizutreten, ist bisher unbeantwortet. Die Vereinsvertretungen werden nicht automatisch benachrichtigt – bitte wende dich direkt an sie."
       }
     },
     "participant": {

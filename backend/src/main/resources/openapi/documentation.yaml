@@ -5288,6 +5288,24 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /user/clubRepresentative/approval:
+    get:
+      operationId: getOwnPendingClubRepresentativeApproval
+      description: Returns the logged-in user's pending club representative request, if any.
+      responses:
+        200:
+          description: Pending club representative request successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnPendingClubRepresentativeApprovalDto'
+        204:
+          description: No pending club representative request
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+
   /user/{userId}/clubRepresentative/approval:
     parameters:
       - name: userId
@@ -7700,6 +7718,22 @@ components:
           format: date-time
         assignedEmail:
           $ref: '#/components/schemas/AssignedEmailDto'
+
+    OwnPendingClubRepresentativeApprovalDto:
+      type: object
+      required:
+        - clubId
+        - clubName
+        - createdAt
+      properties:
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
     PendingClubRepresentativeApprovalDto:
       type: object
