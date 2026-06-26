@@ -346,7 +346,7 @@
     "create": {
       "option": "Opret “{{name}}”",
       "existingSelected": "Eksisterende klub valgt",
-      "joinRequest": "Anmodning om medlemskab: en administrator af “{{name}}” skal godkende din anmodning, før du kan administrere klubben.",
+      "joinRequest": "Anmodning om medlemskab: en administrator af “{{name}}” skal godkende din anmodning, før du kan administrere klubben. Administratoren får ikke automatisk besked – informer dem venligst selv, så de kan acceptere anmodningen.",
       "willCreate": "Ny klub “{{name}}” oprettes"
     },
     "settings": {

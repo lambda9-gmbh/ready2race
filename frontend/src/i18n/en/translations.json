@@ -346,7 +346,7 @@
     "create": {
       "option": "Create “{{name}}”",
       "existingSelected": "Existing club selected",
-      "joinRequest": "Join request: an administrator of “{{name}}” must approve your request before you can manage the club.",
+      "joinRequest": "Join request: an administrator of “{{name}}” must approve your request before you can manage the club. The administrator is not notified automatically – please let them know so they can accept the request.",
       "willCreate": "New club “{{name}}” will be created"
     },
     "settings": {

@@ -346,7 +346,7 @@
     "create": {
       "option": "„{{name}}“ neu anlegen",
       "existingSelected": "Bestehender Verein ausgewählt",
-      "joinRequest": "Beitrittsanfrage: Ein Administrator von „{{name}}“ muss Ihre Anfrage bestätigen, bevor Sie den Verein verwalten können.",
+      "joinRequest": "Beitrittsanfrage: Ein Administrator von „{{name}}“ muss Ihre Anfrage bestätigen, bevor Sie den Verein verwalten können. Der Administrator wird nicht automatisch benachrichtigt – bitte informieren Sie ihn selbst, damit er die Anfrage annimmt.",
       "willCreate": "Neuer Verein „{{name}}“ wird angelegt"
     },
     "settings": {
