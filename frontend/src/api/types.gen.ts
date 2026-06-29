@@ -70,8 +70,8 @@ export type AppUserRegisterRequest = {
     language: EmailLanguage
     callbackUrl: string
     registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
-    birthYear: number
-    gender: Gender
+    birthYear?: number
+    gender?: Gender
 }
 
 export type AppUserRegistrationDto = {

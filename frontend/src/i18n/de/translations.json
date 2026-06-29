@@ -1372,6 +1372,7 @@
       "pendingRegistrations": "Ausstehende Registrierungen",
       "asParticipant": "Als Teilnehmer:in",
       "asClubRepresentative": "Als Vereinsverwaltung",
+      "participateSelf": "Ich möchte selbst auch teilnehmen",
       "step": {
         "emailToSubmitResults": "Um ein Ergebnis selbst hochzuladen, ist eine E-Mail-Adresse erforderlich. Andernfalls muss die Vereinsverwaltung das Ergebnis für Sie eingeben."
       },

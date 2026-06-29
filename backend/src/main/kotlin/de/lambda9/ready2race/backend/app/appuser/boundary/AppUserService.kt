@@ -299,7 +299,7 @@ object AppUserService {
         // Competition registrations
         if (request.registerToSingleCompetitions.isNotEmpty()) {
 
-            val birthYear = request.birthYear
+            val birthYear = request.birthYear!! // Has to be not-null because of validations (list is not empty)
 
             val competitions =
                 !CompetitionRepo.getByIds(request.registerToSingleCompetitions.map { it.competitionId }).orDie()
@@ -486,129 +486,132 @@ object AppUserService {
             userId
         }
 
-        // Always create a participant with the data of the registration
-        val participantRecord = ParticipantRecord(
-            id = UUID.randomUUID(),
-            club = clubId,
-            firstname = registration.firstname,
-            lastname = registration.lastname,
-            year = registration.year!!,
-            gender = registration.gender!!,
-            phone = null,
-            external = false,
-            externalClubName = null,
-            createdAt = now,
-            createdBy = userId,
-            updatedAt = now,
-            updatedBy = userId,
-            email = registration.email,
-        )
-        val participantId = !ParticipantRepo.create(participantRecord).orDie()
+        if (registration.year != null && registration.gender != null) {
+            // Create a participant with the data of the registration IF year and gender were provided
+            val participantRecord = ParticipantRecord(
+                id = UUID.randomUUID(),
+                club = clubId,
+                firstname = registration.firstname,
+                lastname = registration.lastname,
+                year = registration.year!!,
+                gender = registration.gender!!,
+                phone = null,
+                external = false,
+                externalClubName = null,
+                createdAt = now,
+                createdBy = userId,
+                updatedAt = now,
+                updatedBy = userId,
+                email = registration.email,
+            )
+            val participantId = !ParticipantRepo.create(participantRecord).orDie()
 
-        // Handle competition registrations if present
+            // Handle competition registrations if present
+            if (competitionRegistrations.isNotEmpty()) {
+                val competitions = !CompetitionRepo.getByIds(competitionRegistrations.map { it.competitionId }).orDie()
+                val eventId = competitions.first().event!!
 
-        if (competitionRegistrations.isNotEmpty()) {
-            val competitions = !CompetitionRepo.getByIds(competitionRegistrations.map { it.competitionId }).orDie()
-            val eventId = competitions.first().event!!
-
-            val eventRegistration = !EventRegistrationRepo.getByEventAndClub(eventId, clubId).orDie()
-            val eventRegistrationId = if (eventRegistration == null) {
-                !EventRegistrationRepo.create(
-                    EventRegistrationRecord(
-                        id = UUID.randomUUID(),
-                        event = eventId,
-                        club = clubId,
-                        message = null,
-                        createdAt = now,
-                        createdBy = userId,
-                        updatedAt = now,
-                        updatedBy = userId,
-                        eventDocumentsOfficiallyAcceptedAt = now,
-                        eventDocumentsOfficiallyAcceptedBy = userId,
-                    )
-                ).orDie()
-            } else eventRegistration.id!!
-
-
-            val openForRegistrationType = !EventService.getOpenForRegistrationType(eventId).failIf({
-                it == OpenForRegistrationType.CLOSED
-            }) { EventRegistrationError.RegistrationClosed }
-
-            val event = !EventRepo.get(eventId).orDie()
-                .onNullDie("Event must be provided")
-
-            !competitionRegistrations.traverse { competitionRegistration ->
-                KIO.comprehension {
-                    val competition = competitions.first { it.id == competitionRegistration.competitionId }
-
-                    val existingCount = !CompetitionRegistrationRepo.countForCompetitionAndClub(
-                        competitionRegistration.competitionId,
-                        clubId
-                    ).orDie()
-                    val registrationName = when {
-                        existingCount < 1 -> null
-                        existingCount == 1 -> {
-                            val first = !CompetitionRegistrationRepo.getByCompetitionAndClub(
-                                competitionRegistration.competitionId,
-                                clubId
-                            ).orDie()
-                                .map { it.singleOrNull() }.onNullDie("Count returned 1 row, select returned NOT 1 row.")
-                            first.name = "#1"
-                            first.update()
-                            "#2"
-                        }
-
-                        else -> "#${existingCount + 1}"
-                    }
-
-                    val competitionRegistrationId = !CompetitionRegistrationRepo.create(
-                        CompetitionRegistrationRecord(
+                val eventRegistration = !EventRegistrationRepo.getByEventAndClub(eventId, clubId).orDie()
+                val eventRegistrationId = if (eventRegistration == null) {
+                    !EventRegistrationRepo.create(
+                        EventRegistrationRecord(
                             id = UUID.randomUUID(),
-                            eventRegistration = eventRegistrationId,
-                            competition = competitionRegistration.competitionId,
+                            event = eventId,
                             club = clubId,
-                            name = registrationName,
+                            message = null,
                             createdAt = now,
                             createdBy = userId,
                             updatedAt = now,
                             updatedBy = userId,
-                            teamNumber = null,
-                            isLate = openForRegistrationType == OpenForRegistrationType.LATE,
-                            ratingCategory = competitionRegistration.ratingcategory
+                            eventDocumentsOfficiallyAcceptedAt = now,
+                            eventDocumentsOfficiallyAcceptedBy = userId,
                         )
                     ).orDie()
+                } else eventRegistration.id!!
 
-                    !CompetitionRegistrationNamedParticipantRepo.create(
-                        CompetitionRegistrationNamedParticipantRecord(
-                            competitionRegistration = competitionRegistrationId,
-                            namedParticipant = competition.namedParticipants!!.first()?.id!!,
-                            participant = participantId
-                        )
-                    ).orDie()
-                    val fees = competitionRegToFees[competitionRegistration.id]!!
-                    !fees.traverse { feeRecord ->
-                        CompetitionRegistrationOptionalFeeRepo.create(
-                            CompetitionRegistrationOptionalFeeRecord(
-                                competitionRegistrationId,
-                                feeRecord.optionalFee
+
+                val openForRegistrationType = !EventService.getOpenForRegistrationType(eventId).failIf({
+                    it == OpenForRegistrationType.CLOSED
+                }) { EventRegistrationError.RegistrationClosed }
+
+                val event = !EventRepo.get(eventId).orDie()
+                    .onNullDie("Event must be provided")
+
+                !competitionRegistrations.traverse { competitionRegistration ->
+                    KIO.comprehension {
+                        val competition = competitions.first { it.id == competitionRegistration.competitionId }
+
+                        val existingCount = !CompetitionRegistrationRepo.countForCompetitionAndClub(
+                            competitionRegistration.competitionId,
+                            clubId
+                        ).orDie()
+                        val registrationName = when {
+                            existingCount < 1 -> null
+                            existingCount == 1 -> {
+                                val first = !CompetitionRegistrationRepo.getByCompetitionAndClub(
+                                    competitionRegistration.competitionId,
+                                    clubId
+                                ).orDie()
+                                    .map { it.singleOrNull() }
+                                    .onNullDie("Count returned 1 row, select returned NOT 1 row.")
+                                first.name = "#1"
+                                first.update()
+                                "#2"
+                            }
+
+                            else -> "#${existingCount + 1}"
+                        }
+
+                        val competitionRegistrationId = !CompetitionRegistrationRepo.create(
+                            CompetitionRegistrationRecord(
+                                id = UUID.randomUUID(),
+                                eventRegistration = eventRegistrationId,
+                                competition = competitionRegistration.competitionId,
+                                club = clubId,
+                                name = registrationName,
+                                createdAt = now,
+                                createdBy = userId,
+                                updatedAt = now,
+                                updatedBy = userId,
+                                teamNumber = null,
+                                isLate = openForRegistrationType == OpenForRegistrationType.LATE,
+                                ratingCategory = competitionRegistration.ratingcategory
                             )
                         ).orDie()
-                    }
 
-                    if (participantRecord.email != null && event.challengeEvent == true && event.selfSubmission == true) {
-                        !CompetitionRegistrationService.createParticipantAccess(
-                            participantId = participantRecord.id,
-                            participantFirstName = participantRecord.firstname,
-                            participantLastName = participantRecord.lastname,
-                            participantEmail = participantRecord.email!!,
-                            event = event,
-                            emailLanguage = EmailLanguage.DE, // TODO: somehow get a language,
-                            callbackUrl = request.callbackUrl
-                        )
-                    }
+                        !CompetitionRegistrationNamedParticipantRepo.create(
+                            CompetitionRegistrationNamedParticipantRecord(
+                                competitionRegistration = competitionRegistrationId,
+                                namedParticipant = competition.namedParticipants!!.first()?.id!!,
+                                participant = participantId
+                            )
+                        ).orDie()
+                        val fees = competitionRegToFees[competitionRegistration.id]!!
+                        !fees.traverse { feeRecord ->
+                            CompetitionRegistrationOptionalFeeRepo.create(
+                                CompetitionRegistrationOptionalFeeRecord(
+                                    competitionRegistrationId,
+                                    feeRecord.optionalFee
+                                )
+                            ).orDie()
+                        }
 
-                    unit
+                        if (participantRecord.email != null && event.challengeEvent == true && event.selfSubmission == true) {
+                            !CompetitionRegistrationService.createParticipantAccess(
+                                participantId = participantRecord.id,
+                                participantFirstName = participantRecord.firstname,
+                                participantLastName = participantRecord.lastname,
+                                participantEmail = participantRecord.email!!,
+                                event = event,
+                                emailLanguage = EmailLanguage.DE, // TODO: somehow get a language,
+                                callbackUrl = request.callbackUrl
+                            )
+                        }
+
+                        unit
+                    }
                 }
+
             }
         }
 

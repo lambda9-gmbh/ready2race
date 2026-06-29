@@ -8,6 +8,8 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.emailPattern
 import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.isEmpty
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.IntValidators.max
 import de.lambda9.ready2race.backend.validation.validators.IntValidators.min
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.minLength
@@ -30,8 +32,8 @@ data class AppUserRegisterRequest(
     val language: EmailLanguage,
     val callbackUrl: String,
     val registerToSingleCompetitions: List<ParticipantRegisterCompetitionRequest>,
-    val birthYear: Int,
-    val gender: Gender,
+    val birthYear: Int?,
+    val gender: Gender?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -52,6 +54,23 @@ data class AppUserRegisterRequest(
             ),
             this::birthYear validate LocalDateTime.now().year.let { allOf(min(it - 120), max(it)) },
             this::registerToSingleCompetitions validate collection,
+            ValidationResult.oneOf(
+                ValidationResult.allOf(
+                    this::birthYear validate notNull,
+                    this::gender validate notNull,
+                    this::registerToSingleCompetitions validate notEmpty
+                ),
+                ValidationResult.allOf(
+                    this::birthYear validate notNull,
+                    this::gender validate notNull,
+                    this::registerToSingleCompetitions validate isEmpty
+                ),
+                ValidationResult.allOf(
+                    this::birthYear validate isNull,
+                    this::gender validate isNull,
+                    this::registerToSingleCompetitions validate isEmpty
+                )
+            )
         )
 
     companion object {

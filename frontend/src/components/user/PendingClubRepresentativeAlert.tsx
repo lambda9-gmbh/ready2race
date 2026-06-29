@@ -12,7 +12,9 @@ const PendingClubRepresentativeAlert = (props: {gridItem?: boolean}) => {
         preCondition: () => user.loggedIn,
     })
 
-    if (!data) {
+    // A 204 (no pending approval) is surfaced by the fetch client as an empty object `{}`, which
+    // is truthy - so guard on an actual field instead of the object itself.
+    if (!data?.clubName) {
         return null
     }
 

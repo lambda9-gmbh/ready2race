@@ -1372,6 +1372,7 @@
       "pendingRegistrations": "Pending registrations",
       "asParticipant": "As Participant",
       "asClubRepresentative": "As Challenge Manager",
+      "participateSelf": "I want to participate myself as well",
       "step": {
         "emailToSubmitResults": "To submit a result yourself, an email address is required. Otherwise, a club representative will need to enter the result on your behalf."
       },

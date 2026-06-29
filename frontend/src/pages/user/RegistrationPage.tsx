@@ -84,6 +84,7 @@ const RegistrationPage = () => {
         registrationType: undefined,
         event: null,
         competitions: [],
+        participateSelf: false,
         birthYear: '',
         gender: undefined,
         emailRequired: '',
@@ -100,9 +101,15 @@ const RegistrationPage = () => {
     const watchClubname = formContext.watch('clubname')
     const watchBirthYear = formContext.watch('birthYear')
     const watchGender = formContext.watch('gender')
+    const watchParticipateSelf = formContext.watch('participateSelf')
 
     const isClub = watchRegistrationType === 'CLUB'
     const isParticipantOnly = watchRegistrationType === 'PARTICIPANT'
+
+    // Whether the registrant ends up being created as a participant: always for the participant
+    // flow, and for the club flow only when they opt in via the "participate self" checkbox.
+    // This gates the birthYear/gender fields and the event/competition step.
+    const participatesAsParticipant = isParticipantOnly || (isClub && watchParticipateSelf)
 
     // If there are ANY single competitions for which self registration is enabled.
     // If not, registering as a participant only is not possible and only the club flow remains.
@@ -121,9 +128,11 @@ const RegistrationPage = () => {
         },
     )
 
-    // The event/competition step is shown whenever single competitions exist. For the club
-    // flow it is optional, for the participant flow it is mandatory.
-    const showCompetitionStep = anySingleCompetitionsAvailable === true
+    // The event/competition step is only shown when the registrant participates and single
+    // competitions are available. For the participant flow it is mandatory; for the club flow
+    // it only appears once they opt in to participate themselves.
+    const showCompetitionStep =
+        participatesAsParticipant && anySingleCompetitionsAvailable === true
 
     const steps: RegistrationStep[] = [
         RegistrationStep.REGISTRATION_TYPE,
@@ -411,9 +420,12 @@ const RegistrationPage = () => {
                     'clubname',
                     'firstname',
                     'lastname',
-                    'gender',
-                    'birthYear',
                 ]
+
+                // birthYear/gender are only required when the registrant actually participates
+                if (participatesAsParticipant) {
+                    fieldsToValidate.push('gender', 'birthYear')
+                }
 
                 if (isClub) {
                     fieldsToValidate.push('emailRequired', 'password', 'confirmPassword')

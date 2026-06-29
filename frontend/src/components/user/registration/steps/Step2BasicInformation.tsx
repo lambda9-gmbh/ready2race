@@ -9,6 +9,7 @@ import {NewPassword} from '@components/form/NewPassword.tsx'
 import {AutocompleteClub} from '@components/club/AutocompleteClub.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {RegistrationForm} from '@components/user/registration/common.ts'
 
 interface Step2BasicInformationProps {
@@ -21,11 +22,18 @@ export const Step2BasicInformation = ({createClubOnRegistrationAllowed}: Step2Ba
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const formContext = useFormContext<RegistrationForm>()
 
-    const isClub = formContext.watch('registrationType') === 'CLUB'
+    const registrationType = formContext.watch('registrationType')
+    const isClub = registrationType === 'CLUB'
+    const isParticipantOnly = registrationType === 'PARTICIPANT'
     const clubname = formContext.watch('clubname')
     const clubId = formContext.watch('clubId')
+    const participateSelf = formContext.watch('participateSelf')
 
     const canCreateClub = createClubOnRegistrationAllowed === true && isClub
+
+    // Participant data (gender/birth year) is only collected when the registrant participates:
+    // always for the participant flow, and for the club flow only when they opt in.
+    const showParticipantFields = isParticipantOnly || (isClub && participateSelf)
 
     const currentYear = useMemo(() => new Date().getFullYear(), [])
 
@@ -75,27 +83,40 @@ export const Step2BasicInformation = ({createClubOnRegistrationAllowed}: Step2Ba
 
             {isClub && <NewPassword formContext={formContext} horizontal={!isMobile} />}
 
-            {/* A participant is always created - gender and birth year are mandatory for both flows */}
-            <FormInputRadioButtonGroup
-                name="gender"
-                label={t('entity.gender')}
-                required
-                row
-                options={[
-                    {label: 'M', id: 'M'},
-                    {label: 'F', id: 'F'},
-                    {label: 'D', id: 'D'},
-                ]}
-            />
+            {isClub && (
+                <FormInputCheckbox
+                    name="participateSelf"
+                    label={t('user.registration.participateSelf')}
+                    horizontal
+                    reverse
+                />
+            )}
 
-            <FormInputNumber
-                required
-                name={'birthYear'}
-                label={t('user.birthYear')}
-                integer
-                min={currentYear - 120}
-                max={currentYear}
-            />
+            {/* gender and birth year are only required when the registrant participates */}
+            {showParticipantFields && (
+                <>
+                    <FormInputRadioButtonGroup
+                        name="gender"
+                        label={t('entity.gender')}
+                        required
+                        row
+                        options={[
+                            {label: 'M', id: 'M'},
+                            {label: 'F', id: 'F'},
+                            {label: 'D', id: 'D'},
+                        ]}
+                    />
+
+                    <FormInputNumber
+                        required
+                        name={'birthYear'}
+                        label={t('user.birthYear')}
+                        integer
+                        min={currentYear - 120}
+                        max={currentYear}
+                    />
+                </>
+            )}
         </Stack>
     )
 }

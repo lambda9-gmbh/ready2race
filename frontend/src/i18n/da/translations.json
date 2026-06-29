@@ -1372,6 +1372,7 @@
       "pendingRegistrations": "Afventende registreringer",
       "asParticipant": "Som deltager",
       "asClubRepresentative": "Som klubadministration",
+      "participateSelf": "Jeg vil også selv deltage",
       "step": {
         "emailToSubmitResults": "For selv at uploade et resultat kræves en e-mailadresse. Ellers skal klubadministrationen indtaste resultatet for dig."
       },

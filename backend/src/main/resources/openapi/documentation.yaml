@@ -7767,8 +7767,6 @@ components:
         - language
         - callbackUrl
         - registerToSingleCompetitions
-        - birthYear
-        - gender
       properties:
         email:
           type: string

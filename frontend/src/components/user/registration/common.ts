@@ -36,6 +36,11 @@ export type RegistrationForm = {
     registrationType?: RegistrationType
     event: AutocompleteOption
     competitions: CompetitionRegistration[]
+    /**
+     * CLUB flow only: whether the club representative also wants to register themselves as a
+     * participant. When unchecked, birthYear/gender are omitted and no participant is created.
+     */
+    participateSelf: boolean
     birthYear: string
     gender?: Gender
     emailRequired: string
@@ -46,6 +51,9 @@ export type RegistrationForm = {
 export function mapFormToAppUserRegisterRequest(
     formData: RegistrationForm,
 ): AppUserRegisterRequest {
+    // Only when the representative also participates are birthYear/gender (and any competition
+    // selections) sent. Otherwise the backend creates the account without a participant.
+    const participating = formData.participateSelf
     return {
         email: formData.emailRequired!,
         password: formData.password,
@@ -55,16 +63,20 @@ export function mapFormToAppUserRegisterRequest(
         clubname: formData.clubId ? undefined : formData.clubname,
         language: languageMapping[i18nLanguage()],
         callbackUrl: location.origin + location.pathname + '/',
-        registerToSingleCompetitions: formData.competitions
-            .filter(competition => competition.checked)
-            .map(competition => ({
-                competitionId: competition.competitionId,
-                optionalFees: competition.optionalFees,
-                ratingCategory:
-                    competition.ratingCategory !== 'none' ? competition.ratingCategory : undefined,
-            })),
-        birthYear: Number(formData.birthYear),
-        gender: formData.gender!,
+        registerToSingleCompetitions: participating
+            ? formData.competitions
+                  .filter(competition => competition.checked)
+                  .map(competition => ({
+                      competitionId: competition.competitionId,
+                      optionalFees: competition.optionalFees,
+                      ratingCategory:
+                          competition.ratingCategory !== 'none'
+                              ? competition.ratingCategory
+                              : undefined,
+                  }))
+            : [],
+        birthYear: participating ? Number(formData.birthYear) : undefined,
+        gender: participating ? formData.gender : undefined,
     }
 }
 
