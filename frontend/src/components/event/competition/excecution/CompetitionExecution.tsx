@@ -807,6 +807,20 @@ const CompetitionExecution = () => {
                                                                             team.clubName +
                                                                             ` | ${team.name}`}
                                                                     </Typography>
+                                                                    <Typography
+                                                                        color={'textSecondary'}
+                                                                        variant={'body2'}>
+                                                                        {team.namedParticipants
+                                                                            .map(np =>
+                                                                                np.participants
+                                                                                    .map(
+                                                                                        p =>
+                                                                                            `${p.firstName} ${p.lastName}`,
+                                                                                    )
+                                                                                    .join(', '),
+                                                                            )
+                                                                            .join(', ')}
+                                                                    </Typography>
                                                                 </TableCell>
                                                                 <TableCell width="40%">
                                                                     {!failedValue ? (
@@ -976,10 +990,31 @@ const CompetitionExecution = () => {
                                                                 />
                                                             </TableCell>
                                                             <TableCell width="75%">
-                                                                {`${team.clubName}` +
-                                                                    (team.name
-                                                                        ? ` - ${team.name}`
-                                                                        : '')}
+                                                                <Typography>
+                                                                    {team.actualClubName ??
+                                                                        team.clubName}
+                                                                </Typography>
+                                                                <Typography
+                                                                    color={'textSecondary'}
+                                                                    variant={'body2'}>
+                                                                    {`${t('club.registeredBy')} ` +
+                                                                        team.clubName +
+                                                                        ` | ${team.name}`}
+                                                                </Typography>
+                                                                <Typography
+                                                                    color={'textSecondary'}
+                                                                    variant={'body2'}>
+                                                                    {team.namedParticipants
+                                                                        .map(np =>
+                                                                            np.participants
+                                                                                .map(
+                                                                                    p =>
+                                                                                        `${p.firstName} ${p.lastName}`,
+                                                                                )
+                                                                                .join(', '),
+                                                                        )
+                                                                        .join(', ')}
+                                                                </Typography>
                                                             </TableCell>
                                                         </TableRow>
                                                     )
