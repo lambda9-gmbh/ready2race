@@ -22,6 +22,7 @@ type Form = {
     name: string
     colParticipantFirstname: string
     colParticipantLastname: string
+    colParticipantFullname: string
     colParticipantGender: string
     colParticipantRole: string
     colParticipantYear: string
@@ -47,6 +48,7 @@ const defaultValues: Form = {
     name: '',
     colParticipantFirstname: '',
     colParticipantLastname: '',
+    colParticipantFullname: '',
     colParticipantGender: '',
     colParticipantRole: '',
     colParticipantYear: '',
@@ -142,6 +144,10 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
                         <FormInputText
                             name={'colParticipantLastname'}
                             label={t('configuration.export.startlist.col.participant.lastname')}
+                        />
+                        <FormInputText
+                            name={'colParticipantFullname'}
+                            label={t('configuration.export.startlist.col.participant.fullname')}
                         />
                         <FormInputText
                             name={'colParticipantGender'}
@@ -251,6 +257,7 @@ const mapFormToRequest = (formData: Form): StartListConfigRequest => ({
     name: formData.name,
     colParticipantFirstname: takeIfNotEmpty(formData.colParticipantFirstname),
     colParticipantLastname: takeIfNotEmpty(formData.colParticipantLastname),
+    colParticipantFullname: takeIfNotEmpty(formData.colParticipantFullname),
     colParticipantGender: takeIfNotEmpty(formData.colParticipantGender),
     colParticipantRole: takeIfNotEmpty(formData.colParticipantRole),
     colParticipantYear: takeIfNotEmpty(formData.colParticipantYear),
@@ -276,6 +283,7 @@ const mapDtoToForm = (dto: StartListConfigDto): Form => ({
     name: dto.name,
     colParticipantFirstname: dto.colParticipantFirstname ?? '',
     colParticipantLastname: dto.colParticipantLastname ?? '',
+    colParticipantFullname: dto.colParticipantFullname ?? '',
     colParticipantGender: dto.colParticipantGender ?? '',
     colParticipantRole: dto.colParticipantRole ?? '',
     colParticipantYear: dto.colParticipantYear ?? '',

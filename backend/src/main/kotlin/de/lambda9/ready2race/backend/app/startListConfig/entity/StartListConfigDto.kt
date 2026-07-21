@@ -7,6 +7,7 @@ data class StartListConfigDto(
     val name: String,
     val colParticipantFirstname: String?,
     val colParticipantLastname: String?,
+    val colParticipantFullname: String?,
     val colParticipantGender: String?,
     val colParticipantRole: String?,
     val colParticipantYear: String?,

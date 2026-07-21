@@ -180,6 +180,15 @@ import type {
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
+    GetRaceClockerConfigData,
+    GetRaceClockerConfigError,
+    GetRaceClockerConfigResponse,
+    UpdateRaceClockerConfigData,
+    UpdateRaceClockerConfigError,
+    UpdateRaceClockerConfigResponse,
+    PullMatchResultsFromRaceClockerData,
+    PullMatchResultsFromRaceClockerError,
+    PullMatchResultsFromRaceClockerResponse,
     DownloadStartListData,
     DownloadStartListError,
     DownloadStartListResponse,
@@ -1452,6 +1461,51 @@ export const updateMatchResults = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results',
+    })
+}
+
+/**
+ * The two public RaceClocker results URLs of this competition.
+ */
+export const getRaceClockerConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRaceClockerConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRaceClockerConfigResponse,
+        GetRaceClockerConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/raceclocker-config',
+    })
+}
+
+export const updateRaceClockerConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRaceClockerConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRaceClockerConfigResponse,
+        UpdateRaceClockerConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/raceclocker-config',
+    })
+}
+
+/**
+ * Loads this match's results from the public RaceClocker results feed and writes them onto the match. Teams are matched by the registration id that was exported into RaceClocker's "Extra info" column; places are derived from the times, since the feed carries no rank. Nothing is written unless all checks pass.
+ */
+export const pullMatchResultsFromRaceClocker = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<PullMatchResultsFromRaceClockerData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        PullMatchResultsFromRaceClockerResponse,
+        PullMatchResultsFromRaceClockerError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/from-raceclocker',
     })
 }
 

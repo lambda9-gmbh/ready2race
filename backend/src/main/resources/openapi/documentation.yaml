@@ -1585,6 +1585,89 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/raceclocker-config:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getRaceClockerConfig
+      description: The two public RaceClocker results URLs of this competition.
+      responses:
+        200:
+          description: RaceClocker configuration successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceClockerConfigDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateRaceClockerConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaceClockerConfigRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/from-raceclocker:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: pullMatchResultsFromRaceClocker
+      description: >-
+        Loads this match's results from the public RaceClocker results feed and writes them onto the
+        match. Teams are matched by the registration id that was exported into RaceClocker's
+        "Extra info" column; places are derived from the times, since the feed carries no rank.
+        Nothing is written unless all checks pass.
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          description: The RaceClocker feed could not be loaded or read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/startList:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7246,6 +7329,13 @@ components:
         - LIST_DATA_INCOMPLETE
         - RESULT_NOT_FAILED_AND_NO_DATA
         - CLUB_NAME_ALREADY_EXISTS
+        - RACECLOCKER_URL_MISSING
+        - RACECLOCKER_URL_INVALID
+        - RACECLOCKER_UNREACHABLE
+        - RACECLOCKER_MALFORMED_FEED
+        - RACECLOCKER_WAVE_NOT_FOUND
+        - RACECLOCKER_DUPLICATE_TEAMS
+        - RACECLOCKER_NO_RESULTS
 
     Gender:
       type: string
@@ -11016,6 +11106,27 @@ components:
 
 
 
+    RaceClockerConfigDto:
+      type: object
+      properties:
+        timeTrialResultsUrl:
+          type: string
+          description: Public results URL of the individual-start race used for the qualification round.
+        heatsResultsUrl:
+          type: string
+          description: Public results URL of the wave-start race used for all other rounds.
+    RaceClockerConfigRequest:
+      type: object
+      description: >-
+        Both URLs are optional. They must be https URLs on raceclocker.com; the host is pinned so the
+        backend cannot be pointed at other services.
+      properties:
+        timeTrialResultsUrl:
+          type: string
+          nullable: true
+        heatsResultsUrl:
+          type: string
+          nullable: true
     StartListConfigRequest:
       type: object
       description: At least one column must be specified.
@@ -11028,6 +11139,8 @@ components:
         colParticipantFirstname:
           type: string
         colParticipantLastname:
+          type: string
+        colParticipantFullname:
           type: string
         colParticipantGender:
           type: string
@@ -11084,6 +11197,8 @@ components:
         colParticipantFirstname:
           type: string
         colParticipantLastname:
+          type: string
+        colParticipantFullname:
           type: string
         colParticipantGender:
           type: string

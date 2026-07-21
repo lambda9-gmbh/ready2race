@@ -874,7 +874,8 @@
           "upload": "Ergebnisse hochladen",
           "type": {
             "form": "mit Eingabeformular",
-            "XLS": "als XLS-Datei"
+            "XLS": "als XLS-Datei",
+            "RACECLOCKER": "von RaceClocker holen"
           },
           "error": {
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
@@ -922,6 +923,17 @@
           "document": {
             "download": {
               "error": "Beim herunterladen des Ergebnisdokuments ist ein Fehler aufgetreten."
+            }
+          },
+          "raceclocker": {
+            "success": "Ergebnisse von RaceClocker übernommen",
+            "error": {
+              "urlMissing": "Für diesen Wettkampf ist keine RaceClocker-Ergebnis-URL hinterlegt.",
+              "urlInvalid": "Die hinterlegte RaceClocker-URL ist ungültig. Erwartet wird eine https-Adresse auf raceclocker.com.",
+              "unreachable": "Die Ergebnisse konnten nicht von RaceClocker geladen werden. Bitte URL und Verbindung prüfen.",
+              "waveNotFound": "Zum Lauf \"{{wave}}\" gibt es in RaceClocker keine Einträge. Wurde die Startliste dort schon importiert?",
+              "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden ({{teams}}). Bitte dort bereinigen und erneut holen.",
+              "noResults": "Für diesen Lauf liegen in RaceClocker noch keine Zeiten vor."
             }
           }
         },
@@ -989,6 +1001,17 @@
             "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
             "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
             "success": "Ummeldungen erfolgreich gelöscht"
+          }
+        },
+        "raceclocker": {
+          "config": {
+            "open": "RaceClocker-Einstellungen",
+            "title": "RaceClocker-Einstellungen",
+            "hint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
+            "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
+            "heatsUrl": "Ergebnis-Adresse Läufe",
+            "saved": "RaceClocker-Einstellungen gespeichert",
+            "invalid": "Bitte geben Sie https-Adressen auf raceclocker.com an."
           }
         }
       },
@@ -1511,7 +1534,8 @@
             "gender": "Geschlecht",
             "role": "Rolle",
             "year": "Geburtsjahr",
-            "club": "Verein"
+            "club": "Verein",
+            "fullname": "Vor- und Nachname"
           },
           "club": {
             "heading": "Meldender Verein",

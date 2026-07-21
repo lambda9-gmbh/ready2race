@@ -800,6 +800,13 @@ export type ErrorCode =
     | 'LIST_DATA_INCOMPLETE'
     | 'RESULT_NOT_FAILED_AND_NO_DATA'
     | 'CLUB_NAME_ALREADY_EXISTS'
+    | 'RACECLOCKER_URL_MISSING'
+    | 'RACECLOCKER_URL_INVALID'
+    | 'RACECLOCKER_UNREACHABLE'
+    | 'RACECLOCKER_MALFORMED_FEED'
+    | 'RACECLOCKER_WAVE_NOT_FOUND'
+    | 'RACECLOCKER_DUPLICATE_TEAMS'
+    | 'RACECLOCKER_NO_RESULTS'
 
 export type EventDayDto = {
     id: string
@@ -1676,6 +1683,25 @@ export type QrCodeParticipantUpdate = {
     eventId: string
 }
 
+export type RaceClockerConfigDto = {
+    /**
+     * Public results URL of the individual-start race used for the qualification round.
+     */
+    timeTrialResultsUrl?: string
+    /**
+     * Public results URL of the wave-start race used for all other rounds.
+     */
+    heatsResultsUrl?: string
+}
+
+/**
+ * Both URLs are optional. They must be https URLs on raceclocker.com; the host is pinned so the backend cannot be pointed at other services.
+ */
+export type RaceClockerConfigRequest = {
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+}
+
 export type RatingCategoriesToEventRequest = {
     ratingCategories: Array<RatingCategoryToEventRequest>
 }
@@ -1843,6 +1869,7 @@ export type StartListConfigDto = {
     name: string
     colParticipantFirstname?: string
     colParticipantLastname?: string
+    colParticipantFullname?: string
     colParticipantGender?: string
     colParticipantRole?: string
     colParticipantYear?: string
@@ -1871,6 +1898,7 @@ export type StartListConfigRequest = {
     name: string
     colParticipantFirstname?: string
     colParticipantLastname?: string
+    colParticipantFullname?: string
     colParticipantGender?: string
     colParticipantRole?: string
     colParticipantYear?: string
@@ -3198,6 +3226,41 @@ export type UpdateMatchResultsData = {
 export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRaceClockerConfigData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetRaceClockerConfigResponse = RaceClockerConfigDto
+
+export type GetRaceClockerConfigError = BadRequestError | ApiError
+
+export type UpdateRaceClockerConfigData = {
+    body: RaceClockerConfigRequest
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type UpdateRaceClockerConfigResponse = void
+
+export type UpdateRaceClockerConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type PullMatchResultsFromRaceClockerData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type PullMatchResultsFromRaceClockerResponse = void
+
+export type PullMatchResultsFromRaceClockerError = BadRequestError | ApiError
 
 export type DownloadStartListData = {
     path: {

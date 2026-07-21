@@ -12,6 +12,7 @@ data class StartListConfigRequest(
     val name: String,
     val colParticipantFirstname: String?,
     val colParticipantLastname: String?,
+    val colParticipantFullname: String?,
     val colParticipantGender: String?,
     val colParticipantRole: String?,
     val colParticipantYear: String?,
@@ -37,6 +38,7 @@ data class StartListConfigRequest(
             this::name validate notBlank,
             this::colParticipantFirstname validate notBlank,
             this::colParticipantLastname validate notBlank,
+            this::colParticipantFullname validate notBlank,
             this::colParticipantGender validate notBlank,
             this::colParticipantRole validate notBlank,
             this::colParticipantYear validate notBlank,
@@ -59,6 +61,7 @@ data class StartListConfigRequest(
             ValidationResult.anyOf(
                 this::colParticipantFirstname validate notNull,
                 this::colParticipantLastname validate notNull,
+                this::colParticipantFullname validate notNull,
                 this::colParticipantGender validate notNull,
                 this::colParticipantRole validate notNull,
                 this::colParticipantYear validate notNull,
@@ -81,7 +84,7 @@ data class StartListConfigRequest(
             // The team identifier header must be distinct from every other configured column header.
             run {
                 val otherHeaders = listOf(
-                    colParticipantFirstname, colParticipantLastname, colParticipantGender,
+                    colParticipantFirstname, colParticipantLastname, colParticipantFullname, colParticipantGender,
                     colParticipantRole, colParticipantYear, colParticipantClub, colClubName,
                     colTeamName, colTeamStartNumber, colTeamRatingCategory, colTeamClub,
                     colTeamDeregistered, colMatchName, colMatchStartTime, colRoundName,
@@ -104,6 +107,7 @@ data class StartListConfigRequest(
             colTeamRegistrationId = "Info 1",
             colParticipantFirstname = null,
             colParticipantLastname = null,
+            colParticipantFullname = null,
             colParticipantGender = null,
             colParticipantRole = null,
             colParticipantYear = null,

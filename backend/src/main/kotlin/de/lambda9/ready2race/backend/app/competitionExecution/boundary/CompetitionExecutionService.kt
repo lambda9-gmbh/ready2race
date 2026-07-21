@@ -26,6 +26,11 @@ import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipan
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerConfigDto
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerConfigRequest
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
+import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
@@ -736,6 +741,22 @@ object CompetitionExecutionService {
             val expected = index + 1
             !KIO.failOn(expected != place) { CompetitionExecutionError.ResultUploadError.Invalid.PlacesUncontinuous(place, expected) }
         }*/
+        applyParsedTeamResults(match, matchId, teams, userId)
+    }
+
+    /**
+     * Writes externally timed results onto a match. Shared by the spreadsheet upload and the
+     * RaceClocker pull; both arrive here with the same [ParsedTeamResult] shape.
+     *
+     * Expects [prepareForNewPlaces] to have run already.
+     */
+    private fun applyParsedTeamResults(
+        match: CompetitionMatchWithTeams,
+        matchId: UUID,
+        teams: List<ParsedTeamResult>,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
         // TODO: instead for now, we sort the places and give first place to smallest place in expected start numbers maintaining teams with place == null
         val validTeams =
             teams.filter { team -> match.teams.any { team.registrationId == it.competitionRegistration && !it.deregistered } }
@@ -813,6 +834,112 @@ object CompetitionExecutionService {
         }.noDataResponse()
 
 
+    }
+
+    fun getRaceClockerConfig(
+        competitionId: UUID,
+    ): App<ServiceError, ApiResponse.Dto<RaceClockerConfigDto>> = KIO.comprehension {
+
+        val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
+
+        KIO.ok(
+            ApiResponse.Dto(
+                RaceClockerConfigDto(
+                    timeTrialResultsUrl = competition.raceclockerTtResultsUrl,
+                    heatsResultsUrl = competition.raceclockerHeatsResultsUrl,
+                )
+            )
+        )
+    }
+
+    fun updateRaceClockerConfig(
+        competitionId: UUID,
+        userId: UUID,
+        request: RaceClockerConfigRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        !CompetitionRepo.update(competitionId) {
+            // Blank means "not configured" - keeping empty strings would make the pull fail later with
+            // an unhelpful URL error instead of the clear "no URL configured" one.
+            raceclockerTtResultsUrl = request.timeTrialResultsUrl?.trim()?.takeIf { it.isNotBlank() }
+            raceclockerHeatsResultsUrl = request.heatsResultsUrl?.trim()?.takeIf { it.isNotBlank() }
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie().onNullFail { CompetitionError.CompetitionNotFound }
+
+        noData
+    }
+
+    /**
+     * Pulls the results of a single match from RaceClocker's public results feed.
+     *
+     * Counterpart to [updateMatchResultByFile]: same destination, but the data is fetched instead of
+     * uploaded. Rows are tied to teams by the registration id that travelled out in the start list and
+     * comes back in RaceClocker's "Extra info" - the bib cannot serve as the key, since it is only a
+     * lane number within a match and repeats across heats.
+     *
+     * Nothing is written until every check has passed, so a rejected pull leaves the match untouched
+     * and can simply be repeated once RaceClocker has been corrected.
+     */
+    suspend fun CallComprehensionScope.updateMatchResultFromRaceClocker(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val match = !checkUpdateMatchResult(competitionId, matchId)
+
+        val target = !CompetitionMatchRepo.getForRaceClockerPull(matchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        val rawUrl = target.resultsUrl
+            ?: return KIO.fail(RaceClockerError.UrlMissing(target.isQualification))
+
+        // A time trial race holds a single start list with no waves, so its rows are narrowed down by
+        // team alone. Every other round is one wave per match, keyed by the match name.
+        val wave = if (target.isQualification) null else {
+            target.waveName ?: return KIO.fail(RaceClockerError.MatchNameMissing)
+        }
+
+        val url = !RaceClockerFeed.validateUrl(rawUrl)
+        val rows = !RaceClockerFeed.fetch(url)
+
+        val inWave = if (wave == null) rows else rows.filter { it.wave == wave }
+        if (inWave.isEmpty()) return KIO.fail(RaceClockerError.WaveNotFound(wave ?: rawUrl))
+
+        val teamIds = match.teams.filter { !it.deregistered }.map { it.competitionRegistration }.toSet()
+        val forMatch = inWave.filter { it.registrationId != null && it.registrationId in teamIds }
+
+        // RaceClocker only ever inserts, it never updates: importing the same start list twice leaves
+        // duplicate crews behind. Picking one of them silently would be a coin flip, so we refuse and
+        // let the user clean up there.
+        val duplicates = forMatch.groupBy { it.registrationId }.filterValues { it.size > 1 }
+        if (duplicates.isNotEmpty()) {
+            return KIO.fail(RaceClockerError.DuplicateTeams(wave, duplicates.values.map { it.first().name }))
+        }
+
+        // Crews that have not been timed yet are skipped rather than treated as an error, so the pull
+        // can be repeated as the heat progresses.
+        val timed = forMatch.filter { it.result != null }
+        if (timed.isEmpty()) return KIO.fail(RaceClockerError.NoResults(wave))
+
+        !prepareForNewPlaces(matchId, userId)
+
+        val parsed = timed.map { row ->
+            ParsedTeamResult(
+                registrationId = row.registrationId!!,
+                startNumber = row.bib,
+                // The feed carries no rank; places are derived from the times further down.
+                place = null,
+                time = row.time,
+                noResultReason = row.noResultReason,
+            )
+        }
+
+        return applyParsedTeamResults(match, matchId, parsed, userId)
     }
 
     fun updateMatchRunningState(
@@ -1476,6 +1603,10 @@ object CompetitionExecutionService {
 
                 optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
                 optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }
+                // Combined name for tooling that offers only a single name field (e.g. RaceClocker).
+                optionalColumn(config.colParticipantFullname) {
+                    participants.joinToString(", ") { p -> "${p.firstname} ${p.lastname}" }
+                }
                 optionalColumn(config.colParticipantGender) {
                     participants.map { p -> p.gender }.toSortedSet { a, b -> compareValues(a.order(), b.order()) }
                         .joinToString("/")

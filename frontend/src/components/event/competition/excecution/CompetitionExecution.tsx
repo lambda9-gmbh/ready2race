@@ -1,6 +1,7 @@
 import {
     createNextCompetitionRound,
     downloadStartList,
+    pullMatchResultsFromRaceClocker,
     getCompetitionExecutionProgress,
     updateMatchData,
     updateMatchResults,
@@ -8,6 +9,7 @@ import {
 } from '@api/sdk.gen.ts'
 import {
     Box,
+    Button,
     Checkbox,
     Divider,
     Link,
@@ -52,6 +54,7 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
 import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
+import RaceClockerConfigDialog from '@components/event/competition/excecution/RaceClockerConfigDialog.tsx'
 import FormInputTimecode from '@components/form/input/FormInputTimecode.tsx'
 
 type EditMatchTeam = {
@@ -234,6 +237,8 @@ const CompetitionExecution = () => {
     const showStartListConfigDialog = startListMatch !== null
     const closeStartListConfigDialog = () => setStartListMatch(null)
 
+    const [showRaceClockerConfig, setShowRaceClockerConfig] = useState(false)
+
     const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
     const showMatchResultImportConfigDialog = resultImportMatch !== null
     const closeMatchResultImportConfigDialog = () => setResultImportMatch(null)
@@ -270,6 +275,58 @@ const CompetitionExecution = () => {
             anchor.click()
             anchor.href = ''
             anchor.download = ''
+        }
+    }
+
+    const handlePullRaceClockerResults = async (competitionMatchId: string) => {
+        setSubmitting(true)
+        const {error} = await pullMatchResultsFromRaceClocker({
+            path: {
+                eventId,
+                competitionId,
+                competitionMatchId,
+            },
+        })
+        setSubmitting(false)
+
+        if (error) {
+            const details = ('details' in error ? error.details : undefined) as
+                | Record<string, unknown>
+                | undefined
+            switch (error.errorCode) {
+                case 'RACECLOCKER_URL_MISSING':
+                    feedback.error(t('event.competition.execution.results.raceclocker.error.urlMissing'))
+                    break
+                case 'RACECLOCKER_URL_INVALID':
+                    feedback.error(t('event.competition.execution.results.raceclocker.error.urlInvalid'))
+                    break
+                case 'RACECLOCKER_UNREACHABLE':
+                case 'RACECLOCKER_MALFORMED_FEED':
+                    feedback.error(t('event.competition.execution.results.raceclocker.error.unreachable'))
+                    break
+                case 'RACECLOCKER_WAVE_NOT_FOUND':
+                    feedback.error(
+                        t('event.competition.execution.results.raceclocker.error.waveNotFound', {
+                            wave: (details?.wave as string) ?? '',
+                        }),
+                    )
+                    break
+                case 'RACECLOCKER_DUPLICATE_TEAMS':
+                    feedback.error(
+                        t('event.competition.execution.results.raceclocker.error.duplicateTeams', {
+                            teams: ((details?.teams as string[]) ?? []).join(', '),
+                        }),
+                    )
+                    break
+                case 'RACECLOCKER_NO_RESULTS':
+                    feedback.error(t('event.competition.execution.results.raceclocker.error.noResults'))
+                    break
+                default:
+                    feedback.error(t('common.error.unexpected'))
+            }
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.success'))
+            setReloadData(!reloadData)
         }
     }
 
@@ -694,6 +751,14 @@ const CompetitionExecution = () => {
                     )}
                 </Box>
             )}
+            <Box sx={{my: 2}}>
+                <Button
+                    variant={'outlined'}
+                    size={'small'}
+                    onClick={() => setShowRaceClockerConfig(true)}>
+                    {t('event.competition.execution.raceclocker.config.open')}
+                </Button>
+            </Box>
             <Stack spacing={6}>
                 {sortedRounds.map((round, roundIndex) => (
                     <CompetitionExecutionRound
@@ -713,6 +778,7 @@ const CompetitionExecution = () => {
                         smallScreenLayout={smallScreenLayout}
                         setStartListMatch={setStartListMatch}
                         setResultImportMatch={setResultImportMatch}
+                        pullRaceClockerResults={handlePullRaceClockerResults}
                         handleDownloadStartListPDF={matchId =>
                             handleDownloadStartList(matchId, 'PDF')
                         }
@@ -1032,6 +1098,12 @@ const CompetitionExecution = () => {
                 open={showStartListConfigDialog}
                 onClose={closeStartListConfigDialog}
                 onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
+            />
+            <RaceClockerConfigDialog
+                open={showRaceClockerConfig}
+                eventId={eventId}
+                competitionId={competitionId}
+                onClose={() => setShowRaceClockerConfig(false)}
             />
             <MatchResultUploadDialog
                 open={showMatchResultImportConfigDialog}

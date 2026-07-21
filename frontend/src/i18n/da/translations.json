@@ -874,7 +874,8 @@
           "upload": "Upload resultater",
           "type": {
             "form": "med indtastningsformular",
-            "XLS": "som XLS-fil"
+            "XLS": "som XLS-fil",
+            "RACECLOCKER": "hent fra RaceClocker"
           },
           "error": {
             "WRONG_TEAM_COUNT": "Antallet af hold stemmer ikke - læst: {{actual}}, forventet: {{expected}}",
@@ -922,6 +923,17 @@
           "document": {
             "download": {
               "error": "Der opstod en fejl ved download af resultatdokumentet."
+            }
+          },
+          "raceclocker": {
+            "success": "Resultater hentet fra RaceClocker",
+            "error": {
+              "urlMissing": "Der er ikke angivet nogen RaceClocker-resultat-URL for denne konkurrence.",
+              "urlInvalid": "Den angivne RaceClocker-URL er ugyldig. Der forventes en https-adresse på raceclocker.com.",
+              "unreachable": "Resultaterne kunne ikke hentes fra RaceClocker. Kontroller URL og forbindelse.",
+              "waveNotFound": "Der er ingen poster for heat \"{{wave}}\" i RaceClocker. Er startlisten importeret der endnu?",
+              "duplicateTeams": "RaceClocker indeholder dublerede besætninger ({{teams}}). Ryd op der, og hent igen.",
+              "noResults": "Der foreligger endnu ingen tider for dette heat i RaceClocker."
             }
           }
         },
@@ -989,6 +1001,17 @@
             "confirmation": "Er du sikker på, at den sidste ombytning skal slettes?",
             "error": "Der opstod en fejl ved sletning af ombytningerne",
             "success": "Ombytninger slettet"
+          }
+        },
+        "raceclocker": {
+          "config": {
+            "open": "RaceClocker-indstillinger",
+            "title": "RaceClocker-indstillinger",
+            "hint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
+            "timeTrialUrl": "Resultatadresse for enkeltstart",
+            "heatsUrl": "Resultatadresse for heat",
+            "saved": "RaceClocker-indstillinger gemt",
+            "invalid": "Angiv https-adresser på raceclocker.com."
           }
         }
       },
@@ -1511,7 +1534,8 @@
             "gender": "Køn",
             "role": "Rolle",
             "year": "Fødselsår",
-            "club": "Klub"
+            "club": "Klub",
+            "fullname": "Fornavn og efternavn"
           },
           "club": {
             "heading": "Tilmeldende klub",
