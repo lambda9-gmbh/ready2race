@@ -684,6 +684,7 @@
           "required": "Runden skal gennemføres",
           "lockedInfo": "Denne runde er allerede startet og kan ikke længere redigeres. Ændringer er kun mulige for efterfølgende runder.",
           "isQualification": "Kvalifikationsrunde",
+          "isQualificationHint": "Bestemmer desuden, hvilket af de to RaceClocker-løb der først søges efter resultater i: enkeltstartsløbet når markeret, ellers heat-løbet.",
           "finals": {
             "long": {
               "final": {
@@ -929,11 +930,12 @@
             "success": "Resultater hentet fra RaceClocker",
             "error": {
               "urlMissing": "Der er ikke angivet nogen RaceClocker-resultat-URL for denne konkurrence.",
-              "urlInvalid": "Den angivne RaceClocker-URL er ugyldig. Der forventes en https-adresse på raceclocker.com.",
+              "urlInvalid": "Den angivne RaceClocker-URL er ugyldig. Der forventes en adresse på raceclocker.com.",
               "unreachable": "Resultaterne kunne ikke hentes fra RaceClocker. Kontroller URL og forbindelse.",
-              "waveNotFound": "Der er ingen poster for heat \"{{wave}}\" i RaceClocker. Er startlisten importeret der endnu?",
+              "matchNotInFeed": "Der er ingen poster for dette heat i RaceClocker. Er startlisten importeret der endnu? Stammer den fra en tidligere version af runden, skal den eksporteres igen.",
               "duplicateTeams": "RaceClocker indeholder dublerede besætninger ({{teams}}). Ryd op der, og hent igen.",
-              "noResults": "Der foreligger endnu ingen tider for dette heat i RaceClocker."
+              "noResults": "Der foreligger endnu ingen tider for dette heat i RaceClocker.",
+              "matchIsBye": "Dette heat er en frirunde: holdet går videre uden at køre, så der er ingen resultater at hente."
             }
           }
         },
@@ -1010,8 +1012,9 @@
             "hint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
             "timeTrialUrl": "Resultatadresse for enkeltstart",
             "heatsUrl": "Resultatadresse for heat",
+            "importHint": "RaceClocker-skabelonerne eksporterer uden overskriftsrække, fordi RaceClocker ellers importerer den som deltager. Tilknyt derfor kolonnerne efter deres rækkefølge ved import i RaceClocker – især den interne id til \"Extra info\".",
             "saved": "RaceClocker-indstillinger gemt",
-            "invalid": "Angiv https-adresser på raceclocker.com."
+            "invalid": "Angiv adresser på raceclocker.com."
           }
         }
       },
@@ -1525,6 +1528,7 @@
         "startlists": "Eksports af startlister",
         "tableHint": "Definerer kolonnerne til CSV-eksport af startlister under afvikling af konkurrencer.",
         "name": "Navn",
+        "noHeader": "Eksportér uden overskriftsrække",
         "col": {
           "heading": "Kolonner",
           "participant": {
@@ -1545,7 +1549,8 @@
             "heading": "Hold",
             "name": "Navn",
             "startNumber": "Startnummer",
-            "registrationId": "Intern Hold-id",
+            "registrationId": "Intern hold-id (på tværs af runder)",
+            "matchId": "Intern heat-id (pr. runde)",
             "ratingCategory": "Rangeringskategori",
             "club": "Klub (samlet)",
             "deregistered": "Afmeldt",
@@ -1565,11 +1570,12 @@
             "identifier": "Identifikator",
             "name": "Navn",
             "shortName": "Kort navn",
+            "appendRatingToShortName": "Tilføj rangeringskategori til det korte navn",
             "category": "Kategori"
           }
         },
         "error": {
-          "tooFewCols": "Angiv venligst mindst et navn for en kolonne."
+          "tooFewCols": "Angiv venligst mindst et navn for en kolonne, herunder en af de to interne id'er."
         }
       }
     }

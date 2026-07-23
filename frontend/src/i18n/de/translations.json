@@ -684,6 +684,7 @@
           "required": "Runde muss durchgeführt werden",
           "lockedInfo": "Diese Runde wurde bereits gestartet und kann nicht mehr bearbeitet werden. Änderungen sind nur für Folgerunden möglich.",
           "isQualification": "Qualifikationsrunde",
+          "isQualificationHint": "Bestimmt außerdem, in welchem der beiden RaceClocker-Rennen Ergebnisse zuerst gesucht werden: markiert im Zeitfahren-Rennen, sonst im Läufe-Rennen.",
           "finals": {
             "long": {
               "final": {
@@ -929,11 +930,12 @@
             "success": "Ergebnisse von RaceClocker übernommen",
             "error": {
               "urlMissing": "Für diesen Wettkampf ist keine RaceClocker-Ergebnis-URL hinterlegt.",
-              "urlInvalid": "Die hinterlegte RaceClocker-URL ist ungültig. Erwartet wird eine https-Adresse auf raceclocker.com.",
+              "urlInvalid": "Die hinterlegte RaceClocker-URL ist ungültig. Erwartet wird eine Adresse auf raceclocker.com.",
               "unreachable": "Die Ergebnisse konnten nicht von RaceClocker geladen werden. Bitte URL und Verbindung prüfen.",
-              "waveNotFound": "Zum Lauf \"{{wave}}\" gibt es in RaceClocker keine Einträge. Wurde die Startliste dort schon importiert?",
+              "matchNotInFeed": "Zu diesem Lauf gibt es in RaceClocker keine Einträge. Wurde die Startliste dort schon importiert? Stammt sie aus einer früheren Version der Runde, muss sie neu exportiert werden.",
               "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden ({{teams}}). Bitte dort bereinigen und erneut holen.",
-              "noResults": "Für diesen Lauf liegen in RaceClocker noch keine Zeiten vor."
+              "noResults": "Für diesen Lauf liegen in RaceClocker noch keine Zeiten vor.",
+              "matchIsBye": "Dieser Lauf ist ein Freilos: Das Team kommt ohne Rennen weiter, es gibt keine Ergebnisse zu holen."
             }
           }
         },
@@ -1010,8 +1012,9 @@
             "hint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
             "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
             "heatsUrl": "Ergebnis-Adresse Läufe",
+            "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
             "saved": "RaceClocker-Einstellungen gespeichert",
-            "invalid": "Bitte geben Sie https-Adressen auf raceclocker.com an."
+            "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
           }
         }
       },
@@ -1525,6 +1528,7 @@
         "startlists": "Startlisten Exports",
         "tableHint": "Definieren die Spalten für den CSV-Export von Startlisten bei der Durchführung von Wettkämpfen.",
         "name": "Name",
+        "noHeader": "Ohne Kopfzeile exportieren",
         "col": {
           "heading": "Spalten",
           "participant": {
@@ -1545,7 +1549,8 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Startnummer",
-            "registrationId": "Interne Team-Kennung",
+            "registrationId": "Interne Team-Kennung (rundenübergreifend)",
+            "matchId": "Interne Lauf-Kennung (pro Runde)",
             "ratingCategory": "Wertungskategorie",
             "club": "Verein (zusammengefasst)",
             "deregistered": "Abgemeldet",
@@ -1565,11 +1570,12 @@
             "identifier": "Kennung",
             "name": "Name",
             "shortName": "Kurzname",
+            "appendRatingToShortName": "Wertungskategorie an den Kurznamen anhängen",
             "category": "Kategorie"
           }
         },
         "error": {
-          "tooFewCols": "Geben Sie bitte mindestens für eine Spalte die Bezeichnung an."
+          "tooFewCols": "Geben Sie bitte mindestens für eine Spalte die Bezeichnung an, darunter eine der beiden internen Kennungen."
         }
       }
     }

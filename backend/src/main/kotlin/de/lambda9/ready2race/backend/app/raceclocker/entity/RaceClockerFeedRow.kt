@@ -15,8 +15,12 @@ data class RaceClockerFeedRow(
     val bib: Int?,
     /** `null` for time trial races, which have no waves. */
     val wave: String?,
-    /** Read back from RaceClocker's "Extra info"; `null` if the column was not mapped on import. */
-    val registrationId: UUID?,
+    /**
+     * Every UUID found in RaceClocker's "Extra info" - a match team id, a registration id, or both,
+     * depending on what the start list config exported and what was mapped on import. Empty if none
+     * was mapped.
+     */
+    val ids: List<UUID>,
     /** Either a formatted time (`HH:MM:SS.d`) or a status text such as `DNS`, `DNF` or `DQ`. */
     val result: String?,
 ) {

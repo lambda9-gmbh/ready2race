@@ -24,6 +24,7 @@ fun StartListConfigRequest.toRecord(userId: UUID): App<Nothing, StartlistExportC
             colTeamName = colTeamName,
             colTeamStartNumber = colTeamStartNumber,
             colTeamRegistrationId = colTeamRegistrationId,
+            colTeamMatchId = colTeamMatchId,
             colTeamRatingCategory = colTeamRatingCategory,
             colTeamClub = colTeamClub,
             colTeamDeregistered = colTeamDeregistered,
@@ -35,6 +36,8 @@ fun StartListConfigRequest.toRecord(userId: UUID): App<Nothing, StartlistExportC
             colCompetitionName = colCompetitionName,
             colCompetitionShortName = colCompetitionShortName,
             colCompetitionCategory = colCompetitionCategory,
+            noHeader = noHeader,
+            appendRatingToShortName = appendRatingToShortName,
             createdAt = now,
             createdBy = userId,
             updatedAt = now,
@@ -58,6 +61,7 @@ fun StartlistExportConfigRecord.toDto(): App<Nothing, StartListConfigDto> = KIO.
         colTeamName = colTeamName,
         colTeamStartNumber = colTeamStartNumber,
         colTeamRegistrationId = colTeamRegistrationId,
+        colTeamMatchId = colTeamMatchId,
         colTeamRatingCategory = colTeamRatingCategory,
         colTeamClub = colTeamClub,
         colTeamDeregistered = colTeamDeregistered,
@@ -69,5 +73,8 @@ fun StartlistExportConfigRecord.toDto(): App<Nothing, StartListConfigDto> = KIO.
         colCompetitionName = colCompetitionName,
         colCompetitionShortName = colCompetitionShortName,
         colCompetitionCategory = colCompetitionCategory,
+        // Not null in the schema; jOOQ only loses that guarantee because both carry a default.
+        noHeader = noHeader == true,
+        appendRatingToShortName = appendRatingToShortName == true,
     )
 )

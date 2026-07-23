@@ -917,6 +917,9 @@ group by ifer.event;
 
 create view startlist_team as
 select cmt.competition_match,
+       -- Eindeutig pro Team UND Runde, anders als team_id. Traegt den RaceClocker-Round-Trip, siehe
+       -- startlist_export_config.col_team_match_id.
+       cmt.id                                                                           as match_team_id,
        cmt.start_number,
        cr.id                                                                            as team_id,
        cr.name                                                                          as team_name,
@@ -938,7 +941,7 @@ from competition_match_team cmt
          left join substitution_view sv on cr.id = sv.competition_registration_id and
                                            csm.competition_setup_round = sv.competition_setup_round_id
 where cmt.out is not true
-group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name, rc.id, csm.id;
+group by cmt.id, cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name, rc.id, csm.id;
 
 create view startlist_view as
 select csm.id,

@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNull
+import io.ktor.http.*
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -70,59 +71,81 @@ class RaceClockerFeedTest {
     }
 
     @Test
-    fun registrationIdIsReadFromExtraInfo() {
-        assertEquals(uuidOf(4), feed().single { it.bib == 4 }.registrationId)
-        assertEquals(uuidOf(13), feed().single { it.bib == 13 }.registrationId)
+    fun identifiersAreReadFromExtraInfo() {
+        assertEquals(listOf(uuidOf(4)), feed().single { it.bib == 4 }.ids)
+        assertEquals(listOf(uuidOf(13)), feed().single { it.bib == 13 }.ids)
     }
 
     @Test
-    fun missingExtraInfoMappingYieldsNoRegistrationId() {
+    fun missingExtraInfoMappingYieldsNoIdentifier() {
         // The column was not mapped in RaceClocker's importer - such rows cannot be assigned.
-        assertNull(feed().single { it.bib == 2 }.registrationId)
+        assertTrue(feed().single { it.bib == 2 }.ids.isEmpty())
     }
 
     @Test
     fun bibIsParsedFromString() {
         // The feed returns bib numbers as strings, not numbers.
-        assertTrue(feed().all { it.bib != null || it.registrationId == null })
+        assertTrue(feed().all { it.bib != null || it.ids.isEmpty() })
         assertEquals(13, feed().single { it.noResultReason == "DNF" }.bib)
     }
 
     @Test
-    fun validUrlsGetTheJsonParameterAppended() {
+    fun validUrlsAreAccepted() {
         listOf(
             "https://www.raceclocker.com/7c854955",
             "https://raceclocker.com/7c854955",
             "  https://www.raceclocker.com/7c854955  ",
         ).forEach { raw ->
-            val url = RaceClockerFeed.validateUrl(raw).unsafeRunSync().getOrNull()
+            val url = RaceClockerFeed.normalizeUrl(raw).unsafeRunSync().getOrNull()
             assertNotNull(url, "should be accepted: $raw")
-            assertEquals("1", url.parameters["json"], "json=1 must be appended: $raw")
+            assertEquals("1", RaceClockerFeed.feedUrl(url).parameters["json"], "json=1 must be appended: $raw")
         }
+    }
+
+    @Test
+    fun missingSchemeIsFilledIn() {
+        // How the URL looks when copied out of a browser address bar.
+        listOf(
+            "www.raceclocker.com/7c854955",
+            "raceclocker.com/7c854955",
+        ).forEach { raw ->
+            val url = RaceClockerFeed.normalizeUrl(raw).unsafeRunSync().getOrNull()
+            assertNotNull(url, "should be accepted: $raw")
+            assertEquals(URLProtocol.HTTPS, url.protocol, "scheme must default to https: $raw")
+            assertEquals("/7c854955", url.encodedPath)
+        }
+    }
+
+    @Test
+    fun plainHttpIsLiftedToHttps() {
+        // What keeps this endpoint from being an SSRF lever is the host allowlist, not the scheme.
+        val url = RaceClockerFeed.normalizeUrl("http://www.raceclocker.com/7c854955").unsafeRunSync().getOrNull()
+        assertNotNull(url)
+        assertEquals("https://www.raceclocker.com/7c854955", url.toString())
     }
 
     @Test
     fun longFormUrlKeepsItsExistingQuery() {
         val url = RaceClockerFeed
-            .validateUrl("https://www.raceclocker.com/Event_Result.php?EIDK=e73d5ce6")
+            .normalizeUrl("https://www.raceclocker.com/Event_Result.php?EIDK=e73d5ce6")
             .unsafeRunSync().getOrNull()
         assertNotNull(url)
         assertEquals("e73d5ce6", url.parameters["EIDK"], "existing query parameters must survive")
-        assertEquals("1", url.parameters["json"])
+        assertEquals("1", RaceClockerFeed.feedUrl(url).parameters["json"])
     }
 
     @Test
-    fun foreignHostsAndPlainHttpAreRejected() {
+    fun foreignHostsAreRejected() {
         // The URL is operator-supplied, so this check is what keeps the endpoint from being an SSRF lever.
         listOf(
-            "http://www.raceclocker.com/7c854955",
             "https://evil.example.com/7c854955",
             "https://raceclocker.com.evil.example.com/7c854955",
             "http://169.254.169.254/latest/meta-data/",
+            "169.254.169.254/latest/meta-data/",
             "file:///etc/passwd",
             "not a url at all",
         ).forEach { raw ->
-            val result = RaceClockerFeed.validateUrl(raw).unsafeRunSync()
+            val result = RaceClockerFeed.normalizeUrl(raw).unsafeRunSync()
             assertTrue(
                 result.getOrNull() == null,
                 "should be rejected: $raw",

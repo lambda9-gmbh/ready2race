@@ -7333,9 +7333,10 @@ components:
         - RACECLOCKER_URL_INVALID
         - RACECLOCKER_UNREACHABLE
         - RACECLOCKER_MALFORMED_FEED
-        - RACECLOCKER_WAVE_NOT_FOUND
+        - RACECLOCKER_MATCH_NOT_IN_FEED
         - RACECLOCKER_DUPLICATE_TEAMS
         - RACECLOCKER_NO_RESULTS
+        - RACECLOCKER_MATCH_IS_BYE
 
     Gender:
       type: string
@@ -11129,10 +11130,9 @@ components:
           nullable: true
     StartListConfigRequest:
       type: object
-      description: At least one column must be specified.
+      description: At least one column must be specified, and at least one of colTeamRegistrationId / colTeamMatchId.
       required:
         - name
-        - colTeamRegistrationId
       properties:
         name:
           type: string
@@ -11158,7 +11158,10 @@ components:
           type: string
         colTeamRegistrationId:
           type: string
-          description: Header of the column carrying the stable team identifier (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
+          description: Header of the column carrying the team identifier that is stable across rounds (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
+        colTeamMatchId:
+          type: string
+          description: Header of the column carrying the identifier that is unique per team and round (competition match team id). Needed by tooling that holds every round of a competition in a single race (RaceClocker), where the registration id repeats.
         colTeamRatingCategory:
           type: string
         colTeamClub:
@@ -11181,13 +11184,20 @@ components:
           type: string
         colCompetitionCategory:
           type: string
+        noHeader:
+          type: boolean
+          description: Export without a header row. Some tooling imports the header as a data row unless told otherwise (RaceClocker); columns are then mapped by position there.
+        appendRatingToShortName:
+          type: boolean
+          description: Append the rating category to the competition short name column, for tooling that can only group by a single field.
 
     StartListConfigDto:
       type: object
       required:
         - id
         - name
-        - colTeamRegistrationId
+        - noHeader
+        - appendRatingToShortName
       properties:
         id:
           type: string
@@ -11216,6 +11226,8 @@ components:
           type: string
         colTeamRegistrationId:
           type: string
+        colTeamMatchId:
+          type: string
         colTeamRatingCategory:
           type: string
         colTeamClub:
@@ -11238,6 +11250,10 @@ components:
           type: string
         colCompetitionCategory:
           type: string
+        noHeader:
+          type: boolean
+        appendRatingToShortName:
+          type: boolean
 
     InfoViewType:
       type: string

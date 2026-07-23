@@ -315,6 +315,7 @@ object DocumentTemplateService {
                     teams = listOf(
                         CompetitionMatchData.CompetitionMatchTeam(
                             registrationId = UUID.randomUUID(),
+                            matchTeamId = UUID.randomUUID(),
                             startNumber = 1,
                             registeringClubName = "Sportclub Musterhausen",
                             actualClubName = null,
@@ -334,6 +335,7 @@ object DocumentTemplateService {
                         ),
                         CompetitionMatchData.CompetitionMatchTeam(
                             registrationId = UUID.randomUUID(),
+                            matchTeamId = UUID.randomUUID(),
                             startNumber = 2,
                             registeringClubName = "Sportclub Musterhausen",
                             actualClubName = null,
@@ -353,6 +355,7 @@ object DocumentTemplateService {
                         ),
                         CompetitionMatchData.CompetitionMatchTeam(
                             registrationId = UUID.randomUUID(),
+                            matchTeamId = UUID.randomUUID(),
                             startNumber = 3,
                             registeringClubName = "Neustadt 101",
                             actualClubName = null,
@@ -372,6 +375,7 @@ object DocumentTemplateService {
                         ),
                         CompetitionMatchData.CompetitionMatchTeam(
                             registrationId = UUID.randomUUID(),
+                            matchTeamId = UUID.randomUUID(),
                             startNumber = 4,
                             registeringClubName = "Sportfreunde e.V.",
                             actualClubName = null,

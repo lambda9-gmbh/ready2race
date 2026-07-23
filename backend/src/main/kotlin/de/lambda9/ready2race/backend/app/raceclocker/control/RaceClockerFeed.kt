@@ -41,22 +41,41 @@ object RaceClockerFeed {
      */
     private val noWaveValues = setOf("none", "kein", "-", "")
 
-    fun validateUrl(raw: String): IO<RaceClockerError, Url> {
+    /**
+     * Normalises what a user pastes out of the browser into the URL this integration stores.
+     *
+     * A scheme-less input (`www.raceclocker.com/xxxx`) would be read as a *path* by [URLBuilder] and
+     * then fail the host check, so the scheme is filled in. An explicitly typed `http://` is lifted to
+     * HTTPS rather than rejected - what keeps this endpoint from being an SSRF lever is the host
+     * allowlist, not the scheme.
+     */
+    fun normalizeUrl(raw: String): IO<RaceClockerError, Url> {
+        val trimmed = raw.trim()
+        val withScheme = if (trimmed.contains("://")) trimmed else "https://$trimmed"
+
         val url = try {
-            URLBuilder(raw.trim()).build()
+            URLBuilder(withScheme).apply {
+                if (protocol != URLProtocol.HTTPS) {
+                    // Drop a port that was only the old scheme's default, so lifting http keeps the
+                    // URL free of an explicit ":80".
+                    if (port == protocol.defaultPort) port = DEFAULT_PORT
+                    protocol = URLProtocol.HTTPS
+                }
+            }.build()
         } catch (e: Exception) {
             return KIO.fail(RaceClockerError.UrlInvalid(raw))
         }
 
-        if (url.protocol != URLProtocol.HTTPS) return KIO.fail(RaceClockerError.UrlInvalid(raw))
         if (url.host.lowercase() !in allowedHosts) return KIO.fail(RaceClockerError.UrlInvalid(raw))
 
-        // Works for both the short form (raceclocker.com/7c854955) and the long one
-        // (Event_Result.php?EIDK=...), which already carries query parameters.
-        return KIO.ok(
-            URLBuilder(url).apply { parameters["json"] = "1" }.build()
-        )
+        return KIO.ok(url)
     }
+
+    /**
+     * The JSON variant of a results URL. Works for both the short form (raceclocker.com/7c854955) and
+     * the long one (Event_Result.php?EIDK=...), which already carries query parameters.
+     */
+    fun feedUrl(url: Url): Url = URLBuilder(url).apply { parameters["json"] = "1" }.build()
 
     suspend fun fetch(url: Url): IO<RaceClockerError, List<RaceClockerFeedRow>> {
         val body = try {
@@ -104,21 +123,25 @@ object RaceClockerFeed {
             name = path("Name").asText("").trim(),
             bib = path("Bib number").asText("").trim().toIntOrNull(),
             wave = wave.takeUnless { it.lowercase() in noWaveValues },
-            registrationId = extractRegistrationId(),
+            ids = extractIds(),
             result = path("Result").asText("").trim().takeIf { it.isNotBlank() },
         )
     }
 
     /**
-     * The registration id rides along in RaceClocker's "Extra info", which the feed returns as a list
-     * of `[label, value]` pairs. We look for a value that parses as a UUID rather than for a fixed
-     * label, so renaming the exported column in the start list config cannot break the round trip.
+     * The r2r identifiers ride along in RaceClocker's "Extra info", which the feed returns as a list of
+     * `[label, value]` pairs. We collect every value that parses as a UUID rather than looking for a
+     * fixed label, so renaming the exported column in the start list config cannot break the round trip.
+     *
+     * Which kind of id a value is - match team or registration - is decided by the caller, which knows
+     * the ids of the match it is pulling for. That keeps this parser free of any assumption about how
+     * many id columns a start list config exports.
      */
-    private fun JsonNode.extractRegistrationId(): UUID? {
+    private fun JsonNode.extractIds(): List<UUID> {
         val extra = path("ExtraInfo")
-        if (!extra.isArray) return null
+        if (!extra.isArray) return emptyList()
 
-        val ids = extra.mapNotNull { pair ->
+        return extra.mapNotNull { pair ->
             if (!pair.isArray || pair.size() < 2) null
             else try {
                 UUID.fromString(pair[1].asText("").trim())
@@ -126,8 +149,5 @@ object RaceClockerFeed {
                 null
             }
         }
-
-        // More than one UUID means we cannot tell which is ours - treat it as absent rather than guess.
-        return ids.singleOrNull()
     }
 }

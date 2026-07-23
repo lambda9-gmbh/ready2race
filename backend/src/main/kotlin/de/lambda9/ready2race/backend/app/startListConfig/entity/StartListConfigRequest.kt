@@ -20,7 +20,8 @@ data class StartListConfigRequest(
     val colClubName: String?,
     val colTeamName: String?,
     val colTeamStartNumber: String?,
-    val colTeamRegistrationId: String,
+    val colTeamRegistrationId: String?,
+    val colTeamMatchId: String?,
     val colTeamRatingCategory: String?,
     val colTeamClub: String?,
     val colTeamDeregistered: String?,
@@ -32,6 +33,8 @@ data class StartListConfigRequest(
     val colCompetitionName: String?,
     val colCompetitionShortName: String?,
     val colCompetitionCategory: String?,
+    val noHeader: Boolean = false,
+    val appendRatingToShortName: Boolean = false,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -47,6 +50,7 @@ data class StartListConfigRequest(
             this::colTeamName validate notBlank,
             this::colTeamStartNumber validate notBlank,
             this::colTeamRegistrationId validate notBlank,
+            this::colTeamMatchId validate notBlank,
             this::colTeamRatingCategory validate notBlank,
             this::colTeamClub validate notBlank,
             this::colTeamDeregistered validate notBlank,
@@ -81,7 +85,15 @@ data class StartListConfigRequest(
                 this::colCompetitionShortName validate notNull,
                 this::colCompetitionCategory validate notNull,
             ),
-            // The team identifier header must be distinct from every other configured column header.
+            // Results can only be matched back to teams through an identifier column, so one of the two
+            // must be exported: the registration id where the timing tooling handles one round at a
+            // time, the match team id where every round of a competition shares a single race there.
+            ValidationResult.anyOf(
+                this::colTeamRegistrationId validate notNull,
+                this::colTeamMatchId validate notNull,
+            ),
+            // Identifier headers must be distinct from every other configured column header, and from
+            // each other.
             run {
                 val otherHeaders = listOf(
                     colParticipantFirstname, colParticipantLastname, colParticipantFullname, colParticipantGender,
@@ -91,8 +103,12 @@ data class StartListConfigRequest(
                     colCompetitionIdentifier, colCompetitionName, colCompetitionShortName,
                     colCompetitionCategory,
                 )
-                if (otherHeaders.any { it == colTeamRegistrationId }) {
-                    ValidationResult.Invalid.Message { "column header '$colTeamRegistrationId' is already used by another column" }
+                val identifierHeaders = listOfNotNull(colTeamRegistrationId, colTeamMatchId)
+                val clash = identifierHeaders.find { it in otherHeaders }
+                    ?: identifierHeaders.takeIf { it.size == 2 && it[0] == it[1] }?.first()
+
+                if (clash != null) {
+                    ValidationResult.Invalid.Message { "column header '$clash' is already used by another column" }
                 } else {
                     ValidationResult.Valid
                 }
@@ -105,6 +121,7 @@ data class StartListConfigRequest(
             name = "Einzelrennen",
             colTeamStartNumber = "Bib",
             colTeamRegistrationId = "Info 1",
+            colTeamMatchId = null,
             colParticipantFirstname = null,
             colParticipantLastname = null,
             colParticipantFullname = null,

@@ -10,6 +10,7 @@ import {useForm} from 'react-hook-form-mui'
 import {useCallback, useState} from 'react'
 import {Stack, Tab} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {addStartListConfig, updateStartListConfig} from '@api/sdk.gen.ts'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {useFeedback} from '@utils/hooks.ts'
@@ -31,6 +32,7 @@ type Form = {
     colTeamName: string
     colTeamStartNumber: string
     colTeamRegistrationId: string
+    colTeamMatchId: string
     colTeamRatingCategory: string
     colTeamClub: string
     colTeamDeregistered: string
@@ -42,6 +44,8 @@ type Form = {
     colCompetitionName: string
     colCompetitionShortName: string
     colCompetitionCategory: string
+    noHeader: boolean
+    appendRatingToShortName: boolean
 }
 
 const defaultValues: Form = {
@@ -57,6 +61,7 @@ const defaultValues: Form = {
     colTeamName: '',
     colTeamStartNumber: '',
     colTeamRegistrationId: '',
+    colTeamMatchId: '',
     colTeamRatingCategory: '',
     colTeamClub: '',
     colTeamDeregistered: '',
@@ -68,6 +73,8 @@ const defaultValues: Form = {
     colCompetitionName: '',
     colCompetitionShortName: '',
     colCompetitionCategory: '',
+    noHeader: false,
+    appendRatingToShortName: false,
 }
 
 const addAction = (formData: Form) =>
@@ -125,6 +132,11 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
                     name={'name'}
                     label={t('configuration.export.startlist.name')}
                     required
+                />
+                <FormInputCheckbox
+                    name={'noHeader'}
+                    label={t('configuration.export.startlist.noHeader')}
+                    horizontal
                 />
                 <TabSelectionContainer activeTab={activeTab} setActiveTab={setActiveTab}>
                     {FORM_TABS.map(tab => (
@@ -188,7 +200,10 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
                         <FormInputText
                             name={'colTeamRegistrationId'}
                             label={t('configuration.export.startlist.col.team.registrationId')}
-                            required
+                        />
+                        <FormInputText
+                            name={'colTeamMatchId'}
+                            label={t('configuration.export.startlist.col.team.matchId')}
                         />
                         <FormInputText
                             name={'colTeamRatingCategory'}
@@ -242,6 +257,13 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
                             name={'colCompetitionShortName'}
                             label={t('configuration.export.startlist.col.competition.shortName')}
                         />
+                        <FormInputCheckbox
+                            name={'appendRatingToShortName'}
+                            label={t(
+                                'configuration.export.startlist.col.competition.appendRatingToShortName',
+                            )}
+                            horizontal
+                        />
                         <FormInputText
                             name={'colCompetitionCategory'}
                             label={t('configuration.export.startlist.col.competition.category')}
@@ -265,7 +287,8 @@ const mapFormToRequest = (formData: Form): StartListConfigRequest => ({
     colClubName: takeIfNotEmpty(formData.colClubName),
     colTeamName: takeIfNotEmpty(formData.colTeamName),
     colTeamStartNumber: takeIfNotEmpty(formData.colTeamStartNumber),
-    colTeamRegistrationId: formData.colTeamRegistrationId,
+    colTeamRegistrationId: takeIfNotEmpty(formData.colTeamRegistrationId),
+    colTeamMatchId: takeIfNotEmpty(formData.colTeamMatchId),
     colTeamRatingCategory: takeIfNotEmpty(formData.colTeamRatingCategory),
     colTeamClub: takeIfNotEmpty(formData.colTeamClub),
     colTeamDeregistered: takeIfNotEmpty(formData.colTeamDeregistered),
@@ -277,6 +300,8 @@ const mapFormToRequest = (formData: Form): StartListConfigRequest => ({
     colCompetitionName: takeIfNotEmpty(formData.colCompetitionName),
     colCompetitionShortName: takeIfNotEmpty(formData.colCompetitionShortName),
     colCompetitionCategory: takeIfNotEmpty(formData.colCompetitionCategory),
+    noHeader: formData.noHeader,
+    appendRatingToShortName: formData.appendRatingToShortName,
 })
 
 const mapDtoToForm = (dto: StartListConfigDto): Form => ({
@@ -292,6 +317,7 @@ const mapDtoToForm = (dto: StartListConfigDto): Form => ({
     colTeamName: dto.colTeamName ?? '',
     colTeamStartNumber: dto.colTeamStartNumber ?? '',
     colTeamRegistrationId: dto.colTeamRegistrationId ?? '',
+    colTeamMatchId: dto.colTeamMatchId ?? '',
     colTeamRatingCategory: dto.colTeamRatingCategory ?? '',
     colTeamClub: dto.colTeamClub ?? '',
     colTeamDeregistered: dto.colTeamDeregistered ?? '',
@@ -303,6 +329,8 @@ const mapDtoToForm = (dto: StartListConfigDto): Form => ({
     colCompetitionName: dto.colCompetitionName ?? '',
     colCompetitionShortName: dto.colCompetitionShortName ?? '',
     colCompetitionCategory: dto.colCompetitionCategory ?? '',
+    noHeader: dto.noHeader,
+    appendRatingToShortName: dto.appendRatingToShortName,
 })
 
 export default StartListConfigDialog

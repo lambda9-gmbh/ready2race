@@ -96,6 +96,14 @@ const RaceClockerConfigDialog = ({open, eventId, competitionId, onClose}: Props)
                             name={'heatsResultsUrl'}
                             label={t('event.competition.execution.raceclocker.config.heatsUrl')}
                         />
+                        {/* The RaceClocker presets export without a header row, because RaceClocker
+                            imports one as a participant. Its column mapper then shows positions
+                            instead of names, which is easy to get wrong unnoticed. */}
+                        <Alert variant={'outlined'} severity={'info'}>
+                            <Trans
+                                i18nKey={'event.competition.execution.raceclocker.config.importHint'}
+                            />
+                        </Alert>
                     </Stack>
                 </DialogContent>
                 <DialogActions>

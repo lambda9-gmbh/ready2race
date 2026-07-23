@@ -304,11 +304,14 @@ const CompetitionExecution = () => {
                 case 'RACECLOCKER_MALFORMED_FEED':
                     feedback.error(t('event.competition.execution.results.raceclocker.error.unreachable'))
                     break
-                case 'RACECLOCKER_WAVE_NOT_FOUND':
+                case 'RACECLOCKER_MATCH_NOT_IN_FEED':
                     feedback.error(
-                        t('event.competition.execution.results.raceclocker.error.waveNotFound', {
-                            wave: (details?.wave as string) ?? '',
-                        }),
+                        t('event.competition.execution.results.raceclocker.error.matchNotInFeed'),
+                    )
+                    break
+                case 'RACECLOCKER_MATCH_IS_BYE':
+                    feedback.error(
+                        t('event.competition.execution.results.raceclocker.error.matchIsBye'),
                     )
                     break
                 case 'RACECLOCKER_DUPLICATE_TEAMS':

@@ -18,6 +18,12 @@ object CSV {
     fun <A: Any> write(
         out: OutputStream,
         data: List<A>,
+        /**
+         * Some tooling imports the header row as a data row unless told otherwise (RaceClocker does),
+         * which leaves a bogus participant behind. Such exports are written without one; the columns are
+         * then mapped by position on the receiving side.
+         */
+        writeHeader: Boolean = true,
         builder: ColumnBuilder<A>.() -> Unit,
     ) {
         val columns = ColumnBuilder<A>().apply(builder).columns
@@ -25,8 +31,10 @@ object CSV {
         OutputStreamWriter(out).use { writer ->
             val csvWriter = CSVWriter(writer)
 
-            val header = columns.map { it.header }
-            csvWriter.writeNext(header.toTypedArray())
+            if (writeHeader) {
+                val header = columns.map { it.header }
+                csvWriter.writeNext(header.toTypedArray())
+            }
 
             data.forEachIndexed { index, item ->
                 val row = columns.map { it.f(item, index) }

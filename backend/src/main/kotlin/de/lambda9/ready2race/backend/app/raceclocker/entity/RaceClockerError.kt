@@ -7,8 +7,12 @@ import io.ktor.http.*
 
 sealed interface RaceClockerError : ServiceError {
 
-    /** No results URL is configured on the competition for the round this match belongs to. */
-    data class UrlMissing(val qualification: Boolean) : RaceClockerError
+    /**
+     * Neither results URL is configured on the competition. Which of the two a round would use no
+     * longer matters here: the pull falls back to the other race anyway, so it only gives up when both
+     * are missing.
+     */
+    data object UrlMissing : RaceClockerError
 
     data class UrlInvalid(val url: String) : RaceClockerError
 
@@ -17,10 +21,11 @@ sealed interface RaceClockerError : ServiceError {
     data class MalformedFeed(val reason: String) : RaceClockerError
 
     /**
-     * The feed contains no rows for this match's wave. Either the start list for this heat has not
-     * been imported into RaceClocker yet, or the wave was renamed there.
+     * None of the configured feeds contains a row for any team of this match. Either the start list for
+     * this heat has not been imported into RaceClocker yet, or it was exported before the round was
+     * re-created and carries identifiers that no longer exist.
      */
-    data class WaveNotFound(val wave: String) : RaceClockerError
+    data class MatchNotInFeed(val urls: List<String>) : RaceClockerError
 
     /**
      * RaceClocker is insert-only: importing the same start list twice creates duplicates rather than
@@ -31,17 +36,16 @@ sealed interface RaceClockerError : ServiceError {
     /** Rows were found, but none of them carried a usable result yet. */
     data class NoResults(val wave: String?) : RaceClockerError
 
-    /** The match has no name, so there is no wave to match the feed rows against. */
-    data object MatchNameMissing : RaceClockerError
+    /**
+     * The match is a bye: a single team moved on through the bracket without racing. There is nothing
+     * to time and therefore nothing to pull.
+     */
+    data object MatchIsBye : RaceClockerError
 
     override fun respond(): ApiError = when (this) {
-        is UrlMissing -> ApiError(
+        UrlMissing -> ApiError(
             status = HttpStatusCode.BadRequest,
-            message = if (qualification) {
-                "No RaceClocker results URL configured for the time trial race of this competition"
-            } else {
-                "No RaceClocker results URL configured for the heats race of this competition"
-            },
+            message = "No RaceClocker results URL configured for this competition",
             errorCode = ErrorCode.RACECLOCKER_URL_MISSING,
         )
 
@@ -66,11 +70,11 @@ sealed interface RaceClockerError : ServiceError {
             errorCode = ErrorCode.RACECLOCKER_MALFORMED_FEED,
         )
 
-        is WaveNotFound -> ApiError(
+        is MatchNotInFeed -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "No entries for this heat in the RaceClocker feed",
-            details = mapOf("wave" to wave),
-            errorCode = ErrorCode.RACECLOCKER_WAVE_NOT_FOUND,
+            details = mapOf("urls" to urls),
+            errorCode = ErrorCode.RACECLOCKER_MATCH_NOT_IN_FEED,
         )
 
         is DuplicateTeams -> ApiError(
@@ -87,9 +91,10 @@ sealed interface RaceClockerError : ServiceError {
             errorCode = ErrorCode.RACECLOCKER_NO_RESULTS,
         )
 
-        MatchNameMissing -> ApiError(
+        MatchIsBye -> ApiError(
             status = HttpStatusCode.BadRequest,
-            message = "The match has no name, which is required to identify its RaceClocker wave",
+            message = "This heat is a bye - the team moves on without racing, so there are no results to pull",
+            errorCode = ErrorCode.RACECLOCKER_MATCH_IS_BYE,
         )
     }
 }

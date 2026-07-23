@@ -26,13 +26,14 @@ data class RaceClockerConfigRequest(
 
         /**
          * Rejected here rather than only at pull time, so a typo surfaces while editing instead of
-         * mid-regatta. Uses the same check the pull does, which also pins the host to RaceClocker.
+         * mid-regatta. Uses the same normalisation the pull does, which pins the host to RaceClocker but
+         * accepts an input without scheme - that is how a URL looks when copied out of a browser bar.
          */
         private fun validateUrl(value: String?, field: String): ValidationResult {
             if (value.isNullOrBlank()) return ValidationResult.Valid
 
-            return if (RaceClockerFeed.validateUrl(value).unsafeRunSync().getOrNull() == null) {
-                ValidationResult.Invalid.Message { "$field must be a https URL on raceclocker.com" }
+            return if (RaceClockerFeed.normalizeUrl(value).unsafeRunSync().getOrNull() == null) {
+                ValidationResult.Invalid.Message { "$field must be a URL on raceclocker.com" }
             } else {
                 ValidationResult.Valid
             }
