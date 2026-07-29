@@ -1201,7 +1201,49 @@
       "sectionTitle": "Referee dashboard",
       "pageDescription": "Live view for referees with running and upcoming matches, participant requirements, and invoice status.",
       "open": "Open referee dashboard",
-      "title": "Referee dashboard"
+      "title": "Referee dashboard",
+      "tabs": {
+        "live": "Live",
+        "matches": "Matches"
+      },
+      "lastUpdated": "Updated: {{time}}",
+      "staleWarning": "Connection lost — data may be outdated.",
+      "loadError": "Could not load data.",
+      "noRunning": "No match is currently running.",
+      "nextUp": "Up next",
+      "unscheduled": "Without start time",
+      "noMatches": "No matches available.",
+      "noStartTime": "No start time scheduled",
+      "runningSince": "Running for {{duration}}",
+      "state": {
+        "RUNNING": "Running",
+        "FINISHED": "Finished",
+        "UPCOMING": "Upcoming",
+        "UNSCHEDULED": "Unscheduled"
+      },
+      "invoice": {
+        "PAID": "Invoice paid",
+        "OPEN": "Invoice open",
+        "NONE": "No invoice"
+      },
+      "team": {
+        "place": "Place {{place}}",
+        "deregistered": "Deregistered"
+      },
+      "requirement": {
+        "checkedAt": "Fulfilled at {{time}}",
+        "notChecked": "Not fulfilled",
+        "notCheckedOptional": "Not fulfilled (optional)",
+        "note": "Note: {{note}}",
+        "none": "No requirements assigned"
+      },
+      "timeCheck": {
+        "TOO_EARLY": "Fulfilled too early",
+        "LATE": "Fulfilled late",
+        "NOT_CHECKED": "Pending",
+        "beforeStart": "{{delta}} before start",
+        "afterStart": "{{delta}} after start"
+      }
     },
     "results": {
       "download": "Download previous results",

@@ -1201,7 +1201,49 @@
       "sectionTitle": "Schiedsrichter-Dashboard",
       "pageDescription": "Live-Ansicht für Schiedsrichter mit laufenden und anstehenden Läufen, Teilnahmebedingungen und Rechnungsstatus.",
       "open": "Schiedsrichter-Dashboard öffnen",
-      "title": "Schiedsrichter-Dashboard"
+      "title": "Schiedsrichter-Dashboard",
+      "tabs": {
+        "live": "Live",
+        "matches": "Läufe"
+      },
+      "lastUpdated": "Stand: {{time}}",
+      "staleWarning": "Verbindung gestört — Anzeige ist möglicherweise nicht aktuell.",
+      "loadError": "Daten konnten nicht geladen werden.",
+      "noRunning": "Aktuell läuft kein Rennen.",
+      "nextUp": "Als Nächstes",
+      "unscheduled": "Ohne Startzeit",
+      "noMatches": "Keine Läufe vorhanden.",
+      "noStartTime": "Keine Startzeit geplant",
+      "runningSince": "Läuft seit {{duration}}",
+      "state": {
+        "RUNNING": "Läuft",
+        "FINISHED": "Beendet",
+        "UPCOMING": "Anstehend",
+        "UNSCHEDULED": "Ungeplant"
+      },
+      "invoice": {
+        "PAID": "Rechnung bezahlt",
+        "OPEN": "Rechnung offen",
+        "NONE": "Keine Rechnung"
+      },
+      "team": {
+        "place": "Platz {{place}}",
+        "deregistered": "Abgemeldet"
+      },
+      "requirement": {
+        "checkedAt": "Erfüllt am {{time}}",
+        "notChecked": "Nicht erfüllt",
+        "notCheckedOptional": "Nicht erfüllt (optional)",
+        "note": "Notiz: {{note}}",
+        "none": "Keine Bedingungen zugewiesen"
+      },
+      "timeCheck": {
+        "TOO_EARLY": "Zu früh erfüllt",
+        "LATE": "Spät erfüllt",
+        "NOT_CHECKED": "Ausstehend",
+        "beforeStart": "{{delta}} vor Start",
+        "afterStart": "{{delta}} nach Start"
+      }
     },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",

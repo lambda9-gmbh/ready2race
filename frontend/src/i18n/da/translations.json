@@ -1201,7 +1201,49 @@
       "sectionTitle": "Dommer-dashboard",
       "pageDescription": "Live-visning for dommere med igangværende og kommende løb, deltagerkrav og fakturastatus.",
       "open": "Åbn dommer-dashboard",
-      "title": "Dommer-dashboard"
+      "title": "Dommer-dashboard",
+      "tabs": {
+        "live": "Live",
+        "matches": "Løb"
+      },
+      "lastUpdated": "Opdateret: {{time}}",
+      "staleWarning": "Forbindelsen er afbrudt — visningen er muligvis ikke aktuel.",
+      "loadError": "Data kunne ikke indlæses.",
+      "noRunning": "Der er ingen igangværende løb.",
+      "nextUp": "Næste",
+      "unscheduled": "Uden starttid",
+      "noMatches": "Ingen løb tilgængelige.",
+      "noStartTime": "Ingen starttid planlagt",
+      "runningSince": "I gang i {{duration}}",
+      "state": {
+        "RUNNING": "I gang",
+        "FINISHED": "Afsluttet",
+        "UPCOMING": "Kommende",
+        "UNSCHEDULED": "Ikke planlagt"
+      },
+      "invoice": {
+        "PAID": "Faktura betalt",
+        "OPEN": "Faktura åben",
+        "NONE": "Ingen faktura"
+      },
+      "team": {
+        "place": "Plads {{place}}",
+        "deregistered": "Afmeldt"
+      },
+      "requirement": {
+        "checkedAt": "Opfyldt {{time}}",
+        "notChecked": "Ikke opfyldt",
+        "notCheckedOptional": "Ikke opfyldt (valgfri)",
+        "note": "Note: {{note}}",
+        "none": "Ingen krav tildelt"
+      },
+      "timeCheck": {
+        "TOO_EARLY": "Opfyldt for tidligt",
+        "LATE": "Opfyldt sent",
+        "NOT_CHECKED": "Afventer",
+        "beforeStart": "{{delta}} før start",
+        "afterStart": "{{delta}} efter start"
+      }
     },
     "results": {
       "download": "Download tidligere resultater",
