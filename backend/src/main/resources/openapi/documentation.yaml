@@ -7197,6 +7197,7 @@ components:
         - ADMINISTRATION
         - WEB_DAV
         - RESULT
+        - LIVE_DASHBOARD
 
     Scope:
       type: string
