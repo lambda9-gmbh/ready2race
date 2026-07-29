@@ -5607,6 +5607,25 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/liveDashboard:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getLiveDashboard
+      responses:
+        200:
+          description: Live dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveDashboardDto'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/info-views:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -11497,6 +11516,209 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RunningMatchTeamInfo'
+
+    LiveDashboardMatchState:
+      type: string
+      enum:
+        - RUNNING
+        - FINISHED
+        - UPCOMING
+        - UNSCHEDULED
+
+    LiveDashboardInvoiceState:
+      type: string
+      enum:
+        - PAID
+        - OPEN
+        - NONE
+
+    TimeCheckStatus:
+      type: string
+      enum:
+        - OK
+        - TOO_EARLY
+        - LATE
+        - NOT_CHECKED
+
+    TimeCheckDto:
+      type: object
+      required:
+        - status
+      properties:
+        deltaMinutes:
+          type: integer
+          format: int64
+          nullable: true
+        status:
+          $ref: '#/components/schemas/TimeCheckStatus'
+
+    LiveDashboardRequirementStatusDto:
+      type: object
+      required:
+        - requirementId
+        - name
+        - optional
+        - checked
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        optional:
+          type: boolean
+        checked:
+          type: boolean
+        checkedAt:
+          type: string
+          format: date-time
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        timeCheck:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/TimeCheckDto'
+
+    LiveDashboardParticipantDto:
+      type: object
+      required:
+        - participantId
+        - firstName
+        - lastName
+        - requirements
+      properties:
+        participantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        namedRole:
+          type: string
+          nullable: true
+        year:
+          type: integer
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        externalClubName:
+          type: string
+          nullable: true
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDashboardRequirementStatusDto'
+
+    LiveDashboardTeamDto:
+      type: object
+      required:
+        - teamId
+        - failed
+        - deregistered
+        - invoiceState
+        - participants
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        teamName:
+          type: string
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
+        actualClubName:
+          type: string
+          nullable: true
+        startNumber:
+          type: integer
+          nullable: true
+        place:
+          type: integer
+          nullable: true
+        time:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+          nullable: true
+        deregistered:
+          type: boolean
+        deregisteredReason:
+          type: string
+          nullable: true
+        invoiceState:
+          $ref: '#/components/schemas/LiveDashboardInvoiceState'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDashboardParticipantDto'
+
+    LiveDashboardMatchDto:
+      type: object
+      required:
+        - matchId
+        - state
+        - competitionId
+        - competitionName
+        - executionOrder
+        - currentlyRunning
+        - teams
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        state:
+          $ref: '#/components/schemas/LiveDashboardMatchState'
+        competitionId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        executionOrder:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        currentlyRunning:
+          type: boolean
+        elapsedMinutes:
+          type: integer
+          format: int64
+          nullable: true
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDashboardTeamDto'
+
+    LiveDashboardDto:
+      type: object
+      required:
+        - matches
+      properties:
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDashboardMatchDto'
 
     RunningMatchTeamInfo:
       type: object

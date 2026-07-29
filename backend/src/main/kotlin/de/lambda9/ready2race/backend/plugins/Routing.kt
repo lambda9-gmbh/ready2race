@@ -20,6 +20,7 @@ import de.lambda9.ready2race.backend.app.eventParticipant.boundary.challengeAcce
 import de.lambda9.ready2race.backend.app.fee.boundary.fee
 import de.lambda9.ready2race.backend.app.globalConfigurations.boundary.globalConfigurations
 import de.lambda9.ready2race.backend.app.invoice.boundary.invoice
+import de.lambda9.ready2race.backend.app.liveDashboard.boundary.liveDashboard
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.boundary.matchResultImportConfig
 import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticipant
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirement
@@ -46,6 +47,7 @@ fun Application.configureRouting(config: Config, env: JEnv) {
             role()
             event()
             eventInfo()
+            liveDashboard()
             club()
             namedParticipant()
             fee()

@@ -617,6 +617,9 @@ import type {
     GetRunningMatchesData,
     GetRunningMatchesError,
     GetRunningMatchesResponse,
+    GetLiveDashboardData,
+    GetLiveDashboardError,
+    GetLiveDashboardResponse,
     GetInfoViewsData,
     GetInfoViewsError,
     GetInfoViewsResponse,
@@ -3316,6 +3319,19 @@ export const getRunningMatches = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/running-matches',
+    })
+}
+
+export const getLiveDashboard = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetLiveDashboardData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetLiveDashboardResponse,
+        GetLiveDashboardError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard',
     })
 }
 

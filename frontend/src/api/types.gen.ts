@@ -1211,6 +1211,67 @@ export type LatestMatchResultInfo = {
     teams: Array<MatchResultTeamInfo>
 }
 
+export type LiveDashboardDto = {
+    matches: Array<LiveDashboardMatchDto>
+}
+
+export type LiveDashboardInvoiceState = 'PAID' | 'OPEN' | 'NONE'
+
+export type LiveDashboardMatchDto = {
+    matchId: string
+    state: LiveDashboardMatchState
+    competitionId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    executionOrder: number
+    startTime?: string | null
+    currentlyRunning: boolean
+    elapsedMinutes?: number | null
+    teams: Array<LiveDashboardTeamDto>
+}
+
+export type LiveDashboardMatchState = 'RUNNING' | 'FINISHED' | 'UPCOMING' | 'UNSCHEDULED'
+
+export type LiveDashboardParticipantDto = {
+    participantId: string
+    firstName: string
+    lastName: string
+    namedRole?: string | null
+    year?: number | null
+    gender?: string | null
+    externalClubName?: string | null
+    requirements: Array<LiveDashboardRequirementStatusDto>
+}
+
+export type LiveDashboardRequirementStatusDto = {
+    requirementId: string
+    name: string
+    description?: string | null
+    optional: boolean
+    checked: boolean
+    checkedAt?: string | null
+    note?: string | null
+    timeCheck?: TimeCheckDto | null
+}
+
+export type LiveDashboardTeamDto = {
+    teamId: string
+    teamName?: string | null
+    clubName?: string | null
+    actualClubName?: string | null
+    startNumber?: number | null
+    place?: number | null
+    time?: string | null
+    failed: boolean
+    failedReason?: string | null
+    deregistered: boolean
+    deregisteredReason?: string | null
+    invoiceState: LiveDashboardInvoiceState
+    participants: Array<LiveDashboardParticipantDto>
+}
+
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
@@ -1527,6 +1588,14 @@ export type ParticipantRequirementDto = {
      * Per App prüfbar
      */
     checkInApp: boolean
+    /**
+     * Check must be at most this many minutes before match start
+     */
+    checkEarliestMinutesBefore?: number | null
+    /**
+     * Check must exist at latest this many minutes before match start
+     */
+    checkLatestMinutesBefore?: number | null
 }
 
 export type ParticipantRequirementForEventDto = {
@@ -1550,6 +1619,14 @@ export type ParticipantRequirementUpsertDto = {
      * Per App prüfbar
      */
     checkInApp?: boolean
+    /**
+     * Check must be at most this many minutes before match start
+     */
+    checkEarliestMinutesBefore?: number | null
+    /**
+     * Check must exist at latest this many minutes before match start
+     */
+    checkLatestMinutesBefore?: number | null
 }
 
 export type ParticipantScanType = 'ENTRY' | 'EXIT'
@@ -1723,6 +1800,7 @@ export type Resource =
     | 'ADMINISTRATION'
     | 'WEB_DAV'
     | 'RESULT'
+    | 'LIVE_DASHBOARD'
 
 export type ResultChallengeClubDto = {
     id: string
@@ -1996,6 +2074,13 @@ export type ThemeConfigDto = {
     customFont: CustomFontDto
     customLogo: CustomLogoDto
 }
+
+export type TimeCheckDto = {
+    deltaMinutes?: number | null
+    status: TimeCheckStatus
+}
+
+export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'
 
 export type TooManyRequestsError = ApiError & {
     details: {
@@ -5226,6 +5311,16 @@ export type GetRunningMatchesData = {
 export type GetRunningMatchesResponse = Array<RunningMatchInfo>
 
 export type GetRunningMatchesError = ApiError
+
+export type GetLiveDashboardData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetLiveDashboardResponse = LiveDashboardDto
+
+export type GetLiveDashboardError = ApiError
 
 export type GetInfoViewsData = {
     path: {
