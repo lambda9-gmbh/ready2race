@@ -1,12 +1,12 @@
 import {Box, Card, CardContent, Chip, List, ListItemButton, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
-import {LiveDashboardMatchDto, LiveDashboardTeamDto} from '@api/types.gen.ts'
+import {LiveDashboardMatchDto} from '@api/types.gen.ts'
 import {formatMinutes, severityChipColor, teamSeverity} from './common.ts'
 
 type Props = {
     match: LiveDashboardMatchDto
-    onTeamClick: (team: LiveDashboardTeamDto) => void
+    onTeamClick: (matchId: string, teamId: string) => void
 }
 
 const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
@@ -73,7 +73,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                         return (
                             <ListItemButton
                                 key={team.teamId}
-                                onClick={() => onTeamClick(team)}
+                                onClick={() => onTeamClick(match.matchId, team.teamId)}
                                 sx={{px: 1, borderRadius: 1}}>
                                 <Stack
                                     direction="row"

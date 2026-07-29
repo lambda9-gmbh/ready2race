@@ -14,7 +14,7 @@ import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {getLiveDashboard} from '@api/sdk.gen.ts'
-import {LiveDashboardDto, LiveDashboardTeamDto} from '@api/types.gen.ts'
+import {LiveDashboardDto} from '@api/types.gen.ts'
 import {useFetch} from '@utils/hooks.ts'
 import {eventLiveDashboardRoute} from '@routes'
 import LiveDashboardMatchCard from '@components/event/liveDashboard/LiveDashboardMatchCard.tsx'
@@ -31,7 +31,9 @@ const LiveDashboardPage = () => {
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
     const [stale, setStale] = useState(false)
     const [liveChanged, setLiveChanged] = useState(false)
-    const [selectedTeam, setSelectedTeam] = useState<LiveDashboardTeamDto | null>(null)
+    const [selectedTeamRef, setSelectedTeamRef] = useState<{matchId: string; teamId: string} | null>(
+        null,
+    )
     const runningIdsRef = useRef<string | null>(null)
     const tabRef = useRef<'live' | 'matches'>('live')
 
@@ -65,6 +67,14 @@ const LiveDashboardPage = () => {
     const scheduledMatches = dashboard?.matches.filter(m => m.state !== 'UNSCHEDULED') ?? []
     const unscheduledMatches = dashboard?.matches.filter(m => m.state === 'UNSCHEDULED') ?? []
 
+    const selectedTeam = selectedTeamRef
+        ? (dashboard?.matches
+              .find(m => m.matchId === selectedTeamRef.matchId)
+              ?.teams.find(team => team.teamId === selectedTeamRef.teamId) ?? null)
+        : null
+
+    const handleTeamClick = (matchId: string, teamId: string) => setSelectedTeamRef({matchId, teamId})
+
     return (
         <Box sx={{pb: 9, maxWidth: 700, mx: 'auto'}}>
             <Stack spacing={2} sx={{p: 2}}>
@@ -93,7 +103,7 @@ const LiveDashboardPage = () => {
                             <LiveDashboardMatchCard
                                 key={match.matchId}
                                 match={match}
-                                onTeamClick={setSelectedTeam}
+                                onTeamClick={handleTeamClick}
                             />
                         ))}
                         {runningMatches.length === 0 && nextUpcoming && (
@@ -103,7 +113,7 @@ const LiveDashboardPage = () => {
                                 </Typography>
                                 <LiveDashboardMatchCard
                                     match={nextUpcoming}
-                                    onTeamClick={setSelectedTeam}
+                                    onTeamClick={handleTeamClick}
                                 />
                             </>
                         )}
@@ -115,7 +125,7 @@ const LiveDashboardPage = () => {
                             <LiveDashboardMatchCard
                                 key={match.matchId}
                                 match={match}
-                                onTeamClick={setSelectedTeam}
+                                onTeamClick={handleTeamClick}
                             />
                         ))}
                         {unscheduledMatches.length > 0 && (
@@ -127,7 +137,7 @@ const LiveDashboardPage = () => {
                                     <LiveDashboardMatchCard
                                         key={match.matchId}
                                         match={match}
-                                        onTeamClick={setSelectedTeam}
+                                        onTeamClick={handleTeamClick}
                                     />
                                 ))}
                             </>
@@ -138,7 +148,7 @@ const LiveDashboardPage = () => {
                     </>
                 )}
             </Stack>
-            <LiveDashboardTeamDialog team={selectedTeam} onClose={() => setSelectedTeam(null)} />
+            <LiveDashboardTeamDialog team={selectedTeam} onClose={() => setSelectedTeamRef(null)} />
             <Paper sx={{position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10}} elevation={3}>
                 <BottomNavigation
                     showLabels
