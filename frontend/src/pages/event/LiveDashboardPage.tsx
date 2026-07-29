@@ -55,6 +55,9 @@ const LiveDashboardPage = () => {
                 setStale(true)
             }
         },
+        onPanic: () => {
+            setStale(true)
+        },
     })
 
     const runningMatches = dashboard?.matches.filter(m => m.state === 'RUNNING') ?? []
