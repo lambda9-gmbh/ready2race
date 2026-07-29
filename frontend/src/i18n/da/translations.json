@@ -1335,6 +1335,8 @@
     "removedGlobal": "Global tildeling fjernet",
     "checkRequirements": "Kontrollér betingelser",
     "checkInApp": "Kan kontrolleres i app",
+    "checkEarliestMinutesBefore": "Tidligst (minutter før start)",
+    "checkLatestMinutesBefore": "Senest (minutter før start)",
     "namedParticipantRequirements": {
       "title": "Named Participant-betingelser",
       "description": "Administrer specifikke betingelser for Named Participants",

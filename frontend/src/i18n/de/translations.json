@@ -1335,6 +1335,8 @@
     "removedGlobal": "Globale Zuordnung entfernt",
     "checkRequirements": "Bedingungen prüfen",
     "checkInApp": "Per App prüfbar",
+    "checkEarliestMinutesBefore": "Frühestens (Minuten vor Start)",
+    "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
     "namedParticipantRequirements": {
       "title": "Named Participant Bedingungen",
       "description": "Verwalten Sie spezifische Bedingungen für Named Participants",

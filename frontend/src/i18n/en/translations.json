@@ -1335,6 +1335,8 @@
     "removedGlobal": "Global assignment removed",
     "checkRequirements": "Check requirements",
     "checkInApp": "Checkable in app",
+    "checkEarliestMinutesBefore": "Earliest (minutes before start)",
+    "checkLatestMinutesBefore": "Latest (minutes before start)",
     "namedParticipantRequirements": {
       "title": "Named Participant Requirements",
       "description": "Manage specific requirements for named participants",
