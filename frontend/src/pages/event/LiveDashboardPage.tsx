@@ -5,6 +5,7 @@ import {
     BottomNavigation,
     BottomNavigationAction,
     Box,
+    CircularProgress,
     Paper,
     Stack,
     Typography,
@@ -93,6 +94,11 @@ const LiveDashboardPage = () => {
                 )}
                 {stale && !dashboard && (
                     <Alert severity="error">{t('event.liveDashboard.loadError')}</Alert>
+                )}
+                {!dashboard && !stale && (
+                    <Box display="flex" justifyContent="center" py={4}>
+                        <CircularProgress />
+                    </Box>
                 )}
                 {tab === 'live' && (
                     <>
