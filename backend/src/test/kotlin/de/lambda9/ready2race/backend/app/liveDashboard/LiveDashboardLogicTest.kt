@@ -146,11 +146,20 @@ class LiveDashboardLogicTest {
     }
 
     @Test
-    fun finishedWhenFailedTeamHasNoPlace() {
-        // one team has a place, the other failed (DNF/DSQ) and has no place -> both count as "has result"
+    fun failedTeamWithoutPlaceCountsAsResult() {
+        assertTrue(LiveDashboardLogic.teamHasResult(1, false))
+        assertTrue(LiveDashboardLogic.teamHasResult(null, true))
+        assertFalse(LiveDashboardLogic.teamHasResult(null, false))
         assertEquals(
             LiveDashboardMatchState.FINISHED,
-            LiveDashboardLogic.deriveMatchState(false, start, listOf(true, true))
+            LiveDashboardLogic.deriveMatchState(
+                false,
+                start,
+                listOf(
+                    LiveDashboardLogic.teamHasResult(1, false),
+                    LiveDashboardLogic.teamHasResult(null, true),
+                ),
+            )
         )
     }
 

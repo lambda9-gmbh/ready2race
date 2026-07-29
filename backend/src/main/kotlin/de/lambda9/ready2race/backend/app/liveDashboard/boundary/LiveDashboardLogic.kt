@@ -46,6 +46,8 @@ object LiveDashboardLogic {
         else -> LiveDashboardMatchState.UPCOMING
     }
 
+    fun teamHasResult(place: Int?, failed: Boolean): Boolean = place != null || failed
+
     fun requirementApplies(
         assignedNamedParticipants: List<UUID?>,
         participantNamedParticipantId: UUID?,
