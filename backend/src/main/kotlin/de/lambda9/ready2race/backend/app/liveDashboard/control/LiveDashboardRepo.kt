@@ -53,6 +53,7 @@ object LiveDashboardRepo {
             PARTICIPANT.LASTNAME,
             PARTICIPANT.YEAR,
             PARTICIPANT.GENDER,
+            PARTICIPANT.EXTERNAL,
             PARTICIPANT.EXTERNAL_CLUB_NAME,
             COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT.`as`("named_participant_id"),
             NAMED_PARTICIPANT.NAME.`as`("named_role"),
@@ -60,6 +61,7 @@ object LiveDashboardRepo {
             TIMECODE.TIME,
             TIMECODE.BASE_UNIT,
             TIMECODE.MILLISECOND_PRECISION,
+            COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.`as`("round_id"),
         )
             .from(COMPETITION_MATCH_TEAM)
             .join(COMPETITION_SETUP_MATCH)
