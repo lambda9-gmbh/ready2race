@@ -142,7 +142,7 @@ object LiveDashboardService {
                     executionOrder = match[COMPETITION_SETUP_MATCH.EXECUTION_ORDER] ?: 0,
                     startTime = startTime,
                     currentlyRunning = running,
-                    elapsedMinutes = if (running) startTime?.let { Duration.between(it, now).toMinutes() } else null,
+                    elapsedMinutes = if (running) startTime?.let { Duration.between(it, now).toMinutes().coerceAtLeast(0) } else null,
                     teams = teams,
                 )
             }
