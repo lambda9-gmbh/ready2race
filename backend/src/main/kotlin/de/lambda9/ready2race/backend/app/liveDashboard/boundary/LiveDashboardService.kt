@@ -133,7 +133,7 @@ object LiveDashboardService {
 
                 LiveDashboardMatchDto(
                     matchId = matchId,
-                    state = LiveDashboardLogic.deriveMatchState(running, startTime, teams.map { it.place }),
+                    state = LiveDashboardLogic.deriveMatchState(running, startTime, teams.map { it.place != null || it.failed }),
                     competitionId = match.get("competition_id", UUID::class.java)!!,
                     competitionName = match.get("competition_name", String::class.java) ?: "",
                     categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],

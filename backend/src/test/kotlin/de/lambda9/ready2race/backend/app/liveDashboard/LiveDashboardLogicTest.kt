@@ -109,7 +109,7 @@ class LiveDashboardLogicTest {
     fun currentlyRunningWinsOverEverything() {
         assertEquals(
             LiveDashboardMatchState.RUNNING,
-            LiveDashboardLogic.deriveMatchState(true, null, listOf(1, 2))
+            LiveDashboardLogic.deriveMatchState(true, null, listOf(true, true))
         )
     }
 
@@ -117,7 +117,7 @@ class LiveDashboardLogicTest {
     fun allPlacesSetIsFinished() {
         assertEquals(
             LiveDashboardMatchState.FINISHED,
-            LiveDashboardLogic.deriveMatchState(false, start, listOf(1, 2))
+            LiveDashboardLogic.deriveMatchState(false, start, listOf(true, true))
         )
     }
 
@@ -133,7 +133,7 @@ class LiveDashboardLogicTest {
     fun missingStartTimeIsUnscheduled() {
         assertEquals(
             LiveDashboardMatchState.UNSCHEDULED,
-            LiveDashboardLogic.deriveMatchState(false, null, listOf(null, null))
+            LiveDashboardLogic.deriveMatchState(false, null, listOf(false, false))
         )
     }
 
@@ -141,7 +141,16 @@ class LiveDashboardLogicTest {
     fun startTimeInPastWithoutPlacesIsStillUpcoming() {
         assertEquals(
             LiveDashboardMatchState.UPCOMING,
-            LiveDashboardLogic.deriveMatchState(false, LocalDateTime.now().minusHours(1), listOf(1, null))
+            LiveDashboardLogic.deriveMatchState(false, LocalDateTime.now().minusHours(1), listOf(true, false))
+        )
+    }
+
+    @Test
+    fun finishedWhenFailedTeamHasNoPlace() {
+        // one team has a place, the other failed (DNF/DSQ) and has no place -> both count as "has result"
+        assertEquals(
+            LiveDashboardMatchState.FINISHED,
+            LiveDashboardLogic.deriveMatchState(false, start, listOf(true, true))
         )
     }
 
