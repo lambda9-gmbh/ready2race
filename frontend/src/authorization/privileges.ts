@@ -147,6 +147,12 @@ export const readResultOwn: Privilege = {
     scope: 'OWN',
 }
 
+export const readLiveDashboardGlobal: Privilege = {
+    action: 'READ',
+    resource: 'LIVE_DASHBOARD',
+    scope: 'GLOBAL',
+}
+
 export const updateAdministrationConfigGlobal: Privilege = {
     action: 'UPDATE',
     resource: 'ADMINISTRATION',

@@ -16,6 +16,7 @@ import {
     readUserGlobal,
     updateEventGlobal,
     updateUserGlobal,
+    readLiveDashboardGlobal,
 } from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
@@ -25,6 +26,7 @@ import EventPage, {EventTab} from './pages/event/EventPage.tsx'
 import CompetitionPage, {CompetitionTab} from './pages/event/CompetitionPage.tsx'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import EventInfoPage from './pages/event/EventInfoPage.tsx'
+import LiveDashboardPage from './pages/event/LiveDashboardPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
@@ -309,6 +311,15 @@ export const eventInfoRoute = createRoute({
     component: () => <EventInfoPage />,
 })
 
+export const eventLiveDashboardRoute = createRoute({
+    getParentRoute: () => eventRoute,
+    path: 'liveDashboard',
+    component: () => <LiveDashboardPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readLiveDashboardGlobal)
+    },
+})
+
 export const eventDayRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'eventDay/$eventDayId',
@@ -495,6 +506,7 @@ const routeTree = rootRoute.addChildren([
                 eventIndexRoute,
                 eventRegistrationRoute,
                 eventInfoRoute,
+                eventLiveDashboardRoute,
                 eventDayRoute.addChildren([eventDayIndexRoute]),
                 competitionRoute.addChildren([competitionIndexRoute]),
                 eventRegisterRoute.addChildren([eventRegisterIndexRoute]),

@@ -1197,6 +1197,12 @@
       "matchTeams": "Løbshold",
       "executionOrder": "Udførelsesrækkefølge: {{order}}"
     },
+    "liveDashboard": {
+      "sectionTitle": "Dommer-dashboard",
+      "pageDescription": "Live-visning for dommere med igangværende og kommende løb, deltagerkrav og fakturastatus.",
+      "open": "Åbn dommer-dashboard",
+      "title": "Dommer-dashboard"
+    },
     "results": {
       "download": "Download tidligere resultater",
       "downloadError": "Filen kunne ikke downloades."

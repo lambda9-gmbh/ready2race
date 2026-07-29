@@ -1197,6 +1197,12 @@
       "matchTeams": "Lauf-Teams",
       "executionOrder": "Ausführungsreihenfolge: {{order}}"
     },
+    "liveDashboard": {
+      "sectionTitle": "Schiedsrichter-Dashboard",
+      "pageDescription": "Live-Ansicht für Schiedsrichter mit laufenden und anstehenden Läufen, Teilnahmebedingungen und Rechnungsstatus.",
+      "open": "Schiedsrichter-Dashboard öffnen",
+      "title": "Schiedsrichter-Dashboard"
+    },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",
       "downloadError": "Die datei konnte nicht heruntergeladen werden."

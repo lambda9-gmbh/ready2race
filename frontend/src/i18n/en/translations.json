@@ -1197,6 +1197,12 @@
       "matchTeams": "Match Teams",
       "executionOrder": "Execution Order: {{order}}"
     },
+    "liveDashboard": {
+      "sectionTitle": "Referee dashboard",
+      "pageDescription": "Live view for referees with running and upcoming matches, participant requirements, and invoice status.",
+      "open": "Open referee dashboard",
+      "title": "Referee dashboard"
+    },
     "results": {
       "download": "Download previous results",
       "downloadError": "Die datei konnte nicht heruntergeladen werden."
