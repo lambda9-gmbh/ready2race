@@ -19,6 +19,8 @@ fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): App<Nothing, Partici
                 description = description,
                 optional = optional ?: false,
                 checkInApp = checkInApp ?: false,
+                checkEarliestMinutesBefore = checkEarliestMinutesBefore,
+                checkLatestMinutesBefore = checkLatestMinutesBefore,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -34,6 +36,8 @@ fun ParticipantRequirementRecord.toDto(): App<Nothing, ParticipantRequirementDto
         description = description,
         optional = optional,
         checkInApp = checkInApp ?: false,
+        checkEarliestMinutesBefore = checkEarliestMinutesBefore,
+        checkLatestMinutesBefore = checkLatestMinutesBefore,
     )
 )
 
@@ -57,6 +61,8 @@ fun ParticipantRequirementForEventRecord.toRequirementDto() =
         description = description,
         optional = optional!!,
         checkInApp = checkInApp ?: false,
+        checkEarliestMinutesBefore = checkEarliestMinutesBefore,
+        checkLatestMinutesBefore = checkLatestMinutesBefore,
     )
 
 fun ParticipantRequirementForEventRecord.toNamedParticipantRequirementDto(namedParticipantId: UUID) =

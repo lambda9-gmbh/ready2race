@@ -9150,6 +9150,14 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        checkEarliestMinutesBefore:
+          type: integer
+          nullable: true
+          description: "Check must be at most this many minutes before match start"
+        checkLatestMinutesBefore:
+          type: integer
+          nullable: true
+          description: "Check must exist at latest this many minutes before match start"
 
     CheckedParticipantRequirement:
       type: object
@@ -9219,6 +9227,14 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        checkEarliestMinutesBefore:
+          type: integer
+          nullable: true
+          description: "Check must be at most this many minutes before match start"
+        checkLatestMinutesBefore:
+          type: integer
+          nullable: true
+          description: "Check must exist at latest this many minutes before match start"
 
     ParticipantRequirementCheckForEventConfigDto:
       type: object
