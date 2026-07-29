@@ -92,7 +92,11 @@ const LiveDashboardTeamDialog = ({team, onClose}: Props) => {
             <DialogContent>
                 <Stack spacing={2}>
                     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                        {team.clubName && <Typography variant="body2">{team.clubName}</Typography>}
+                        {(team.actualClubName ?? team.clubName) && (
+                            <Typography variant="body2">
+                                {team.actualClubName ?? team.clubName}
+                            </Typography>
+                        )}
                         <Chip
                             size="small"
                             label={t(`event.liveDashboard.invoice.${team.invoiceState}`)}

@@ -89,13 +89,13 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                             <Typography variant="body2" noWrap>
                                                 {team.teamName ?? team.clubName ?? ''}
                                             </Typography>
-                                            {team.teamName && team.clubName && (
+                                            {team.teamName && (team.actualClubName ?? team.clubName) && (
                                                 <Typography
                                                     variant="caption"
                                                     color="text.secondary"
                                                     noWrap
                                                     display="block">
-                                                    {team.clubName}
+                                                    {team.actualClubName ?? team.clubName}
                                                 </Typography>
                                             )}
                                         </Box>
