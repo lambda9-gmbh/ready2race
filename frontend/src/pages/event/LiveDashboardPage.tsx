@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {
     Alert,
     Badge,
@@ -73,6 +73,12 @@ const LiveDashboardPage = () => {
               .find(m => m.matchId === selectedTeamRef.matchId)
               ?.teams.find(team => team.teamId === selectedTeamRef.teamId) ?? null)
         : null
+
+    useEffect(() => {
+        if (selectedTeam === null && dashboard !== null && selectedTeamRef !== null) {
+            setSelectedTeamRef(null)
+        }
+    }, [selectedTeam, dashboard, selectedTeamRef])
 
     const handleTeamClick = (matchId: string, teamId: string) => setSelectedTeamRef({matchId, teamId})
 
