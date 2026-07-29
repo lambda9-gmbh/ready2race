@@ -33,6 +33,7 @@ const LiveDashboardPage = () => {
     const [liveChanged, setLiveChanged] = useState(false)
     const [selectedTeam, setSelectedTeam] = useState<LiveDashboardTeamDto | null>(null)
     const runningIdsRef = useRef<string | null>(null)
+    const tabRef = useRef<'live' | 'matches'>('live')
 
     useFetch(signal => getLiveDashboard({signal, path: {eventId}}), {
         autoReloadInterval: POLL_INTERVAL_MS,
@@ -46,7 +47,7 @@ const LiveDashboardPage = () => {
                     .filter(m => m.state === 'RUNNING')
                     .map(m => m.matchId)
                     .join(',')
-                if (runningIdsRef.current !== null && ids !== runningIdsRef.current) {
+                if (runningIdsRef.current !== null && ids !== runningIdsRef.current && tabRef.current !== 'live') {
                     setLiveChanged(true)
                 }
                 runningIdsRef.current = ids
@@ -140,6 +141,7 @@ const LiveDashboardPage = () => {
                     showLabels
                     value={tab}
                     onChange={(_, newTab: 'live' | 'matches') => {
+                        tabRef.current = newTab
                         setTab(newTab)
                         if (newTab === 'live') {
                             setLiveChanged(false)
