@@ -162,7 +162,8 @@
   "format": {
     "date": "MM/dd/yyyy",
     "datetime": "MM/dd/yyyy, hh:mm a",
-    "time": "hh:mm a"
+    "time": "hh:mm a",
+    "timeWithSeconds": "hh:mm:ss a"
   },
   "document": {
     "template": {
@@ -1226,9 +1227,14 @@
         "OPEN": "Invoice open",
         "NONE": "No invoice"
       },
+      "substitution": {
+        "short": "Substitution",
+        "for": "Substituted for {{name}}"
+      },
       "team": {
         "place": "Place {{place}}",
-        "deregistered": "Deregistered"
+        "deregistered": "Deregistered",
+        "failed": "Did not finish"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",

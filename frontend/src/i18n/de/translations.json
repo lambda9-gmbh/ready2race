@@ -162,7 +162,8 @@
   "format": {
     "date": "dd.MM.yyyy",
     "datetime": "dd.MM.yyyy, HH:mm",
-    "time": "HH:mm"
+    "time": "HH:mm",
+    "timeWithSeconds": "HH:mm:ss"
   },
   "document": {
     "template": {
@@ -1226,9 +1227,14 @@
         "OPEN": "Rechnung offen",
         "NONE": "Keine Rechnung"
       },
+      "substitution": {
+        "short": "Ummeldung",
+        "for": "Umgemeldet für {{name}}"
+      },
       "team": {
         "place": "Platz {{place}}",
-        "deregistered": "Abgemeldet"
+        "deregistered": "Abgemeldet",
+        "failed": "Ausgeschieden"
       },
       "requirement": {
         "checkedAt": "Erfüllt am {{time}}",

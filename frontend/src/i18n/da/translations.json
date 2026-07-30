@@ -162,7 +162,8 @@
   "format": {
     "date": "dd.MM.yyyy",
     "datetime": "dd.MM.yyyy, HH:mm",
-    "time": "HH:mm"
+    "time": "HH:mm",
+    "timeWithSeconds": "HH:mm:ss"
   },
   "document": {
     "template": {
@@ -1226,9 +1227,14 @@
         "OPEN": "Faktura åben",
         "NONE": "Ingen faktura"
       },
+      "substitution": {
+        "short": "Ombytning",
+        "for": "Ombyttet for {{name}}"
+      },
       "team": {
         "place": "Plads {{place}}",
-        "deregistered": "Afmeldt"
+        "deregistered": "Afmeldt",
+        "failed": "Udgået"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",

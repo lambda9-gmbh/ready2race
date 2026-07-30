@@ -85,12 +85,18 @@ const LiveDashboardPage = () => {
     return (
         <Box sx={{pb: 9, maxWidth: 700, mx: 'auto'}}>
             <Stack spacing={2} sx={{p: 2}}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">{t('event.liveDashboard.title')}</Typography>
+                <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="baseline"
+                    spacing={1}>
+                    <Typography variant="subtitle1" fontWeight={700} noWrap>
+                        {t('event.liveDashboard.title')}
+                    </Typography>
                     {lastUpdated && (
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" noWrap flexShrink={0}>
                             {t('event.liveDashboard.lastUpdated', {
-                                time: format(lastUpdated, t('format.time')),
+                                time: format(lastUpdated, t('format.timeWithSeconds')),
                             })}
                         </Typography>
                     )}
