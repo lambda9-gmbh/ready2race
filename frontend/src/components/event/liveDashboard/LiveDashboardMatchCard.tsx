@@ -194,6 +194,18 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                         {team.failed
                                             ? t('event.liveDashboard.team.failedShort')
                                             : (team.time ?? '')}
+                                        {team.penaltySeconds != null && (
+                                            <Typography
+                                                component="span"
+                                                color="warning.main"
+                                                display="block"
+                                                sx={{
+                                                    fontSize: '0.8rem',
+                                                    fontVariantNumeric: 'tabular-nums',
+                                                }}>
+                                                {`+${team.penaltySeconds} s`}
+                                            </Typography>
+                                        )}
                                     </Typography>
                                     <Box
                                         sx={{

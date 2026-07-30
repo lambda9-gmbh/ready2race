@@ -172,6 +172,8 @@ object LiveDashboardService {
                         },
                         failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                         failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
+                        penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
+                        penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
                         deregistered = first.get("deregistered", Boolean::class.java) == true,
                         deregisteredReason = first.get("deregistration_reason", String::class.java),
                         invoiceState = LiveDashboardLogic.deriveInvoiceState(

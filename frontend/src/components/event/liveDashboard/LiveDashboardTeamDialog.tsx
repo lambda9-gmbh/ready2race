@@ -109,6 +109,17 @@ const LiveDashboardTeamDialog = ({team, onClose}: Props) => {
                                       : 'default'
                             }
                         />
+                        {team.penaltySeconds != null && (
+                            <Chip
+                                size="small"
+                                color="warning"
+                                label={
+                                    t('event.competition.execution.results.penalty', {
+                                        seconds: team.penaltySeconds,
+                                    }) + (team.penaltyNote ? ` · ${team.penaltyNote}` : '')
+                                }
+                            />
+                        )}
                         {team.deregistered && (
                             <Chip
                                 size="small"
