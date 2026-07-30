@@ -653,7 +653,11 @@ object CompetitionExecutionService {
                 startNumber = !optionalCell(config.colTeamStartNumber, int),
                 place = place,
                 time = timeCell?.takeIf { timeIsValid },
-                noResultReason = timeCell?.takeUnless { timeIsValid }
+                noResultReason = timeCell?.takeUnless { timeIsValid },
+                // Der Tabellen-Upload trägt bewusst keine Zeitstrafen: Strafen kommen aus der
+                // Zeitmessung (RaceClocker) oder werden im Ergebnis-Formular erfasst.
+                penaltySeconds = null,
+                penaltyNote = null,
             )
         }.mapError {
             when (it) {
@@ -867,6 +871,9 @@ object CompetitionExecutionService {
                     this.failed = result.noResultReason != null
                     this.failedReason = result.noResultReason
                     this.timecode = timecode
+                    // Nur ausweisen: die Zeit enthält die Strafe bereits, sie wird nicht verrechnet.
+                    this.penaltySeconds = result.penaltySeconds
+                    this.penaltyNote = result.penaltyNote
                     updatedBy = userId
                     updatedAt = LocalDateTime.now()
                 }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
@@ -1001,6 +1008,8 @@ object CompetitionExecutionService {
                 place = null,
                 time = row.time,
                 noResultReason = row.noResultReason,
+                penaltySeconds = row.penaltySeconds,
+                penaltyNote = row.penaltyNote,
             )
         }
 

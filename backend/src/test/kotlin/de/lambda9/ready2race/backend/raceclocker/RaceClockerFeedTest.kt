@@ -51,6 +51,24 @@ class RaceClockerFeedTest {
     }
 
     @Test
+    fun penaltyIsReadForDisplayWithoutTouchingTheTime() {
+        // RaceClocker has already added the penalty to the result, so the time must stay as sent —
+        // the penalty travels alongside it purely so referees can see why a time looks the way it does.
+        val row = feed().single { it.bib == 7 }
+        assertEquals(15, row.penaltySeconds)
+        assertEquals("Gegner Verhindert", row.penaltyNote)
+        assertEquals(row.result, row.time, "the penalty must not be applied to the time")
+    }
+
+    @Test
+    fun zeroPenaltyIsReadAsNoPenalty() {
+        // The feed writes "0" and an empty note for everyone without a penalty.
+        val row = feed().single { it.bib == 4 }
+        assertNull(row.penaltySeconds)
+        assertNull(row.penaltyNote)
+    }
+
+    @Test
     fun formattedTimeIsReadAsTime() {
         val row = feed().single { it.bib == 4 }
         assertEquals("00:02:22.5", row.time)

@@ -168,6 +168,10 @@ object RaceClockerFeed {
             ids = extractIds(),
             result = path("Result").asText("").trim().takeIf { it.isNotBlank() },
             start = textForKeys(startKeys)?.takeIf { it.isNotBlank() }?.let { parseTimeOfDay(it) },
+            // RaceClocker writes the penalty as whole seconds and keeps the reason in a separate
+            // field. Both are display-only here; the time already contains the penalty.
+            penaltySeconds = path("Penalty").asText("").trim().toIntOrNull()?.takeIf { it > 0 },
+            penaltyNote = path("Penalty note").asText("").trim().takeIf { it.isNotBlank() },
         )
     }
 

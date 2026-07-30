@@ -7,10 +7,12 @@ import java.util.UUID
 /**
  * One participant row of a RaceClocker results feed, reduced to the fields this integration needs.
  *
- * Deliberately not modelled: `Result in seconds` (redundant with [result]), the finish timestamp
- * (its key is localised - `Finish` vs `Ziel` - and, unlike the start, nothing here needs it) and
- * `Penalty`. The penalty is already baked into [result] by RaceClocker, so adding it again would
- * double-count it.
+ * Deliberately not modelled: `Result in seconds` (redundant with [result]) and the finish timestamp
+ * (its key is localised - `Finish` vs `Ziel` - and, unlike the start, nothing here needs it).
+ *
+ * [penaltySeconds] is carried over for display only: RaceClocker has already added it to [result],
+ * so it must never be applied to the time again. Referees still need to see that a time contains a
+ * penalty and why.
  */
 data class RaceClockerFeedRow(
     val name: String,
@@ -31,6 +33,9 @@ data class RaceClockerFeedRow(
      * parse - this is auxiliary data, so a feed oddity here must never fail the pull.
      */
     val start: LocalTime?,
+    /** Time penalty in seconds, already included in [result]. */
+    val penaltySeconds: Int?,
+    val penaltyNote: String?,
 ) {
     /**
      * RaceClocker has no status field: a non-started or disqualified participant carries the status
