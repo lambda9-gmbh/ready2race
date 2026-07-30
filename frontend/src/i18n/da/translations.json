@@ -491,6 +491,8 @@
     "allowSelfSubmission": "Tillad selvstændig indsendelse af resultater",
     "submissionNeedsVerification": "Indsendte resultater skal verificeres",
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
+    "autoActivateNextMatch": "Aktiver næste løb automatisk",
+    "autoActivateNextMatchHint": "Når en dommer afslutter et løb i dashboardet, aktiveres løbene med næste starttid. Kun nyttigt med en komplet tidsplan — ellers rammer kæden det forkerte løb.",
     "invoice": {
       "prefix": "Fakturapræfiks",
       "paymentDueBy": "Betalingsfrist for tilmeldingsgebyrer",

@@ -695,6 +695,10 @@ export type CreateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    /**
+     * Finishing a race in the referee dashboard activates the races of the next start time
+     */
+    autoActivateNextMatch?: boolean
 }
 
 export type CustomFontDto = {
@@ -872,6 +876,10 @@ export type EventDto = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    /**
+     * Finishing a race in the referee dashboard activates the races of the next start time
+     */
+    autoActivateNextMatch?: boolean
     challengesFinished?: boolean
 }
 
@@ -2203,6 +2211,10 @@ export type UpdateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    /**
+     * Finishing a race in the referee dashboard activates the races of the next start time
+     */
+    autoActivateNextMatch?: boolean
 }
 
 export type UpdateGlobalConfigurationsRequest = {

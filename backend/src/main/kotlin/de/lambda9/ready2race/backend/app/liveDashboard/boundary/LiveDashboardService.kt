@@ -239,12 +239,21 @@ object LiveDashboardService {
         // Die Kette läuft vorwärts: aktiviert werden nur Läufe, die später starten als der eben
         // beendete. Sonst würde ein ohne vollständige Ergebnisse freigegebener Lauf sich selbst
         // wieder einreihen — zurückholen geht bewusst nur von Hand.
-        val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
-        val candidates = (!LiveDashboardRepo.getActivationCandidates(eventId).orDie())
-            .filter { candidate ->
-                val start = candidate[COMPETITION_MATCH.START_TIME]
-                finishedStart == null || (start != null && start > finishedStart)
-            }
+        //
+        // Ist die Automatik für die Veranstaltung aus, beendet der Aufruf nur diesen Lauf. Das ist
+        // die sichere Wahl, solange der Zeitplan Lücken hat: Startzeiten stehen erst fest, wenn die
+        // Läufe einer Runde gesetzt sind, und die Kette würde sonst den falschen Lauf greifen.
+        val chainEnabled = !EventRepo.getAutoActivateNextMatch(eventId).orDie()
+        val candidates = if (chainEnabled) {
+            val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
+            (!LiveDashboardRepo.getActivationCandidates(eventId).orDie())
+                .filter { candidate ->
+                    val start = candidate[COMPETITION_MATCH.START_TIME]
+                    finishedStart == null || (start != null && start > finishedStart)
+                }
+        } else {
+            emptyList()
+        }
 
         !setRunning(matchId, false, userId)
         !activateNext(candidates, userId)

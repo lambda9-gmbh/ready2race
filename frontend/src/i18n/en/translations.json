@@ -491,6 +491,8 @@
     "allowSelfSubmission": "Allow self submission of results",
     "submissionNeedsVerification": "Submitted results must be verified",
     "allowParticipantSelfRegistration": "Allow participants to register themselves",
+    "autoActivateNextMatch": "Activate next races automatically",
+    "autoActivateNextMatchHint": "When a referee finishes a race in the dashboard, the races of the next start time become active. Only useful with a complete schedule — otherwise the chain picks the wrong race.",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",

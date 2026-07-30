@@ -8081,6 +8081,9 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
+        autoActivateNextMatch:
+          type: boolean
+          description: "Finishing a race in the referee dashboard activates the races of the next start time"
         challengesFinished:
           type: boolean
 
@@ -8225,6 +8228,9 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
+        autoActivateNextMatch:
+          type: boolean
+          description: "Finishing a race in the referee dashboard activates the races of the next start time"
 
     UpdateEventRequest:
       type: object
@@ -8271,6 +8277,9 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
+        autoActivateNextMatch:
+          type: boolean
+          description: "Finishing a race in the referee dashboard activates the races of the next start time"
 
 
     # eventDay

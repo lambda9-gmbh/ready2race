@@ -27,5 +27,7 @@ data class EventDto(
     val allowSelfSubmission: Boolean,
     val submissionNeedsVerification: Boolean,
     val allowParticipantSelfRegistration: Boolean,
+    /** Beendet ein Schiedsrichter einen Lauf, werden die Läufe der nächsten Startzeit aktiv. */
+    val autoActivateNextMatch: Boolean,
     val challengesFinished: Boolean?,
 )

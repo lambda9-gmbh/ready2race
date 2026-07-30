@@ -491,6 +491,8 @@
     "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
     "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
+    "autoActivateNextMatch": "Nächste Läufe automatisch aktivieren",
+    "autoActivateNextMatchHint": "Beendet eine Schiedsrichterin einen Lauf im Dashboard, werden die Läufe der nächsten Startzeit aktiv. Nur sinnvoll, wenn der Zeitplan durchgängig gepflegt ist — sonst greift die Kette den falschen Lauf.",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",

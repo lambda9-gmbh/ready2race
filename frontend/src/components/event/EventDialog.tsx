@@ -30,6 +30,7 @@ type EventForm = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    autoActivateNextMatch: boolean
 }
 
 const addAction = (formData: EventForm) => {
@@ -65,6 +66,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         allowSelfSubmission: false,
         submissionNeedsVerification: false,
         allowParticipantSelfRegistration: false,
+        autoActivateNextMatch: false,
     }
 
     const formContext = useForm<EventForm>()
@@ -145,6 +147,13 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     name={`allowParticipantSelfRegistration`}
                     label={t('event.allowParticipantSelfRegistration')}
                 />
+                <FormInputCheckbox
+                    name={`autoActivateNextMatch`}
+                    label={t('event.autoActivateNextMatch')}
+                />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.autoActivateNextMatchHint')}
+                </Typography>
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate
@@ -174,6 +183,7 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         allowSelfSubmission: formData.allowSelfSubmission,
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
+        autoActivateNextMatch: formData.autoActivateNextMatch,
     }
 }
 
@@ -194,6 +204,7 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         allowSelfSubmission: formData.allowSelfSubmission,
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
+        autoActivateNextMatch: formData.autoActivateNextMatch,
     }
 }
 
@@ -215,6 +226,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         allowSelfSubmission: dto.allowSelfSubmission,
         submissionNeedsVerification: dto.submissionNeedsVerification,
         allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
+        autoActivateNextMatch: dto.autoActivateNextMatch ?? false,
     }
 }
 
