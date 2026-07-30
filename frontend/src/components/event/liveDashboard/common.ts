@@ -53,3 +53,42 @@ export const storedPollInterval = (): number => {
     const stored = Number(localStorage.getItem(POLL_INTERVAL_STORAGE_KEY))
     return POLL_INTERVAL_OPTIONS_MS.some(o => o === stored) ? stored : DEFAULT_POLL_INTERVAL_MS
 }
+
+const CLUB_NAME_BALLAST = [
+    /\s*\be\.?\s?V\.?(?=\s|$)/gi, // Rechtsform "e.V." / "eV"
+    /\s*\([^)]*\d[^)]*\)/g, // Gründungsjahre in Klammern, z.B. "(1879/83)"
+    /\s*\bvon\s+\d{4}\b/gi, // "von 1889"
+    /\s+\d{4}\b/g, // nachgestellte Jahreszahl, z.B. "München 1972"
+]
+
+// Im Rudersport gängige Kürzel — Schiedsrichter lesen sie ohne Nachdenken.
+const CLUB_TYPE_ABBREVIATIONS: [RegExp, string][] = [
+    [/\bRudergesellschaft\b/gi, 'RG'],
+    [/\bRuder-?vereinigung\b/gi, 'RVg'],
+    [/\bRuder-?verein\b/gi, 'RV'],
+    [/\bRuder-?club\b/gi, 'RC'],
+    [/\bRuder-?klub\b/gi, 'RK'],
+    [/\bSegel-?verein\b/gi, 'SV'],
+    [/\bSegel-?club\b/gi, 'SC'],
+    [/\bSportvereinigung\b/gi, 'SVg'],
+    [/\bSportverein\b/gi, 'SV'],
+    [/\bTurnverein\b/gi, 'TV'],
+    [/\bAkademischer\b/gi, 'Akad.'],
+]
+
+/**
+ * Kurzform eines Vereinsnamens für die Listenansicht: Rechtsform und
+ * Gründungsjahre entfallen, gängige Vereinstypen werden abgekürzt.
+ * Der vollständige Name bleibt im Detail-Dialog sichtbar.
+ */
+export const shortClubName = (name: string): string => {
+    const withoutBallast = CLUB_NAME_BALLAST.reduce(
+        (acc, pattern) => acc.replace(pattern, ' '),
+        name,
+    )
+    const abbreviated = CLUB_TYPE_ABBREVIATIONS.reduce(
+        (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
+        withoutBallast,
+    )
+    return abbreviated.replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').trim()
+}

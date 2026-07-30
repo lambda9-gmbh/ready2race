@@ -7,7 +7,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardMatchDto} from '@api/types.gen.ts'
-import {formatMinutes, Severity, teamSeverity} from './common.ts'
+import {formatMinutes, Severity, shortClubName, teamSeverity} from './common.ts'
 
 type Props = {
     match: LiveDashboardMatchDto
@@ -99,11 +99,15 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                 <Divider sx={{mt: 1.5}} />
                 {match.teams.map((team, index) => {
                     const substituted = team.participants.some(p => p.substitutedFor)
-                    const clubLine = team.actualClubName ?? team.clubName
+                    // Kurzform in der Liste; der vollständige Name steht im Detail-Dialog
+                    const fullClub = team.actualClubName ?? team.clubName
+                    const clubLine = fullClub != null ? shortClubName(fullClub) : null
                     // Team names often already contain the club — then drop the second line
                     const showClubLine =
                         team.teamName != null &&
+                        fullClub != null &&
                         clubLine != null &&
+                        !team.teamName.includes(fullClub) &&
                         !team.teamName.includes(clubLine)
 
                     return (
