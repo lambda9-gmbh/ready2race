@@ -44,6 +44,7 @@ import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
+import MoreTimeOutlinedIcon from '@mui/icons-material/MoreTimeOutlined'
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
@@ -883,27 +884,37 @@ const CompetitionExecution = () => {
                                                                                     placeholder="00:00:00.000"
                                                                                 />
                                                                             </Box>
+                                                                            {/* Wie Platz und Zeit ohne Label: das "– Optional" der
+                                                                                Labels sprengt diese enge Spalte. */}
                                                                             <Box
-                                                                                sx={{
-                                                                                    display: 'flex',
-                                                                                    gap: 1,
-                                                                                    alignItems: 'center',
-                                                                                }}>
-                                                                                <FormInputNumber
-                                                                                    name={`teamResults.${fieldIndex}.penaltySeconds`}
-                                                                                    label={t(
+                                                                                display="flex"
+                                                                                gap={1}
+                                                                                alignItems={
+                                                                                    'center'
+                                                                                }>
+                                                                                <MoreTimeOutlinedIcon
+                                                                                    color={'action'}
+                                                                                    titleAccess={t(
                                                                                         'event.competition.execution.results.penaltySeconds',
                                                                                     )}
+                                                                                />
+                                                                                <FormInputNumber
+                                                                                    name={`teamResults.${fieldIndex}.penaltySeconds`}
                                                                                     min={1}
                                                                                     integer
                                                                                     size="small"
+                                                                                    placeholder={t(
+                                                                                        'event.competition.execution.results.penaltySeconds',
+                                                                                    )}
+                                                                                    sx={{width: 110}}
                                                                                 />
                                                                                 <FormInputText
                                                                                     name={`teamResults.${fieldIndex}.penaltyNote`}
-                                                                                    label={t(
-                                                                                        'event.competition.execution.results.penaltyNote',
-                                                                                    )}
                                                                                     size="small"
+                                                                                    placeholder={t(
+                                                                                        'event.competition.execution.results.penaltyNoteShort',
+                                                                                    )}
+                                                                                    sx={{flex: 1}}
                                                                                 />
                                                                             </Box>
                                                                         </Box>

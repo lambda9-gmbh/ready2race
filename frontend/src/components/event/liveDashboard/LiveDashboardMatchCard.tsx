@@ -203,7 +203,9 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                                     fontSize: '0.8rem',
                                                     fontVariantNumeric: 'tabular-nums',
                                                 }}>
-                                                {`+${team.penaltySeconds} s`}
+                                                {t('event.liveDashboard.penaltyIncluded', {
+                                                    seconds: team.penaltySeconds,
+                                                })}
                                             </Typography>
                                         )}
                                     </Typography>

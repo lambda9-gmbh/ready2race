@@ -334,6 +334,7 @@
     }
   },
   "club": {
+    "nameLengthHint": "{{length}}/{{max}} Zeichen empfohlen – längere Namen werden in Listen gekürzt",
     "club": "Verein",
     "registrant": "Anmelder",
     "registeredBy": "gemeldet von",
@@ -820,7 +821,7 @@
           "registeredBy": "gemeldet von",
           "place": "Platz",
           "time": "Zeit",
-          "placeAndTime": "Platz/Zeit",
+          "placeAndTime": "Platz/Zeit/Strafe",
           "manageRunning": "Laufende Partien verwalten",
           "running": "Läuft",
           "roundAndMatch": "Runde {{round}}, Partie {{match}}",
@@ -844,9 +845,10 @@
           },
           "failed": "Ausgeschieden",
           "failedReason": "Grund für Ausscheiden",
-            "penalty": "Zeitstrafe +{{seconds}} s",
-            "penaltySeconds": "Zeitstrafe (s)",
-            "penaltyNote": "Grund der Zeitstrafe",
+            "penalty": "Zeitstrafe inkl. {{seconds}} s",
+            "penaltySeconds": "Strafe (s)",
+            "penaltyNote": "Grund der Strafe",
+            "penaltyNoteShort": "Grund",
           "validation": {
             "duplicates": {
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",
@@ -1234,6 +1236,7 @@
         "tooltip": "Nächste Aktualisierung in {{seconds}} s (alle {{interval}} s)",
         "everySeconds": "Alle {{seconds}} Sekunden"
       },
+      "penaltyIncluded": "inkl. {{seconds}} s",
       "substitution": {
         "short": "Ummeldung",
         "for": "Umgemeldet für {{name}}"

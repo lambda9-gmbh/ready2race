@@ -334,6 +334,7 @@
     }
   },
   "club": {
+    "nameLengthHint": "{{length}}/{{max}} characters recommended – longer names are shortened in lists",
     "club": "Club",
     "registrant": "Registrant",
     "registeredBy": "registered by",
@@ -820,7 +821,7 @@
           "registeredBy": "registered by",
           "place": "Place",
           "time": "Time",
-          "placeAndTime": "Place/Time",
+          "placeAndTime": "Place/Time/Penalty",
           "manageRunning": "Manage Running Matches",
           "running": "Running",
           "roundAndMatch": "Round {{round}}, Match {{match}}",
@@ -844,9 +845,10 @@
           },
           "failed": "Eliminated",
           "failedReason": "Reason for elimination",
-            "penalty": "Time penalty +{{seconds}} s",
-            "penaltySeconds": "Time penalty (s)",
+            "penalty": "Time penalty incl. {{seconds}} s",
+            "penaltySeconds": "Penalty (s)",
             "penaltyNote": "Penalty reason",
+            "penaltyNoteShort": "Reason",
           "validation": {
             "duplicates": {
               "single": "The place: {{places}} is used several times.",
@@ -1234,6 +1236,7 @@
         "tooltip": "Next refresh in {{seconds}} s (every {{interval}} s)",
         "everySeconds": "Every {{seconds}} seconds"
       },
+      "penaltyIncluded": "incl. {{seconds}} s",
       "substitution": {
         "short": "Substitution",
         "for": "Substituted for {{name}}"

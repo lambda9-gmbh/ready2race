@@ -334,6 +334,7 @@
     }
   },
   "club": {
+    "nameLengthHint": "{{length}}/{{max}} tegn anbefales – længere navne forkortes i lister",
     "club": "Klub",
     "registrant": "Tilmeldende",
     "registeredBy": "tilmeldt af",
@@ -820,7 +821,7 @@
           "registeredBy": "tilmeldt af",
           "place": "Placering",
           "time": "Tid",
-          "placeAndTime": "Placering/tid",
+          "placeAndTime": "Placering/Tid/Straf",
           "manageRunning": "Administrer igangværende kampe",
           "running": "Kører",
           "roundAndMatch": "Runde {{round}}, kamp {{match}}",
@@ -844,9 +845,10 @@
           },
           "failed": "Udgået",
           "failedReason": "Årsag til udgåelse",
-            "penalty": "Tidsstraf +{{seconds}} s",
-            "penaltySeconds": "Tidsstraf (s)",
-            "penaltyNote": "Årsag til tidsstraf",
+            "penalty": "Tidsstraf inkl. {{seconds}} s",
+            "penaltySeconds": "Straf (s)",
+            "penaltyNote": "Årsag til straf",
+            "penaltyNoteShort": "Årsag",
           "validation": {
             "duplicates": {
               "single": "Placeringen: {{places}} bruges flere gange.",
@@ -1234,6 +1236,7 @@
         "tooltip": "Næste opdatering om {{seconds}} s (hvert {{interval}}. s)",
         "everySeconds": "Hvert {{seconds}}. sekund"
       },
+      "penaltyIncluded": "inkl. {{seconds}} s",
       "substitution": {
         "short": "Ombytning",
         "for": "Ombyttet for {{name}}"
