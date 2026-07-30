@@ -32,13 +32,13 @@ type Props = {
 const severityIcon = (severity: Severity) => {
     switch (severity) {
         case 'ok':
-            return <CheckCircleIcon color="success" />
+            return <CheckCircleIcon sx={{color: 'success.dark'}} />
         case 'warning':
-            return <WarningAmberIcon color="warning" />
+            return <WarningAmberIcon sx={{color: 'warning.dark'}} />
         case 'error':
-            return <CancelIcon color="error" />
+            return <CancelIcon sx={{color: 'error.dark'}} />
         case 'neutral':
-            return <RadioButtonUncheckedIcon color="disabled" />
+            return <RadioButtonUncheckedIcon sx={{color: 'text.disabled'}} />
     }
 }
 
@@ -141,8 +141,8 @@ const LiveDashboardTeamDialog = ({team, onClose}: Props) => {
                             </Typography>
                             {p.substitutedFor && (
                                 <Stack direction="row" spacing={0.5} alignItems="center">
-                                    <SwapHorizIcon color="info" sx={{fontSize: 18}} />
-                                    <Typography variant="body2" color="info.main">
+                                    <SwapHorizIcon sx={{fontSize: 20, color: 'info.dark'}} />
+                                    <Typography variant="body2" color="info.dark">
                                         {t('event.liveDashboard.substitution.for', {
                                             name: p.substitutedFor,
                                         })}

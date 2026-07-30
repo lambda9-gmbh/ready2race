@@ -16,17 +16,19 @@ type Props = {
 
 // One glanceable icon per team replaces the detail chips — everything else
 // lives in the team dialog, one tap away.
+// Draußen zählt Kontrast: die dunklen Palette-Varianten bleiben auch bei Sonne
+// lesbar, während die konfigurierten main-Töne verblassen.
 const severityIcon = (severity: Severity) => {
-    const sx = {fontSize: 26, display: 'block'}
+    const sx = {fontSize: 28, display: 'block'}
     switch (severity) {
         case 'ok':
-            return <CheckCircleIcon color="success" sx={sx} />
+            return <CheckCircleIcon sx={{...sx, color: 'success.dark'}} />
         case 'warning':
-            return <WarningAmberIcon color="warning" sx={sx} />
+            return <WarningAmberIcon sx={{...sx, color: 'warning.dark'}} />
         case 'error':
-            return <CancelIcon color="error" sx={sx} />
+            return <CancelIcon sx={{...sx, color: 'error.dark'}} />
         case 'neutral':
-            return <RadioButtonUncheckedIcon color="disabled" sx={sx} />
+            return <RadioButtonUncheckedIcon sx={{...sx, color: 'text.disabled'}} />
     }
 }
 
@@ -48,8 +50,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                 minWidth: 0,
                 overflow: 'hidden',
                 // Accent bar instead of a full frame: marks the live race without shouting
-                borderLeft: running ? '5px solid' : undefined,
-                borderLeftColor: running ? 'success.main' : undefined,
+                borderLeft: running ? '6px solid' : undefined,
+                borderLeftColor: running ? 'success.dark' : undefined,
             }}>
             <CardContent sx={{p: 1.25, '&:last-child': {pb: 0.5}}}>
                 <Box
@@ -66,16 +68,15 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                         variant="subtitle1"
                         fontWeight={700}
                         textAlign="right"
-                        sx={{fontVariantNumeric: 'tabular-nums'}}
-                        color={running ? 'success.main' : 'text.primary'}>
+                        sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.900'}}>
                         {match.startTime
                             ? format(new Date(match.startTime), t('format.time'))
                             : '—'}
                     </Typography>
                     <Typography
                         variant="body2"
-                        color="text.secondary"
                         sx={{
+                            color: 'grey.800',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
@@ -85,16 +86,27 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                             .filter(Boolean)
                             .join(' · ')}
                     </Typography>
-                    <Typography
-                        variant="body2"
-                        textAlign="right"
-                        color={running ? 'success.main' : 'text.secondary'}>
-                        {running && match.elapsedMinutes != null
-                            ? t('event.liveDashboard.runningSince', {
-                                  duration: formatMinutes(match.elapsedMinutes),
-                              })
-                            : t(`event.liveDashboard.state.${match.state}`)}
-                    </Typography>
+                    <Box sx={{justifySelf: 'end'}}>
+                        <Box
+                            component="span"
+                            sx={{
+                                display: 'inline-block',
+                                px: 0.75,
+                                py: 0.25,
+                                borderRadius: 1,
+                                fontSize: '0.8rem',
+                                fontWeight: 700,
+                                whiteSpace: 'nowrap',
+                                backgroundColor: running ? 'success.dark' : 'grey.200',
+                                color: running ? 'common.white' : 'grey.900',
+                            }}>
+                            {running && match.elapsedMinutes != null
+                                ? t('event.liveDashboard.runningSince', {
+                                      duration: formatMinutes(match.elapsedMinutes),
+                                  })
+                                : t(`event.liveDashboard.state.${match.state}`)}
+                        </Box>
+                    </Box>
                 </Box>
                 <Divider sx={{mt: 1.5}} />
                 {match.teams.map((team, index) => {
@@ -133,9 +145,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                             }}>
                             <Typography
                                 variant="subtitle1"
-                                color="text.secondary"
                                 fontWeight={700}
-                                sx={{fontVariantNumeric: 'tabular-nums'}}>
+                                sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.700'}}>
                                 {team.startNumber ?? '–'}
                             </Typography>
                             <Box sx={{minWidth: 0}}>
@@ -158,8 +169,11 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                     </Typography>
                                     {substituted && (
                                         <SwapHorizIcon
-                                            color="info"
-                                            sx={{fontSize: 20, flexShrink: 0}}
+                                            sx={{
+                                                fontSize: 22,
+                                                flexShrink: 0,
+                                                color: 'info.dark',
+                                            }}
                                             titleAccess={t(
                                                 'event.liveDashboard.substitution.short',
                                             )}
@@ -169,9 +183,9 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                 {showClubLine && (
                                     <Typography
                                         variant="body2"
-                                        color="text.secondary"
                                         noWrap
-                                        display="block">
+                                        display="block"
+                                        sx={{color: 'grey.800'}}>
                                         {clubLine}
                                     </Typography>
                                 )}
@@ -189,7 +203,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                                 'ui-monospace, SFMono-Regular, Menlo, monospace',
                                             fontVariantNumeric: 'tabular-nums',
                                             letterSpacing: '-0.05em',
-                                            color: team.failed ? 'warning.main' : 'text.primary',
+                                            color: team.failed ? 'warning.dark' : 'text.primary',
                                         }}>
                                         {team.failed
                                             ? t('event.liveDashboard.team.failedShort')
@@ -197,7 +211,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                         {team.penaltySeconds != null && (
                                             <Typography
                                                 component="span"
-                                                color="warning.main"
+                                                color="warning.dark"
                                                 display="block"
                                                 sx={{
                                                     fontSize: '0.8rem',

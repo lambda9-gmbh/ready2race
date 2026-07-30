@@ -109,7 +109,7 @@ const LiveDashboardPage = () => {
                     </Typography>
                     <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
                         {lastUpdated && (
-                            <Typography variant="caption" color="text.secondary" noWrap>
+                            <Typography variant="caption" noWrap sx={{color: 'grey.700'}}>
                                 {format(lastUpdated, t('format.timeWithSeconds'))}
                             </Typography>
                         )}

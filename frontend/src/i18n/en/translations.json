@@ -61,6 +61,7 @@
         }
       },
       "seconds": "Seconds",
+      "secondsShort": "s",
       "optional": "Optional",
       "required": "Please fill in this field.",
       "requiredCheck": "You have to accept this to continue.",
@@ -847,6 +848,7 @@
           "failedReason": "Reason for elimination",
             "penalty": "Time penalty incl. {{seconds}} s",
             "penaltySeconds": "Penalty (s)",
+            "penaltyShort": "Penalty",
             "penaltyNote": "Penalty reason",
             "penaltyNoteShort": "Reason",
           "validation": {
@@ -856,7 +858,8 @@
               "message": "Please select each place only once per match."
             },
             "noResultsEntered": "Please enter at least all places or all times for the teams in this match.",
-            "partialHint": "Partial results are allowed: rows without a place and without a time stay open and can be completed later."
+            "partialHint": "Partial results are allowed: rows without a place and without a time stay open and can be completed later.",
+            "penaltyHint": "Time penalties are recorded for information only and are not applied to the time — the entered time counts as recorded (penalty included)."
           },
           "submit": {
             "error": "An error has occurred when entering the results",

@@ -61,6 +61,7 @@
         }
       },
       "seconds": "Sekunder",
+      "secondsShort": "s",
       "optional": "Valgfrit",
       "required": "Udfyld venligst dette felt.",
       "requiredCheck": "Dette skal accepteres for at fortsætte.",
@@ -847,6 +848,7 @@
           "failedReason": "Årsag til udgåelse",
             "penalty": "Tidsstraf inkl. {{seconds}} s",
             "penaltySeconds": "Straf (s)",
+            "penaltyShort": "Straf",
             "penaltyNote": "Årsag til straf",
             "penaltyNoteShort": "Årsag",
           "validation": {
@@ -856,7 +858,8 @@
               "message": "Vælg venligst unikke placeringer pr. kamp."
             },
             "noResultsEntered": "Angiv venligst mindst enten alle placeringer eller alle tider for alle hold i denne kamp.",
-            "partialHint": "Delresultater er tilladt: rækker uden placering og uden tid forbliver åbne og kan udfyldes senere."
+            "partialHint": "Delresultater er tilladt: rækker uden placering og uden tid forbliver åbne og kan udfyldes senere.",
+            "penaltyHint": "Tidsstraffe registreres kun til information og lægges ikke til tiden — den indtastede tid gælder som registreret (inkl. straf)."
           },
           "submit": {
             "error": "Der opstod en fejl ved lagring af resultatet",

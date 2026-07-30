@@ -583,6 +583,11 @@ object CompetitionExecutionService {
                     this.timecode = timecode
                     this.failed = result.failed
                     this.failedReason = result.failedReason
+                    // Nur ausgewiesen, nie verrechnet: die erfasste Zeit gilt wie eingetragen.
+                    // Achtung für später: sobald eine externe Zeitmessung (RaceClocker) Strafen
+                    // liefert, ist sie die Quelle der Wahrheit und überschreibt diesen Wert - eine
+                    // hier eingetragene Strafe geht dann verloren. Wer beide Wege erlauben will,
+                    // braucht vorher eine Regel, welche Quelle gewinnt.
                     this.penaltySeconds = result.penaltySeconds
                     this.penaltyNote = result.penaltyNote
                     updatedBy = userId

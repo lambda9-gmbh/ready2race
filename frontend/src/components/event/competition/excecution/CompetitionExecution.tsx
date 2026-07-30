@@ -8,6 +8,7 @@ import {
 } from '@api/sdk.gen.ts'
 import {
     Box,
+    InputAdornment,
     Checkbox,
     Divider,
     Link,
@@ -769,10 +770,10 @@ const CompetitionExecution = () => {
                                                               'event.competition.execution.match.startNumber.startNumber',
                                                           )}
                                                 </TableCell>
-                                                <TableCell width="40%">
+                                                <TableCell width="34%">
                                                     {t('event.competition.execution.match.team')}
                                                 </TableCell>
-                                                <TableCell width="40%">
+                                                <TableCell width="46%">
                                                     {t(
                                                         'event.competition.execution.match.placeAndTime',
                                                     )}
@@ -805,7 +806,7 @@ const CompetitionExecution = () => {
                                                                 <TableCell width="10%">
                                                                     {team.startNumber}
                                                                 </TableCell>
-                                                                <TableCell width="40%">
+                                                                <TableCell width="34%">
                                                                     <Typography>
                                                                         {team.actualClubName ??
                                                                             team.clubName}
@@ -832,7 +833,7 @@ const CompetitionExecution = () => {
                                                                             .join(', ')}
                                                                     </Typography>
                                                                 </TableCell>
-                                                                <TableCell width="40%">
+                                                                <TableCell width="46%">
                                                                     {!failedValue ? (
                                                                         <Box
                                                                             sx={{
@@ -904,9 +905,23 @@ const CompetitionExecution = () => {
                                                                                     integer
                                                                                     size="small"
                                                                                     placeholder={t(
-                                                                                        'event.competition.execution.results.penaltySeconds',
+                                                                                        'event.competition.execution.results.penaltyShort',
                                                                                     )}
-                                                                                    sx={{width: 110}}
+                                                                                    slotProps={{
+                                                                                        input: {
+                                                                                            endAdornment: (
+                                                                                                <InputAdornment
+                                                                                                    position={
+                                                                                                        'end'
+                                                                                                    }>
+                                                                                                    {t(
+                                                                                                        'common.form.secondsShort',
+                                                                                                    )}
+                                                                                                </InputAdornment>
+                                                                                            ),
+                                                                                        },
+                                                                                    }}
+                                                                                    sx={{width: 116}}
                                                                                 />
                                                                                 <FormInputText
                                                                                     name={`teamResults.${fieldIndex}.penaltyNote`}

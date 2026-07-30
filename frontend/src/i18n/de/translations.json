@@ -61,6 +61,7 @@
         }
       },
       "seconds": "Sekunden",
+      "secondsShort": "s",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
       "requiredCheck": "Zum Fortfahren muss dies akzeptiert werden.",
@@ -847,6 +848,7 @@
           "failedReason": "Grund für Ausscheiden",
             "penalty": "Zeitstrafe inkl. {{seconds}} s",
             "penaltySeconds": "Strafe (s)",
+            "penaltyShort": "Strafe",
             "penaltyNote": "Grund der Strafe",
             "penaltyNoteShort": "Grund",
           "validation": {
@@ -856,7 +858,8 @@
               "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
             },
             "noResultsEntered": "Bitte geben Sie mindestens alle Plätze oder alle Zeiten für alle Teams in dieser Partie an.",
-            "partialHint": "Teilergebnisse sind möglich: Zeilen ohne Platz und ohne Zeit bleiben offen und können später ergänzt werden."
+            "partialHint": "Teilergebnisse sind möglich: Zeilen ohne Platz und ohne Zeit bleiben offen und können später ergänzt werden.",
+            "penaltyHint": "Zeitstrafen werden nur vermerkt und nicht auf die Zeit angerechnet — die eingetragene Zeit gilt wie erfasst (inkl. Strafe)."
           },
           "submit": {
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
