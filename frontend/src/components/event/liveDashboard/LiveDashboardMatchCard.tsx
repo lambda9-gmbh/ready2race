@@ -1,4 +1,4 @@
-import {Box, Card, CardContent, Chip, List, ListItemButton, Stack, Typography} from '@mui/material'
+import {Box, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
@@ -17,7 +17,7 @@ type Props = {
 // One glanceable icon per team replaces the detail chips — everything else
 // lives in the team dialog, one tap away.
 const severityIcon = (severity: Severity) => {
-    const sx = {fontSize: 26}
+    const sx = {fontSize: 26, display: 'block'}
     switch (severity) {
         case 'ok':
             return <CheckCircleIcon color="success" sx={sx} />
@@ -34,161 +34,192 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
+    // Result columns are reserved for the whole match, not per row: times then line up
+    // underneath each other and every team name keeps the same width.
+    const hasResults = match.teams.some(team => team.time || team.place != null || team.failed)
+    const columns = hasResults
+        ? '2ch minmax(0, 1fr) 7.5ch 2rem 26px'
+        : '2ch minmax(0, 1fr) 26px'
 
     return (
         <Card
             variant="outlined"
             sx={{
-                borderColor: running ? 'success.main' : undefined,
-                borderWidth: running ? 2 : undefined,
-                // Ohne minWidth wachsen Flex-Kinder mit ihrem Inhalt und sprengen die Breite
                 minWidth: 0,
                 overflow: 'hidden',
+                // Accent bar instead of a full frame: marks the live race without shouting
+                borderLeft: running ? '5px solid' : undefined,
+                borderLeftColor: running ? 'success.main' : undefined,
             }}>
-            <CardContent sx={{p: 2, '&:last-child': {pb: 2}}}>
-                <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="baseline"
-                    spacing={1}
-                    sx={{minWidth: 0}}>
-                    <Box sx={{minWidth: 0, overflow: 'hidden'}}>
-                        <Typography variant="subtitle1" fontWeight={700} noWrap>
-                            {match.matchName ?? match.roundName ?? match.competitionName}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
+            <CardContent sx={{p: 1.25, '&:last-child': {pb: 0.5}}}>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(0, 1fr) auto',
+                        columnGap: 1.5,
+                        alignItems: 'baseline',
+                    }}>
+                    <Typography variant="subtitle1" fontWeight={700} noWrap>
+                        {match.matchName ?? match.roundName ?? match.competitionName}
+                    </Typography>
+                    <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        textAlign="right"
+                        sx={{fontVariantNumeric: 'tabular-nums'}}
+                        color={running ? 'success.main' : 'text.primary'}>
+                        {match.startTime
+                            ? format(new Date(match.startTime), t('format.time'))
+                            : '—'}
+                    </Typography>
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                        }}>
+                        {[match.competitionName, match.categoryName, match.roundName]
+                            .filter(Boolean)
+                            .join(' · ')}
+                    </Typography>
+                    <Typography
+                        variant="body2"
+                        textAlign="right"
+                        color={running ? 'success.main' : 'text.secondary'}>
+                        {running && match.elapsedMinutes != null
+                            ? t('event.liveDashboard.runningSince', {
+                                  duration: formatMinutes(match.elapsedMinutes),
+                              })
+                            : t(`event.liveDashboard.state.${match.state}`)}
+                    </Typography>
+                </Box>
+                <Divider sx={{mt: 1.5}} />
+                {match.teams.map((team, index) => {
+                    const substituted = team.participants.some(p => p.substitutedFor)
+                    const clubLine = team.actualClubName ?? team.clubName
+                    // Team names often already contain the club — then drop the second line
+                    const showClubLine =
+                        team.teamName != null &&
+                        clubLine != null &&
+                        !team.teamName.includes(clubLine)
+
+                    return (
+                        <Box
+                            key={team.teamId}
+                            onClick={() => onTeamClick(match.matchId, team.teamId)}
                             sx={{
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
+                                display: 'grid',
+                                gridTemplateColumns: columns,
+                                columnGap: 0.75,
+                                alignItems: 'center',
+                                py: 1.25,
+                                mx: -1,
+                                px: 1,
+                                cursor: 'pointer',
+                                borderRadius: 1,
+                                borderBottom: index < match.teams.length - 1 ? '1px solid' : 'none',
+                                borderBottomColor: 'divider',
+                                '&:active': {backgroundColor: 'action.selected'},
+                                '@media (hover: hover)': {
+                                    '&:hover': {backgroundColor: 'action.hover'},
+                                },
                             }}>
-                            {[match.competitionName, match.categoryName, match.roundName]
-                                .filter(Boolean)
-                                .join(' · ')}
-                        </Typography>
-                    </Box>
-                    <Stack alignItems="flex-end" flexShrink={0}>
-                        <Typography
-                            variant="subtitle1"
-                            fontWeight={700}
-                            color={running ? 'success.main' : 'text.primary'}>
-                            {match.startTime
-                                ? format(new Date(match.startTime), t('format.time'))
-                                : '—'}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            color={running ? 'success.main' : 'text.secondary'}>
-                            {running && match.elapsedMinutes != null
-                                ? t('event.liveDashboard.runningSince', {
-                                      duration: formatMinutes(match.elapsedMinutes),
-                                  })
-                                : t(`event.liveDashboard.state.${match.state}`)}
-                        </Typography>
-                    </Stack>
-                </Stack>
-                <List dense disablePadding sx={{mt: 1}}>
-                    {match.teams.map(team => {
-                        const substituted = team.participants.some(p => p.substitutedFor)
-                        const clubLine = team.actualClubName ?? team.clubName
-                        // Teamnamen enthalten oft den Vereinsnamen — dann die zweite Zeile weglassen
-                        const showClubLine =
-                            team.teamName != null &&
-                            clubLine != null &&
-                            !team.teamName.includes(clubLine)
-                        return (
-                            <ListItemButton
-                                key={team.teamId}
-                                onClick={() => onTeamClick(match.matchId, team.teamId)}
-                                sx={{px: 1, py: 1, borderRadius: 1}}>
+                            <Typography
+                                variant="subtitle1"
+                                color="text.secondary"
+                                fontWeight={700}
+                                sx={{fontVariantNumeric: 'tabular-nums'}}>
+                                {team.startNumber ?? '–'}
+                            </Typography>
+                            <Box sx={{minWidth: 0}}>
                                 <Stack
                                     direction="row"
-                                    spacing={1}
+                                    spacing={0.5}
                                     alignItems="center"
-                                    width="100%"
                                     sx={{minWidth: 0}}>
                                     <Typography
                                         variant="subtitle1"
-                                        color="text.secondary"
-                                        fontWeight={700}
-                                        sx={{minWidth: 24, textAlign: 'right'}}>
-                                        {team.startNumber ?? '–'}
+                                        sx={{
+                                            lineHeight: 1.25,
+                                            overflowWrap: 'break-word',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                        }}>
+                                        {team.teamName ?? clubLine ?? ''}
                                     </Typography>
-                                    <Box sx={{minWidth: 0, overflow: 'hidden', flexGrow: 1}}>
-                                        <Stack
-                                            direction="row"
-                                            spacing={0.5}
-                                            alignItems="center"
-                                            sx={{minWidth: 0}}>
-                                            <Typography
-                                                variant="subtitle1"
-                                                sx={{
-                                                    lineHeight: 1.3,
-                                                    display: '-webkit-box',
-                                                    WebkitLineClamp: 2,
-                                                    WebkitBoxOrient: 'vertical',
-                                                    overflow: 'hidden',
-                                                }}>
-                                                {team.teamName ?? team.clubName ?? ''}
-                                            </Typography>
-                                            {substituted && (
-                                                <SwapHorizIcon
-                                                    color="info"
-                                                    sx={{fontSize: 20, flexShrink: 0}}
-                                                    titleAccess={t(
-                                                        'event.liveDashboard.substitution.short',
-                                                    )}
-                                                />
+                                    {substituted && (
+                                        <SwapHorizIcon
+                                            color="info"
+                                            sx={{fontSize: 20, flexShrink: 0}}
+                                            titleAccess={t(
+                                                'event.liveDashboard.substitution.short',
                                             )}
-                                        </Stack>
-                                        {showClubLine && (
+                                        />
+                                    )}
+                                </Stack>
+                                {showClubLine && (
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        noWrap
+                                        display="block">
+                                        {clubLine}
+                                    </Typography>
+                                )}
+                            </Box>
+                            {hasResults && (
+                                <>
+                                    {/* Times share one right-aligned monospaced column, so they
+                                        can be compared by scanning straight down. */}
+                                    <Typography
+                                        fontWeight={700}
+                                        textAlign="right"
+                                        sx={{
+                                            fontSize: '0.9rem',
+                                            fontFamily:
+                                                'ui-monospace, SFMono-Regular, Menlo, monospace',
+                                            fontVariantNumeric: 'tabular-nums',
+                                            letterSpacing: '-0.05em',
+                                            color: team.failed ? 'warning.main' : 'text.primary',
+                                        }}>
+                                        {team.failed
+                                            ? t('event.liveDashboard.team.failedShort')
+                                            : (team.time ?? '')}
+                                    </Typography>
+                                    <Box
+                                        sx={{
+                                            width: '2rem',
+                                            height: '2rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderRadius: '50%',
+                                            backgroundColor:
+                                                team.place != null ? 'primary.main' : 'transparent',
+                                        }}>
+                                        {team.place != null && (
                                             <Typography
-                                                variant="body2"
-                                                color="text.secondary"
-                                                noWrap
-                                                display="block">
-                                                {clubLine}
+                                                fontWeight={700}
+                                                color="primary.contrastText"
+                                                sx={{
+                                                    fontSize: '0.95rem',
+                                                    fontVariantNumeric: 'tabular-nums',
+                                                }}>
+                                                {team.place}
                                             </Typography>
                                         )}
                                     </Box>
-                                    {/* Result first and biggest — that is what a referee scans for. */}
-                                    {team.time && (
-                                        <Typography
-                                            variant="h6"
-                                            fontWeight={700}
-                                            fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
-                                            sx={{flexShrink: 0, letterSpacing: '-0.04em'}}>
-                                            {team.time}
-                                        </Typography>
-                                    )}
-                                    {team.place != null && (
-                                        <Chip
-                                            size="small"
-                                            color="primary"
-                                            label={`${team.place}.`}
-                                            sx={{fontWeight: 700, flexShrink: 0}}
-                                        />
-                                    )}
-                                    {team.failed && (
-                                        <Chip
-                                            size="small"
-                                            color="warning"
-                                            variant="outlined"
-                                            label={t('event.liveDashboard.team.failed')}
-                                            sx={{flexShrink: 0}}
-                                        />
-                                    )}
-                                    <Box display="flex" flexShrink={0}>
-                                        {severityIcon(teamSeverity(team))}
-                                    </Box>
-                                </Stack>
-                            </ListItemButton>
-                        )
-                    })}
-                </List>
+                                </>
+                            )}
+                            {severityIcon(teamSeverity(team))}
+                        </Box>
+                    )
+                })}
             </CardContent>
         </Card>
     )

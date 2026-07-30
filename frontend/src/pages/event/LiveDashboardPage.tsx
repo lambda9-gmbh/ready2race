@@ -95,7 +95,7 @@ const LiveDashboardPage = () => {
                 minWidth: 0,
                 overflowX: 'hidden',
             }}>
-            <Stack spacing={2} sx={{p: 2, minWidth: 0}}>
+            <Stack spacing={2} sx={{px: 1, py: 2, minWidth: 0}}>
                 <Stack
                     direction="row"
                     justifyContent="space-between"

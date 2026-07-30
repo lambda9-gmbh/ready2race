@@ -1238,7 +1238,8 @@
       "team": {
         "place": "Plads {{place}}",
         "deregistered": "Afmeldt",
-        "failed": "Udgået"
+        "failed": "Udgået",
+        "failedShort": "DNF"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",

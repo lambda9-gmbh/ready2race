@@ -1238,7 +1238,8 @@
       "team": {
         "place": "Place {{place}}",
         "deregistered": "Deregistered",
-        "failed": "Did not finish"
+        "failed": "Did not finish",
+        "failedShort": "DNF"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",
