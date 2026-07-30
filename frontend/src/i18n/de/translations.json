@@ -1240,6 +1240,16 @@
         "everySeconds": "Alle {{seconds}} Sekunden"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
+      "control": {
+        "finish": "Lauf beenden",
+        "finishing": "Wird beendet …",
+        "undo": "Rückgängig",
+        "finished": "Lauf beendet — nächste Läufe aktiviert",
+        "deactivate": "Lauf deaktivieren",
+        "activate": "Lauf aktivieren",
+        "incompleteWarning": "Es fehlen noch Ergebnisse — beenden aktiviert trotzdem die nächsten Läufe.",
+        "error": "Der Lauf konnte nicht geändert werden."
+      },
       "substitution": {
         "short": "Ummeldung",
         "for": "Umgemeldet für {{name}}"

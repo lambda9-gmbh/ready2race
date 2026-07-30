@@ -1240,6 +1240,16 @@
         "everySeconds": "Hvert {{seconds}}. sekund"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
+      "control": {
+        "finish": "Afslut løb",
+        "finishing": "Afsluttes …",
+        "undo": "Fortryd",
+        "finished": "Løbet er afsluttet — næste løb aktiveret",
+        "deactivate": "Deaktiver løb",
+        "activate": "Aktiver løb",
+        "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
+        "error": "Løbet kunne ikke ændres."
+      },
       "substitution": {
         "short": "Ombytning",
         "for": "Ombyttet for {{name}}"

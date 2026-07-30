@@ -92,6 +92,7 @@ sealed class Privilege(
     data object ReadResultOwn : Privilege(Action.READ, Resource.RESULT, Scope.OWN)
 
     data object ReadLiveDashboardGlobal : Privilege(Action.READ, Resource.LIVE_DASHBOARD, Scope.GLOBAL)
+    data object UpdateLiveDashboardGlobal : Privilege(Action.UPDATE, Resource.LIVE_DASHBOARD, Scope.GLOBAL)
 
     data object UpdateAdministrationConfigGlobal : Privilege(Action.UPDATE, Resource.ADMINISTRATION, Scope.GLOBAL)
     data object ReadAdministrationConfigGlobal : Privilege(Action.READ, Resource.ADMINISTRATION, Scope.GLOBAL)

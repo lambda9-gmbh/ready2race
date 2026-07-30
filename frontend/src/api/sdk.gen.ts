@@ -617,6 +617,12 @@ import type {
     GetRunningMatchesData,
     GetRunningMatchesError,
     GetRunningMatchesResponse,
+    FinishLiveDashboardMatchData,
+    FinishLiveDashboardMatchError,
+    FinishLiveDashboardMatchResponse,
+    SetLiveDashboardMatchRunningData,
+    SetLiveDashboardMatchRunningError,
+    SetLiveDashboardMatchRunningResponse,
     GetLiveDashboardData,
     GetLiveDashboardError,
     GetLiveDashboardResponse,
@@ -3319,6 +3325,35 @@ export const getRunningMatches = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/running-matches',
+    })
+}
+
+/**
+ * Marks the match as finished and activates the matches of the next start time
+ */
+export const finishLiveDashboardMatch = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<FinishLiveDashboardMatchData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        FinishLiveDashboardMatchResponse,
+        FinishLiveDashboardMatchError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/finish',
+    })
+}
+
+export const setLiveDashboardMatchRunning = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetLiveDashboardMatchRunningData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SetLiveDashboardMatchRunningResponse,
+        SetLiveDashboardMatchRunningError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/running-state',
     })
 }
 

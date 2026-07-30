@@ -152,6 +152,11 @@ export const readLiveDashboardGlobal: Privilege = {
     resource: 'LIVE_DASHBOARD',
     scope: 'GLOBAL',
 }
+export const updateLiveDashboardGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'LIVE_DASHBOARD',
+    scope: 'GLOBAL',
+}
 
 export const updateAdministrationConfigGlobal: Privilege = {
     action: 'UPDATE',

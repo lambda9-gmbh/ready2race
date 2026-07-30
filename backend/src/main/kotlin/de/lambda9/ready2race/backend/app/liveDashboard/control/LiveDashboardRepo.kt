@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.liveDashboard.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL.selectOne
 import java.util.UUID
 
 object LiveDashboardRepo {
@@ -91,6 +93,48 @@ object LiveDashboardRepo {
             .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
+            .fetch()
+    }
+
+    fun getMatchStartTime(matchId: UUID) = Jooq.query {
+        select(COMPETITION_MATCH.START_TIME)
+            .from(COMPETITION_MATCH)
+            .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(matchId))
+            .fetchOne(COMPETITION_MATCH.START_TIME)
+    }
+
+    /**
+     * Läufe, die als nächste anstehen: geplant, noch nicht laufend und noch ohne vollständiges
+     * Ergebnis. Sortiert nach Startzeit, damit der Aufrufer die früheste Startzeit greifen kann.
+     */
+    fun getActivationCandidates(eventId: UUID) = Jooq.query {
+        select(
+            COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
+            COMPETITION_MATCH.START_TIME,
+        )
+            .from(COMPETITION_MATCH)
+            .join(COMPETITION_SETUP_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(COMPETITION_MATCH.START_TIME.isNotNull)
+            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.isFalse)
+            // mindestens eine Mannschaft ohne Ergebnis: der Lauf steht noch aus
+            .and(
+                DSL.exists(
+                    selectOne()
+                        .from(COMPETITION_MATCH_TEAM)
+                        .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
+                        .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
+                        .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
+                        .and(COMPETITION_MATCH_TEAM.FAILED.isTrue.not())
+                )
+            )
+            .orderBy(COMPETITION_MATCH.START_TIME.asc())
             .fetch()
     }
 

@@ -1240,6 +1240,16 @@
         "everySeconds": "Every {{seconds}} seconds"
       },
       "penaltyIncluded": "incl. {{seconds}} s",
+      "control": {
+        "finish": "Finish race",
+        "finishing": "Finishing …",
+        "undo": "Undo",
+        "finished": "Race finished — next races activated",
+        "deactivate": "Deactivate race",
+        "activate": "Activate race",
+        "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
+        "error": "The race could not be changed."
+      },
       "substitution": {
         "short": "Substitution",
         "for": "Substituted for {{name}}"

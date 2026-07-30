@@ -5334,6 +5334,31 @@ export type GetRunningMatchesResponse = Array<RunningMatchInfo>
 
 export type GetRunningMatchesError = ApiError
 
+export type FinishLiveDashboardMatchData = {
+    path: {
+        eventId: string
+        matchId: string
+    }
+}
+
+export type FinishLiveDashboardMatchResponse = void
+
+export type FinishLiveDashboardMatchError = ApiError
+
+export type SetLiveDashboardMatchRunningData = {
+    path: {
+        eventId: string
+        matchId: string
+    }
+    query: {
+        running: boolean
+    }
+}
+
+export type SetLiveDashboardMatchRunningResponse = void
+
+export type SetLiveDashboardMatchRunningError = ApiError
+
 export type GetLiveDashboardData = {
     path: {
         eventId: string

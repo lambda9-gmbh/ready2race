@@ -9,6 +9,8 @@ import de.lambda9.ready2race.backend.app.liveDashboard.entity.*
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.singletonOrFallback
@@ -217,4 +219,74 @@ object LiveDashboardService {
 
             KIO.ok(ApiResponse.Dto(LiveDashboardDto(matches)))
         }
+    /**
+     * Erklärt einen Lauf für beendet und zieht die nächsten nach: aktiv sind danach die Läufe mit
+     * der frühesten noch offenen Startzeit — meist einer, bei parallelen Starts mehrere.
+     *
+     * Damit hält sich das Feld ohne Zutun aktuell: Schiedsrichter sehen den Lauf, den sie gerade
+     * vorbereiten oder abnehmen, und geben ihn nach der Ergebniskontrolle selbst frei.
+     */
+    fun finishMatch(
+        eventId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<LiveDashboardError, ApiResponse.NoData> = KIO.comprehension {
+        val exists = !EventRepo.exists(eventId).orDie()
+        if (!exists) {
+            return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
+        }
+
+        // Die Kette läuft vorwärts: aktiviert werden nur Läufe, die später starten als der eben
+        // beendete. Sonst würde ein ohne vollständige Ergebnisse freigegebener Lauf sich selbst
+        // wieder einreihen — zurückholen geht bewusst nur von Hand.
+        val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
+        val candidates = (!LiveDashboardRepo.getActivationCandidates(eventId).orDie())
+            .filter { candidate ->
+                val start = candidate[COMPETITION_MATCH.START_TIME]
+                finishedStart == null || (start != null && start > finishedStart)
+            }
+
+        !setRunning(matchId, false, userId)
+        !activateNext(candidates, userId)
+
+        noData
+    }
+
+    /** Manuelles Übersteuern, falls zu viele oder zu wenige Läufe aktiv sind. */
+    fun setMatchRunning(
+        eventId: UUID,
+        matchId: UUID,
+        running: Boolean,
+        userId: UUID,
+    ): App<LiveDashboardError, ApiResponse.NoData> = KIO.comprehension {
+        val exists = !EventRepo.exists(eventId).orDie()
+        if (!exists) {
+            return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
+        }
+
+        !setRunning(matchId, running, userId)
+
+        noData
+    }
+
+    private fun setRunning(matchId: UUID, running: Boolean, userId: UUID): App<Nothing, Unit> =
+        CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = running
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie().map { }
+
+    private fun activateNext(candidates: List<Record>, userId: UUID): App<Nothing, Unit> =
+        KIO.comprehension {
+            val nextStart = candidates.firstOrNull()?.get(COMPETITION_MATCH.START_TIME)
+                ?: return@comprehension KIO.unit
+
+            // Alle Läufe derselben Startzeit gemeinsam aktivieren: parallele Starts gehören zusammen.
+            !candidates
+                .filter { it[COMPETITION_MATCH.START_TIME] == nextStart }
+                .traverse { setRunning(it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!, true, userId) }
+
+            KIO.unit
+        }
+
 }

@@ -5607,6 +5607,55 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/liveDashboard/match/{matchId}/finish:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: finishLiveDashboardMatch
+      description: "Marks the match as finished and activates the matches of the next start time"
+      responses:
+        204:
+          description: Match finished
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard/match/{matchId}/running-state:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: setLiveDashboardMatchRunning
+      parameters:
+        - name: running
+          in: query
+          required: true
+          schema:
+            type: boolean
+      responses:
+        204:
+          description: Running state updated
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/liveDashboard:
     parameters:
       - $ref: '#/components/parameters/eventId'

@@ -1,4 +1,4 @@
-import {Box, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
+import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
@@ -8,10 +8,14 @@ import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardMatchDto} from '@api/types.gen.ts'
 import {formatMinutes, Severity, shortClubName, teamSeverity} from './common.ts'
+import FinishMatchButton from './FinishMatchButton.tsx'
 
 type Props = {
     match: LiveDashboardMatchDto
     onTeamClick: (matchId: string, teamId: string) => void
+    /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
+    onFinish?: (matchId: string) => Promise<void>
+    onSetRunning?: (matchId: string, running: boolean) => Promise<void>
 }
 
 // One glanceable icon per team replaces the detail chips — everything else
@@ -32,13 +36,16 @@ const severityIcon = (severity: Severity) => {
     }
 }
 
-const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
+const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Props) => {
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = match.teams.some(team => team.time || team.place != null || team.failed)
+    const resultsComplete =
+        match.teams.length > 0 &&
+        match.teams.every(team => team.place != null || team.failed)
     const columns = hasResults
         ? '2ch minmax(0, 1fr) 7.5ch 2rem 26px'
         : '2ch minmax(0, 1fr) 26px'
@@ -252,6 +259,33 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                         </Box>
                     )
                 })}
+                {(onFinish || onSetRunning) && (match.state === 'RUNNING' || onSetRunning) && (
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        sx={{pt: 1.5, flexWrap: 'wrap'}}>
+                        {match.state === 'RUNNING' && !resultsComplete && (
+                            <Typography variant="caption" sx={{color: 'grey.700', mr: 'auto'}}>
+                                {t('event.liveDashboard.control.incompleteWarning')}
+                            </Typography>
+                        )}
+                        {onSetRunning && (
+                            <Button
+                                size="small"
+                                variant="text"
+                                onClick={() => onSetRunning(match.matchId, !running)}>
+                                {running
+                                    ? t('event.liveDashboard.control.deactivate')
+                                    : t('event.liveDashboard.control.activate')}
+                            </Button>
+                        )}
+                        {onFinish && match.state === 'RUNNING' && (
+                            <FinishMatchButton onFinish={() => onFinish(match.matchId)} />
+                        )}
+                    </Stack>
+                )}
             </CardContent>
         </Card>
     )

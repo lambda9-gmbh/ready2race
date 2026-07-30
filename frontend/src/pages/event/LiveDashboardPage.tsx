@@ -14,9 +14,15 @@ import LiveTvIcon from '@mui/icons-material/LiveTv'
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
-import {getLiveDashboard} from '@api/sdk.gen.ts'
+import {
+    finishLiveDashboardMatch,
+    getLiveDashboard,
+    setLiveDashboardMatchRunning,
+} from '@api/sdk.gen.ts'
 import {LiveDashboardDto} from '@api/types.gen.ts'
-import {useFetch} from '@utils/hooks.ts'
+import {useFetch, useFeedback} from '@utils/hooks.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import {eventLiveDashboardRoute} from '@routes'
 import LiveDashboardMatchCard from '@components/event/liveDashboard/LiveDashboardMatchCard.tsx'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
@@ -25,7 +31,10 @@ import {storedPollInterval} from '@components/event/liveDashboard/common.ts'
 
 const LiveDashboardPage = () => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
+    const user = useUser()
     const {eventId} = eventLiveDashboardRoute.useParams()
+    const mayControl = user.checkPrivilege(updateLiveDashboardGlobal)
 
     const [tab, setTab] = useState<'live' | 'matches'>('live')
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
@@ -39,7 +48,7 @@ const LiveDashboardPage = () => {
     const runningIdsRef = useRef<string | null>(null)
     const tabRef = useRef<'live' | 'matches'>('live')
 
-    useFetch(signal => getLiveDashboard({signal, path: {eventId}}), {
+    const dashboardData = useFetch(signal => getLiveDashboard({signal, path: {eventId}}), {
         autoReloadInterval: pollIntervalMs,
         deps: [eventId, pollIntervalMs],
         onResponse: ({data}) => {
@@ -82,6 +91,27 @@ const LiveDashboardPage = () => {
     }, [selectedTeam, dashboard, selectedTeamRef])
 
     const handleTeamClick = (matchId: string, teamId: string) => setSelectedTeamRef({matchId, teamId})
+
+    const handleFinish = async (matchId: string) => {
+        const {error} = await finishLiveDashboardMatch({path: {eventId, matchId}})
+        if (error) {
+            feedback.error(t('event.liveDashboard.control.error'))
+        } else {
+            feedback.success(t('event.liveDashboard.control.finished'))
+        }
+        dashboardData.reload()
+    }
+
+    const handleSetRunning = async (matchId: string, running: boolean) => {
+        const {error} = await setLiveDashboardMatchRunning({
+            path: {eventId, matchId},
+            query: {running},
+        })
+        if (error) {
+            feedback.error(t('event.liveDashboard.control.error'))
+        }
+        dashboardData.reload()
+    }
 
     return (
         <Box
@@ -141,6 +171,8 @@ const LiveDashboardPage = () => {
                                 key={match.matchId}
                                 match={match}
                                 onTeamClick={handleTeamClick}
+                                onFinish={mayControl ? handleFinish : undefined}
+                                onSetRunning={mayControl ? handleSetRunning : undefined}
                             />
                         ))}
                         {runningMatches.length === 0 && nextUpcoming && (
@@ -151,6 +183,7 @@ const LiveDashboardPage = () => {
                                 <LiveDashboardMatchCard
                                     match={nextUpcoming}
                                     onTeamClick={handleTeamClick}
+                                    onSetRunning={mayControl ? handleSetRunning : undefined}
                                 />
                             </>
                         )}
@@ -163,6 +196,8 @@ const LiveDashboardPage = () => {
                                 key={match.matchId}
                                 match={match}
                                 onTeamClick={handleTeamClick}
+                                onFinish={mayControl ? handleFinish : undefined}
+                                onSetRunning={mayControl ? handleSetRunning : undefined}
                             />
                         ))}
                         {unscheduledMatches.length > 0 && (
@@ -175,6 +210,8 @@ const LiveDashboardPage = () => {
                                         key={match.matchId}
                                         match={match}
                                         onTeamClick={handleTeamClick}
+                                        onFinish={mayControl ? handleFinish : undefined}
+                                        onSetRunning={mayControl ? handleSetRunning : undefined}
                                     />
                                 ))}
                             </>
