@@ -851,8 +851,7 @@
               "message": "Vælg venligst unikke placeringer pr. kamp."
             },
             "noResultsEntered": "Angiv venligst mindst enten alle placeringer eller alle tider for alle hold i denne kamp.",
-            "missingPlaces": "Angiv venligst placeringer for alle hold i denne kamp.",
-            "missingTimes": "Angiv venligst tider for alle hold i denne kamp."
+            "partialHint": "Delresultater er tilladt: rækker uden placering og uden tid forbliver åbne og kan udfyldes senere."
           },
           "submit": {
             "error": "Der opstod en fejl ved lagring af resultatet",

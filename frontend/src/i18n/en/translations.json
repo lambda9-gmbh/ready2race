@@ -851,8 +851,7 @@
               "message": "Please select each place only once per match."
             },
             "noResultsEntered": "Please enter at least all places or all times for the teams in this match.",
-            "missingPlaces": "Please enter all places for the teams in this match.",
-            "missingTimes": "Please enter times for all teams in this match."
+            "partialHint": "Partial results are allowed: rows without a place and without a time stay open and can be completed later."
           },
           "submit": {
             "error": "An error has occurred when entering the results",

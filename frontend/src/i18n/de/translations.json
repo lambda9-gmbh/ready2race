@@ -851,8 +851,7 @@
               "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
             },
             "noResultsEntered": "Bitte geben Sie mindestens alle Plätze oder alle Zeiten für alle Teams in dieser Partie an.",
-            "missingPlaces": "Bitte geben Sie Plätze für alle Teams in dieser Partie an.",
-            "missingTimes": "Bitte geben Sie Zeiten für alle Teams in dieser Partie an."
+            "partialHint": "Teilergebnisse sind möglich: Zeilen ohne Platz und ohne Zeit bleiben offen und können später ergänzt werden."
           },
           "submit": {
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
