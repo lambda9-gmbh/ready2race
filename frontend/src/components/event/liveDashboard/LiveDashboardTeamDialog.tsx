@@ -18,6 +18,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardRequirementStatusDto, LiveDashboardTeamDto} from '@api/types.gen.ts'
@@ -127,6 +128,17 @@ const LiveDashboardTeamDialog = ({team, onClose}: Props) => {
                                     </Typography>
                                 )}
                             </Typography>
+                            {p.substitutedFor && (
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                    <SwapHorizIcon color="info" sx={{fontSize: 18}} />
+                                    <Typography variant="body2" color="info.main">
+                                        {t('event.liveDashboard.substitution.for', {
+                                            name: p.substitutedFor,
+                                        })}
+                                        {p.substitutionReason && ` · ${p.substitutionReason}`}
+                                    </Typography>
+                                </Stack>
+                            )}
                             {p.requirements.length === 0 ? (
                                 <Typography variant="body2" color="text.secondary">
                                     {t('event.liveDashboard.requirement.none')}

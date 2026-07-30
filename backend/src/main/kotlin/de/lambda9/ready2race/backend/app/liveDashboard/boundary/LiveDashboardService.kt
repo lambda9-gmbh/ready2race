@@ -102,7 +102,16 @@ object LiveDashboardService {
                 // Post-substitution crew: this is the crew that actually starts, incl. taken-over roles.
                 val resolved = !CompetitionExecutionService.getActuallyParticipatingParticipants(registered, subs)
 
+                // Who was substituted in for whom, so the dashboard can show the change
+                // instead of silently presenting a different crew than the one that was entered.
+                val substitutedForByParticipant = subs
+                    .filter { it.participantIn != null }
+                    .associateBy({ it.participantIn!!.id!! }, { it })
+
                 val participants = resolved.map { p ->
+                    val substitution = substitutedForByParticipant[p.id]
+                    val replaced = substitution?.participantOut
+
                     val requirements = requirementInfos
                         .filter { req ->
                             LiveDashboardLogic.requirementApplies(
@@ -137,6 +146,8 @@ object LiveDashboardService {
                         year = p.year,
                         gender = p.gender.name,
                         externalClubName = p.externalClubName,
+                        substitutedFor = replaced?.let { "${it.firstname} ${it.lastname}" },
+                        substitutionReason = substitution?.reason,
                         requirements = requirements,
                     )
                 }

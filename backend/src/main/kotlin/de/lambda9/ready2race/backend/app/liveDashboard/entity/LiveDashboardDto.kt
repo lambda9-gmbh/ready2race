@@ -33,6 +33,9 @@ data class LiveDashboardParticipantDto(
     val year: Int?,
     val gender: String?,
     val externalClubName: String?,
+    /** Name of the participant this one replaced, if they were substituted into this round. */
+    val substitutedFor: String?,
+    val substitutionReason: String?,
     val requirements: List<LiveDashboardRequirementStatusDto>,
 )
 

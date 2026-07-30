@@ -11611,6 +11611,13 @@ components:
         externalClubName:
           type: string
           nullable: true
+        substitutedFor:
+          type: string
+          nullable: true
+          description: "Name of the participant this one replaced when substituted into the round"
+        substitutionReason:
+          type: string
+          nullable: true
         requirements:
           type: array
           items:

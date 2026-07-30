@@ -1242,6 +1242,11 @@ export type LiveDashboardParticipantDto = {
     year?: number | null
     gender?: string | null
     externalClubName?: string | null
+    /**
+     * Name of the participant this one replaced when substituted into the round
+     */
+    substitutedFor?: string | null
+    substitutionReason?: string | null
     requirements: Array<LiveDashboardRequirementStatusDto>
 }
 
