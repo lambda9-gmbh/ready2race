@@ -56,6 +56,8 @@ object CompetitionMatchTeamRepo {
                 COMPETITION_MATCH_TEAM.PLACE,
                 COMPETITION_MATCH_TEAM.FAILED,
                 COMPETITION_MATCH_TEAM.FAILED_REASON,
+                COMPETITION_MATCH_TEAM.PENALTY_SECONDS,
+                COMPETITION_MATCH_TEAM.PENALTY_NOTE,
                 COMPETITION_REGISTRATION.NAME.`as`("team_name"),
                 COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
                 COMPETITION_DEREGISTRATION.REASON.`as`("deregistration_reason"),

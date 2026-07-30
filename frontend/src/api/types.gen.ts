@@ -366,6 +366,11 @@ export type CompetitionMatchTeamDto = {
     deregistrationReason?: string
     failed: boolean
     failedReason?: string
+    /**
+     * Time penalty in seconds; the result time already includes it
+     */
+    penaltySeconds?: number
+    penaltyNote?: string
 }
 
 export type CompetitionPropertiesDto = {
@@ -1265,6 +1270,11 @@ export type MatchResultTeamInfo = {
     timeString?: string
     failed: boolean
     failedReason?: string
+    /**
+     * Time penalty in seconds; the result time already includes it
+     */
+    penaltySeconds?: number
+    penaltyNote?: string
     deregistered: boolean
     deregisteredReason?: string
     participants: Array<ParticipantInfo>
@@ -2078,6 +2088,11 @@ export type UpdateCompetitionMatchTeamResultRequest = {
     timeString?: string
     failed?: boolean
     failedReason?: string
+    /**
+     * Time penalty in seconds; the reported result time already includes it
+     */
+    penaltySeconds?: number
+    penaltyNote?: string
 }
 
 export type UpdateEventRequest = {

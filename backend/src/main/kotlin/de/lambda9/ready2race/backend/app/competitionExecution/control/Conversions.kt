@@ -59,6 +59,8 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String
                             deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
                             failed = team.failed,
                             failedReason = team.failedReason,
+                            penaltySeconds = team.penaltySeconds,
+                            penaltyNote = team.penaltyNote,
                         )
                     },
                     weighting = match.second.weighting,
@@ -131,6 +133,8 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                         out = team.out!!,
                         failed = team.failed!!,
                         failedReason = team.failedReason,
+                        penaltySeconds = team.penaltySeconds,
+                        penaltyNote = team.penaltyNote,
                         ratingCategory = team.ratingCategoryName,
                         mixedTeamTerm = mixedTeamTerm,
                     )

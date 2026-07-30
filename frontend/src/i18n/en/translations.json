@@ -843,6 +843,9 @@
           },
           "failed": "Eliminated",
           "failedReason": "Reason for elimination",
+            "penalty": "Time penalty +{{seconds}} s",
+            "penaltySeconds": "Time penalty (s)",
+            "penaltyNote": "Penalty reason",
           "validation": {
             "duplicates": {
               "single": "The place: {{places}} is used several times.",

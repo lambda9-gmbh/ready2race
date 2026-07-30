@@ -583,6 +583,8 @@ object CompetitionExecutionService {
                     this.timecode = timecode
                     this.failed = result.failed
                     this.failedReason = result.failedReason
+                    this.penaltySeconds = result.penaltySeconds
+                    this.penaltyNote = result.penaltyNote
                     updatedBy = userId
                     updatedAt = LocalDateTime.now()
                 }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
