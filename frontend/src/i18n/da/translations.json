@@ -1227,6 +1227,11 @@
         "OPEN": "Faktura åben",
         "NONE": "Ingen faktura"
       },
+      "refresh": {
+        "label": "Opdateringsinterval",
+        "tooltip": "Næste opdatering om {{seconds}} s (hvert {{interval}}. s)",
+        "everySeconds": "Hvert {{seconds}}. sekund"
+      },
       "substitution": {
         "short": "Ombytning",
         "for": "Ombyttet for {{name}}"

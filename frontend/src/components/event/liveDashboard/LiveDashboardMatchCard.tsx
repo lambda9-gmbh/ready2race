@@ -41,14 +41,18 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
             sx={{
                 borderColor: running ? 'success.main' : undefined,
                 borderWidth: running ? 2 : undefined,
+                // Ohne minWidth wachsen Flex-Kinder mit ihrem Inhalt und sprengen die Breite
+                minWidth: 0,
+                overflow: 'hidden',
             }}>
             <CardContent sx={{p: 1.5, '&:last-child': {pb: 1.5}}}>
                 <Stack
                     direction="row"
                     justifyContent="space-between"
                     alignItems="baseline"
-                    spacing={1}>
-                    <Box minWidth={0}>
+                    spacing={1}
+                    sx={{minWidth: 0}}>
+                    <Box sx={{minWidth: 0, overflow: 'hidden'}}>
                         <Typography variant="subtitle2" fontWeight={700} noWrap>
                             {match.matchName ?? match.roundName ?? match.competitionName}
                         </Typography>
@@ -81,6 +85,12 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                 <List dense disablePadding sx={{mt: 0.5}}>
                     {match.teams.map(team => {
                         const substituted = team.participants.some(p => p.substitutedFor)
+                        const clubLine = team.actualClubName ?? team.clubName
+                        // Teamnamen enthalten oft den Vereinsnamen — dann die zweite Zeile weglassen
+                        const showClubLine =
+                            team.teamName != null &&
+                            clubLine != null &&
+                            !team.teamName.includes(clubLine)
                         return (
                             <ListItemButton
                                 key={team.teamId}
@@ -90,7 +100,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                     direction="row"
                                     spacing={1}
                                     alignItems="center"
-                                    width="100%">
+                                    width="100%"
+                                    sx={{minWidth: 0}}>
                                     <Typography
                                         variant="body2"
                                         color="text.secondary"
@@ -98,9 +109,20 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                         sx={{minWidth: 20, textAlign: 'right'}}>
                                         {team.startNumber ?? '–'}
                                     </Typography>
-                                    <Box minWidth={0} flexGrow={1}>
-                                        <Stack direction="row" spacing={0.5} alignItems="center">
-                                            <Typography variant="body2" noWrap>
+                                    <Box sx={{minWidth: 0, overflow: 'hidden', flexGrow: 1}}>
+                                        <Stack
+                                            direction="row"
+                                            spacing={0.5}
+                                            alignItems="center"
+                                            sx={{minWidth: 0}}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden',
+                                                }}>
                                                 {team.teamName ?? team.clubName ?? ''}
                                             </Typography>
                                             {substituted && (
@@ -113,23 +135,23 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                                 />
                                             )}
                                         </Stack>
-                                        {team.teamName && (team.actualClubName ?? team.clubName) && (
+                                        {showClubLine && (
                                             <Typography
                                                 variant="caption"
                                                 color="text.secondary"
                                                 noWrap
                                                 display="block">
-                                                {team.actualClubName ?? team.clubName}
+                                                {clubLine}
                                             </Typography>
                                         )}
                                     </Box>
                                     {/* Result first and biggest — that is what a referee scans for. */}
                                     {team.time && (
                                         <Typography
-                                            variant="subtitle1"
+                                            variant="body1"
                                             fontWeight={700}
                                             fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
-                                            sx={{flexShrink: 0}}>
+                                            sx={{flexShrink: 0, letterSpacing: '-0.03em'}}>
                                             {team.time}
                                         </Typography>
                                     )}

@@ -1227,6 +1227,11 @@
         "OPEN": "Rechnung offen",
         "NONE": "Keine Rechnung"
       },
+      "refresh": {
+        "label": "Aktualisierungsintervall",
+        "tooltip": "Nächste Aktualisierung in {{seconds}} s (alle {{interval}} s)",
+        "everySeconds": "Alle {{seconds}} Sekunden"
+      },
       "substitution": {
         "short": "Ummeldung",
         "for": "Umgemeldet für {{name}}"

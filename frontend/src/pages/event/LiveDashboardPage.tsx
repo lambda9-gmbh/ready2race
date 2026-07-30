@@ -20,14 +20,15 @@ import {useFetch} from '@utils/hooks.ts'
 import {eventLiveDashboardRoute} from '@routes'
 import LiveDashboardMatchCard from '@components/event/liveDashboard/LiveDashboardMatchCard.tsx'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
-
-const POLL_INTERVAL_MS = 10_000
+import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
+import {storedPollInterval} from '@components/event/liveDashboard/common.ts'
 
 const LiveDashboardPage = () => {
     const {t} = useTranslation()
     const {eventId} = eventLiveDashboardRoute.useParams()
 
     const [tab, setTab] = useState<'live' | 'matches'>('live')
+    const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(null)
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
     const [stale, setStale] = useState(false)
@@ -39,8 +40,8 @@ const LiveDashboardPage = () => {
     const tabRef = useRef<'live' | 'matches'>('live')
 
     useFetch(signal => getLiveDashboard({signal, path: {eventId}}), {
-        autoReloadInterval: POLL_INTERVAL_MS,
-        deps: [eventId],
+        autoReloadInterval: pollIntervalMs,
+        deps: [eventId, pollIntervalMs],
         onResponse: ({data}) => {
             if (data !== undefined) {
                 setDashboard(data)
@@ -83,23 +84,38 @@ const LiveDashboardPage = () => {
     const handleTeamClick = (matchId: string, teamId: string) => setSelectedTeamRef({matchId, teamId})
 
     return (
-        <Box sx={{pb: 9, maxWidth: 700, mx: 'auto'}}>
-            <Stack spacing={2} sx={{p: 2}}>
+        <Box
+            sx={{
+                pb: 9,
+                // width + maxWidth statt nur maxWidth: das Layout setzt die Seite als
+                // Flex-Kind ein, das sonst mit seinem Inhalt über den Viewport wächst
+                width: '100%',
+                maxWidth: 700,
+                mx: 'auto',
+                minWidth: 0,
+                overflowX: 'hidden',
+            }}>
+            <Stack spacing={2} sx={{p: 2, minWidth: 0}}>
                 <Stack
                     direction="row"
                     justifyContent="space-between"
                     alignItems="baseline"
                     spacing={1}>
-                    <Typography variant="subtitle1" fontWeight={700} noWrap>
+                    <Typography variant="subtitle2" fontWeight={700} noWrap sx={{minWidth: 0}}>
                         {t('event.liveDashboard.title')}
                     </Typography>
-                    {lastUpdated && (
-                        <Typography variant="caption" color="text.secondary" noWrap flexShrink={0}>
-                            {t('event.liveDashboard.lastUpdated', {
-                                time: format(lastUpdated, t('format.timeWithSeconds')),
-                            })}
-                        </Typography>
-                    )}
+                    <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
+                        {lastUpdated && (
+                            <Typography variant="caption" color="text.secondary" noWrap>
+                                {format(lastUpdated, t('format.timeWithSeconds'))}
+                            </Typography>
+                        )}
+                        <RefreshCountdown
+                            intervalMs={pollIntervalMs}
+                            lastUpdated={lastUpdated}
+                            onIntervalChange={setPollIntervalMs}
+                        />
+                    </Stack>
                 </Stack>
                 {stale && dashboard && (
                     <Alert severity="warning">{t('event.liveDashboard.staleWarning')}</Alert>

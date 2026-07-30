@@ -1227,6 +1227,11 @@
         "OPEN": "Invoice open",
         "NONE": "No invoice"
       },
+      "refresh": {
+        "label": "Refresh interval",
+        "tooltip": "Next refresh in {{seconds}} s (every {{interval}} s)",
+        "everySeconds": "Every {{seconds}} seconds"
+      },
       "substitution": {
         "short": "Substitution",
         "for": "Substituted for {{name}}"

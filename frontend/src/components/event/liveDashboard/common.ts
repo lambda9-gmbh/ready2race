@@ -43,3 +43,13 @@ export const formatMinutes = (totalMinutes: number): string => {
     const m = abs % 60
     return h > 0 ? `${h} h ${m} min` : `${m} min`
 }
+
+export const POLL_INTERVAL_OPTIONS_MS = [5_000, 10_000, 30_000, 60_000] as const
+export const POLL_INTERVAL_STORAGE_KEY = 'live_dashboard_poll_interval'
+const DEFAULT_POLL_INTERVAL_MS = 10_000
+
+/** Refresh rate the referee picked on this device, falling back to the default. */
+export const storedPollInterval = (): number => {
+    const stored = Number(localStorage.getItem(POLL_INTERVAL_STORAGE_KEY))
+    return POLL_INTERVAL_OPTIONS_MS.some(o => o === stored) ? stored : DEFAULT_POLL_INTERVAL_MS
+}
