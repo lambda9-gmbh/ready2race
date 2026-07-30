@@ -101,7 +101,10 @@ const LiveDashboardPage = () => {
                     justifyContent="space-between"
                     alignItems="baseline"
                     spacing={1}>
-                    <Typography variant="subtitle2" fontWeight={700} noWrap sx={{minWidth: 0}}>
+                    <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        sx={{minWidth: 0, lineHeight: 1.2}}>
                         {t('event.liveDashboard.title')}
                     </Typography>
                     <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>

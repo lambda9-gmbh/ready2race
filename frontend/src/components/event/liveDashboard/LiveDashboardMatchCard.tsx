@@ -17,7 +17,7 @@ type Props = {
 // One glanceable icon per team replaces the detail chips — everything else
 // lives in the team dialog, one tap away.
 const severityIcon = (severity: Severity) => {
-    const sx = {fontSize: 20}
+    const sx = {fontSize: 26}
     switch (severity) {
         case 'ok':
             return <CheckCircleIcon color="success" sx={sx} />
@@ -45,7 +45,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                 minWidth: 0,
                 overflow: 'hidden',
             }}>
-            <CardContent sx={{p: 1.5, '&:last-child': {pb: 1.5}}}>
+            <CardContent sx={{p: 2, '&:last-child': {pb: 2}}}>
                 <Stack
                     direction="row"
                     justifyContent="space-between"
@@ -53,10 +53,18 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                     spacing={1}
                     sx={{minWidth: 0}}>
                     <Box sx={{minWidth: 0, overflow: 'hidden'}}>
-                        <Typography variant="subtitle2" fontWeight={700} noWrap>
+                        <Typography variant="subtitle1" fontWeight={700} noWrap>
                             {match.matchName ?? match.roundName ?? match.competitionName}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap display="block">
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                            }}>
                             {[match.competitionName, match.categoryName, match.roundName]
                                 .filter(Boolean)
                                 .join(' · ')}
@@ -64,7 +72,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                     </Box>
                     <Stack alignItems="flex-end" flexShrink={0}>
                         <Typography
-                            variant="subtitle2"
+                            variant="subtitle1"
                             fontWeight={700}
                             color={running ? 'success.main' : 'text.primary'}>
                             {match.startTime
@@ -72,7 +80,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                 : '—'}
                         </Typography>
                         <Typography
-                            variant="caption"
+                            variant="body2"
                             color={running ? 'success.main' : 'text.secondary'}>
                             {running && match.elapsedMinutes != null
                                 ? t('event.liveDashboard.runningSince', {
@@ -82,7 +90,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                         </Typography>
                     </Stack>
                 </Stack>
-                <List dense disablePadding sx={{mt: 0.5}}>
+                <List dense disablePadding sx={{mt: 1}}>
                     {match.teams.map(team => {
                         const substituted = team.participants.some(p => p.substitutedFor)
                         const clubLine = team.actualClubName ?? team.clubName
@@ -95,7 +103,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                             <ListItemButton
                                 key={team.teamId}
                                 onClick={() => onTeamClick(match.matchId, team.teamId)}
-                                sx={{px: 1, py: 0.5, borderRadius: 1}}>
+                                sx={{px: 1, py: 1, borderRadius: 1}}>
                                 <Stack
                                     direction="row"
                                     spacing={1}
@@ -103,10 +111,10 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                     width="100%"
                                     sx={{minWidth: 0}}>
                                     <Typography
-                                        variant="body2"
+                                        variant="subtitle1"
                                         color="text.secondary"
-                                        fontWeight={600}
-                                        sx={{minWidth: 20, textAlign: 'right'}}>
+                                        fontWeight={700}
+                                        sx={{minWidth: 24, textAlign: 'right'}}>
                                         {team.startNumber ?? '–'}
                                     </Typography>
                                     <Box sx={{minWidth: 0, overflow: 'hidden', flexGrow: 1}}>
@@ -116,8 +124,9 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                             alignItems="center"
                                             sx={{minWidth: 0}}>
                                             <Typography
-                                                variant="body2"
+                                                variant="subtitle1"
                                                 sx={{
+                                                    lineHeight: 1.3,
                                                     display: '-webkit-box',
                                                     WebkitLineClamp: 2,
                                                     WebkitBoxOrient: 'vertical',
@@ -128,7 +137,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                             {substituted && (
                                                 <SwapHorizIcon
                                                     color="info"
-                                                    sx={{fontSize: 16, flexShrink: 0}}
+                                                    sx={{fontSize: 20, flexShrink: 0}}
                                                     titleAccess={t(
                                                         'event.liveDashboard.substitution.short',
                                                     )}
@@ -137,7 +146,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                         </Stack>
                                         {showClubLine && (
                                             <Typography
-                                                variant="caption"
+                                                variant="body2"
                                                 color="text.secondary"
                                                 noWrap
                                                 display="block">
@@ -148,10 +157,10 @@ const LiveDashboardMatchCard = ({match, onTeamClick}: Props) => {
                                     {/* Result first and biggest — that is what a referee scans for. */}
                                     {team.time && (
                                         <Typography
-                                            variant="body1"
+                                            variant="h6"
                                             fontWeight={700}
                                             fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
-                                            sx={{flexShrink: 0, letterSpacing: '-0.03em'}}>
+                                            sx={{flexShrink: 0, letterSpacing: '-0.04em'}}>
                                             {team.time}
                                         </Typography>
                                     )}
