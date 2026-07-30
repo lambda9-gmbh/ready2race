@@ -500,13 +500,20 @@ object CompetitionExecutionService {
     private fun prepareForNewPlaces(
         matchId: UUID,
         userId: UUID,
+        /**
+         * Whether the match is done. Partial results (only some boats finished) leave the
+         * match running, so the live views keep showing it as the current race.
+         */
+        stopRunning: Boolean = true,
     ): App<Nothing, Unit> = KIO.comprehension {
 
-        !CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = false
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie()
+        if (stopRunning) {
+            !CompetitionMatchRepo.update(matchId) {
+                currentlyRunning = false
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
 
         !CompetitionMatchTeamRepo.updateManyByMatch(matchId) {
             place = null
@@ -525,7 +532,15 @@ object CompetitionExecutionService {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !checkUpdateMatchResult(competitionId, matchId)
-        !prepareForNewPlaces(matchId, userId)
+
+        // A submission may cover only part of the field (first boats across the line). The match
+        // counts as done only once every participating team has a result.
+        val matchTeams = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+        val resultsComplete = matchTeams
+            .filter { it.out != true }
+            .all { team -> request.teamResults.any { it.registrationId == team.competitionRegistration } }
+
+        !prepareForNewPlaces(matchId, userId, stopRunning = resultsComplete)
 
         val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
 

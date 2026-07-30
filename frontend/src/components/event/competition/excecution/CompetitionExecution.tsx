@@ -165,12 +165,8 @@ const CompetitionExecution = () => {
                 const duplicatePlaces = Array.from(groupBy(validValues, val => val.place))
                     .filter(([val, items]) => items.length > 1 && val !== '')
                     .map(([place]) => place)
-                const partiallyFilledPlaces =
-                    validValues.some(val => val.place === '') &&
-                    validValues.some(val => val.place !== '')
-                const partiallyFilledTimes =
-                    validValues.some(val => val.timeString === '') &&
-                    validValues.some(val => val.timeString !== '')
+                // Teilergebnisse sind erlaubt: Zeilen ohne Platz und ohne Zeit bleiben offen und
+                // werden nicht übertragen. Nur eine komplett leere Eingabe ist sinnlos.
                 const neitherPlaceNorTimeFilled =
                     validValues.length > 0 &&
                     validValues.every(val => val.place === '' && val.timeString === '')
@@ -192,16 +188,6 @@ const CompetitionExecution = () => {
                             t('event.competition.execution.results.validation.duplicates.message'),
                     )
                     return 'duplicates'
-                } else if (partiallyFilledPlaces) {
-                    setTeamResultsError(
-                        t('event.competition.execution.results.validation.missingPlaces'),
-                    )
-                    return 'missingPlaces'
-                } else if (partiallyFilledTimes) {
-                    setTeamResultsError(
-                        t('event.competition.execution.results.validation.missingTimes'),
-                    )
-                    return 'missingTimes'
                 }
 
                 setTeamResultsError(null)
@@ -431,15 +417,29 @@ const CompetitionExecution = () => {
                     competitionMatchId: formData.selectedMatchDto.id,
                 },
                 body: {
-                    teamResults: formData.teamResults.map(results => ({
-                        registrationId: results.registrationId,
-                        place: results.failed || !results.place ? undefined : Number(results.place),
-                        timeString: results.failed ? undefined : takeIfNotEmpty(results.timeString),
-                        failed: results.failed,
-                        failedReason: results.failed
-                            ? takeIfNotEmpty(results.failedReason)
-                            : undefined,
-                    })),
+                    // Offene Zeilen (kein Platz, keine Zeit, nicht ausgeschieden) bleiben ohne
+                    // Ergebnis: das Backend verlangt je übertragenem Team Platz, Zeit oder Grund.
+                    teamResults: formData.teamResults
+                        .filter(
+                            results =>
+                                results.failed ||
+                                takeIfNotEmpty(results.place) !== undefined ||
+                                takeIfNotEmpty(results.timeString) !== undefined,
+                        )
+                        .map(results => ({
+                            registrationId: results.registrationId,
+                            place:
+                                results.failed || !results.place
+                                    ? undefined
+                                    : Number(results.place),
+                            timeString: results.failed
+                                ? undefined
+                                : takeIfNotEmpty(results.timeString),
+                            failed: results.failed,
+                            failedReason: results.failed
+                                ? takeIfNotEmpty(results.failedReason)
+                                : undefined,
+                        })),
                 },
             })
             if (error) {

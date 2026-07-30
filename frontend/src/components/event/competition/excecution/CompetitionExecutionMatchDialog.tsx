@@ -30,6 +30,11 @@ const CompetitionExecutionMatchDialog = ({submitting, ...props}: Props) => {
                     {props.fieldArrayError && (
                         <Typography color={'error'}>{props.fieldArrayError}</Typography>
                     )}
+                    {props.enterResults && (
+                        <Typography variant={'body2'} color={'text.secondary'}>
+                            {t('event.competition.execution.results.validation.partialHint')}
+                        </Typography>
+                    )}
                     {props.children}
                 </Stack>
             </DialogContent>
