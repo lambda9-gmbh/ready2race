@@ -20,6 +20,8 @@ data class CompetitionMatchTeamWithRegistration(
     val out: Boolean,
     val failed: Boolean,
     val failedReason: String?,
+    val penaltySeconds: Int?,
+    val penaltyNote: String?,
     val ratingCategory: String?,
     val mixedTeamTerm: String?
 )

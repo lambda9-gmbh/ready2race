@@ -844,6 +844,9 @@
           },
           "failed": "Udgået",
           "failedReason": "Årsag til udgåelse",
+            "penalty": "Tidsstraf +{{seconds}} s",
+            "penaltySeconds": "Tidsstraf (s)",
+            "penaltyNote": "Årsag til tidsstraf",
           "validation": {
             "duplicates": {
               "single": "Placeringen: {{places}} bruges flere gange.",

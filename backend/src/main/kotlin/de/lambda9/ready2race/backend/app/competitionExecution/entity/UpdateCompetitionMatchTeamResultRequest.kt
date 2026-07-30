@@ -17,7 +17,10 @@ data class UpdateCompetitionMatchTeamResultRequest(
     val place: Int?,
     val timeString: String?,
     val failed: Boolean,
-    val failedReason: String?
+    val failedReason: String?,
+    /** Zeitstrafe in Sekunden; die Ergebniszeit enthält sie bereits. */
+    val penaltySeconds: Int?,
+    val penaltyNote: String?,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
         this::place validate min(1),
@@ -36,7 +39,9 @@ data class UpdateCompetitionMatchTeamResultRequest(
             ),
         ),
         this::failedReason validate notBlank,
-        this::timeString validate pattern(timecodePattern)
+        this::timeString validate pattern(timecodePattern),
+        this::penaltySeconds validate min(1),
+        this::penaltyNote validate notBlank
     )
 
     companion object {
@@ -46,7 +51,9 @@ data class UpdateCompetitionMatchTeamResultRequest(
                 place = 1,
                 timeString = "12:34.567",
                 failed = false,
-                failedReason = null
+                failedReason = null,
+                penaltySeconds = 15,
+                penaltyNote = "Gegner behindert",
             )
     }
 }

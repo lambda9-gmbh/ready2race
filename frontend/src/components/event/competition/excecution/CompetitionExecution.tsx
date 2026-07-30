@@ -70,6 +70,8 @@ type EnterResultsTeam = {
     timeString: string
     failed: boolean
     failedReason: string
+    penaltySeconds: string
+    penaltyNote: string
 }
 type EnterResultsForm = {
     selectedMatchDto: CompetitionMatchDto | null
@@ -213,6 +215,8 @@ const CompetitionExecution = () => {
                 timeString: team.timeString?.toString() ?? '',
                 failed: team.failed,
                 failedReason: team.failedReason ?? '',
+                penaltySeconds: team.penaltySeconds?.toString() ?? '',
+                penaltyNote: team.penaltyNote ?? '',
             }))
     }
 
@@ -439,6 +443,11 @@ const CompetitionExecution = () => {
                             failedReason: results.failed
                                 ? takeIfNotEmpty(results.failedReason)
                                 : undefined,
+                            penaltySeconds:
+                                takeIfNotEmpty(results.penaltySeconds) !== undefined
+                                    ? Number(results.penaltySeconds)
+                                    : undefined,
+                            penaltyNote: takeIfNotEmpty(results.penaltyNote),
                         })),
                 },
             })
@@ -872,6 +881,29 @@ const CompetitionExecution = () => {
                                                                                     name={`teamResults.${fieldIndex}.timeString`}
                                                                                     size="small"
                                                                                     placeholder="00:00:00.000"
+                                                                                />
+                                                                            </Box>
+                                                                            <Box
+                                                                                sx={{
+                                                                                    display: 'flex',
+                                                                                    gap: 1,
+                                                                                    alignItems: 'center',
+                                                                                }}>
+                                                                                <FormInputNumber
+                                                                                    name={`teamResults.${fieldIndex}.penaltySeconds`}
+                                                                                    label={t(
+                                                                                        'event.competition.execution.results.penaltySeconds',
+                                                                                    )}
+                                                                                    min={1}
+                                                                                    integer
+                                                                                    size="small"
+                                                                                />
+                                                                                <FormInputText
+                                                                                    name={`teamResults.${fieldIndex}.penaltyNote`}
+                                                                                    label={t(
+                                                                                        'event.competition.execution.results.penaltyNote',
+                                                                                    )}
+                                                                                    size="small"
                                                                                 />
                                                                             </Box>
                                                                         </Box>

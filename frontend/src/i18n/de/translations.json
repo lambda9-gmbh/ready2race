@@ -844,6 +844,9 @@
           },
           "failed": "Ausgeschieden",
           "failedReason": "Grund für Ausscheiden",
+            "penalty": "Zeitstrafe +{{seconds}} s",
+            "penaltySeconds": "Zeitstrafe (s)",
+            "penaltyNote": "Grund der Zeitstrafe",
           "validation": {
             "duplicates": {
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",

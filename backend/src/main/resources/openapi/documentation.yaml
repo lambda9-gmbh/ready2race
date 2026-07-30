@@ -10632,6 +10632,11 @@ components:
           type: boolean
         failedReason:
           type: string
+        penaltySeconds:
+          type: integer
+          description: "Time penalty in seconds; the result time already includes it"
+        penaltyNote:
+          type: string
 
     UpdateCompetitionMatchRequest:
       type: object
@@ -10729,6 +10734,11 @@ components:
         failed:
           type: boolean
         failedReason:
+          type: string
+        penaltySeconds:
+          type: integer
+          description: "Time penalty in seconds; the reported result time already includes it"
+        penaltyNote:
           type: string
 
     CompetitionTeamPlaceDto:
@@ -11458,6 +11468,11 @@ components:
           type: boolean
         failedReason:
           type: string
+        penaltySeconds:
+          type: integer
+          description: "Time penalty in seconds; the result time already includes it"
+        penaltyNote:
+          type: string
         deregistered:
           type: boolean
         deregisteredReason:
@@ -11656,6 +11671,12 @@ components:
         failed:
           type: boolean
         failedReason:
+          type: string
+          nullable: true
+        penaltySeconds:
+          type: integer
+          nullable: true
+        penaltyNote:
           type: string
           nullable: true
         deregistered:
