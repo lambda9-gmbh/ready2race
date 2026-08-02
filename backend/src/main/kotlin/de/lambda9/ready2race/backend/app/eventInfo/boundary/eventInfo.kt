@@ -47,6 +47,16 @@ fun Route.eventInfo() {
                 EventInfoService.getRunningMatches(eventId, limit)
             }
         }
+
+        // Alles, was die Athleten-Anzeige braucht, in einer Antwort.
+        // Öffentlich wie die drei Endpoints darüber — bewusst ohne authenticate.
+        get("/athlete-board") {
+            call.respondComprehension {
+                val eventId = !pathParam("eventId", uuid)
+
+                EventInfoService.getAthleteBoard(eventId)
+            }
+        }
     }
 
     route("/event/{eventId}/info-views") {

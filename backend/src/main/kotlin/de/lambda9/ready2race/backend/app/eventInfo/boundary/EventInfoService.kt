@@ -1,17 +1,21 @@
 package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfigurationRepo
+import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
+import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.data.Timecode
+import de.lambda9.ready2race.backend.database.generated.enums.InfoViewType
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -195,6 +199,48 @@ object EventInfoService {
 
         KIO.ok(ApiResponse.ListDto(result))
     }
+
+    fun getAthleteBoard(eventId: UUID): App<EventInfoProblem, ApiResponse.Dto<AthleteBoardDto>> =
+        KIO.comprehension {
+            val eventName = !EventRepo.getName(eventId).orDie()
+            if (eventName == null) {
+                !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
+            }
+
+            // findByEvent liefert nur aktive Zeilen, aufsteigend nach sort_order.
+            // Gedacht ist genau eine ATHLETE_BOARD-Zeile; bei mehreren gewinnt die erste.
+            val views = !InfoViewConfigurationRepo.findByEvent(eventId).orDie()
+            val boardView = views.firstOrNull { it.viewType == InfoViewType.ATHLETE_BOARD }
+
+            val config = AthleteBoardLogic.resolveConfig(
+                filters = boardView?.filters?.let { ObjectMapper().readTree(it.data()) },
+                displayDurationSeconds = boardView?.displayDurationSeconds,
+            )
+
+            val now = LocalDateTime.now()
+
+            val running = !getRunningMatches(eventId, config.runningLimit)
+            val upcoming = !getUpcomingCompetitionMatches(eventId, config.upcomingLimit)
+            val results = !getLatestMatchResults(eventId, config.resultsLimit, null)
+
+            KIO.ok(
+                ApiResponse.Dto(
+                    AthleteBoardDto(
+                        eventName = eventName!!,
+                        serverTime = now,
+                        refreshIntervalSeconds = config.refreshIntervalSeconds,
+                        showCountdown = config.showCountdown,
+                        running = running.data.map {
+                            it.toAthleteBoardMatch(now, config.showCountdown)
+                        },
+                        upcoming = AthleteBoardLogic.sortByStartTime(
+                            upcoming.data.map { it.toAthleteBoardMatch(now, config.showCountdown) }
+                        ) { it.startTime },
+                        results = results.data.map { it.toAthleteBoardResult() },
+                    )
+                )
+            )
+        }
 
 
     // Helper Methods
