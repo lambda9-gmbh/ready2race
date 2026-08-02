@@ -200,7 +200,7 @@ object LiveDashboardService {
                 KIO.ok(
                     LiveDashboardMatchDto(
                         matchId = matchId,
-                        state = LiveDashboardLogic.deriveMatchState(running, startTime, teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed) }),
+                        state = LiveDashboardLogic.deriveMatchState(running, startTime, teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) }),
                         competitionId = match.get("competition_id", UUID::class.java)!!,
                         competitionName = match.get("competition_name", String::class.java) ?: "",
                         categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
@@ -230,10 +230,16 @@ object LiveDashboardService {
         eventId: UUID,
         matchId: UUID,
         userId: UUID,
+        openResults: OpenResultHandling? = null,
     ): App<LiveDashboardError, ApiResponse.NoData> = KIO.comprehension {
         val exists = !EventRepo.exists(eventId).orDie()
         if (!exists) {
             return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
+        }
+
+        // Sammelentscheidung für die Boote ohne Ergebnis, bevor der Lauf aus der Ansicht geht.
+        if (openResults != null) {
+            !LiveDashboardRepo.markOpenTeamsFailed(matchId, openResults.name, userId).orDie()
         }
 
         // Die Kette läuft vorwärts: aktiviert werden nur Läufe, die später starten als der eben

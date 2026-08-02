@@ -30,6 +30,17 @@ export const teamSeverity = (team: LiveDashboardTeamDto): Severity =>
         team.invoiceState === 'OPEN' ? 'error' : 'neutral',
     ])
 
+/**
+ * Ein Boot ist erledigt, sobald Platz, Zeit oder ein Ausscheidungsgrund vorliegt. Abgemeldete
+ * Boote sind es ebenfalls — auf ihr Ergebnis wartet niemand mehr.
+ */
+export const teamHasResult = (team: LiveDashboardTeamDto): boolean =>
+    team.deregistered || team.failed || team.place != null || team.time != null
+
+/** Die Boote, für die beim Beenden eines Laufs noch zu entscheiden ist. */
+export const openResultTeams = (match: {teams: LiveDashboardTeamDto[]}): LiveDashboardTeamDto[] =>
+    match.teams.filter(team => !teamHasResult(team))
+
 export const severityChipColor: Record<Severity, 'success' | 'warning' | 'error' | 'default'> = {
     ok: 'success',
     warning: 'warning',

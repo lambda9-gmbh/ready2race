@@ -28,6 +28,7 @@ import LiveDashboardMatchCard from '@components/event/liveDashboard/LiveDashboar
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
 import {storedPollInterval} from '@components/event/liveDashboard/common.ts'
+import {MatchResultStatus} from '@utils/matchResultStatus.ts'
 
 const LiveDashboardPage = () => {
     const {t} = useTranslation()
@@ -92,8 +93,11 @@ const LiveDashboardPage = () => {
 
     const handleTeamClick = (matchId: string, teamId: string) => setSelectedTeamRef({matchId, teamId})
 
-    const handleFinish = async (matchId: string) => {
-        const {error} = await finishLiveDashboardMatch({path: {eventId, matchId}})
+    const handleFinish = async (matchId: string, openResults: MatchResultStatus | null) => {
+        const {error} = await finishLiveDashboardMatch({
+            path: {eventId, matchId},
+            query: openResults ? {openResults} : undefined,
+        })
         if (error) {
             feedback.error(t('event.liveDashboard.control.error'))
         } else {

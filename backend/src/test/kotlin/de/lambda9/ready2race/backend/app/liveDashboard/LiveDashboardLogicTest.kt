@@ -147,17 +147,37 @@ class LiveDashboardLogicTest {
 
     @Test
     fun failedTeamWithoutPlaceCountsAsResult() {
-        assertTrue(LiveDashboardLogic.teamHasResult(1, false))
-        assertTrue(LiveDashboardLogic.teamHasResult(null, true))
-        assertFalse(LiveDashboardLogic.teamHasResult(null, false))
+        assertTrue(LiveDashboardLogic.teamHasResult(1, false, false))
+        assertTrue(LiveDashboardLogic.teamHasResult(null, true, false))
+        assertFalse(LiveDashboardLogic.teamHasResult(null, false, false))
         assertEquals(
             LiveDashboardMatchState.FINISHED,
             LiveDashboardLogic.deriveMatchState(
                 false,
                 start,
                 listOf(
-                    LiveDashboardLogic.teamHasResult(1, false),
-                    LiveDashboardLogic.teamHasResult(null, true),
+                    LiveDashboardLogic.teamHasResult(1, false, false),
+                    LiveDashboardLogic.teamHasResult(null, true, false),
+                ),
+            )
+        )
+    }
+
+    @Test
+    fun deregisteredTeamNeedsNoResult() {
+        assertTrue(LiveDashboardLogic.teamHasResult(null, false, true))
+    }
+
+    @Test
+    fun matchWithDeregisteredTeamCanFinish() {
+        assertEquals(
+            LiveDashboardMatchState.FINISHED,
+            LiveDashboardLogic.deriveMatchState(
+                false,
+                start,
+                listOf(
+                    LiveDashboardLogic.teamHasResult(1, false, false),
+                    LiveDashboardLogic.teamHasResult(null, false, true),
                 ),
             )
         )

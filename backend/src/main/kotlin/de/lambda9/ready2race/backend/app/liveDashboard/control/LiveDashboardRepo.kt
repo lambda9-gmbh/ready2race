@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.selectOne
+import java.time.LocalDateTime
 import java.util.UUID
 
 object LiveDashboardRepo {
@@ -96,6 +97,42 @@ object LiveDashboardRepo {
             .fetch()
     }
 
+    /**
+     * Trägt bei allen offenen Mannschaften eines Laufs denselben Ausscheidungsgrund ein. Offen
+     * heißt: kein Platz, keine Zeit, nicht bereits ausgeschieden und nicht abgemeldet — für
+     * abgemeldete Mannschaften kommt kein Ergebnis mehr.
+     *
+     * Bereits erfasste Ergebnisse bleiben unangetastet, Plätze werden nicht neu berechnet: die
+     * markierten Mannschaften bekommen keinen.
+     */
+    fun markOpenTeamsFailed(matchId: UUID, reason: String, userId: UUID) = Jooq.query {
+        update(COMPETITION_MATCH_TEAM)
+            .set(COMPETITION_MATCH_TEAM.FAILED, true)
+            .set(COMPETITION_MATCH_TEAM.FAILED_REASON, reason)
+            .set(COMPETITION_MATCH_TEAM.UPDATED_BY, userId)
+            .set(COMPETITION_MATCH_TEAM.UPDATED_AT, LocalDateTime.now())
+            .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
+            .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
+            .and(COMPETITION_MATCH_TEAM.FAILED.isTrue.not())
+            .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
+            .and(COMPETITION_MATCH_TEAM.TIMECODE.isNull)
+            .and(
+                DSL.notExists(
+                    selectOne()
+                        .from(COMPETITION_DEREGISTRATION)
+                        .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                        .and(
+                            COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(
+                                DSL.select(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND)
+                                    .from(COMPETITION_SETUP_MATCH)
+                                    .where(COMPETITION_SETUP_MATCH.ID.eq(matchId))
+                            )
+                        )
+                )
+            )
+            .execute()
+    }
+
     fun getMatchStartTime(matchId: UUID) = Jooq.query {
         select(COMPETITION_MATCH.START_TIME)
             .from(COMPETITION_MATCH)
@@ -123,7 +160,8 @@ object LiveDashboardRepo {
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.START_TIME.isNotNull)
             .and(COMPETITION_MATCH.CURRENTLY_RUNNING.isFalse)
-            // mindestens eine Mannschaft ohne Ergebnis: der Lauf steht noch aus
+            // mindestens eine Mannschaft ohne Ergebnis: der Lauf steht noch aus. Abgemeldete
+            // Mannschaften zählen nicht — auf ihr Ergebnis wartet niemand.
             .and(
                 DSL.exists(
                     selectOne()
@@ -132,6 +170,12 @@ object LiveDashboardRepo {
                         .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
                         .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
                         .and(COMPETITION_MATCH_TEAM.FAILED.isTrue.not())
+                        .andNotExists(
+                            selectOne()
+                                .from(COMPETITION_DEREGISTRATION)
+                                .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                                .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+                        )
                 )
             )
             .orderBy(COMPETITION_MATCH.START_TIME.asc())

@@ -4,16 +4,17 @@
  * lesen den Status für die Anzeige daraus, ohne den gespeicherten Text zu verändern.
  */
 
-export type MatchResultStatus = 'DNS' | 'DNF' | 'DQ'
+export type MatchResultStatus = 'DNS' | 'DNF' | 'DSQ'
 
-export const matchResultStatuses: readonly MatchResultStatus[] = ['DNS', 'DNF', 'DQ']
+export const matchResultStatuses: readonly MatchResultStatus[] = ['DNS', 'DNF', 'DSQ']
 
+/** Die Zeitnahme schreibt „DQ“, Schiedsrichter tippen „DSQ“ — angezeigt wird immer DSQ. */
 const statusAliases: Record<string, MatchResultStatus> = {
     DNS: 'DNS',
     DNF: 'DNF',
-    DQ: 'DQ',
-    DSQ: 'DQ',
-    DISQ: 'DQ',
+    DSQ: 'DSQ',
+    DQ: 'DSQ',
+    DISQ: 'DSQ',
 }
 
 /**

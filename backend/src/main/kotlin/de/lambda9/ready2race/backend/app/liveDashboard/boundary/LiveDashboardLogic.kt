@@ -46,7 +46,12 @@ object LiveDashboardLogic {
         else -> LiveDashboardMatchState.UPCOMING
     }
 
-    fun teamHasResult(place: Int?, failed: Boolean): Boolean = place != null || failed
+    /**
+     * Abgemeldete Mannschaften brauchen kein Ergebnis — für sie kommt keins mehr. Ohne diesen
+     * Fall erreicht ein Lauf mit einer Abmeldung nie den Zustand [LiveDashboardMatchState.FINISHED].
+     */
+    fun teamHasResult(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
+        deregistered || place != null || failed
 
     fun requirementApplies(
         assignedNamedParticipants: List<UUID?>,

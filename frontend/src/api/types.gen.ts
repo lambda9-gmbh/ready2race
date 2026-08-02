@@ -5351,6 +5351,12 @@ export type FinishLiveDashboardMatchData = {
         eventId: string
         matchId: string
     }
+    query?: {
+        /**
+         * Marks every team without a result as failed with this reason. Deregistered teams are left alone.
+         */
+        openResults?: 'DNS' | 'DNF' | 'DSQ'
+    }
 }
 
 export type FinishLiveDashboardMatchResponse = void

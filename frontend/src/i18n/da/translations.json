@@ -852,7 +852,7 @@
           "status": {
             "DNS": "Ikke startet",
             "DNF": "Ikke fuldført",
-            "DQ": "Diskvalificeret"
+            "DSQ": "Diskvalificeret"
           },
             "penalty": "Tidsstraf inkl. {{seconds}} s",
             "penaltySeconds": "Straf (s)",
@@ -1256,6 +1256,15 @@
         "deactivate": "Deaktiver løb",
         "activate": "Aktiver løb",
         "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
+        "openResults": {
+          "title": "Manglende resultater",
+          "question_one": "Én båd mangler stadig et resultat. Hvad skal der ske med den?",
+          "question_other": "{{count}} både mangler stadig et resultat. Hvad skal der ske med dem?",
+          "keepOpen": "Lad stå åbent",
+          "DNS": "Ikke startet",
+          "DNF": "Ikke fuldført",
+          "DSQ": "Diskvalificeret"
+        },
         "error": "Løbet kunne ikke ændres."
       },
       "substitution": {

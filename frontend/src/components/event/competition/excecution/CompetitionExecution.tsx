@@ -93,7 +93,7 @@ type EnterResultsForm = {
 const statusLabelKeys = {
     DNS: 'event.competition.execution.results.status.DNS',
     DNF: 'event.competition.execution.results.status.DNF',
-    DQ: 'event.competition.execution.results.status.DQ',
+    DSQ: 'event.competition.execution.results.status.DSQ',
 } as const satisfies Record<MatchResultStatus, string>
 
 const CompetitionExecution = () => {

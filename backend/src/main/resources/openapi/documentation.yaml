@@ -5619,6 +5619,14 @@ paths:
     put:
       operationId: finishLiveDashboardMatch
       description: "Marks the match as finished and activates the matches of the next start time"
+      parameters:
+        - name: openResults
+          in: query
+          required: false
+          description: "Marks every team without a result as failed with this reason. Deregistered teams are left alone."
+          schema:
+            type: string
+            enum: [DNS, DNF, DSQ]
       responses:
         204:
           description: Match finished

@@ -5,21 +5,21 @@ describe('matchResultStatus', () => {
     it('erkennt die drei Kürzel', () => {
         expect(matchResultStatus('DNS')).toEqual({status: 'DNS', note: null})
         expect(matchResultStatus('DNF')).toEqual({status: 'DNF', note: null})
-        expect(matchResultStatus('DQ')).toEqual({status: 'DQ', note: null})
+        expect(matchResultStatus('DSQ')).toEqual({status: 'DSQ', note: null})
     })
 
     it('ignoriert Groß-/Kleinschreibung und Leerraum', () => {
         expect(matchResultStatus('  dnf ')).toEqual({status: 'DNF', note: null})
     })
 
-    it('normalisiert DSQ und DISQ auf DQ', () => {
-        expect(matchResultStatus('DSQ')).toEqual({status: 'DQ', note: null})
-        expect(matchResultStatus('disq')).toEqual({status: 'DQ', note: null})
+    it('normalisiert DQ und DISQ auf DSQ', () => {
+        expect(matchResultStatus('DQ')).toEqual({status: 'DSQ', note: null})
+        expect(matchResultStatus('disq')).toEqual({status: 'DSQ', note: null})
     })
 
     it('trennt eine Notiz hinter dem Kürzel ab', () => {
-        expect(matchResultStatus('DQ – Frühstart')).toEqual({status: 'DQ', note: 'Frühstart'})
-        expect(matchResultStatus('DQ: Frühstart')).toEqual({status: 'DQ', note: 'Frühstart'})
+        expect(matchResultStatus('DQ – Frühstart')).toEqual({status: 'DSQ', note: 'Frühstart'})
+        expect(matchResultStatus('DQ: Frühstart')).toEqual({status: 'DSQ', note: 'Frühstart'})
         expect(matchResultStatus('DNS, krank gemeldet')).toEqual({
             status: 'DNS',
             note: 'krank gemeldet',
@@ -57,7 +57,7 @@ describe('matchResultStatus', () => {
 
 describe('failedLabel', () => {
     it('stellt das Kürzel voran und hängt die Notiz an', () => {
-        expect(failedLabel('DQ – Frühstart', 'Ausgeschieden')).toBe('DQ (Frühstart)')
+        expect(failedLabel('DQ – Frühstart', 'Ausgeschieden')).toBe('DSQ (Frühstart)')
         expect(failedLabel('DNS', 'Ausgeschieden')).toBe('DNS')
     })
 
@@ -69,7 +69,7 @@ describe('failedLabel', () => {
 
 describe('formatFailedReason', () => {
     it('setzt Status und Notiz wieder zusammen', () => {
-        expect(formatFailedReason('DQ', 'Frühstart')).toBe('DQ Frühstart')
+        expect(formatFailedReason('DSQ', 'Frühstart')).toBe('DSQ Frühstart')
         expect(formatFailedReason('DNS', '')).toBe('DNS')
         expect(formatFailedReason(null, 'Boot gekentert')).toBe('Boot gekentert')
         expect(formatFailedReason(null, '  ')).toBe(null)
