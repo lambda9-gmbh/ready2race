@@ -2,8 +2,10 @@ package de.lambda9.ready2race.backend.app.liveDashboard
 
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardInvoiceState
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchState
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementStatusDto
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardScope
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckStatus
 import java.time.LocalDateTime
@@ -183,6 +185,68 @@ class LiveDashboardLogicTest {
                 ),
             )
         )
+    }
+
+    // --- selectForScope ---
+
+    private fun match(state: LiveDashboardMatchState, name: String) = LiveDashboardMatchDto(
+        matchId = UUID.randomUUID(),
+        state = state,
+        competitionId = UUID.randomUUID(),
+        competitionName = "Coastal",
+        categoryName = null,
+        roundName = null,
+        matchName = name,
+        executionOrder = 0,
+        startTime = start,
+        currentlyRunning = state == LiveDashboardMatchState.RUNNING,
+        elapsedMinutes = null,
+        teams = emptyList(),
+    )
+
+    @Test
+    fun liveScopeKeepsEveryRunningMatch() {
+        val matches = listOf(
+            match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"),
+            match(LiveDashboardMatchState.RUNNING, "Vorlauf 2"),
+            match(LiveDashboardMatchState.RUNNING, "Vorlauf 3"),
+            match(LiveDashboardMatchState.UPCOMING, "Finale"),
+        )
+
+        val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
+
+        assertEquals(listOf("Vorlauf 2", "Vorlauf 3"), selected.map { it.matchName })
+    }
+
+    @Test
+    fun liveScopeFallsBackToTheNextUpcomingMatch() {
+        val matches = listOf(
+            match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"),
+            match(LiveDashboardMatchState.UPCOMING, "Vorlauf 2"),
+            match(LiveDashboardMatchState.UPCOMING, "Finale"),
+        )
+
+        val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
+
+        assertEquals(listOf("Vorlauf 2"), selected.map { it.matchName })
+    }
+
+    @Test
+    fun liveScopeIsEmptyWhenNothingIsRunningOrUpcoming() {
+        val matches = listOf(match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"))
+
+        assertTrue(LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE).isEmpty())
+    }
+
+    @Test
+    fun allScopeKeepsEverything() {
+        val matches = listOf(
+            match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"),
+            match(LiveDashboardMatchState.RUNNING, "Vorlauf 2"),
+            match(LiveDashboardMatchState.UNSCHEDULED, "Finale"),
+        )
+
+        assertEquals(3, LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.ALL).size)
     }
 
     // --- summarizeRequirements ---

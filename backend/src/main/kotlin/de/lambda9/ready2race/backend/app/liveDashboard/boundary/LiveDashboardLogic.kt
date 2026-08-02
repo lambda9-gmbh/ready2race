@@ -1,7 +1,9 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.boundary
 
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardInvoiceState
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchState
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardScope
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementStatusDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementSummaryDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckDto
@@ -54,6 +56,23 @@ object LiveDashboardLogic {
      */
     fun teamHasResult(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
         deregistered || place != null || failed
+
+    /**
+     * Was eine Abfrage im gewünschten Umfang zurückgibt: alles, oder die laufenden Läufe und —
+     * wenn keiner läuft — der nächste anstehende. Die Reihenfolge bleibt erhalten; die Läufe
+     * kommen bereits nach Startzeit sortiert aus der Datenbank.
+     */
+    fun selectForScope(
+        matches: List<LiveDashboardMatchDto>,
+        scope: LiveDashboardScope,
+    ): List<LiveDashboardMatchDto> = when (scope) {
+        LiveDashboardScope.ALL -> matches
+        LiveDashboardScope.LIVE -> matches
+            .filter { it.state == LiveDashboardMatchState.RUNNING }
+            .ifEmpty {
+                listOfNotNull(matches.firstOrNull { it.state == LiveDashboardMatchState.UPCOMING })
+            }
+    }
 
     /**
      * Verdichtet die Bedingungen aller Personen einer Mannschaft auf die Zahlen, aus denen die

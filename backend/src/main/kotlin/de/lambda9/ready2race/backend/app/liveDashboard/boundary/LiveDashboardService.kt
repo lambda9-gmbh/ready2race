@@ -133,17 +133,7 @@ object LiveDashboardService {
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
 
-            // Der Live-Tab zeigt die laufenden Läufe und, wenn keiner läuft, den nächsten. Nur
-            // der Läufe-Tab braucht die vollständige Liste.
-            val selected = when (scope) {
-                LiveDashboardScope.ALL -> matches
-                LiveDashboardScope.LIVE -> matches.filter { it.state == LiveDashboardMatchState.RUNNING }
-                    .ifEmpty {
-                        listOfNotNull(matches.firstOrNull { it.state == LiveDashboardMatchState.UPCOMING })
-                    }
-            }
-
-            KIO.ok(ApiResponse.ETagged(LiveDashboardDto(selected)))
+            KIO.ok(ApiResponse.ETagged(LiveDashboardDto(LiveDashboardLogic.selectForScope(matches, scope))))
         }
 
     /**
