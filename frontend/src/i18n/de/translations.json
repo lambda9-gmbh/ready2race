@@ -848,6 +848,12 @@
           },
           "failed": "Ausgeschieden",
           "failedReason": "Grund für Ausscheiden",
+          "failedNote": "Notiz zum Ausscheiden",
+          "status": {
+            "DNS": "Nicht gestartet",
+            "DNF": "Nicht beendet",
+            "DQ": "Disqualifiziert"
+          },
             "penalty": "Zeitstrafe inkl. {{seconds}} s",
             "penaltySeconds": "Strafe (s)",
             "penaltyShort": "Strafe",

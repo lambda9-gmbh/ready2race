@@ -7,6 +7,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardMatchDto} from '@api/types.gen.ts'
+import {matchResultStatus} from '@utils/matchResultStatus.ts'
 import {formatMinutes, Severity, shortClubName, teamSeverity} from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
 
@@ -213,7 +214,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                             color: team.failed ? 'warning.dark' : 'text.primary',
                                         }}>
                                         {team.failed
-                                            ? t('event.liveDashboard.team.failedShort')
+                                            ? (matchResultStatus(team.failedReason).status ??
+                                              t('event.liveDashboard.team.failedShort'))
                                             : (team.time ?? '')}
                                         {team.penaltySeconds != null && (
                                             <Typography

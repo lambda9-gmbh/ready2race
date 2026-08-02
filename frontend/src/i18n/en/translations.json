@@ -848,6 +848,12 @@
           },
           "failed": "Eliminated",
           "failedReason": "Reason for elimination",
+          "failedNote": "Note on elimination",
+          "status": {
+            "DNS": "Did not start",
+            "DNF": "Did not finish",
+            "DQ": "Disqualified"
+          },
             "penalty": "Time penalty incl. {{seconds}} s",
             "penaltySeconds": "Penalty (s)",
             "penaltyShort": "Penalty",

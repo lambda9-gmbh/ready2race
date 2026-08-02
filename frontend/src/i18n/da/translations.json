@@ -848,6 +848,12 @@
           },
           "failed": "Udgået",
           "failedReason": "Årsag til udgåelse",
+          "failedNote": "Note til udgåelse",
+          "status": {
+            "DNS": "Ikke startet",
+            "DNF": "Ikke fuldført",
+            "DQ": "Diskvalificeret"
+          },
             "penalty": "Tidsstraf inkl. {{seconds}} s",
             "penaltySeconds": "Straf (s)",
             "penaltyShort": "Straf",
