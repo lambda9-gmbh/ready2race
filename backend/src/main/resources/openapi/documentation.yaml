@@ -5669,13 +5669,60 @@ paths:
       - $ref: '#/components/parameters/eventId'
     get:
       operationId: getLiveDashboard
+      description: "Polled by the referee dashboard. Send the ETag of the previous answer as If-None-Match to get a 304 without a body while nothing changed."
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          description: "LIVE returns the running matches, or the next upcoming one if none is running. Defaults to ALL."
+          schema:
+            type: string
+            enum: [LIVE, ALL]
       responses:
         200:
           description: Live dashboard data retrieved successfully
+          headers:
+            ETag:
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LiveDashboardDto'
+        304:
+          description: Unchanged since the ETag sent as If-None-Match
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getLiveDashboardTeamDetail
+      description: "Crew and requirement details of one team; deliberately kept out of the polled list"
+      responses:
+        200:
+          description: Team detail retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveDashboardTeamDetailDto'
         401:
           $ref: '#/components/responses/401'
         404:
@@ -11711,7 +11758,8 @@ components:
         - failed
         - deregistered
         - invoiceState
-        - participants
+        - requirements
+        - substituted
       properties:
         teamId:
           type: string
@@ -11752,6 +11800,41 @@ components:
           nullable: true
         invoiceState:
           $ref: '#/components/schemas/LiveDashboardInvoiceState'
+        requirements:
+          $ref: '#/components/schemas/LiveDashboardRequirementSummaryDto'
+        substituted:
+          type: boolean
+
+    LiveDashboardRequirementSummaryDto:
+      type: object
+      description: "Condensed requirement state per team; the requirements themselves are only in the team detail"
+      required:
+        - total
+        - fulfilled
+        - missingRequired
+        - missingOptional
+        - timeIssues
+      properties:
+        total:
+          type: integer
+        fulfilled:
+          type: integer
+        missingRequired:
+          type: integer
+        missingOptional:
+          type: integer
+        timeIssues:
+          type: integer
+
+    LiveDashboardTeamDetailDto:
+      type: object
+      required:
+        - teamId
+        - participants
+      properties:
+        teamId:
+          type: string
+          format: uuid
         participants:
           type: array
           items:

@@ -48,31 +48,59 @@ const LiveDashboardPage = () => {
     )
     const runningIdsRef = useRef<string | null>(null)
     const tabRef = useRef<'live' | 'matches'>('live')
+    /** Stand der letzten Antwort; spart den Rumpf, solange sich nichts geändert hat. */
+    const etagRef = useRef<string | null>(null)
 
-    const dashboardData = useFetch(signal => getLiveDashboard({signal, path: {eventId}}), {
-        autoReloadInterval: pollIntervalMs,
-        deps: [eventId, pollIntervalMs],
-        onResponse: ({data}) => {
-            if (data !== undefined) {
-                setDashboard(data)
-                setLastUpdated(new Date())
-                setStale(false)
-                const ids = data.matches
-                    .filter(m => m.state === 'RUNNING')
-                    .map(m => m.matchId)
-                    .join(',')
-                if (runningIdsRef.current !== null && ids !== runningIdsRef.current && tabRef.current !== 'live') {
-                    setLiveChanged(true)
+    // Der Live-Tab braucht nur die laufenden Läufe; die vollständige Liste sieht sich niemand im
+    // Sekundentakt an. Beim Wechsel wird neu geladen, der letzte Stand gilt nicht für beide.
+    const scope = tab === 'live' ? 'LIVE' : 'ALL'
+
+    const dashboardData = useFetch(
+        signal =>
+            getLiveDashboard({
+                signal,
+                path: {eventId},
+                query: {scope},
+                // Unverändert? Dann antwortet der Server mit 304 und ohne Rumpf. 'no-store' hält
+                // den Browser-Cache aus der Bedingung heraus, sonst beantwortet er sie selbst.
+                headers: etagRef.current ? {'If-None-Match': etagRef.current} : undefined,
+                cache: 'no-store',
+            }),
+        {
+            autoReloadInterval: pollIntervalMs,
+            deps: [eventId, pollIntervalMs, scope],
+            onResponse: ({data, response}) => {
+                if (response.status === 304) {
+                    setLastUpdated(new Date())
+                    setStale(false)
+                    return
                 }
-                runningIdsRef.current = ids
-            } else {
+                if (data !== undefined) {
+                    etagRef.current = response.headers.get('ETag')
+                    setDashboard(data)
+                    setLastUpdated(new Date())
+                    setStale(false)
+                    const ids = data.matches
+                        .filter(m => m.state === 'RUNNING')
+                        .map(m => m.matchId)
+                        .join(',')
+                    if (
+                        runningIdsRef.current !== null &&
+                        ids !== runningIdsRef.current &&
+                        tabRef.current !== 'live'
+                    ) {
+                        setLiveChanged(true)
+                    }
+                    runningIdsRef.current = ids
+                } else {
+                    setStale(true)
+                }
+            },
+            onPanic: () => {
                 setStale(true)
-            }
+            },
         },
-        onPanic: () => {
-            setStale(true)
-        },
-    })
+    )
 
     const runningMatches = dashboard?.matches.filter(m => m.state === 'RUNNING') ?? []
     const nextUpcoming = dashboard?.matches.find(m => m.state === 'UPCOMING')
@@ -226,7 +254,12 @@ const LiveDashboardPage = () => {
                     </>
                 )}
             </Stack>
-            <LiveDashboardTeamDialog team={selectedTeam} onClose={() => setSelectedTeamRef(null)} />
+            <LiveDashboardTeamDialog
+                team={selectedTeam}
+                matchId={selectedTeamRef?.matchId ?? null}
+                eventId={eventId}
+                onClose={() => setSelectedTeamRef(null)}
+            />
             <Paper sx={{position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10}} elevation={3}>
                 <BottomNavigation
                     showLabels
@@ -234,6 +267,10 @@ const LiveDashboardPage = () => {
                     onChange={(_, newTab: 'live' | 'matches') => {
                         tabRef.current = newTab
                         setTab(newTab)
+                        // Der andere Tab hat einen anderen Umfang: der bisherige Stand samt ETag
+                        // gilt für ihn nicht, sonst stünde kurz die Live-Auswahl als Gesamtliste da.
+                        setDashboard(null)
+                        etagRef.current = null
                         if (newTab === 'live') {
                             setLiveChanged(false)
                         }

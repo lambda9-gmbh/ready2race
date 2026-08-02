@@ -1,13 +1,22 @@
 import {describe, expect, it} from 'vitest'
 import {LiveDashboardTeamDto} from '@api/types.gen.ts'
-import {openResultTeams, teamHasResult} from './common.ts'
+import {openResultTeams, teamHasResult, teamSeverity} from './common.ts'
+
+const noRequirements = {
+    total: 0,
+    fulfilled: 0,
+    missingRequired: 0,
+    missingOptional: 0,
+    timeIssues: 0,
+}
 
 const team = (overrides: Partial<LiveDashboardTeamDto>): LiveDashboardTeamDto => ({
     teamId: crypto.randomUUID(),
     failed: false,
     deregistered: false,
     invoiceState: 'NONE',
-    participants: [],
+    requirements: noRequirements,
+    substituted: false,
     ...overrides,
 })
 
@@ -24,6 +33,66 @@ describe('teamHasResult', () => {
 
     it('erkennt ein offenes Boot', () => {
         expect(teamHasResult(team({}))).toBe(false)
+    })
+})
+
+describe('teamSeverity', () => {
+    it('meldet eine fehlende Pflichtbedingung als Fehler', () => {
+        const severity = teamSeverity(
+            team({requirements: {...noRequirements, total: 3, fulfilled: 2, missingRequired: 1}}),
+        )
+        expect(severity).toBe('error')
+    })
+
+    it('meldet eine offene Rechnung als Fehler', () => {
+        expect(teamSeverity(team({invoiceState: 'OPEN'}))).toBe('error')
+    })
+
+    it('meldet eine Prüfung außerhalb des Zeitfensters als Warnung', () => {
+        const severity = teamSeverity(
+            team({requirements: {...noRequirements, total: 2, fulfilled: 2, timeIssues: 1}}),
+        )
+        expect(severity).toBe('warning')
+    })
+
+    it('wertet eine fehlende Pflichtbedingung schwerer als eine Zeitabweichung', () => {
+        const severity = teamSeverity(
+            team({
+                requirements: {
+                    ...noRequirements,
+                    total: 3,
+                    fulfilled: 2,
+                    missingRequired: 1,
+                    timeIssues: 1,
+                },
+            }),
+        )
+        expect(severity).toBe('error')
+    })
+
+    it('bleibt neutral, wenn ausschließlich Optionales fehlt', () => {
+        const severity = teamSeverity(
+            team({requirements: {...noRequirements, total: 1, missingOptional: 1}}),
+        )
+        expect(severity).toBe('neutral')
+    })
+
+    it('lässt eine fehlende optionale Bedingung eine erfüllte nicht abwerten', () => {
+        const severity = teamSeverity(
+            team({requirements: {...noRequirements, total: 2, fulfilled: 1, missingOptional: 1}}),
+        )
+        expect(severity).toBe('ok')
+    })
+
+    it('meldet vollständig erfüllte Bedingungen als in Ordnung', () => {
+        const severity = teamSeverity(
+            team({requirements: {...noRequirements, total: 3, fulfilled: 3}}),
+        )
+        expect(severity).toBe('ok')
+    })
+
+    it('bleibt ohne zugewiesene Bedingungen neutral', () => {
+        expect(teamSeverity(team({}))).toBe('neutral')
     })
 })
 

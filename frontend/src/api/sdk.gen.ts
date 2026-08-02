@@ -626,6 +626,9 @@ import type {
     GetLiveDashboardData,
     GetLiveDashboardError,
     GetLiveDashboardResponse,
+    GetLiveDashboardTeamDetailData,
+    GetLiveDashboardTeamDetailError,
+    GetLiveDashboardTeamDetailResponse,
     GetInfoViewsData,
     GetInfoViewsError,
     GetInfoViewsResponse,
@@ -3357,6 +3360,9 @@ export const setLiveDashboardMatchRunning = <ThrowOnError extends boolean = fals
     })
 }
 
+/**
+ * Polled by the referee dashboard. Send the ETag of the previous answer as If-None-Match to get a 304 without a body while nothing changed.
+ */
 export const getLiveDashboard = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetLiveDashboardData, ThrowOnError>,
 ) => {
@@ -3367,6 +3373,22 @@ export const getLiveDashboard = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/liveDashboard',
+    })
+}
+
+/**
+ * Crew and requirement details of one team; deliberately kept out of the polled list
+ */
+export const getLiveDashboardTeamDetail = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetLiveDashboardTeamDetailData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetLiveDashboardTeamDetailResponse,
+        GetLiveDashboardTeamDetailError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}',
     })
 }
 

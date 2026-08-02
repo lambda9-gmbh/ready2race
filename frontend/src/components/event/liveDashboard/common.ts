@@ -24,9 +24,15 @@ export const requirementSeverity = (r: LiveDashboardRequirementStatusDto): Sever
 export const participantSeverity = (p: LiveDashboardParticipantDto): Severity =>
     worstSeverity(p.requirements.map(requirementSeverity))
 
+/**
+ * Dieselbe Bewertung wie [requirementSeverity], nur aus den verdichteten Zahlen der Liste: die
+ * Bedingungen selbst kommen erst mit dem Detail-Dialog.
+ */
 export const teamSeverity = (team: LiveDashboardTeamDto): Severity =>
     worstSeverity([
-        ...team.participants.map(participantSeverity),
+        team.requirements.missingRequired > 0 ? 'error' : 'neutral',
+        team.requirements.timeIssues > 0 ? 'warning' : 'neutral',
+        team.requirements.fulfilled > 0 ? 'ok' : 'neutral',
         team.invoiceState === 'OPEN' ? 'error' : 'neutral',
     ])
 

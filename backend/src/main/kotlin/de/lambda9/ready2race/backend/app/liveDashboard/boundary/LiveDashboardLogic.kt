@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.liveDashboard.boundary
 
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardInvoiceState
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchState
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementStatusDto
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementSummaryDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckStatus
 import java.time.Duration
@@ -52,6 +54,22 @@ object LiveDashboardLogic {
      */
     fun teamHasResult(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
         deregistered || place != null || failed
+
+    /**
+     * Verdichtet die Bedingungen aller Personen einer Mannschaft auf die Zahlen, aus denen die
+     * Liste ihre Ampel ableitet. Die Bedingungen selbst bleiben dem Detail-Dialog vorbehalten.
+     */
+    fun summarizeRequirements(
+        requirements: List<LiveDashboardRequirementStatusDto>,
+    ): LiveDashboardRequirementSummaryDto = LiveDashboardRequirementSummaryDto(
+        total = requirements.size,
+        fulfilled = requirements.count { it.checked },
+        missingRequired = requirements.count { !it.checked && !it.optional },
+        missingOptional = requirements.count { !it.checked && it.optional },
+        timeIssues = requirements.count {
+            it.timeCheck?.status == TimeCheckStatus.LATE || it.timeCheck?.status == TimeCheckStatus.TOO_EARLY
+        },
+    )
 
     fun requirementApplies(
         assignedNamedParticipants: List<UUID?>,

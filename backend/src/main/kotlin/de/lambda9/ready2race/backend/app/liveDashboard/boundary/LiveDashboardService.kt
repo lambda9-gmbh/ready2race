@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.data.Timecode
+import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.tailwind.core.KIO
@@ -24,7 +25,10 @@ import java.util.UUID
 
 object LiveDashboardService {
 
-    fun getLiveDashboard(eventId: UUID): App<LiveDashboardError, ApiResponse.Dto<LiveDashboardDto>> =
+    fun getLiveDashboard(
+        eventId: UUID,
+        scope: LiveDashboardScope,
+    ): App<LiveDashboardError, ApiResponse.ETagged<LiveDashboardDto>> =
         KIO.comprehension {
             val exists = !EventRepo.exists(eventId).orDie()
             if (!exists) {
@@ -38,27 +42,12 @@ object LiveDashboardService {
             val invoiceRecords = !LiveDashboardRepo.getInvoicePaymentsByClub(eventId).orDie()
             val substitutionRecords = !SubstitutionRepo.getByEvent(eventId, null, Privilege.Scope.GLOBAL).orDie()
 
-            // requirement id -> assigned named participants (null element = global assignment)
-            val requirementAssignments = requirementRecords.groupBy(
-                { it[PARTICIPANT_REQUIREMENT.ID]!! },
-                { it[EVENT_HAS_PARTICIPANT_REQUIREMENT.NAMED_PARTICIPANT] },
-            )
-            val requirementInfos = requirementRecords.distinctBy { it[PARTICIPANT_REQUIREMENT.ID] }
-
-            val checksByKey = checkRecords.associateBy {
-                it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT]!! to
-                    it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT]!!
-            }
+            val context = ParticipantContext(requirementRecords, checkRecords, substitutionRecords)
 
             val paidAtsByClub = invoiceRecords.groupBy(
                 { it[INVOICE_FOR_EVENT_REGISTRATION.CLUB] },
                 { it[INVOICE_FOR_EVENT_REGISTRATION.PAID_AT] },
             )
-
-            // (round, registration) -> substitutions applying to that team in that round, ordered
-            val substitutionsByKey = substitutionRecords
-                .groupBy { it.competitionSetupRoundId!! to it.competitionRegistrationId!! }
-                .mapValues { (_, subs) -> subs.sortedBy { it.orderForRound } }
 
             val teamsByMatch = teamRecords.groupBy { it.get("match_id", UUID::class.java)!! }
             val now = LocalDateTime.now()
@@ -73,86 +62,8 @@ object LiveDashboardService {
                 val clubId = first.get("club_id", UUID::class.java)
                 val clubName = first.get("club_name", String::class.java)
                 val teamName = first.get("team_name", String::class.java)
-                val roundId = first.get("round_id", UUID::class.java)!!
 
-                val registered = rows.mapNotNull { row ->
-                    val participantId = row.get("participant_id", UUID::class.java)
-                    val namedParticipantId = row.get("named_participant_id", UUID::class.java)
-                    if (participantId == null || namedParticipantId == null) {
-                        null
-                    } else {
-                        ParticipantForExecutionDto(
-                            id = participantId,
-                            namedParticipantId = namedParticipantId,
-                            namedParticipantName = row.get("named_role", String::class.java) ?: "",
-                            firstName = row[PARTICIPANT.FIRSTNAME] ?: "",
-                            lastName = row[PARTICIPANT.LASTNAME] ?: "",
-                            year = row[PARTICIPANT.YEAR]!!,
-                            gender = row[PARTICIPANT.GENDER]!!,
-                            clubId = clubId!!,
-                            clubName = clubName ?: "",
-                            competitionRegistrationId = registrationId,
-                            competitionRegistrationName = teamName,
-                            external = row[PARTICIPANT.EXTERNAL],
-                            externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
-                        )
-                    }
-                }.distinctBy { it.id to it.namedParticipantId }
-
-                val subs = substitutionsByKey[roundId to registrationId] ?: emptyList()
-
-                // Post-substitution crew: this is the crew that actually starts, incl. taken-over roles.
-                val resolved = !CompetitionExecutionService.getActuallyParticipatingParticipants(registered, subs)
-
-                // Who was substituted in for whom, so the dashboard can show the change
-                // instead of silently presenting a different crew than the one that was entered.
-                val substitutedForByParticipant = subs
-                    .filter { it.participantIn != null }
-                    .associateBy({ it.participantIn!!.id!! }, { it })
-
-                val participants = resolved.map { p ->
-                    val substitution = substitutedForByParticipant[p.id]
-                    val replaced = substitution?.participantOut
-
-                    val requirements = requirementInfos
-                        .filter { req ->
-                            LiveDashboardLogic.requirementApplies(
-                                requirementAssignments[req[PARTICIPANT_REQUIREMENT.ID]!!] ?: emptyList(),
-                                p.namedParticipantId,
-                            )
-                        }
-                        .map { req ->
-                            val check = checksByKey[p.id to req[PARTICIPANT_REQUIREMENT.ID]!!]
-                            LiveDashboardRequirementStatusDto(
-                                requirementId = req[PARTICIPANT_REQUIREMENT.ID]!!,
-                                name = req[PARTICIPANT_REQUIREMENT.NAME]!!,
-                                description = req[PARTICIPANT_REQUIREMENT.DESCRIPTION],
-                                optional = req[PARTICIPANT_REQUIREMENT.OPTIONAL]!!,
-                                checked = check != null,
-                                checkedAt = check?.get(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.CREATED_AT),
-                                note = check?.get(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.NOTE),
-                                timeCheck = LiveDashboardLogic.computeTimeCheck(
-                                    startTime = startTime,
-                                    checkedAt = check?.get(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.CREATED_AT),
-                                    earliestMinutesBefore = req[PARTICIPANT_REQUIREMENT.CHECK_EARLIEST_MINUTES_BEFORE],
-                                    latestMinutesBefore = req[PARTICIPANT_REQUIREMENT.CHECK_LATEST_MINUTES_BEFORE],
-                                ),
-                            )
-                        }
-
-                    LiveDashboardParticipantDto(
-                        participantId = p.id,
-                        firstName = p.firstName,
-                        lastName = p.lastName,
-                        namedRole = p.namedParticipantName,
-                        year = p.year,
-                        gender = p.gender.name,
-                        externalClubName = p.externalClubName,
-                        substitutedFor = replaced?.let { "${it.firstname} ${it.lastname}" },
-                        substitutionReason = substitution?.reason,
-                        requirements = requirements,
-                    )
-                }
+                val participants = !buildParticipants(rows, registrationId, startTime, context)
 
                 KIO.ok(
                     LiveDashboardTeamDto(
@@ -160,7 +71,7 @@ object LiveDashboardService {
                         teamName = teamName,
                         clubName = clubName,
                         actualClubName = singletonOrFallback(
-                            resolved.map { it.externalClubName }.toSet(),
+                            participants.map { it.externalClubName }.toSet(),
                             first[EVENT.MIXED_TEAM_TERM],
                         ),
                         startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
@@ -181,7 +92,12 @@ object LiveDashboardService {
                         invoiceState = LiveDashboardLogic.deriveInvoiceState(
                             clubId?.let { paidAtsByClub[it] } ?: emptyList()
                         ),
-                        participants = participants,
+                        // Die Personendaten selbst bleiben hier: sie sind der größte Posten im
+                        // Poll und werden erst im Detail-Dialog gebraucht.
+                        requirements = LiveDashboardLogic.summarizeRequirements(
+                            participants.flatMap { it.requirements }
+                        ),
+                        substituted = participants.any { it.substitutedFor != null },
                     )
                 )
             }
@@ -217,8 +133,52 @@ object LiveDashboardService {
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
 
-            KIO.ok(ApiResponse.Dto(LiveDashboardDto(matches)))
+            // Der Live-Tab zeigt die laufenden Läufe und, wenn keiner läuft, den nächsten. Nur
+            // der Läufe-Tab braucht die vollständige Liste.
+            val selected = when (scope) {
+                LiveDashboardScope.ALL -> matches
+                LiveDashboardScope.LIVE -> matches.filter { it.state == LiveDashboardMatchState.RUNNING }
+                    .ifEmpty {
+                        listOfNotNull(matches.firstOrNull { it.state == LiveDashboardMatchState.UPCOMING })
+                    }
+            }
+
+            KIO.ok(ApiResponse.ETagged(LiveDashboardDto(selected)))
         }
+
+    /**
+     * Personendaten einer Mannschaft für den Detail-Dialog: Aufstellung, Ummeldungen und die
+     * Teilnahmebedingungen mit allem, was die Liste bewusst nicht mehr mitschickt.
+     */
+    fun getTeamDetail(
+        eventId: UUID,
+        matchId: UUID,
+        teamId: UUID,
+    ): App<LiveDashboardError, ApiResponse.Dto<LiveDashboardTeamDetailDto>> = KIO.comprehension {
+        val exists = !EventRepo.exists(eventId).orDie()
+        if (!exists) {
+            return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
+        }
+
+        val teamRecords = !LiveDashboardRepo.getTeams(eventId, matchId, teamId).orDie()
+        if (teamRecords.isEmpty()) {
+            return@comprehension KIO.fail(LiveDashboardError.TeamNotFound(teamId))
+        }
+
+        val startTime = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
+        val requirementRecords = !LiveDashboardRepo.getEventRequirements(eventId).orDie()
+        val checkRecords = !LiveDashboardRepo.getChecks(eventId).orDie()
+        val substitutionRecords = !SubstitutionRepo.getByEvent(eventId, null, Privilege.Scope.GLOBAL).orDie()
+
+        val participants = !buildParticipants(
+            rows = teamRecords,
+            registrationId = teamId,
+            startTime = startTime,
+            context = ParticipantContext(requirementRecords, checkRecords, substitutionRecords),
+        )
+
+        KIO.ok(ApiResponse.Dto(LiveDashboardTeamDetailDto(teamId, participants)))
+    }
     /**
      * Erklärt einen Lauf für beendet und zieht die nächsten nach: aktiv sind danach die Läufe mit
      * der frühesten noch offenen Startzeit — meist einer, bei parallelen Starts mehrere.
@@ -282,6 +242,132 @@ object LiveDashboardService {
         !setRunning(matchId, running, userId)
 
         noData
+    }
+
+    /**
+     * Die veranstaltungsweiten Daten, die für jede Mannschaft gleich sind — einmal aufbereitet
+     * statt je Mannschaft neu gruppiert.
+     */
+    private class ParticipantContext(
+        requirementRecords: List<Record>,
+        checkRecords: List<Record>,
+        substitutionRecords: List<SubstitutionViewRecord>,
+    ) {
+        /** requirement id -> assigned named participants (null element = global assignment) */
+        val requirementAssignments = requirementRecords.groupBy(
+            { it[PARTICIPANT_REQUIREMENT.ID]!! },
+            { it[EVENT_HAS_PARTICIPANT_REQUIREMENT.NAMED_PARTICIPANT] },
+        )
+
+        val requirementInfos = requirementRecords.distinctBy { it[PARTICIPANT_REQUIREMENT.ID] }
+
+        val checksByKey = checkRecords.associateBy {
+            it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT]!! to
+                it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT]!!
+        }
+
+        /** (round, registration) -> substitutions applying to that team in that round, ordered */
+        val substitutionsByKey = substitutionRecords
+            .groupBy { it.competitionSetupRoundId!! to it.competitionRegistrationId!! }
+            .mapValues { (_, subs) -> subs.sortedBy { it.orderForRound } }
+    }
+
+    /**
+     * Löst die gemeldete Aufstellung einer Mannschaft gegen die Ummeldungen der Runde auf und
+     * hängt jeder Person ihre Teilnahmebedingungen an.
+     */
+    private fun buildParticipants(
+        rows: List<Record>,
+        registrationId: UUID,
+        startTime: LocalDateTime?,
+        context: ParticipantContext,
+    ): App<Nothing, List<LiveDashboardParticipantDto>> = KIO.comprehension {
+        val first = rows.first()
+        val clubId = first.get("club_id", UUID::class.java)
+        val clubName = first.get("club_name", String::class.java)
+        val teamName = first.get("team_name", String::class.java)
+        val roundId = first.get("round_id", UUID::class.java)!!
+
+        val registered = rows.mapNotNull { row ->
+            val participantId = row.get("participant_id", UUID::class.java)
+            val namedParticipantId = row.get("named_participant_id", UUID::class.java)
+            if (participantId == null || namedParticipantId == null) {
+                null
+            } else {
+                ParticipantForExecutionDto(
+                    id = participantId,
+                    namedParticipantId = namedParticipantId,
+                    namedParticipantName = row.get("named_role", String::class.java) ?: "",
+                    firstName = row[PARTICIPANT.FIRSTNAME] ?: "",
+                    lastName = row[PARTICIPANT.LASTNAME] ?: "",
+                    year = row[PARTICIPANT.YEAR]!!,
+                    gender = row[PARTICIPANT.GENDER]!!,
+                    clubId = clubId!!,
+                    clubName = clubName ?: "",
+                    competitionRegistrationId = registrationId,
+                    competitionRegistrationName = teamName,
+                    external = row[PARTICIPANT.EXTERNAL],
+                    externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                )
+            }
+        }.distinctBy { it.id to it.namedParticipantId }
+
+        val subs = context.substitutionsByKey[roundId to registrationId] ?: emptyList()
+
+        // Post-substitution crew: this is the crew that actually starts, incl. taken-over roles.
+        val resolved = !CompetitionExecutionService.getActuallyParticipatingParticipants(registered, subs)
+
+        // Who was substituted in for whom, so the dashboard can show the change
+        // instead of silently presenting a different crew than the one that was entered.
+        val substitutedForByParticipant = subs
+            .filter { it.participantIn != null }
+            .associateBy({ it.participantIn!!.id!! }, { it })
+
+        KIO.ok(
+            resolved.map { p ->
+                val substitution = substitutedForByParticipant[p.id]
+                val replaced = substitution?.participantOut
+
+                val requirements = context.requirementInfos
+                    .filter { req ->
+                        LiveDashboardLogic.requirementApplies(
+                            context.requirementAssignments[req[PARTICIPANT_REQUIREMENT.ID]!!] ?: emptyList(),
+                            p.namedParticipantId,
+                        )
+                    }
+                    .map { req ->
+                        val check = context.checksByKey[p.id to req[PARTICIPANT_REQUIREMENT.ID]!!]
+                        LiveDashboardRequirementStatusDto(
+                            requirementId = req[PARTICIPANT_REQUIREMENT.ID]!!,
+                            name = req[PARTICIPANT_REQUIREMENT.NAME]!!,
+                            description = req[PARTICIPANT_REQUIREMENT.DESCRIPTION],
+                            optional = req[PARTICIPANT_REQUIREMENT.OPTIONAL]!!,
+                            checked = check != null,
+                            checkedAt = check?.get(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.CREATED_AT),
+                            note = check?.get(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.NOTE),
+                            timeCheck = LiveDashboardLogic.computeTimeCheck(
+                                startTime = startTime,
+                                checkedAt = check?.get(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.CREATED_AT),
+                                earliestMinutesBefore = req[PARTICIPANT_REQUIREMENT.CHECK_EARLIEST_MINUTES_BEFORE],
+                                latestMinutesBefore = req[PARTICIPANT_REQUIREMENT.CHECK_LATEST_MINUTES_BEFORE],
+                            ),
+                        )
+                    }
+
+                LiveDashboardParticipantDto(
+                    participantId = p.id,
+                    firstName = p.firstName,
+                    lastName = p.lastName,
+                    namedRole = p.namedParticipantName,
+                    year = p.year,
+                    gender = p.gender.name,
+                    externalClubName = p.externalClubName,
+                    substitutedFor = replaced?.let { "${it.firstname} ${it.lastname}" },
+                    substitutionReason = substitution?.reason,
+                    requirements = requirements,
+                )
+            }
+        )
     }
 
     private fun setRunning(matchId: UUID, running: Boolean, userId: UUID): App<Nothing, Unit> =

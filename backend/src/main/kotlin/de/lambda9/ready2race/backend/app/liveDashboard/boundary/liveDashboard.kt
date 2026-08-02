@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardScope
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
@@ -17,8 +18,21 @@ fun Route.liveDashboard() {
             call.respondComprehension {
                 !authenticate(Privilege.ReadLiveDashboardGlobal)
                 val eventId = !pathParam("eventId", uuid)
+                val scope = !optionalQueryParam("scope", enum<LiveDashboardScope>())
 
-                LiveDashboardService.getLiveDashboard(eventId)
+                LiveDashboardService.getLiveDashboard(eventId, scope ?: LiveDashboardScope.ALL)
+            }
+        }
+
+        // Personendaten einer Mannschaft; bewusst nicht Teil des Polls.
+        get("/match/{matchId}/team/{teamId}") {
+            call.respondComprehension {
+                !authenticate(Privilege.ReadLiveDashboardGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val matchId = !pathParam("matchId", uuid)
+                val teamId = !pathParam("teamId", uuid)
+
+                LiveDashboardService.getTeamDetail(eventId, matchId, teamId)
             }
         }
 

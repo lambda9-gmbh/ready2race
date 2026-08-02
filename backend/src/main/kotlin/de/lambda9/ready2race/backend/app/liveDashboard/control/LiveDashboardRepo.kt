@@ -38,7 +38,11 @@ object LiveDashboardRepo {
             .fetch()
     }
 
-    fun getTeams(eventId: UUID) = Jooq.query {
+    /**
+     * Ohne [matchId]/[registrationId] die Mannschaften der ganzen Veranstaltung, mit ihnen die
+     * einer einzelnen — der Detail-Dialog braucht nur letztere.
+     */
+    fun getTeams(eventId: UUID, matchId: UUID? = null, registrationId: UUID? = null) = Jooq.query {
         select(
             COMPETITION_MATCH_TEAM.COMPETITION_MATCH.`as`("match_id"),
             COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
@@ -94,6 +98,8 @@ object LiveDashboardRepo {
             .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
+            .and(matchId?.let { COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(it) } ?: DSL.noCondition())
+            .and(registrationId?.let { COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(it) } ?: DSL.noCondition())
             .fetch()
     }
 

@@ -13,6 +13,15 @@ sealed interface ApiResponse {
         val dto: T
     ): ApiResponse
 
+    /**
+     * Wie [Dto], zusätzlich mit `ETag`: schickt der Client denselben Wert als `If-None-Match`,
+     * antwortet der Server mit 304 und ohne Rumpf. Gedacht für Endpoints, die im Sekundentakt
+     * abgefragt werden und sich selten ändern.
+     */
+    data class ETagged<T: Any>(
+        val dto: T
+    ): ApiResponse
+
     data class ListDto<T: Any>(
         val data: List<T>,
     ): ApiResponse

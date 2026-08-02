@@ -117,7 +117,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                 </Box>
                 <Divider sx={{mt: 1.5}} />
                 {match.teams.map((team, index) => {
-                    const substituted = team.participants.some(p => p.substitutedFor)
+                    const substituted = team.substituted
                     // Kurzform in der Liste; der vollständige Name steht im Detail-Dialog
                     const fullClub = team.actualClubName ?? team.clubName
                     const clubLine = fullClub != null ? shortClubName(fullClub) : null
