@@ -1,0 +1,150 @@
+package de.lambda9.ready2race.backend.app.eventInfo
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
+import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
+import java.time.LocalDateTime
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+class AthleteBoardLogicTest {
+
+    private val mapper = ObjectMapper()
+    private val now: LocalDateTime = LocalDateTime.of(2026, 8, 2, 10, 0)
+
+    private fun filters(json: String) = mapper.readTree(json)
+
+    // --- resolveConfig ---
+
+    @Test
+    fun missingConfigurationYieldsDefaults() {
+        val config = AthleteBoardLogic.resolveConfig(null, null)
+        assertEquals(3, config.runningLimit)
+        assertEquals(3, config.upcomingLimit)
+        assertEquals(1, config.resultsLimit)
+        assertTrue(config.showCountdown)
+        assertEquals(15, config.refreshIntervalSeconds)
+    }
+
+    @Test
+    fun fullConfigurationIsRead() {
+        val config = AthleteBoardLogic.resolveConfig(
+            filters("""{"running":5,"upcoming":4,"results":2,"showCountdown":false}"""),
+            30,
+        )
+        assertEquals(5, config.runningLimit)
+        assertEquals(4, config.upcomingLimit)
+        assertEquals(2, config.resultsLimit)
+        assertFalse(config.showCountdown)
+        assertEquals(30, config.refreshIntervalSeconds)
+    }
+
+    @Test
+    fun partialConfigurationKeepsDefaultsPerField() {
+        val config = AthleteBoardLogic.resolveConfig(filters("""{"showCountdown":false}"""), null)
+        assertEquals(3, config.runningLimit)
+        assertEquals(3, config.upcomingLimit)
+        assertEquals(1, config.resultsLimit)
+        assertFalse(config.showCountdown)
+        assertEquals(15, config.refreshIntervalSeconds)
+    }
+
+    @Test
+    fun nonNumericLimitFallsBackToDefault() {
+        val config = AthleteBoardLogic.resolveConfig(filters("""{"running":"viele"}"""), null)
+        assertEquals(3, config.runningLimit)
+    }
+
+    @Test
+    fun limitsAreClamped() {
+        val config = AthleteBoardLogic.resolveConfig(
+            filters("""{"running":500,"upcoming":0}"""),
+            null,
+        )
+        assertEquals(20, config.runningLimit)
+        assertEquals(1, config.upcomingLimit)
+    }
+
+    @Test
+    fun nonPositiveDisplayDurationFallsBackToDefaultInterval() {
+        val config = AthleteBoardLogic.resolveConfig(null, 0)
+        assertEquals(15, config.refreshIntervalSeconds)
+    }
+
+    // --- startState ---
+
+    @Test
+    fun matchWithoutStartTimeIsUnscheduled() {
+        assertEquals(
+            AthleteBoardStartState.UNSCHEDULED,
+            AthleteBoardLogic.startState(null, now, true),
+        )
+    }
+
+    @Test
+    fun futureStartWithCountdownEnabled() {
+        assertEquals(
+            AthleteBoardStartState.COUNTDOWN,
+            AthleteBoardLogic.startState(now.plusMinutes(5), now, true),
+        )
+    }
+
+    @Test
+    fun futureStartWithCountdownDisabled() {
+        assertEquals(
+            AthleteBoardStartState.SCHEDULED,
+            AthleteBoardLogic.startState(now.plusMinutes(5), now, false),
+        )
+    }
+
+    @Test
+    fun passedStartTimeIsOverdueInsteadOfNegativeCountdown() {
+        assertEquals(
+            AthleteBoardStartState.OVERDUE,
+            AthleteBoardLogic.startState(now.minusMinutes(3), now, true),
+        )
+    }
+
+    @Test
+    fun passedStartTimeIsOverdueEvenWithoutCountdown() {
+        assertEquals(
+            AthleteBoardStartState.OVERDUE,
+            AthleteBoardLogic.startState(now.minusMinutes(3), now, false),
+        )
+    }
+
+    @Test
+    fun startTimeExactlyNowIsOverdue() {
+        assertEquals(
+            AthleteBoardStartState.OVERDUE,
+            AthleteBoardLogic.startState(now, now, true),
+        )
+    }
+
+    // --- sortByStartTime ---
+
+    @Test
+    fun matchesWithoutStartTimeSortToTheEnd() {
+        val input: List<Pair<String, LocalDateTime?>> = listOf(
+            "ohne" to null,
+            "spaet" to now.plusMinutes(30),
+            "frueh" to now.plusMinutes(5),
+        )
+        val sorted = AthleteBoardLogic.sortByStartTime(input) { it.second }
+        assertEquals(listOf("frueh", "spaet", "ohne"), sorted.map { it.first })
+    }
+
+    @Test
+    fun sortingIsStableForEqualStartTimes() {
+        val same = now.plusMinutes(10)
+        val input: List<Pair<String, LocalDateTime?>> = listOf(
+            "a" to same,
+            "b" to same,
+            "c" to null,
+        )
+        val sorted = AthleteBoardLogic.sortByStartTime(input) { it.second }
+        assertEquals(listOf("a", "b", "c"), sorted.map { it.first })
+    }
+}
