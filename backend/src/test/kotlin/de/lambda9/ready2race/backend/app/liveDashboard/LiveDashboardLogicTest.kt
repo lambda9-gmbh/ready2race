@@ -218,6 +218,7 @@ class LiveDashboardLogicTest {
         matchName = name,
         executionOrder = 0,
         startTime = start,
+        startedAt = null,
         currentlyRunning = state == LiveDashboardMatchState.RUNNING,
         elapsedMinutes = null,
         teams = emptyList(),

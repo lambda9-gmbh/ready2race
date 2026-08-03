@@ -90,6 +90,7 @@ data class LiveDashboardMatchDto(
     val matchName: String?,
     val executionOrder: Int,
     val startTime: LocalDateTime?,
+    val startedAt: LocalDateTime?,
     val currentlyRunning: Boolean,
     val elapsedMinutes: Long?,
     val teams: List<LiveDashboardTeamDto>,

@@ -105,6 +105,7 @@ object LiveDashboardService {
             fun buildMatchDto(match: Record): App<Nothing, LiveDashboardMatchDto> = KIO.comprehension {
                 val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
                 val startTime = match[COMPETITION_MATCH.START_TIME]
+                val startedAt = match[COMPETITION_MATCH.STARTED_AT]
                 val finishedAt = match[COMPETITION_MATCH.FINISHED_AT]
                 val running = match[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
 
@@ -125,8 +126,9 @@ object LiveDashboardService {
                         matchName = match.get("match_name", String::class.java),
                         executionOrder = match[COMPETITION_SETUP_MATCH.EXECUTION_ORDER] ?: 0,
                         startTime = startTime,
+                        startedAt = startedAt,
                         currentlyRunning = running,
-                        elapsedMinutes = if (running) startTime?.let { Duration.between(it, now).toMinutes().coerceAtLeast(0) } else null,
+                        elapsedMinutes = startedAt?.let { Duration.between(it, now).toMinutes().coerceAtLeast(0) },
                         teams = teams,
                     )
                 )
@@ -236,6 +238,33 @@ object LiveDashboardService {
         }
 
         !setRunning(matchId, running, userId)
+
+        noData
+    }
+
+    /**
+     * Markiert den echten Start eines Laufs — getrennt von der geplanten Startzeit. Idempotent:
+     * ein zweiter Aufruf verschiebt den Zeitstempel nicht mehr, er ist nur beim ersten Mal gesetzt.
+     * Zugleich geht der Lauf auf "aktiv", da "gestartet" ohne "laufend" keinen Sinn ergibt.
+     */
+    fun markMatchStarted(
+        eventId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<LiveDashboardError, ApiResponse.NoData> = KIO.comprehension {
+        val exists = !EventRepo.exists(eventId).orDie()
+        if (!exists) {
+            return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
+        }
+
+        !CompetitionMatchRepo.update(matchId) {
+            if (startedAt == null) {
+                startedAt = LocalDateTime.now()
+            }
+            currentlyRunning = true
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
 
         noData
     }

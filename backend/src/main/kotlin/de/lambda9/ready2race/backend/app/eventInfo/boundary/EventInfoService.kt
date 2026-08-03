@@ -220,7 +220,8 @@ object EventInfoService {
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
             val startTime = match[COMPETITION_MATCH.START_TIME]
-            val elapsedMinutes = startTime?.let {
+            val startedAt = match[COMPETITION_MATCH.STARTED_AT]
+            val elapsedMinutes = startedAt?.let {
                 java.time.Duration.between(it, LocalDateTime.now()).toMinutes()
             }
             val teams = !getRunningMatchTeams(matchId)

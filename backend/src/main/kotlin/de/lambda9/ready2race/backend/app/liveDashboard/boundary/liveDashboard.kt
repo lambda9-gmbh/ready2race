@@ -49,6 +49,17 @@ fun Route.liveDashboard() {
             }
         }
 
+        // Markiert den echten Start des Laufs; die geplante Startzeit bleibt unangetastet.
+        put("/match/{matchId}/start") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateLiveDashboardGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val matchId = !pathParam("matchId", uuid)
+
+                LiveDashboardService.markMatchStarted(eventId, matchId, user.id!!)
+            }
+        }
+
         put("/match/{matchId}/running-state") {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateLiveDashboardGlobal)
