@@ -71,9 +71,7 @@ const AthleteBoardMatchCard = ({match, now, showCountdown}: AthleteBoardMatchCar
             <CardContent sx={{p: 'clamp(0.75rem, 1.2vw, 1.5rem)'}}>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
                     <Box sx={{minWidth: 0}}>
-                        <Typography
-                            sx={{fontSize: 'clamp(1rem, 1.8vw, 1.6rem)', fontWeight: 700}}
-                            noWrap>
+                        <Typography sx={{fontSize: 'clamp(1rem, 1.8vw, 1.6rem)', fontWeight: 700}}>
                             {match.competitionName}
                         </Typography>
                         <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">

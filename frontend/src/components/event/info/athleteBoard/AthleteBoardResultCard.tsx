@@ -20,7 +20,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
     return (
         <Card variant="outlined" sx={{mb: 1.5}}>
             <CardContent sx={{p: 'clamp(0.75rem, 1.2vw, 1.5rem)'}}>
-                <Typography sx={{fontSize: 'clamp(1rem, 1.8vw, 1.6rem)', fontWeight: 700}} noWrap>
+                <Typography sx={{fontSize: 'clamp(1rem, 1.8vw, 1.6rem)', fontWeight: 700}}>
                     {result.competitionName}
                 </Typography>
                 <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">

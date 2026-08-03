@@ -312,12 +312,6 @@ export const eventInfoRoute = createRoute({
     component: () => <EventInfoPage />,
 })
 
-export const athleteBoardRoute = createRoute({
-    getParentRoute: () => eventRoute,
-    path: 'board',
-    component: () => <AthleteBoardPage />,
-})
-
 export const eventLiveDashboardRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'liveDashboard',
@@ -500,6 +494,14 @@ export const challengeRoute = createRoute({
     component: () => <ChallengePage />,
 })
 
+// Öffentliche Route ohne App-Layout: fest montierte Athletenbildschirme und
+// Athleten-Handys brauchen weder Kopfleiste noch Seitenleiste noch Anmeldung.
+export const athleteBoardRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'board/$eventId',
+    component: () => <AthleteBoardPage />,
+})
+
 const routeTree = rootRoute.addChildren([
     mainLayoutRoute.addChildren([
         indexRoute,
@@ -513,7 +515,6 @@ const routeTree = rootRoute.addChildren([
                 eventIndexRoute,
                 eventRegistrationRoute,
                 eventInfoRoute,
-                athleteBoardRoute,
                 eventLiveDashboardRoute,
                 eventDayRoute.addChildren([eventDayIndexRoute]),
                 competitionRoute.addChildren([competitionIndexRoute]),
@@ -540,6 +541,7 @@ const routeTree = rootRoute.addChildren([
     ]),
     resultsRoute.addChildren([resultsIndexRoute, resultsQRCodeRoute, resultsEventRoute]),
     mobileRoute.addChildren([challengeRoute]),
+    athleteBoardRoute,
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath

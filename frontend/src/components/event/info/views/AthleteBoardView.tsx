@@ -76,7 +76,7 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
                 alignItems="baseline"
                 gap={2}
                 sx={{mb: 2}}>
-                <Typography sx={{fontSize: 'clamp(1.1rem, 2.2vw, 2.2rem)', fontWeight: 800}} noWrap>
+                <Typography sx={{fontSize: 'clamp(1.1rem, 2.2vw, 2.2rem)', fontWeight: 800}}>
                     {data?.eventName ?? ''}
                 </Typography>
                 <Stack alignItems="flex-end">
