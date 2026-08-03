@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNull
 import io.ktor.http.*
+import java.time.LocalTime
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -69,6 +70,59 @@ class RaceClockerFeedTest {
             assertTrue(!row.isTime)
         }
     }
+
+    @Test
+    fun startTimeIsParsedFromFeed() {
+        // The fixture carries "Start": "11:00:00.0" for this participant.
+        val row = feed().single { it.bib == 4 }
+        assertEquals(LocalTime.of(11, 0), row.start)
+    }
+
+    @Test
+    fun startTimeParsesEveryFixtureRow() {
+        // None of the fixture's "H:mm:ss.d" values should be rejected as unparsable.
+        assertTrue(feed().all { it.start != null }, "every fixture row carries a parsable Start value")
+    }
+
+    @Test
+    fun earliestStartPicksTheMinimumAcrossRows() {
+        val rows = listOf(
+            rowWithStart(LocalTime.of(11, 5)),
+            rowWithStart(LocalTime.of(11, 0)),
+            rowWithStart(LocalTime.of(11, 30)),
+        )
+        assertEquals(LocalTime.of(11, 0), RaceClockerFeedRow.earliestStart(rows))
+    }
+
+    @Test
+    fun earliestStartIgnoresRowsWithoutAStart() {
+        val rows = listOf(
+            rowWithStart(null),
+            rowWithStart(LocalTime.of(11, 15)),
+            rowWithStart(null),
+        )
+        assertEquals(LocalTime.of(11, 15), RaceClockerFeedRow.earliestStart(rows))
+    }
+
+    @Test
+    fun earliestStartIsNullWhenNoRowHasOne() {
+        val rows = listOf(rowWithStart(null), rowWithStart(null))
+        assertNull(RaceClockerFeedRow.earliestStart(rows))
+    }
+
+    @Test
+    fun earliestStartOfEmptyListIsNull() {
+        assertNull(RaceClockerFeedRow.earliestStart(emptyList()))
+    }
+
+    private fun rowWithStart(start: LocalTime?) = RaceClockerFeedRow(
+        name = "Test",
+        bib = null,
+        wave = null,
+        ids = emptyList(),
+        result = "00:01:00.0",
+        start = start,
+    )
 
     @Test
     fun identifiersAreReadFromExtraInfo() {

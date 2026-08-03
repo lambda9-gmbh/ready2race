@@ -84,6 +84,7 @@ import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -986,6 +987,20 @@ object CompetitionExecutionService {
             rows.single().takeIf { it.result != null }?.let { registrationId to it }
         }
         if (timed.isEmpty()) return KIO.fail(RaceClockerError.NoResults(target.waveName))
+
+        // Externe Zeitnahme ist Quelle der Wahrheit: die früheste von RaceClocker gemessene
+        // Startzeit unter den zugeordneten Booten überschreibt started_at bedingungslos, auch wenn
+        // dort schon ein manueller Stempel steht (z. B. von LiveDashboardService.markMatchStarted) -
+        // gleiche Regel wie beim Penalty-Überschreiben oben.
+        val earliestStart = RaceClockerFeedRow.earliestStart(rowsByTeam.values.flatten())
+        if (earliestStart != null) {
+            val raceDay = match.startTime?.toLocalDate() ?: LocalDate.now()
+            !CompetitionMatchRepo.update(matchId) {
+                startedAt = raceDay.atTime(earliestStart)
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
 
         !prepareForNewPlaces(matchId, userId)
 

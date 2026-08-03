@@ -11,6 +11,10 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import java.time.LocalTime
+import java.time.format.DateTimeFormatterBuilder
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoField
 import java.util.UUID
 
 /**
@@ -117,6 +121,37 @@ object RaceClockerFeed {
         )
     }
 
+    /**
+     * RaceClocker localises this key (`Start` on English accounts, `Startzeit` on German ones), so
+     * the field is looked up by name rather than by a fixed key, compared case-insensitively.
+     */
+    private val startKeys = setOf("start", "startzeit")
+
+    /**
+     * Matches the fixed shape RaceClocker writes times in - `H:mm:ss` with an optional fractional
+     * second (`11:00:00.0`). The fraction is accepted with variable width since it is not needed for
+     * the value we keep ([RaceClockerFeedRow.start] only distinguishes whole seconds).
+     */
+    private val timeOfDayFormat = DateTimeFormatterBuilder()
+        .appendPattern("H:mm:ss")
+        .optionalStart()
+        .appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true)
+        .optionalEnd()
+        .toFormatter()
+
+    /** Unparsable/missing values are `null`, not an error - this field is auxiliary data. */
+    private fun parseTimeOfDay(raw: String): LocalTime? =
+        try {
+            LocalTime.parse(raw, timeOfDayFormat)
+        } catch (e: DateTimeParseException) {
+            null
+        }
+
+    private fun JsonNode.textForKeys(keys: Set<String>): String? {
+        val key = fieldNames().asSequence().firstOrNull { it.lowercase() in keys } ?: return null
+        return path(key).asText("").trim()
+    }
+
     private fun JsonNode.toRow(): RaceClockerFeedRow {
         val wave = path("Wave").asText("").trim()
         return RaceClockerFeedRow(
@@ -125,6 +160,7 @@ object RaceClockerFeed {
             wave = wave.takeUnless { it.lowercase() in noWaveValues },
             ids = extractIds(),
             result = path("Result").asText("").trim().takeIf { it.isNotBlank() },
+            start = textForKeys(startKeys)?.takeIf { it.isNotBlank() }?.let { parseTimeOfDay(it) },
         )
     }
 
