@@ -2,9 +2,8 @@ package de.lambda9.ready2race.backend.app.eventInfo
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
-import de.lambda9.ready2race.backend.app.eventInfo.boundary.PendingScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
-import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleSlotState
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.Test
@@ -202,17 +201,21 @@ class AthleteBoardLogicTest {
     }
 
     // --- placeholdersFromPendingSlots ---
+    //
+    // Die Filterung auf WAITING (SKIPPED/FREE/LINKED/OBSOLETE liefern keinen Kandidaten) sitzt
+    // seit dem Zusammenlegen mit dem Live-Dashboard in `EventScheduleLogic.pendingSlotOrNull` und
+    // ist dort geprüft (siehe EventScheduleLogicTest). Hier bleibt nur die reine Mapping-Prüfung:
+    // [slots] enthält per Vertrag ausschließlich WAITING-Slots.
 
     private fun pendingSlot(
-        state: EventScheduleSlotState,
         startTime: LocalDateTime = now.plusMinutes(30),
         competitionName: String = "Kanu",
         roundName: String? = "Vorlauf",
         matchName: String? = "Lauf 1",
     ) = PendingScheduleSlotInfo(
+        slotId = UUID.randomUUID(),
         setupMatchId = UUID.randomUUID(),
         startTime = startTime,
-        state = state,
         competitionId = UUID.randomUUID(),
         competitionName = competitionName,
         roundName = roundName,
@@ -221,7 +224,7 @@ class AthleteBoardLogicTest {
 
     @Test
     fun waitingSlotBecomesPendingPlaceholder() {
-        val slot = pendingSlot(EventScheduleSlotState.WAITING)
+        val slot = pendingSlot()
 
         val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(listOf(slot))
 
@@ -238,25 +241,12 @@ class AthleteBoardLogicTest {
     }
 
     @Test
-    fun skippedSlotYieldsNoPlaceholder() {
-        val slot = pendingSlot(EventScheduleSlotState.SKIPPED)
+    fun multiplePendingSlotsAllBecomePlaceholdersInOrder() {
+        val first = pendingSlot(matchName = "erster")
+        val second = pendingSlot(matchName = "zweiter")
 
-        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(listOf(slot))
+        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(listOf(first, second))
 
-        assertTrue(placeholders.isEmpty())
-    }
-
-    @Test
-    fun onlyWaitingSlotsAmongMixedStatesBecomePlaceholders() {
-        val waiting = pendingSlot(EventScheduleSlotState.WAITING, matchName = "wartend")
-        val skipped = pendingSlot(EventScheduleSlotState.SKIPPED, matchName = "übersprungen")
-        val linked = pendingSlot(EventScheduleSlotState.LINKED, matchName = "verlinkt")
-        val obsolete = pendingSlot(EventScheduleSlotState.OBSOLETE, matchName = "entfallen")
-
-        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(
-            listOf(waiting, skipped, linked, obsolete)
-        )
-
-        assertEquals(listOf("wartend"), placeholders.map { it.matchName })
+        assertEquals(listOf("erster", "zweiter"), placeholders.map { it.matchName })
     }
 }

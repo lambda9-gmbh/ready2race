@@ -9,6 +9,8 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class EventScheduleLogicTest {
 
@@ -68,6 +70,103 @@ class EventScheduleLogicTest {
             EventScheduleSlotState.SKIPPED,
             EventScheduleLogic.deriveSlotState(isFree = true, skipped = true, roundMaterialized = false, matchExists = false),
         )
+    }
+
+    // --- pendingSlotOrNull ---
+    //
+    // Übernommen aus AthleteBoardLogicTest, seit die "nur WAITING zählt"-Regel hierher gezogen
+    // wurde, damit Athleten-Anzeige und Live-Dashboard sie nicht mehr getrennt pflegen.
+
+    private val slotNow: LocalDateTime = LocalDateTime.of(2026, 8, 2, 10, 0)
+
+    private fun waitingArgs(
+        slotId: UUID = UUID.randomUUID(),
+        setupMatchId: UUID? = UUID.randomUUID(),
+        startTime: LocalDateTime = slotNow.plusMinutes(30),
+        competitionId: UUID? = UUID.randomUUID(),
+        competitionName: String? = "Kanu",
+        roundName: String? = "Vorlauf",
+        matchName: String? = "Lauf 1",
+        skipped: Boolean = false,
+        roundMaterialized: Boolean = false,
+        matchExists: Boolean = false,
+    ) = EventScheduleLogic.pendingSlotOrNull(
+        slotId = slotId,
+        setupMatchId = setupMatchId,
+        startTime = startTime,
+        competitionId = competitionId,
+        competitionName = competitionName,
+        roundName = roundName,
+        matchName = matchName,
+        skipped = skipped,
+        roundMaterialized = roundMaterialized,
+        matchExists = matchExists,
+    )
+
+    @Test
+    fun waitingSlotYieldsPendingSlotInfo() {
+        val slotId = UUID.randomUUID()
+        val setupMatchId = UUID.randomUUID()
+        val competitionId = UUID.randomUUID()
+        val startTime = slotNow.plusMinutes(30)
+
+        val result = waitingArgs(
+            slotId = slotId,
+            setupMatchId = setupMatchId,
+            startTime = startTime,
+            competitionId = competitionId,
+            competitionName = "Kanu",
+            roundName = "Vorlauf",
+            matchName = "Lauf 1",
+        )
+
+        val info = assertNotNull(result)
+        assertEquals(slotId, info.slotId)
+        assertEquals(setupMatchId, info.setupMatchId)
+        assertEquals(startTime, info.startTime)
+        assertEquals(competitionId, info.competitionId)
+        assertEquals("Kanu", info.competitionName)
+        assertEquals("Vorlauf", info.roundName)
+        assertEquals("Lauf 1", info.matchName)
+    }
+
+    @Test
+    fun freeSlotWithoutSetupMatchYieldsNoPendingSlot() {
+        assertNull(waitingArgs(setupMatchId = null))
+    }
+
+    @Test
+    fun slotWithoutCompetitionYieldsNoPendingSlot() {
+        // Verteidigt gegen einen kaputten Join: ohne Kompetition kein Ziel für einen Platzhalter.
+        assertNull(waitingArgs(competitionId = null))
+    }
+
+    @Test
+    fun skippedSlotYieldsNoPendingSlot() {
+        assertNull(waitingArgs(skipped = true))
+    }
+
+    @Test
+    fun linkedSlotYieldsNoPendingSlot() {
+        assertNull(waitingArgs(roundMaterialized = true, matchExists = true))
+    }
+
+    @Test
+    fun obsoleteSlotYieldsNoPendingSlot() {
+        assertNull(waitingArgs(roundMaterialized = true, matchExists = false))
+    }
+
+    @Test
+    fun onlyWaitingSlotsAmongMixedStatesYieldPendingSlots() {
+        val waiting = waitingArgs(matchName = "wartend")
+        val skipped = waitingArgs(matchName = "übersprungen", skipped = true)
+        val linked = waitingArgs(matchName = "verlinkt", roundMaterialized = true, matchExists = true)
+        val obsolete = waitingArgs(matchName = "entfallen", roundMaterialized = true, matchExists = false)
+        val free = waitingArgs(matchName = "frei", setupMatchId = null)
+
+        val results = listOf(waiting, skipped, linked, obsolete, free)
+
+        assertEquals(listOf("wartend"), results.mapNotNull { it?.matchName })
     }
 
     // --- computeShift ---

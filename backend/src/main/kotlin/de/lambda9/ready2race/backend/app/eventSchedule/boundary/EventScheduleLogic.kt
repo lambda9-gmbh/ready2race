@@ -22,6 +22,22 @@ sealed interface ShiftResult {
     data class CompressionImpossible(val maxReductionMinutes: Long) : ShiftResult
 }
 
+/**
+ * Ein WAITING-Slot mit den Namen aus der Setup-Zeile - die gemeinsame Grundlage für Platzhalter
+ * auf Athleten-Anzeige und Live-Dashboard (siehe [EventScheduleLogic.pendingSlotOrNull]).
+ * [setupMatchId] zeigt auf die Setup-Zeile, nicht auf einen echten Lauf, der für WAITING-Slots
+ * per Definition noch nicht existiert; [slotId] ist die ID des Zeitstrahl-Slots selbst.
+ */
+data class PendingScheduleSlotInfo(
+    val slotId: UUID,
+    val setupMatchId: UUID,
+    val startTime: LocalDateTime,
+    val competitionId: UUID,
+    val competitionName: String,
+    val roundName: String?,
+    val matchName: String?,
+)
+
 object EventScheduleLogic {
 
     const val MIN_GAP_MINUTES = 5L
@@ -41,6 +57,56 @@ object EventScheduleLogic {
         isFree -> EventScheduleSlotState.FREE
         matchExists -> EventScheduleSlotState.LINKED
         else -> EventScheduleSlotState.WAITING
+    }
+
+    /**
+     * Baut aus einer rohen Zeitstrahl-Zeile einen WAITING-Platzhalter, oder liefert null - für
+     * FREE-Slots (keine Setup-Zeile/Kompetition), SKIPPED, LINKED und OBSOLETE. Ersetzt die früher
+     * getrennt in Athleten-Anzeige und Live-Dashboard gepflegte "nur WAITING zählt"-Regel: beide
+     * bauen jetzt auf dieser einen Funktion auf, statt den Zustand jeweils selbst zu prüfen.
+     *
+     * Bewusst ohne Alterung: Ein WAITING-Slot, der überfällig ist, wird hier weiterhin geliefert
+     * und bleibt Platzhalter - anders als bei echten Läufen gibt es keine Nachfrist, nach der er
+     * von der Anzeige verschwindet. Genau der überfällige Zeitpunkt ist der Punkt, an dem die
+     * Boards ihn zeigen müssen; ein liegen gebliebener Slot wird erst durch das manuelle
+     * Überspringen aufgelöst.
+     */
+    fun pendingSlotOrNull(
+        slotId: UUID,
+        setupMatchId: UUID?,
+        startTime: LocalDateTime,
+        competitionId: UUID?,
+        competitionName: String?,
+        roundName: String?,
+        matchName: String?,
+        skipped: Boolean,
+        roundMaterialized: Boolean,
+        matchExists: Boolean,
+    ): PendingScheduleSlotInfo? {
+        if (setupMatchId == null || competitionId == null) {
+            return null
+        }
+
+        val state = deriveSlotState(
+            isFree = false,
+            skipped = skipped,
+            roundMaterialized = roundMaterialized,
+            matchExists = matchExists,
+        )
+
+        return if (state != EventScheduleSlotState.WAITING) {
+            null
+        } else {
+            PendingScheduleSlotInfo(
+                slotId = slotId,
+                setupMatchId = setupMatchId,
+                startTime = startTime,
+                competitionId = competitionId,
+                competitionName = competitionName ?: "",
+                roundName = roundName,
+                matchName = matchName,
+            )
+        }
     }
 
     /**

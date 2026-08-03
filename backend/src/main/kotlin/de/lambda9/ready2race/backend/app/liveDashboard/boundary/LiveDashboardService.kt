@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
-import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleSlotState
 import de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.*
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
@@ -139,7 +138,7 @@ object LiveDashboardService {
             }
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
-            val pendingSlots = !getPendingSlots(eventId)
+            val pendingSlots = !getPendingSlots(eventId, matches.map { it.matchId }.toSet())
 
             KIO.ok(
                 ApiResponse.ETagged(
@@ -155,33 +154,40 @@ object LiveDashboardService {
 
     /**
      * WAITING-Slots des Events als Platzhalter (Task 14) - aufsteigend nach Startzeit, da
-     * [EventScheduleRepo.getSlots] bereits so sortiert liefert. SKIPPED, FREE, LINKED und OBSOLETE
-     * liefern keinen Eintrag: LINKED ist bereits ein echter Lauf und steckt in [matches], die
-     * anderen sind kein Kandidat für einen künftigen Lauf.
+     * [EventScheduleRepo.getSlots] bereits so sortiert liefert. Die "nur WAITING zählt"-Regel
+     * steckt gemeinsam mit der Athleten-Anzeige in [EventScheduleLogic.pendingSlotOrNull]: SKIPPED,
+     * FREE, LINKED und OBSOLETE liefern dort keinen Eintrag - LINKED ist bereits ein echter Lauf
+     * und steckt in [matches], die anderen sind kein Kandidat für einen künftigen Lauf.
      */
-    private fun getPendingSlots(eventId: UUID): App<Nothing, List<PendingSlotDto>> = KIO.comprehension {
+    private fun getPendingSlots(eventId: UUID, matchIds: Set<UUID>): App<Nothing, List<PendingSlotDto>> = KIO.comprehension {
         val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
 
         val result = slotRecords.mapNotNull { r ->
-            val state = EventScheduleLogic.deriveSlotState(
-                isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null,
+            EventScheduleLogic.pendingSlotOrNull(
+                slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
+                setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
+                startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                competitionId = r.get("competition_id", UUID::class.java),
+                competitionName = r.get("competition_name", String::class.java),
+                roundName = r.get("round_name", String::class.java),
+                matchName = r.get("match_name", String::class.java),
                 skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
                 roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
                 matchExists = r.get("match_exists", Boolean::class.java) == true,
             )
-
-            if (state != EventScheduleSlotState.WAITING) {
-                null
-            } else {
+        }
+            // Zwei getrennte Reads — wenn zwischen ihnen eine Runde entsteht oder gelöscht wird,
+            // könnte derselbe Lauf doppelt auftauchen; echte Einträge gewinnen.
+            .filterNot { it.setupMatchId in matchIds }
+            .map { slot ->
                 PendingSlotDto(
-                    slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
-                    startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
-                    competitionName = r.get("competition_name", String::class.java),
-                    roundName = r.get("round_name", String::class.java),
-                    matchName = r.get("match_name", String::class.java),
+                    slotId = slot.slotId,
+                    startTime = slot.startTime,
+                    competitionName = slot.competitionName,
+                    roundName = slot.roundName,
+                    matchName = slot.matchName,
                 )
             }
-        }
 
         KIO.ok(result)
     }

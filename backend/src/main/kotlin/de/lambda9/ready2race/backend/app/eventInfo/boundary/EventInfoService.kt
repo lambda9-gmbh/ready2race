@@ -13,6 +13,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -198,7 +199,12 @@ object EventInfoService {
         limit: Int,
     ): App<Nothing, List<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
         val pendingSlots = !getPendingScheduleSlots(eventId)
+        val realMatchIds = real.map { it.matchId }.toSet()
+
+        // Zwei getrennte Reads — wenn zwischen ihnen eine Runde entsteht oder gelöscht wird,
+        // könnte derselbe Lauf doppelt auftauchen; echte Einträge gewinnen.
         val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(pendingSlots)
+            .filterNot { it.matchId in realMatchIds }
 
         KIO.ok(
             AthleteBoardLogic.sortByStartTime(real + placeholders) { it.scheduledStartTime }.take(limit)
@@ -206,38 +212,25 @@ object EventInfoService {
     }
 
     /**
-     * Alle Slots des Events mit ihrem abgeleiteten Zustand (siehe
-     * `EventScheduleLogic.deriveSlotState`) - Grundlage für [mergeWithPendingPlaceholders]. Slots
-     * ohne zugeordnete Setup-Zeile (FREE) liefern nie WAITING und werden hier übersprungen, statt
-     * ein Match-Ziel ohne Wettkampf/Setup-Zeile zu konstruieren.
+     * Alle WAITING-Slots des Events, gemeinsam mit dem Live-Dashboard über
+     * [EventScheduleLogic.pendingSlotOrNull] bestimmt - Grundlage für [mergeWithPendingPlaceholders].
      */
     private fun getPendingScheduleSlots(eventId: UUID): App<Nothing, List<PendingScheduleSlotInfo>> = KIO.comprehension {
         val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
 
         val result = slotRecords.mapNotNull { r ->
-            val setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
-            val competitionId = r.get("competition_id", UUID::class.java)
-
-            if (setupMatchId == null || competitionId == null) {
-                null
-            } else {
-                val state = EventScheduleLogic.deriveSlotState(
-                    isFree = false,
-                    skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
-                    roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
-                    matchExists = r.get("match_exists", Boolean::class.java) == true,
-                )
-
-                PendingScheduleSlotInfo(
-                    setupMatchId = setupMatchId,
-                    startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
-                    state = state,
-                    competitionId = competitionId,
-                    competitionName = r.get("competition_name", String::class.java) ?: "",
-                    roundName = r.get("round_name", String::class.java),
-                    matchName = r.get("match_name", String::class.java),
-                )
-            }
+            EventScheduleLogic.pendingSlotOrNull(
+                slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
+                setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
+                startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                competitionId = r.get("competition_id", UUID::class.java),
+                competitionName = r.get("competition_name", String::class.java),
+                roundName = r.get("round_name", String::class.java),
+                matchName = r.get("match_name", String::class.java),
+                skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+                roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
+                matchExists = r.get("match_exists", Boolean::class.java) == true,
+            )
         }
 
         KIO.ok(result)
