@@ -107,9 +107,19 @@ object EventScheduleRepo {
         )
     }
 
-    /** Explizite Prüfung statt dem DB-Unique-Fehler überlassen (siehe EventScheduleError.SetupMatchAlreadyPlanned). */
-    fun slotExistsForSetupMatch(setupMatchId: UUID) =
-        EVENT_SCHEDULE_SLOT.exists { COMPETITION_SETUP_MATCH.eq(setupMatchId) }
+    /**
+     * Explizite Prüfung statt dem DB-Unique-Fehler überlassen (siehe EventScheduleError.SetupMatchAlreadyPlanned).
+     * [excludeSlotId] blendet den gerade bearbeiteten Slot aus, damit ein Update, das ihm die Setup-Zeile
+     * belässt, die er ohnehin schon hält, nicht fälschlich als Konflikt zählt.
+     */
+    fun slotExistsForSetupMatch(setupMatchId: UUID, excludeSlotId: UUID? = null) =
+        EVENT_SCHEDULE_SLOT.exists {
+            var condition = COMPETITION_SETUP_MATCH.eq(setupMatchId)
+            if (excludeSlotId != null) {
+                condition = condition.and(ID.ne(excludeSlotId))
+            }
+            condition
+        }
 
     /**
      * Write-Through: spiegelt die geplante Slot-Zeit auf competition_match.start_time. No-op,

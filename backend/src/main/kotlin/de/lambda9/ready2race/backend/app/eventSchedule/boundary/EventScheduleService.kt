@@ -114,6 +114,20 @@ object EventScheduleService {
         request: UpsertScheduleSlotRequest,
         userId: UUID,
     ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val setupMatchId = request.competitionSetupMatch
+        if (setupMatchId != null) {
+            val belongsToEvent = !EventScheduleRepo.setupMatchExistsForEvent(eventId, setupMatchId).orDie()
+            if (!belongsToEvent) {
+                return@comprehension KIO.fail(EventScheduleError.SetupMatchNotFound(setupMatchId))
+            }
+
+            val alreadyPlanned =
+                !EventScheduleRepo.slotExistsForSetupMatch(setupMatchId, excludeSlotId = slotId).orDie()
+            if (alreadyPlanned) {
+                return@comprehension KIO.fail(EventScheduleError.SetupMatchAlreadyPlanned(setupMatchId))
+            }
+        }
+
         !EventScheduleRepo.updateSlot(eventId, slotId) {
             startTime = request.startTime
             competitionSetupMatch = request.competitionSetupMatch
@@ -123,8 +137,8 @@ object EventScheduleService {
             updatedBy = userId
         }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
 
-        if (request.competitionSetupMatch != null) {
-            !EventScheduleRepo.stampMatchStartTime(request.competitionSetupMatch, request.startTime, userId).orDie()
+        if (setupMatchId != null) {
+            !EventScheduleRepo.stampMatchStartTime(setupMatchId, request.startTime, userId).orDie()
         }
 
         noData
