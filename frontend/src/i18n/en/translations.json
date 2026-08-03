@@ -689,6 +689,7 @@
           "required": "Round must be held",
           "lockedInfo": "This round has already been started and can no longer be edited. Changes are only possible for following rounds.",
           "isQualification": "Qualification round",
+          "isQualificationHint": "Also decides which of the two RaceClocker races results are looked for first: the time trial race when marked, the heats race otherwise.",
           "finals": {
             "long": {
               "final": {
@@ -890,7 +891,8 @@
           "upload": "Upload match results",
           "type": {
             "form": "into Form",
-            "XLS": "as XLS-File"
+            "XLS": "as XLS-File",
+            "RACECLOCKER": "from RaceClocker"
           },
           "error": {
             "WRONG_TEAM_COUNT": "The team count is different from expected - actual: {{actual}}, expected: {{expected}}",
@@ -938,6 +940,18 @@
           "document": {
             "download": {
               "error": "An error has occurred when downloading the result document"
+            }
+          },
+          "raceclocker": {
+            "success": "Results taken over from RaceClocker",
+            "error": {
+              "urlMissing": "No RaceClocker results URL is configured for this competition.",
+              "urlInvalid": "The configured RaceClocker URL is invalid. An address on raceclocker.com is expected.",
+              "unreachable": "The results could not be loaded from RaceClocker. Please check the URL and the connection.",
+              "matchNotInFeed": "There are no entries for this heat in RaceClocker. Has the start list been imported there yet? If it was exported from an earlier version of the round, it has to be exported again.",
+              "duplicateTeams": "RaceClocker contains duplicate crews ({{teams}}). Please clean them up there and pull again.",
+              "noResults": "There are no times for this heat in RaceClocker yet.",
+              "matchIsBye": "This heat is a bye: the team moves on without racing, so there are no results to pull."
             }
           }
         },
@@ -1005,6 +1019,18 @@
               "unexpected": "An error has occurred when deleting the substitution"
             },
             "success": "Substitution successfully deleted"
+          }
+        },
+        "raceclocker": {
+          "config": {
+            "open": "RaceClocker settings",
+            "title": "RaceClocker settings",
+            "hint": "RaceClocker needs two races per competition: one of type \"individual starts (time trial)\" for the qualification round and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here. ready2race determines by itself which one applies to a given heat.",
+            "timeTrialUrl": "Results address for time trial",
+            "heatsUrl": "Results address for heats",
+            "importHint": "The RaceClocker presets export without a header row, because RaceClocker would otherwise import that row as a participant. Map the columns by their position when importing into RaceClocker – the internal identifier in particular onto \"Extra info\".",
+            "saved": "RaceClocker settings saved",
+            "invalid": "Please enter addresses on raceclocker.com."
           }
         }
       },
@@ -1625,6 +1651,7 @@
         "startlists": "Start-list configurations",
         "tableHint": "Define the columns for the CSV export of start lists when conducting competitions.",
         "name": "Name",
+        "noHeader": "Export without header row",
         "col": {
           "heading": "Columns",
           "participant": {
@@ -1634,7 +1661,8 @@
             "gender": "Gender",
             "role": "Role",
             "year": "Year of birth",
-            "club": "club"
+            "club": "club",
+            "fullname": "First and last name"
           },
           "club": {
             "heading": "Registering club",
@@ -1644,7 +1672,8 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Start number",
-            "registrationId": "Internal team identifier",
+            "registrationId": "Internal team identifier (across rounds)",
+            "matchId": "Internal heat identifier (per round)",
             "ratingCategory": "Rating category",
             "club": "Club (summarized)",
             "deregistered": "Deregistered",
@@ -1664,11 +1693,12 @@
             "identifier": "Identifier",
             "name": "Name",
             "shortName": "Short name",
+            "appendRatingToShortName": "Append rating category to the short name",
             "category": "Category"
           }
         },
         "error": {
-          "tooFewCols": "Please specify at least one column."
+          "tooFewCols": "Please specify at least one column, including one of the two internal identifiers."
         }
       }
     }

@@ -1585,6 +1585,89 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/raceclocker-config:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getRaceClockerConfig
+      description: The two public RaceClocker results URLs of this competition.
+      responses:
+        200:
+          description: RaceClocker configuration successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceClockerConfigDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateRaceClockerConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaceClockerConfigRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/from-raceclocker:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: pullMatchResultsFromRaceClocker
+      description: >-
+        Loads this match's results from the public RaceClocker results feed and writes them onto the
+        match. Teams are matched by the registration id that was exported into RaceClocker's
+        "Extra info" column; places are derived from the times, since the feed carries no rank.
+        Nothing is written unless all checks pass.
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          description: The RaceClocker feed could not be loaded or read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/startList:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7388,6 +7471,14 @@ components:
         - LIST_DATA_INCOMPLETE
         - RESULT_NOT_FAILED_AND_NO_DATA
         - CLUB_NAME_ALREADY_EXISTS
+        - RACECLOCKER_URL_MISSING
+        - RACECLOCKER_URL_INVALID
+        - RACECLOCKER_UNREACHABLE
+        - RACECLOCKER_MALFORMED_FEED
+        - RACECLOCKER_MATCH_NOT_IN_FEED
+        - RACECLOCKER_DUPLICATE_TEAMS
+        - RACECLOCKER_NO_RESULTS
+        - RACECLOCKER_MATCH_IS_BYE
 
     Gender:
       type: string
@@ -11195,18 +11286,40 @@ components:
 
 
 
+    RaceClockerConfigDto:
+      type: object
+      properties:
+        timeTrialResultsUrl:
+          type: string
+          description: Public results URL of the individual-start race used for the qualification round.
+        heatsResultsUrl:
+          type: string
+          description: Public results URL of the wave-start race used for all other rounds.
+    RaceClockerConfigRequest:
+      type: object
+      description: >-
+        Both URLs are optional. They must be https URLs on raceclocker.com; the host is pinned so the
+        backend cannot be pointed at other services.
+      properties:
+        timeTrialResultsUrl:
+          type: string
+          nullable: true
+        heatsResultsUrl:
+          type: string
+          nullable: true
     StartListConfigRequest:
       type: object
-      description: At least one column must be specified.
+      description: At least one column must be specified, and at least one of colTeamRegistrationId / colTeamMatchId.
       required:
         - name
-        - colTeamRegistrationId
       properties:
         name:
           type: string
         colParticipantFirstname:
           type: string
         colParticipantLastname:
+          type: string
+        colParticipantFullname:
           type: string
         colParticipantGender:
           type: string
@@ -11224,7 +11337,10 @@ components:
           type: string
         colTeamRegistrationId:
           type: string
-          description: Header of the column carrying the stable team identifier (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
+          description: Header of the column carrying the team identifier that is stable across rounds (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
+        colTeamMatchId:
+          type: string
+          description: Header of the column carrying the identifier that is unique per team and round (competition match team id). Needed by tooling that holds every round of a competition in a single race (RaceClocker), where the registration id repeats.
         colTeamRatingCategory:
           type: string
         colTeamClub:
@@ -11247,13 +11363,20 @@ components:
           type: string
         colCompetitionCategory:
           type: string
+        noHeader:
+          type: boolean
+          description: Export without a header row. Some tooling imports the header as a data row unless told otherwise (RaceClocker); columns are then mapped by position there.
+        appendRatingToShortName:
+          type: boolean
+          description: Append the rating category to the competition short name column, for tooling that can only group by a single field.
 
     StartListConfigDto:
       type: object
       required:
         - id
         - name
-        - colTeamRegistrationId
+        - noHeader
+        - appendRatingToShortName
       properties:
         id:
           type: string
@@ -11264,6 +11387,8 @@ components:
           type: string
         colParticipantLastname:
           type: string
+        colParticipantFullname:
+          type: string
         colParticipantGender:
           type: string
         colParticipantRole:
@@ -11279,6 +11404,8 @@ components:
         colTeamStartNumber:
           type: string
         colTeamRegistrationId:
+          type: string
+        colTeamMatchId:
           type: string
         colTeamRatingCategory:
           type: string
@@ -11302,6 +11429,10 @@ components:
           type: string
         colCompetitionCategory:
           type: string
+        noHeader:
+          type: boolean
+        appendRatingToShortName:
+          type: boolean
 
     InfoViewType:
       type: string

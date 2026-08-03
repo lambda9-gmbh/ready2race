@@ -45,10 +45,11 @@ type Props = {
     smallScreenLayout: boolean
     setResultImportMatch: Dispatch<SetStateAction<string | null>>
     setStartListMatch: Dispatch<SetStateAction<string | null>>
+    pullRaceClockerResults: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
 }
 
-const MATCH_RESULT_OPTIONS = ['form', 'XLS'] as const
+const MATCH_RESULT_OPTIONS = ['form', 'XLS', 'RACECLOCKER'] as const
 type MatchResultOption = (typeof MATCH_RESULT_OPTIONS)[number]
 
 const CompetitionExecutionRound = ({
@@ -59,6 +60,7 @@ const CompetitionExecutionRound = ({
     smallScreenLayout,
     setResultImportMatch,
     setStartListMatch,
+    pullRaceClockerResults,
     handleDownloadStartListPDF,
     ...props
 }: Props) => {
@@ -317,6 +319,9 @@ const CompetitionExecutionRound = ({
                                                         break
                                                     case 'XLS':
                                                         setResultImportMatch(match.id)
+                                                        break
+                                                    case 'RACECLOCKER':
+                                                        await pullRaceClockerResults(match.id)
                                                         break
                                                 }
                                             }}

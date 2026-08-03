@@ -401,6 +401,9 @@ export type CompetitionMatchDto = {
     weighting: number
     executionOrder: number
     startTime?: string
+    /**
+     * Offset between the starts of consecutive teams, in seconds
+     */
     startTimeOffset?: number
     currentlyRunning: boolean
 }
@@ -609,6 +612,9 @@ export type CompetitionSetupMatchDto = {
     name?: string
     participants: Array<number>
     executionOrder: number
+    /**
+     * Offset between the starts of consecutive teams, in seconds
+     */
     startTimeOffset?: number
 }
 
@@ -864,6 +870,14 @@ export type ErrorCode =
     | 'LIST_DATA_INCOMPLETE'
     | 'RESULT_NOT_FAILED_AND_NO_DATA'
     | 'CLUB_NAME_ALREADY_EXISTS'
+    | 'RACECLOCKER_URL_MISSING'
+    | 'RACECLOCKER_URL_INVALID'
+    | 'RACECLOCKER_UNREACHABLE'
+    | 'RACECLOCKER_MALFORMED_FEED'
+    | 'RACECLOCKER_MATCH_NOT_IN_FEED'
+    | 'RACECLOCKER_DUPLICATE_TEAMS'
+    | 'RACECLOCKER_NO_RESULTS'
+    | 'RACECLOCKER_MATCH_IS_BYE'
 
 export type EventDayDto = {
     id: string
@@ -1854,6 +1868,25 @@ export type QrCodeParticipantUpdate = {
     eventId: string
 }
 
+export type RaceClockerConfigDto = {
+    /**
+     * Public results URL of the individual-start race used for the qualification round.
+     */
+    timeTrialResultsUrl?: string
+    /**
+     * Public results URL of the wave-start race used for all other rounds.
+     */
+    heatsResultsUrl?: string
+}
+
+/**
+ * Both URLs are optional. They must be https URLs on raceclocker.com; the host is pinned so the backend cannot be pointed at other services.
+ */
+export type RaceClockerConfigRequest = {
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+}
+
 export type RatingCategoriesToEventRequest = {
     ratingCategories: Array<RatingCategoryToEventRequest>
 }
@@ -2022,6 +2055,7 @@ export type StartListConfigDto = {
     name: string
     colParticipantFirstname?: string
     colParticipantLastname?: string
+    colParticipantFullname?: string
     colParticipantGender?: string
     colParticipantRole?: string
     colParticipantYear?: string
@@ -2029,7 +2063,8 @@ export type StartListConfigDto = {
     colClubName?: string
     colTeamName?: string
     colTeamStartNumber?: string
-    colTeamRegistrationId: string
+    colTeamRegistrationId?: string
+    colTeamMatchId?: string
     colTeamRatingCategory?: string
     colTeamClub?: string
     colTeamDeregistered?: string
@@ -2041,15 +2076,18 @@ export type StartListConfigDto = {
     colCompetitionName?: string
     colCompetitionShortName?: string
     colCompetitionCategory?: string
+    noHeader: boolean
+    appendRatingToShortName: boolean
 }
 
 /**
- * At least one column must be specified.
+ * At least one column must be specified, and at least one of colTeamRegistrationId / colTeamMatchId.
  */
 export type StartListConfigRequest = {
     name: string
     colParticipantFirstname?: string
     colParticipantLastname?: string
+    colParticipantFullname?: string
     colParticipantGender?: string
     colParticipantRole?: string
     colParticipantYear?: string
@@ -2058,9 +2096,13 @@ export type StartListConfigRequest = {
     colTeamName?: string
     colTeamStartNumber?: string
     /**
-     * Header of the column carrying the stable team identifier (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
+     * Header of the column carrying the team identifier that is stable across rounds (competition registration id). Must map to a pass-through field of the timing tooling (e.g. Webscorer "Info 1").
      */
-    colTeamRegistrationId: string
+    colTeamRegistrationId?: string
+    /**
+     * Header of the column carrying the identifier that is unique per team and round (competition match team id). Needed by tooling that holds every round of a competition in a single race (RaceClocker), where the registration id repeats.
+     */
+    colTeamMatchId?: string
     colTeamRatingCategory?: string
     colTeamClub?: string
     colTeamDeregistered?: string
@@ -2072,6 +2114,14 @@ export type StartListConfigRequest = {
     colCompetitionName?: string
     colCompetitionShortName?: string
     colCompetitionCategory?: string
+    /**
+     * Export without a header row. Some tooling imports the header as a data row unless told otherwise (RaceClocker); columns are then mapped by position there.
+     */
+    noHeader?: boolean
+    /**
+     * Append the rating category to the competition short name column, for tooling that can only group by a single field.
+     */
+    appendRatingToShortName?: boolean
 }
 
 export type StartListFileType = 'PDF' | 'CSV'
@@ -3393,6 +3443,41 @@ export type UpdateMatchResultsData = {
 export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRaceClockerConfigData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetRaceClockerConfigResponse = RaceClockerConfigDto
+
+export type GetRaceClockerConfigError = BadRequestError | ApiError
+
+export type UpdateRaceClockerConfigData = {
+    body: RaceClockerConfigRequest
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type UpdateRaceClockerConfigResponse = void
+
+export type UpdateRaceClockerConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type PullMatchResultsFromRaceClockerData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type PullMatchResultsFromRaceClockerResponse = void
+
+export type PullMatchResultsFromRaceClockerError = BadRequestError | ApiError
 
 export type DownloadStartListData = {
     path: {
