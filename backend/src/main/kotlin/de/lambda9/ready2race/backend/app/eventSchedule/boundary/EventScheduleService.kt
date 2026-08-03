@@ -280,6 +280,11 @@ object EventScheduleService {
             is ShiftResult.Ok -> result.entries
         }
 
+        // Ein Shift bleibt im Renntag — über Mitternacht hinaus wäre der Plan des Folgetags still betroffen.
+        if (entries.any { it.newStartTime.toLocalDate() != day }) {
+            return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+        }
+
         if (!request.dryRun) {
             val changed = entries.filter { it.oldStartTime != it.newStartTime }
             !changed.traverse { entry ->
