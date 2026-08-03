@@ -149,6 +149,61 @@ export type AssignRequirementToNamedParticipantDto = {
     qrCodeRequired: boolean
 }
 
+export type AthleteBoardDto = {
+    eventName: string
+    serverTime: string
+    refreshIntervalSeconds: number
+    showCountdown: boolean
+    running: Array<AthleteBoardMatch>
+    upcoming: Array<AthleteBoardMatch>
+    results: Array<AthleteBoardResult>
+}
+
+export type AthleteBoardMatch = {
+    matchId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    startTime?: string | null
+    startState: AthleteBoardStartState
+    teams: Array<AthleteBoardTeam>
+}
+
+export type AthleteBoardParticipant = {
+    name: string
+    role?: string | null
+}
+
+export type AthleteBoardResult = {
+    matchId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    startTime?: string | null
+    teams: Array<AthleteBoardResultTeam>
+}
+
+export type AthleteBoardResultTeam = {
+    place?: number | null
+    lane: number
+    clubName?: string | null
+    teamName?: string | null
+    timeString?: string | null
+    failed: boolean
+    failedReason?: string | null
+}
+
+export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
+
+export type AthleteBoardTeam = {
+    lane?: number | null
+    clubName?: string | null
+    teamName?: string | null
+    participants: Array<AthleteBoardParticipant>
+}
+
 export type BadRequestError = ApiError & {
     details?: {
         validExample?: unknown
@@ -1155,7 +1210,11 @@ export type InfoViewConfigurationRequest = {
     isActive: boolean
 }
 
-export type InfoViewType = 'UPCOMING_MATCHES' | 'LATEST_MATCH_RESULTS' | 'RUNNING_MATCHES'
+export type InfoViewType =
+    | 'UPCOMING_MATCHES'
+    | 'LATEST_MATCH_RESULTS'
+    | 'RUNNING_MATCHES'
+    | 'ATHLETE_BOARD'
 
 export type Invalid =
     | string
@@ -5345,6 +5404,16 @@ export type GetRunningMatchesData = {
 export type GetRunningMatchesResponse = Array<RunningMatchInfo>
 
 export type GetRunningMatchesError = ApiError
+
+export type GetAthleteBoardData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetAthleteBoardResponse = AthleteBoardDto
+
+export type GetAthleteBoardError = ApiError
 
 export type FinishLiveDashboardMatchData = {
     path: {

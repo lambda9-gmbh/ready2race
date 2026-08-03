@@ -617,6 +617,9 @@ import type {
     GetRunningMatchesData,
     GetRunningMatchesError,
     GetRunningMatchesResponse,
+    GetAthleteBoardData,
+    GetAthleteBoardError,
+    GetAthleteBoardResponse,
     FinishLiveDashboardMatchData,
     FinishLiveDashboardMatchError,
     FinishLiveDashboardMatchResponse,
@@ -3325,6 +3328,22 @@ export const getRunningMatches = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/running-matches',
+    })
+}
+
+/**
+ * Public board for athletes at start and finish: running, next and last finished matches in one response
+ */
+export const getAthleteBoard = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetAthleteBoardData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAthleteBoardResponse,
+        GetAthleteBoardError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/athlete-board',
     })
 }
 
