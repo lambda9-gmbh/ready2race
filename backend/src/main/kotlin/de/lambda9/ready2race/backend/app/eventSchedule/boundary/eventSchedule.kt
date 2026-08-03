@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.eventSchedule.entity.ShiftScheduleRequest
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.UpsertScheduleSlotRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.authenticateAny
@@ -63,6 +64,15 @@ fun Route.eventSchedule() {
                 val slotId = !pathParam("slotId", uuid)
 
                 EventScheduleService.setSlotSkipped(eventId, slotId, skipped = false, userId = user.id!!)
+            }
+        }
+        post("/shift") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val body = !receiveKIO(ShiftScheduleRequest.example)
+
+                EventScheduleService.shiftSchedule(eventId, body, user.id!!)
             }
         }
     }

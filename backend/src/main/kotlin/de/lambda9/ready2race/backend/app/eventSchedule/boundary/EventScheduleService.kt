@@ -11,6 +11,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -210,5 +212,101 @@ object EventScheduleService {
         }
 
         noData
+    }
+
+    /**
+     * Verschiebt den Zeitstrahl ab [ShiftScheduleRequest.fromSlotId] (Task 11). Betroffen sind nur
+     * Slots desselben Renntags ab diesem Slot (aufsteigend) — [EventScheduleRepo.getSlots] liefert
+     * bereits nach start_time sortiert, ein Tageswechsel kommt danach also nie zurück.
+     * Slot-bezogene Validierung (Ziel muss in dieser Tages-Teilliste hinter dem Start-Slot liegen,
+     * delta <= 0 bei COMPRESS_TO_TARGET) passiert hier bewusst VOR dem Aufruf von [EventScheduleLogic.computeShift],
+     * dessen `require(targetIndex > 0)` sonst eine IllegalArgumentException werfen würde statt eines
+     * fachlichen Fehlers.
+     */
+    fun shiftSchedule(
+        eventId: UUID,
+        request: ShiftScheduleRequest,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.Dto<ShiftPreviewDto>> = KIO.comprehension {
+        val allSlots = !EventScheduleRepo.getSlots(eventId).orDie()
+
+        val fromIndex = allSlots.indexOfFirst { it[EVENT_SCHEDULE_SLOT.ID] == request.fromSlotId }
+        if (fromIndex == -1) {
+            return@comprehension KIO.fail(EventScheduleError.SlotNotFound(request.fromSlotId))
+        }
+
+        val fromStartTime = allSlots[fromIndex][EVENT_SCHEDULE_SLOT.START_TIME]!!
+        val day = fromStartTime.toLocalDate()
+
+        val daySlotRecords = allSlots.drop(fromIndex)
+            .takeWhile { it[EVENT_SCHEDULE_SLOT.START_TIME]!!.toLocalDate() == day }
+
+        val daySlots = daySlotRecords.map {
+            ShiftSlot(
+                id = it[EVENT_SCHEDULE_SLOT.ID]!!,
+                startTime = it[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                durationMinutes = it[EVENT_SCHEDULE_SLOT.DURATION_MINUTES],
+            )
+        }
+        val setupMatchIdBySlot = daySlotRecords.associate {
+            it[EVENT_SCHEDULE_SLOT.ID]!! to it[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
+        }
+
+        val deltaMinutes = when (request.mode) {
+            ShiftMode.PLUS_MINUTES -> request.minutes!!
+            ShiftMode.SET_TIME -> Duration.between(fromStartTime, request.newTime!!).toMinutes()
+            ShiftMode.COMPRESS_TO_TARGET ->
+                request.minutes ?: Duration.between(fromStartTime, request.newTime!!).toMinutes()
+        }
+
+        if (deltaMinutes == 0L) {
+            return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+        }
+
+        val targetSlotId = if (request.mode == ShiftMode.COMPRESS_TO_TARGET) {
+            val targetIndex = daySlots.indexOfFirst { it.id == request.targetSlotId }
+            if (targetIndex <= 0 || deltaMinutes < 0) {
+                return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+            }
+            request.targetSlotId
+        } else {
+            null
+        }
+
+        val entries = when (val result = EventScheduleLogic.computeShift(daySlots, deltaMinutes, targetSlotId)) {
+            is ShiftResult.CompressionImpossible ->
+                return@comprehension KIO.fail(EventScheduleError.CompressionImpossible(result.maxReductionMinutes))
+
+            is ShiftResult.Ok -> result.entries
+        }
+
+        if (!request.dryRun) {
+            val changed = entries.filter { it.oldStartTime != it.newStartTime }
+            !changed.traverse { entry ->
+                KIO.comprehension {
+                    !EventScheduleRepo.updateSlot(eventId, entry.slotId) {
+                        startTime = entry.newStartTime
+                        updatedAt = LocalDateTime.now()
+                        updatedBy = userId
+                    }.orDie().onNullFail { EventScheduleError.SlotNotFound(entry.slotId) }
+
+                    val setupMatchId = setupMatchIdBySlot[entry.slotId]
+                    if (setupMatchId != null) {
+                        !EventScheduleRepo.stampMatchStartTime(setupMatchId, entry.newStartTime, userId).orDie()
+                    }
+
+                    KIO.unit
+                }
+            }
+        }
+
+        KIO.ok(
+            ApiResponse.Dto(
+                ShiftPreviewDto(
+                    entries = entries.map { ShiftPreviewEntryDto(it.slotId, it.oldStartTime, it.newStartTime) },
+                    applied = !request.dryRun,
+                )
+            )
+        )
     }
 }
