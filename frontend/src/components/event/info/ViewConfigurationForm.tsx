@@ -67,6 +67,16 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
     const setFilter = (key: string, value: number | boolean) =>
         setValue('filters', {...(filters ?? {}), [key]: value})
 
+    // Hält die gespeicherte Konfiguration im gültigen Bereich; ein leeres Feld würde sonst
+    // als 0 gespeichert. Das Backend klemmt zwar ebenfalls, aber die Maske soll zeigen,
+    // was tatsächlich gilt.
+    const setLimitFilter = (key: string, raw: string) => {
+        const value = Number(raw)
+        if (Number.isFinite(value)) {
+            setFilter(key, Math.min(20, Math.max(1, Math.round(value))))
+        }
+    }
+
     return (
         <>
             <DialogTitle>{view ? t('event.info.editView') : t('event.info.addView')}</DialogTitle>
@@ -135,7 +145,7 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
                                     size="small"
                                     label={t('event.info.athleteBoard.limitRunning')}
                                     value={filterNumber('running', 3)}
-                                    onChange={e => setFilter('running', Number(e.target.value))}
+                                    onChange={e => setLimitFilter('running', e.target.value)}
                                     inputProps={{min: 1, max: 20}}
                                 />
                                 <TextField
@@ -143,7 +153,7 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
                                     size="small"
                                     label={t('event.info.athleteBoard.limitUpcoming')}
                                     value={filterNumber('upcoming', 3)}
-                                    onChange={e => setFilter('upcoming', Number(e.target.value))}
+                                    onChange={e => setLimitFilter('upcoming', e.target.value)}
                                     inputProps={{min: 1, max: 20}}
                                 />
                                 <TextField
@@ -151,7 +161,7 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
                                     size="small"
                                     label={t('event.info.athleteBoard.limitResults')}
                                     value={filterNumber('results', 1)}
-                                    onChange={e => setFilter('results', Number(e.target.value))}
+                                    onChange={e => setLimitFilter('results', e.target.value)}
                                     inputProps={{min: 1, max: 20}}
                                 />
                                 <FormControlLabel

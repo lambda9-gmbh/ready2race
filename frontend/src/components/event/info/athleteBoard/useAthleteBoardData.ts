@@ -9,10 +9,11 @@ export interface AthleteBoardState {
     lastUpdated: Date | null
     notFound: boolean
     initialLoad: boolean
-    // true, solange noch nie erfolgreich geladen wurde und der letzte Versuch
-    // fehlgeschlagen ist (Backend tot, HTTP-Fehler, kein Netz). Sobald einmal ein Abruf
-    // erfolgreich war, bleibt `data` stehen und dieses Flag ist für die Anzeige irrelevant
-    // — der letzte gute Stand hat Vorrang, siehe Hook-Kommentar unten.
+    // true, solange der letzte Versuch fehlgeschlagen ist (Backend tot, HTTP-Fehler,
+    // kein Netz). Vor dem ersten Erfolg unterscheidet das Flag "geladen, aber leer" von
+    // "nichts gewusst"; danach bleibt `data` als letzter guter Stand stehen und das Flag
+    // trägt die Stand-von-Warnung — bewusstes Pausieren im Hintergrund zählt nicht als
+    // Fehler, weil dabei gar kein Abruf stattfindet.
     loadFailed: boolean
 }
 
