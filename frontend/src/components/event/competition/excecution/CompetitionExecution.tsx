@@ -63,16 +63,11 @@ import BaseDialog from '@components/BaseDialog.tsx'
 import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
 import FormInputTimecode from '@components/form/input/FormInputTimecode.tsx'
-
-type EditMatchTeam = {
-    registrationId: string
-    startNumber: string
-}
-type EditMatchForm = {
-    selectedMatchDto: CompetitionMatchDto | null
-    startTime: string
-    teams: EditMatchTeam[]
-}
+import {
+    EditMatchForm,
+    emptyEditMatchForm,
+    mapMatchDtoToEditMatchForm,
+} from '@components/event/competition/excecution/editMatchForm.ts'
 
 type EnterResultsTeam = {
     registrationId: string
@@ -507,11 +502,7 @@ const CompetitionExecution = () => {
 
     // todo: merge following code with code for resultsUpdate
     const editMatchFormContext = useForm<EditMatchForm>({
-        values: {
-            selectedMatchDto: null,
-            startTime: '',
-            teams: [],
-        },
+        defaultValues: emptyEditMatchForm,
     })
 
     const selectedEditMatch = editMatchFormContext.watch('selectedMatchDto')
@@ -548,25 +539,13 @@ const CompetitionExecution = () => {
         },
     })
 
-    const mapTeamDtoToFormTeamData = (teams: CompetitionMatchTeamDto[]): EditMatchTeam[] => {
-        return teams
-            .sort((a, b) => a.startNumber - b.startNumber)
-            .map(team => ({
-                registrationId: team.registrationId,
-                startNumber: team.startNumber?.toString() ?? '',
-            }))
-    }
-
     const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false)
     const openEditMatchDialog = (roundIndex: number, matchIndex: number) => {
         const round = sortedRounds?.[roundIndex]
         const selectedMatch = round ? matchesFiltered(round)[matchIndex] : null
         if (selectedMatch) {
             setEditMatchDialogOpen(true)
-            editMatchFormContext.reset({
-                selectedMatchDto: selectedMatch,
-                teams: mapTeamDtoToFormTeamData(selectedMatch.teams),
-            })
+            editMatchFormContext.reset(mapMatchDtoToEditMatchForm(selectedMatch))
         }
     }
     const closeEditMatchDialog = () => {
@@ -612,11 +591,7 @@ const CompetitionExecution = () => {
             ) {
                 const nextMatch =
                     currentRoundMatches[selectedMatchIndex(formData.selectedMatchDto) + 1]
-                editMatchFormContext.reset({
-                    selectedMatchDto: nextMatch,
-                    startTime: nextMatch.startTime ?? '',
-                    teams: mapTeamDtoToFormTeamData(nextMatch.teams),
-                })
+                editMatchFormContext.reset(mapMatchDtoToEditMatchForm(nextMatch))
             }
         } else {
             closeEditMatchDialog()
