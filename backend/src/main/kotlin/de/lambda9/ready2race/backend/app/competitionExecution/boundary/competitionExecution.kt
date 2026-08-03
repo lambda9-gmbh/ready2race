@@ -137,7 +137,7 @@ fun Route.competitionExecution() {
                                             part.provider().toByteArray(),
                                         )
                                     } else {
-                                        KIO.fail(RequestError.File.Multiple)
+                                        !KIO.fail(RequestError.File.Multiple)
                                     }
                                 }
 
@@ -249,7 +249,7 @@ fun Route.competitionExecution() {
                                                 part.provider().toByteArray(),
                                             )
                                         } else {
-                                            KIO.fail(RequestError.File.Multiple)
+                                            !KIO.fail(RequestError.File.Multiple)
                                         }
                                     }
 
@@ -342,7 +342,7 @@ fun Route.competitionExecution() {
                                                 part.provider().toByteArray(),
                                             )
                                         } else {
-                                            KIO.fail(RequestError.File.Multiple)
+                                            !KIO.fail(RequestError.File.Multiple)
                                         }
                                     }
 

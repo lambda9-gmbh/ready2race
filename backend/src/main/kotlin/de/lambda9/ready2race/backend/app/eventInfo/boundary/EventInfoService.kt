@@ -51,7 +51,7 @@ object EventInfoService {
         KIO.comprehension {
             val exists = !EventRepo.exists(eventId).orDie()
             if (!exists) {
-                KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
+                !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
             }
 
             val views = !InfoViewConfigurationRepo.findByEvent(eventId, includeInactive).orDie()
@@ -65,15 +65,15 @@ object EventInfoService {
         // Validate event exists
         val exists = !EventRepo.exists(eventId).orDie()
         if (!exists) {
-            KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
+            !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
         }
 
         // Validate request
         if (request.displayDurationSeconds <= 0) {
-            KIO.fail<EventInfoProblem>(EventInfoProblem.InvalidViewConfiguration("Display duration must be positive"))
+            !KIO.fail<EventInfoProblem>(EventInfoProblem.InvalidViewConfiguration("Display duration must be positive"))
         }
         if (request.dataLimit <= 0 || request.dataLimit > 100) {
-            KIO.fail<EventInfoProblem>(EventInfoProblem.InvalidViewConfiguration("Data limit must be between 1 and 100"))
+            !KIO.fail<EventInfoProblem>(EventInfoProblem.InvalidViewConfiguration("Data limit must be between 1 and 100"))
         }
 
         val record = request.toRecord(eventId)
@@ -87,7 +87,7 @@ object EventInfoService {
     ): App<EventInfoProblem, ApiResponse.NoData> = KIO.comprehension {
         val existing = !InfoViewConfigurationRepo.findById(id).orDie()
         if (existing == null) {
-            KIO.fail<EventInfoProblem>(EventInfoProblem.InfoViewConfigurationNotFound(id))
+            !KIO.fail<EventInfoProblem>(EventInfoProblem.InfoViewConfigurationNotFound(id))
         }
 
         val updated = !InfoViewConfigurationRepo.update(id) {
@@ -111,7 +111,7 @@ object EventInfoService {
         val existing = !InfoViewConfigurationRepo.exists(id).orDie()
 
         if (!existing) {
-            KIO.fail<EventInfoProblem>(EventInfoProblem.InfoViewConfigurationNotFound(id))
+            !KIO.fail<EventInfoProblem>(EventInfoProblem.InfoViewConfigurationNotFound(id))
         }
 
         !InfoViewConfigurationRepo.delete(id).orDie()

@@ -52,7 +52,7 @@ fun Route.participantRequirementForEvent() {
                                         part.provider().toByteArray(),
                                     )
                                 } else {
-                                    KIO.fail(RequestError.File.Multiple)
+                                    !KIO.fail(RequestError.File.Multiple)
                                 }
                             }
 

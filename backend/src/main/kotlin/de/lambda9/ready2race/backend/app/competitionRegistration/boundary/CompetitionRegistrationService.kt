@@ -397,9 +397,7 @@ object CompetitionRegistrationService {
             !CompetitionRepo.isOpenForRegistration(competitionId, LocalDateTime.now()).orDie()
                 .onFalseFail { CompetitionRegistrationError.RegistrationClosed }
 
-            if (user.club != clubId) {
-                KIO.fail(CompetitionRegistrationError.NotFound)
-            }
+            !KIO.failOn(user.club != clubId) { CompetitionRegistrationError.NotFound }
         }
         unit
     }
