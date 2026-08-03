@@ -12,6 +12,8 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
+import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.data.Timecode
@@ -159,7 +161,8 @@ object EventInfoService {
         val matches =
             !CompetitionMatchRepo.getUpcomingMatches(eventId, limit).orDie()
 
-        val result = !toUpcomingCompetitionMatchInfos(matches)
+        val real = !toUpcomingCompetitionMatchInfos(matches)
+        val result = !mergeWithPendingPlaceholders(eventId, real, limit)
 
         KIO.ok(ApiResponse.ListDto(result))
     }
@@ -176,9 +179,68 @@ object EventInfoService {
         val matches =
             !CompetitionMatchRepo.getUpcomingMatchesForBoard(eventId, limit, grace).orDie()
 
-        val result = !toUpcomingCompetitionMatchInfos(matches)
+        val real = !toUpcomingCompetitionMatchInfos(matches)
+        val result = !mergeWithPendingPlaceholders(eventId, real, limit)
 
         KIO.ok(ApiResponse.ListDto(result))
+    }
+
+    /**
+     * Mischt Platzhalter aus wartenden Zeitstrahl-Slots (Runde noch nicht erzeugt) unter die
+     * echten Läufe, aufsteigend nach Startzeit, gedeckelt auf [limit] - genau wie die Kiosk- und
+     * Board-Antworten es ohne Platzhalter schon waren. Die reine Filter-/Mapping-Entscheidung
+     * steckt in [AthleteBoardLogic.placeholdersFromPendingSlots] und ist dort ohne Datenbank
+     * geprüft; hier passiert nur das Zusammenführen der beiden Quellen.
+     */
+    private fun mergeWithPendingPlaceholders(
+        eventId: UUID,
+        real: List<UpcomingCompetitionMatchInfo>,
+        limit: Int,
+    ): App<Nothing, List<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
+        val pendingSlots = !getPendingScheduleSlots(eventId)
+        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(pendingSlots)
+
+        KIO.ok(
+            AthleteBoardLogic.sortByStartTime(real + placeholders) { it.scheduledStartTime }.take(limit)
+        )
+    }
+
+    /**
+     * Alle Slots des Events mit ihrem abgeleiteten Zustand (siehe
+     * `EventScheduleLogic.deriveSlotState`) - Grundlage für [mergeWithPendingPlaceholders]. Slots
+     * ohne zugeordnete Setup-Zeile (FREE) liefern nie WAITING und werden hier übersprungen, statt
+     * ein Match-Ziel ohne Wettkampf/Setup-Zeile zu konstruieren.
+     */
+    private fun getPendingScheduleSlots(eventId: UUID): App<Nothing, List<PendingScheduleSlotInfo>> = KIO.comprehension {
+        val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
+
+        val result = slotRecords.mapNotNull { r ->
+            val setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
+            val competitionId = r.get("competition_id", UUID::class.java)
+
+            if (setupMatchId == null || competitionId == null) {
+                null
+            } else {
+                val state = EventScheduleLogic.deriveSlotState(
+                    isFree = false,
+                    skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+                    roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
+                    matchExists = r.get("match_exists", Boolean::class.java) == true,
+                )
+
+                PendingScheduleSlotInfo(
+                    setupMatchId = setupMatchId,
+                    startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                    state = state,
+                    competitionId = competitionId,
+                    competitionName = r.get("competition_name", String::class.java) ?: "",
+                    roundName = r.get("round_name", String::class.java),
+                    matchName = r.get("match_name", String::class.java),
+                )
+            }
+        }
+
+        KIO.ok(result)
     }
 
     // Gemeinsame Abbildung von Roh-Records auf UpcomingCompetitionMatchInfo, genutzt von

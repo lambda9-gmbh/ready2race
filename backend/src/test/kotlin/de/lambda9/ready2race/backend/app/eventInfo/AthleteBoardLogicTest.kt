@@ -2,8 +2,11 @@ package de.lambda9.ready2race.backend.app.eventInfo
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.PendingScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
+import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleSlotState
 import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -196,5 +199,64 @@ class AthleteBoardLogicTest {
         )
         val sorted = AthleteBoardLogic.sortByStartTime(input) { it.second }
         assertEquals(listOf("a", "b", "c"), sorted.map { it.first })
+    }
+
+    // --- placeholdersFromPendingSlots ---
+
+    private fun pendingSlot(
+        state: EventScheduleSlotState,
+        startTime: LocalDateTime = now.plusMinutes(30),
+        competitionName: String = "Kanu",
+        roundName: String? = "Vorlauf",
+        matchName: String? = "Lauf 1",
+    ) = PendingScheduleSlotInfo(
+        setupMatchId = UUID.randomUUID(),
+        startTime = startTime,
+        state = state,
+        competitionId = UUID.randomUUID(),
+        competitionName = competitionName,
+        roundName = roundName,
+        matchName = matchName,
+    )
+
+    @Test
+    fun waitingSlotBecomesPendingPlaceholder() {
+        val slot = pendingSlot(EventScheduleSlotState.WAITING)
+
+        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(listOf(slot))
+
+        assertEquals(1, placeholders.size)
+        val placeholder = placeholders.single()
+        assertTrue(placeholder.pendingRound)
+        assertEquals(slot.setupMatchId, placeholder.matchId)
+        assertEquals(slot.competitionId, placeholder.competitionId)
+        assertEquals(slot.competitionName, placeholder.competitionName)
+        assertEquals(slot.roundName, placeholder.roundName)
+        assertEquals(slot.matchName, placeholder.matchName)
+        assertEquals(slot.startTime, placeholder.scheduledStartTime)
+        assertTrue(placeholder.teams.isEmpty())
+    }
+
+    @Test
+    fun skippedSlotYieldsNoPlaceholder() {
+        val slot = pendingSlot(EventScheduleSlotState.SKIPPED)
+
+        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(listOf(slot))
+
+        assertTrue(placeholders.isEmpty())
+    }
+
+    @Test
+    fun onlyWaitingSlotsAmongMixedStatesBecomePlaceholders() {
+        val waiting = pendingSlot(EventScheduleSlotState.WAITING, matchName = "wartend")
+        val skipped = pendingSlot(EventScheduleSlotState.SKIPPED, matchName = "übersprungen")
+        val linked = pendingSlot(EventScheduleSlotState.LINKED, matchName = "verlinkt")
+        val obsolete = pendingSlot(EventScheduleSlotState.OBSOLETE, matchName = "entfallen")
+
+        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(
+            listOf(waiting, skipped, linked, obsolete)
+        )
+
+        assertEquals(listOf("wartend"), placeholders.map { it.matchName })
     }
 }

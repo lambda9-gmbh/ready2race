@@ -15,5 +15,11 @@ data class UpcomingCompetitionMatchInfo(
     val roundName: String?,
     val matchName: String?,
     val executionOrder: Int,
-    val teams: List<UpcomingMatchTeamInfo>
+    val teams: List<UpcomingMatchTeamInfo>,
+    /**
+     * true für einen Platzhalter aus einem wartenden Zeitstrahl-Slot (Runde noch nicht
+     * erzeugt) - matchId zeigt dann auf die Setup-Zeile, nicht auf einen echten Lauf, und
+     * teams ist immer leer.
+     */
+    val pendingRound: Boolean = false,
 )

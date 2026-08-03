@@ -4,8 +4,10 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
+import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleSlotState
 import de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.*
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
@@ -137,9 +139,52 @@ object LiveDashboardService {
             }
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
+            val pendingSlots = !getPendingSlots(eventId)
 
-            KIO.ok(ApiResponse.ETagged(LiveDashboardDto(LiveDashboardLogic.selectForScope(matches, scope))))
+            KIO.ok(
+                ApiResponse.ETagged(
+                    LiveDashboardDto(
+                        matches = LiveDashboardLogic.selectForScope(matches, scope),
+                        // Unabhängig vom Scope: auch im LIVE-Ausschnitt soll sichtbar bleiben, was
+                        // als nächstes ansteht, auch wenn die Runde noch nicht erzeugt ist.
+                        pendingSlots = pendingSlots,
+                    )
+                )
+            )
         }
+
+    /**
+     * WAITING-Slots des Events als Platzhalter (Task 14) - aufsteigend nach Startzeit, da
+     * [EventScheduleRepo.getSlots] bereits so sortiert liefert. SKIPPED, FREE, LINKED und OBSOLETE
+     * liefern keinen Eintrag: LINKED ist bereits ein echter Lauf und steckt in [matches], die
+     * anderen sind kein Kandidat für einen künftigen Lauf.
+     */
+    private fun getPendingSlots(eventId: UUID): App<Nothing, List<PendingSlotDto>> = KIO.comprehension {
+        val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
+
+        val result = slotRecords.mapNotNull { r ->
+            val state = EventScheduleLogic.deriveSlotState(
+                isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null,
+                skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+                roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
+                matchExists = r.get("match_exists", Boolean::class.java) == true,
+            )
+
+            if (state != EventScheduleSlotState.WAITING) {
+                null
+            } else {
+                PendingSlotDto(
+                    slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
+                    startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                    competitionName = r.get("competition_name", String::class.java),
+                    roundName = r.get("round_name", String::class.java),
+                    matchName = r.get("match_name", String::class.java),
+                )
+            }
+        }
+
+        KIO.ok(result)
+    }
 
     /**
      * Personendaten einer Mannschaft für den Detail-Dialog: Aufstellung, Ummeldungen und die

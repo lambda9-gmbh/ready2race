@@ -96,6 +96,21 @@ data class LiveDashboardMatchDto(
     val teams: List<LiveDashboardTeamDto>,
 )
 
+/**
+ * Ein wartender Zeitstrahl-Slot (Runde noch nicht erzeugt) - für die Schiedsrichter-Ansicht, die
+ * so sieht, was als nächstes kommt, auch bevor der Lauf existiert. Bewusst ohne Team-/
+ * Personendaten, die gibt es für einen WAITING-Slot ohnehin noch nicht.
+ */
+data class PendingSlotDto(
+    val slotId: UUID,
+    val startTime: LocalDateTime,
+    val competitionName: String?,
+    val roundName: String?,
+    val matchName: String?,
+)
+
 data class LiveDashboardDto(
     val matches: List<LiveDashboardMatchDto>,
+    /** Aufsteigend nach Startzeit; in beiden Scopes (ALL und LIVE) enthalten - die Liste ist klein. */
+    val pendingSlots: List<PendingSlotDto>,
 )

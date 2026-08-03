@@ -3,7 +3,26 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardConfig
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
+import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
+import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleSlotState
 import java.time.LocalDateTime
+import java.util.UUID
+
+/**
+ * Ein Zeitstrahl-Slot mit dem abgeleiteten Zustand (siehe
+ * `EventScheduleLogic.deriveSlotState`) und den Namen aus der Setup-Zeile - alles, was ein
+ * Platzhalter auf den öffentlichen Boards braucht. [setupMatchId] zeigt auf die Setup-Zeile,
+ * nicht auf einen echten Lauf, der für WAITING-Slots per Definition noch nicht existiert.
+ */
+data class PendingScheduleSlotInfo(
+    val setupMatchId: UUID,
+    val startTime: LocalDateTime,
+    val state: EventScheduleSlotState,
+    val competitionId: UUID,
+    val competitionName: String,
+    val roundName: String?,
+    val matchName: String?,
+)
 
 /**
  * Reine Logik der Athleten-Anzeige, bewusst ohne Datenbank- und Ktor-Bezug,
@@ -87,4 +106,32 @@ object AthleteBoardLogic {
      */
     fun <T> sortByStartTime(items: List<T>, startTime: (T) -> LocalDateTime?): List<T> =
         items.sortedWith(compareBy(nullsLast<LocalDateTime>()) { startTime(it) })
+
+    /**
+     * Platzhalter für "nächste Läufe", deren Runde noch nicht erzeugt wurde. Nur WAITING-Slots
+     * liefern einen Eintrag - SKIPPED, FREE, LINKED und OBSOLETE sind entweder kein Kandidat
+     * (kein zugeordneter Lauf) oder bereits anderweitig sichtbar (LINKED landet als echter Lauf
+     * in den Antworten). Bewusst ohne Team-/Personendaten: die Sparsamkeitsregel der
+     * Athleten-Anzeige gilt auch für Platzhalter, und für einen WAITING-Slot gibt es ohnehin noch
+     * keine Aufstellung.
+     */
+    fun placeholdersFromPendingSlots(slots: List<PendingScheduleSlotInfo>): List<UpcomingCompetitionMatchInfo> =
+        slots.filter { it.state == EventScheduleSlotState.WAITING }
+            .map { slot ->
+                UpcomingCompetitionMatchInfo(
+                    matchId = slot.setupMatchId,
+                    matchNumber = null,
+                    competitionId = slot.competitionId,
+                    competitionName = slot.competitionName,
+                    categoryName = null,
+                    scheduledStartTime = slot.startTime,
+                    placeName = null,
+                    roundNumber = null,
+                    roundName = slot.roundName,
+                    matchName = slot.matchName,
+                    executionOrder = 0,
+                    teams = emptyList(),
+                    pendingRound = true,
+                )
+            }
 }
