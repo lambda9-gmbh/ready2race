@@ -27,6 +27,7 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object NotInChallengeTimespan : CompetitionExecutionError
     data object PlaceAndTimeBothNull : CompetitionExecutionError
     data object PlacesNotContinuous : CompetitionExecutionError
+    data object StartTimeManagedBySchedule : CompetitionExecutionError
 
     sealed interface ResultUploadError : CompetitionExecutionError {
         data object FileError : ResultUploadError
@@ -179,6 +180,11 @@ sealed interface CompetitionExecutionError : ServiceError {
         PlacesNotContinuous -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "The places are not continuous."
+        )
+
+        StartTimeManagedBySchedule -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "Start time is managed by the event schedule",
         )
 
         is ResultUploadError.CellBlank -> ApiError(

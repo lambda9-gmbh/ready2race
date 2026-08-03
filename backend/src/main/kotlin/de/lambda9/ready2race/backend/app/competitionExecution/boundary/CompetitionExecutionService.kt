@@ -456,6 +456,11 @@ object CompetitionExecutionService {
             return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
         }
 
+        val slotTime = !EventScheduleRepo.getSlotBySetupMatch(matchId).orDie()
+        if (slotTime != null && request.startTime != slotTime) {
+            return@comprehension KIO.fail(CompetitionExecutionError.StartTimeManagedBySchedule)
+        }
+
         !CompetitionMatchRepo.update(matchId) {
             startTime = request.startTime
             updatedBy = userId
