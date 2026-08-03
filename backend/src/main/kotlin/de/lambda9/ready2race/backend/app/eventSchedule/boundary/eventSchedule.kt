@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.UpsertScheduleSlotRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
+import de.lambda9.ready2race.backend.calls.requests.authenticateAny
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -44,6 +45,24 @@ fun Route.eventSchedule() {
                 val slotId = !pathParam("slotId", uuid)
 
                 EventScheduleService.deleteSlot(eventId, slotId)
+            }
+        }
+        put("/slot/{slotId}/skip") {
+            call.respondComprehension {
+                val user = !authenticateAny(Privilege.UpdateEventGlobal, Privilege.UpdateLiveDashboardGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val slotId = !pathParam("slotId", uuid)
+
+                EventScheduleService.setSlotSkipped(eventId, slotId, skipped = true, userId = user.id!!)
+            }
+        }
+        put("/slot/{slotId}/unskip") {
+            call.respondComprehension {
+                val user = !authenticateAny(Privilege.UpdateEventGlobal, Privilege.UpdateLiveDashboardGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val slotId = !pathParam("slotId", uuid)
+
+                EventScheduleService.setSlotSkipped(eventId, slotId, skipped = false, userId = user.id!!)
             }
         }
     }

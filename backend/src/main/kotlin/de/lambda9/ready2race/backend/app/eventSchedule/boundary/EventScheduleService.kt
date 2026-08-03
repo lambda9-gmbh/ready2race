@@ -157,4 +157,58 @@ object EventScheduleService {
             noData
         }
     }
+
+    /**
+     * Skip/Unskip mit Audit (Spec §8). skip: erlaubt für FREE, WAITING und LINKED ohne
+     * `started_at` am Lauf; OBSOLETE ist endgültig (SlotNotSkippable), ein bereits gestarteter
+     * Lauf schlägt mit MatchAlreadyStarted fehl. unskip: erlaubt solange kein Lauf des Slots
+     * `started_at` trägt.
+     */
+    fun setSlotSkipped(
+        eventId: UUID,
+        slotId: UUID,
+        skipped: Boolean,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val row = !EventScheduleRepo.getSlotWithContext(eventId, slotId).orDie()
+            .onNullFail { EventScheduleError.SlotNotFound(slotId) }
+
+        val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+        val matchExists = row.get("match_exists", Boolean::class.java) == true
+        val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
+        val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
+        val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
+
+        if (skipped) {
+            val state = EventScheduleLogic.deriveSlotState(
+                isFree = isFree,
+                skipped = alreadySkipped,
+                roundMaterialized = roundMaterialized,
+                matchExists = matchExists,
+            )
+
+            if (state == EventScheduleSlotState.OBSOLETE) {
+                return@comprehension KIO.fail(EventScheduleError.SlotNotSkippable(slotId))
+            }
+            if (state == EventScheduleSlotState.LINKED && matchStartedAt != null) {
+                return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
+            }
+
+            !EventScheduleRepo.updateSlot(eventId, slotId) {
+                skippedAt = LocalDateTime.now()
+                skippedBy = userId
+            }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
+        } else {
+            if (matchStartedAt != null) {
+                return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
+            }
+
+            !EventScheduleRepo.updateSlot(eventId, slotId) {
+                skippedAt = null
+                skippedBy = null
+            }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
+        }
+
+        noData
+    }
 }

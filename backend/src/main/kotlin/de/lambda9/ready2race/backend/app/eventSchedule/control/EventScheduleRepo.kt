@@ -58,6 +58,40 @@ object EventScheduleRepo {
             .fetch()
     }
 
+    /**
+     * Ein einzelner Slot mit demselben Kontext wie [getSlots] (Match-Status, "Runde
+     * materialisiert") — für die Zustandsableitung vor Skip/Unskip. Gleiche Joins wie dort, nur
+     * auf einen Slot gefiltert statt auf das ganze Event.
+     */
+    fun getSlotWithContext(eventId: UUID, slotId: UUID) = Jooq.query {
+        val sibling = COMPETITION_SETUP_MATCH.`as`("sibling")
+        val siblingMatch = COMPETITION_MATCH.`as`("sibling_match")
+
+        val roundMaterialized = DSL.field(
+            DSL.exists(
+                selectOne()
+                    .from(sibling)
+                    .join(siblingMatch)
+                    .on(siblingMatch.COMPETITION_SETUP_MATCH.eq(sibling.ID))
+                    .where(sibling.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+            )
+        ).`as`("round_materialized")
+
+        select(
+            EVENT_SCHEDULE_SLOT.asterisk(),
+            COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
+            COMPETITION_MATCH.STARTED_AT.`as`("match_started_at"),
+            roundMaterialized,
+        )
+            .from(EVENT_SCHEDULE_SLOT)
+            .leftJoin(COMPETITION_SETUP_MATCH)
+            .on(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            .leftJoin(COMPETITION_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
+            .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId).and(EVENT_SCHEDULE_SLOT.ID.eq(slotId)))
+            .fetchOne()
+    }
+
     /** Setup-Zeilen des Events ohne Slot — die "nicht verplant"-Liste. */
     fun getUnplannedSetupMatches(eventId: UUID) = Jooq.query {
         select(
