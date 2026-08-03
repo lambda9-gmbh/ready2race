@@ -1,6 +1,7 @@
 import {
     Box,
     Chip,
+    CircularProgress,
     Dialog,
     DialogContent,
     DialogTitle,
@@ -22,10 +23,15 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardRequirementStatusDto, LiveDashboardTeamDto} from '@api/types.gen.ts'
+import {getLiveDashboardTeamDetail} from '@api/sdk.gen.ts'
+import {useFetch} from '@utils/hooks.ts'
 import {formatMinutes, requirementSeverity, severityChipColor, Severity} from './common.ts'
 
 type Props = {
     team: LiveDashboardTeamDto | null
+    /** Der Lauf, aus dem die Mannschaft angetippt wurde — die Aufstellung gilt je Runde. */
+    matchId: string | null
+    eventId: string
     onClose: () => void
 }
 
@@ -42,12 +48,37 @@ const severityIcon = (severity: Severity) => {
     }
 }
 
-const LiveDashboardTeamDialog = ({team, onClose}: Props) => {
+/**
+ * Der Dialog trägt die Personendaten selbst nach: sie sind der größte Posten im Poll und werden
+ * erst hier gebraucht. Geladen wird einmal beim Öffnen — Teilnahmebedingungen werden am Zelt
+ * abgehakt und ändern sich während eines Laufs praktisch nicht.
+ */
+const LiveDashboardTeamDialog = ({team, matchId, eventId, onClose}: Props) =>
+    team === null || matchId === null ? null : (
+        <TeamDialog team={team} matchId={matchId} eventId={eventId} onClose={onClose} />
+    )
+
+const TeamDialog = ({
+    team,
+    matchId,
+    eventId,
+    onClose,
+}: {
+    team: LiveDashboardTeamDto
+    matchId: string
+    eventId: string
+    onClose: () => void
+}) => {
     const {t} = useTranslation()
 
-    if (team === null) {
-        return null
-    }
+    const {data: detail, pending} = useFetch(
+        signal =>
+            getLiveDashboardTeamDetail({
+                signal,
+                path: {eventId, matchId, teamId: team.teamId},
+            }),
+        {deps: [eventId, matchId, team.teamId]},
+    )
 
     const requirementSecondary = (r: LiveDashboardRequirementStatusDto): string => {
         const parts: string[] = []
@@ -128,7 +159,12 @@ const LiveDashboardTeamDialog = ({team, onClose}: Props) => {
                             />
                         )}
                     </Stack>
-                    {team.participants.map(p => (
+                    {pending && detail === null && (
+                        <Box display="flex" justifyContent="center" py={2}>
+                            <CircularProgress />
+                        </Box>
+                    )}
+                    {detail?.participants.map(p => (
                         <Box key={p.participantId}>
                             <Typography variant="subtitle1">
                                 {p.firstName} {p.lastName}

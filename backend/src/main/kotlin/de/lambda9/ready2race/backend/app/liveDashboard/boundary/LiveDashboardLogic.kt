@@ -1,7 +1,11 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.boundary
 
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardInvoiceState
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchState
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardScope
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementStatusDto
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementSummaryDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckStatus
 import java.time.Duration
@@ -46,7 +50,45 @@ object LiveDashboardLogic {
         else -> LiveDashboardMatchState.UPCOMING
     }
 
-    fun teamHasResult(place: Int?, failed: Boolean): Boolean = place != null || failed
+    /**
+     * Abgemeldete Mannschaften brauchen kein Ergebnis — für sie kommt keins mehr. Ohne diesen
+     * Fall erreicht ein Lauf mit einer Abmeldung nie den Zustand [LiveDashboardMatchState.FINISHED].
+     */
+    fun teamHasResult(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
+        deregistered || place != null || failed
+
+    /**
+     * Was eine Abfrage im gewünschten Umfang zurückgibt: alles, oder die laufenden Läufe und —
+     * wenn keiner läuft — der nächste anstehende. Die Reihenfolge bleibt erhalten; die Läufe
+     * kommen bereits nach Startzeit sortiert aus der Datenbank.
+     */
+    fun selectForScope(
+        matches: List<LiveDashboardMatchDto>,
+        scope: LiveDashboardScope,
+    ): List<LiveDashboardMatchDto> = when (scope) {
+        LiveDashboardScope.ALL -> matches
+        LiveDashboardScope.LIVE -> matches
+            .filter { it.state == LiveDashboardMatchState.RUNNING }
+            .ifEmpty {
+                listOfNotNull(matches.firstOrNull { it.state == LiveDashboardMatchState.UPCOMING })
+            }
+    }
+
+    /**
+     * Verdichtet die Bedingungen aller Personen einer Mannschaft auf die Zahlen, aus denen die
+     * Liste ihre Ampel ableitet. Die Bedingungen selbst bleiben dem Detail-Dialog vorbehalten.
+     */
+    fun summarizeRequirements(
+        requirements: List<LiveDashboardRequirementStatusDto>,
+    ): LiveDashboardRequirementSummaryDto = LiveDashboardRequirementSummaryDto(
+        total = requirements.size,
+        fulfilled = requirements.count { it.checked },
+        missingRequired = requirements.count { !it.checked && !it.optional },
+        missingOptional = requirements.count { !it.checked && it.optional },
+        timeIssues = requirements.count {
+            it.timeCheck?.status == TimeCheckStatus.LATE || it.timeCheck?.status == TimeCheckStatus.TOO_EARLY
+        },
+    )
 
     fun requirementApplies(
         assignedNamedParticipants: List<UUID?>,

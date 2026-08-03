@@ -7,14 +7,15 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardMatchDto} from '@api/types.gen.ts'
-import {formatMinutes, Severity, shortClubName, teamSeverity} from './common.ts'
+import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
+import {formatMinutes, openResultTeams, Severity, shortClubName, teamSeverity} from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
 
 type Props = {
     match: LiveDashboardMatchDto
     onTeamClick: (matchId: string, teamId: string) => void
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
-    onFinish?: (matchId: string) => Promise<void>
+    onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
     onSetRunning?: (matchId: string, running: boolean) => Promise<void>
 }
 
@@ -43,9 +44,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = match.teams.some(team => team.time || team.place != null || team.failed)
-    const resultsComplete =
-        match.teams.length > 0 &&
-        match.teams.every(team => team.place != null || team.failed)
+    const openTeams = openResultTeams(match)
+    const resultsComplete = match.teams.length > 0 && openTeams.length === 0
     const columns = hasResults
         ? '2ch minmax(0, 1fr) 7.5ch 2rem 26px'
         : '2ch minmax(0, 1fr) 26px'
@@ -117,7 +117,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                 </Box>
                 <Divider sx={{mt: 1.5}} />
                 {match.teams.map((team, index) => {
-                    const substituted = team.participants.some(p => p.substitutedFor)
+                    const substituted = team.substituted
                     // Kurzform in der Liste; der vollständige Name steht im Detail-Dialog
                     const fullClub = team.actualClubName ?? team.clubName
                     const clubLine = fullClub != null ? shortClubName(fullClub) : null
@@ -213,7 +213,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                             color: team.failed ? 'warning.dark' : 'text.primary',
                                         }}>
                                         {team.failed
-                                            ? t('event.liveDashboard.team.failedShort')
+                                            ? (matchResultStatus(team.failedReason).status ??
+                                              t('event.liveDashboard.team.failedShort'))
                                             : (team.time ?? '')}
                                         {team.penaltySeconds != null && (
                                             <Typography
@@ -282,7 +283,10 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                             </Button>
                         )}
                         {onFinish && match.state === 'RUNNING' && (
-                            <FinishMatchButton onFinish={() => onFinish(match.matchId)} />
+                            <FinishMatchButton
+                                openTeamCount={openTeams.length}
+                                onFinish={openResults => onFinish(match.matchId, openResults)}
+                            />
                         )}
                     </Stack>
                 )}

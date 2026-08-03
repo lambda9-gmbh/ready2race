@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.calls.comprehension.comprehension
+import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.pagination.Page
 import de.lambda9.ready2race.backend.pagination.Sortable
@@ -20,6 +21,7 @@ import io.ktor.server.response.*
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.net.URLConnection
+import java.security.MessageDigest
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -44,6 +46,36 @@ fun <R, E, A : Any, S : Sortable> KIO<R, E, Page<A, S>>.pageResponse(): KIO<R, E
 
 fun <R, E> KIO<R, E, File>.fileResponse(): KIO<R, E, ApiResponse.File> =
     map { ApiResponse.File(name = it.name, bytes = it.bytes) }
+
+/**
+ * Antwortet mit `ETag` und lässt den Rumpf weg, wenn der Client denselben Stand schon hat.
+ *
+ * Der Fingerabdruck entsteht aus dem serialisierten Datensatz, nicht aus Zeitstempeln: ein
+ * `max(updated_at)`-Kriterium müsste jede beteiligte Tabelle erfassen und wäre bei Löschungen
+ * still falsch. Gespart wird die Übertragung, nicht die Abfrage — genau darum geht es im
+ * Mobilfunknetz.
+ */
+suspend fun ApplicationCall.respondETagged(
+    apiResponse: ApiResponse.ETagged<*>,
+) {
+    val etag = "\"" + MessageDigest.getInstance("SHA-256")
+        .digest(jsonMapper.writeValueAsBytes(apiResponse.dto))
+        .joinToString("") { "%02x".format(it) }
+        .take(32) + "\""
+
+    response.header(HttpHeaders.ETag, etag)
+
+    val known = request.headers[HttpHeaders.IfNoneMatch]
+        ?.split(",")
+        ?.map { it.trim() }
+        ?: emptyList()
+
+    if (known.contains(etag)) {
+        respond(HttpStatusCode.NotModified)
+    } else {
+        respond(apiResponse.dto)
+    }
+}
 
 suspend fun ApplicationCall.respondError(
     error: ToApiError,
@@ -109,6 +141,10 @@ suspend fun ApplicationCall.respondKIO(
 
                 is ApiResponse.Dto<*> -> {
                     respond(apiResponse.dto)
+                }
+
+                is ApiResponse.ETagged<*> -> {
+                    respondETagged(apiResponse)
                 }
 
                 is ApiResponse.ListDto<*> -> {

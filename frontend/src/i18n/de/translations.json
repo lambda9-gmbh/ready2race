@@ -848,6 +848,12 @@
           },
           "failed": "Ausgeschieden",
           "failedReason": "Grund für Ausscheiden",
+          "failedNote": "Notiz zum Ausscheiden",
+          "status": {
+            "DNS": "Nicht gestartet",
+            "DNF": "Nicht beendet",
+            "DSQ": "Disqualifiziert"
+          },
             "penalty": "Zeitstrafe inkl. {{seconds}} s",
             "penaltySeconds": "Strafe (s)",
             "penaltyShort": "Strafe",
@@ -1276,6 +1282,15 @@
         "deactivate": "Lauf deaktivieren",
         "activate": "Lauf aktivieren",
         "incompleteWarning": "Es fehlen noch Ergebnisse — beenden aktiviert trotzdem die nächsten Läufe.",
+        "openResults": {
+          "title": "Offene Ergebnisse",
+          "question_one": "Ein Boot hat noch kein Ergebnis. Was soll damit geschehen?",
+          "question_other": "{{count}} Boote haben noch kein Ergebnis. Was soll damit geschehen?",
+          "keepOpen": "Offen lassen",
+          "DNS": "Nicht gestartet",
+          "DNF": "Nicht beendet",
+          "DSQ": "Disqualifiziert"
+        },
         "error": "Der Lauf konnte nicht geändert werden."
       },
       "substitution": {

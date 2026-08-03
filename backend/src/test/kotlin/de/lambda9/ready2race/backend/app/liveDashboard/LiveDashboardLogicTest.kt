@@ -2,7 +2,11 @@ package de.lambda9.ready2race.backend.app.liveDashboard
 
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardInvoiceState
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardMatchState
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementStatusDto
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardScope
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckStatus
 import java.time.LocalDateTime
 import java.util.UUID
@@ -147,20 +151,158 @@ class LiveDashboardLogicTest {
 
     @Test
     fun failedTeamWithoutPlaceCountsAsResult() {
-        assertTrue(LiveDashboardLogic.teamHasResult(1, false))
-        assertTrue(LiveDashboardLogic.teamHasResult(null, true))
-        assertFalse(LiveDashboardLogic.teamHasResult(null, false))
+        assertTrue(LiveDashboardLogic.teamHasResult(1, false, false))
+        assertTrue(LiveDashboardLogic.teamHasResult(null, true, false))
+        assertFalse(LiveDashboardLogic.teamHasResult(null, false, false))
         assertEquals(
             LiveDashboardMatchState.FINISHED,
             LiveDashboardLogic.deriveMatchState(
                 false,
                 start,
                 listOf(
-                    LiveDashboardLogic.teamHasResult(1, false),
-                    LiveDashboardLogic.teamHasResult(null, true),
+                    LiveDashboardLogic.teamHasResult(1, false, false),
+                    LiveDashboardLogic.teamHasResult(null, true, false),
                 ),
             )
         )
+    }
+
+    @Test
+    fun deregisteredTeamNeedsNoResult() {
+        assertTrue(LiveDashboardLogic.teamHasResult(null, false, true))
+    }
+
+    @Test
+    fun matchWithDeregisteredTeamCanFinish() {
+        assertEquals(
+            LiveDashboardMatchState.FINISHED,
+            LiveDashboardLogic.deriveMatchState(
+                false,
+                start,
+                listOf(
+                    LiveDashboardLogic.teamHasResult(1, false, false),
+                    LiveDashboardLogic.teamHasResult(null, false, true),
+                ),
+            )
+        )
+    }
+
+    // --- selectForScope ---
+
+    private fun match(state: LiveDashboardMatchState, name: String) = LiveDashboardMatchDto(
+        matchId = UUID.randomUUID(),
+        state = state,
+        competitionId = UUID.randomUUID(),
+        competitionName = "Coastal",
+        categoryName = null,
+        roundName = null,
+        matchName = name,
+        executionOrder = 0,
+        startTime = start,
+        currentlyRunning = state == LiveDashboardMatchState.RUNNING,
+        elapsedMinutes = null,
+        teams = emptyList(),
+    )
+
+    @Test
+    fun liveScopeKeepsEveryRunningMatch() {
+        val matches = listOf(
+            match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"),
+            match(LiveDashboardMatchState.RUNNING, "Vorlauf 2"),
+            match(LiveDashboardMatchState.RUNNING, "Vorlauf 3"),
+            match(LiveDashboardMatchState.UPCOMING, "Finale"),
+        )
+
+        val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
+
+        assertEquals(listOf("Vorlauf 2", "Vorlauf 3"), selected.map { it.matchName })
+    }
+
+    @Test
+    fun liveScopeFallsBackToTheNextUpcomingMatch() {
+        val matches = listOf(
+            match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"),
+            match(LiveDashboardMatchState.UPCOMING, "Vorlauf 2"),
+            match(LiveDashboardMatchState.UPCOMING, "Finale"),
+        )
+
+        val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
+
+        assertEquals(listOf("Vorlauf 2"), selected.map { it.matchName })
+    }
+
+    @Test
+    fun liveScopeIsEmptyWhenNothingIsRunningOrUpcoming() {
+        val matches = listOf(match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"))
+
+        assertTrue(LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE).isEmpty())
+    }
+
+    @Test
+    fun allScopeKeepsEverything() {
+        val matches = listOf(
+            match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"),
+            match(LiveDashboardMatchState.RUNNING, "Vorlauf 2"),
+            match(LiveDashboardMatchState.UNSCHEDULED, "Finale"),
+        )
+
+        assertEquals(3, LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.ALL).size)
+    }
+
+    // --- summarizeRequirements ---
+
+    private fun requirement(
+        optional: Boolean = false,
+        checked: Boolean = true,
+        timeStatus: TimeCheckStatus? = null,
+    ) = LiveDashboardRequirementStatusDto(
+        requirementId = UUID.randomUUID(),
+        name = "Bedingung",
+        description = null,
+        optional = optional,
+        checked = checked,
+        checkedAt = if (checked) start.minusMinutes(30) else null,
+        note = null,
+        timeCheck = timeStatus?.let { TimeCheckDto(30, it) },
+    )
+
+    @Test
+    fun summaryCountsFulfilledAndMissing() {
+        val summary = LiveDashboardLogic.summarizeRequirements(
+            listOf(
+                requirement(),
+                requirement(checked = false),
+                requirement(optional = true, checked = false),
+            )
+        )
+        assertEquals(3, summary.total)
+        assertEquals(1, summary.fulfilled)
+        assertEquals(1, summary.missingRequired)
+        assertEquals(1, summary.missingOptional)
+        assertEquals(0, summary.timeIssues)
+    }
+
+    @Test
+    fun summaryCountsChecksOutsideTheWindow() {
+        val summary = LiveDashboardLogic.summarizeRequirements(
+            listOf(
+                requirement(timeStatus = TimeCheckStatus.OK),
+                requirement(timeStatus = TimeCheckStatus.LATE),
+                requirement(timeStatus = TimeCheckStatus.TOO_EARLY),
+            )
+        )
+        assertEquals(3, summary.fulfilled)
+        assertEquals(2, summary.timeIssues)
+    }
+
+    @Test
+    fun summaryOfNothingIsEmpty() {
+        val summary = LiveDashboardLogic.summarizeRequirements(emptyList())
+        assertEquals(0, summary.total)
+        assertEquals(0, summary.fulfilled)
+        assertEquals(0, summary.missingRequired)
+        assertEquals(0, summary.missingOptional)
+        assertEquals(0, summary.timeIssues)
     }
 
     // --- requirementApplies ---

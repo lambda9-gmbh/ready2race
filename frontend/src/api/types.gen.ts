@@ -1333,6 +1333,22 @@ export type LiveDashboardRequirementStatusDto = {
     timeCheck?: TimeCheckDto | null
 }
 
+/**
+ * Condensed requirement state per team; the requirements themselves are only in the team detail
+ */
+export type LiveDashboardRequirementSummaryDto = {
+    total: number
+    fulfilled: number
+    missingRequired: number
+    missingOptional: number
+    timeIssues: number
+}
+
+export type LiveDashboardTeamDetailDto = {
+    teamId: string
+    participants: Array<LiveDashboardParticipantDto>
+}
+
 export type LiveDashboardTeamDto = {
     teamId: string
     teamName?: string | null
@@ -1348,7 +1364,8 @@ export type LiveDashboardTeamDto = {
     deregistered: boolean
     deregisteredReason?: string | null
     invoiceState: LiveDashboardInvoiceState
-    participants: Array<LiveDashboardParticipantDto>
+    requirements: LiveDashboardRequirementSummaryDto
+    substituted: boolean
 }
 
 export type LoginDto = {
@@ -5420,6 +5437,12 @@ export type FinishLiveDashboardMatchData = {
         eventId: string
         matchId: string
     }
+    query?: {
+        /**
+         * Marks every team without a result as failed with this reason. Deregistered teams are left alone.
+         */
+        openResults?: 'DNS' | 'DNF' | 'DSQ'
+    }
 }
 
 export type FinishLiveDashboardMatchResponse = void
@@ -5444,11 +5467,29 @@ export type GetLiveDashboardData = {
     path: {
         eventId: string
     }
+    query?: {
+        /**
+         * LIVE returns the running matches, or the next upcoming one if none is running. Defaults to ALL.
+         */
+        scope?: 'LIVE' | 'ALL'
+    }
 }
 
 export type GetLiveDashboardResponse = LiveDashboardDto
 
-export type GetLiveDashboardError = ApiError
+export type GetLiveDashboardError = unknown | ApiError
+
+export type GetLiveDashboardTeamDetailData = {
+    path: {
+        eventId: string
+        matchId: string
+        teamId: string
+    }
+}
+
+export type GetLiveDashboardTeamDetailResponse = LiveDashboardTeamDetailDto
+
+export type GetLiveDashboardTeamDetailError = ApiError
 
 export type GetInfoViewsData = {
     path: {

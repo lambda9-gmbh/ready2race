@@ -39,6 +39,20 @@ data class LiveDashboardParticipantDto(
     val requirements: List<LiveDashboardRequirementStatusDto>,
 )
 
+/**
+ * Verdichtung der Teilnahmebedingungen einer Mannschaft. Die Liste zeigt daraus ein Ampel-Icon;
+ * die Bedingungen selbst holt erst der Detail-Dialog. Bei 150 Personen mal drei Bedingungen ist
+ * das der Unterschied zwischen einer Antwort von 100 KB und einer von wenigen KB.
+ */
+data class LiveDashboardRequirementSummaryDto(
+    val total: Int,
+    val fulfilled: Int,
+    val missingRequired: Int,
+    val missingOptional: Int,
+    /** Prüfungen außerhalb des konfigurierten Zeitfensters. */
+    val timeIssues: Int,
+)
+
 data class LiveDashboardTeamDto(
     val teamId: UUID,
     val teamName: String?,
@@ -55,6 +69,14 @@ data class LiveDashboardTeamDto(
     val deregistered: Boolean,
     val deregisteredReason: String?,
     val invoiceState: LiveDashboardInvoiceState,
+    val requirements: LiveDashboardRequirementSummaryDto,
+    /** Ob mindestens eine Person für diese Runde umgemeldet wurde. */
+    val substituted: Boolean,
+)
+
+/** Was der Detail-Dialog zusätzlich braucht; wird einzeln je Mannschaft geladen. */
+data class LiveDashboardTeamDetailDto(
+    val teamId: UUID,
     val participants: List<LiveDashboardParticipantDto>,
 )
 

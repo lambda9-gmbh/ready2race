@@ -19,6 +19,8 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography,
     useMediaQuery,
     useTheme,
@@ -32,6 +34,12 @@ import {Controller, FormContainer, useFieldArray, useForm} from 'react-hook-form
 import Throbber from '@components/Throbber.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {getFilename, groupBy, shuffle} from '@utils/helpers.ts'
+import {
+    formatFailedReason,
+    MatchResultStatus,
+    matchResultStatus,
+    matchResultStatuses,
+} from '@utils/matchResultStatus.ts'
 import {
     CompetitionExecutionCanNotCreateRoundReason,
     CompetitionMatchDto,
@@ -71,6 +79,8 @@ type EnterResultsTeam = {
     place: string
     timeString: string
     failed: boolean
+    /** Kürzel und Notiz stehen im Formular getrennt, in der Datenbank zusammen in einem Feld. */
+    failedStatus: MatchResultStatus | ''
     failedReason: string
     penaltySeconds: string
     penaltyNote: string
@@ -79,6 +89,12 @@ type EnterResultsForm = {
     selectedMatchDto: CompetitionMatchDto | null
     teamResults: EnterResultsTeam[]
 }
+
+const statusLabelKeys = {
+    DNS: 'event.competition.execution.results.status.DNS',
+    DNF: 'event.competition.execution.results.status.DNF',
+    DSQ: 'event.competition.execution.results.status.DSQ',
+} as const satisfies Record<MatchResultStatus, string>
 
 const CompetitionExecution = () => {
     const {t} = useTranslation()
@@ -211,15 +227,20 @@ const CompetitionExecution = () => {
         return teams
             .filter(t => !t.deregistered)
             .sort((a, b) => a.startNumber - b.startNumber)
-            .map(team => ({
-                registrationId: team.registrationId,
-                place: team.place?.toString() ?? '',
-                timeString: team.timeString?.toString() ?? '',
-                failed: team.failed,
-                failedReason: team.failedReason ?? '',
-                penaltySeconds: team.penaltySeconds?.toString() ?? '',
-                penaltyNote: team.penaltyNote ?? '',
-            }))
+            .map(team => {
+                const {status, note} = matchResultStatus(team.failedReason)
+
+                return {
+                    registrationId: team.registrationId,
+                    place: team.place?.toString() ?? '',
+                    timeString: team.timeString?.toString() ?? '',
+                    failed: team.failed,
+                    failedStatus: status ?? '',
+                    failedReason: note ?? '',
+                    penaltySeconds: team.penaltySeconds?.toString() ?? '',
+                    penaltyNote: team.penaltyNote ?? '',
+                }
+            })
     }
 
     const [startListMatch, setStartListMatch] = useState<string | null>(null)
@@ -443,7 +464,10 @@ const CompetitionExecution = () => {
                                 : takeIfNotEmpty(results.timeString),
                             failed: results.failed,
                             failedReason: results.failed
-                                ? takeIfNotEmpty(results.failedReason)
+                                ? (formatFailedReason(
+                                      results.failedStatus || null,
+                                      results.failedReason,
+                                  ) ?? undefined)
                                 : undefined,
                             penaltySeconds:
                                 takeIfNotEmpty(results.penaltySeconds) !== undefined
@@ -934,13 +958,71 @@ const CompetitionExecution = () => {
                                                                             </Box>
                                                                         </Box>
                                                                     ) : (
-                                                                        <FormInputText
-                                                                            name={`teamResults.${fieldIndex}.failedReason`}
-                                                                            label={t(
-                                                                                'event.competition.execution.results.failedReason',
-                                                                            )}
-                                                                            size="small"
-                                                                        />
+                                                                        <Box
+                                                                            sx={{
+                                                                                display: 'flex',
+                                                                                flexDirection:
+                                                                                    'column',
+                                                                                gap: 2,
+                                                                            }}>
+                                                                            {/* Die Kürzel bleiben in jeder Sprache gleich; was sie
+                                                                                bedeuten, steht im Tooltip. */}
+                                                                            <Controller
+                                                                                name={`teamResults.${fieldIndex}.failedStatus`}
+                                                                                render={({
+                                                                                    field: {
+                                                                                        onChange:
+                                                                                            statusOnChange,
+                                                                                        value: statusValue,
+                                                                                    },
+                                                                                }) => (
+                                                                                    <ToggleButtonGroup
+                                                                                        exclusive
+                                                                                        size="small"
+                                                                                        value={
+                                                                                            statusValue ||
+                                                                                            null
+                                                                                        }
+                                                                                        onChange={(
+                                                                                            _,
+                                                                                            next,
+                                                                                        ) =>
+                                                                                            statusOnChange(
+                                                                                                next ??
+                                                                                                    '',
+                                                                                            )
+                                                                                        }>
+                                                                                        {matchResultStatuses.map(
+                                                                                            status => (
+                                                                                                <ToggleButton
+                                                                                                    key={
+                                                                                                        status
+                                                                                                    }
+                                                                                                    value={
+                                                                                                        status
+                                                                                                    }
+                                                                                                    title={t(
+                                                                                                        statusLabelKeys[
+                                                                                                            status
+                                                                                                        ],
+                                                                                                    )}>
+                                                                                                    {
+                                                                                                        status
+                                                                                                    }
+                                                                                                </ToggleButton>
+                                                                                            ),
+                                                                                        )}
+                                                                                    </ToggleButtonGroup>
+                                                                                )}
+                                                                            />
+                                                                            <FormInputText
+                                                                                name={`teamResults.${fieldIndex}.failedReason`}
+                                                                                label={t(
+                                                                                    'event.competition.execution.results.failedNote',
+                                                                                )}
+                                                                                size="small"
+                                                                            />
+                                                                        </Box>
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell width="10%">

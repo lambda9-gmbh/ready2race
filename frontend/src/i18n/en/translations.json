@@ -848,6 +848,12 @@
           },
           "failed": "Eliminated",
           "failedReason": "Reason for elimination",
+          "failedNote": "Note on elimination",
+          "status": {
+            "DNS": "Did not start",
+            "DNF": "Did not finish",
+            "DSQ": "Disqualified"
+          },
             "penalty": "Time penalty incl. {{seconds}} s",
             "penaltySeconds": "Penalty (s)",
             "penaltyShort": "Penalty",
@@ -1276,6 +1282,15 @@
         "deactivate": "Deactivate race",
         "activate": "Activate race",
         "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
+        "openResults": {
+          "title": "Open results",
+          "question_one": "One boat has no result yet. What should happen to it?",
+          "question_other": "{{count}} boats have no result yet. What should happen to them?",
+          "keepOpen": "Leave open",
+          "DNS": "Did not start",
+          "DNF": "Did not finish",
+          "DSQ": "Disqualified"
+        },
         "error": "The race could not be changed."
       },
       "substitution": {

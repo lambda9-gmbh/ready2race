@@ -21,6 +21,7 @@ import BaseDialog from '@components/BaseDialog.tsx'
 import {useTranslation} from 'react-i18next'
 import {ResultsMatchInfo} from '@components/results/ResultsMatchCard.tsx'
 import {sortByPlaces, compareNullsHigh} from '@utils/helpers.ts'
+import {failedLabel} from '@utils/matchResultStatus.ts'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
 
 type Props<M extends ResultsMatchInfo> = {
@@ -97,12 +98,12 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                         {team.place
                                                             ? `${team.place}.`
                                                             : team.failed
-                                                              ? t(
-                                                                    'event.competition.execution.results.failed',
-                                                                ) +
-                                                                (team.failedReason
-                                                                    ? ` (${team.failedReason})`
-                                                                    : '')
+                                                              ? failedLabel(
+                                                                    team.failedReason,
+                                                                    t(
+                                                                        'event.competition.execution.results.failed',
+                                                                    ),
+                                                                )
                                                               : team.deregistered
                                                                 ? t(
                                                                       'event.competition.registration.deregister.deregistered',

@@ -29,6 +29,7 @@ import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
 import Checkbox from '@mui/material/Checkbox'
+import {failedLabel} from '@utils/matchResultStatus.ts'
 
 type Props = {
     round: CompetitionRoundDto
@@ -455,12 +456,12 @@ const CompetitionExecutionRound = ({
                                                                   ? ` (${team.deregistrationReason})`
                                                                   : '')
                                                             : team.failed
-                                                              ? t(
-                                                                    'event.competition.execution.results.failed',
-                                                                ) +
-                                                                (team.failedReason
-                                                                    ? ` (${team.failedReason})`
-                                                                    : '')
+                                                              ? failedLabel(
+                                                                    team.failedReason,
+                                                                    t(
+                                                                        'event.competition.execution.results.failed',
+                                                                    ),
+                                                                )
                                                               : team.place}
                                                     </TableCell>
                                                     <TableCell width="20%">
