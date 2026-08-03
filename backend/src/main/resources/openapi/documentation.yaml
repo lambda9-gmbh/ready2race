@@ -5738,6 +5738,30 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/liveDashboard/match/{matchId}/start:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: startLiveDashboardMatch
+      description: "Marks the real start of the match; the scheduled start time is left untouched"
+      responses:
+        204:
+          description: Match marked as started
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/liveDashboard/match/{matchId}/running-state:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -5828,6 +5852,234 @@ paths:
           $ref: '#/components/responses/401'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventSchedule
+      description: "The event's timeline: planned slots plus setup rounds that have no slot yet"
+      responses:
+        200:
+          description: Schedule retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventScheduleDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: createScheduleSlot
+      description: "Creates either a free slot (name set) or a slot linked to a setup round (competitionSetupMatch set) - exactly one of the two"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertScheduleSlotRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateScheduleSlot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertScheduleSlotRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteScheduleSlot
+      description: "The match keeps its last start time (no rollback onto the setup round)"
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/skip:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: skipScheduleSlot
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/unskip:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: unskipScheduleSlot
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/shift:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: shiftEventSchedule
+      description: "Shifts the timeline of the same race day, starting at fromSlotId. dryRun=true only computes the preview."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftScheduleRequest'
+      responses:
+        200:
+          description: Shift computed (and applied unless dryRun)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftPreviewDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/import:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: importEventSchedule
+      description: >-
+        Imports a flat xlsx schedule export, matching rows to setup rounds by name. dryRun=true
+        (the default if the field is missing or unparsable) only returns the match preview per row;
+        dryRun=false replaces the event's whole timeline with the import on success.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: "Flat xlsx schedule export"
+                dryRun:
+                  type: boolean
+                  description: "Defaults to true (preview only) if missing or unparsable"
+      responses:
+        200:
+          description: Import preview or result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleImportResultDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -11573,6 +11825,7 @@ components:
         - competitionName
         - executionOrder
         - teams
+        - pendingRound
       properties:
         matchId:
           type: string
@@ -11610,6 +11863,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpcomingMatchTeamInfo'
+        pendingRound:
+          type: boolean
+          description: "true for a placeholder from a waiting timeline slot (round not yet materialized) - matchId then points at the setup round, not a real match, and teams is always empty"
 
     UpcomingMatchTeamInfo:
       type: object
@@ -11792,6 +12048,7 @@ components:
         - competitionName
         - startState
         - teams
+        - pendingRound
       properties:
         matchId:
           type: string
@@ -11817,6 +12074,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardTeam'
+        pendingRound:
+          type: boolean
+          description: "true for a placeholder from a waiting timeline slot; teams is then always empty"
 
     AthleteBoardResultTeam:
       type: object
@@ -12188,6 +12448,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
         currentlyRunning:
           type: boolean
         elapsedMinutes:
@@ -12199,15 +12463,271 @@ components:
           items:
             $ref: '#/components/schemas/LiveDashboardTeamDto'
 
+    PendingSlotDto:
+      type: object
+      description: "A waiting timeline slot (round not yet materialized) - deliberately without team/participant data, since a WAITING slot has none yet"
+      required:
+        - slotId
+        - startTime
+      properties:
+        slotId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        competitionName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+
     LiveDashboardDto:
       type: object
       required:
         - matches
+        - pendingSlots
       properties:
         matches:
           type: array
           items:
             $ref: '#/components/schemas/LiveDashboardMatchDto'
+        pendingSlots:
+          type: array
+          description: "Ascending by start time; included in both scopes (ALL and LIVE) - the list is small"
+          items:
+            $ref: '#/components/schemas/PendingSlotDto'
+
+    EventScheduleSlotState:
+      type: string
+      enum:
+        - FREE
+        - WAITING
+        - LINKED
+        - OBSOLETE
+        - SKIPPED
+
+    EventScheduleSlotDto:
+      type: object
+      required:
+        - id
+        - startTime
+        - state
+      properties:
+        id:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        state:
+          $ref: '#/components/schemas/EventScheduleSlotState'
+        name:
+          type: string
+          nullable: true
+        durationMinutes:
+          type: integer
+          nullable: true
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+        competitionName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        matchId:
+          type: string
+          format: uuid
+          nullable: true
+        matchStartedAt:
+          type: string
+          format: date-time
+          nullable: true
+        matchFinishedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    UnplannedSetupMatchDto:
+      type: object
+      description: "A setup round of the event with no schedule slot yet"
+      required:
+        - setupMatchId
+        - competitionId
+        - competitionName
+        - roundName
+      properties:
+        setupMatchId:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        roundName:
+          type: string
+        matchName:
+          type: string
+          nullable: true
+
+    EventScheduleDto:
+      type: object
+      required:
+        - slots
+        - unplannedSetupMatches
+      properties:
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventScheduleSlotDto'
+        unplannedSetupMatches:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnplannedSetupMatchDto'
+
+    UpsertScheduleSlotRequest:
+      type: object
+      description: "Exactly one of competitionSetupMatch (round slot) or name (free slot) must be set, never both and never neither"
+      required:
+        - startTime
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        competitionSetupMatch:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        durationMinutes:
+          type: integer
+          nullable: true
+
+    ShiftMode:
+      type: string
+      enum:
+        - PLUS_MINUTES
+        - SET_TIME
+        - COMPRESS_TO_TARGET
+
+    ShiftScheduleRequest:
+      type: object
+      description: >-
+        Field combination depends on mode: PLUS_MINUTES needs only minutes, SET_TIME only newTime,
+        COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two.
+      required:
+        - fromSlotId
+        - mode
+        - dryRun
+      properties:
+        fromSlotId:
+          type: string
+          format: uuid
+        mode:
+          $ref: '#/components/schemas/ShiftMode'
+        minutes:
+          type: integer
+          format: int64
+          nullable: true
+        newTime:
+          type: string
+          format: date-time
+          nullable: true
+        targetSlotId:
+          type: string
+          format: uuid
+          nullable: true
+        dryRun:
+          type: boolean
+
+    ShiftPreviewEntryDto:
+      type: object
+      required:
+        - slotId
+        - oldStartTime
+        - newStartTime
+      properties:
+        slotId:
+          type: string
+          format: uuid
+        oldStartTime:
+          type: string
+          format: date-time
+        newStartTime:
+          type: string
+          format: date-time
+
+    ShiftPreviewDto:
+      type: object
+      required:
+        - entries
+        - applied
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShiftPreviewEntryDto'
+        applied:
+          type: boolean
+
+    ImportRowStatus:
+      type: string
+      enum:
+        - LINKED
+        - FREE
+        - AMBIGUOUS
+        - DUPLICATE
+
+    ImportRowResultDto:
+      type: object
+      description: "A row for the preview UI. targetLabel is only set for LINKED rows (\"competitionName – roundName – matchName\"), null otherwise."
+      required:
+        - rowNumber
+        - startTime
+        - laufText
+        - status
+      properties:
+        rowNumber:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        competitionText:
+          type: string
+          nullable: true
+        laufText:
+          type: string
+        status:
+          $ref: '#/components/schemas/ImportRowStatus'
+        targetLabel:
+          type: string
+          nullable: true
+
+    ScheduleImportResultDto:
+      type: object
+      required:
+        - rows
+        - applied
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportRowResultDto'
+        applied:
+          type: boolean
 
     RunningMatchTeamInfo:
       type: object
