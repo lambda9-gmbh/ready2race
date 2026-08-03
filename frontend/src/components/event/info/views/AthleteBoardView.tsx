@@ -14,7 +14,7 @@ const STALE_AFTER_MISSED_INTERVALS = 2
 
 const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
     const {t} = useTranslation()
-    const {data, lastUpdated, notFound, initialLoad} = useAthleteBoardData(eventId)
+    const {data, lastUpdated, notFound, initialLoad, loadFailed} = useAthleteBoardData(eventId)
     const now = useServerClock(data?.serverTime)
 
     if (notFound) {
@@ -34,6 +34,25 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
             </Box>
         )
     }
+
+    // Es wurde noch nie erfolgreich geladen und der letzte Versuch ist fehlgeschlagen
+    // (Backend tot, HTTP-Fehler, kein Netz). Das darf nicht wie "keine Läufe" aussehen —
+    // ein montierter Bildschirm würde sonst bei totem Backend behaupten, es sei kein Lauf
+    // auf dem Wasser.
+    if (!data && loadFailed) {
+        return (
+            <Box sx={{display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', p: 3}}>
+                <Typography variant="h5" color="error">
+                    {t('event.info.athleteBoard.loadError')}
+                </Typography>
+            </Box>
+        )
+    }
+
+    // "Stand" wird bewusst aus der Serverzeit der letzten erfolgreichen Antwort abgeleitet
+    // (nicht aus der Geräteuhr) — sonst widersprechen sich Uhrzeit links (Serveruhr) und
+    // "Stand" rechts genau auf dem Bildschirm, für den die Serverzeit-Verankerung gedacht ist.
+    const asOfTime = data ? new Date(data.serverTime) : null
 
     const staleThresholdMs =
         (data?.refreshIntervalSeconds ?? 15) * STALE_AFTER_MISSED_INTERVALS * 1000
@@ -83,12 +102,12 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
                     <Typography sx={{fontSize: 'clamp(1.1rem, 2.2vw, 2.2rem)', fontWeight: 800}}>
                         {now.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})}
                     </Typography>
-                    {lastUpdated && (
+                    {asOfTime && (
                         <Typography
                             sx={{fontSize: 'clamp(0.65rem, 1vw, 0.85rem)'}}
                             color={stale ? 'warning.main' : 'text.secondary'}>
                             {t('event.info.athleteBoard.asOf', {
-                                time: lastUpdated.toLocaleTimeString(undefined, {
+                                time: asOfTime.toLocaleTimeString(undefined, {
                                     hour: '2-digit',
                                     minute: '2-digit',
                                 }),
@@ -111,7 +130,7 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
                             key={match.matchId}
                             match={match}
                             now={now}
-                            showCountdown={false}
+                            variant="running"
                         />
                     )),
                 )}
@@ -123,6 +142,7 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
                             key={match.matchId}
                             match={match}
                             now={now}
+                            variant="upcoming"
                             showCountdown={data?.showCountdown ?? true}
                         />
                     )),

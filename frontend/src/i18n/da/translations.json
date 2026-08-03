@@ -1226,7 +1226,10 @@
         "limitRunning": "Antal igangværende løb",
         "limitUpcoming": "Antal kommende løb",
         "limitResults": "Antal resultater",
-        "showCountdown": "Vis nedtælling til start"
+        "showCountdown": "Vis nedtælling til start",
+        "loadError": "Data kunne ikke indlæses. Kontrollér venligst forbindelsen.",
+        "minutesUnit": "min",
+        "secondsUnit": "sek"
       }
     },
     "liveDashboard": {

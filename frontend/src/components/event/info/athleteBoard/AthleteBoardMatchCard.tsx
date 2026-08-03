@@ -1,24 +1,39 @@
 import {Box, Card, CardContent, Chip, Stack, Typography} from '@mui/material'
+import {TFunction} from 'i18next'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch} from '@api/types.gen'
+
+/**
+ * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits auf dem Wasser,
+ * eine verstrichene Startzeit ist hier der Normalfall und wird nicht kommentiert.
+ * "upcoming": Karte im Block "Nächster Lauf" — nur hier ergeben Countdown und der
+ * Hinweis "erwartet" (Start verpasst) inhaltlich einen Sinn, siehe KDoc von
+ * AthleteBoardStartState im Backend ("nur im Block upcoming aussagekräftig").
+ */
+type AthleteBoardMatchCardVariant = 'running' | 'upcoming'
 
 interface AthleteBoardMatchCardProps {
     match: AthleteBoardMatch
     now: Date
-    showCountdown: boolean
+    variant: AthleteBoardMatchCardVariant
+    // Nur innerhalb variant="upcoming" relevant: ob zusätzlich zum "erwartet"-Hinweis
+    // auch die genaue Countdown-Zahl gezeigt wird (Einstellung der Veranstaltung).
+    showCountdown?: boolean
 }
 
 const formatTime = (value: string) =>
     new Date(value).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})
 
-const formatRemaining = (seconds: number) => {
+const formatRemaining = (seconds: number, t: TFunction) => {
     const total = Math.max(0, Math.floor(seconds))
     const minutes = Math.floor(total / 60)
     const rest = total % 60
-    return minutes > 0 ? `${minutes} min` : `${rest} s`
+    return minutes > 0
+        ? `${minutes} ${t('event.info.athleteBoard.minutesUnit')}`
+        : `${rest} ${t('event.info.athleteBoard.secondsUnit')}`
 }
 
-const AthleteBoardMatchCard = ({match, now, showCountdown}: AthleteBoardMatchCardProps) => {
+const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: AthleteBoardMatchCardProps) => {
     const {t} = useTranslation()
 
     const startsInSeconds = match.startTime
@@ -27,8 +42,11 @@ const AthleteBoardMatchCard = ({match, now, showCountdown}: AthleteBoardMatchCar
 
     // Der Server liefert den Zustand beim Abruf; zwischen zwei Abrufen läuft die Uhr
     // lokal weiter, deshalb wird der Übergang zu "erwartet" hier noch einmal geprüft.
+    // Beides trägt nur im Block "Nächster Lauf" Bedeutung (siehe KDoc von
+    // AthleteBoardStartState im Backend) — deshalb hängt der Hinweis am variant-Schalter.
     const overdue =
-        match.startState === 'OVERDUE' || (startsInSeconds !== null && startsInSeconds <= 0)
+        variant === 'upcoming' &&
+        (match.startState === 'OVERDUE' || (startsInSeconds !== null && startsInSeconds <= 0))
 
     const renderTiming = () => {
         if (!match.startTime) {
@@ -51,13 +69,14 @@ const AthleteBoardMatchCard = ({match, now, showCountdown}: AthleteBoardMatchCar
                         {t('event.info.athleteBoard.expected')}
                     </Typography>
                 ) : (
+                    variant === 'upcoming' &&
                     showCountdown &&
                     startsInSeconds !== null && (
                         <Typography
                             sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}}
                             color="text.secondary">
                             {t('event.info.athleteBoard.startsIn', {
-                                time: formatRemaining(startsInSeconds),
+                                time: formatRemaining(startsInSeconds, t),
                             })}
                         </Typography>
                     )

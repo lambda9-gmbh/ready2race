@@ -1226,7 +1226,10 @@
         "limitRunning": "Number of running races",
         "limitUpcoming": "Number of next races",
         "limitResults": "Number of results",
-        "showCountdown": "Show countdown to start"
+        "showCountdown": "Show countdown to start",
+        "loadError": "Data could not be loaded. Please check the connection.",
+        "minutesUnit": "min",
+        "secondsUnit": "s"
       }
     },
     "liveDashboard": {
