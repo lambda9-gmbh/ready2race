@@ -1374,7 +1374,23 @@
       "noSlots": "Der er endnu ikke oprettet en tidsplan for denne begivenhed.",
       "plan": "Planlæg",
       "adjust": "Juster tidsplan",
-      "import": "Excel-import"
+      "import": "Excel-import",
+      "shift": {
+        "title": "Juster tidsplan",
+        "fromSlot": "Start-slot",
+        "modePlus": "+X minutter",
+        "modeSetTime": "Angiv starttid",
+        "modeCompress": "Indhent til",
+        "targetSlot": "Mål-slot",
+        "minutes": "Minutter",
+        "newTime": "Ny starttid",
+        "preview": "Forhåndsvisning",
+        "apply": "Anvend",
+        "old": "Gammel",
+        "new": "Ny",
+        "unchanged": "„Anvend“ er kun muligt, så længe formularen ikke er ændret siden forhåndsvisningen. Kør venligst forhåndsvisningen igen.",
+        "impossible": "Kan ikke indhente — kun {{max}} minutters spillerum. Vælg en senere mål-slot."
+      }
     },
     "results": {
       "download": "Download tidligere resultater",

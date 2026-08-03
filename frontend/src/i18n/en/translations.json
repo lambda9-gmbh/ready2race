@@ -1374,7 +1374,23 @@
       "noSlots": "No schedule has been created for this event yet.",
       "plan": "Schedule",
       "adjust": "Adjust schedule",
-      "import": "Excel import"
+      "import": "Excel import",
+      "shift": {
+        "title": "Adjust schedule",
+        "fromSlot": "Start slot",
+        "modePlus": "+X minutes",
+        "modeSetTime": "Set start time",
+        "modeCompress": "Catch up by",
+        "targetSlot": "Target slot",
+        "minutes": "Minutes",
+        "newTime": "New start time",
+        "preview": "Preview",
+        "apply": "Apply",
+        "old": "Old",
+        "new": "New",
+        "unchanged": "\"Apply\" is only available while the form has not changed since the preview. Please run the preview again.",
+        "impossible": "Cannot catch up — only {{max}} minutes of slack. Choose a later target slot."
+      }
     },
     "results": {
       "download": "Download previous results",

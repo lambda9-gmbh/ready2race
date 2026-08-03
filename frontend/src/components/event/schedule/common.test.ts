@@ -1,6 +1,14 @@
 import {describe, expect, it} from 'vitest'
-import {groupSlotsByDay, isEditable, slotLabel} from './common.ts'
-import {EventScheduleSlotDto} from '@api/types.gen.ts'
+import {
+    buildShiftPreviewRows,
+    defaultFromSlotId,
+    groupSlotsByDay,
+    isEditable,
+    parseMaxReductionMinutes,
+    slotLabel,
+    slotsAfter,
+} from './common.ts'
+import {EventScheduleSlotDto, ShiftPreviewEntryDto} from '@api/types.gen.ts'
 
 const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): EventScheduleSlotDto => ({
     id: crypto.randomUUID(),
@@ -86,5 +94,94 @@ describe('isEditable', () => {
                 }),
             ),
         ).toBe(false)
+    })
+})
+
+describe('defaultFromSlotId', () => {
+    it('picks the first slot without matchFinishedAt', () => {
+        const finished = slot('2026-08-17T08:00:00', {matchFinishedAt: '2026-08-17T08:20:00'})
+        const open = slot('2026-08-17T09:00:00')
+        const later = slot('2026-08-17T10:00:00')
+        expect(defaultFromSlotId([finished, open, later])).toBe(open.id)
+    })
+
+    it('falls back to the first slot when every slot is already finished', () => {
+        const first = slot('2026-08-17T08:00:00', {matchFinishedAt: '2026-08-17T08:20:00'})
+        const second = slot('2026-08-17T09:00:00', {matchFinishedAt: '2026-08-17T09:20:00'})
+        expect(defaultFromSlotId([first, second])).toBe(first.id)
+    })
+
+    it('returns undefined for an empty day', () => {
+        expect(defaultFromSlotId([])).toBeUndefined()
+    })
+})
+
+describe('slotsAfter', () => {
+    it('returns only the slots later than the chosen from-slot, in order', () => {
+        const a = slot('2026-08-17T08:00:00')
+        const b = slot('2026-08-17T09:00:00')
+        const c = slot('2026-08-17T10:00:00')
+        expect(slotsAfter([a, b, c], a.id)).toEqual([b, c])
+        expect(slotsAfter([a, b, c], b.id)).toEqual([c])
+        expect(slotsAfter([a, b, c], c.id)).toEqual([])
+    })
+
+    it('returns an empty list when the from-slot is unknown', () => {
+        const a = slot('2026-08-17T08:00:00')
+        expect(slotsAfter([a], 'not-a-real-id')).toEqual([])
+    })
+})
+
+describe('buildShiftPreviewRows', () => {
+    it('marks rows whose time actually changed and resolves the slot label', () => {
+        const unchanged = slot('2026-08-17T08:00:00', {name: 'Eröffnung', state: 'FREE'})
+        const changed = slot('2026-08-17T09:00:00')
+        const entries: ShiftPreviewEntryDto[] = [
+            {
+                slotId: unchanged.id,
+                oldStartTime: '2026-08-17T08:00:00',
+                newStartTime: '2026-08-17T08:00:00',
+            },
+            {
+                slotId: changed.id,
+                oldStartTime: '2026-08-17T09:00:00',
+                newStartTime: '2026-08-17T09:15:00',
+            },
+        ]
+        const rows = buildShiftPreviewRows(entries, [unchanged, changed])
+        expect(rows).toEqual([
+            {
+                slotId: unchanged.id,
+                label: 'Eröffnung',
+                oldStartTime: '2026-08-17T08:00:00',
+                newStartTime: '2026-08-17T08:00:00',
+                changed: false,
+            },
+            {
+                slotId: changed.id,
+                label: slotLabel(changed),
+                oldStartTime: '2026-08-17T09:00:00',
+                newStartTime: '2026-08-17T09:15:00',
+                changed: true,
+            },
+        ])
+    })
+
+    it('falls back to the raw slot id when the slot cannot be resolved', () => {
+        const rows = buildShiftPreviewRows(
+            [{slotId: 'ghost', oldStartTime: '2026-08-17T08:00:00', newStartTime: '2026-08-17T08:10:00'}],
+            [],
+        )
+        expect(rows[0].label).toBe('ghost')
+    })
+})
+
+describe('parseMaxReductionMinutes', () => {
+    it('extracts the minute count from the backend CompressionImpossible message', () => {
+        expect(parseMaxReductionMinutes('Cannot compress: only 7 minutes available')).toBe(7)
+    })
+
+    it('returns undefined when the message does not match the expected shape', () => {
+        expect(parseMaxReductionMinutes('Shift request parameters are inconsistent')).toBeUndefined()
     })
 })

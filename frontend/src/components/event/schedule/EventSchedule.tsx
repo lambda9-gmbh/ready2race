@@ -28,6 +28,7 @@ import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
 import {groupSlotsByDay, isEditable, slotLabel} from './common.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
+import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 
 const stateChipProps = (
     slot: EventScheduleSlotDto,
@@ -71,6 +72,9 @@ const EventSchedule = () => {
     const [editingSlot, setEditingSlot] = useState<EventScheduleSlotDto | undefined>(undefined)
     const [presetMatch, setPresetMatch] = useState<UnplannedSetupMatchDto | undefined>(undefined)
 
+    const [shiftDialogOpen, setShiftDialogOpen] = useState(false)
+    const [shiftDaySlots, setShiftDaySlots] = useState<EventScheduleSlotDto[]>([])
+
     const {data, pending} = useFetch(signal => getEventSchedule({signal, path: {eventId}}), {
         onResponse: ({error}) => {
             if (error) {
@@ -99,6 +103,13 @@ const EventSchedule = () => {
     }
 
     const closeDialog = () => setDialogOpen(false)
+
+    const openShiftDialog = (daySlots: EventScheduleSlotDto[]) => {
+        setShiftDaySlots(daySlots)
+        setShiftDialogOpen(true)
+    }
+
+    const closeShiftDialog = () => setShiftDialogOpen(false)
 
     const handleDelete = (slot: EventScheduleSlotDto) => {
         confirmAction(async () => {
@@ -163,9 +174,23 @@ const EventSchedule = () => {
             )}
             {daySections.map(section => (
                 <Box key={section.date}>
-                    <Typography variant={'h3'} sx={{mb: 1}}>
-                        {format(new Date(section.date), t('format.date'))}
-                    </Typography>
+                    <Stack
+                        direction={'row'}
+                        justifyContent={'space-between'}
+                        alignItems={'center'}
+                        sx={{mb: 1}}>
+                        <Typography variant={'h3'}>
+                            {format(new Date(section.date), t('format.date'))}
+                        </Typography>
+                        {canEdit && (
+                            <Button
+                                size={'small'}
+                                variant={'text'}
+                                onClick={() => openShiftDialog(section.slots)}>
+                                {t('event.schedule.adjust')}
+                            </Button>
+                        )}
+                    </Stack>
                     <TableContainer>
                         <Table size={'small'}>
                             <TableHead>
@@ -299,6 +324,15 @@ const EventSchedule = () => {
                     unplannedSetupMatches={unplannedSetupMatches}
                     editingSlot={editingSlot}
                     presetMatch={presetMatch}
+                />
+            )}
+            {canEdit && (
+                <ScheduleShiftDialog
+                    eventId={eventId}
+                    open={shiftDialogOpen}
+                    onClose={closeShiftDialog}
+                    reloadData={reload}
+                    slots={shiftDaySlots}
                 />
             )}
         </Stack>

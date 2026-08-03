@@ -1374,7 +1374,23 @@
       "noSlots": "Für diese Veranstaltung ist noch kein Zeitplan angelegt.",
       "plan": "Einplanen",
       "adjust": "Zeitplan anpassen",
-      "import": "Excel-Import"
+      "import": "Excel-Import",
+      "shift": {
+        "title": "Zeitplan anpassen",
+        "fromSlot": "Start-Slot",
+        "modePlus": "+X Minuten",
+        "modeSetTime": "Startzeit setzen",
+        "modeCompress": "Aufholen bis",
+        "targetSlot": "Ziel-Slot",
+        "minutes": "Minuten",
+        "newTime": "Neue Startzeit",
+        "preview": "Vorschau",
+        "apply": "Anwenden",
+        "old": "Alt",
+        "new": "Neu",
+        "unchanged": "„Anwenden“ ist nur möglich, solange sich das Formular seit der Vorschau nicht geändert hat. Bitte die Vorschau erneut ausführen.",
+        "impossible": "Aufholen nicht möglich — nur {{max}} Minuten Spielraum. Wähle einen späteren Ziel-Slot."
+      }
     },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",
