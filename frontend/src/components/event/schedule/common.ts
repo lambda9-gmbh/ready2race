@@ -1,4 +1,10 @@
-import {EventScheduleSlotDto, ShiftPreviewEntryDto} from '@api/types.gen.ts'
+import {ChipProps} from '@mui/material'
+import {
+    EventScheduleSlotDto,
+    ImportRowResultDto,
+    ImportRowStatus,
+    ShiftPreviewEntryDto,
+} from '@api/types.gen.ts'
 
 export type DaySection = {date: string; slots: EventScheduleSlotDto[]}
 
@@ -74,3 +80,35 @@ export const parseMaxReductionMinutes = (message: string): number | undefined =>
     const match = message.match(/only (\d+) minutes available/)
     return match ? Number(match[1]) : undefined
 }
+
+// DUPLICATE-Zeilen blockieren den scharfen Import serverseitig (siehe EventScheduleService.
+// importSchedule: bei dryRun=false führt ein verbliebenes Duplikat zu 422 DuplicateImportRow) -
+// der Import-Button bleibt deshalb schon in der Vorschau gesperrt, statt den Nutzer erst beim
+// Anwenden scheitern zu lassen. AMBIGUOUS ist dagegen kein Blocker: diese Zeilen fallen bewusst
+// auf einen freien Slot zurück (siehe rowAmbiguous-Hinweistext) und werden trotzdem importiert.
+export const hasBlockingImportRows = (rows: ImportRowResultDto[]): boolean =>
+    rows.some(row => row.status === 'DUPLICATE')
+
+// Reine Farbzuordnung für den Status-Chip der Vorschau-Tabelle, getrennt von der Übersetzung
+// des Labels, damit sie ohne i18n-Kontext testbar ist.
+export const importRowChipColor = (status: ImportRowStatus): ChipProps['color'] => {
+    switch (status) {
+        case 'LINKED':
+            return 'success'
+        case 'AMBIGUOUS':
+            return 'warning'
+        case 'DUPLICATE':
+            return 'error'
+        case 'FREE':
+        default:
+            return 'default'
+    }
+}
+
+// Warnung im Import-Dialog: ein Import ersetzt ALLE Slots des Events (siehe replacesAll-Hinweis),
+// auch solche mit einem bereits gestarteten oder beendeten Lauf. matchStartedAt/matchFinishedAt
+// werden pro Slot aus dem RaceClocker-Feed befüllt (siehe EventScheduleService.getSchedule) -
+// sind sie für mindestens einen Slot gesetzt, macht der Dialog das Risiko sichtbar, bevor der
+// Nutzer den scharfen Import auslöst.
+export const hasRunningOrFinishedSlots = (slots: EventScheduleSlotDto[]): boolean =>
+    slots.some(s => s.matchStartedAt != null || s.matchFinishedAt != null)

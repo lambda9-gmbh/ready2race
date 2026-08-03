@@ -3,12 +3,15 @@ import {
     buildShiftPreviewRows,
     defaultFromSlotId,
     groupSlotsByDay,
+    hasBlockingImportRows,
+    hasRunningOrFinishedSlots,
+    importRowChipColor,
     isEditable,
     parseMaxReductionMinutes,
     slotLabel,
     slotsAfter,
 } from './common.ts'
-import {EventScheduleSlotDto, ShiftPreviewEntryDto} from '@api/types.gen.ts'
+import {EventScheduleSlotDto, ImportRowResultDto, ShiftPreviewEntryDto} from '@api/types.gen.ts'
 
 const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): EventScheduleSlotDto => ({
     id: crypto.randomUUID(),
@@ -183,5 +186,77 @@ describe('parseMaxReductionMinutes', () => {
 
     it('returns undefined when the message does not match the expected shape', () => {
         expect(parseMaxReductionMinutes('Shift request parameters are inconsistent')).toBeUndefined()
+    })
+})
+
+const importRow = (over: Partial<ImportRowResultDto> = {}): ImportRowResultDto => ({
+    rowNumber: 1,
+    startTime: '2026-08-17T08:00:00',
+    competitionText: 'CM 1x',
+    laufText: 'Achtelfinale AF1',
+    status: 'LINKED',
+    targetLabel: 'CM 1x – Achtelfinale – AF1',
+    ...over,
+})
+
+describe('hasBlockingImportRows', () => {
+    it('is false when every row imports cleanly', () => {
+        expect(
+            hasBlockingImportRows([importRow({status: 'LINKED'}), importRow({status: 'FREE'})]),
+        ).toBe(false)
+    })
+
+    it('is false for AMBIGUOUS rows - they just fall back to a free slot', () => {
+        expect(hasBlockingImportRows([importRow({status: 'AMBIGUOUS'})])).toBe(false)
+    })
+
+    it('is true as soon as one row is a DUPLICATE', () => {
+        expect(
+            hasBlockingImportRows([importRow({status: 'LINKED'}), importRow({status: 'DUPLICATE'})]),
+        ).toBe(true)
+    })
+
+    it('is false for an empty preview', () => {
+        expect(hasBlockingImportRows([])).toBe(false)
+    })
+})
+
+describe('importRowChipColor', () => {
+    it('maps each status to its chip color', () => {
+        expect(importRowChipColor('LINKED')).toBe('success')
+        expect(importRowChipColor('FREE')).toBe('default')
+        expect(importRowChipColor('AMBIGUOUS')).toBe('warning')
+        expect(importRowChipColor('DUPLICATE')).toBe('error')
+    })
+})
+
+describe('hasRunningOrFinishedSlots', () => {
+    it('is false when no slot has started or finished', () => {
+        expect(
+            hasRunningOrFinishedSlots([
+                slot('2026-08-17T08:00:00'),
+                slot('2026-08-17T09:00:00'),
+            ]),
+        ).toBe(false)
+    })
+
+    it('is true when a slot has started', () => {
+        expect(
+            hasRunningOrFinishedSlots([
+                slot('2026-08-17T08:00:00', {matchStartedAt: '2026-08-17T08:01:00'}),
+            ]),
+        ).toBe(true)
+    })
+
+    it('is true when a slot has finished', () => {
+        expect(
+            hasRunningOrFinishedSlots([
+                slot('2026-08-17T08:00:00', {matchFinishedAt: '2026-08-17T08:20:00'}),
+            ]),
+        ).toBe(true)
+    })
+
+    it('is false for an empty schedule', () => {
+        expect(hasRunningOrFinishedSlots([])).toBe(false)
     })
 })

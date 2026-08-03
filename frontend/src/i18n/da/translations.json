@@ -1375,6 +1375,20 @@
       "plan": "Planlæg",
       "adjust": "Juster tidsplan",
       "import": "Excel-import",
+      "importDialog": {
+        "title": "Excel-import",
+        "choose": "Vælg fil",
+        "replacesAll": "Importen erstatter alle eksisterende slots.",
+        "runningWarning": "Den aktuelle tidsplan indeholder allerede påbegyndte eller afsluttede løb. Disse bliver også erstattet af importen.",
+        "row": "Række",
+        "time": "Tid",
+        "text": "Tekst",
+        "rowLinked": "Forbundet: {{target}}",
+        "rowFree": "Fri slot",
+        "rowAmbiguous": "Ikke entydig — importeres som en fri slot",
+        "rowDuplicate": "Duplikeret i filen — import blokeret",
+        "apply": "Importér"
+      },
       "shift": {
         "title": "Juster tidsplan",
         "fromSlot": "Start-slot",

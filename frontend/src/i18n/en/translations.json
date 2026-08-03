@@ -1375,6 +1375,20 @@
       "plan": "Schedule",
       "adjust": "Adjust schedule",
       "import": "Excel import",
+      "importDialog": {
+        "title": "Excel import",
+        "choose": "Choose file",
+        "replacesAll": "The import replaces all existing slots.",
+        "runningWarning": "The current schedule already contains started or finished races. These will also be replaced by the import.",
+        "row": "Row",
+        "time": "Time",
+        "text": "Text",
+        "rowLinked": "Linked: {{target}}",
+        "rowFree": "Free slot",
+        "rowAmbiguous": "Not unique — will be imported as a free slot",
+        "rowDuplicate": "Duplicate in the file — import blocked",
+        "apply": "Import"
+      },
       "shift": {
         "title": "Adjust schedule",
         "fromSlot": "Start slot",

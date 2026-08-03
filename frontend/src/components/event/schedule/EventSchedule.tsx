@@ -29,6 +29,7 @@ import Throbber from '@components/Throbber.tsx'
 import {groupSlotsByDay, isEditable, slotLabel} from './common.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
+import ScheduleImportDialog from './ScheduleImportDialog.tsx'
 
 const stateChipProps = (
     slot: EventScheduleSlotDto,
@@ -75,6 +76,8 @@ const EventSchedule = () => {
     const [shiftDialogOpen, setShiftDialogOpen] = useState(false)
     const [shiftDaySlots, setShiftDaySlots] = useState<EventScheduleSlotDto[]>([])
 
+    const [importDialogOpen, setImportDialogOpen] = useState(false)
+
     const {data, pending} = useFetch(signal => getEventSchedule({signal, path: {eventId}}), {
         onResponse: ({error}) => {
             if (error) {
@@ -110,6 +113,9 @@ const EventSchedule = () => {
     }
 
     const closeShiftDialog = () => setShiftDialogOpen(false)
+
+    const openImportDialog = () => setImportDialogOpen(true)
+    const closeImportDialog = () => setImportDialogOpen(false)
 
     const handleDelete = (slot: EventScheduleSlotDto) => {
         confirmAction(async () => {
@@ -163,9 +169,14 @@ const EventSchedule = () => {
             <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
                 <Typography variant={'h2'}>{t('event.schedule.tab')}</Typography>
                 {canEdit && (
-                    <Button variant={'outlined'} startIcon={<Add />} onClick={openAddDialog}>
-                        {t('event.schedule.addSlot')}
-                    </Button>
+                    <Stack direction={'row'} spacing={2}>
+                        <Button variant={'outlined'} onClick={openImportDialog}>
+                            {t('event.schedule.import')}
+                        </Button>
+                        <Button variant={'outlined'} startIcon={<Add />} onClick={openAddDialog}>
+                            {t('event.schedule.addSlot')}
+                        </Button>
+                    </Stack>
                 )}
             </Stack>
             {!data && pending && <Throbber />}
@@ -333,6 +344,15 @@ const EventSchedule = () => {
                     onClose={closeShiftDialog}
                     reloadData={reload}
                     slots={shiftDaySlots}
+                />
+            )}
+            {canEdit && (
+                <ScheduleImportDialog
+                    eventId={eventId}
+                    open={importDialogOpen}
+                    onClose={closeImportDialog}
+                    reloadData={reload}
+                    slots={data?.slots ?? []}
                 />
             )}
         </Stack>

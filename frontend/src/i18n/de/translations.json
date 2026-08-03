@@ -1375,6 +1375,20 @@
       "plan": "Einplanen",
       "adjust": "Zeitplan anpassen",
       "import": "Excel-Import",
+      "importDialog": {
+        "title": "Excel-Import",
+        "choose": "Datei auswählen",
+        "replacesAll": "Der Import ersetzt alle vorhandenen Slots.",
+        "runningWarning": "Der aktuelle Zeitplan enthält bereits gestartete oder beendete Läufe. Auch diese werden beim Import ersetzt.",
+        "row": "Zeile",
+        "time": "Zeit",
+        "text": "Text",
+        "rowLinked": "Verknüpft: {{target}}",
+        "rowFree": "Freier Slot",
+        "rowAmbiguous": "Nicht eindeutig — wird als freier Slot importiert",
+        "rowDuplicate": "Doppelt in der Datei — Import blockiert",
+        "apply": "Importieren"
+      },
       "shift": {
         "title": "Zeitplan anpassen",
         "fromSlot": "Start-Slot",
