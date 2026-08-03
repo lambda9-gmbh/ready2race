@@ -93,19 +93,24 @@ object CompetitionMatchRepo {
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(
-                notExists(
-                    selectOne()
-                        .from(COMPETITION_MATCH_TEAM)
-                        .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                        .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
-                        .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
-                        .and(COMPETITION_MATCH_TEAM.FAILED.isFalse)
-                        .and(notExists(
-                            selectOne()
-                                .from(COMPETITION_DEREGISTRATION)
-                                .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
-                                .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
-                        ))
+                // Beendet heißt: entweder explizit abgeschlossen (finished_at gesetzt), oder —
+                // Altdaten-Fallback für Läufe ohne finished_at — alle Mannschaften haben ein
+                // Ergebnis (die bisherige notExists-Bedingung).
+                COMPETITION_MATCH.FINISHED_AT.isNotNull.or(
+                    notExists(
+                        selectOne()
+                            .from(COMPETITION_MATCH_TEAM)
+                            .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
+                            .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
+                            .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
+                            .and(COMPETITION_MATCH_TEAM.FAILED.isFalse)
+                            .and(notExists(
+                                selectOne()
+                                    .from(COMPETITION_DEREGISTRATION)
+                                    .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                                    .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                            ))
+                    )
                 )
             )
             .and(
@@ -237,6 +242,7 @@ object CompetitionMatchRepo {
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(false))
+            .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             .and(
                 // Unverändert aus getMatchResults übernommene Teilbedingungen, hier als exists
                 // statt notExists: es gibt noch ein Team ohne Platz, das nicht ausgeschieden,

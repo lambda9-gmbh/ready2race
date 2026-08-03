@@ -105,6 +105,7 @@ object LiveDashboardService {
             fun buildMatchDto(match: Record): App<Nothing, LiveDashboardMatchDto> = KIO.comprehension {
                 val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
                 val startTime = match[COMPETITION_MATCH.START_TIME]
+                val finishedAt = match[COMPETITION_MATCH.FINISHED_AT]
                 val running = match[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
 
                 val teams = !(teamsByMatch[matchId] ?: emptyList())
@@ -116,7 +117,7 @@ object LiveDashboardService {
                 KIO.ok(
                     LiveDashboardMatchDto(
                         matchId = matchId,
-                        state = LiveDashboardLogic.deriveMatchState(running, startTime, teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) }),
+                        state = LiveDashboardLogic.deriveMatchState(running, startTime, finishedAt, teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) }),
                         competitionId = match.get("competition_id", UUID::class.java)!!,
                         competitionName = match.get("competition_name", String::class.java) ?: "",
                         categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
@@ -212,6 +213,11 @@ object LiveDashboardService {
         }
 
         !setRunning(matchId, false, userId)
+        !CompetitionMatchRepo.update(matchId) {
+            finishedAt = LocalDateTime.now()
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
         !activateNext(candidates, userId)
 
         noData
