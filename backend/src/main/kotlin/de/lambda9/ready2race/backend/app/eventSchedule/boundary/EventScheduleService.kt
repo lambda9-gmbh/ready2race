@@ -214,6 +214,10 @@ object EventScheduleService {
                 skippedAt = LocalDateTime.now()
                 skippedBy = userId
             }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
+
+            // Überspringen kann genau den Slot betreffen, an dem die Kette wartet — danach prüfen,
+            // ob sie weiterlaufen kann.
+            !ScheduleChainService.resumeIfParked(eventId, userId)
         } else {
             if (matchStartedAt != null) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))

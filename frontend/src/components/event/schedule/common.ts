@@ -107,8 +107,8 @@ export const importRowChipColor = (status: ImportRowStatus): ChipProps['color'] 
 
 // Warnung im Import-Dialog: ein Import ersetzt ALLE Slots des Events (siehe replacesAll-Hinweis),
 // auch solche mit einem bereits gestarteten oder beendeten Lauf. matchStartedAt/matchFinishedAt
-// werden pro Slot aus dem RaceClocker-Feed befüllt (siehe EventScheduleService.getSchedule) -
-// sind sie für mindestens einen Slot gesetzt, macht der Dialog das Risiko sichtbar, bevor der
-// Nutzer den scharfen Import auslöst.
+// kommen pro Slot aus competition_match (siehe EventScheduleService.getSchedule) - die Zeitnahme
+// ist nur einer der Schreiber. Sind sie für mindestens einen Slot gesetzt, macht der Dialog das
+// Risiko sichtbar, bevor der Nutzer den scharfen Import auslöst.
 export const hasRunningOrFinishedSlots = (slots: EventScheduleSlotDto[]): boolean =>
     slots.some(s => s.matchStartedAt != null || s.matchFinishedAt != null)

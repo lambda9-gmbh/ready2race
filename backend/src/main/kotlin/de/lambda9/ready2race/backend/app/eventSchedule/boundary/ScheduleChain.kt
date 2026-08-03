@@ -64,9 +64,10 @@ object ScheduleChain {
 
 /**
  * Der Zeitstrahl-Modus der Aktivierungskette (Task 9): [decideAndActivate] ist der Auslöser aus
- * `finishMatch`, [resumeAfterRoundCreation] der zweite Auslöser aus `createNewRound` — beide teilen
- * sich `buildChainSlots`/`ScheduleChain.decideNext`/die Aktivierung, damit an keiner Stelle zweimal
- * dieselbe Entscheidung anders getroffen wird.
+ * `finishMatch`, [resumeIfParked] der zweite Auslöser aus `createNewRound` und aus
+ * `EventScheduleService.setSlotSkipped` — alle teilen sich `buildChainSlots`/
+ * `ScheduleChain.decideNext`/die Aktivierung, damit an keiner Stelle zweimal dieselbe Entscheidung
+ * anders getroffen wird.
  */
 object ScheduleChainService {
 
@@ -82,11 +83,13 @@ object ScheduleChainService {
         }
 
     /**
-     * Zweiter Auslöser des wartenden Breakpoints: nach Rundenerzeugung wieder ansetzen, aber nur
-     * wenn die Automatik an ist und gerade kein Lauf des Events aktiv ist — sonst greift entweder
-     * schon ein Lauf, oder die Veranstaltung will die Kette gar nicht.
+     * Wieder ansetzen, wenn die Kette an einem wartenden Slot geparkt sein könnte: nach
+     * Rundenerzeugung (`createNewRound`) und nach dem Überspringen eines wartenden Slots
+     * (`EventScheduleService.setSlotSkipped`). Greift nur, wenn die Automatik an ist und gerade
+     * kein Lauf des Events aktiv ist — sonst greift entweder schon ein Lauf, oder die Veranstaltung
+     * will die Kette gar nicht.
      */
-    fun resumeAfterRoundCreation(eventId: UUID, userId: UUID): App<Nothing, Unit> = KIO.comprehension {
+    fun resumeIfParked(eventId: UUID, userId: UUID): App<Nothing, Unit> = KIO.comprehension {
         val chainEnabled = !EventRepo.getAutoActivateNextMatch(eventId).orDie()
         if (!chainEnabled) {
             return@comprehension KIO.unit

@@ -316,7 +316,7 @@ object CompetitionExecutionService {
         !EventScheduleRepo.stampSlotTimesForSetupMatches(createdSetupMatchIds, userId).orDie()
         // … und die wartende Kette wieder anstoßen: wenn nichts läuft, aktiviert sich der nächste
         // fällige Slot jetzt selbst — das ist der zweite Auslöser des wartenden Breakpoints.
-        !ScheduleChainService.resumeAfterRoundCreation(eventId, userId)
+        !ScheduleChainService.resumeIfParked(eventId, userId)
 
         noData
     }

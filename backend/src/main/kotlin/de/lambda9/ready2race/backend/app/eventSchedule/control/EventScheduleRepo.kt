@@ -130,7 +130,7 @@ object EventScheduleRepo {
             .fetchOne(EVENT_SCHEDULE_SLOT.START_TIME)
     }
 
-    /** Ob irgendein Lauf des Events gerade läuft — Gate für [de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService.resumeAfterRoundCreation]. */
+    /** Ob irgendein Lauf des Events gerade läuft — Gate für [de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService.resumeIfParked]. */
     fun hasRunningMatch(eventId: UUID) = Jooq.query {
         fetchExists(
             COMPETITION_MATCH
