@@ -5,9 +5,13 @@ import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.*
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventScheduleSlotRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import java.time.LocalDateTime
 import java.util.UUID
 
 object EventScheduleService {
@@ -58,4 +62,85 @@ object EventScheduleService {
 
             KIO.ok(ApiResponse.Dto(EventScheduleDto(slots, unplannedDtos)))
         }
+
+    fun createSlot(
+        eventId: UUID,
+        request: UpsertScheduleSlotRequest,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.Created> = KIO.comprehension {
+        val eventExists = !EventRepo.exists(eventId).orDie()
+        if (!eventExists) {
+            return@comprehension KIO.fail(EventScheduleError.EventNotFound(eventId))
+        }
+
+        val setupMatchId = request.competitionSetupMatch
+        if (setupMatchId != null) {
+            val belongsToEvent = !EventScheduleRepo.setupMatchExistsForEvent(eventId, setupMatchId).orDie()
+            if (!belongsToEvent) {
+                return@comprehension KIO.fail(EventScheduleError.SetupMatchNotFound(setupMatchId))
+            }
+
+            val alreadyPlanned = !EventScheduleRepo.slotExistsForSetupMatch(setupMatchId).orDie()
+            if (alreadyPlanned) {
+                return@comprehension KIO.fail(EventScheduleError.SetupMatchAlreadyPlanned(setupMatchId))
+            }
+        }
+
+        val now = LocalDateTime.now()
+        val record = EventScheduleSlotRecord(
+            id = UUID.randomUUID(),
+            event = eventId,
+            startTime = request.startTime,
+            competitionSetupMatch = setupMatchId,
+            name = request.name,
+            durationMinutes = request.durationMinutes,
+            createdAt = now,
+            createdBy = userId,
+            updatedAt = now,
+            updatedBy = userId,
+        )
+        val id = !EventScheduleRepo.createSlot(record).orDie()
+
+        if (setupMatchId != null) {
+            !EventScheduleRepo.stampMatchStartTime(setupMatchId, request.startTime, userId).orDie()
+        }
+
+        KIO.ok(ApiResponse.Created(id))
+    }
+
+    fun updateSlot(
+        eventId: UUID,
+        slotId: UUID,
+        request: UpsertScheduleSlotRequest,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        !EventScheduleRepo.updateSlot(eventId, slotId) {
+            startTime = request.startTime
+            competitionSetupMatch = request.competitionSetupMatch
+            name = request.name
+            durationMinutes = request.durationMinutes
+            updatedAt = LocalDateTime.now()
+            updatedBy = userId
+        }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
+
+        if (request.competitionSetupMatch != null) {
+            !EventScheduleRepo.stampMatchStartTime(request.competitionSetupMatch, request.startTime, userId).orDie()
+        }
+
+        noData
+    }
+
+    fun deleteSlot(
+        eventId: UUID,
+        slotId: UUID,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        // Der Lauf behält seine letzte start_time (Spec §8) - keine Rückabwicklung auf competition_match.
+        val deleted = !EventScheduleRepo.deleteSlot(eventId, slotId).orDie()
+
+        if (deleted < 1) {
+            KIO.fail(EventScheduleError.SlotNotFound(slotId))
+        } else {
+            noData
+        }
+    }
 }

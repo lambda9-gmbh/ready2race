@@ -1,9 +1,12 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.control
 
+import de.lambda9.ready2race.backend.database.*
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventScheduleSlotRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.selectOne
+import java.time.LocalDateTime
 import java.util.UUID
 
 object EventScheduleRepo {
@@ -79,4 +82,48 @@ object EventScheduleRepo {
             .orderBy(COMPETITION_PROPERTIES.NAME, COMPETITION_SETUP_MATCH.EXECUTION_ORDER)
             .fetch()
     }
+
+    fun createSlot(record: EventScheduleSlotRecord) = EVENT_SCHEDULE_SLOT.insertReturning(record) { ID }
+
+    fun updateSlot(eventId: UUID, slotId: UUID, f: EventScheduleSlotRecord.() -> Unit) =
+        EVENT_SCHEDULE_SLOT.update(f) { ID.eq(slotId).and(EVENT.eq(eventId)) }
+
+    fun deleteSlot(eventId: UUID, slotId: UUID) =
+        EVENT_SCHEDULE_SLOT.delete { ID.eq(slotId).and(EVENT.eq(eventId)) }
+
+    /** Ob die Setup-Zeile überhaupt zu diesem Event gehört — gleicher Join wie [getUnplannedSetupMatches]. */
+    fun setupMatchExistsForEvent(eventId: UUID, setupMatchId: UUID) = Jooq.query {
+        fetchExists(
+            COMPETITION_SETUP_MATCH
+                .join(COMPETITION_SETUP_ROUND)
+                .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                .join(COMPETITION_PROPERTIES)
+                .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+                .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+                .where(
+                    COMPETITION_SETUP_MATCH.ID.eq(setupMatchId)
+                        .and(COMPETITION.EVENT.eq(eventId))
+                )
+        )
+    }
+
+    /** Explizite Prüfung statt dem DB-Unique-Fehler überlassen (siehe EventScheduleError.SetupMatchAlreadyPlanned). */
+    fun slotExistsForSetupMatch(setupMatchId: UUID) =
+        EVENT_SCHEDULE_SLOT.exists { COMPETITION_SETUP_MATCH.eq(setupMatchId) }
+
+    /**
+     * Write-Through: spiegelt die geplante Slot-Zeit auf competition_match.start_time. No-op,
+     * wenn zu dieser Setup-Zeile noch kein Lauf existiert (competition_match wird erst bei
+     * Rundenerzeugung materialisiert) — [update] fetcht die Zeile vorher und macht bei keinem
+     * Treffer schlicht nichts.
+     */
+    fun stampMatchStartTime(setupMatchId: UUID, startTime: LocalDateTime, userId: UUID) =
+        COMPETITION_MATCH.update(
+            f = {
+                this.startTime = startTime
+                updatedAt = LocalDateTime.now()
+                updatedBy = userId
+            },
+            condition = { COMPETITION_SETUP_MATCH.eq(setupMatchId) }
+        )
 }
