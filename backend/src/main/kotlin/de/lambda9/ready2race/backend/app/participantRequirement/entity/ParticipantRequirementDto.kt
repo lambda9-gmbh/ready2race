@@ -8,4 +8,6 @@ data class ParticipantRequirementDto(
     val description: String?,
     val optional: Boolean,
     val checkInApp: Boolean,
+    val checkEarliestMinutesBefore: Int?,
+    val checkLatestMinutesBefore: Int?,
 )

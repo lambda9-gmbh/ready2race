@@ -35,44 +35,44 @@ fun Route.documentTemplate() {
         }
 
         post {
-            val multiPartData = call.receiveMultipart()
-
-            var upload: File? = null
-            var templateRequest: GapDocumentTemplateRequest? = null
-
-            var done = false
-            while (!done) {
-                val part = multiPartData.readPart()
-                if (part == null) {
-                    done = true
-                } else {
-                    when (part) {
-                        is PartData.FileItem -> {
-                            if (upload == null) {
-                                upload = File(
-                                    part.originalFileName!!,
-                                    part.provider().toByteArray(),
-                                )
-                            } else {
-                                // TODO: @Fix this does nothing, wrap the multipart receiving into the respondComprehension and add the '!'
-                                KIO.fail(RequestError.File.Multiple)
-                            }
-                        }
-
-                        is PartData.FormItem -> {
-                            if (part.name == "request") {
-                                templateRequest = jsonMapper.readValue<GapDocumentTemplateRequest>(part.value)
-                            }
-                        }
-
-                        else -> {}
-                    }
-                    part.dispose()
-                }
-            }
-
             call.respondComprehension {
                 !authenticate(Privilege.UpdateEventGlobal)
+
+                val multiPartData = call.receiveMultipart()
+
+                var upload: File? = null
+                var templateRequest: GapDocumentTemplateRequest? = null
+
+                var done = false
+                while (!done) {
+                    val part = multiPartData.readPart()
+                    if (part == null) {
+                        done = true
+                    } else {
+                        when (part) {
+                            is PartData.FileItem -> {
+                                if (upload == null) {
+                                    upload = File(
+                                        part.originalFileName!!,
+                                        part.provider().toByteArray(),
+                                    )
+                                } else {
+                                    !KIO.fail(RequestError.File.Multiple)
+                                }
+                            }
+
+                            is PartData.FormItem -> {
+                                if (part.name == "request") {
+                                    templateRequest = jsonMapper.readValue<GapDocumentTemplateRequest>(part.value)
+                                }
+                            }
+
+                            else -> {}
+                        }
+                        part.dispose()
+                    }
+                }
+
                 val request = !KIO.failOnNull(templateRequest) { RequestError.BodyMissing(GapDocumentTemplateRequest.example) }
                 val file = !KIO.failOnNull(upload) { RequestError.File.Missing }
                 !KIO.failOn(!checkValidPdf(file.bytes)) { RequestError.File.UnsupportedType }

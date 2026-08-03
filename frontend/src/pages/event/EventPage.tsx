@@ -30,7 +30,7 @@ import {
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
-import {Forward, InfoOutlined, PlayCircleOutlined} from '@mui/icons-material'
+import {Forward, InfoOutlined, PlayCircleOutlined, SportsScoreOutlined} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
 import {useMemo, useRef, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
@@ -42,6 +42,7 @@ import {
     createInvoiceGlobal,
     readClubOwn,
     readEventGlobal,
+    readLiveDashboardGlobal,
     readRegistrationGlobal,
     readRegistrationOwn,
     readUserGlobal,
@@ -394,6 +395,27 @@ const EventPage = () => {
                                             onClick={() => setManageRunningMatchesOpen(true)}>
                                             {t('event.competition.execution.match.manageRunning')}
                                         </Button>
+                                    </Card>
+                                )}
+                                {user.checkPrivilege(readLiveDashboardGlobal) && !data.challengeEvent && (
+                                    <Card sx={{p: 2}}>
+                                        <Typography variant="h6" sx={{mb: 1}}>
+                                            {t('event.liveDashboard.sectionTitle')}
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{mb: 2}}>
+                                            {t('event.liveDashboard.pageDescription')}
+                                        </Typography>
+                                        <Link to={'/event/$eventId/liveDashboard'} params={{eventId}}>
+                                            <Button
+                                                startIcon={<SportsScoreOutlined/>}
+                                                variant="outlined"
+                                                fullWidth>
+                                                {t('event.liveDashboard.open')}
+                                            </Button>
+                                        </Link>
                                     </Card>
                                 )}
                             </Stack>

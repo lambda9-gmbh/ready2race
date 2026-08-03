@@ -61,6 +61,7 @@
         }
       },
       "seconds": "Sekunden",
+      "secondsShort": "s",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
       "requiredCheck": "Zum Fortfahren muss dies akzeptiert werden.",
@@ -162,7 +163,8 @@
   "format": {
     "date": "dd.MM.yyyy",
     "datetime": "dd.MM.yyyy, HH:mm",
-    "time": "HH:mm"
+    "time": "HH:mm",
+    "timeWithSeconds": "HH:mm:ss"
   },
   "document": {
     "template": {
@@ -333,6 +335,7 @@
     }
   },
   "club": {
+    "nameLengthHint": "{{length}}/{{max}} Zeichen empfohlen – längere Namen werden in Listen gekürzt",
     "club": "Verein",
     "registrant": "Anmelder",
     "registeredBy": "gemeldet von",
@@ -488,6 +491,8 @@
     "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
     "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
+    "autoActivateNextMatch": "Nächste Läufe automatisch aktivieren",
+    "autoActivateNextMatchHint": "Beendet eine Schiedsrichterin einen Lauf im Dashboard, werden die Läufe der nächsten Startzeit aktiv. Nur sinnvoll, wenn der Zeitplan durchgängig gepflegt ist — sonst greift die Kette den falschen Lauf.",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -819,7 +824,7 @@
           "registeredBy": "gemeldet von",
           "place": "Platz",
           "time": "Zeit",
-          "placeAndTime": "Platz/Zeit",
+          "placeAndTime": "Platz/Zeit/Strafe",
           "manageRunning": "Laufende Partien verwalten",
           "running": "Läuft",
           "roundAndMatch": "Runde {{round}}, Partie {{match}}",
@@ -843,6 +848,11 @@
           },
           "failed": "Ausgeschieden",
           "failedReason": "Grund für Ausscheiden",
+            "penalty": "Zeitstrafe inkl. {{seconds}} s",
+            "penaltySeconds": "Strafe (s)",
+            "penaltyShort": "Strafe",
+            "penaltyNote": "Grund der Strafe",
+            "penaltyNoteShort": "Grund",
           "validation": {
             "duplicates": {
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",
@@ -850,8 +860,8 @@
               "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
             },
             "noResultsEntered": "Bitte geben Sie mindestens alle Plätze oder alle Zeiten für alle Teams in dieser Partie an.",
-            "missingPlaces": "Bitte geben Sie Plätze für alle Teams in dieser Partie an.",
-            "missingTimes": "Bitte geben Sie Zeiten für alle Teams in dieser Partie an."
+            "partialHint": "Teilergebnisse sind möglich: Zeilen ohne Platz und ohne Zeit bleiben offen und können später ergänzt werden.",
+            "penaltyHint": "Zeitstrafen werden nur vermerkt und nicht auf die Zeit angerechnet — die eingetragene Zeit gilt wie erfasst (inkl. Strafe)."
           },
           "submit": {
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
@@ -1159,7 +1169,8 @@
       "viewTypes": {
         "upcomingMatches": "Anstehend",
         "latestMatchResults": "Neueste Ergebnisse",
-        "runningMatches": "Aktuell laufend"
+        "runningMatches": "Aktuell laufend",
+        "athleteBoard": "Athleten-Anzeige"
       },
       "configuration": "Ansichtskonfiguration",
       "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
@@ -1195,7 +1206,102 @@
       "result": "Ergebnis",
       "points": "Punkte",
       "matchTeams": "Lauf-Teams",
-      "executionOrder": "Ausführungsreihenfolge: {{order}}"
+      "executionOrder": "Ausführungsreihenfolge: {{order}}",
+      "athleteBoard": {
+        "running": "Aktueller Lauf",
+        "upcoming": "Nächster Lauf",
+        "results": "Letztes Ergebnis",
+        "noRunning": "Zurzeit kein Lauf auf dem Wasser",
+        "noUpcoming": "Kein weiterer Lauf gesetzt",
+        "noResults": "Noch kein Ergebnis",
+        "lane": "Bahn",
+        "expected": "erwartet",
+        "unscheduled": "Zeit offen",
+        "failed": "nicht gewertet",
+        "startsIn": "in {{time}}",
+        "asOf": "Stand {{time}}",
+        "stale": "Verbindung unterbrochen",
+        "eventNotFound": "Veranstaltung nicht gefunden",
+        "settingsTitle": "Athleten-Anzeige",
+        "limitRunning": "Anzahl laufender Läufe",
+        "limitUpcoming": "Anzahl nächster Läufe",
+        "limitResults": "Anzahl Ergebnisse",
+        "showCountdown": "Countdown bis zum Start anzeigen",
+        "refreshHint": "Die öffentliche Athleten-Anzeige aktualisiert sich in diesem Takt, aber nie schneller als alle 10 Sekunden.",
+        "loadError": "Daten konnten nicht geladen werden. Bitte Verbindung prüfen.",
+        "minutesUnit": "min",
+        "secondsUnit": "s"
+      }
+    },
+    "liveDashboard": {
+      "sectionTitle": "Schiedsrichter-Dashboard",
+      "pageDescription": "Live-Ansicht für Schiedsrichter mit laufenden und anstehenden Läufen, Teilnahmebedingungen und Rechnungsstatus.",
+      "open": "Schiedsrichter-Dashboard öffnen",
+      "title": "Schiedsrichter-Dashboard",
+      "tabs": {
+        "live": "Live",
+        "matches": "Läufe"
+      },
+      "lastUpdated": "Stand: {{time}}",
+      "staleWarning": "Verbindung gestört — Anzeige ist möglicherweise nicht aktuell.",
+      "loadError": "Daten konnten nicht geladen werden.",
+      "noRunning": "Aktuell läuft kein Rennen.",
+      "nextUp": "Als Nächstes",
+      "unscheduled": "Ohne Startzeit",
+      "noMatches": "Keine Läufe vorhanden.",
+      "noStartTime": "Keine Startzeit geplant",
+      "runningSince": "Läuft seit {{duration}}",
+      "state": {
+        "RUNNING": "Läuft",
+        "FINISHED": "Beendet",
+        "UPCOMING": "Anstehend",
+        "UNSCHEDULED": "Ungeplant"
+      },
+      "invoice": {
+        "PAID": "Rechnung bezahlt",
+        "OPEN": "Rechnung offen",
+        "NONE": "Keine Rechnung"
+      },
+      "refresh": {
+        "label": "Aktualisierungsintervall",
+        "tooltip": "Nächste Aktualisierung in {{seconds}} s (alle {{interval}} s)",
+        "everySeconds": "Alle {{seconds}} Sekunden"
+      },
+      "penaltyIncluded": "inkl. {{seconds}} s",
+      "control": {
+        "finish": "Lauf beenden",
+        "finishing": "Wird beendet …",
+        "undo": "Rückgängig",
+        "finished": "Lauf beendet — nächste Läufe aktiviert",
+        "deactivate": "Lauf deaktivieren",
+        "activate": "Lauf aktivieren",
+        "incompleteWarning": "Es fehlen noch Ergebnisse — beenden aktiviert trotzdem die nächsten Läufe.",
+        "error": "Der Lauf konnte nicht geändert werden."
+      },
+      "substitution": {
+        "short": "Ummeldung",
+        "for": "Umgemeldet für {{name}}"
+      },
+      "team": {
+        "place": "Platz {{place}}",
+        "deregistered": "Abgemeldet",
+        "failed": "Ausgeschieden",
+        "failedShort": "DNF"
+      },
+      "requirement": {
+        "checkedAt": "Erfüllt am {{time}}",
+        "notChecked": "Nicht erfüllt",
+        "notCheckedOptional": "Nicht erfüllt (optional)",
+        "note": "Notiz: {{note}}",
+        "none": "Keine Bedingungen zugewiesen"
+      },
+      "timeCheck": {
+        "TOO_EARLY": "Zu früh erfüllt",
+        "LATE": "Spät erfüllt",
+        "NOT_CHECKED": "Ausstehend",
+        "beforeStart": "{{delta}} vor Start",
+        "afterStart": "{{delta}} nach Start"
+      }
     },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",
@@ -1287,6 +1393,8 @@
     "removedGlobal": "Globale Zuordnung entfernt",
     "checkRequirements": "Bedingungen prüfen",
     "checkInApp": "Per App prüfbar",
+    "checkEarliestMinutesBefore": "Frühestens (Minuten vor Start)",
+    "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
     "namedParticipantRequirements": {
       "title": "Named Participant Bedingungen",
       "description": "Verwalten Sie spezifische Bedingungen für Named Participants",

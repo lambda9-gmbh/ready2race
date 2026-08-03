@@ -8,6 +8,7 @@ import {
 } from '@api/sdk.gen.ts'
 import {
     Box,
+    InputAdornment,
     Checkbox,
     Divider,
     Link,
@@ -44,6 +45,7 @@ import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
+import MoreTimeOutlinedIcon from '@mui/icons-material/MoreTimeOutlined'
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
@@ -70,6 +72,8 @@ type EnterResultsTeam = {
     timeString: string
     failed: boolean
     failedReason: string
+    penaltySeconds: string
+    penaltyNote: string
 }
 type EnterResultsForm = {
     selectedMatchDto: CompetitionMatchDto | null
@@ -165,12 +169,8 @@ const CompetitionExecution = () => {
                 const duplicatePlaces = Array.from(groupBy(validValues, val => val.place))
                     .filter(([val, items]) => items.length > 1 && val !== '')
                     .map(([place]) => place)
-                const partiallyFilledPlaces =
-                    validValues.some(val => val.place === '') &&
-                    validValues.some(val => val.place !== '')
-                const partiallyFilledTimes =
-                    validValues.some(val => val.timeString === '') &&
-                    validValues.some(val => val.timeString !== '')
+                // Teilergebnisse sind erlaubt: Zeilen ohne Platz und ohne Zeit bleiben offen und
+                // werden nicht übertragen. Nur eine komplett leere Eingabe ist sinnlos.
                 const neitherPlaceNorTimeFilled =
                     validValues.length > 0 &&
                     validValues.every(val => val.place === '' && val.timeString === '')
@@ -192,16 +192,6 @@ const CompetitionExecution = () => {
                             t('event.competition.execution.results.validation.duplicates.message'),
                     )
                     return 'duplicates'
-                } else if (partiallyFilledPlaces) {
-                    setTeamResultsError(
-                        t('event.competition.execution.results.validation.missingPlaces'),
-                    )
-                    return 'missingPlaces'
-                } else if (partiallyFilledTimes) {
-                    setTeamResultsError(
-                        t('event.competition.execution.results.validation.missingTimes'),
-                    )
-                    return 'missingTimes'
                 }
 
                 setTeamResultsError(null)
@@ -227,6 +217,8 @@ const CompetitionExecution = () => {
                 timeString: team.timeString?.toString() ?? '',
                 failed: team.failed,
                 failedReason: team.failedReason ?? '',
+                penaltySeconds: team.penaltySeconds?.toString() ?? '',
+                penaltyNote: team.penaltyNote ?? '',
             }))
     }
 
@@ -431,15 +423,34 @@ const CompetitionExecution = () => {
                     competitionMatchId: formData.selectedMatchDto.id,
                 },
                 body: {
-                    teamResults: formData.teamResults.map(results => ({
-                        registrationId: results.registrationId,
-                        place: results.failed || !results.place ? undefined : Number(results.place),
-                        timeString: results.failed ? undefined : takeIfNotEmpty(results.timeString),
-                        failed: results.failed,
-                        failedReason: results.failed
-                            ? takeIfNotEmpty(results.failedReason)
-                            : undefined,
-                    })),
+                    // Offene Zeilen (kein Platz, keine Zeit, nicht ausgeschieden) bleiben ohne
+                    // Ergebnis: das Backend verlangt je übertragenem Team Platz, Zeit oder Grund.
+                    teamResults: formData.teamResults
+                        .filter(
+                            results =>
+                                results.failed ||
+                                takeIfNotEmpty(results.place) !== undefined ||
+                                takeIfNotEmpty(results.timeString) !== undefined,
+                        )
+                        .map(results => ({
+                            registrationId: results.registrationId,
+                            place:
+                                results.failed || !results.place
+                                    ? undefined
+                                    : Number(results.place),
+                            timeString: results.failed
+                                ? undefined
+                                : takeIfNotEmpty(results.timeString),
+                            failed: results.failed,
+                            failedReason: results.failed
+                                ? takeIfNotEmpty(results.failedReason)
+                                : undefined,
+                            penaltySeconds:
+                                takeIfNotEmpty(results.penaltySeconds) !== undefined
+                                    ? Number(results.penaltySeconds)
+                                    : undefined,
+                            penaltyNote: takeIfNotEmpty(results.penaltyNote),
+                        })),
                 },
             })
             if (error) {
@@ -759,10 +770,10 @@ const CompetitionExecution = () => {
                                                               'event.competition.execution.match.startNumber.startNumber',
                                                           )}
                                                 </TableCell>
-                                                <TableCell width="40%">
+                                                <TableCell width="34%">
                                                     {t('event.competition.execution.match.team')}
                                                 </TableCell>
-                                                <TableCell width="40%">
+                                                <TableCell width="46%">
                                                     {t(
                                                         'event.competition.execution.match.placeAndTime',
                                                     )}
@@ -795,7 +806,7 @@ const CompetitionExecution = () => {
                                                                 <TableCell width="10%">
                                                                     {team.startNumber}
                                                                 </TableCell>
-                                                                <TableCell width="40%">
+                                                                <TableCell width="34%">
                                                                     <Typography>
                                                                         {team.actualClubName ??
                                                                             team.clubName}
@@ -822,7 +833,7 @@ const CompetitionExecution = () => {
                                                                             .join(', ')}
                                                                     </Typography>
                                                                 </TableCell>
-                                                                <TableCell width="40%">
+                                                                <TableCell width="46%">
                                                                     {!failedValue ? (
                                                                         <Box
                                                                             sx={{
@@ -872,6 +883,53 @@ const CompetitionExecution = () => {
                                                                                     name={`teamResults.${fieldIndex}.timeString`}
                                                                                     size="small"
                                                                                     placeholder="00:00:00.000"
+                                                                                />
+                                                                            </Box>
+                                                                            {/* Wie Platz und Zeit ohne Label: das "– Optional" der
+                                                                                Labels sprengt diese enge Spalte. */}
+                                                                            <Box
+                                                                                display="flex"
+                                                                                gap={1}
+                                                                                alignItems={
+                                                                                    'center'
+                                                                                }>
+                                                                                <MoreTimeOutlinedIcon
+                                                                                    color={'action'}
+                                                                                    titleAccess={t(
+                                                                                        'event.competition.execution.results.penaltySeconds',
+                                                                                    )}
+                                                                                />
+                                                                                <FormInputNumber
+                                                                                    name={`teamResults.${fieldIndex}.penaltySeconds`}
+                                                                                    min={1}
+                                                                                    integer
+                                                                                    size="small"
+                                                                                    placeholder={t(
+                                                                                        'event.competition.execution.results.penaltyShort',
+                                                                                    )}
+                                                                                    slotProps={{
+                                                                                        input: {
+                                                                                            endAdornment: (
+                                                                                                <InputAdornment
+                                                                                                    position={
+                                                                                                        'end'
+                                                                                                    }>
+                                                                                                    {t(
+                                                                                                        'common.form.secondsShort',
+                                                                                                    )}
+                                                                                                </InputAdornment>
+                                                                                            ),
+                                                                                        },
+                                                                                    }}
+                                                                                    sx={{width: 116}}
+                                                                                />
+                                                                                <FormInputText
+                                                                                    name={`teamResults.${fieldIndex}.penaltyNote`}
+                                                                                    size="small"
+                                                                                    placeholder={t(
+                                                                                        'event.competition.execution.results.penaltyNoteShort',
+                                                                                    )}
+                                                                                    sx={{flex: 1}}
                                                                                 />
                                                                             </Box>
                                                                         </Box>

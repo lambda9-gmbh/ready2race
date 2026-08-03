@@ -30,6 +30,16 @@ const CompetitionExecutionMatchDialog = ({submitting, ...props}: Props) => {
                     {props.fieldArrayError && (
                         <Typography color={'error'}>{props.fieldArrayError}</Typography>
                     )}
+                    {props.enterResults && (
+                        <Stack spacing={0.5}>
+                            <Typography variant={'body2'} color={'text.secondary'}>
+                                {t('event.competition.execution.results.validation.partialHint')}
+                            </Typography>
+                            <Typography variant={'body2'} color={'text.secondary'}>
+                                {t('event.competition.execution.results.validation.penaltyHint')}
+                            </Typography>
+                        </Stack>
+                    )}
                     {props.children}
                 </Stack>
             </DialogContent>

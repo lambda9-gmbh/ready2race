@@ -567,6 +567,7 @@ select e.id,
        e.self_submission,
        e.submission_needs_verification,
        e.participant_self_registration,
+       e.auto_activate_next_match,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        max(cpcc.end_at)                                                                 as challenge_end,
        err.event is not null                                                            as registrations_finalized
@@ -788,6 +789,8 @@ select cmt.id,
        cmt.out,
        cmt.failed,
        cmt.failed_reason,
+       cmt.penalty_seconds,
+       cmt.penalty_note,
        cr.club                                                                 as club_id,
        c.name                                                                  as club_name,
        cr.name                                                                 as registration_name,
@@ -809,7 +812,8 @@ from competition_match_team cmt
          left join event_registration er on cr.event_registration = er.id
          left join event e on er.event = e.id
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.competition_registration, cr.club, c.name,
-         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, e.mixed_team_term
+         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, e.mixed_team_term,
+         cmt.penalty_seconds, cmt.penalty_note
 ;
 
 create view competition_match_with_teams as

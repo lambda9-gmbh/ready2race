@@ -28,6 +28,8 @@ data class MatchResultTeamInfo(
     val timeString: String?,
     val failed: Boolean,
     val failedReason: String?,
+    val penaltySeconds: Int?,
+    val penaltyNote: String?,
     val deregistered: Boolean,
     val deregisteredReason: String?,
     val participants: List<ParticipantInfo>

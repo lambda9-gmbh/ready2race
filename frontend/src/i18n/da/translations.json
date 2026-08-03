@@ -61,6 +61,7 @@
         }
       },
       "seconds": "Sekunder",
+      "secondsShort": "s",
       "optional": "Valgfrit",
       "required": "Udfyld venligst dette felt.",
       "requiredCheck": "Dette skal accepteres for at fortsætte.",
@@ -162,7 +163,8 @@
   "format": {
     "date": "dd.MM.yyyy",
     "datetime": "dd.MM.yyyy, HH:mm",
-    "time": "HH:mm"
+    "time": "HH:mm",
+    "timeWithSeconds": "HH:mm:ss"
   },
   "document": {
     "template": {
@@ -333,6 +335,7 @@
     }
   },
   "club": {
+    "nameLengthHint": "{{length}}/{{max}} tegn anbefales – længere navne forkortes i lister",
     "club": "Klub",
     "registrant": "Tilmeldende",
     "registeredBy": "tilmeldt af",
@@ -488,6 +491,8 @@
     "allowSelfSubmission": "Tillad selvstændig indsendelse af resultater",
     "submissionNeedsVerification": "Indsendte resultater skal verificeres",
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
+    "autoActivateNextMatch": "Aktiver næste løb automatisk",
+    "autoActivateNextMatchHint": "Når en dommer afslutter et løb i dashboardet, aktiveres løbene med næste starttid. Kun nyttigt med en komplet tidsplan — ellers rammer kæden det forkerte løb.",
     "invoice": {
       "prefix": "Fakturapræfiks",
       "paymentDueBy": "Betalingsfrist for tilmeldingsgebyrer",
@@ -819,7 +824,7 @@
           "registeredBy": "tilmeldt af",
           "place": "Placering",
           "time": "Tid",
-          "placeAndTime": "Placering/tid",
+          "placeAndTime": "Placering/Tid/Straf",
           "manageRunning": "Administrer igangværende kampe",
           "running": "Kører",
           "roundAndMatch": "Runde {{round}}, kamp {{match}}",
@@ -843,6 +848,11 @@
           },
           "failed": "Udgået",
           "failedReason": "Årsag til udgåelse",
+            "penalty": "Tidsstraf inkl. {{seconds}} s",
+            "penaltySeconds": "Straf (s)",
+            "penaltyShort": "Straf",
+            "penaltyNote": "Årsag til straf",
+            "penaltyNoteShort": "Årsag",
           "validation": {
             "duplicates": {
               "single": "Placeringen: {{places}} bruges flere gange.",
@@ -850,8 +860,8 @@
               "message": "Vælg venligst unikke placeringer pr. kamp."
             },
             "noResultsEntered": "Angiv venligst mindst enten alle placeringer eller alle tider for alle hold i denne kamp.",
-            "missingPlaces": "Angiv venligst placeringer for alle hold i denne kamp.",
-            "missingTimes": "Angiv venligst tider for alle hold i denne kamp."
+            "partialHint": "Delresultater er tilladt: rækker uden placering og uden tid forbliver åbne og kan udfyldes senere.",
+            "penaltyHint": "Tidsstraffe registreres kun til information og lægges ikke til tiden — den indtastede tid gælder som registreret (inkl. straf)."
           },
           "submit": {
             "error": "Der opstod en fejl ved lagring af resultatet",
@@ -1159,7 +1169,8 @@
       "viewTypes": {
         "upcomingMatches": "Kommende",
         "latestMatchResults": "Nyeste resultater",
-        "runningMatches": "Igangværende"
+        "runningMatches": "Igangværende",
+        "athleteBoard": "Atletvisning"
       },
       "configuration": "Visningskonfiguration",
       "configurationHelp": "Træk visningerne for at ændre rækkefølgen. Hver visning vises i den angivne varighed.",
@@ -1195,7 +1206,102 @@
       "result": "Resultat",
       "points": "Point",
       "matchTeams": "Løbshold",
-      "executionOrder": "Udførelsesrækkefølge: {{order}}"
+      "executionOrder": "Udførelsesrækkefølge: {{order}}",
+      "athleteBoard": {
+        "running": "Aktuelt løb",
+        "upcoming": "Næste løb",
+        "results": "Seneste resultat",
+        "noRunning": "Intet løb på vandet lige nu",
+        "noUpcoming": "Ingen flere løb planlagt",
+        "noResults": "Endnu intet resultat",
+        "lane": "Bane",
+        "expected": "forventet",
+        "unscheduled": "Tid ikke fastsat",
+        "failed": "ikke placeret",
+        "startsIn": "om {{time}}",
+        "asOf": "Opdateret {{time}}",
+        "stale": "Forbindelsen afbrudt",
+        "eventNotFound": "Arrangementet blev ikke fundet",
+        "settingsTitle": "Atletvisning",
+        "limitRunning": "Antal igangværende løb",
+        "limitUpcoming": "Antal kommende løb",
+        "limitResults": "Antal resultater",
+        "showCountdown": "Vis nedtælling til start",
+        "refreshHint": "Den offentlige atletvisning opdateres i denne takt, men aldrig hurtigere end hvert 10. sekund.",
+        "loadError": "Data kunne ikke indlæses. Kontrollér venligst forbindelsen.",
+        "minutesUnit": "min",
+        "secondsUnit": "sek"
+      }
+    },
+    "liveDashboard": {
+      "sectionTitle": "Dommer-dashboard",
+      "pageDescription": "Live-visning for dommere med igangværende og kommende løb, deltagerkrav og fakturastatus.",
+      "open": "Åbn dommer-dashboard",
+      "title": "Dommer-dashboard",
+      "tabs": {
+        "live": "Live",
+        "matches": "Løb"
+      },
+      "lastUpdated": "Opdateret: {{time}}",
+      "staleWarning": "Forbindelsen er afbrudt — visningen er muligvis ikke aktuel.",
+      "loadError": "Data kunne ikke indlæses.",
+      "noRunning": "Der er ingen igangværende løb.",
+      "nextUp": "Næste",
+      "unscheduled": "Uden starttid",
+      "noMatches": "Ingen løb tilgængelige.",
+      "noStartTime": "Ingen starttid planlagt",
+      "runningSince": "I gang i {{duration}}",
+      "state": {
+        "RUNNING": "I gang",
+        "FINISHED": "Afsluttet",
+        "UPCOMING": "Kommende",
+        "UNSCHEDULED": "Ikke planlagt"
+      },
+      "invoice": {
+        "PAID": "Faktura betalt",
+        "OPEN": "Faktura åben",
+        "NONE": "Ingen faktura"
+      },
+      "refresh": {
+        "label": "Opdateringsinterval",
+        "tooltip": "Næste opdatering om {{seconds}} s (hvert {{interval}}. s)",
+        "everySeconds": "Hvert {{seconds}}. sekund"
+      },
+      "penaltyIncluded": "inkl. {{seconds}} s",
+      "control": {
+        "finish": "Afslut løb",
+        "finishing": "Afsluttes …",
+        "undo": "Fortryd",
+        "finished": "Løbet er afsluttet — næste løb aktiveret",
+        "deactivate": "Deaktiver løb",
+        "activate": "Aktiver løb",
+        "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
+        "error": "Løbet kunne ikke ændres."
+      },
+      "substitution": {
+        "short": "Ombytning",
+        "for": "Ombyttet for {{name}}"
+      },
+      "team": {
+        "place": "Plads {{place}}",
+        "deregistered": "Afmeldt",
+        "failed": "Udgået",
+        "failedShort": "DNF"
+      },
+      "requirement": {
+        "checkedAt": "Opfyldt {{time}}",
+        "notChecked": "Ikke opfyldt",
+        "notCheckedOptional": "Ikke opfyldt (valgfri)",
+        "note": "Note: {{note}}",
+        "none": "Ingen krav tildelt"
+      },
+      "timeCheck": {
+        "TOO_EARLY": "Opfyldt for tidligt",
+        "LATE": "Opfyldt sent",
+        "NOT_CHECKED": "Afventer",
+        "beforeStart": "{{delta}} før start",
+        "afterStart": "{{delta}} efter start"
+      }
     },
     "results": {
       "download": "Download tidligere resultater",
@@ -1287,6 +1393,8 @@
     "removedGlobal": "Global tildeling fjernet",
     "checkRequirements": "Kontrollér betingelser",
     "checkInApp": "Kan kontrolleres i app",
+    "checkEarliestMinutesBefore": "Tidligst (minutter før start)",
+    "checkLatestMinutesBefore": "Senest (minutter før start)",
     "namedParticipantRequirements": {
       "title": "Named Participant-betingelser",
       "description": "Administrer specifikke betingelser for Named Participants",

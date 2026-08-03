@@ -61,6 +61,7 @@
         }
       },
       "seconds": "Seconds",
+      "secondsShort": "s",
       "optional": "Optional",
       "required": "Please fill in this field.",
       "requiredCheck": "You have to accept this to continue.",
@@ -162,7 +163,8 @@
   "format": {
     "date": "MM/dd/yyyy",
     "datetime": "MM/dd/yyyy, hh:mm a",
-    "time": "hh:mm a"
+    "time": "hh:mm a",
+    "timeWithSeconds": "hh:mm:ss a"
   },
   "document": {
     "template": {
@@ -333,6 +335,7 @@
     }
   },
   "club": {
+    "nameLengthHint": "{{length}}/{{max}} characters recommended – longer names are shortened in lists",
     "club": "Club",
     "registrant": "Registrant",
     "registeredBy": "registered by",
@@ -488,6 +491,8 @@
     "allowSelfSubmission": "Allow self submission of results",
     "submissionNeedsVerification": "Submitted results must be verified",
     "allowParticipantSelfRegistration": "Allow participants to register themselves",
+    "autoActivateNextMatch": "Activate next races automatically",
+    "autoActivateNextMatchHint": "When a referee finishes a race in the dashboard, the races of the next start time become active. Only useful with a complete schedule — otherwise the chain picks the wrong race.",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -819,7 +824,7 @@
           "registeredBy": "registered by",
           "place": "Place",
           "time": "Time",
-          "placeAndTime": "Place/Time",
+          "placeAndTime": "Place/Time/Penalty",
           "manageRunning": "Manage Running Matches",
           "running": "Running",
           "roundAndMatch": "Round {{round}}, Match {{match}}",
@@ -843,6 +848,11 @@
           },
           "failed": "Eliminated",
           "failedReason": "Reason for elimination",
+            "penalty": "Time penalty incl. {{seconds}} s",
+            "penaltySeconds": "Penalty (s)",
+            "penaltyShort": "Penalty",
+            "penaltyNote": "Penalty reason",
+            "penaltyNoteShort": "Reason",
           "validation": {
             "duplicates": {
               "single": "The place: {{places}} is used several times.",
@@ -850,8 +860,8 @@
               "message": "Please select each place only once per match."
             },
             "noResultsEntered": "Please enter at least all places or all times for the teams in this match.",
-            "missingPlaces": "Please enter all places for the teams in this match.",
-            "missingTimes": "Please enter times for all teams in this match."
+            "partialHint": "Partial results are allowed: rows without a place and without a time stay open and can be completed later.",
+            "penaltyHint": "Time penalties are recorded for information only and are not applied to the time — the entered time counts as recorded (penalty included)."
           },
           "submit": {
             "error": "An error has occurred when entering the results",
@@ -1159,7 +1169,8 @@
       "viewTypes": {
         "upcomingMatches": "Upcoming Matches",
         "latestMatchResults": "Latest Match Results",
-        "runningMatches": "Currently Running"
+        "runningMatches": "Currently Running",
+        "athleteBoard": "Athlete board"
       },
       "configuration": "View Configuration",
       "configurationHelp": "Drag views to reorder them. Each view will be displayed for the specified duration.",
@@ -1195,7 +1206,102 @@
       "result": "Result",
       "points": "Points",
       "matchTeams": "Match Teams",
-      "executionOrder": "Execution Order: {{order}}"
+      "executionOrder": "Execution Order: {{order}}",
+      "athleteBoard": {
+        "running": "Current race",
+        "upcoming": "Next race",
+        "results": "Last result",
+        "noRunning": "No race on the water right now",
+        "noUpcoming": "No further race scheduled",
+        "noResults": "No result yet",
+        "lane": "Lane",
+        "expected": "expected",
+        "unscheduled": "Time open",
+        "failed": "not classified",
+        "startsIn": "in {{time}}",
+        "asOf": "As of {{time}}",
+        "stale": "Connection lost",
+        "eventNotFound": "Event not found",
+        "settingsTitle": "Athlete board",
+        "limitRunning": "Number of running races",
+        "limitUpcoming": "Number of next races",
+        "limitResults": "Number of results",
+        "showCountdown": "Show countdown to start",
+        "refreshHint": "The public athlete board refreshes at this rate, but never faster than every 10 seconds.",
+        "loadError": "Data could not be loaded. Please check the connection.",
+        "minutesUnit": "min",
+        "secondsUnit": "s"
+      }
+    },
+    "liveDashboard": {
+      "sectionTitle": "Referee dashboard",
+      "pageDescription": "Live view for referees with running and upcoming matches, participant requirements, and invoice status.",
+      "open": "Open referee dashboard",
+      "title": "Referee dashboard",
+      "tabs": {
+        "live": "Live",
+        "matches": "Matches"
+      },
+      "lastUpdated": "Updated: {{time}}",
+      "staleWarning": "Connection lost — data may be outdated.",
+      "loadError": "Could not load data.",
+      "noRunning": "No match is currently running.",
+      "nextUp": "Up next",
+      "unscheduled": "Without start time",
+      "noMatches": "No matches available.",
+      "noStartTime": "No start time scheduled",
+      "runningSince": "Running for {{duration}}",
+      "state": {
+        "RUNNING": "Running",
+        "FINISHED": "Finished",
+        "UPCOMING": "Upcoming",
+        "UNSCHEDULED": "Unscheduled"
+      },
+      "invoice": {
+        "PAID": "Invoice paid",
+        "OPEN": "Invoice open",
+        "NONE": "No invoice"
+      },
+      "refresh": {
+        "label": "Refresh interval",
+        "tooltip": "Next refresh in {{seconds}} s (every {{interval}} s)",
+        "everySeconds": "Every {{seconds}} seconds"
+      },
+      "penaltyIncluded": "incl. {{seconds}} s",
+      "control": {
+        "finish": "Finish race",
+        "finishing": "Finishing …",
+        "undo": "Undo",
+        "finished": "Race finished — next races activated",
+        "deactivate": "Deactivate race",
+        "activate": "Activate race",
+        "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
+        "error": "The race could not be changed."
+      },
+      "substitution": {
+        "short": "Substitution",
+        "for": "Substituted for {{name}}"
+      },
+      "team": {
+        "place": "Place {{place}}",
+        "deregistered": "Deregistered",
+        "failed": "Did not finish",
+        "failedShort": "DNF"
+      },
+      "requirement": {
+        "checkedAt": "Fulfilled at {{time}}",
+        "notChecked": "Not fulfilled",
+        "notCheckedOptional": "Not fulfilled (optional)",
+        "note": "Note: {{note}}",
+        "none": "No requirements assigned"
+      },
+      "timeCheck": {
+        "TOO_EARLY": "Fulfilled too early",
+        "LATE": "Fulfilled late",
+        "NOT_CHECKED": "Pending",
+        "beforeStart": "{{delta}} before start",
+        "afterStart": "{{delta}} after start"
+      }
     },
     "results": {
       "download": "Download previous results",
@@ -1287,6 +1393,8 @@
     "removedGlobal": "Global assignment removed",
     "checkRequirements": "Check requirements",
     "checkInApp": "Checkable in app",
+    "checkEarliestMinutesBefore": "Earliest (minutes before start)",
+    "checkLatestMinutesBefore": "Latest (minutes before start)",
     "namedParticipantRequirements": {
       "title": "Named Participant Requirements",
       "description": "Manage specific requirements for named participants",

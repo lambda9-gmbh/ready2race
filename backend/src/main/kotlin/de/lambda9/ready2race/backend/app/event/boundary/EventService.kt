@@ -95,6 +95,7 @@ object EventService {
             selfSubmission = request.allowSelfSubmission
             submissionNeedsVerification = request.submissionNeedsVerification
             participantSelfRegistration = request.allowParticipantSelfRegistration
+            autoActivateNextMatch = request.autoActivateNextMatch
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

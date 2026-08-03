@@ -20,6 +20,14 @@ import java.util.*
 
 object EventRepo {
 
+    fun getAutoActivateNextMatch(eventId: UUID) = Jooq.query {
+        select(EVENT.AUTO_ACTIVATE_NEXT_MATCH)
+            .from(EVENT)
+            .where(EVENT.ID.eq(eventId))
+            .fetchOne(EVENT.AUTO_ACTIVATE_NEXT_MATCH) ?: false
+    }
+
+
     private fun EventView.searchFields() =
         listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO, DESCRIPTION)
 

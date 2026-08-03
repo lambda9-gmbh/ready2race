@@ -9,12 +9,15 @@ import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 
 type ParticipantRequirementForm = {
     name: string
     description: string
     optional: boolean
     checkInApp: boolean
+    checkEarliestMinutesBefore: string
+    checkLatestMinutesBefore: string
 }
 
 const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRequirementDto>) => {
@@ -41,6 +44,8 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
         description: '',
         optional: false,
         checkInApp: false,
+        checkEarliestMinutesBefore: '',
+        checkLatestMinutesBefore: '',
     }
 
     const formContext = useForm<ParticipantRequirementForm>()
@@ -61,6 +66,18 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
                 <FormInputText name="description" label={t('entity.description')} />
                 <FormInputCheckbox name="optional" label={t('entity.optional')} />
                 <FormInputCheckbox name="checkInApp" label={t('participantRequirement.checkInApp')} />
+                <FormInputNumber
+                    name="checkEarliestMinutesBefore"
+                    label={t('participantRequirement.checkEarliestMinutesBefore')}
+                    min={1}
+                    integer
+                />
+                <FormInputNumber
+                    name="checkLatestMinutesBefore"
+                    label={t('participantRequirement.checkLatestMinutesBefore')}
+                    min={1}
+                    integer
+                />
             </Stack>
         </EntityDialog>
     )
@@ -72,6 +89,14 @@ function mapFormToRequest(formData: ParticipantRequirementForm): ParticipantRequ
         description: takeIfNotEmpty(formData.description),
         optional: formData.optional,
         checkInApp: formData.checkInApp,
+        checkEarliestMinutesBefore:
+            formData.checkEarliestMinutesBefore !== ''
+                ? Number(formData.checkEarliestMinutesBefore)
+                : undefined,
+        checkLatestMinutesBefore:
+            formData.checkLatestMinutesBefore !== ''
+                ? Number(formData.checkLatestMinutesBefore)
+                : undefined,
     }
 }
 
@@ -81,6 +106,8 @@ function mapDtoToForm(dto: ParticipantRequirementDto): ParticipantRequirementFor
         description: dto.description ?? '',
         optional: dto.optional,
         checkInApp: dto.checkInApp,
+        checkEarliestMinutesBefore: dto.checkEarliestMinutesBefore?.toString() ?? '',
+        checkLatestMinutesBefore: dto.checkLatestMinutesBefore?.toString() ?? '',
     }
 }
 

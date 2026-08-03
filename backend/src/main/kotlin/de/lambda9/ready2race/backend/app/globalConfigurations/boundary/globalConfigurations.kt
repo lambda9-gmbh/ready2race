@@ -59,7 +59,7 @@ fun Route.globalConfigurations(env: JEnv) {
                                                 part.provider().toByteArray(),
                                             )
                                         } else {
-                                            KIO.fail(RequestError.File.Multiple)
+                                            !KIO.fail(RequestError.File.Multiple)
                                         }
                                     }
                                     "logoFile" -> {
@@ -69,7 +69,7 @@ fun Route.globalConfigurations(env: JEnv) {
                                                 part.provider().toByteArray(),
                                             )
                                         } else {
-                                            KIO.fail(RequestError.File.Multiple)
+                                            !KIO.fail(RequestError.File.Multiple)
                                         }
                                     }
                                 }

@@ -16,6 +16,7 @@ import {
     readUserGlobal,
     updateEventGlobal,
     updateUserGlobal,
+    readLiveDashboardGlobal,
 } from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
@@ -25,6 +26,8 @@ import EventPage, {EventTab} from './pages/event/EventPage.tsx'
 import CompetitionPage, {CompetitionTab} from './pages/event/CompetitionPage.tsx'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import EventInfoPage from './pages/event/EventInfoPage.tsx'
+import AthleteBoardPage from './pages/event/AthleteBoardPage.tsx'
+import LiveDashboardPage from './pages/event/LiveDashboardPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
@@ -309,6 +312,15 @@ export const eventInfoRoute = createRoute({
     component: () => <EventInfoPage />,
 })
 
+export const eventLiveDashboardRoute = createRoute({
+    getParentRoute: () => eventRoute,
+    path: 'liveDashboard',
+    component: () => <LiveDashboardPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readLiveDashboardGlobal)
+    },
+})
+
 export const eventDayRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'eventDay/$eventDayId',
@@ -482,6 +494,14 @@ export const challengeRoute = createRoute({
     component: () => <ChallengePage />,
 })
 
+// Öffentliche Route ohne App-Layout: fest montierte Athletenbildschirme und
+// Athleten-Handys brauchen weder Kopfleiste noch Seitenleiste noch Anmeldung.
+export const athleteBoardRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'board/$eventId',
+    component: () => <AthleteBoardPage />,
+})
+
 const routeTree = rootRoute.addChildren([
     mainLayoutRoute.addChildren([
         indexRoute,
@@ -495,6 +515,7 @@ const routeTree = rootRoute.addChildren([
                 eventIndexRoute,
                 eventRegistrationRoute,
                 eventInfoRoute,
+                eventLiveDashboardRoute,
                 eventDayRoute.addChildren([eventDayIndexRoute]),
                 competitionRoute.addChildren([competitionIndexRoute]),
                 eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
@@ -520,6 +541,7 @@ const routeTree = rootRoute.addChildren([
     ]),
     resultsRoute.addChildren([resultsIndexRoute, resultsQRCodeRoute, resultsEventRoute]),
     mobileRoute.addChildren([challengeRoute]),
+    athleteBoardRoute,
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath

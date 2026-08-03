@@ -27,6 +27,8 @@ data class CreateEventRequest(
     val allowSelfSubmission: Boolean,
     val submissionNeedsVerification: Boolean,
     val allowParticipantSelfRegistration: Boolean,
+    /** Beendet ein Schiedsrichter einen Lauf, werden die Läufe der nächsten Startzeit aktiv. */
+    val autoActivateNextMatch: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -66,6 +68,7 @@ data class CreateEventRequest(
                 allowSelfSubmission = false,
                 submissionNeedsVerification = false,
                 allowParticipantSelfRegistration = false,
+                autoActivateNextMatch = false,
             )
     }
 }

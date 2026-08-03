@@ -130,6 +130,20 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                 </Typography>
                                                             </Box>
                                                         )}
+                                                    {'penaltySeconds' in team &&
+                                                        team.penaltySeconds != null && (
+                                                            <Typography
+                                                                color={'warning.main'}
+                                                                variant={'body2'}>
+                                                                {t(
+                                                                    'event.competition.execution.results.penalty',
+                                                                    {seconds: team.penaltySeconds},
+                                                                )}
+                                                                {team.penaltyNote
+                                                                    ? ` · ${team.penaltyNote}`
+                                                                    : ''}
+                                                            </Typography>
+                                                        )}
                                                 </Box>
                                             ) : (
                                                 <Box></Box>

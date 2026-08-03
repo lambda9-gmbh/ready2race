@@ -3,10 +3,13 @@ import {FormContainer} from 'react-hook-form-mui'
 import {
     Box,
     Button,
+    Checkbox,
     DialogActions,
     DialogContent,
     DialogTitle,
+    FormControlLabel,
     Slider,
+    TextField,
     Typography,
 } from '@mui/material'
 import {useTranslation} from 'react-i18next'
@@ -26,6 +29,7 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
         {id: 'UPCOMING_MATCHES', label: t('event.info.viewTypes.upcomingMatches')},
         {id: 'LATEST_MATCH_RESULTS', label: t('event.info.viewTypes.latestMatchResults')},
         {id: 'RUNNING_MATCHES', label: t('event.info.viewTypes.runningMatches')},
+        {id: 'ATHLETE_BOARD', label: t('event.info.viewTypes.athleteBoard')},
     ]
 
     const formContext = useForm<InfoViewConfigurationRequest>({
@@ -51,6 +55,17 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
     const {watch, setValue} = formContext
     const displayDuration = watch('displayDurationSeconds')
     const dataLimit = watch('dataLimit')
+    const viewType = watch('viewType')
+    // filters ist im erzeugten Typ `{[key: string]: unknown} | undefined` — kein Cast nötig.
+    const filters = watch('filters')
+
+    const filterNumber = (key: string, fallback: number) => {
+        const value = filters?.[key]
+        return typeof value === 'number' ? value : fallback
+    }
+
+    const setFilter = (key: string, value: number | boolean) =>
+        setValue('filters', {...(filters ?? {}), [key]: value})
 
     return (
         <>
@@ -89,6 +104,11 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
                                     {value: 60, label: '60s'},
                                 ]}
                             />
+                            {viewType === 'ATHLETE_BOARD' && (
+                                <Typography variant="caption" color="text.secondary">
+                                    {t('event.info.athleteBoard.refreshHint')}
+                                </Typography>
+                            )}
                         </Box>
 
                         <Box>
@@ -109,6 +129,49 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
                                 ]}
                             />
                         </Box>
+
+                        {viewType === 'ATHLETE_BOARD' && (
+                            <Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
+                                <Typography variant="subtitle2">
+                                    {t('event.info.athleteBoard.settingsTitle')}
+                                </Typography>
+                                <TextField
+                                    type="number"
+                                    size="small"
+                                    label={t('event.info.athleteBoard.limitRunning')}
+                                    value={filterNumber('running', 3)}
+                                    onChange={e => setFilter('running', Number(e.target.value))}
+                                    inputProps={{min: 1, max: 20}}
+                                />
+                                <TextField
+                                    type="number"
+                                    size="small"
+                                    label={t('event.info.athleteBoard.limitUpcoming')}
+                                    value={filterNumber('upcoming', 3)}
+                                    onChange={e => setFilter('upcoming', Number(e.target.value))}
+                                    inputProps={{min: 1, max: 20}}
+                                />
+                                <TextField
+                                    type="number"
+                                    size="small"
+                                    label={t('event.info.athleteBoard.limitResults')}
+                                    value={filterNumber('results', 1)}
+                                    onChange={e => setFilter('results', Number(e.target.value))}
+                                    inputProps={{min: 1, max: 20}}
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={filters?.showCountdown !== false}
+                                            onChange={e =>
+                                                setFilter('showCountdown', e.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label={t('event.info.athleteBoard.showCountdown')}
+                                />
+                            </Box>
+                        )}
                     </Box>
                 </DialogContent>
 

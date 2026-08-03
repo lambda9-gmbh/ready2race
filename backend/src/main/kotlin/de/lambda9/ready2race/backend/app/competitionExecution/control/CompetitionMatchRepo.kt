@@ -12,6 +12,7 @@ import org.jooq.Record12
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.*
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -161,6 +162,72 @@ object CompetitionMatchRepo {
             .and(COMPETITION_MATCH.START_TIME.gt(LocalDateTime.now()))
             .orderBy(
                 COMPETITION_MATCH.START_TIME.asc(),
+                COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()
+            )
+            .limit(limit)
+            .fetch()
+    }
+
+    // Eigene Query für die Athleten-Anzeige: Anders als getUpcomingMatches fällt ein Lauf hier
+    // nicht aus der Liste, nur weil seine geplante Startzeit verstrichen ist oder weil er noch
+    // gar keine Startzeit hat. Ein Lauf gehört hierher, wenn er nicht gerade läuft, noch kein
+    // vollständiges Ergebnis hat (Umkehrung der "abgeschlossen"-Bedingung aus getMatchResults)
+    // und entweder keine Startzeit hat oder seine Startzeit noch innerhalb der Nachfrist liegt.
+    fun getUpcomingMatchesForBoard(
+        eventId: UUID,
+        limit: Int,
+        grace: Duration
+    ) = Jooq.query {
+
+        val threshold = LocalDateTime.now().minus(grace)
+
+        select(
+            COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
+            COMPETITION_MATCH.START_TIME,
+            COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
+            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            COMPETITION_SETUP_MATCH.START_TIME_OFFSET,
+            COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
+            COMPETITION.ID.`as`("competition_id"),
+            COMPETITION_VIEW.NAME.`as`("competition_name"),
+            COMPETITION_VIEW.CATEGORY_NAME,
+        )
+            .from(COMPETITION_MATCH)
+            .join(COMPETITION_SETUP_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(false))
+            .and(
+                // Unverändert aus getMatchResults übernommene Teilbedingungen, hier als exists
+                // statt notExists: es gibt noch ein Team ohne Platz, das nicht ausgeschieden,
+                // nicht disqualifiziert und nicht abgemeldet ist - der Lauf ist also noch offen.
+                exists(
+                    selectOne()
+                        .from(COMPETITION_MATCH_TEAM)
+                        .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
+                        .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
+                        .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
+                        .and(COMPETITION_MATCH_TEAM.FAILED.isFalse)
+                        .and(notExists(
+                            selectOne()
+                                .from(COMPETITION_DEREGISTRATION)
+                                .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                                .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                        ))
+                )
+            )
+            .and(
+                COMPETITION_MATCH.START_TIME.isNull
+                    .or(COMPETITION_MATCH.START_TIME.gt(threshold))
+            )
+            .orderBy(
+                COMPETITION_MATCH.START_TIME.asc().nullsLast(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()
             )
             .limit(limit)

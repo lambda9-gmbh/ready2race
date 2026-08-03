@@ -617,6 +617,18 @@ import type {
     GetRunningMatchesData,
     GetRunningMatchesError,
     GetRunningMatchesResponse,
+    GetAthleteBoardData,
+    GetAthleteBoardError,
+    GetAthleteBoardResponse,
+    FinishLiveDashboardMatchData,
+    FinishLiveDashboardMatchError,
+    FinishLiveDashboardMatchResponse,
+    SetLiveDashboardMatchRunningData,
+    SetLiveDashboardMatchRunningError,
+    SetLiveDashboardMatchRunningResponse,
+    GetLiveDashboardData,
+    GetLiveDashboardError,
+    GetLiveDashboardResponse,
     GetInfoViewsData,
     GetInfoViewsError,
     GetInfoViewsResponse,
@@ -3316,6 +3328,64 @@ export const getRunningMatches = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/running-matches',
+    })
+}
+
+/**
+ * Public board for athletes at start and finish: running, next and last finished matches in one response
+ */
+export const getAthleteBoard = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetAthleteBoardData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAthleteBoardResponse,
+        GetAthleteBoardError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/athlete-board',
+    })
+}
+
+/**
+ * Marks the match as finished and activates the matches of the next start time
+ */
+export const finishLiveDashboardMatch = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<FinishLiveDashboardMatchData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        FinishLiveDashboardMatchResponse,
+        FinishLiveDashboardMatchError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/finish',
+    })
+}
+
+export const setLiveDashboardMatchRunning = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetLiveDashboardMatchRunningData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SetLiveDashboardMatchRunningResponse,
+        SetLiveDashboardMatchRunningError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/running-state',
+    })
+}
+
+export const getLiveDashboard = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetLiveDashboardData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetLiveDashboardResponse,
+        GetLiveDashboardError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard',
     })
 }
 
