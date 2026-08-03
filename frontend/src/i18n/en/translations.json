@@ -1169,7 +1169,8 @@
       "viewTypes": {
         "upcomingMatches": "Upcoming Matches",
         "latestMatchResults": "Latest Match Results",
-        "runningMatches": "Currently Running"
+        "runningMatches": "Currently Running",
+        "athleteBoard": "Athlete board"
       },
       "configuration": "View Configuration",
       "configurationHelp": "Drag views to reorder them. Each view will be displayed for the specified duration.",
@@ -1205,7 +1206,28 @@
       "result": "Result",
       "points": "Points",
       "matchTeams": "Match Teams",
-      "executionOrder": "Execution Order: {{order}}"
+      "executionOrder": "Execution Order: {{order}}",
+      "athleteBoard": {
+        "running": "Current race",
+        "upcoming": "Next race",
+        "results": "Last result",
+        "noRunning": "No race on the water right now",
+        "noUpcoming": "No further race scheduled",
+        "noResults": "No result yet",
+        "lane": "Lane",
+        "expected": "expected",
+        "unscheduled": "Time open",
+        "failed": "not classified",
+        "startsIn": "in {{time}}",
+        "asOf": "As of {{time}}",
+        "stale": "Connection lost",
+        "eventNotFound": "Event not found",
+        "settingsTitle": "Athlete board",
+        "limitRunning": "Number of running races",
+        "limitUpcoming": "Number of next races",
+        "limitResults": "Number of results",
+        "showCountdown": "Show countdown to start"
+      }
     },
     "liveDashboard": {
       "sectionTitle": "Referee dashboard",

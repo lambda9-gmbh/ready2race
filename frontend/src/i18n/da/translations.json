@@ -1169,7 +1169,8 @@
       "viewTypes": {
         "upcomingMatches": "Kommende",
         "latestMatchResults": "Nyeste resultater",
-        "runningMatches": "Igangværende"
+        "runningMatches": "Igangværende",
+        "athleteBoard": "Atletvisning"
       },
       "configuration": "Visningskonfiguration",
       "configurationHelp": "Træk visningerne for at ændre rækkefølgen. Hver visning vises i den angivne varighed.",
@@ -1205,7 +1206,28 @@
       "result": "Resultat",
       "points": "Point",
       "matchTeams": "Løbshold",
-      "executionOrder": "Udførelsesrækkefølge: {{order}}"
+      "executionOrder": "Udførelsesrækkefølge: {{order}}",
+      "athleteBoard": {
+        "running": "Aktuelt løb",
+        "upcoming": "Næste løb",
+        "results": "Seneste resultat",
+        "noRunning": "Intet løb på vandet lige nu",
+        "noUpcoming": "Ingen flere løb planlagt",
+        "noResults": "Endnu intet resultat",
+        "lane": "Bane",
+        "expected": "forventet",
+        "unscheduled": "Tid ikke fastsat",
+        "failed": "ikke placeret",
+        "startsIn": "om {{time}}",
+        "asOf": "Opdateret {{time}}",
+        "stale": "Forbindelsen afbrudt",
+        "eventNotFound": "Arrangementet blev ikke fundet",
+        "settingsTitle": "Atletvisning",
+        "limitRunning": "Antal igangværende løb",
+        "limitUpcoming": "Antal kommende løb",
+        "limitResults": "Antal resultater",
+        "showCountdown": "Vis nedtælling til start"
+      }
     },
     "liveDashboard": {
       "sectionTitle": "Dommer-dashboard",

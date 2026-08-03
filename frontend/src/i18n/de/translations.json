@@ -1169,7 +1169,8 @@
       "viewTypes": {
         "upcomingMatches": "Anstehend",
         "latestMatchResults": "Neueste Ergebnisse",
-        "runningMatches": "Aktuell laufend"
+        "runningMatches": "Aktuell laufend",
+        "athleteBoard": "Athleten-Anzeige"
       },
       "configuration": "Ansichtskonfiguration",
       "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
@@ -1205,7 +1206,28 @@
       "result": "Ergebnis",
       "points": "Punkte",
       "matchTeams": "Lauf-Teams",
-      "executionOrder": "Ausführungsreihenfolge: {{order}}"
+      "executionOrder": "Ausführungsreihenfolge: {{order}}",
+      "athleteBoard": {
+        "running": "Aktueller Lauf",
+        "upcoming": "Nächster Lauf",
+        "results": "Letztes Ergebnis",
+        "noRunning": "Zurzeit kein Lauf auf dem Wasser",
+        "noUpcoming": "Kein weiterer Lauf gesetzt",
+        "noResults": "Noch kein Ergebnis",
+        "lane": "Bahn",
+        "expected": "erwartet",
+        "unscheduled": "Zeit offen",
+        "failed": "nicht gewertet",
+        "startsIn": "in {{time}}",
+        "asOf": "Stand {{time}}",
+        "stale": "Verbindung unterbrochen",
+        "eventNotFound": "Veranstaltung nicht gefunden",
+        "settingsTitle": "Athleten-Anzeige",
+        "limitRunning": "Anzahl laufender Läufe",
+        "limitUpcoming": "Anzahl nächster Läufe",
+        "limitResults": "Anzahl Ergebnisse",
+        "showCountdown": "Countdown bis zum Start anzeigen"
+      }
     },
     "liveDashboard": {
       "sectionTitle": "Schiedsrichter-Dashboard",

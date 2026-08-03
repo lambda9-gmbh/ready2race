@@ -20,9 +20,6 @@ const formatRemaining = (seconds: number) => {
 
 const AthleteBoardMatchCard = ({match, now, showCountdown}: AthleteBoardMatchCardProps) => {
     const {t} = useTranslation()
-    // Die Übersetzungsschlüssel unter event.info.athleteBoard.* werden erst mit der Seite
-    // angelegt; bis dahin bräuchte t() hier eine noch nicht existierende Literal-Vereinigung.
-    const translate = t as unknown as (key: string, options?: Record<string, unknown>) => string
 
     const startsInSeconds = match.startTime
         ? (new Date(match.startTime).getTime() - now.getTime()) / 1000
@@ -37,7 +34,7 @@ const AthleteBoardMatchCard = ({match, now, showCountdown}: AthleteBoardMatchCar
         if (!match.startTime) {
             return (
                 <Typography sx={{fontSize: 'clamp(0.8rem, 1.4vw, 1.1rem)'}} color="text.secondary">
-                    {translate('event.info.athleteBoard.unscheduled')}
+                    {t('event.info.athleteBoard.unscheduled')}
                 </Typography>
             )
         }
@@ -51,7 +48,7 @@ const AthleteBoardMatchCard = ({match, now, showCountdown}: AthleteBoardMatchCar
                     <Typography
                         sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}}
                         color="text.secondary">
-                        {translate('event.info.athleteBoard.expected')}
+                        {t('event.info.athleteBoard.expected')}
                     </Typography>
                 ) : (
                     showCountdown &&
@@ -59,7 +56,7 @@ const AthleteBoardMatchCard = ({match, now, showCountdown}: AthleteBoardMatchCar
                         <Typography
                             sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}}
                             color="text.secondary">
-                            {translate('event.info.athleteBoard.startsIn', {
+                            {t('event.info.athleteBoard.startsIn', {
                                 time: formatRemaining(startsInSeconds),
                             })}
                         </Typography>

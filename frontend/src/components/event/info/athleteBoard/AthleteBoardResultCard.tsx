@@ -8,9 +8,6 @@ interface AthleteBoardResultCardProps {
 
 const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
     const {t} = useTranslation()
-    // Die Übersetzungsschlüssel unter event.info.athleteBoard.* werden erst mit der Seite
-    // angelegt; bis dahin bräuchte t() hier eine noch nicht existierende Literal-Vereinigung.
-    const translate = t as unknown as (key: string, options?: Record<string, unknown>) => string
 
     const teams = [...result.teams].sort((a, b) => {
         // Platzierte zuerst, danach die ohne Platz (DNF und Konsorten).
@@ -66,14 +63,14 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                                 <Typography
                                     sx={{fontSize: 'clamp(0.7rem, 1.1vw, 0.95rem)'}}
                                     color="text.secondary">
-                                    {translate('event.info.athleteBoard.lane')} {team.lane}
+                                    {t('event.info.athleteBoard.lane')} {team.lane}
                                 </Typography>
                             </Box>
                             <Typography
                                 sx={{fontSize: 'clamp(0.9rem, 1.5vw, 1.3rem)', fontWeight: 600}}
                                 color={team.failed ? 'text.secondary' : 'text.primary'}>
                                 {team.failed
-                                    ? (team.failedReason ?? translate('event.info.athleteBoard.failed'))
+                                    ? (team.failedReason ?? t('event.info.athleteBoard.failed'))
                                     : (team.timeString ?? '')}
                             </Typography>
                         </Stack>
