@@ -3,6 +3,7 @@ import {InfoViewConfigurationDto} from '@api/types.gen'
 import UpcomingMatchesView from './views/UpcomingMatchesView'
 import {LatestMatchResultsView} from './views/LatestMatchResultsView'
 import RunningMatchesView from './views/RunningMatchesView'
+import AthleteBoardView from './views/AthleteBoardView'
 
 interface InfoViewDisplayProps {
     eventId: string
@@ -30,6 +31,10 @@ const InfoViewDisplay = ({eventId, view}: InfoViewDisplayProps) => {
                 )
             case 'RUNNING_MATCHES':
                 return <RunningMatchesView eventId={eventId} limit={view.dataLimit} />
+            case 'ATHLETE_BOARD':
+                // Limits und Countdown-Schalter kommen aus der Antwort des Endpoints,
+                // damit Kiosk und eigene Seite dieselbe Konfiguration zeigen.
+                return <AthleteBoardView eventId={eventId} />
             default:
                 return (
                     <Box sx={{p: 3}}>

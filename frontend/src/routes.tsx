@@ -26,6 +26,7 @@ import EventPage, {EventTab} from './pages/event/EventPage.tsx'
 import CompetitionPage, {CompetitionTab} from './pages/event/CompetitionPage.tsx'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import EventInfoPage from './pages/event/EventInfoPage.tsx'
+import AthleteBoardPage from './pages/event/AthleteBoardPage.tsx'
 import LiveDashboardPage from './pages/event/LiveDashboardPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
@@ -311,6 +312,12 @@ export const eventInfoRoute = createRoute({
     component: () => <EventInfoPage />,
 })
 
+export const athleteBoardRoute = createRoute({
+    getParentRoute: () => eventRoute,
+    path: 'board',
+    component: () => <AthleteBoardPage />,
+})
+
 export const eventLiveDashboardRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'liveDashboard',
@@ -506,6 +513,7 @@ const routeTree = rootRoute.addChildren([
                 eventIndexRoute,
                 eventRegistrationRoute,
                 eventInfoRoute,
+                athleteBoardRoute,
                 eventLiveDashboardRoute,
                 eventDayRoute.addChildren([eventDayIndexRoute]),
                 competitionRoute.addChildren([competitionIndexRoute]),
