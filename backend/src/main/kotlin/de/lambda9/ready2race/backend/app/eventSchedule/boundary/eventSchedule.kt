@@ -3,13 +3,20 @@ package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.ShiftScheduleRequest
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.UpsertScheduleSlotRequest
+import de.lambda9.ready2race.backend.calls.requests.RequestError
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.authenticateAny
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
+import de.lambda9.ready2race.backend.xls.checkValidXls
+import de.lambda9.tailwind.core.KIO
+import io.ktor.http.content.*
+import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import io.ktor.utils.io.*
 
 fun Route.eventSchedule() {
     route("/event/{eventId}/schedule") {
@@ -73,6 +80,60 @@ fun Route.eventSchedule() {
                 val body = !receiveKIO(ShiftScheduleRequest.example)
 
                 EventScheduleService.shiftSchedule(eventId, body, user.id!!)
+            }
+        }
+        post("/import") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+
+                val multiPartData = receiveMultipart()
+
+                var upload: File? = null
+                var dryRun: Boolean? = null
+
+                var done = false
+                while (!done) {
+                    val part = multiPartData.readPart()
+                    if (part == null) {
+                        done = true
+                    } else {
+                        when (part) {
+                            is PartData.FileItem -> {
+                                if (upload == null) {
+                                    upload = File(
+                                        part.originalFileName!!,
+                                        part.provider().toByteArray(),
+                                    )
+                                } else {
+                                    !KIO.fail(RequestError.File.Multiple)
+                                }
+                            }
+
+                            is PartData.FormItem -> {
+                                if (part.name == "dryRun") {
+                                    dryRun = part.value.toBooleanStrictOrNull()
+                                }
+                            }
+
+                            else -> {}
+                        }
+                        part.dispose()
+                    }
+                }
+
+                val file = !KIO.failOnNull(upload) { RequestError.File.Missing }
+                // Fehlt/unparsbar: sicherer Default ist die Vorschau, kein versehentliches Schreiben.
+                val dry = dryRun ?: true
+
+                !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
+
+                EventScheduleService.importSchedule(
+                    eventId = eventId,
+                    fileBytes = file.bytes,
+                    dryRun = dry,
+                    userId = user.id!!,
+                )
             }
         }
     }

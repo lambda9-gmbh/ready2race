@@ -2,19 +2,31 @@ package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.*
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventScheduleSlotRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
+import de.lambda9.ready2race.backend.xls.CellParser
+import de.lambda9.ready2race.backend.xls.XLS
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+
+/** Eine geparste, noch nicht gematchte Import-Zeile — Zwischenformat zwischen XLS-Read und Matching (Task 12). */
+private data class ImportRow(
+    val startTime: LocalDateTime,
+    val competition: String?,
+    val lauf: String,
+    val duration: Int?,
+)
 
 object EventScheduleService {
 
@@ -313,5 +325,145 @@ object EventScheduleService {
                 )
             )
         )
+    }
+
+    /**
+     * Excel-Import des Zeitstrahls (Task 12). `dryRun=true` liefert nur die Vorschau (Matching je
+     * Zeile, keine Schreiboperation). `dryRun=false` ersetzt bei Erfolg den ganzen Zeitstrahl des
+     * Events: erst wird auf Duplikate geprüft (gleiche Setup-Zeile in mehreren Zeilen verlinkt -
+     * das ist immer ein Fehler, nicht nur eine Warnung, weil sonst zwei Slots dieselbe
+     * competition_match.start_time beanspruchen würden), dann werden alle bestehenden Slots
+     * gelöscht und durch die Import-Zeilen ersetzt.
+     */
+    fun importSchedule(
+        eventId: UUID,
+        fileBytes: ByteArray,
+        dryRun: Boolean,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.Dto<ScheduleImportResultDto>> = KIO.comprehension {
+        val eventExists = !EventRepo.exists(eventId).orDie()
+        if (!eventExists) {
+            return@comprehension KIO.fail(EventScheduleError.EventNotFound(eventId))
+        }
+
+        val eventDays = !EventDayRepo.getByEvent(eventId).orDie()
+        val eventYear = eventDays.minOfOrNull { it.date }?.year ?: LocalDate.now().year
+
+        val parsedRows = !XLS.read(fileBytes.inputStream()) {
+            val date = !cell("Datum", CellParser.localDate(eventYear))
+            val time = !cell("Uhrzeit", CellParser.localTime)
+            val competition = !optionalCell("Wettkampf", CellParser.string)
+            val lauf = !cell("Lauf", CellParser.string)
+            val duration = !optionalCell("Dauer", CellParser.int)
+            ImportRow(
+                startTime = LocalDateTime.of(date, time),
+                competition = competition,
+                lauf = lauf,
+                duration = duration,
+            )
+        }.mapError { EventScheduleError.ImportFileUnreadable }
+
+        val candidateRecords = !EventScheduleRepo.getImportCandidates(eventId).orDie()
+
+        // Anzeigeinfo je Setup-Zeile für targetLabel - getrennt von den (lowercased) Match-Texten.
+        val displayInfoBySetupMatch = candidateRecords.associate { r ->
+            r[COMPETITION_SETUP_MATCH.ID]!! to Triple(
+                r.get("competition_name", String::class.java) ?: "",
+                r.get("round_name", String::class.java) ?: "",
+                r.get("match_name", String::class.java),
+            )
+        }
+
+        val candidates = candidateRecords.map { r ->
+            val texts = listOfNotNull(
+                r[COMPETITION_PROPERTIES.IDENTIFIER],
+                r.get("competition_name", String::class.java),
+                r[COMPETITION_PROPERTIES.SHORT_NAME],
+            ).map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
+
+            ImportCandidate(
+                setupMatchId = r[COMPETITION_SETUP_MATCH.ID]!!,
+                competitionTexts = texts,
+                matchName = r.get("match_name", String::class.java),
+                roundName = r.get("round_name", String::class.java) ?: "",
+            )
+        }
+
+        // rowNumber: Zeile 1 ist der Header, XLS.read liefert die Datenzeilen ab Index 0 in
+        // Reihenfolge -> Excel-Zeilennummer = Index + 2.
+        val matched = parsedRows.mapIndexed { idx, row ->
+            val (status, setupMatchId) = ScheduleImport.matchRow(row.competition, row.lauf, candidates)
+            ImportRowResult(
+                rowNumber = idx + 2,
+                startTime = row.startTime,
+                competitionText = row.competition,
+                laufText = row.lauf,
+                status = status,
+                setupMatchId = setupMatchId,
+            ) to row.duration
+        }
+
+        // Duplikat-Erkennung über alle Zeilen hinweg: gleiche setupMatchId in >1 Zeile -> ALLE
+        // betroffenen Zeilen werden DUPLICATE, nicht nur die zweite.
+        val setupMatchCounts = matched.mapNotNull { it.first.setupMatchId }.groupingBy { it }.eachCount()
+        val finalRows = matched.map { (result, duration) ->
+            val isDuplicate = result.setupMatchId != null && (setupMatchCounts[result.setupMatchId] ?: 0) > 1
+            (if (isDuplicate) result.copy(status = ImportRowStatus.DUPLICATE) else result) to duration
+        }
+
+        fun targetLabel(setupMatchId: UUID): String? {
+            val (competitionName, roundName, matchName) = displayInfoBySetupMatch[setupMatchId] ?: return null
+            return listOfNotNull(competitionName, roundName, matchName).joinToString(" – ")
+        }
+
+        val rowDtos = finalRows.map { (result, _) ->
+            ImportRowResultDto(
+                rowNumber = result.rowNumber,
+                startTime = result.startTime,
+                competitionText = result.competitionText,
+                laufText = result.laufText,
+                status = result.status,
+                targetLabel = if (result.status == ImportRowStatus.LINKED) {
+                    result.setupMatchId?.let { targetLabel(it) }
+                } else {
+                    null
+                },
+            )
+        }
+
+        if (dryRun) {
+            return@comprehension KIO.ok(ApiResponse.Dto(ScheduleImportResultDto(rowDtos, applied = false)))
+        }
+
+        val duplicateRowNumbers = finalRows.filter { it.first.status == ImportRowStatus.DUPLICATE }.map { it.first.rowNumber }
+        if (duplicateRowNumbers.isNotEmpty()) {
+            return@comprehension KIO.fail(EventScheduleError.DuplicateImportRow(duplicateRowNumbers))
+        }
+
+        !EventScheduleRepo.deleteAllSlots(eventId).orDie()
+
+        val now = LocalDateTime.now()
+        val newSlotRecords = finalRows.map { (result, duration) ->
+            val isLinked = result.status == ImportRowStatus.LINKED
+            EventScheduleSlotRecord(
+                id = UUID.randomUUID(),
+                event = eventId,
+                startTime = result.startTime,
+                competitionSetupMatch = if (isLinked) result.setupMatchId else null,
+                name = if (isLinked) null else result.laufText,
+                durationMinutes = duration,
+                createdAt = now,
+                createdBy = userId,
+                updatedAt = now,
+                updatedBy = userId,
+            )
+        }
+        !EventScheduleRepo.createSlots(newSlotRecords).orDie()
+
+        !finalRows.filter { it.first.status == ImportRowStatus.LINKED }.traverse { (result, _) ->
+            EventScheduleRepo.stampMatchStartTime(result.setupMatchId!!, result.startTime, userId).orDie()
+        }
+
+        KIO.ok(ApiResponse.Dto(ScheduleImportResultDto(rowDtos, applied = true)))
     }
 }

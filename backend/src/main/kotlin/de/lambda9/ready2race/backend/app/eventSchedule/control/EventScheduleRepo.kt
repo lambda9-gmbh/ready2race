@@ -225,7 +225,39 @@ object EventScheduleRepo {
             .fetch()
     }
 
+    /**
+     * Alle Setup-Zeilen des Events als Match-Kandidaten für den Excel-Import (Task 12) — gleiche
+     * Joins wie [getUnplannedSetupMatches], aber ohne den notExists-Filter: der Import muss auch
+     * bereits verplante Zeilen kennen, um Duplikate zu erkennen. Zusätzlich SHORT_NAME/IDENTIFIER
+     * für die Text-Kandidaten des Namens-Matchings.
+     */
+    fun getImportCandidates(eventId: UUID) = Jooq.query {
+        select(
+            COMPETITION_SETUP_MATCH.ID,
+            COMPETITION.ID.`as`("competition_id"),
+            COMPETITION_PROPERTIES.NAME.`as`("competition_name"),
+            COMPETITION_PROPERTIES.SHORT_NAME,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
+            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+        )
+            .from(COMPETITION_SETUP_MATCH)
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .orderBy(COMPETITION_PROPERTIES.NAME, COMPETITION_SETUP_MATCH.EXECUTION_ORDER)
+            .fetch()
+    }
+
+    /** Alle Slots des Events löschen — Vorstufe des Re-Imports (Task 12): der Import ersetzt den ganzen Zeitstrahl. */
+    fun deleteAllSlots(eventId: UUID) = EVENT_SCHEDULE_SLOT.delete { EVENT.eq(eventId) }
+
     fun createSlot(record: EventScheduleSlotRecord) = EVENT_SCHEDULE_SLOT.insertReturning(record) { ID }
+
+    fun createSlots(records: List<EventScheduleSlotRecord>) = EVENT_SCHEDULE_SLOT.insert(records)
 
     fun updateSlot(eventId: UUID, slotId: UUID, f: EventScheduleSlotRecord.() -> Unit) =
         EVENT_SCHEDULE_SLOT.update(f) { ID.eq(slotId).and(EVENT.eq(eventId)) }
