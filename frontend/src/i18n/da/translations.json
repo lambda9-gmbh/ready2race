@@ -1344,6 +1344,38 @@
         "afterStart": "{{delta}} efter start"
       }
     },
+    "schedule": {
+      "tab": "Tidsplan",
+      "slot": "Slot",
+      "addSlot": "Tilføj slot",
+      "slotType": "Type",
+      "freeSlot": "Fri slot",
+      "matchSlot": "Løb",
+      "competition": "Konkurrence",
+      "round": "Runde",
+      "match": "Løb",
+      "startTime": "Starttid",
+      "status": "Status",
+      "duration": "Varighed (minutter)",
+      "durationValue": "{{minutes}} min",
+      "state": {
+        "FREE": "Programpunkt",
+        "WAITING": "Løb endnu ikke fastsat",
+        "LINKED": "Forbundet",
+        "OBSOLETE": "Bortfalder",
+        "SKIPPED": "Sprunget over",
+        "finished": "Afsluttet"
+      },
+      "skip": "Spring over",
+      "unskip": "Fortryd spring over",
+      "skipConfirm": "Vil du virkelig springe slot „{{label}}“ over kl. {{time}}? Kæden springer den så over.",
+      "unplanned": "Ikke planlagte løb",
+      "noUnplanned": "Alle løb er planlagt.",
+      "noSlots": "Der er endnu ikke oprettet en tidsplan for denne begivenhed.",
+      "plan": "Planlæg",
+      "adjust": "Juster tidsplan",
+      "import": "Excel-import"
+    },
     "results": {
       "download": "Download tidligere resultater",
       "downloadError": "Filen kunne ikke downloades."

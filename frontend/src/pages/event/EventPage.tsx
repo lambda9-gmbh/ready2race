@@ -53,6 +53,7 @@ import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
 import {Shiftplan} from '@components/event/shiftplan/Shiftplan.tsx'
+import EventSchedule from '@components/event/schedule/EventSchedule.tsx'
 import {
     a11yProps,
     getFilename,
@@ -79,6 +80,7 @@ const EVENT_TABS = [
     'participants',
     'registrations',
     'organization',
+    'schedule',
     'settings',
     'invoices',
 ] as const
@@ -245,6 +247,9 @@ const EventPage = () => {
                                         {...tabProps('organization')}
                                     />
                                 )}
+                            {user.checkPrivilege(readEventGlobal) && (
+                                <Tab label={t('event.schedule.tab')} {...tabProps('schedule')} />
+                            )}
                             {user.checkPrivilege(readEventGlobal) && (
                                 <Tab label={t('event.tabs.settings')} {...tabProps('settings')} />
                             )}
@@ -453,6 +458,9 @@ const EventPage = () => {
                                 <TaskDialog {...taskProps.dialog} eventId={eventId}/>
                                 <Shiftplan/>
                             </Stack>
+                        </TabPanel>
+                        <TabPanel index={'schedule'} activeTab={activeTab}>
+                            <EventSchedule/>
                         </TabPanel>
                         <TabPanel index={'settings'} activeTab={activeTab}>
                             <Stack spacing={4}>

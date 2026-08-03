@@ -1344,6 +1344,38 @@
         "afterStart": "{{delta}} nach Start"
       }
     },
+    "schedule": {
+      "tab": "Zeitplan",
+      "slot": "Slot",
+      "addSlot": "Slot hinzufügen",
+      "slotType": "Art",
+      "freeSlot": "Freier Slot",
+      "matchSlot": "Lauf",
+      "competition": "Wettkampf",
+      "round": "Runde",
+      "match": "Lauf",
+      "startTime": "Startzeit",
+      "status": "Status",
+      "duration": "Dauer (Minuten)",
+      "durationValue": "{{minutes}} min",
+      "state": {
+        "FREE": "Programmpunkt",
+        "WAITING": "Lauf noch nicht gesetzt",
+        "LINKED": "Verknüpft",
+        "OBSOLETE": "Entfällt",
+        "SKIPPED": "Übersprungen",
+        "finished": "Beendet"
+      },
+      "skip": "Überspringen",
+      "unskip": "Überspringen aufheben",
+      "skipConfirm": "Slot „{{label}}“ um {{time}} wirklich überspringen? Die Kette lässt ihn dann aus.",
+      "unplanned": "Nicht verplante Läufe",
+      "noUnplanned": "Alle Läufe sind eingeplant.",
+      "noSlots": "Für diese Veranstaltung ist noch kein Zeitplan angelegt.",
+      "plan": "Einplanen",
+      "adjust": "Zeitplan anpassen",
+      "import": "Excel-Import"
+    },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",
       "downloadError": "Die datei konnte nicht heruntergeladen werden."

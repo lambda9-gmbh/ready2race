@@ -1344,6 +1344,38 @@
         "afterStart": "{{delta}} after start"
       }
     },
+    "schedule": {
+      "tab": "Schedule",
+      "slot": "Slot",
+      "addSlot": "Add slot",
+      "slotType": "Type",
+      "freeSlot": "Free slot",
+      "matchSlot": "Race",
+      "competition": "Competition",
+      "round": "Round",
+      "match": "Race",
+      "startTime": "Start time",
+      "status": "Status",
+      "duration": "Duration (minutes)",
+      "durationValue": "{{minutes}} min",
+      "state": {
+        "FREE": "Program item",
+        "WAITING": "Race not yet set",
+        "LINKED": "Linked",
+        "OBSOLETE": "Obsolete",
+        "SKIPPED": "Skipped",
+        "finished": "Finished"
+      },
+      "skip": "Skip",
+      "unskip": "Undo skip",
+      "skipConfirm": "Really skip slot \"{{label}}\" at {{time}}? The chain will then leave it out.",
+      "unplanned": "Unplanned races",
+      "noUnplanned": "All races are scheduled.",
+      "noSlots": "No schedule has been created for this event yet.",
+      "plan": "Schedule",
+      "adjust": "Adjust schedule",
+      "import": "Excel import"
+    },
     "results": {
       "download": "Download previous results",
       "downloadError": "Die datei konnte nicht heruntergeladen werden."
