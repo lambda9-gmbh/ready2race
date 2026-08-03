@@ -22,6 +22,7 @@ import java.util.UUID
 
 /** Eine geparste, noch nicht gematchte Import-Zeile — Zwischenformat zwischen XLS-Read und Matching (Task 12). */
 private data class ImportRow(
+    val rowNumber: Int,
     val startTime: LocalDateTime,
     val competition: String?,
     val lauf: String,
@@ -356,6 +357,7 @@ object EventScheduleService {
             val lauf = !cell("Lauf", CellParser.string)
             val duration = !optionalCell("Dauer", CellParser.int)
             ImportRow(
+                rowNumber = rowNum,
                 startTime = LocalDateTime.of(date, time),
                 competition = competition,
                 lauf = lauf,
@@ -389,12 +391,13 @@ object EventScheduleService {
             )
         }
 
-        // rowNumber: Zeile 1 ist der Header, XLS.read liefert die Datenzeilen ab Index 0 in
-        // Reihenfolge -> Excel-Zeilennummer = Index + 2.
-        val matched = parsedRows.mapIndexed { idx, row ->
+        // rowNumber kommt direkt vom RowReader (physische Excel-Zeilennummer), nicht aus dem
+        // Listen-Index - POI überspringt beim Iterieren leere Zeilen stillschweigend, mit einer
+        // Leerzeile in der Datei würde Index + 2 sonst auf die falsche Excel-Zeile zeigen.
+        val matched = parsedRows.map { row ->
             val (status, setupMatchId) = ScheduleImport.matchRow(row.competition, row.lauf, candidates)
             ImportRowResult(
-                rowNumber = idx + 2,
+                rowNumber = row.rowNumber,
                 startTime = row.startTime,
                 competitionText = row.competition,
                 laufText = row.lauf,
