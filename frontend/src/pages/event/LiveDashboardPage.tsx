@@ -18,21 +18,27 @@ import {
     finishLiveDashboardMatch,
     getLiveDashboard,
     setLiveDashboardMatchRunning,
+    skipScheduleSlot,
+    startLiveDashboardMatch,
 } from '@api/sdk.gen.ts'
 import {LiveDashboardDto} from '@api/types.gen.ts'
 import {useFetch, useFeedback} from '@utils/hooks.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import {eventLiveDashboardRoute} from '@routes'
-import LiveDashboardMatchCard from '@components/event/liveDashboard/LiveDashboardMatchCard.tsx'
+import LiveDashboardMatchCard, {
+    LiveDashboardPendingSlotCard,
+} from '@components/event/liveDashboard/LiveDashboardMatchCard.tsx'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
-import {storedPollInterval} from '@components/event/liveDashboard/common.ts'
+import {buildLiveDashboardTimeline, storedPollInterval} from '@components/event/liveDashboard/common.ts'
 import {MatchResultStatus} from '@utils/matchResultStatus.ts'
 
 const LiveDashboardPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const {confirmAction} = useConfirmation()
     const user = useUser()
     const {eventId} = eventLiveDashboardRoute.useParams()
     const mayControl = user.checkPrivilege(updateLiveDashboardGlobal)
@@ -106,6 +112,13 @@ const LiveDashboardPage = () => {
     const nextUpcoming = dashboard?.matches.find(m => m.state === 'UPCOMING')
     const scheduledMatches = dashboard?.matches.filter(m => m.state !== 'UNSCHEDULED') ?? []
     const unscheduledMatches = dashboard?.matches.filter(m => m.state === 'UNSCHEDULED') ?? []
+    const pendingSlots = dashboard?.pendingSlots ?? []
+    // "Als Nächstes" ist das chronologisch nächste Ding überhaupt — das kann auch ein noch nicht
+    // gesetzter Slot vor dem nächsten echten Lauf sein.
+    const nextEntry = buildLiveDashboardTimeline(nextUpcoming ? [nextUpcoming] : [], pendingSlots)[0]
+    // Zeitplan-Ansicht: geplante/laufende/beendete Läufe und wartende Slots gemeinsam nach
+    // Startzeit, damit ein Platzhalter genau zwischen seinen Nachbarn auftaucht.
+    const scheduledTimeline = buildLiveDashboardTimeline(scheduledMatches, pendingSlots)
 
     const selectedTeam = selectedTeamRef
         ? (dashboard?.matches
@@ -143,6 +156,30 @@ const LiveDashboardPage = () => {
             feedback.error(t('event.liveDashboard.control.error'))
         }
         dashboardData.reload()
+    }
+
+    const handleStart = async (matchId: string) => {
+        const {error} = await startLiveDashboardMatch({path: {eventId, matchId}})
+        if (error) {
+            feedback.error(t('event.liveDashboard.control.error'))
+        }
+        dashboardData.reload()
+    }
+
+    const handleSkipSlot = (slotId: string, label: string, time: string) => {
+        confirmAction(
+            async () => {
+                const {error} = await skipScheduleSlot({path: {eventId, slotId}})
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+                dashboardData.reload()
+            },
+            {
+                content: t('event.schedule.skipConfirm', {label, time}),
+                okText: t('event.schedule.skip'),
+            },
+        )
     }
 
     return (
@@ -205,33 +242,50 @@ const LiveDashboardPage = () => {
                                 onTeamClick={handleTeamClick}
                                 onFinish={mayControl ? handleFinish : undefined}
                                 onSetRunning={mayControl ? handleSetRunning : undefined}
+                                onStart={mayControl ? handleStart : undefined}
                             />
                         ))}
-                        {runningMatches.length === 0 && nextUpcoming && (
+                        {runningMatches.length === 0 && nextEntry && (
                             <>
                                 <Typography variant="subtitle2" color="text.secondary">
                                     {t('event.liveDashboard.nextUp')}
                                 </Typography>
-                                <LiveDashboardMatchCard
-                                    match={nextUpcoming}
-                                    onTeamClick={handleTeamClick}
-                                    onSetRunning={mayControl ? handleSetRunning : undefined}
-                                />
+                                {nextEntry.kind === 'match' ? (
+                                    <LiveDashboardMatchCard
+                                        match={nextEntry.match}
+                                        onTeamClick={handleTeamClick}
+                                        onSetRunning={mayControl ? handleSetRunning : undefined}
+                                    />
+                                ) : (
+                                    <LiveDashboardPendingSlotCard
+                                        slot={nextEntry.slot}
+                                        onSkip={mayControl ? handleSkipSlot : undefined}
+                                    />
+                                )}
                             </>
                         )}
                     </>
                 )}
                 {tab === 'matches' && (
                     <>
-                        {scheduledMatches.map(match => (
-                            <LiveDashboardMatchCard
-                                key={match.matchId}
-                                match={match}
-                                onTeamClick={handleTeamClick}
-                                onFinish={mayControl ? handleFinish : undefined}
-                                onSetRunning={mayControl ? handleSetRunning : undefined}
-                            />
-                        ))}
+                        {scheduledTimeline.map(entry =>
+                            entry.kind === 'match' ? (
+                                <LiveDashboardMatchCard
+                                    key={entry.match.matchId}
+                                    match={entry.match}
+                                    onTeamClick={handleTeamClick}
+                                    onFinish={mayControl ? handleFinish : undefined}
+                                    onSetRunning={mayControl ? handleSetRunning : undefined}
+                                    onStart={mayControl ? handleStart : undefined}
+                                />
+                            ) : (
+                                <LiveDashboardPendingSlotCard
+                                    key={entry.slot.slotId}
+                                    slot={entry.slot}
+                                    onSkip={mayControl ? handleSkipSlot : undefined}
+                                />
+                            ),
+                        )}
                         {unscheduledMatches.length > 0 && (
                             <>
                                 <Typography variant="subtitle2" color="text.secondary">
@@ -244,11 +298,12 @@ const LiveDashboardPage = () => {
                                         onTeamClick={handleTeamClick}
                                         onFinish={mayControl ? handleFinish : undefined}
                                         onSetRunning={mayControl ? handleSetRunning : undefined}
+                                        onStart={mayControl ? handleStart : undefined}
                                     />
                                 ))}
                             </>
                         )}
-                        {dashboard && dashboard.matches.length === 0 && (
+                        {dashboard && dashboard.matches.length === 0 && pendingSlots.length === 0 && (
                             <Alert severity="info">{t('event.liveDashboard.noMatches')}</Alert>
                         )}
                     </>

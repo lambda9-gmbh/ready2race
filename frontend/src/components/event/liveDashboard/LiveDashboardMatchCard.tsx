@@ -6,9 +6,16 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
-import {LiveDashboardMatchDto} from '@api/types.gen.ts'
+import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
-import {formatMinutes, openResultTeams, Severity, shortClubName, teamSeverity} from './common.ts'
+import {
+    formatMinutes,
+    openResultTeams,
+    pendingSlotLabel,
+    Severity,
+    shortClubName,
+    teamSeverity,
+} from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
 
 type Props = {
@@ -17,6 +24,8 @@ type Props = {
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
     onSetRunning?: (matchId: string, running: boolean) => Promise<void>
+    /** Markiert den echten Start (Task 8/15); nur relevant, solange der Lauf noch keinen hat. */
+    onStart?: (matchId: string) => Promise<void>
 }
 
 // One glanceable icon per team replaces the detail chips — everything else
@@ -37,7 +46,7 @@ const severityIcon = (severity: Severity) => {
     }
 }
 
-const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Props) => {
+const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning, onStart}: Props) => {
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
@@ -71,15 +80,28 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                     <Typography variant="subtitle1" fontWeight={700} noWrap>
                         {match.matchName ?? match.roundName ?? match.competitionName}
                     </Typography>
-                    <Typography
-                        variant="subtitle1"
-                        fontWeight={700}
-                        textAlign="right"
-                        sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.900'}}>
-                        {match.startTime
-                            ? format(new Date(match.startTime), t('format.time'))
-                            : '—'}
-                    </Typography>
+                    <Box sx={{justifySelf: 'end', textAlign: 'right'}}>
+                        <Typography
+                            variant="subtitle1"
+                            fontWeight={700}
+                            sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.900'}}>
+                            {match.startTime
+                                ? t('event.liveDashboard.plannedAt', {
+                                      time: format(new Date(match.startTime), t('format.time')),
+                                  })
+                                : '—'}
+                        </Typography>
+                        {match.startedAt && (
+                            <Typography
+                                variant="caption"
+                                display="block"
+                                sx={{color: 'success.dark', fontVariantNumeric: 'tabular-nums'}}>
+                                {t('event.liveDashboard.startedAtLabel', {
+                                    time: format(new Date(match.startedAt), t('format.time')),
+                                })}
+                            </Typography>
+                        )}
+                    </Box>
                     <Typography
                         variant="body2"
                         sx={{
@@ -282,6 +304,15 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                     : t('event.liveDashboard.control.activate')}
                             </Button>
                         )}
+                        {onStart && running && !match.startedAt && (
+                            <Button
+                                size="small"
+                                variant="contained"
+                                color="success"
+                                onClick={() => onStart(match.matchId)}>
+                                {t('event.liveDashboard.control.start')}
+                            </Button>
+                        )}
                         {onFinish && match.state === 'RUNNING' && (
                             <FinishMatchButton
                                 openTeamCount={openTeams.length}
@@ -296,3 +327,76 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
 }
 
 export default LiveDashboardMatchCard
+
+type PendingSlotCardProps = {
+    slot: PendingSlotDto
+    /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
+    onSkip?: (slotId: string, label: string, time: string) => void
+}
+
+/**
+ * Platzhalter für einen wartenden Zeitplan-Slot (Runde noch nicht gesetzt) — bewusst ohne Teams
+ * oder Ergebnis-Spalten, die es für diese Runde noch gar nicht gibt.
+ */
+export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProps) => {
+    const {t} = useTranslation()
+    const label = pendingSlotLabel(slot)
+    const time = format(new Date(slot.startTime), t('format.time'))
+
+    return (
+        <Card variant="outlined" sx={{minWidth: 0, overflow: 'hidden'}}>
+            <CardContent sx={{p: 1.25, '&:last-child': {pb: 0.75}}}>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(0, 1fr) auto',
+                        columnGap: 1.5,
+                        alignItems: 'baseline',
+                    }}>
+                    <Typography variant="subtitle1" fontWeight={700} noWrap sx={{color: 'grey.700'}}>
+                        {label || t('event.schedule.state.WAITING')}
+                    </Typography>
+                    <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        textAlign="right"
+                        sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.900'}}>
+                        {time}
+                    </Typography>
+                </Box>
+                <Box
+                    sx={{
+                        mt: 1,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 1,
+                    }}>
+                    <Box
+                        component="span"
+                        sx={{
+                            display: 'inline-block',
+                            px: 0.75,
+                            py: 0.25,
+                            borderRadius: 1,
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            backgroundColor: 'grey.200',
+                            color: 'grey.900',
+                        }}>
+                        {t('event.schedule.state.WAITING')}
+                    </Box>
+                    {onSkip && (
+                        <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => onSkip(slot.slotId, label, time)}>
+                            {t('event.schedule.skip')}
+                        </Button>
+                    )}
+                </Box>
+            </CardContent>
+        </Card>
+    )
+}

@@ -112,43 +112,57 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     {renderTiming()}
                 </Stack>
 
-                <Stack sx={{mt: 1.5}} divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
-                    {match.teams.map((team, index) => (
-                        <Stack
-                            key={`${match.matchId}-${team.lane ?? index}`}
-                            direction="row"
-                            alignItems="center"
-                            gap={1.5}
-                            sx={{py: 0.75}}>
-                            <Typography
-                                sx={{
-                                    fontSize: 'clamp(1.6rem, 3.4vw, 3rem)',
-                                    fontWeight: 800,
-                                    lineHeight: 1,
-                                    minWidth: '1.8em',
-                                    textAlign: 'center',
-                                }}>
-                                {team.lane ?? '–'}
-                            </Typography>
-                            <Box sx={{minWidth: 0}}>
+                {match.pendingRound ? (
+                    <Typography
+                        sx={{fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)', mt: 1.5}}
+                        color="text.secondary"
+                        fontStyle="italic">
+                        {t('event.info.pendingRound')}
+                    </Typography>
+                ) : (
+                    <Stack sx={{mt: 1.5}} divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
+                        {match.teams.map((team, index) => (
+                            <Stack
+                                key={`${match.matchId}-${team.lane ?? index}`}
+                                direction="row"
+                                alignItems="center"
+                                gap={1.5}
+                                sx={{py: 0.75}}>
                                 <Typography
-                                    sx={{fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)', fontWeight: 600}}>
-                                    {team.clubName ?? ''}
-                                    {team.teamName ? ` | ${team.teamName}` : ''}
+                                    sx={{
+                                        fontSize: 'clamp(1.6rem, 3.4vw, 3rem)',
+                                        fontWeight: 800,
+                                        lineHeight: 1,
+                                        minWidth: '1.8em',
+                                        textAlign: 'center',
+                                    }}>
+                                    {team.lane ?? '–'}
                                 </Typography>
-                                {team.participants.length > 0 && (
+                                <Box sx={{minWidth: 0}}>
                                     <Typography
-                                        sx={{fontSize: 'clamp(0.7rem, 1.1vw, 0.95rem)'}}
-                                        color="text.secondary">
-                                        {team.participants
-                                            .map(p => (p.role ? `${p.name} (${p.role})` : p.name))
-                                            .join(', ')}
+                                        sx={{
+                                            fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)',
+                                            fontWeight: 600,
+                                        }}>
+                                        {team.clubName ?? ''}
+                                        {team.teamName ? ` | ${team.teamName}` : ''}
                                     </Typography>
-                                )}
-                            </Box>
-                        </Stack>
-                    ))}
-                </Stack>
+                                    {team.participants.length > 0 && (
+                                        <Typography
+                                            sx={{fontSize: 'clamp(0.7rem, 1.1vw, 0.95rem)'}}
+                                            color="text.secondary">
+                                            {team.participants
+                                                .map(p =>
+                                                    p.role ? `${p.name} (${p.role})` : p.name,
+                                                )
+                                                .join(', ')}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Stack>
+                        ))}
+                    </Stack>
+                )}
             </CardContent>
         </Card>
     )

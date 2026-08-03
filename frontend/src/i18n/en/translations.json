@@ -492,7 +492,7 @@
     "submissionNeedsVerification": "Submitted results must be verified",
     "allowParticipantSelfRegistration": "Allow participants to register themselves",
     "autoActivateNextMatch": "Activate next races automatically",
-    "autoActivateNextMatchHint": "When a referee finishes a race in the dashboard, the races of the next start time become active. Only useful with a complete schedule — otherwise the chain picks the wrong race.",
+    "autoActivateNextMatchHint": "When a referee finishes a race in the dashboard, the races of the next start time become active. Only useful with a complete schedule — otherwise the chain picks the wrong race. With a maintained schedule (Schedule tab), the chain follows the slots and waits at races that haven't been set yet.",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -1239,6 +1239,7 @@
       "points": "Points",
       "matchTeams": "Match Teams",
       "executionOrder": "Execution Order: {{order}}",
+      "pendingRound": "Race not yet set",
       "athleteBoard": {
         "running": "Current race",
         "upcoming": "Next race",
@@ -1283,6 +1284,8 @@
       "noMatches": "No matches available.",
       "noStartTime": "No start time scheduled",
       "runningSince": "Running for {{duration}}",
+      "plannedAt": "planned {{time}}",
+      "startedAtLabel": "started {{time}}",
       "state": {
         "RUNNING": "Running",
         "FINISHED": "Finished",
@@ -1307,6 +1310,7 @@
         "finished": "Race finished — next races activated",
         "deactivate": "Deactivate race",
         "activate": "Activate race",
+        "start": "Start",
         "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
         "openResults": {
           "title": "Open results",
@@ -1369,6 +1373,7 @@
       "skip": "Skip",
       "unskip": "Undo skip",
       "skipConfirm": "Really skip slot \"{{label}}\" at {{time}}? The chain will then leave it out.",
+      "managedHint": "Managed via the schedule",
       "unplanned": "Unplanned races",
       "noUnplanned": "All races are scheduled.",
       "noSlots": "No schedule has been created for this event yet.",

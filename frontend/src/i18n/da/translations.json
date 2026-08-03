@@ -492,7 +492,7 @@
     "submissionNeedsVerification": "Indsendte resultater skal verificeres",
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
     "autoActivateNextMatch": "Aktiver næste løb automatisk",
-    "autoActivateNextMatchHint": "Når en dommer afslutter et løb i dashboardet, aktiveres løbene med næste starttid. Kun nyttigt med en komplet tidsplan — ellers rammer kæden det forkerte løb.",
+    "autoActivateNextMatchHint": "Når en dommer afslutter et løb i dashboardet, aktiveres løbene med næste starttid. Kun nyttigt med en komplet tidsplan — ellers rammer kæden det forkerte løb. Med en vedligeholdt tidsplan (fanen Tidsplan) følger kæden slottene og venter ved løb, der endnu ikke er fastsat.",
     "invoice": {
       "prefix": "Fakturapræfiks",
       "paymentDueBy": "Betalingsfrist for tilmeldingsgebyrer",
@@ -1239,6 +1239,7 @@
       "points": "Point",
       "matchTeams": "Løbshold",
       "executionOrder": "Udførelsesrækkefølge: {{order}}",
+      "pendingRound": "Løb endnu ikke fastsat",
       "athleteBoard": {
         "running": "Aktuelt løb",
         "upcoming": "Næste løb",
@@ -1283,6 +1284,8 @@
       "noMatches": "Ingen løb tilgængelige.",
       "noStartTime": "Ingen starttid planlagt",
       "runningSince": "I gang i {{duration}}",
+      "plannedAt": "planlagt {{time}}",
+      "startedAtLabel": "startet {{time}}",
       "state": {
         "RUNNING": "I gang",
         "FINISHED": "Afsluttet",
@@ -1307,6 +1310,7 @@
         "finished": "Løbet er afsluttet — næste løb aktiveret",
         "deactivate": "Deaktiver løb",
         "activate": "Aktiver løb",
+        "start": "Start",
         "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
         "openResults": {
           "title": "Manglende resultater",
@@ -1369,6 +1373,7 @@
       "skip": "Spring over",
       "unskip": "Fortryd spring over",
       "skipConfirm": "Vil du virkelig springe slot „{{label}}“ over kl. {{time}}? Kæden springer den så over.",
+      "managedHint": "Vedligeholdes via tidsplanen",
       "unplanned": "Ikke planlagte løb",
       "noUnplanned": "Alle løb er planlagt.",
       "noSlots": "Der er endnu ikke oprettet en tidsplan for denne begivenhed.",

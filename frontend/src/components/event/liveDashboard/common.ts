@@ -1,7 +1,9 @@
 import {
+    LiveDashboardMatchDto,
     LiveDashboardParticipantDto,
     LiveDashboardRequirementStatusDto,
     LiveDashboardTeamDto,
+    PendingSlotDto,
 } from '@api/types.gen.ts'
 
 export type Severity = 'ok' | 'warning' | 'error' | 'neutral'
@@ -109,3 +111,39 @@ export const shortClubName = (name: string): string => {
     )
     return abbreviated.replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').trim()
 }
+
+/**
+ * Ein Eintrag im Referee-Dashboard: entweder ein wirklicher Lauf oder ein wartender Zeitplan-Slot,
+ * dessen Runde noch nicht gesetzt ist (kein Match, keine Teams). Beide teilen sich eine Startzeit,
+ * nach der die Anzeige sortiert.
+ */
+export type LiveDashboardTimelineEntry =
+    | {kind: 'match'; match: LiveDashboardMatchDto}
+    | {kind: 'pending'; slot: PendingSlotDto}
+
+const timelineEntryStartTime = (entry: LiveDashboardTimelineEntry): string | null | undefined =>
+    entry.kind === 'match' ? entry.match.startTime : entry.slot.startTime
+
+/**
+ * Läufe und wartende Slots gemeinsam nach Startzeit sortiert — ein Platzhalter reiht sich damit
+ * genau dort ein, wo die noch nicht gesetzte Runde tatsächlich stattfindet. Einträge ohne
+ * Startzeit (unplanmäßige Läufe) fallen ans Ende, statt die Sortierung zu stören.
+ */
+export const buildLiveDashboardTimeline = (
+    matches: LiveDashboardMatchDto[],
+    pendingSlots: PendingSlotDto[],
+): LiveDashboardTimelineEntry[] =>
+    [
+        ...matches.map(match => ({kind: 'match' as const, match})),
+        ...pendingSlots.map(slot => ({kind: 'pending' as const, slot})),
+    ].sort((a, b) => {
+        const timeA = timelineEntryStartTime(a)
+        const timeB = timelineEntryStartTime(b)
+        if (timeA == null) return timeB == null ? 0 : 1
+        if (timeB == null) return -1
+        return timeA.localeCompare(timeB)
+    })
+
+/** Anzeige-Label eines wartenden Slots — dieselbe Zusammensetzung wie slotLabel im Zeitplan-Tab. */
+export const pendingSlotLabel = (slot: PendingSlotDto): string =>
+    [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' · ')

@@ -141,8 +141,14 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                             </Typography>
                                         )}
                                     </Stack>
+                                    {/* Platzhalter: die Runde ist noch nicht gesetzt, es gibt keine Teams */}
+                                    {match.pendingRound && (
+                                        <Typography variant="body1" color="text.secondary" fontStyle="italic">
+                                            {t('event.info.pendingRound')}
+                                        </Typography>
+                                    )}
                                     {/* Teams */}
-                                    {match.teams.length > 0 && (
+                                    {!match.pendingRound && match.teams.length > 0 && (
                                         <Box
                                             sx={{
                                                 display: 'flex',

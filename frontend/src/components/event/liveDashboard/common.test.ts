@@ -1,6 +1,12 @@
 import {describe, expect, it} from 'vitest'
-import {LiveDashboardTeamDto} from '@api/types.gen.ts'
-import {openResultTeams, teamHasResult, teamSeverity} from './common.ts'
+import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
+import {
+    buildLiveDashboardTimeline,
+    openResultTeams,
+    pendingSlotLabel,
+    teamHasResult,
+    teamSeverity,
+} from './common.ts'
 
 const noRequirements = {
     total: 0,
@@ -111,5 +117,64 @@ describe('openResultTeams', () => {
 
     it('liefert bei vollständigen Ergebnissen nichts', () => {
         expect(openResultTeams({teams: [team({place: 1}), team({place: 2})]})).toEqual([])
+    })
+})
+
+const match = (overrides: Partial<LiveDashboardMatchDto>): LiveDashboardMatchDto => ({
+    matchId: crypto.randomUUID(),
+    state: 'UPCOMING',
+    competitionId: crypto.randomUUID(),
+    competitionName: 'CM 1x',
+    executionOrder: 0,
+    currentlyRunning: false,
+    teams: [],
+    ...overrides,
+})
+
+const pendingSlot = (overrides: Partial<PendingSlotDto>): PendingSlotDto => ({
+    slotId: crypto.randomUUID(),
+    startTime: '2026-08-17T08:00:00',
+    ...overrides,
+})
+
+describe('buildLiveDashboardTimeline', () => {
+    it('sortiert Läufe und wartende Slots gemeinsam nach Startzeit', () => {
+        const early = match({matchId: 'early', startTime: '2026-08-17T08:00:00'})
+        const late = match({matchId: 'late', startTime: '2026-08-17T09:00:00'})
+        const between = pendingSlot({slotId: 'between', startTime: '2026-08-17T08:30:00'})
+
+        const timeline = buildLiveDashboardTimeline([late, early], [between])
+
+        expect(timeline.map(entry => (entry.kind === 'match' ? entry.match.matchId : entry.slot.slotId))).toEqual([
+            'early',
+            'between',
+            'late',
+        ])
+    })
+
+    it('reiht Läufe ohne Startzeit ans Ende ein', () => {
+        const scheduled = match({matchId: 'scheduled', startTime: '2026-08-17T08:00:00'})
+        const unscheduled = match({matchId: 'unscheduled', startTime: undefined})
+
+        const timeline = buildLiveDashboardTimeline([unscheduled, scheduled], [])
+
+        expect(timeline.map(entry => (entry.kind === 'match' ? entry.match.matchId : entry.slot.slotId))).toEqual([
+            'scheduled',
+            'unscheduled',
+        ])
+    })
+})
+
+describe('pendingSlotLabel', () => {
+    it('setzt Wettkampf, Runde und Lauf mit Trennzeichen zusammen', () => {
+        expect(
+            pendingSlotLabel(
+                pendingSlot({competitionName: 'CM 1x', roundName: 'Achtelfinale', matchName: 'AF1'}),
+            ),
+        ).toBe('CM 1x · Achtelfinale · AF1')
+    })
+
+    it('lässt fehlende Teile weg', () => {
+        expect(pendingSlotLabel(pendingSlot({competitionName: 'CM 1x'}))).toBe('CM 1x')
     })
 })

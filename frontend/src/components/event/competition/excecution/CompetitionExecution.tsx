@@ -3,6 +3,7 @@ import {
     downloadStartList,
     pullMatchResultsFromRaceClocker,
     getCompetitionExecutionProgress,
+    getEventSchedule,
     updateMatchData,
     updateMatchResults,
     uploadResultFile,
@@ -30,7 +31,8 @@ import {
 import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
-import {BaseSyntheticEvent, Fragment, useRef, useState} from 'react'
+import {BaseSyntheticEvent, Fragment, useMemo, useRef, useState} from 'react'
+import {format} from 'date-fns'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {Controller, FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
@@ -109,6 +111,24 @@ const CompetitionExecution = () => {
     const [submitting, setSubmitting] = useState(false)
 
     const [reloadData, setReloadData] = useState(false)
+
+    // Läufe, deren Startzeit über den Zeitplan (Tab Zeitplan) gepflegt wird — für sie bleibt das
+    // Startzeit-Feld hier read-only, damit die Kette (Task 10) nicht durch eine hier eingegebene
+    // abweichende Zeit ausgehebelt wird. Events ohne Zeitstrahl liefern eine leere Slot-Liste,
+    // dann bleibt das Feld wie bisher editierbar.
+    const {data: eventSchedule} = useFetch(
+        signal => getEventSchedule({signal, path: {eventId}}),
+        {deps: [eventId]},
+    )
+    const slotManagedMatchIds = useMemo(
+        () =>
+            new Set(
+                (eventSchedule?.slots ?? [])
+                    .filter(slot => slot.matchId != null)
+                    .map(slot => slot.matchId as string),
+            ),
+        [eventSchedule],
+    )
 
     const {data: progressDto, pending: progressDtoPending} = useFetch(
         signal =>
@@ -1121,11 +1141,33 @@ const CompetitionExecution = () => {
                                     currentRoundMatches.length >
                                     selectedMatchIndex(selectedEditMatch) + 1
                                 }>
-                                <FormInputDateTime
-                                    name={'startTime'}
-                                    label={t('event.competition.execution.match.startTime')}
-                                    timeSteps={{minutes: 1}}
-                                />
+                                {slotManagedMatchIds.has(selectedEditMatch.id) ? (
+                                    <Box sx={{mb: 2}}>
+                                        <Typography sx={{fontSize: '1.1rem', mb: 1}}>
+                                            {t('event.competition.execution.match.startTime')}
+                                        </Typography>
+                                        <Typography>
+                                            {selectedEditMatch.startTime
+                                                ? format(
+                                                      new Date(selectedEditMatch.startTime),
+                                                      t('format.datetime'),
+                                                  )
+                                                : '—'}
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            color="textSecondary"
+                                            sx={{mt: 0.5}}>
+                                            {t('event.schedule.managedHint')}
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <FormInputDateTime
+                                        name={'startTime'}
+                                        label={t('event.competition.execution.match.startTime')}
+                                        timeSteps={{minutes: 1}}
+                                    />
+                                )}
                                 <Box sx={{mt: 4}}>
                                     <LoadingButton
                                         pending={submitting}
