@@ -79,9 +79,40 @@ class RaceClockerFeedTest {
     }
 
     @Test
-    fun startTimeParsesEveryFixtureRow() {
+    fun startTimeParsesEveryFixtureRowWithARealResult() {
         // None of the fixture's "H:mm:ss.d" values should be rejected as unparsable.
-        assertTrue(feed().all { it.start != null }, "every fixture row carries a parsable Start value")
+        val rowsWithResult = feed().filter { it.isTime }
+        assertTrue(rowsWithResult.isNotEmpty())
+        assertTrue(rowsWithResult.all { it.start != null }, "every timed fixture row carries a parsable Start value")
+    }
+
+    @Test
+    fun startTimeIsMissingForFixtureRowsWithTheMidnightSentinel() {
+        // The DNF/DNS/DQ rows (bibs 13, 10, 6) carry RaceClocker's "00:00:00.0" placeholder as Start.
+        val noResultRows = feed().filter { it.noResultReason != null }
+        assertEquals(3, noResultRows.size)
+        assertTrue(noResultRows.all { it.start == null }, "the midnight sentinel must not be read as a real start")
+    }
+
+    @Test
+    fun midnightStartIsTreatedAsMissing() {
+        // RaceClocker writes "00:00:00.0" as a placeholder for boats without a real start
+        // (DNS/DNF/DQ) - midnight is never an actual start time at a regatta.
+        val body = """[{"Name":"Test","Bib number":"1","Wave":"None","Result":"DNS","Start":"00:00:00.0"}]"""
+        val row = RaceClockerFeed.parse(body).unsafeRunSync().getOrNull()!!.single()
+        assertNull(row.start, "the midnight sentinel must not be read as a real start")
+    }
+
+    @Test
+    fun earliestStartIgnoresTheMidnightSentinel() {
+        val body = """
+            [
+              {"Name":"Sentinel","Bib number":"1","Wave":"None","Result":"DNS","Start":"00:00:00.0"},
+              {"Name":"Real","Bib number":"2","Wave":"None","Result":"00:01:00.0","Start":"11:00:00.0"}
+            ]
+        """.trimIndent()
+        val rows = RaceClockerFeed.parse(body).unsafeRunSync().getOrNull()!!
+        assertEquals(LocalTime.of(11, 0), RaceClockerFeedRow.earliestStart(rows))
     }
 
     @Test

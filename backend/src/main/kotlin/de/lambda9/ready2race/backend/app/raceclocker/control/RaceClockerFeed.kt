@@ -139,10 +139,17 @@ object RaceClockerFeed {
         .optionalEnd()
         .toFormatter()
 
-    /** Unparsable/missing values are `null`, not an error - this field is auxiliary data. */
+    /**
+     * Unparsable/missing values are `null`, not an error - this field is auxiliary data.
+     *
+     * RaceClocker liefert 00:00:00.0 als Platzhalter für Boote ohne Start (DNS/DNF/DQ) - Mitternacht
+     * ist bei einer Regatta nie ein echter Start. Ohne diese Sonderbehandlung würde der Platzhalter
+     * als [LocalTime.MIDNIGHT] geparst und über [RaceClockerFeedRow.earliestStart] den echten
+     * `started_at`-Wert eines Laufs überschreiben, sobald ein Boot der Welle keinen Start hat.
+     */
     private fun parseTimeOfDay(raw: String): LocalTime? =
         try {
-            LocalTime.parse(raw, timeOfDayFormat)
+            LocalTime.parse(raw, timeOfDayFormat).takeUnless { it == LocalTime.MIDNIGHT }
         } catch (e: DateTimeParseException) {
             null
         }
