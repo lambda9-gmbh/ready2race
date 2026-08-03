@@ -190,7 +190,7 @@ object EventScheduleService {
             if (state == EventScheduleSlotState.OBSOLETE) {
                 return@comprehension KIO.fail(EventScheduleError.SlotNotSkippable(slotId))
             }
-            if (state == EventScheduleSlotState.LINKED && matchStartedAt != null) {
+            if (matchStartedAt != null) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
             }
 
