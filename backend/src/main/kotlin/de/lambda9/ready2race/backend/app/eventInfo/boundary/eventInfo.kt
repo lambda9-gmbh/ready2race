@@ -11,50 +11,54 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.tailwind.core.KIO
+import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.routing.*
 
 fun Route.eventInfo() {
+    // Alle Endpoints in diesem Block sind öffentlich (kein authenticate). Das Rate-Limit
+    // ist eine grob dimensionierte Notbremse gegen Hämmern, siehe Requests.kt.
     route("/event/{eventId}/info") {
+        rateLimit(RateLimitName("publicInfo")) {
 
+            // Get upcoming competition matches
+            get("/upcoming-matches") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+                    val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
 
-        // Get upcoming competition matches
-        get("/upcoming-matches") {
-            call.respondComprehension {
-                val eventId = !pathParam("eventId", uuid)
-                val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
-
-                EventInfoService.getUpcomingCompetitionMatches(eventId, limit)
+                    EventInfoService.getUpcomingCompetitionMatches(eventId, limit)
+                }
             }
-        }
 
-        // Get latest match results
-        get("/latest-match-results") {
-            call.respondComprehension {
-                val eventId = !pathParam("eventId", uuid)
-                val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
-                val competitionId = !optionalQueryParam("competitionId", uuid)
+            // Get latest match results
+            get("/latest-match-results") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+                    val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
+                    val competitionId = !optionalQueryParam("competitionId", uuid)
 
-                EventInfoService.getLatestMatchResults(eventId, limit, competitionId)
+                    EventInfoService.getLatestMatchResults(eventId, limit, competitionId)
+                }
             }
-        }
 
-        // Get currently running matches
-        get("/running-matches") {
-            call.respondComprehension {
-                val eventId = !pathParam("eventId", uuid)
-                val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
+            // Get currently running matches
+            get("/running-matches") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+                    val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
 
-                EventInfoService.getRunningMatches(eventId, limit)
+                    EventInfoService.getRunningMatches(eventId, limit)
+                }
             }
-        }
 
-        // Alles, was die Athleten-Anzeige braucht, in einer Antwort.
-        // Öffentlich wie die drei Endpoints darüber — bewusst ohne authenticate.
-        get("/athlete-board") {
-            call.respondComprehension {
-                val eventId = !pathParam("eventId", uuid)
+            // Alles, was die Athleten-Anzeige braucht, in einer Antwort.
+            // Öffentlich wie die drei Endpoints darüber — bewusst ohne authenticate.
+            get("/athlete-board") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
 
-                EventInfoService.getAthleteBoard(eventId)
+                    EventInfoService.getAthleteBoard(eventId)
+                }
             }
         }
     }
