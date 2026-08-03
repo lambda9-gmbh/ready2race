@@ -23,6 +23,8 @@ import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
 import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipantError
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
+import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
@@ -112,6 +114,9 @@ object CompetitionExecutionService {
             .onTrueFail { CompetitionExecutionChallengeError.NotAChallengeEvent }
 
         var createFollowingRound = true
+        // Zeitstrahl: Setup-Match-Ids aller in diesem Aufruf erzeugten Läufe, über alle
+        // Runden/Iterationen hinweg — Grundlage für den Slot-Write-Through nach der Schleife.
+        val createdSetupMatchIds = mutableListOf<UUID>()
         while (createFollowingRound) {
             val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
@@ -151,6 +156,7 @@ object CompetitionExecutionService {
                         !it.applyCompetitionMatch(userId, null)
                     }
                 !CompetitionMatchRepo.create(matchRecords).orDie()
+                createdSetupMatchIds += matchRecords.map { it.competitionSetupMatch!! }
 
 
                 val seedingList = getSeedingList(nextRoundSetupMatches.map { it.teams }, registrations.size)
@@ -225,6 +231,7 @@ object CompetitionExecutionService {
                         !it.applyCompetitionMatch(userId, null)
                     }
                 !CompetitionMatchRepo.create(matchRecords).orDie()
+                createdSetupMatchIds += matchRecords.map { it.competitionSetupMatch!! }
 
                 val nextRoundSetupParticipants =
                     !CompetitionSetupParticipantRepo.get(nextRoundSetupMatches.map { it.id }).orDie()
@@ -303,6 +310,12 @@ object CompetitionExecutionService {
                 }
             }
         }
+
+        // Zeitstrahl: geplante Slot-Zeiten auf die soeben erzeugten Läufe stempeln …
+        !EventScheduleRepo.stampSlotTimesForSetupMatches(createdSetupMatchIds, userId).orDie()
+        // … und die wartende Kette wieder anstoßen: wenn nichts läuft, aktiviert sich der nächste
+        // fällige Slot jetzt selbst — das ist der zweite Auslöser des wartenden Breakpoints.
+        !ScheduleChainService.resumeAfterRoundCreation(eventId, userId)
 
         noData
     }

@@ -4,6 +4,8 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
+import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.*
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
@@ -203,16 +205,6 @@ object LiveDashboardService {
         // die sichere Wahl, solange der Zeitplan Lücken hat: Startzeiten stehen erst fest, wenn die
         // Läufe einer Runde gesetzt sind, und die Kette würde sonst den falschen Lauf greifen.
         val chainEnabled = !EventRepo.getAutoActivateNextMatch(eventId).orDie()
-        val candidates = if (chainEnabled) {
-            val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
-            (!LiveDashboardRepo.getActivationCandidates(eventId).orDie())
-                .filter { candidate ->
-                    val start = candidate[COMPETITION_MATCH.START_TIME]
-                    finishedStart == null || (start != null && start > finishedStart)
-                }
-        } else {
-            emptyList()
-        }
 
         !setRunning(matchId, false, userId)
         !CompetitionMatchRepo.update(matchId) {
@@ -220,7 +212,24 @@ object LiveDashboardService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
-        !activateNext(candidates, userId)
+
+        if (chainEnabled) {
+            val slotTime = !EventScheduleRepo.getSlotBySetupMatch(matchId).orDie()
+            if (slotTime != null) {
+                // Zeitstrahl-Modus: der Kette entlang der Slots folgen, an wartenden Slots geduldig
+                // sein (createNewRound stößt die Kette dann später wieder an).
+                !ScheduleChainService.decideAndActivate(eventId, after = slotTime, userId)
+            } else {
+                // Legacy: Events ohne Zeitstrahl behalten das bisherige Verhalten.
+                val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
+                val candidates = (!LiveDashboardRepo.getActivationCandidates(eventId).orDie())
+                    .filter { candidate ->
+                        val start = candidate[COMPETITION_MATCH.START_TIME]
+                        finishedStart == null || (start != null && start > finishedStart)
+                    }
+                !activateNext(candidates, userId)
+            }
+        }
 
         noData
     }

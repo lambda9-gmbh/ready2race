@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.eventSchedule.control
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventScheduleSlotRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
+import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.selectOne
@@ -56,6 +58,103 @@ object EventScheduleRepo {
             .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
             .orderBy(EVENT_SCHEDULE_SLOT.START_TIME.asc(), COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc())
             .fetch()
+    }
+
+    /**
+     * Slots nach [after] für die Aktivierungskette (Task 9). Gleiche Joins/Aliase wie [getSlots],
+     * zusätzlich `match_open` — mindestens eine Mannschaft ohne Ergebnis, wortgleiches Prädikat zu
+     * `LiveDashboardRepo.getActivationCandidates`.
+     */
+    fun getChainSlots(eventId: UUID, after: LocalDateTime) = Jooq.query {
+        val sibling = COMPETITION_SETUP_MATCH.`as`("sibling")
+        val siblingMatch = COMPETITION_MATCH.`as`("sibling_match")
+
+        val roundMaterialized = DSL.field(
+            DSL.exists(
+                selectOne()
+                    .from(sibling)
+                    .join(siblingMatch)
+                    .on(siblingMatch.COMPETITION_SETUP_MATCH.eq(sibling.ID))
+                    .where(sibling.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+            )
+        ).`as`("round_materialized")
+
+        val matchOpen = DSL.field(
+            DSL.exists(
+                selectOne()
+                    .from(COMPETITION_MATCH_TEAM)
+                    .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
+                    .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
+                    .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
+                    .and(COMPETITION_MATCH_TEAM.FAILED.isTrue.not())
+                    .andNotExists(
+                        selectOne()
+                            .from(COMPETITION_DEREGISTRATION)
+                            .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                            .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+                    )
+            )
+        ).`as`("match_open")
+
+        select(
+            EVENT_SCHEDULE_SLOT.asterisk(),
+            COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
+            COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
+            roundMaterialized,
+            matchOpen,
+        )
+            .from(EVENT_SCHEDULE_SLOT)
+            .leftJoin(COMPETITION_SETUP_MATCH)
+            .on(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            .leftJoin(COMPETITION_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
+            .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
+            .and(EVENT_SCHEDULE_SLOT.START_TIME.gt(after))
+            .orderBy(EVENT_SCHEDULE_SLOT.START_TIME.asc(), COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc())
+            .fetch()
+    }
+
+    /** Die Startzeit des Slots, der auf diese Setup-Zeile zeigt — null, wenn keiner existiert. */
+    fun getSlotBySetupMatch(setupMatchId: UUID) = Jooq.query {
+        select(EVENT_SCHEDULE_SLOT.START_TIME)
+            .from(EVENT_SCHEDULE_SLOT)
+            .where(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH.eq(setupMatchId))
+            .fetchOne(EVENT_SCHEDULE_SLOT.START_TIME)
+    }
+
+    /** Ob irgendein Lauf des Events gerade läuft — Gate für [de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService.resumeAfterRoundCreation]. */
+    fun hasRunningMatch(eventId: UUID) = Jooq.query {
+        fetchExists(
+            COMPETITION_MATCH
+                .join(COMPETITION_SETUP_MATCH)
+                .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+                .join(COMPETITION_SETUP_ROUND)
+                .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                .join(COMPETITION_PROPERTIES)
+                .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+                .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+                .where(
+                    COMPETITION.EVENT.eq(eventId)
+                        .and(COMPETITION_MATCH.CURRENTLY_RUNNING.isTrue)
+                )
+        )
+    }
+
+    /**
+     * Startzeit des Slots des zuletzt beendeten Laufs (nur Läufe mit Slot zählen) — Referenzpunkt
+     * für den zweiten Auslöser der Kette nach Rundenerzeugung. null, wenn im Zeitstrahl des Events
+     * noch nichts beendet ist.
+     */
+    fun getLastFinishedSlotTime(eventId: UUID) = Jooq.query {
+        select(EVENT_SCHEDULE_SLOT.START_TIME)
+            .from(EVENT_SCHEDULE_SLOT)
+            .join(COMPETITION_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
+            .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
+            .and(COMPETITION_MATCH.FINISHED_AT.isNotNull)
+            .orderBy(COMPETITION_MATCH.FINISHED_AT.desc())
+            .limit(1)
+            .fetchOne(EVENT_SCHEDULE_SLOT.START_TIME)
     }
 
     /**
@@ -170,4 +269,23 @@ object EventScheduleRepo {
             },
             condition = { COMPETITION_SETUP_MATCH.eq(setupMatchId) }
         )
+
+    /**
+     * Zeitstrahl-Write-Through nach Rundenerzeugung (Task 9): stempelt für jede frisch erzeugte
+     * Setup-Zeile, die einen Slot hat, dessen geplante Startzeit auf den neuen Lauf — simple
+     * Wiederverwendung von [stampMatchStartTime] je id statt einer eigenen Update-Join-Query.
+     * Setup-Zeilen ohne Slot (kein Zeitstrahl für dieses Event) bleiben unangetastet.
+     */
+    fun stampSlotTimesForSetupMatches(ids: List<UUID>, userId: UUID) = KIO.comprehension {
+        !ids.traverse { id ->
+            KIO.comprehension {
+                val slotTime = !getSlotBySetupMatch(id)
+                if (slotTime != null) {
+                    !stampMatchStartTime(id, slotTime, userId)
+                }
+                KIO.unit
+            }
+        }
+        KIO.unit
+    }
 }
