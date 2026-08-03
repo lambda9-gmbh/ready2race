@@ -104,6 +104,11 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
                                     {value: 60, label: '60s'},
                                 ]}
                             />
+                            {viewType === 'ATHLETE_BOARD' && (
+                                <Typography variant="caption" color="text.secondary">
+                                    {t('event.info.athleteBoard.refreshHint')}
+                                </Typography>
+                            )}
                         </Box>
 
                         <Box>

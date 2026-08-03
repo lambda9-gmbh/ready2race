@@ -1227,6 +1227,7 @@
         "limitUpcoming": "Anzahl nächster Läufe",
         "limitResults": "Anzahl Ergebnisse",
         "showCountdown": "Countdown bis zum Start anzeigen",
+        "refreshHint": "Die öffentliche Athleten-Anzeige aktualisiert sich in diesem Takt, aber nie schneller als alle 10 Sekunden.",
         "loadError": "Daten konnten nicht geladen werden. Bitte Verbindung prüfen.",
         "minutesUnit": "min",
         "secondsUnit": "s"

@@ -83,6 +83,46 @@ class AthleteBoardLogicTest {
         assertEquals(15, config.refreshIntervalSeconds)
     }
 
+    @Test
+    fun refreshIntervalNeverDropsBelowMinimum() {
+        // Der Kiosk-Regler erlaubt 5 Sekunden Rotationsdauer. Die Rotation darf so schnell
+        // sein, der Abfragetakt der öffentlichen Anzeige nicht — er wird angehoben.
+        val config = AthleteBoardLogic.resolveConfig(null, 5)
+        assertEquals(AthleteBoardLogic.MIN_REFRESH_INTERVAL_SECONDS, config.refreshIntervalSeconds)
+    }
+
+    @Test
+    fun refreshIntervalAboveMinimumIsKept() {
+        val config = AthleteBoardLogic.resolveConfig(null, 20)
+        assertEquals(20, config.refreshIntervalSeconds)
+    }
+
+    // --- isCacheFresh ---
+
+    @Test
+    fun cacheIsFreshWithinTtl() {
+        assertTrue(AthleteBoardLogic.isCacheFresh(now, now))
+        assertTrue(AthleteBoardLogic.isCacheFresh(now.minusSeconds(4), now))
+    }
+
+    @Test
+    fun cacheIsStaleFromTtlOnwards() {
+        assertFalse(
+            AthleteBoardLogic.isCacheFresh(
+                now.minusSeconds(AthleteBoardLogic.CACHE_TTL_SECONDS.toLong()),
+                now,
+            )
+        )
+        assertFalse(AthleteBoardLogic.isCacheFresh(now.minusMinutes(10), now))
+    }
+
+    @Test
+    fun cacheBuiltInTheFutureCountsAsFresh() {
+        // LocalDateTime.now() ist nicht monoton; ein Uhrsprung rückwärts soll den Cache
+        // nicht dauerhaft ungültig machen, sondern schlicht als frisch gelten.
+        assertTrue(AthleteBoardLogic.isCacheFresh(now.plusSeconds(30), now))
+    }
+
     // --- startState ---
 
     @Test

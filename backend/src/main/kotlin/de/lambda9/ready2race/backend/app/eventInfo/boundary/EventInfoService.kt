@@ -24,12 +24,23 @@ import org.jooq.Record
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 object EventInfoService {
 
     // Eine Instanz genügt: ObjectMapper ist threadsicher und wird von einem öffentlichen
     // Endpoint bei einer Regatta im Sekundentakt aufgerufen.
     private val objectMapper = ObjectMapper()
+
+    // Zwischenspeicher der Athleten-Anzeige je Veranstaltung. Ohne ihn löst jeder Abruf
+    // rund ein Dutzend Datenbankabfragen aus — bei 200 Telefonen im 15-Sekunden-Takt
+    // landet das ungebremst auf der Datenbank. Mit ihm zahlt die Datenbank höchstens
+    // einmal je CACHE_TTL_SECONDS und Veranstaltung, egal wie viele Zuschauer laden.
+    // Nur echte, per EventRepo geprüfte Veranstaltungen landen hier, die Karte bleibt
+    // also klein; abgelaufene Einträge werden beim nächsten Abruf überschrieben.
+    private data class CachedBoard(val builtAt: LocalDateTime, val dto: AthleteBoardDto)
+
+    private val athleteBoardCache = ConcurrentHashMap<UUID, CachedBoard>()
 
     // Info View Configuration Methods
 
@@ -236,44 +247,58 @@ object EventInfoService {
 
     fun getAthleteBoard(eventId: UUID): App<EventInfoProblem, ApiResponse.Dto<AthleteBoardDto>> =
         KIO.comprehension {
-            val eventName = !EventRepo.getName(eventId).orDie()
-            if (eventName == null) {
-                !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
-            }
-
-            // findByEvent liefert nur aktive Zeilen, aufsteigend nach sort_order.
-            // Gedacht ist genau eine ATHLETE_BOARD-Zeile; bei mehreren gewinnt die erste.
-            val views = !InfoViewConfigurationRepo.findByEvent(eventId).orDie()
-            val boardView = views.firstOrNull { it.viewType == InfoViewType.ATHLETE_BOARD }
-
-            val config = AthleteBoardLogic.resolveConfig(
-                filters = boardView?.filters?.let { objectMapper.readTree(it.data()) },
-                displayDurationSeconds = boardView?.displayDurationSeconds,
-            )
-
             val now = LocalDateTime.now()
 
-            val running = !getRunningMatches(eventId, config.runningLimit)
-            val upcoming = !getUpcomingMatchesForBoard(eventId, config.upcomingLimit)
-            val results = !getLatestMatchResults(eventId, config.resultsLimit, null)
+            // serverTime ist die Bezugsgröße für den Countdown auf dem Gerät und muss
+            // deshalb je Antwort frisch sein — nur der Rest der Antwort kommt aus dem
+            // Zwischenspeicher. Die startState-Felder darin sind höchstens
+            // CACHE_TTL_SECONDS alt; das trägt die Anzeige.
+            val cached = athleteBoardCache[eventId]
+                ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
 
-            KIO.ok(
-                ApiResponse.Dto(
-                    AthleteBoardDto(
-                        eventName = eventName!!,
-                        serverTime = now,
-                        refreshIntervalSeconds = config.refreshIntervalSeconds,
-                        showCountdown = config.showCountdown,
-                        running = running.data.map {
-                            it.toAthleteBoardMatch(now, config.showCountdown)
-                        },
-                        upcoming = AthleteBoardLogic.sortByStartTime(
-                            upcoming.data.map { it.toAthleteBoardMatch(now, config.showCountdown) }
-                        ) { it.startTime },
-                        results = results.data.map { it.toAthleteBoardResult() },
-                    )
+            if (cached != null) {
+                KIO.ok(ApiResponse.Dto(cached.dto.copy(serverTime = now)))
+            } else {
+                val eventName = !EventRepo.getName(eventId).orDie()
+                if (eventName == null) {
+                    !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
+                }
+
+                // findByEvent liefert nur aktive Zeilen, aufsteigend nach sort_order.
+                // Gedacht ist genau eine ATHLETE_BOARD-Zeile; bei mehreren gewinnt die erste.
+                val views = !InfoViewConfigurationRepo.findByEvent(eventId).orDie()
+                val boardView = views.firstOrNull { it.viewType == InfoViewType.ATHLETE_BOARD }
+
+                val config = AthleteBoardLogic.resolveConfig(
+                    filters = boardView?.filters?.let { objectMapper.readTree(it.data()) },
+                    displayDurationSeconds = boardView?.displayDurationSeconds,
                 )
-            )
+
+                val running = !getRunningMatches(eventId, config.runningLimit)
+                val upcoming = !getUpcomingMatchesForBoard(eventId, config.upcomingLimit)
+                val results = !getLatestMatchResults(eventId, config.resultsLimit, null)
+
+                val dto = AthleteBoardDto(
+                    eventName = eventName!!,
+                    serverTime = now,
+                    refreshIntervalSeconds = config.refreshIntervalSeconds,
+                    showCountdown = config.showCountdown,
+                    running = running.data.map {
+                        it.toAthleteBoardMatch(now, config.showCountdown)
+                    },
+                    upcoming = AthleteBoardLogic.sortByStartTime(
+                        upcoming.data.map { it.toAthleteBoardMatch(now, config.showCountdown) }
+                    ) { it.startTime },
+                    results = results.data.map { it.toAthleteBoardResult() },
+                )
+
+                // Laufen mehrere Abrufe gleichzeitig in dieses Fenster, rechnen sie doppelt
+                // und der letzte gewinnt — bei Millisekunden Rechenzeit je Eintrag kein
+                // Grund für ein Lock.
+                athleteBoardCache[eventId] = CachedBoard(now, dto)
+
+                KIO.ok(ApiResponse.Dto(dto))
+            }
         }
 
 

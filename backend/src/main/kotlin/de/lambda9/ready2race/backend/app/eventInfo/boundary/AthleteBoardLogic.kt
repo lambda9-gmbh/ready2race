@@ -17,6 +17,17 @@ object AthleteBoardLogic {
     const val DEFAULT_SHOW_COUNTDOWN = true
     const val DEFAULT_REFRESH_INTERVAL_SECONDS = 15
 
+    // Untergrenze für den Abfragetakt der öffentlichen Anzeige. Der Takt kommt aus
+    // display_duration_seconds, und dessen Regler in der Admin-Maske dient zugleich als
+    // Rotationsdauer der Kiosk-Seite, die bis 5 Sekunden hinunter darf. Eine flotte Rotation
+    // soll nicht nebenbei alle Telefone im 5-Sekunden-Takt anfragen lassen.
+    const val MIN_REFRESH_INTERVAL_SECONDS = 10
+
+    // Serverseitiger Zwischenspeicher je Veranstaltung: deckelt die Datenbanklast unabhängig
+    // von der Zuschauerzahl. Deutlich kürzer als der Abfragetakt, damit die Anzeige nie
+    // sichtbar hinterherhängt.
+    const val CACHE_TTL_SECONDS = 5
+
     // Nachfrist für "nächste Läufe": Eine verstrichene Startzeit macht einen Lauf nicht sofort
     // uninteressant für den Block, sondern erst nach dieser Frist - vorher bleibt er als
     // überfällig (OVERDUE) sichtbar, statt kommentarlos von der Anzeige zu verschwinden.
@@ -39,6 +50,7 @@ object AthleteBoardLogic {
                 ?.booleanValue()
                 ?: DEFAULT_SHOW_COUNTDOWN,
             refreshIntervalSeconds = displayDurationSeconds?.takeIf { it > 0 }
+                ?.coerceAtLeast(MIN_REFRESH_INTERVAL_SECONDS)
                 ?: DEFAULT_REFRESH_INTERVAL_SECONDS,
         )
 
@@ -62,6 +74,13 @@ object AthleteBoardLogic {
         showCountdown -> AthleteBoardStartState.COUNTDOWN
         else -> AthleteBoardStartState.SCHEDULED
     }
+
+    /**
+     * Ein Eintrag ist frisch, solange er jünger als [CACHE_TTL_SECONDS] ist. Ein `builtAt`
+     * in der Zukunft (Uhrsprung rückwärts) gilt als frisch statt als dauerhaft abgelaufen.
+     */
+    fun isCacheFresh(builtAt: LocalDateTime, now: LocalDateTime): Boolean =
+        builtAt.plusSeconds(CACHE_TTL_SECONDS.toLong()).isAfter(now)
 
     /**
      * Aufsteigend nach Startzeit; Läufe ohne gepflegte Startzeit stehen am Ende.
