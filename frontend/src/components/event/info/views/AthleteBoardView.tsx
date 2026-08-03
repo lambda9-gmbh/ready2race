@@ -56,8 +56,13 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
 
     const staleThresholdMs =
         (data?.refreshIntervalSeconds ?? 15) * STALE_AFTER_MISSED_INTERVALS * 1000
+    // Beide Bedingungen, nicht nur die Uhr: Im Hintergrund pausiert das Polling bewusst,
+    // dabei altert lastUpdated ohne dass die Verbindung gestört wäre. Erst ein tatsächlich
+    // fehlgeschlagener Abruf (loadFailed) macht aus dem Altern eine Warnung.
     const stale =
-        lastUpdated !== null && Date.now() - lastUpdated.getTime() > staleThresholdMs
+        loadFailed &&
+        lastUpdated !== null &&
+        Date.now() - lastUpdated.getTime() > staleThresholdMs
 
     const column = (
         title: string,

@@ -67,7 +67,15 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                                 </Typography>
                             </Box>
                             <Typography
-                                sx={{fontSize: 'clamp(0.9rem, 1.5vw, 1.3rem)', fontWeight: 600}}
+                                sx={{
+                                    fontSize: 'clamp(0.9rem, 1.5vw, 1.3rem)',
+                                    fontWeight: 600,
+                                    // Ein langer DNF-Grund darf den Vereinsnamen nicht überlagern:
+                                    // rechts bündig in der eigenen Hälfte umbrechen.
+                                    flexShrink: 0,
+                                    maxWidth: '45%',
+                                    textAlign: 'right',
+                                }}
                                 color={team.failed ? 'text.secondary' : 'text.primary'}>
                                 {team.failed
                                     ? (team.failedReason ?? t('event.info.athleteBoard.failed'))
