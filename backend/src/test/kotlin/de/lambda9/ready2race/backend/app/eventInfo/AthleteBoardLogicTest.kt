@@ -16,6 +16,16 @@ class AthleteBoardLogicTest {
 
     private fun filters(json: String) = mapper.readTree(json)
 
+    // --- Konstanten ---
+
+    @Test
+    fun overdueGraceIsThirtyMinutes() {
+        // Bewusst als Wert-Test: Diese Nachfrist wird von CompetitionMatchRepo.getUpcomingMatchesForBoard
+        // verwendet und ist nicht über die Konfiguration einstellbar, daher schützt der Test vor
+        // einer unbemerkten Änderung.
+        assertEquals(30, AthleteBoardLogic.DEFAULT_OVERDUE_GRACE_MINUTES)
+    }
+
     // --- resolveConfig ---
 
     @Test
@@ -129,11 +139,11 @@ class AthleteBoardLogicTest {
     fun matchesWithoutStartTimeSortToTheEnd() {
         val input: List<Pair<String, LocalDateTime?>> = listOf(
             "ohne" to null,
-            "spaet" to now.plusMinutes(30),
-            "frueh" to now.plusMinutes(5),
+            "spät" to now.plusMinutes(30),
+            "früh" to now.plusMinutes(5),
         )
         val sorted = AthleteBoardLogic.sortByStartTime(input) { it.second }
-        assertEquals(listOf("frueh", "spaet", "ohne"), sorted.map { it.first })
+        assertEquals(listOf("früh", "spät", "ohne"), sorted.map { it.first })
     }
 
     @Test

@@ -17,6 +17,11 @@ object AthleteBoardLogic {
     const val DEFAULT_SHOW_COUNTDOWN = true
     const val DEFAULT_REFRESH_INTERVAL_SECONDS = 15
 
+    // Nachfrist für "nächste Läufe": Eine verstrichene Startzeit macht einen Lauf nicht sofort
+    // uninteressant für den Block, sondern erst nach dieser Frist - vorher bleibt er als
+    // überfällig (OVERDUE) sichtbar, statt kommentarlos von der Anzeige zu verschwinden.
+    const val DEFAULT_OVERDUE_GRACE_MINUTES = 30
+
     private const val MIN_LIMIT = 1
     private const val MAX_LIMIT = 20
 

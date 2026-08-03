@@ -20,10 +20,16 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import org.jooq.JSONB
+import org.jooq.Record
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 
 object EventInfoService {
+
+    // Eine Instanz genügt: ObjectMapper ist threadsicher und wird von einem öffentlichen
+    // Endpoint bei einer Regatta im Sekundentakt aufgerufen.
+    private val objectMapper = ObjectMapper()
 
     // Info View Configuration Methods
 
@@ -142,6 +148,34 @@ object EventInfoService {
         val matches =
             !CompetitionMatchRepo.getUpcomingMatches(eventId, limit).orDie()
 
+        val result = !toUpcomingCompetitionMatchInfos(matches)
+
+        KIO.ok(ApiResponse.ListDto(result))
+    }
+
+    // Nur für die Athleten-Anzeige: verspätete und ungeplante Läufe bleiben sichtbar, siehe
+    // CompetitionMatchRepo.getUpcomingMatchesForBoard. Die Kiosk-Ansicht nutzt weiterhin
+    // getUpcomingCompetitionMatches oben und bleibt davon unberührt.
+    fun getUpcomingMatchesForBoard(
+        eventId: UUID,
+        limit: Int,
+    ): App<Nothing, ApiResponse.ListDto<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
+
+        val grace = Duration.ofMinutes(AthleteBoardLogic.DEFAULT_OVERDUE_GRACE_MINUTES.toLong())
+        val matches =
+            !CompetitionMatchRepo.getUpcomingMatchesForBoard(eventId, limit, grace).orDie()
+
+        val result = !toUpcomingCompetitionMatchInfos(matches)
+
+        KIO.ok(ApiResponse.ListDto(result))
+    }
+
+    // Gemeinsame Abbildung von Roh-Records auf UpcomingCompetitionMatchInfo, genutzt von
+    // getUpcomingCompetitionMatches und getUpcomingMatchesForBoard - beide Queries liefern
+    // dieselbe Spaltenform.
+    private fun toUpcomingCompetitionMatchInfos(
+        matches: List<Record>
+    ): App<Nothing, List<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
             val teams = !getUpcomingMatchTeams(matchId)
@@ -162,7 +196,7 @@ object EventInfoService {
             )
         }
 
-        KIO.ok(ApiResponse.ListDto(result))
+        KIO.ok(result)
     }
 
     fun getRunningMatches(
@@ -213,14 +247,14 @@ object EventInfoService {
             val boardView = views.firstOrNull { it.viewType == InfoViewType.ATHLETE_BOARD }
 
             val config = AthleteBoardLogic.resolveConfig(
-                filters = boardView?.filters?.let { ObjectMapper().readTree(it.data()) },
+                filters = boardView?.filters?.let { objectMapper.readTree(it.data()) },
                 displayDurationSeconds = boardView?.displayDurationSeconds,
             )
 
             val now = LocalDateTime.now()
 
             val running = !getRunningMatches(eventId, config.runningLimit)
-            val upcoming = !getUpcomingCompetitionMatches(eventId, config.upcomingLimit)
+            val upcoming = !getUpcomingMatchesForBoard(eventId, config.upcomingLimit)
             val results = !getLatestMatchResults(eventId, config.resultsLimit, null)
 
             KIO.ok(
