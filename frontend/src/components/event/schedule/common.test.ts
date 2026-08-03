@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {groupSlotsByDay, slotLabel} from './common.ts'
+import {groupSlotsByDay, isEditable, slotLabel} from './common.ts'
 import {EventScheduleSlotDto} from '@api/types.gen.ts'
 
 const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): EventScheduleSlotDto => ({
@@ -13,6 +13,7 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     roundName: 'Achtelfinale',
     matchName: 'AF1',
     matchId: null,
+    setupMatchId: crypto.randomUUID(),
     matchStartedAt: null,
     matchFinishedAt: null,
     ...over,
@@ -46,8 +47,44 @@ describe('slotLabel', () => {
                     roundName: null,
                     matchName: null,
                     state: 'FREE',
+                    setupMatchId: null,
                 }),
             ),
         ).toBe('Mittagspause')
+    })
+})
+
+describe('isEditable', () => {
+    it('allows editing a free slot', () => {
+        expect(
+            isEditable(slot('2026-08-17T08:00:00', {state: 'FREE', setupMatchId: null})),
+        ).toBe(true)
+    })
+
+    it('allows editing a WAITING match slot even without a materialized match', () => {
+        expect(
+            isEditable(slot('2026-08-17T08:00:00', {state: 'WAITING', matchId: null})),
+        ).toBe(true)
+    })
+
+    it('allows editing a LINKED match slot', () => {
+        const id = crypto.randomUUID()
+        expect(
+            isEditable(
+                slot('2026-08-17T08:00:00', {state: 'LINKED', matchId: id, setupMatchId: id}),
+            ),
+        ).toBe(true)
+    })
+
+    it('does not allow editing an OBSOLETE slot, even though setupMatchId is still populated', () => {
+        expect(
+            isEditable(
+                slot('2026-08-17T08:00:00', {
+                    state: 'OBSOLETE',
+                    matchId: null,
+                    setupMatchId: crypto.randomUUID(),
+                }),
+            ),
+        ).toBe(false)
     })
 })

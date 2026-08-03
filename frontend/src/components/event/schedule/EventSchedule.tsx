@@ -26,7 +26,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
-import {groupSlotsByDay, slotLabel} from './common.ts'
+import {groupSlotsByDay, isEditable, slotLabel} from './common.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 
 const stateChipProps = (
@@ -54,11 +54,6 @@ const stateChipProps = (
             return {label: t('event.schedule.state.FREE'), color: 'default'}
     }
 }
-
-// Editieren der Verknüpfung ist nur möglich, wenn die DTO die zugehörige Setup-Zeile preisgibt
-// (matchId) - bei WAITING/OBSOLETE ist matchId bewusst null (siehe EventScheduleService.getSchedule),
-// dort greift stattdessen "Zeitplan anpassen" (Task 17) für Zeitverschiebungen.
-const isEditable = (slot: EventScheduleSlotDto) => slot.state === 'FREE' || slot.matchId != null
 
 const EventSchedule = () => {
     const {t} = useTranslation()

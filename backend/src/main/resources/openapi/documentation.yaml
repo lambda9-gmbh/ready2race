@@ -12549,6 +12549,10 @@ components:
           type: string
           format: uuid
           nullable: true
+        setupMatchId:
+          type: string
+          format: uuid
+          nullable: true
         matchStartedAt:
           type: string
           format: date-time

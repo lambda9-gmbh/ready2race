@@ -51,11 +51,14 @@ const blankValues = (
     durationMinutes: null,
 })
 
+// setupMatchId (nicht matchId!) trägt die Verknüpfung für den PUT-Body - matchId ist bei
+// WAITING-Slots bewusst null (siehe EventScheduleService.getSchedule), setupMatchId dagegen für
+// jeden Match-Slot befüllt, unabhängig von der Materialisierung.
 const mapSlotToForm = (slot: EventScheduleSlotDto): ScheduleSlotForm => ({
     mode: slot.state === 'FREE' ? 'FREE' : 'MATCH',
     competitionId: slot.competitionId ?? '',
     roundName: slot.roundName ?? '',
-    setupMatchId: slot.matchId ?? '',
+    setupMatchId: slot.setupMatchId ?? '',
     name: slot.name ?? '',
     startTime: slot.startTime,
     durationMinutes: slot.durationMinutes ?? null,

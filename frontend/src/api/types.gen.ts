@@ -1127,6 +1127,7 @@ export type EventScheduleSlotDto = {
     roundName?: string | null
     matchName?: string | null
     matchId?: string | null
+    setupMatchId?: string | null
     matchStartedAt?: string | null
     matchFinishedAt?: string | null
 }

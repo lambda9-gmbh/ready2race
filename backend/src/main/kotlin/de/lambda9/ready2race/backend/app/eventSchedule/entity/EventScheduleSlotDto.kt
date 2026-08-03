@@ -14,6 +14,7 @@ data class EventScheduleSlotDto(
     val roundName: String?,
     val matchName: String?,
     val matchId: UUID?,
+    val setupMatchId: UUID?,
     val matchStartedAt: LocalDateTime?,
     val matchFinishedAt: LocalDateTime?,
 )
