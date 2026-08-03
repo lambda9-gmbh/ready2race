@@ -8914,6 +8914,7 @@ components:
           type: integer
         startTimeOffset:
           type: integer
+          description: Offset between the starts of consecutive teams, in seconds
 
     CompetitionSetupGroupDto:
       type: object
@@ -10714,6 +10715,7 @@ components:
           format: date-time
         startTimeOffset:
           type: integer
+          description: Offset between the starts of consecutive teams, in seconds
         currentlyRunning:
           type: boolean
 

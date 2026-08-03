@@ -31,7 +31,7 @@ model CompetitionMatchDto {
   weighting: int32;
   executionOrder: int32;
   startTime?: utcDateTime;
-  startTimeOffset?: int64;
+  startTimeOffset?: int64; // seconds
   currentlyRunning: boolean;
 }
 
