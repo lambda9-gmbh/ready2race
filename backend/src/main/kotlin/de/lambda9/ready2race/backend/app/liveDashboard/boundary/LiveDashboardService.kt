@@ -215,6 +215,8 @@ object LiveDashboardService {
 
         if (chainEnabled) {
             val slotTime = !EventScheduleRepo.getSlotBySetupMatch(matchId).orDie()
+            // Bei teilweise gepflegtem Zeitstrahl entscheidet jeder Lauf für sich — ein Lauf ohne
+            // Slot nutzt die Legacy-Logik, auch wenn andere Läufe Slots haben.
             if (slotTime != null) {
                 // Zeitstrahl-Modus: der Kette entlang der Slots folgen, an wartenden Slots geduldig
                 // sein (createNewRound stößt die Kette dann später wieder an).

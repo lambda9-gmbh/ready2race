@@ -56,7 +56,11 @@ object EventScheduleRepo {
             .leftJoin(COMPETITION_MATCH)
             .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
             .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
-            .orderBy(EVENT_SCHEDULE_SLOT.START_TIME.asc(), COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc())
+            .orderBy(
+                EVENT_SCHEDULE_SLOT.START_TIME.asc(),
+                COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc(),
+                EVENT_SCHEDULE_SLOT.ID.asc(),
+            )
             .fetch()
     }
 
@@ -110,7 +114,11 @@ object EventScheduleRepo {
             .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
             .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
             .and(EVENT_SCHEDULE_SLOT.START_TIME.gt(after))
-            .orderBy(EVENT_SCHEDULE_SLOT.START_TIME.asc(), COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc())
+            .orderBy(
+                EVENT_SCHEDULE_SLOT.START_TIME.asc(),
+                COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc(),
+                EVENT_SCHEDULE_SLOT.ID.asc(),
+            )
             .fetch()
     }
 
@@ -141,20 +149,21 @@ object EventScheduleRepo {
     }
 
     /**
-     * Startzeit des Slots des zuletzt beendeten Laufs (nur Läufe mit Slot zählen) — Referenzpunkt
-     * für den zweiten Auslöser der Kette nach Rundenerzeugung. null, wenn im Zeitstrahl des Events
-     * noch nichts beendet ist.
+     * Größte Startzeit unter allen Slots des Events, deren verknüpfter Lauf bereits beendet ist —
+     * Referenzpunkt für den zweiten Auslöser der Kette nach Rundenerzeugung. Bewusst `max(start_time)`
+     * statt "Slot des zuletzt (nach finished_at) beendeten Laufs": Läufe werden nicht zwingend in
+     * Startzeit-Reihenfolge beendet, `max(start_time)` liefert dagegen eine monotone Front, die nie
+     * zurückspringt. null, wenn im Zeitstrahl des Events noch nichts beendet ist.
      */
     fun getLastFinishedSlotTime(eventId: UUID) = Jooq.query {
-        select(EVENT_SCHEDULE_SLOT.START_TIME)
+        val maxStartTime = DSL.max(EVENT_SCHEDULE_SLOT.START_TIME)
+        select(maxStartTime)
             .from(EVENT_SCHEDULE_SLOT)
             .join(COMPETITION_MATCH)
             .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
             .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.FINISHED_AT.isNotNull)
-            .orderBy(COMPETITION_MATCH.FINISHED_AT.desc())
-            .limit(1)
-            .fetchOne(EVENT_SCHEDULE_SLOT.START_TIME)
+            .fetchOne(maxStartTime)
     }
 
     /**

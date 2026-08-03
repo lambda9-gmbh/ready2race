@@ -72,4 +72,22 @@ class ScheduleChainTest {
     fun emptyTailMeansNothingToDo() {
         assertIs<ChainDecision.NothingToDo>(ScheduleChain.decideNext(emptyList()))
     }
+
+    @Test
+    fun mixedGroupWithWaitingSlotWaitsAsAUnit() {
+        val m = UUID.randomUUID()
+        val t = base.plusMinutes(10)
+        val linked = ChainSlot(UUID.randomUUID(), t, LINKED, m, matchFinished = false, matchOpen = true)
+        val waiting = ChainSlot(UUID.randomUUID(), t, WAITING, null, matchFinished = false, matchOpen = false)
+        assertIs<ChainDecision.WaitingForRound>(ScheduleChain.decideNext(listOf(linked, waiting)))
+    }
+
+    @Test
+    fun groupWithOnlyFinishedMatchesIsPassedOver() {
+        val m = UUID.randomUUID()
+        val t = base.plusMinutes(10)
+        val done = ChainSlot(UUID.randomUUID(), t, LINKED, UUID.randomUUID(), matchFinished = true, matchOpen = false)
+        val next = ChainSlot(UUID.randomUUID(), base.plusMinutes(20), LINKED, m, matchFinished = false, matchOpen = true)
+        assertEquals(ChainDecision.Activate(listOf(m)), ScheduleChain.decideNext(listOf(done, next)))
+    }
 }

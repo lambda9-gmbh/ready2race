@@ -30,31 +30,33 @@ sealed interface ChainDecision {
 object ScheduleChain {
 
     /**
-     * Wandert die Slots hinter dem beendeten Lauf vorwärts. Übersprungene, entfallene und freie
-     * Slots sowie beendete/abgeschlossene Läufe werden übergangen. Ein wartender Slot stoppt die
-     * Suche bewusst OHNE Fehler: Die Kette wartet, bis die Runde gesetzt wird — createNewRound
-     * stößt sie dann wieder an (zweiter Auslöser).
+     * Wandert die Slots hinter dem beendeten Lauf vorwärts, gruppiert nach Startzeit — parallele
+     * Starts gehören zusammen und entscheiden als Einheit, nicht die zufällige Zeilenreihenfolge
+     * innerhalb derselben Startzeit. Für jede Gruppe (aufsteigend sortiert):
+     * - Enthält sie einen wartenden Slot, stoppt die Suche bewusst OHNE Fehler: Ein paralleler
+     *   Start darf nicht halb losgeschickt werden. Die Kette wartet, bis die Runde gesetzt wird —
+     *   createNewRound stößt sie dann wieder an (zweiter Auslöser).
+     * - Sonst werden alle aktivierbaren Läufe der Gruppe (LINKED, nicht beendet, noch offen)
+     *   gemeinsam aktiviert.
+     * - Hat die Gruppe nur übersprungene, entfallene, freie oder bereits erledigte/geschlossene
+     *   Slots, wird sie übergangen und die nächste Gruppe betrachtet.
      */
     fun decideNext(slotsAfter: List<ChainSlot>): ChainDecision {
-        for (slot in slotsAfter) {
-            when (slot.state) {
-                EventScheduleSlotState.SKIPPED,
-                EventScheduleSlotState.OBSOLETE,
-                EventScheduleSlotState.FREE -> continue
+        val groups = slotsAfter.groupBy { it.startTime }.toSortedMap()
 
-                EventScheduleSlotState.WAITING -> return ChainDecision.WaitingForRound
-
-                EventScheduleSlotState.LINKED -> {
-                    if (slot.matchFinished || !slot.matchOpen) continue
-                    // Parallele Starts: alle aktivierbaren Läufe derselben Startzeit gemeinsam.
-                    val group = slotsAfter.filter {
-                        it.startTime == slot.startTime &&
-                            it.state == EventScheduleSlotState.LINKED &&
-                            !it.matchFinished && it.matchOpen
-                    }
-                    return ChainDecision.Activate(group.mapNotNull { it.matchId })
-                }
+        for ((_, group) in groups) {
+            val hasWaiting = group.any { it.state == EventScheduleSlotState.WAITING }
+            if (hasWaiting) {
+                return ChainDecision.WaitingForRound
             }
+
+            val activatable = group.filter {
+                it.state == EventScheduleSlotState.LINKED && !it.matchFinished && it.matchOpen
+            }
+            if (activatable.isNotEmpty()) {
+                return ChainDecision.Activate(activatable.mapNotNull { it.matchId })
+            }
+            // Nur FREE/SKIPPED/OBSOLETE bzw. beendete/geschlossene Läufe in dieser Gruppe — weiter.
         }
         return ChainDecision.NothingToDo
     }
@@ -95,8 +97,16 @@ object ScheduleChainService {
             return@comprehension KIO.unit
         }
 
+        // Resume greift erst, wenn schon ein verplanter Lauf beendet wurde — den allerersten Lauf
+        // aktiviert der Schiedsrichter wie bisher von Hand. Ohne Referenzpunkt gibt es also nichts
+        // zu tun (und insbesondere keinen Fallback auf LocalDateTime.MIN, der beim jOOQ-Bind auf
+        // Timestamp.valueOf() mit "timestamp out of range" gegen Postgres krachen würde).
         val reference = !EventScheduleRepo.getLastFinishedSlotTime(eventId).orDie()
-        val chainSlots = !buildChainSlots(eventId, reference ?: LocalDateTime.MIN)
+        if (reference == null) {
+            return@comprehension KIO.unit
+        }
+
+        val chainSlots = !buildChainSlots(eventId, reference)
         !activate(ScheduleChain.decideNext(chainSlots), userId)
 
         KIO.unit
