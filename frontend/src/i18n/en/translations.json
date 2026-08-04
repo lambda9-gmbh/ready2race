@@ -1422,7 +1422,18 @@
         }
       },
       "allPlanned": "All scheduled races are already planned.",
-      "goToExecution": "Go to execution"
+      "goToExecution": "Go to execution",
+      "indicator": {
+        "now": "Now",
+        "state": {
+          "finished": "Finished",
+          "running": "Running",
+          "linked": "Linked",
+          "waiting": "Race not set yet",
+          "free": "Program item",
+          "skipped": "Skipped"
+        }
+      }
     },
     "results": {
       "download": "Download previous results",
