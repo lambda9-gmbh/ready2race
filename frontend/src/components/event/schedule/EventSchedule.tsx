@@ -16,8 +16,9 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material'
-import {Add, Delete, Edit, EventBusy, EventRepeat} from '@mui/icons-material'
+import {Add, Delete, Edit, EventBusy, EventRepeat, OpenInNew} from '@mui/icons-material'
 import {format} from 'date-fns'
+import {Link} from '@tanstack/react-router'
 import {eventRoute} from '@routes'
 import {deleteScheduleSlot, getEventSchedule, skipScheduleSlot, unskipScheduleSlot} from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
@@ -221,7 +222,38 @@ const EventSchedule = () => {
                                             <TableCell>
                                                 {format(new Date(slot.startTime), t('format.time'))}
                                             </TableCell>
-                                            <TableCell>{slotLabel(slot)}</TableCell>
+                                            <TableCell>
+                                                <Stack
+                                                    direction={'row'}
+                                                    spacing={0.5}
+                                                    alignItems={'center'}>
+                                                    <span>{slotLabel(slot)}</span>
+                                                    {slot.matchId && (
+                                                        <Tooltip
+                                                            title={t('event.schedule.goToExecution')}>
+                                                            <Link
+                                                                to={
+                                                                    '/event/$eventId/competition/$competitionId'
+                                                                }
+                                                                params={{
+                                                                    eventId,
+                                                                    competitionId: slot.competitionId!,
+                                                                }}
+                                                                search={{tab: 'execution'}}
+                                                                style={{
+                                                                    display: 'inline-flex',
+                                                                    color: 'inherit',
+                                                                }}>
+                                                                <IconButton
+                                                                    size={'small'}
+                                                                    component={'span'}>
+                                                                    <OpenInNew fontSize={'small'} />
+                                                                </IconButton>
+                                                            </Link>
+                                                        </Tooltip>
+                                                    )}
+                                                </Stack>
+                                            </TableCell>
                                             <TableCell>
                                                 <Chip
                                                     size={'small'}

@@ -161,33 +161,39 @@ const ScheduleSlotDialog = ({
                     )
                 )}
                 {!editingSlot && mode === 'MATCH' && (
-                    <>
-                        <FormInputSelect
-                            name={'competitionId'}
-                            label={t('event.schedule.competition')}
-                            required
-                            options={competitionOptions}
-                            onChange={() => {
-                                formContext.setValue('roundName', '')
-                                formContext.setValue('setupMatchId', '')
-                            }}
-                        />
-                        <FormInputSelect
-                            name={'roundName'}
-                            label={t('event.schedule.round')}
-                            required
-                            disabled={!competitionId}
-                            options={roundOptions}
-                            onChange={() => formContext.setValue('setupMatchId', '')}
-                        />
-                        <FormInputSelect
-                            name={'setupMatchId'}
-                            label={t('event.schedule.match')}
-                            required
-                            disabled={!roundName}
-                            options={matchOptions}
-                        />
-                    </>
+                    unplannedSetupMatches.length === 0 ? (
+                        <Typography color={'text.secondary'}>
+                            {t('event.schedule.allPlanned')}
+                        </Typography>
+                    ) : (
+                        <>
+                            <FormInputSelect
+                                name={'competitionId'}
+                                label={t('event.schedule.competition')}
+                                required
+                                options={competitionOptions}
+                                onChange={() => {
+                                    formContext.setValue('roundName', '')
+                                    formContext.setValue('setupMatchId', '')
+                                }}
+                            />
+                            <FormInputSelect
+                                name={'roundName'}
+                                label={t('event.schedule.round')}
+                                required
+                                disabled={!competitionId}
+                                options={roundOptions}
+                                onChange={() => formContext.setValue('setupMatchId', '')}
+                            />
+                            <FormInputSelect
+                                name={'setupMatchId'}
+                                label={t('event.schedule.match')}
+                                required
+                                disabled={!roundName}
+                                options={matchOptions}
+                            />
+                        </>
+                    )
                 )}
                 {((!editingSlot && mode === 'FREE') || (editingSlot && !editingMatchSlot)) && (
                     <FormInputText name={'name'} label={t('entity.name')} required />

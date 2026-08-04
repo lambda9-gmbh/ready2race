@@ -855,11 +855,11 @@
             "DNF": "Ikke fuldført",
             "DSQ": "Diskvalificeret"
           },
-            "penalty": "Tidsstraf inkl. {{seconds}} s",
-            "penaltySeconds": "Straf (s)",
-            "penaltyShort": "Straf",
-            "penaltyNote": "Årsag til straf",
-            "penaltyNoteShort": "Årsag",
+          "penalty": "Tidsstraf inkl. {{seconds}} s",
+          "penaltySeconds": "Straf (s)",
+          "penaltyShort": "Straf",
+          "penaltyNote": "Årsag til straf",
+          "penaltyNoteShort": "Årsag",
           "validation": {
             "duplicates": {
               "single": "Placeringen: {{places}} bruges flere gange.",
@@ -1310,7 +1310,6 @@
         "finished": "Løbet er afsluttet — næste løb aktiveret",
         "deactivate": "Deaktiver løb",
         "activate": "Aktiver løb",
-        "start": "Start",
         "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
         "openResults": {
           "title": "Manglende resultater",
@@ -1408,8 +1407,17 @@
         "old": "Gammel",
         "new": "Ny",
         "unchanged": "„Anvend“ er kun muligt, så længe formularen ikke er ændret siden forhåndsvisningen. Kør venligst forhåndsvisningen igen.",
-        "impossible": "Kan ikke indhente — kun {{max}} minutters spillerum. Vælg en senere mål-slot."
-      }
+        "impossible": "Kan ikke indhente — kun {{max}} minutters spillerum. Vælg en senere mål-slot.",
+        "mode": "Metode",
+        "delayMinutes": "Forsinkelse (minutter)",
+        "help": {
+          "plus": "Alle slots fra den valgte slot og frem flyttes med de angivne minutter (negativ = tidligere).",
+          "setTime": "Den valgte slot får den nye starttid; alle efterfølgende slots beholder deres afstande.",
+          "compress": "Den angivne forsinkelse indhentes frem til mål-slotten: afstandene indimellem forkortes, mål-slotten beholder sit oprindelige tidspunkt."
+        }
+      },
+      "allPlanned": "Alle planlagte løb er allerede indsat.",
+      "goToExecution": "Til gennemførelse"
     },
     "results": {
       "download": "Download tidligere resultater",

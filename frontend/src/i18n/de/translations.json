@@ -855,11 +855,11 @@
             "DNF": "Nicht beendet",
             "DSQ": "Disqualifiziert"
           },
-            "penalty": "Zeitstrafe inkl. {{seconds}} s",
-            "penaltySeconds": "Strafe (s)",
-            "penaltyShort": "Strafe",
-            "penaltyNote": "Grund der Strafe",
-            "penaltyNoteShort": "Grund",
+          "penalty": "Zeitstrafe inkl. {{seconds}} s",
+          "penaltySeconds": "Strafe (s)",
+          "penaltyShort": "Strafe",
+          "penaltyNote": "Grund der Strafe",
+          "penaltyNoteShort": "Grund",
           "validation": {
             "duplicates": {
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",
@@ -1310,7 +1310,6 @@
         "finished": "Lauf beendet — nächste Läufe aktiviert",
         "deactivate": "Lauf deaktivieren",
         "activate": "Lauf aktivieren",
-        "start": "Start",
         "incompleteWarning": "Es fehlen noch Ergebnisse — beenden aktiviert trotzdem die nächsten Läufe.",
         "openResults": {
           "title": "Offene Ergebnisse",
@@ -1408,8 +1407,17 @@
         "old": "Alt",
         "new": "Neu",
         "unchanged": "„Anwenden“ ist nur möglich, solange sich das Formular seit der Vorschau nicht geändert hat. Bitte die Vorschau erneut ausführen.",
-        "impossible": "Aufholen nicht möglich — nur {{max}} Minuten Spielraum. Wähle einen späteren Ziel-Slot."
-      }
+        "impossible": "Aufholen nicht möglich — nur {{max}} Minuten Spielraum. Wähle einen späteren Ziel-Slot.",
+        "mode": "Methode",
+        "delayMinutes": "Verzug (Minuten)",
+        "help": {
+          "plus": "Alle Slots ab dem gewählten Slot werden um die angegebenen Minuten verschoben (negativ = vorziehen).",
+          "setTime": "Der gewählte Slot bekommt die neue Startzeit; alle folgenden Slots behalten ihre Abstände.",
+          "compress": "Der angegebene Verzug wird bis zum Ziel-Slot aufgeholt: Die Abstände dazwischen werden verkürzt, der Ziel-Slot behält seine ursprüngliche Zeit."
+        }
+      },
+      "allPlanned": "Alle geplanten Läufe sind bereits eingeplant.",
+      "goToExecution": "Zur Durchführung"
     },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",

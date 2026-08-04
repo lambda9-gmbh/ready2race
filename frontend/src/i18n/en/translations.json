@@ -855,11 +855,11 @@
             "DNF": "Did not finish",
             "DSQ": "Disqualified"
           },
-            "penalty": "Time penalty incl. {{seconds}} s",
-            "penaltySeconds": "Penalty (s)",
-            "penaltyShort": "Penalty",
-            "penaltyNote": "Penalty reason",
-            "penaltyNoteShort": "Reason",
+          "penalty": "Time penalty incl. {{seconds}} s",
+          "penaltySeconds": "Penalty (s)",
+          "penaltyShort": "Penalty",
+          "penaltyNote": "Penalty reason",
+          "penaltyNoteShort": "Reason",
           "validation": {
             "duplicates": {
               "single": "The place: {{places}} is used several times.",
@@ -1310,7 +1310,6 @@
         "finished": "Race finished — next races activated",
         "deactivate": "Deactivate race",
         "activate": "Activate race",
-        "start": "Start",
         "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
         "openResults": {
           "title": "Open results",
@@ -1408,8 +1407,17 @@
         "old": "Old",
         "new": "New",
         "unchanged": "\"Apply\" is only available while the form has not changed since the preview. Please run the preview again.",
-        "impossible": "Cannot catch up — only {{max}} minutes of slack. Choose a later target slot."
-      }
+        "impossible": "Cannot catch up — only {{max}} minutes of slack. Choose a later target slot.",
+        "mode": "Method",
+        "delayMinutes": "Delay (minutes)",
+        "help": {
+          "plus": "All slots from the selected slot onward are shifted by the given minutes (negative = move earlier).",
+          "setTime": "The selected slot gets the new start time; all following slots keep their gaps.",
+          "compress": "The given delay is caught up by the target slot: the gaps in between are shortened, and the target slot keeps its original time."
+        }
+      },
+      "allPlanned": "All scheduled races are already planned.",
+      "goToExecution": "Go to execution"
     },
     "results": {
       "download": "Download previous results",
