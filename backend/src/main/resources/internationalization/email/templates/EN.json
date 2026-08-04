@@ -108,6 +108,28 @@
         "",
         "We wish you all the best."
       ]
+    },
+    {
+      "key": "CLUB_REPRESENTATIVE_APPROVAL_REQUESTED",
+      "subject": "Ready2Race - New manager request for ##club##",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "##sender## would like to register as an additional manager for your club \"##club##\".",
+        "",
+        "Please log in to Ready2Race and approve or reject the request on the club page so ##sender## can help manage the club."
+      ]
+    },
+    {
+      "key": "COMPETITION_REGISTRATION_EDITED",
+      "subject": "Ready2Race - Registration for ##event## was edited",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "##sender## edited a registration of ##club## for ##competitions## at the event '##event##'.",
+        "",
+        "Please check the registration in Ready2Race if you were not aware of this change."
+      ]
     }
   ]
 }

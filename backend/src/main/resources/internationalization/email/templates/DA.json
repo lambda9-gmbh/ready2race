@@ -108,6 +108,28 @@
         "",
         "Vi ønsker dig fortsat held og lykke."
       ]
+    },
+    {
+      "key": "CLUB_REPRESENTATIVE_APPROVAL_REQUESTED",
+      "subject": "Ready2Race – Ny anmodning om administratoradgang til ##club##",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "##sender## ønsker at registrere sig som yderligere administrator for jeres klub \"##club##\".",
+        "",
+        "Log venligst ind på Ready2Race og godkend eller afvis anmodningen på klubsiden, så ##sender## kan hjælpe med at administrere klubben."
+      ]
+    },
+    {
+      "key": "COMPETITION_REGISTRATION_EDITED",
+      "subject": "Ready2Race – Tilmelding til ##event## er blevet ændret",
+      "body": [
+        "Hej ##recipient##,",
+        "",
+        "##sender## har ændret en tilmelding fra ##club## til ##competitions## ved arrangementet \"##event##\".",
+        "",
+        "Tjek venligst tilmeldingen i Ready2Race, hvis du ikke var bekendt med denne ændring."
+      ]
     }
   ]
 }

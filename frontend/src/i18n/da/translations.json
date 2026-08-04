@@ -346,7 +346,7 @@
     "create": {
       "option": "Opret “{{name}}”",
       "existingSelected": "Eksisterende klub valgt",
-      "joinRequest": "Anmodning om medlemskab: en administrator af “{{name}}” skal godkende din anmodning, før du kan administrere klubben. Administratoren får ikke automatisk besked – informer dem venligst selv, så de kan acceptere anmodningen.",
+      "joinRequest": "Anmodning om medlemskab: en administrator af “{{name}}” skal godkende din anmodning, før du kan administrere klubben. De eksisterende administratorer får automatisk besked via e-mail om din anmodning.",
       "willCreate": "Ny klub “{{name}}” oprettes"
     },
     "settings": {
@@ -384,7 +384,7 @@
       },
       "pending": {
         "title": "Anmodning om klubadministration",
-        "message": "Anmodningen om at tilslutte sig klubben {{club}} som klubadministration er endnu ikke besvaret. Klubbens administratorer bliver ikke kontaktet automatisk, så kontakt dem venligst direkte."
+        "message": "Anmodningen om at tilslutte sig klubben {{club}} som klubadministration er endnu ikke besvaret. Klubbens eksisterende administratorer er allerede blevet informeret via e-mail."
       }
     },
     "participant": {
@@ -1939,7 +1939,9 @@
         "EVENT_REGISTRATION_CONFIRMATION": "Bekræftelse på arrangementstilmelding",
         "EVENT_REGISTRATION_INVOICE": "Faktura for arrangementstilmelding",
         "PARTICIPANT_CHALLENGE_REGISTERED": "Bekræftelse på challenge-tilmelding",
-        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Deltagelsesbevis"
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Deltagelsesbevis",
+        "CLUB_REPRESENTATIVE_APPROVAL_REQUESTED": "Anmodning om administratoradgang",
+        "COMPETITION_REGISTRATION_EDITED": "Tilmelding ændret"
       },
       "requiredPlaceholders": "Påkrævede pladsholdere:",
       "optionalPlaceholders": "Valgfrie pladsholdere:",
