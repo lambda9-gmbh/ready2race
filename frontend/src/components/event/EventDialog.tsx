@@ -31,6 +31,7 @@ type EventForm = {
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
     autoActivateNextMatch: boolean
+    showBreaksOnPublicBoards: boolean
 }
 
 const addAction = (formData: EventForm) => {
@@ -67,6 +68,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         submissionNeedsVerification: false,
         allowParticipantSelfRegistration: false,
         autoActivateNextMatch: false,
+        showBreaksOnPublicBoards: false,
     }
 
     const formContext = useForm<EventForm>()
@@ -154,6 +156,13 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                 <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
                     {t('event.autoActivateNextMatchHint')}
                 </Typography>
+                <FormInputCheckbox
+                    name={`showBreaksOnPublicBoards`}
+                    label={t('event.showBreaksOnPublicBoards')}
+                />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.showBreaksOnPublicBoardsHint')}
+                </Typography>
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate
@@ -184,6 +193,7 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         autoActivateNextMatch: formData.autoActivateNextMatch,
+        showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
     }
 }
 
@@ -205,6 +215,7 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         autoActivateNextMatch: formData.autoActivateNextMatch,
+        showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
     }
 }
 
@@ -227,6 +238,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         submissionNeedsVerification: dto.submissionNeedsVerification,
         allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
         autoActivateNextMatch: dto.autoActivateNextMatch ?? false,
+        showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards ?? false,
     }
 }
 

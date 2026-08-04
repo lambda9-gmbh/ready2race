@@ -493,6 +493,8 @@
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
     "autoActivateNextMatch": "Nächste Läufe automatisch aktivieren",
     "autoActivateNextMatchHint": "Beendet eine Schiedsrichterin einen Lauf im Dashboard, werden die Läufe der nächsten Startzeit aktiv. Nur sinnvoll, wenn der Zeitplan durchgängig gepflegt ist — sonst greift die Kette den falschen Lauf. Mit gepflegtem Zeitplan (Tab Zeitplan) folgt die Kette den Slots und wartet an noch nicht gesetzten Läufen.",
+    "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
+    "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -1240,6 +1242,7 @@
       "matchTeams": "Lauf-Teams",
       "executionOrder": "Ausführungsreihenfolge: {{order}}",
       "pendingRound": "Lauf noch nicht gesetzt",
+      "freeSlot": "Programmpunkt",
       "athleteBoard": {
         "running": "Aktueller Lauf",
         "upcoming": "Nächster Lauf",

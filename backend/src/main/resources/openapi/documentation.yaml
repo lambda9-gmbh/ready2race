@@ -8500,6 +8500,9 @@ components:
         autoActivateNextMatch:
           type: boolean
           description: "Finishing a race in the referee dashboard activates the races of the next start time"
+        showBreaksOnPublicBoards:
+          type: boolean
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         challengesFinished:
           type: boolean
 
@@ -8647,6 +8650,9 @@ components:
         autoActivateNextMatch:
           type: boolean
           description: "Finishing a race in the referee dashboard activates the races of the next start time"
+        showBreaksOnPublicBoards:
+          type: boolean
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
 
     UpdateEventRequest:
       type: object
@@ -8696,6 +8702,9 @@ components:
         autoActivateNextMatch:
           type: boolean
           description: "Finishing a race in the referee dashboard activates the races of the next start time"
+        showBreaksOnPublicBoards:
+          type: boolean
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
 
 
     # eventDay
@@ -11821,7 +11830,6 @@ components:
       type: object
       required:
         - matchId
-        - competitionId
         - competitionName
         - executionOrder
         - teams
@@ -11836,6 +11844,8 @@ components:
         competitionId:
           type: string
           format: uuid
+          nullable: true
+          description: "null for a FREE placeholder (break/schedule item, see name) - there is no competition then"
         competitionName:
           type: string
         categoryName:
@@ -11866,6 +11876,10 @@ components:
         pendingRound:
           type: boolean
           description: "true for a placeholder from a waiting timeline slot (round not yet materialized) - matchId then points at the setup round, not a real match, and teams is always empty"
+        name:
+          type: string
+          nullable: true
+          description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
 
     UpcomingMatchTeamInfo:
       type: object
@@ -12077,6 +12091,10 @@ components:
         pendingRound:
           type: boolean
           description: "true for a placeholder from a waiting timeline slot; teams is then always empty"
+        name:
+          type: string
+          nullable: true
+          description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
 
     AthleteBoardResultTeam:
       type: object

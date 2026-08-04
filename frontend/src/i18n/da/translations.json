@@ -493,6 +493,8 @@
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
     "autoActivateNextMatch": "Aktiver næste løb automatisk",
     "autoActivateNextMatchHint": "Når en dommer afslutter et løb i dashboardet, aktiveres løbene med næste starttid. Kun nyttigt med en komplet tidsplan — ellers rammer kæden det forkerte løb. Med en vedligeholdt tidsplan (fanen Tidsplan) følger kæden slottene og venter ved løb, der endnu ikke er fastsat.",
+    "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
+    "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
     "invoice": {
       "prefix": "Fakturapræfiks",
       "paymentDueBy": "Betalingsfrist for tilmeldingsgebyrer",
@@ -1240,6 +1242,7 @@
       "matchTeams": "Løbshold",
       "executionOrder": "Udførelsesrækkefølge: {{order}}",
       "pendingRound": "Løb endnu ikke fastsat",
+      "freeSlot": "Programpunkt",
       "athleteBoard": {
         "running": "Aktuelt løb",
         "upcoming": "Næste løb",

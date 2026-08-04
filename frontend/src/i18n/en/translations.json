@@ -493,6 +493,8 @@
     "allowParticipantSelfRegistration": "Allow participants to register themselves",
     "autoActivateNextMatch": "Activate next races automatically",
     "autoActivateNextMatchHint": "When a referee finishes a race in the dashboard, the races of the next start time become active. Only useful with a complete schedule — otherwise the chain picks the wrong race. With a maintained schedule (Schedule tab), the chain follows the slots and waits at races that haven't been set yet.",
+    "showBreaksOnPublicBoards": "Show breaks on public boards",
+    "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -1240,6 +1242,7 @@
       "matchTeams": "Match Teams",
       "executionOrder": "Execution Order: {{order}}",
       "pendingRound": "Race not yet set",
+      "freeSlot": "Schedule item",
       "athleteBoard": {
         "running": "Current race",
         "upcoming": "Next race",

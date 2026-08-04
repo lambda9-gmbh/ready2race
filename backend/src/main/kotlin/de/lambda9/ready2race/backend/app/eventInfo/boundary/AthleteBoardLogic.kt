@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardConfig
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.FreeScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
 import java.time.LocalDateTime
 
@@ -114,6 +115,34 @@ object AthleteBoardLogic {
                 executionOrder = 0,
                 teams = emptyList(),
                 pendingRound = true,
+            )
+        }
+
+    /**
+     * Platzhalter für FREE-Slots (Programmpunkte wie "Mittagspause") - nur gebaut, wenn die
+     * Veranstaltung das über `Event.showBreaksOnPublicBoards` erlaubt (siehe
+     * `EventInfoService.mergeWithPendingPlaceholders`). Anders als bei [placeholdersFromPendingSlots]
+     * gibt es keine Kompetition; [name] trägt die Anzeige statt Kompetitions-/Rundenname. Ohne
+     * Team-/Personendaten aus demselben Grund wie bei Lauf-Platzhaltern - für einen Programmpunkt
+     * gibt es ohnehin keine Aufstellung.
+     */
+    fun placeholdersFromFreeSlots(slots: List<FreeScheduleSlotInfo>): List<UpcomingCompetitionMatchInfo> =
+        slots.map { slot ->
+            UpcomingCompetitionMatchInfo(
+                matchId = slot.slotId,
+                matchNumber = null,
+                competitionId = null,
+                competitionName = "",
+                categoryName = null,
+                scheduledStartTime = slot.startTime,
+                placeName = null,
+                roundNumber = null,
+                roundName = null,
+                matchName = null,
+                executionOrder = 0,
+                teams = emptyList(),
+                pendingRound = false,
+                name = slot.name,
             )
         }
 }

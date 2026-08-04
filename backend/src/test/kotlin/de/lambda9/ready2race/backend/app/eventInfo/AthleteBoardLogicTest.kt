@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.eventInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.FreeScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
 import java.time.LocalDateTime
 import java.util.UUID
@@ -248,5 +249,47 @@ class AthleteBoardLogicTest {
         val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(listOf(first, second))
 
         assertEquals(listOf("erster", "zweiter"), placeholders.map { it.matchName })
+    }
+
+    // --- placeholdersFromFreeSlots ---
+    //
+    // Die Filterung auf FREE (nicht übersprungen) sitzt gemeinsam mit dem Live-Dashboard in
+    // `EventScheduleLogic.freeSlotOrNull` und ist dort geprüft (siehe EventScheduleLogicTest).
+    // Hier bleibt nur die reine Mapping-Prüfung: [slots] enthält per Vertrag ausschließlich
+    // FREE-Slots. Nur gebaut, wenn die Veranstaltung Pausen auf öffentlichen Anzeigen erlaubt.
+
+    private fun freeSlot(
+        startTime: LocalDateTime = now.plusMinutes(45),
+        name: String? = "Mittagspause",
+    ) = FreeScheduleSlotInfo(
+        slotId = UUID.randomUUID(),
+        startTime = startTime,
+        name = name,
+    )
+
+    @Test
+    fun freeSlotBecomesNamedPlaceholderWithoutCompetition() {
+        val slot = freeSlot()
+
+        val placeholders = AthleteBoardLogic.placeholdersFromFreeSlots(listOf(slot))
+
+        assertEquals(1, placeholders.size)
+        val placeholder = placeholders.single()
+        assertEquals(slot.slotId, placeholder.matchId)
+        assertEquals(slot.name, placeholder.name)
+        assertEquals(slot.startTime, placeholder.scheduledStartTime)
+        assertFalse(placeholder.pendingRound)
+        assertEquals(null, placeholder.competitionId)
+        assertTrue(placeholder.teams.isEmpty())
+    }
+
+    @Test
+    fun multipleFreeSlotsAllBecomePlaceholdersInOrder() {
+        val first = freeSlot(name = "Frühstückspause")
+        val second = freeSlot(name = "Mittagspause")
+
+        val placeholders = AthleteBoardLogic.placeholdersFromFreeSlots(listOf(first, second))
+
+        assertEquals(listOf("Frühstückspause", "Mittagspause"), placeholders.map { it.name })
     }
 }

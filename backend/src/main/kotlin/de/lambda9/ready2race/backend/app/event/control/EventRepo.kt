@@ -27,6 +27,13 @@ object EventRepo {
             .fetchOne(EVENT.AUTO_ACTIVATE_NEXT_MATCH) ?: false
     }
 
+    fun getShowBreaksOnPublicBoards(eventId: UUID) = Jooq.query {
+        select(EVENT.SHOW_BREAKS_ON_PUBLIC_BOARDS)
+            .from(EVENT)
+            .where(EVENT.ID.eq(eventId))
+            .fetchOne(EVENT.SHOW_BREAKS_ON_PUBLIC_BOARDS) ?: false
+    }
+
 
     private fun EventView.searchFields() =
         listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO, DESCRIPTION)

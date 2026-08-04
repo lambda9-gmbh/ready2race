@@ -29,6 +29,8 @@ data class CreateEventRequest(
     val allowParticipantSelfRegistration: Boolean,
     /** Beendet ein Schiedsrichter einen Lauf, werden die Läufe der nächsten Startzeit aktiv. */
     val autoActivateNextMatch: Boolean,
+    /** Zeigt Pausen/Programmpunkte aus dem Zeitplan auch auf Kiosk und Athleten-Anzeige. */
+    val showBreaksOnPublicBoards: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -69,6 +71,7 @@ data class CreateEventRequest(
                 submissionNeedsVerification = false,
                 allowParticipantSelfRegistration = false,
                 autoActivateNextMatch = false,
+                showBreaksOnPublicBoards = false,
             )
     }
 }

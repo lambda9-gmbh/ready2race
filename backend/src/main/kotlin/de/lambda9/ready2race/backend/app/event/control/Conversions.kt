@@ -38,6 +38,7 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 submissionNeedsVerification = submissionNeedsVerification,
                 participantSelfRegistration = allowParticipantSelfRegistration,
                 autoActivateNextMatch = autoActivateNextMatch,
+                showBreaksOnPublicBoards = showBreaksOnPublicBoards,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -75,6 +76,7 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         submissionNeedsVerification = submissionNeedsVerification!!,
         allowParticipantSelfRegistration = participantSelfRegistration!!,
         autoActivateNextMatch = autoActivateNextMatch ?: false,
+        showBreaksOnPublicBoards = showBreaksOnPublicBoards ?: false,
         challengesFinished = challengeEnd?.let { it < LocalDateTime.now() },
     )
 )

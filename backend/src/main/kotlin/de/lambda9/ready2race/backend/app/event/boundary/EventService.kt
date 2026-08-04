@@ -96,6 +96,7 @@ object EventService {
             submissionNeedsVerification = request.submissionNeedsVerification
             participantSelfRegistration = request.allowParticipantSelfRegistration
             autoActivateNextMatch = request.autoActivateNextMatch
+            showBreaksOnPublicBoards = request.showBreaksOnPublicBoards
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

@@ -172,6 +172,10 @@ export type AthleteBoardMatch = {
      * true for a placeholder from a waiting timeline slot; teams is then always empty
      */
     pendingRound: boolean
+    /**
+     * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
+     */
+    name?: string | null
 }
 
 export type AthleteBoardParticipant = {
@@ -764,6 +768,10 @@ export type CreateEventRequest = {
      * Finishing a race in the referee dashboard activates the races of the next start time
      */
     autoActivateNextMatch?: boolean
+    /**
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
+     */
+    showBreaksOnPublicBoards?: boolean
 }
 
 export type CustomFontDto = {
@@ -953,6 +961,10 @@ export type EventDto = {
      * Finishing a race in the referee dashboard activates the races of the next start time
      */
     autoActivateNextMatch?: boolean
+    /**
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
+     */
+    showBreaksOnPublicBoards?: boolean
     challengesFinished?: boolean
 }
 
@@ -2352,7 +2364,10 @@ export type UnprocessableEntityError = ApiError & {
 export type UpcomingCompetitionMatchInfo = {
     matchId: string
     matchNumber?: number | null
-    competitionId: string
+    /**
+     * null for a FREE placeholder (break/schedule item, see name) - there is no competition then
+     */
+    competitionId?: string | null
     competitionName: string
     categoryName?: string | null
     scheduledStartTime?: string | null
@@ -2366,6 +2381,10 @@ export type UpcomingCompetitionMatchInfo = {
      * true for a placeholder from a waiting timeline slot (round not yet materialized) - matchId then points at the setup round, not a real match, and teams is always empty
      */
     pendingRound: boolean
+    /**
+     * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
+     */
+    name?: string | null
 }
 
 export type UpcomingMatchParticipantInfo = {
@@ -2444,6 +2463,10 @@ export type UpdateEventRequest = {
      * Finishing a race in the referee dashboard activates the races of the next start time
      */
     autoActivateNextMatch?: boolean
+    /**
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
+     */
+    showBreaksOnPublicBoards?: boolean
 }
 
 export type UpdateGlobalConfigurationsRequest = {
