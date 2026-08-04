@@ -819,29 +819,9 @@ object CompetitionExecutionService {
 
         // Write back the (potentially externally changed) start numbers. The stable team identifier is
         // the source of truth for matching, so we adopt whatever start numbers the external timing tooling
-        // assigned. Start numbers are negated first to avoid transient violations of the unique
-        // (competition_match, start_number) index while reassigning. Match teams that are not part of the
-        // imported file (e.g. deregistered/out teams) keep a unique number after the highest imported one.
+        // assigned.
         if (correctedTeams.isNotEmpty() && correctedTeams.all { it.startNumber != null }) {
-            val allMatchTeamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
-            val importedStartNumberByRegistration = correctedTeams.associate { it.registrationId to it.startNumber!! }
-
-            !allMatchTeamRecords.traverse { team ->
-                CompetitionMatchTeamRepo.update(team) {
-                    startNumber = team.startNumber * -1
-                }.orDie()
-            }
-
-            var fallbackStartNumber = importedStartNumberByRegistration.values.maxOrNull() ?: 0
-            !allMatchTeamRecords.sortedBy { it.startNumber }.traverse { team ->
-                val newStartNumber = importedStartNumberByRegistration[team.competitionRegistration]
-                    ?: (++fallbackStartNumber)
-                CompetitionMatchTeamRepo.update(team) {
-                    startNumber = newStartNumber
-                    updatedBy = userId
-                    updatedAt = LocalDateTime.now()
-                }.orDie()
-            }
+            !writeStartNumbers(matchId, correctedTeams.associate { it.registrationId to it.startNumber!! }, userId)
         }
 
         correctedTeams.traverse { result ->
@@ -1000,11 +980,20 @@ object CompetitionExecutionService {
 
         !prepareForNewPlaces(matchId)
 
+        // Lanes are taken from every assigned row, not just the timed ones: a heat is usually pulled
+        // while boats are still on the water, and numbering only the finishers would push the rest
+        // out of their lanes.
+        !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, rows) -> rows.single() }, userId)
+
         val parsed = timed.map { (registrationId, row) ->
             ParsedTeamResult(
                 registrationId = registrationId,
-                startNumber = row.bib,
-                // The feed carries no rank; places are derived from the times further down.
+                // Lanes were written above from the feed's list positions; leaving this null keeps
+                // [applyParsedTeamResults] from renumbering them off the bib, which stays with a boat
+                // when it is moved and therefore no longer describes where it starts.
+                startNumber = null,
+                // Places are derived from the times further down - RaceClocker's "Rank" is a list
+                // position, not a finishing rank.
                 place = null,
                 time = row.time,
                 noResultReason = row.noResultReason,
@@ -1014,6 +1003,62 @@ object CompetitionExecutionService {
         }
 
         return applyParsedTeamResults(match, matchId, parsed, userId)
+    }
+
+    /**
+     * Writes the lanes a match currently has in RaceClocker onto its teams.
+     *
+     * The timekeeper swaps lanes on site, and everything attached to an entry travels with it when it
+     * is moved - only the list position changes. [RaceClockerFeedRow.lanesByRow] turns those positions
+     * into 1..n, and this writes them to the start numbers.
+     *
+     * Start numbers are negated first to avoid transient violations of the unique
+     * (competition_match, start_number) index while reassigning; teams that the feed does not cover
+     * keep a unique number after the highest imported one.
+     */
+    private fun applyLanesFromFeed(
+        matchId: UUID,
+        rowByRegistration: Map<UUID, RaceClockerFeedRow>,
+        userId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+        val lanes = RaceClockerFeedRow.lanesByRow(rowByRegistration)
+        if (lanes.isEmpty()) return@comprehension KIO.unit
+
+        writeStartNumbers(matchId, lanes, userId)
+    }
+
+    /**
+     * Sets the start numbers of a match from [startNumberByRegistration].
+     *
+     * They are negated first to avoid transient violations of the unique (competition_match,
+     * start_number) index while reassigning. Teams the caller does not cover (e.g. deregistered or
+     * out teams) keep a unique number after the highest given one.
+     */
+    private fun writeStartNumbers(
+        matchId: UUID,
+        startNumberByRegistration: Map<UUID, Int>,
+        userId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+        val allMatchTeamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+
+        !allMatchTeamRecords.traverse { team ->
+            CompetitionMatchTeamRepo.update(team) {
+                startNumber = team.startNumber * -1
+            }.orDie()
+        }
+
+        var fallbackStartNumber = startNumberByRegistration.values.maxOrNull() ?: 0
+        !allMatchTeamRecords.sortedBy { it.startNumber }.traverse { team ->
+            val newStartNumber = startNumberByRegistration[team.competitionRegistration]
+                ?: (++fallbackStartNumber)
+            CompetitionMatchTeamRepo.update(team) {
+                startNumber = newStartNumber
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
+
+        KIO.unit
     }
 
     /**

@@ -16,6 +16,13 @@ import java.util.UUID
  */
 data class RaceClockerFeedRow(
     val name: String,
+    /**
+     * RaceClocker's own list position, handed out per participant across the whole race. It is *not*
+     * a finishing rank: it stays with the position when an entry is moved, while everything attached
+     * to the entry (bib, extra info, times) travels along. That makes it the only field that reflects
+     * a lane swap - see [lanesByRow].
+     */
+    val rank: Int?,
     val bib: Int?,
     /** `null` for time trial races, which have no waves. */
     val wave: String?,
@@ -55,5 +62,19 @@ data class RaceClockerFeedRow(
          * selection logic (as opposed to the DB write) can be tested without any database.
          */
         fun earliestStart(rows: List<RaceClockerFeedRow>): LocalTime? = rows.mapNotNull { it.start }.minOrNull()
+
+        /**
+         * Lane numbers for one match, derived from the list positions of its rows: sorted by [rank]
+         * and numbered 1..n. [rank] counts across the entire race, so it cannot be used as a lane
+         * directly - only its order within the match matters.
+         *
+         * Rows without a rank keep the order they arrived in and are numbered last, so an incomplete
+         * feed degrades to the previous behaviour instead of shuffling lanes.
+         */
+        fun <T> lanesByRow(rows: Map<T, RaceClockerFeedRow>): Map<T, Int> =
+            rows.entries
+                .sortedWith(compareBy(nullsLast()) { it.value.rank })
+                .mapIndexed { index, entry -> entry.key to index + 1 }
+                .toMap()
     }
 }

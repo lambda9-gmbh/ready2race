@@ -69,6 +69,38 @@ class RaceClockerFeedTest {
     }
 
     @Test
+    fun rankIsReadAsTheListPosition() {
+        // "Rank" is RaceClocker's list position, not a finishing rank: in the fixture the two boats of
+        // wave AF1 have been swapped, so the DNF boat sits in front of the one with a time.
+        val af1 = feed().filter { it.wave == "AF1 CM1x" }
+        assertEquals(listOf(13, 4), af1.sortedBy { it.rank }.map { it.bib })
+    }
+
+    @Test
+    fun lanesFollowTheListPositionWithinTheMatch() {
+        // Rank counts across the whole race (1..8 here), so only its order inside one match matters.
+        val af4 = feed().filter { it.wave == "AF4 CM1x" }.associateBy { it.bib!! }
+        assertEquals(mapOf(7 to 1, 10 to 2), RaceClockerFeedRow.lanesByRow(af4))
+
+        // The swapped wave: the boat that was moved to the front takes lane 1, and its bib and time
+        // stay with it — that is exactly what a lane swap looks like in the feed.
+        val af1 = feed().filter { it.wave == "AF1 CM1x" }.associateBy { it.bib!! }
+        assertEquals(mapOf(13 to 1, 4 to 2), RaceClockerFeedRow.lanesByRow(af1))
+        assertEquals("00:02:22.5", af1.getValue(4).time, "the moved entry keeps its own time")
+    }
+
+    @Test
+    fun rowsWithoutRankAreNumberedLast() {
+        // A feed without the field must not shuffle lanes — unranked rows keep their order at the end.
+        val withRank = feed().single { it.bib == 7 }
+        val withoutRank = feed().single { it.bib == 10 }.copy(rank = null)
+        assertEquals(
+            mapOf(7 to 1, 10 to 2),
+            RaceClockerFeedRow.lanesByRow(mapOf(7 to withRank, 10 to withoutRank)),
+        )
+    }
+
+    @Test
     fun formattedTimeIsReadAsTime() {
         val row = feed().single { it.bib == 4 }
         assertEquals("00:02:22.5", row.time)
@@ -166,6 +198,7 @@ class RaceClockerFeedTest {
 
     private fun rowWithStart(start: LocalTime?) = RaceClockerFeedRow(
         name = "Test",
+        rank = null,
         bib = null,
         wave = null,
         ids = emptyList(),

@@ -163,6 +163,7 @@ object RaceClockerFeed {
         val wave = path("Wave").asText("").trim()
         return RaceClockerFeedRow(
             name = path("Name").asText("").trim(),
+            rank = path("Rank").asText("").trim().toIntOrNull(),
             bib = path("Bib number").asText("").trim().toIntOrNull(),
             wave = wave.takeUnless { it.lowercase() in noWaveValues },
             ids = extractIds(),
