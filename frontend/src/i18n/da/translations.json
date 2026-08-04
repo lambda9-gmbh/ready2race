@@ -1420,7 +1420,18 @@
         }
       },
       "allPlanned": "Alle planlagte løb er allerede indsat.",
-      "goToExecution": "Til gennemførelse"
+      "goToExecution": "Til gennemførelse",
+      "indicator": {
+        "now": "Nu",
+        "state": {
+          "finished": "Afsluttet",
+          "running": "Kører",
+          "linked": "Tilknyttet",
+          "waiting": "Løb ikke sat endnu",
+          "free": "Programpunkt",
+          "skipped": "Sprunget over"
+        }
+      }
     },
     "results": {
       "download": "Download tidligere resultater",

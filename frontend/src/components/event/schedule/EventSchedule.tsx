@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {
     Box,
@@ -28,9 +28,22 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
 import {groupSlotsByDay, isEditable, slotLabel} from './common.ts'
+import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 import ScheduleImportDialog from './ScheduleImportDialog.tsx'
+import ScheduleTimelineIndicator from './ScheduleTimelineIndicator.tsx'
+
+/** Clock for the timeline's now-marker: the Zeitplan tab has no server-time feed of its own, so a
+ * locally ticking clock (refreshed every 30s, plenty for a position marker) stands in for it. */
+const useLocalClock = (intervalMs: number): Date => {
+    const [now, setNow] = useState(() => new Date())
+    useEffect(() => {
+        const id = window.setInterval(() => setNow(new Date()), intervalMs)
+        return () => window.clearInterval(id)
+    }, [intervalMs])
+    return now
+}
 
 const stateChipProps = (
     slot: EventScheduleSlotDto,
@@ -78,6 +91,29 @@ const EventSchedule = () => {
     const [shiftDaySlots, setShiftDaySlots] = useState<EventScheduleSlotDto[]>([])
 
     const [importDialogOpen, setImportDialogOpen] = useState(false)
+
+    const now = useLocalClock(30_000)
+    const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
+    const [highlightedSlotId, setHighlightedSlotId] = useState<string | null>(null)
+    const highlightTimeoutRef = useRef<number | null>(null)
+
+    const scrollToSlot = (slotId: string) => {
+        rowRefs.current.get(slotId)?.scrollIntoView({behavior: 'smooth', block: 'center'})
+        if (highlightTimeoutRef.current != null) {
+            window.clearTimeout(highlightTimeoutRef.current)
+        }
+        setHighlightedSlotId(slotId)
+        highlightTimeoutRef.current = window.setTimeout(() => setHighlightedSlotId(null), 1500)
+    }
+
+    useEffect(
+        () => () => {
+            if (highlightTimeoutRef.current != null) {
+                window.clearTimeout(highlightTimeoutRef.current)
+            }
+        },
+        [],
+    )
 
     const {data, pending} = useFetch(signal => getEventSchedule({signal, path: {eventId}}), {
         onResponse: ({error}) => {
@@ -203,6 +239,13 @@ const EventSchedule = () => {
                             </Button>
                         )}
                     </Stack>
+                    <Box sx={{mb: 2}}>
+                        <ScheduleTimelineIndicator
+                            entries={scheduleSlotsToEntries(section.slots)}
+                            now={now}
+                            onEntryClick={scrollToSlot}
+                        />
+                    </Box>
                     <TableContainer>
                         <Table size={'small'}>
                             <TableHead>
@@ -218,7 +261,22 @@ const EventSchedule = () => {
                                 {section.slots.map(slot => {
                                     const chip = stateChipProps(slot, t)
                                     return (
-                                        <TableRow key={slot.id}>
+                                        <TableRow
+                                            key={slot.id}
+                                            ref={el => {
+                                                if (el) {
+                                                    rowRefs.current.set(slot.id, el)
+                                                } else {
+                                                    rowRefs.current.delete(slot.id)
+                                                }
+                                            }}
+                                            sx={{
+                                                backgroundColor:
+                                                    highlightedSlotId === slot.id
+                                                        ? 'action.selected'
+                                                        : undefined,
+                                                transition: 'background-color 0.3s ease',
+                                            }}>
                                             <TableCell>
                                                 {format(new Date(slot.startTime), t('format.time'))}
                                             </TableCell>

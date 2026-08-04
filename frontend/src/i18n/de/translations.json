@@ -1420,7 +1420,18 @@
         }
       },
       "allPlanned": "Alle geplanten Läufe sind bereits eingeplant.",
-      "goToExecution": "Zur Durchführung"
+      "goToExecution": "Zur Durchführung",
+      "indicator": {
+        "now": "Jetzt",
+        "state": {
+          "finished": "Beendet",
+          "running": "Läuft",
+          "linked": "Verknüpft",
+          "waiting": "Lauf noch nicht gesetzt",
+          "free": "Programmpunkt",
+          "skipped": "Übersprungen"
+        }
+      }
     },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",
