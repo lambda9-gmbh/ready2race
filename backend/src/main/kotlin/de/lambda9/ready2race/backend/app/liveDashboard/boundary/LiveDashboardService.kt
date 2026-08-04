@@ -153,16 +153,19 @@ object LiveDashboardService {
         }
 
     /**
-     * WAITING-Slots des Events als Platzhalter (Task 14) - aufsteigend nach Startzeit, da
-     * [EventScheduleRepo.getSlots] bereits so sortiert liefert. Die "nur WAITING zählt"-Regel
-     * steckt gemeinsam mit der Athleten-Anzeige in [EventScheduleLogic.pendingSlotOrNull]: SKIPPED,
-     * FREE, LINKED und OBSOLETE liefern dort keinen Eintrag - LINKED ist bereits ein echter Lauf
-     * und steckt in [matches], die anderen sind kein Kandidat für einen künftigen Lauf.
+     * WAITING- und FREE-Slots des Events als Platzhalter (Task 14, erweitert um Programmpunkte) -
+     * gemeinsam nach Startzeit sortiert. Die "nur WAITING zählt"-Regel für Lauf-Platzhalter steckt
+     * gemeinsam mit der Athleten-Anzeige in [EventScheduleLogic.pendingSlotOrNull]: SKIPPED, FREE,
+     * LINKED und OBSOLETE liefern dort keinen Eintrag - LINKED ist bereits ein echter Lauf und
+     * steckt in [matches], die anderen sind kein Kandidat für einen künftigen Lauf. FREE-Slots
+     * (Programmpunkte) kommen zusätzlich über [EventScheduleLogic.freeSlotOrNull] hinzu - anders
+     * als bei der Athleten-Anzeige/dem Kiosk ist das hier gewollt: Schiedsrichter sollen auch
+     * Pausen im Ablauf sehen, öffentliche Boards bewusst nicht.
      */
     private fun getPendingSlots(eventId: UUID, matchIds: Set<UUID>): App<Nothing, List<PendingSlotDto>> = KIO.comprehension {
         val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
 
-        val result = slotRecords.mapNotNull { r ->
+        val waiting = slotRecords.mapNotNull { r ->
             EventScheduleLogic.pendingSlotOrNull(
                 slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
                 setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
@@ -183,13 +186,33 @@ object LiveDashboardService {
                 PendingSlotDto(
                     slotId = slot.slotId,
                     startTime = slot.startTime,
+                    name = null,
                     competitionName = slot.competitionName,
                     roundName = slot.roundName,
                     matchName = slot.matchName,
                 )
             }
 
-        KIO.ok(result)
+        val free = slotRecords.mapNotNull { r ->
+            EventScheduleLogic.freeSlotOrNull(
+                slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
+                isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null,
+                name = r[EVENT_SCHEDULE_SLOT.NAME],
+                startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+            )
+        }.map { slot ->
+            PendingSlotDto(
+                slotId = slot.slotId,
+                startTime = slot.startTime,
+                name = slot.name,
+                competitionName = null,
+                roundName = null,
+                matchName = null,
+            )
+        }
+
+        KIO.ok((waiting + free).sortedBy { it.startTime })
     }
 
     /**

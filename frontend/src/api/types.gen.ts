@@ -1839,11 +1839,12 @@ export type PendingClubRepresentativeApprovalDto = {
 }
 
 /**
- * A waiting timeline slot (round not yet materialized) - deliberately without team/participant data, since a WAITING slot has none yet
+ * A placeholder in the live dashboard timeline - either a waiting match slot (round not yet materialized) or a FREE slot/program item (e.g. lunch break). Deliberately without team/participant data, since neither kind has any yet. 'name' distinguishes the cases: set for program items, null for match placeholders.
  */
 export type PendingSlotDto = {
     slotId: string
     startTime: string
+    name?: string | null
     competitionName?: string | null
     roundName?: string | null
     matchName?: string | null

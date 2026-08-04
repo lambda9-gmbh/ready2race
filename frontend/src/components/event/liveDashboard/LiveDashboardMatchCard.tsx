@@ -24,8 +24,6 @@ type Props = {
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
     onSetRunning?: (matchId: string, running: boolean) => Promise<void>
-    /** Markiert den echten Start (Task 8/15); nur relevant, solange der Lauf noch keinen hat. */
-    onStart?: (matchId: string) => Promise<void>
 }
 
 // One glanceable icon per team replaces the detail chips — everything else
@@ -46,7 +44,7 @@ const severityIcon = (severity: Severity) => {
     }
 }
 
-const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning, onStart}: Props) => {
+const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Props) => {
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
@@ -286,9 +284,10 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning, onS
                     <Stack
                         direction="row"
                         spacing={1}
+                        flexWrap="wrap"
                         justifyContent="flex-end"
                         alignItems="center"
-                        sx={{pt: 1.5, flexWrap: 'wrap'}}>
+                        sx={{pt: 1.5}}>
                         {match.state === 'RUNNING' && !resultsComplete && (
                             <Typography variant="caption" sx={{color: 'grey.700', mr: 'auto'}}>
                                 {t('event.liveDashboard.control.incompleteWarning')}
@@ -302,15 +301,6 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning, onS
                                 {running
                                     ? t('event.liveDashboard.control.deactivate')
                                     : t('event.liveDashboard.control.activate')}
-                            </Button>
-                        )}
-                        {onStart && running && !match.startedAt && (
-                            <Button
-                                size="small"
-                                variant="contained"
-                                color="success"
-                                onClick={() => onStart(match.matchId)}>
-                                {t('event.liveDashboard.control.start')}
                             </Button>
                         )}
                         {onFinish && match.state === 'RUNNING' && (
@@ -335,13 +325,16 @@ type PendingSlotCardProps = {
 }
 
 /**
- * Platzhalter für einen wartenden Zeitplan-Slot (Runde noch nicht gesetzt) — bewusst ohne Teams
- * oder Ergebnis-Spalten, die es für diese Runde noch gar nicht gibt.
+ * Platzhalter im Referee-Dashboard — entweder ein Programmpunkt (FREE, z.B. "Mittagspause") oder
+ * ein wartender Lauf-Slot (Runde noch nicht gesetzt); `slot.name` unterscheidet die Fälle (siehe
+ * `PendingSlotDto`). Bewusst ohne Teams oder Ergebnis-Spalten, die gibt es für beide Fälle nicht.
  */
 export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProps) => {
     const {t} = useTranslation()
+    const isFree = slot.name != null
     const label = pendingSlotLabel(slot)
     const time = format(new Date(slot.startTime), t('format.time'))
+    const stateLabel = t(isFree ? 'event.schedule.state.FREE' : 'event.schedule.state.WAITING')
 
     return (
         <Card variant="outlined" sx={{minWidth: 0, overflow: 'hidden'}}>
@@ -354,7 +347,7 @@ export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProp
                         alignItems: 'baseline',
                     }}>
                     <Typography variant="subtitle1" fontWeight={700} noWrap sx={{color: 'grey.700'}}>
-                        {label || t('event.schedule.state.WAITING')}
+                        {label || stateLabel}
                     </Typography>
                     <Typography
                         variant="subtitle1"
@@ -385,7 +378,7 @@ export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProp
                             backgroundColor: 'grey.200',
                             color: 'grey.900',
                         }}>
-                        {t('event.schedule.state.WAITING')}
+                        {stateLabel}
                     </Box>
                     {onSkip && (
                         <Button

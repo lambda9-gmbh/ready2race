@@ -19,7 +19,6 @@ import {
     getLiveDashboard,
     setLiveDashboardMatchRunning,
     skipScheduleSlot,
-    startLiveDashboardMatch,
 } from '@api/sdk.gen.ts'
 import {LiveDashboardDto} from '@api/types.gen.ts'
 import {useFetch, useFeedback} from '@utils/hooks.ts'
@@ -158,14 +157,6 @@ const LiveDashboardPage = () => {
         dashboardData.reload()
     }
 
-    const handleStart = async (matchId: string) => {
-        const {error} = await startLiveDashboardMatch({path: {eventId, matchId}})
-        if (error) {
-            feedback.error(t('event.liveDashboard.control.error'))
-        }
-        dashboardData.reload()
-    }
-
     const handleSkipSlot = (slotId: string, label: string, time: string) => {
         confirmAction(
             async () => {
@@ -242,7 +233,6 @@ const LiveDashboardPage = () => {
                                 onTeamClick={handleTeamClick}
                                 onFinish={mayControl ? handleFinish : undefined}
                                 onSetRunning={mayControl ? handleSetRunning : undefined}
-                                onStart={mayControl ? handleStart : undefined}
                             />
                         ))}
                         {runningMatches.length === 0 && nextEntry && (
@@ -276,7 +266,6 @@ const LiveDashboardPage = () => {
                                     onTeamClick={handleTeamClick}
                                     onFinish={mayControl ? handleFinish : undefined}
                                     onSetRunning={mayControl ? handleSetRunning : undefined}
-                                    onStart={mayControl ? handleStart : undefined}
                                 />
                             ) : (
                                 <LiveDashboardPendingSlotCard
@@ -298,7 +287,6 @@ const LiveDashboardPage = () => {
                                         onTeamClick={handleTeamClick}
                                         onFinish={mayControl ? handleFinish : undefined}
                                         onSetRunning={mayControl ? handleSetRunning : undefined}
-                                        onStart={mayControl ? handleStart : undefined}
                                     />
                                 ))}
                             </>

@@ -38,6 +38,17 @@ data class PendingScheduleSlotInfo(
     val matchName: String?,
 )
 
+/**
+ * Ein FREE-Slot (Programmpunkt wie "Mittagspause") mit seinem Namen - nur fürs Live-Dashboard
+ * (siehe [EventScheduleLogic.freeSlotOrNull]). Athleten-Anzeige und Kiosk bleiben bei
+ * [PendingScheduleSlotInfo]/WAITING-Slots; öffentliche Boards zeigen bewusst keine Pausen.
+ */
+data class FreeScheduleSlotInfo(
+    val slotId: UUID,
+    val startTime: LocalDateTime,
+    val name: String?,
+)
+
 object EventScheduleLogic {
 
     const val MIN_GAP_MINUTES = 5L
@@ -106,6 +117,38 @@ object EventScheduleLogic {
                 roundName = roundName,
                 matchName = matchName,
             )
+        }
+    }
+
+    /**
+     * Baut aus einer rohen Zeitstrahl-Zeile einen FREE-Platzhalter (Programmpunkt), oder liefert
+     * null - für Slots, die keine FREE-Slots sind, oder die übersprungen wurden. Getrennt von
+     * [pendingSlotOrNull], weil beide Platzhalter-Arten unterschiedliche Konsumenten haben: WAITING
+     * zeigen Athleten-Anzeige, Kiosk und Live-Dashboard gemeinsam, FREE nur das Live-Dashboard
+     * (öffentliche Boards bekommen keine Pausen zu sehen).
+     */
+    fun freeSlotOrNull(
+        slotId: UUID,
+        isFree: Boolean,
+        name: String?,
+        startTime: LocalDateTime,
+        skipped: Boolean,
+    ): FreeScheduleSlotInfo? {
+        if (!isFree) {
+            return null
+        }
+
+        val state = deriveSlotState(
+            isFree = true,
+            skipped = skipped,
+            roundMaterialized = false,
+            matchExists = false,
+        )
+
+        return if (state != EventScheduleSlotState.FREE) {
+            null
+        } else {
+            FreeScheduleSlotInfo(slotId = slotId, startTime = startTime, name = name)
         }
     }
 

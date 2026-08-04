@@ -169,6 +169,53 @@ class EventScheduleLogicTest {
         assertEquals(listOf("wartend"), results.mapNotNull { it?.matchName })
     }
 
+    // --- freeSlotOrNull ---
+
+    @Test
+    fun freeSlotYieldsFreeSlotInfo() {
+        val slotId = UUID.randomUUID()
+        val startTime = slotNow.plusMinutes(30)
+
+        val result = EventScheduleLogic.freeSlotOrNull(
+            slotId = slotId,
+            isFree = true,
+            name = "Mittagspause",
+            startTime = startTime,
+            skipped = false,
+        )
+
+        val info = assertNotNull(result)
+        assertEquals(slotId, info.slotId)
+        assertEquals(startTime, info.startTime)
+        assertEquals("Mittagspause", info.name)
+    }
+
+    @Test
+    fun nonFreeSlotYieldsNoFreeSlotInfo() {
+        assertNull(
+            EventScheduleLogic.freeSlotOrNull(
+                slotId = UUID.randomUUID(),
+                isFree = false,
+                name = null,
+                startTime = slotNow,
+                skipped = false,
+            ),
+        )
+    }
+
+    @Test
+    fun skippedFreeSlotYieldsNoFreeSlotInfo() {
+        assertNull(
+            EventScheduleLogic.freeSlotOrNull(
+                slotId = UUID.randomUUID(),
+                isFree = true,
+                name = "Mittagspause",
+                startTime = slotNow,
+                skipped = true,
+            ),
+        )
+    }
+
     // --- computeShift ---
 
     private val base = LocalDateTime.of(2026, 8, 17, 10, 0)
