@@ -86,7 +86,6 @@ import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.collections.sortedBy
@@ -1745,13 +1744,15 @@ object CompetitionExecutionService {
                 optionalColumn(config.colTeamRatingCategory) { ratingCategory?.name ?: "" }
                 optionalColumn(config.colTeamClub) { actualClubName ?: registeringClubName }
 
-                optionalColumn(config.colMatchName) { data.matchName ?: "" }
+                // Die Wellen-Name-Formatierung (Startzeit + Name) MUSS mit CompetitionMatchRepo.
+                // getForRaceClockerPull übereinstimmen (siehe WaveName) - sonst greift dessen
+                // Fallback-Filter über den Wellen-Namen beim Ergebnis-Pull nicht mehr.
+                optionalColumn(config.colMatchName) { WaveName.format(data.matchName, data.startTime) ?: "" }
                 optionalColumn(config.colMatchStartTime) { idx ->
                     val offsetSeconds = idx * (data.startTimeOffset ?: 0)
-                    // TODO: make this configurable
-                    LocalTime.ofSecondOfDay(offsetSeconds)
-                        //data.startTime.toLocalTime().plusSeconds(offsetSeconds)
-                        .format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                    data.startTime?.plusSeconds(offsetSeconds)
+                        ?.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                        ?: ""
                 }
 
                 optionalColumn(config.colRoundName) { data.roundName }
