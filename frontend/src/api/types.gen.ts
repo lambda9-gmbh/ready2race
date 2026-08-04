@@ -1140,6 +1140,7 @@ export type EventScheduleSlotDto = {
     matchName?: string | null
     matchId?: string | null
     setupMatchId?: string | null
+    setupRoundId?: string | null
     matchStartedAt?: string | null
     matchFinishedAt?: string | null
 }
@@ -2357,6 +2358,9 @@ export type UnprocessableEntityError = ApiError & {
           }
         | {
               result: Invalid
+          }
+        | {
+              maxReductionMinutes: number
           }
         | unknown
 }
@@ -5788,6 +5792,17 @@ export type UnskipScheduleSlotData = {
 export type UnskipScheduleSlotResponse = void
 
 export type UnskipScheduleSlotError = ApiError
+
+export type SkipScheduleRoundData = {
+    path: {
+        eventId: string
+        setupRoundId: string
+    }
+}
+
+export type SkipScheduleRoundResponse = void
+
+export type SkipScheduleRoundError = ApiError
 
 export type ShiftEventScheduleData = {
     body: ShiftScheduleRequest

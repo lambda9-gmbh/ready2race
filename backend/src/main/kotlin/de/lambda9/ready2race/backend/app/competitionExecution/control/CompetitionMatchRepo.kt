@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchForRunningStatusDto
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
@@ -35,14 +36,18 @@ object CompetitionMatchRepo {
     fun getForStartList(id: UUID) = STARTLIST_VIEW.selectOne { ID.eq(id) }
 
     /**
-     * Everything needed to pull this match's results from RaceClocker: the match name (which doubles
-     * as the RaceClocker wave name) and the competition's two results URLs. Which of the two applies
-     * follows from the round: a qualification round is timed as a separate time trial race, because
-     * only individual starts have a real countdown in RaceClocker.
+     * Everything needed to pull this match's results from RaceClocker: the wave name (match name plus
+     * planned start time, see [WaveName] - MUST be formatted exactly like
+     * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.buildCsv]
+     * builds it for the export, or the wave-name fallback filter in `assignFeedRows` never matches)
+     * and the competition's two results URLs. Which of the two applies follows from the round: a
+     * qualification round is timed as a separate time trial race, because only individual starts have
+     * a real countdown in RaceClocker.
      */
     fun getForRaceClockerPull(id: UUID) = Jooq.query {
         select(
             COMPETITION_SETUP_MATCH.NAME,
+            COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
             COMPETITION.RACECLOCKER_TT_RESULTS_URL,
             COMPETITION.RACECLOCKER_HEATS_RESULTS_URL,
@@ -58,7 +63,7 @@ object CompetitionMatchRepo {
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne {
                 RaceClockerMatchTarget(
-                    waveName = it[COMPETITION_SETUP_MATCH.NAME],
+                    waveName = WaveName.format(it[COMPETITION_SETUP_MATCH.NAME], it[COMPETITION_MATCH.START_TIME]),
                     // Not null in the schema; the projection just loses that guarantee.
                     isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
                     timeTrialUrl = it[COMPETITION.RACECLOCKER_TT_RESULTS_URL],

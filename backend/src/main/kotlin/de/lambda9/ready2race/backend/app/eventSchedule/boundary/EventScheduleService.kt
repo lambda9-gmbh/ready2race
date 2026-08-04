@@ -61,6 +61,7 @@ object EventScheduleService {
                     matchName = r.get("match_name", String::class.java),
                     matchId = if (matchExists) r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] else null,
                     setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
+                    setupRoundId = r.get("setup_round_id", UUID::class.java),
                     matchStartedAt = r.get("match_started_at", java.time.LocalDateTime::class.java),
                     matchFinishedAt = r.get("match_finished_at", java.time.LocalDateTime::class.java),
                 )
@@ -233,6 +234,70 @@ object EventScheduleService {
     }
 
     /**
+     * Skip einer ganzen Setup-Runde auf einmal - dieselben Regeln wie [setSlotSkipped], nur für alle
+     * Slots dieser Runde im Event. Zwei Durchgänge, damit die Aktion atomar wirkt: erst validieren
+     * (nichts schreiben, solange nicht klar ist, dass die ganze Runde durchgeht), dann anwenden.
+     *
+     * - Bereits übersprungene Slots bleiben, wie sie sind - kein Fehler, kein erneutes Schreiben.
+     * - OBSOLETE Slots (die Setup-Zeile existiert nicht mehr) werden übergangen: es gibt nichts mehr
+     *   zu überspringen, das blockiert die restliche Runde aber nicht.
+     * - Ein bereits gestarteter Lauf lässt die GANZE Aktion mit MatchAlreadyStarted scheitern, auch
+     *   wenn andere Slots der Runde noch skippable wären - kein Teilerfolg, damit der Nutzer nicht
+     *   glaubt, die Runde sei vollständig übersprungen, obwohl ein laufender Start übrig bleibt.
+     */
+    fun setRoundSkipped(
+        eventId: UUID,
+        setupRoundId: UUID,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val rows = !EventScheduleRepo.getSlots(eventId, setupRoundId).orDie()
+
+        val toSkip = mutableListOf<UUID>()
+        for (row in rows) {
+            val slotId = row[EVENT_SCHEDULE_SLOT.ID]!!
+            val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
+            if (alreadySkipped) {
+                continue
+            }
+
+            val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+            val matchExists = row.get("match_exists", Boolean::class.java) == true
+            val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
+            val state = EventScheduleLogic.deriveSlotState(
+                isFree = isFree,
+                skipped = false,
+                roundMaterialized = roundMaterialized,
+                matchExists = matchExists,
+            )
+
+            if (state == EventScheduleSlotState.OBSOLETE) {
+                continue
+            }
+
+            val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
+            if (matchStartedAt != null) {
+                return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
+            }
+
+            toSkip.add(slotId)
+        }
+
+        val now = LocalDateTime.now()
+        !toSkip.traverse { slotId ->
+            EventScheduleRepo.updateSlot(eventId, slotId) {
+                skippedAt = now
+                skippedBy = userId
+            }.orDie().map { }
+        }
+
+        // Wie beim Einzel-Skip: die Kette könnte an einem der jetzt übersprungenen Slots geparkt
+        // gewesen sein.
+        !ScheduleChainService.resumeIfParked(eventId, userId)
+
+        noData
+    }
+
+    /**
      * Verschiebt den Zeitstrahl ab [ShiftScheduleRequest.fromSlotId] (Task 11). Betroffen sind nur
      * Slots desselben Renntags ab diesem Slot (aufsteigend) — [EventScheduleRepo.getSlots] liefert
      * bereits nach start_time sortiert, ein Tageswechsel kommt danach also nie zurück.
@@ -301,6 +366,21 @@ object EventScheduleService {
         // Ein Shift bleibt im Renntag — über Mitternacht hinaus wäre der Plan des Folgetags still betroffen.
         if (entries.any { it.newStartTime.toLocalDate() != day }) {
             return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+        }
+
+        // Bei einem Vorziehen (deltaMinutes < 0) darf der verschobene Block seinen Vorgänger nicht
+        // überholen: der letzte UNverschobene Slot desselben Tages VOR dem Start-Slot behält seine
+        // Zeit, keiner der verschobenen Slots darf davor zu liegen kommen - sonst würde die
+        // Reihenfolge im Zeitstrahl durcheinandergeraten. Kein Vorgänger am selben Tag (Start-Slot
+        // ist der erste des Tages) heißt: keine Grenze von dieser Seite.
+        if (deltaMinutes < 0) {
+            val predecessor = allSlots.getOrNull(fromIndex - 1)
+                ?.takeIf { it[EVENT_SCHEDULE_SLOT.START_TIME]!!.toLocalDate() == day }
+                ?.get(EVENT_SCHEDULE_SLOT.START_TIME)
+
+            if (EventScheduleLogic.overtakesPredecessor(entries, predecessor)) {
+                return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+            }
         }
 
         if (!request.dryRun) {

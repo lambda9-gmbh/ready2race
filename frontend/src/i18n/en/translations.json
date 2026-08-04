@@ -1375,6 +1375,8 @@
       "skip": "Skip",
       "unskip": "Undo skip",
       "skipConfirm": "Really skip slot \"{{label}}\" at {{time}}? The chain will then leave it out.",
+      "skipRound": "Skip round",
+      "skipRoundConfirm": "Really skip all {{count}} slots of round \"{{label}}\"? Already started races prevent skipping the whole round.",
       "managedHint": "Managed via the schedule",
       "unplanned": "Unplanned races",
       "noUnplanned": "All races are scheduled.",

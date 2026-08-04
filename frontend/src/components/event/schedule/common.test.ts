@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest'
 import {
     buildShiftPreviewRows,
     defaultFromSlotId,
+    extractMaxReductionMinutes,
     groupSlotsByDay,
     hasBlockingImportRows,
     hasRunningOrFinishedSlots,
@@ -10,6 +11,7 @@ import {
     parseMaxReductionMinutes,
     slotLabel,
     slotsAfter,
+    slotsInRound,
 } from './common.ts'
 import {EventScheduleSlotDto, ImportRowResultDto, ShiftPreviewEntryDto} from '@api/types.gen.ts'
 
@@ -25,6 +27,7 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     matchName: 'AF1',
     matchId: null,
     setupMatchId: crypto.randomUUID(),
+    setupRoundId: crypto.randomUUID(),
     matchStartedAt: null,
     matchFinishedAt: null,
     ...over,
@@ -42,6 +45,23 @@ describe('groupSlotsByDay', () => {
             '2026-08-17T08:00:00',
             '2026-08-17T10:00:00',
         ])
+    })
+})
+
+describe('slotsInRound', () => {
+    it('returns only the slots sharing the given setup round id', () => {
+        const roundA = crypto.randomUUID()
+        const roundB = crypto.randomUUID()
+        const a1 = slot('2026-08-17T08:00:00', {setupRoundId: roundA})
+        const a2 = slot('2026-08-17T08:10:00', {setupRoundId: roundA})
+        const b1 = slot('2026-08-17T08:20:00', {setupRoundId: roundB})
+        const free = slot('2026-08-17T08:30:00', {setupRoundId: null, setupMatchId: null})
+
+        expect(slotsInRound([a1, a2, b1, free], roundA)).toEqual([a1, a2])
+    })
+
+    it('returns an empty list when no slot matches', () => {
+        expect(slotsInRound([slot('2026-08-17T08:00:00')], crypto.randomUUID())).toEqual([])
     })
 })
 
@@ -186,6 +206,38 @@ describe('parseMaxReductionMinutes', () => {
 
     it('returns undefined when the message does not match the expected shape', () => {
         expect(parseMaxReductionMinutes('Shift request parameters are inconsistent')).toBeUndefined()
+    })
+})
+
+describe('extractMaxReductionMinutes', () => {
+    it('prefers the structured details field over the message', () => {
+        expect(
+            extractMaxReductionMinutes({
+                message: 'Cannot compress: only 999 minutes available',
+                details: {maxReductionMinutes: 7},
+            }),
+        ).toBe(7)
+    })
+
+    it('falls back to parsing the message when details is missing', () => {
+        expect(
+            extractMaxReductionMinutes({message: 'Cannot compress: only 7 minutes available'}),
+        ).toBe(7)
+    })
+
+    it('falls back to parsing the message when details does not carry the field', () => {
+        expect(
+            extractMaxReductionMinutes({
+                message: 'Cannot compress: only 7 minutes available',
+                details: {reason: 'INVALID'},
+            }),
+        ).toBe(7)
+    })
+
+    it('returns undefined when neither details nor the message carry a value', () => {
+        expect(
+            extractMaxReductionMinutes({message: 'Shift request parameters are inconsistent'}),
+        ).toBeUndefined()
     })
 })
 

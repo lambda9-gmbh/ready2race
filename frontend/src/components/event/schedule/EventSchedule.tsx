@@ -16,18 +16,24 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material'
-import {Add, Delete, Edit, EventBusy, EventRepeat, OpenInNew} from '@mui/icons-material'
+import {Add, Delete, Edit, EventBusy, EventRepeat, OpenInNew, PlaylistRemove} from '@mui/icons-material'
 import {format} from 'date-fns'
 import {Link} from '@tanstack/react-router'
 import {eventRoute} from '@routes'
-import {deleteScheduleSlot, getEventSchedule, skipScheduleSlot, unskipScheduleSlot} from '@api/sdk.gen.ts'
+import {
+    deleteScheduleSlot,
+    getEventSchedule,
+    skipScheduleRound,
+    skipScheduleSlot,
+    unskipScheduleSlot,
+} from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
-import {groupSlotsByDay, isEditable, slotLabel} from './common.ts'
+import {groupSlotsByDay, isEditable, slotLabel, slotsInRound} from './common.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 import ScheduleImportDialog from './ScheduleImportDialog.tsx'
@@ -145,6 +151,32 @@ const EventSchedule = () => {
                     time: format(new Date(slot.startTime), t('format.time')),
                 }),
                 okText: t('event.schedule.skip'),
+            },
+        )
+    }
+
+    const handleSkipRound = (slot: EventScheduleSlotDto) => {
+        const setupRoundId = slot.setupRoundId
+        if (!setupRoundId) {
+            return
+        }
+        const affected = slotsInRound(data?.slots ?? [], setupRoundId)
+        const label = [slot.competitionName, slot.roundName].filter(Boolean).join(' – ')
+
+        confirmAction(
+            async () => {
+                const {error} = await skipScheduleRound({path: {eventId, setupRoundId}})
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+                reload()
+            },
+            {
+                content: t('event.schedule.skipRoundConfirm', {
+                    label,
+                    count: affected.length,
+                }),
+                okText: t('event.schedule.skipRound'),
             },
         )
     }
@@ -295,6 +327,15 @@ const EventSchedule = () => {
                                                                     size={'small'}
                                                                     onClick={() => handleSkip(slot)}>
                                                                     <EventBusy fontSize={'small'} />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )}
+                                                        {slot.setupRoundId && (
+                                                            <Tooltip title={t('event.schedule.skipRound')}>
+                                                                <IconButton
+                                                                    size={'small'}
+                                                                    onClick={() => handleSkipRound(slot)}>
+                                                                    <PlaylistRemove fontSize={'small'} />
                                                                 </IconButton>
                                                             </Tooltip>
                                                         )}

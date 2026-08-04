@@ -15,6 +15,8 @@ data class EventScheduleSlotDto(
     val matchName: String?,
     val matchId: UUID?,
     val setupMatchId: UUID?,
+    /** Die Setup-Runde dieses Slots - null für FREE-Slots. Ziel für "ganze Runde überspringen". */
+    val setupRoundId: UUID?,
     val matchStartedAt: LocalDateTime?,
     val matchFinishedAt: LocalDateTime?,
 )

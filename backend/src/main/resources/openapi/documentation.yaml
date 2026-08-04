@@ -6006,6 +6006,32 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/schedule/round/{setupRoundId}/skip:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: setupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: skipScheduleRound
+      description: "Skips every schedule slot of this setup round belonging to the event - same rules as skipping a single slot (already skipped slots are left as they are, a started match blocks the whole action)"
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/schedule/shift:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7861,6 +7887,13 @@ components:
                   properties:
                     result:
                       $ref: '#/components/schemas/Invalid'
+                - type: object
+                  required:
+                    - maxReductionMinutes
+                  properties:
+                    maxReductionMinutes:
+                      type: integer
+                      format: int64
                 - { }
 
     TooManyRequestsError:
@@ -12571,6 +12604,10 @@ components:
           format: uuid
           nullable: true
         setupMatchId:
+          type: string
+          format: uuid
+          nullable: true
+        setupRoundId:
           type: string
           format: uuid
           nullable: true

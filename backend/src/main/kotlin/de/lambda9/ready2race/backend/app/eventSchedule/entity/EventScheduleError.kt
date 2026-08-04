@@ -24,7 +24,14 @@ sealed interface EventScheduleError : ServiceError {
         is SetupMatchAlreadyPlanned -> ApiError(HttpStatusCode.Conflict, "Setup match $setupMatchId already has a schedule slot")
         is MatchAlreadyStarted -> ApiError(HttpStatusCode.Conflict, "The match of slot $slotId has already started")
         is SlotNotSkippable -> ApiError(HttpStatusCode.Conflict, "Slot $slotId cannot be skipped in its current state")
-        is CompressionImpossible -> ApiError(HttpStatusCode.UnprocessableEntity, "Cannot compress: only $maxReductionMinutes minutes available")
+        is CompressionImpossible -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Cannot compress: only $maxReductionMinutes minutes available",
+            // Maschinenlesbar zusätzlich zum Freitext, damit das Frontend die Minutenzahl nicht mehr
+            // aus der (übersetzbaren/änderbaren) Nachricht herausparsen muss (siehe common.ts,
+            // parseMaxReductionMinutes/extractMaxReductionMinutes).
+            details = mapOf("maxReductionMinutes" to maxReductionMinutes),
+        )
         InvalidShiftRequest -> ApiError(HttpStatusCode.UnprocessableEntity, "Shift request parameters are inconsistent")
         is DuplicateImportRow -> ApiError(HttpStatusCode.UnprocessableEntity, "Import contains duplicate matches in rows $rowNumbers")
         ImportFileUnreadable -> ApiError(HttpStatusCode.UnprocessableEntity, "Import file could not be read")

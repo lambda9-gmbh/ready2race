@@ -662,6 +662,9 @@ import type {
     UnskipScheduleSlotData,
     UnskipScheduleSlotError,
     UnskipScheduleSlotResponse,
+    SkipScheduleRoundData,
+    SkipScheduleRoundError,
+    SkipScheduleRoundResponse,
     ShiftEventScheduleData,
     ShiftEventScheduleError,
     ShiftEventScheduleResponse,
@@ -3592,6 +3595,22 @@ export const unskipScheduleSlot = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule/slot/{slotId}/unskip',
+    })
+}
+
+/**
+ * Skips every schedule slot of this setup round belonging to the event - same rules as skipping a single slot (already skipped slots are left as they are, a started match blocks the whole action)
+ */
+export const skipScheduleRound = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SkipScheduleRoundData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SkipScheduleRoundResponse,
+        SkipScheduleRoundError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/round/{setupRoundId}/skip',
     })
 }
 
