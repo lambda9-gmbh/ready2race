@@ -18,8 +18,12 @@ object EventScheduleRepo {
      * mindestens eine Setup-Zeile derselben Runde hat einen Lauf. Dafür braucht die korrelierte
      * Subquery eigene Aliase für competition_setup_match/competition_match, weil beide Tabellen
      * im äußeren Query bereits unaliast verjoint sind.
+     *
+     * [setupRoundId], wenn gesetzt, schränkt auf die Slots genau dieser Setup-Runde ein - Grundlage
+     * für "ganze Runde überspringen" (siehe EventScheduleService.setRoundSkipped), das dieselbe
+     * Zustandsableitung braucht wie der Einzel-Slot-Skip, nur für mehrere Zeilen auf einmal.
      */
-    fun getSlots(eventId: UUID) = Jooq.query {
+    fun getSlots(eventId: UUID, setupRoundId: UUID? = null) = Jooq.query {
         val sibling = COMPETITION_SETUP_MATCH.`as`("sibling")
         val siblingMatch = COMPETITION_MATCH.`as`("sibling_match")
 
@@ -33,12 +37,18 @@ object EventScheduleRepo {
             )
         ).`as`("round_materialized")
 
+        var condition = EVENT_SCHEDULE_SLOT.EVENT.eq(eventId)
+        if (setupRoundId != null) {
+            condition = condition.and(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(setupRoundId))
+        }
+
         select(
             EVENT_SCHEDULE_SLOT.asterisk(),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_PROPERTIES.NAME.`as`("competition_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.`as`("setup_round_id"),
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.STARTED_AT.`as`("match_started_at"),
             COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
@@ -55,7 +65,7 @@ object EventScheduleRepo {
             .leftJoin(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_MATCH)
             .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
-            .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
+            .where(condition)
             .orderBy(
                 EVENT_SCHEDULE_SLOT.START_TIME.asc(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc(),
@@ -65,9 +75,16 @@ object EventScheduleRepo {
     }
 
     /**
-     * Slots nach [after] für die Aktivierungskette (Task 9). Gleiche Joins/Aliase wie [getSlots],
-     * zusätzlich `match_open` — mindestens eine Mannschaft ohne Ergebnis, wortgleiches Prädikat zu
-     * `LiveDashboardRepo.getActivationCandidates`.
+     * Slots ab (einschließlich) [after] für die Aktivierungskette (Task 9). Gleiche Joins/Aliase wie
+     * [getSlots], zusätzlich `match_open` — mindestens eine Mannschaft ohne Ergebnis, wortgleiches
+     * Prädikat zu `LiveDashboardRepo.getActivationCandidates` — und `CURRENTLY_RUNNING`, damit
+     * [ScheduleChain.decideNext] einen noch laufenden Sibling-Lauf derselben Startzeit von einem
+     * frisch aktivierbaren unterscheiden kann.
+     *
+     * Bewusst `>=` statt `>`: [after] ist die Startzeit des gerade beendeten Slots selbst, und dessen
+     * Gruppe (parallele Starts derselben Startzeit) muss mit in den Walk - sonst würde ein noch
+     * offener Parallel-Lauf derselben Gruppe stillschweigend übergangen und die Kette bereits auf die
+     * nächste Gruppe vorrücken, obwohl die aktuelle noch nicht fertig ist (siehe ScheduleChainTest).
      */
     fun getChainSlots(eventId: UUID, after: LocalDateTime) = Jooq.query {
         val sibling = COMPETITION_SETUP_MATCH.`as`("sibling")
@@ -104,6 +121,7 @@ object EventScheduleRepo {
             EVENT_SCHEDULE_SLOT.asterisk(),
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
+            COMPETITION_MATCH.CURRENTLY_RUNNING,
             roundMaterialized,
             matchOpen,
         )
@@ -113,7 +131,7 @@ object EventScheduleRepo {
             .leftJoin(COMPETITION_MATCH)
             .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
             .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
-            .and(EVENT_SCHEDULE_SLOT.START_TIME.gt(after))
+            .and(EVENT_SCHEDULE_SLOT.START_TIME.ge(after))
             .orderBy(
                 EVENT_SCHEDULE_SLOT.START_TIME.asc(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc(),
@@ -300,6 +318,11 @@ object EventScheduleRepo {
      * wenn zu dieser Setup-Zeile noch kein Lauf existiert (competition_match wird erst bei
      * Rundenerzeugung materialisiert) — [update] fetcht die Zeile vorher und macht bei keinem
      * Treffer schlicht nichts.
+     *
+     * Beendete Läufe behalten ihre historische Startzeit: `.and(FINISHED_AT.isNull)` sorgt dafür,
+     * dass ein nachträgliches Verschieben/Importieren/Anlegen im Zeitstrahl einen bereits
+     * abgeschlossenen Lauf nicht mehr rückwirkend umdatiert - der Zeitstrahl ist ab dann nur noch
+     * für die (noch offenen) Läufe maßgeblich, nicht mehr für die Historie.
      */
     fun stampMatchStartTime(setupMatchId: UUID, startTime: LocalDateTime, userId: UUID) =
         COMPETITION_MATCH.update(
@@ -308,7 +331,7 @@ object EventScheduleRepo {
                 updatedAt = LocalDateTime.now()
                 updatedBy = userId
             },
-            condition = { COMPETITION_SETUP_MATCH.eq(setupMatchId) }
+            condition = { COMPETITION_SETUP_MATCH.eq(setupMatchId).and(FINISHED_AT.isNull) }
         )
 
     /**

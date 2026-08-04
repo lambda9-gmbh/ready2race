@@ -90,4 +90,55 @@ class ScheduleChainTest {
         val next = ChainSlot(UUID.randomUUID(), base.plusMinutes(20), LINKED, m, matchFinished = false, matchOpen = true)
         assertEquals(ChainDecision.Activate(listOf(m)), ScheduleChain.decideNext(listOf(done, next)))
     }
+
+    // --- parallele Startgruppen müssen als Ganzes fertig sein (Thomas' Vorgabe) ---
+    //
+    // getChainSlots liefert seit dem Fix (>= statt > auf start_time) die eigene Gruppe des gerade
+    // beendeten Laufs mit in den Walk - decideNext muss deshalb einen noch laufenden Sibling-Lauf
+    // derselben Startzeit erkennen und darf dann NICHT zur nächsten Gruppe vorrücken.
+
+    @Test
+    fun blocksAdvanceWhileASiblingOfTheSameStartIsStillRunning() {
+        val t = base.plusMinutes(10)
+        val finished = ChainSlot(UUID.randomUUID(), t, LINKED, UUID.randomUUID(), matchFinished = true, matchOpen = false)
+        val stillRunning = ChainSlot(
+            UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
+            matchFinished = false, matchOpen = true, currentlyRunning = true,
+        )
+        val next = ChainSlot(
+            UUID.randomUUID(), base.plusMinutes(20), LINKED, UUID.randomUUID(),
+            matchFinished = false, matchOpen = true,
+        )
+
+        assertIs<ChainDecision.NothingToDo>(ScheduleChain.decideNext(listOf(finished, stillRunning, next)))
+    }
+
+    @Test
+    fun advancesOnceTheLastSiblingOfTheStartGroupFinishes() {
+        val t = base.plusMinutes(10)
+        val finishedA = ChainSlot(UUID.randomUUID(), t, LINKED, UUID.randomUUID(), matchFinished = true, matchOpen = false)
+        val finishedB = ChainSlot(UUID.randomUUID(), t, LINKED, UUID.randomUUID(), matchFinished = true, matchOpen = false)
+        val next = UUID.randomUUID()
+        val nextSlot = ChainSlot(
+            UUID.randomUUID(), base.plusMinutes(20), LINKED, next,
+            matchFinished = false, matchOpen = true,
+        )
+
+        assertEquals(
+            ChainDecision.Activate(listOf(next)),
+            ScheduleChain.decideNext(listOf(finishedA, finishedB, nextSlot)),
+        )
+    }
+
+    @Test
+    fun aSoloFinishWithNoRunningSiblingStillAdvances() {
+        // Kein paralleler Lauf in der Gruppe (nur der gerade beendete selbst) - unverändertes
+        // Verhalten, die Kette darf normal weiterlaufen.
+        val t = base.plusMinutes(10)
+        val finished = ChainSlot(UUID.randomUUID(), t, LINKED, UUID.randomUUID(), matchFinished = true, matchOpen = false)
+        val m = UUID.randomUUID()
+        val next = ChainSlot(UUID.randomUUID(), base.plusMinutes(20), LINKED, m, matchFinished = false, matchOpen = true)
+
+        assertEquals(ChainDecision.Activate(listOf(m)), ScheduleChain.decideNext(listOf(finished, next)))
+    }
 }
