@@ -26,7 +26,7 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {shiftEventSchedule} from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, ShiftMode, ShiftScheduleRequest} from '@api/types.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
-import {buildShiftPreviewRows, defaultFromSlotId, parseMaxReductionMinutes, slotsAfter} from './common.ts'
+import {buildShiftPreviewRows, defaultFromSlotId, extractMaxReductionMinutes, slotsAfter} from './common.ts'
 
 type ShiftForm = {
     fromSlotId: string
@@ -129,7 +129,7 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
             if (error.status.value === 422) {
                 setPreviewError({
                     message: error.message,
-                    max: parseMaxReductionMinutes(error.message),
+                    max: extractMaxReductionMinutes(error),
                 })
             } else {
                 feedback.error(t('common.error.unexpected'))

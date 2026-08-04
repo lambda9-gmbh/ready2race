@@ -44,6 +44,14 @@ export const slotsAfter = (slots: EventScheduleSlotDto[], fromSlotId: string): E
     return idx === -1 ? [] : slots.slice(idx + 1)
 }
 
+// Zählt die Slots derselben Setup-Runde (client-seitig, ohne Zusatzrequest) - für die Bestätigung
+// vor "Runde überspringen" (siehe EventScheduleService.setRoundSkipped): wie viele Slots wären
+// betroffen, damit der Dialog das nicht nur behauptet, sondern konkret nennt.
+export const slotsInRound = (
+    slots: EventScheduleSlotDto[],
+    setupRoundId: string,
+): EventScheduleSlotDto[] => slots.filter(s => s.setupRoundId === setupRoundId)
+
 export type ShiftPreviewRow = {
     slotId: string
     label: string
@@ -71,14 +79,29 @@ export const buildShiftPreviewRows = (
     })
 }
 
-// Der Server liefert bei CompressionImpossible (422) nur einen Freitext ("Cannot compress: only
-// $maxReductionMinutes minutes available", siehe EventScheduleError.kt) statt eines strukturierten
-// Felds - die Minutenzahl muss also aus der Nachricht herausgeparst werden, um sie in den i18n-Text
-// {{max}} einzusetzen. Passt das Muster nicht (anderer Fehlertext), gibt es undefined zurück, und
+// Fallback für den Fall, dass der Server (noch) keine strukturierten details mitschickt, z. B. bei
+// einer älteren Backend-Version oder wenn details aus irgendeinem Grund fehlt - dann wird die
+// Minutenzahl aus dem Freitext ("Cannot compress: only $maxReductionMinutes minutes available",
+// siehe EventScheduleError.kt) herausgeparst. Passt das Muster nicht, gibt es undefined zurück, und
 // der Dialog zeigt den generischen Invalid-Text.
 export const parseMaxReductionMinutes = (message: string): number | undefined => {
     const match = message.match(/only (\d+) minutes available/)
     return match ? Number(match[1]) : undefined
+}
+
+// Primärer Weg (seit EventScheduleError.CompressionImpossible details mitschickt, siehe
+// EventScheduleError.kt): die Minutenzahl kommt maschinenlesbar aus error.details, statt aus der
+// (übersetzbaren, änderbaren) Nachricht geparst zu werden. Fehlt details (siehe parseMaxReductionMinutes),
+// bleibt der Regex-Fallback als Sicherheitsnetz.
+export const extractMaxReductionMinutes = (error: {
+    message: string
+    details?: unknown
+}): number | undefined => {
+    const details = error.details as {maxReductionMinutes?: number} | undefined
+    if (typeof details?.maxReductionMinutes === 'number') {
+        return details.maxReductionMinutes
+    }
+    return parseMaxReductionMinutes(error.message)
 }
 
 // DUPLICATE-Zeilen blockieren den scharfen Import serverseitig (siehe EventScheduleService.

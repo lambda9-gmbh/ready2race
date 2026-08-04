@@ -217,4 +217,19 @@ object EventScheduleLogic {
         }
         return ShiftResult.Ok(entries)
     }
+
+    /**
+     * Guard gegen "Überholen des Vorgängers" bei einem negativen Shift (Vorziehen):
+     * [predecessorStartTime] ist die Startzeit des letzten UNverschobenen Slots desselben Tages vor
+     * dem Start-Slot - der bleibt an seiner Zeit stehen. Fällt eine der neuen Zeiten davor, würde der
+     * verschobene Block zeitlich vor seinen Vorgänger rutschen und die Reihenfolge im Zeitstrahl
+     * durcheinanderbringen; das ist kein zulässiges Ergebnis. Ohne Vorgänger am selben Tag (der
+     * Start-Slot ist der erste des Tages) gibt es von dieser Seite keine Grenze.
+     */
+    fun overtakesPredecessor(entries: List<ShiftPreviewEntry>, predecessorStartTime: LocalDateTime?): Boolean {
+        if (predecessorStartTime == null) {
+            return false
+        }
+        return entries.any { it.newStartTime < predecessorStartTime }
+    }
 }

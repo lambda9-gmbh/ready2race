@@ -1375,6 +1375,8 @@
       "skip": "Spring over",
       "unskip": "Fortryd spring over",
       "skipConfirm": "Vil du virkelig springe slot „{{label}}“ over kl. {{time}}? Kæden springer den så over.",
+      "skipRound": "Spring runde over",
+      "skipRoundConfirm": "Vil du virkelig springe alle {{count}} slots i runden „{{label}}“ over? Allerede påbegyndte løb forhindrer, at hele runden springes over.",
       "managedHint": "Vedligeholdes via tidsplanen",
       "unplanned": "Ikke planlagte løb",
       "noUnplanned": "Alle løb er planlagt.",

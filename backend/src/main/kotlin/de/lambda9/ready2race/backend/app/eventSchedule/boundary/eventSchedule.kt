@@ -73,6 +73,15 @@ fun Route.eventSchedule() {
                 EventScheduleService.setSlotSkipped(eventId, slotId, skipped = false, userId = user.id!!)
             }
         }
+        put("/round/{setupRoundId}/skip") {
+            call.respondComprehension {
+                val user = !authenticateAny(Privilege.UpdateEventGlobal, Privilege.UpdateLiveDashboardGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val setupRoundId = !pathParam("setupRoundId", uuid)
+
+                EventScheduleService.setRoundSkipped(eventId, setupRoundId, userId = user.id!!)
+            }
+        }
         post("/shift") {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateEventGlobal)

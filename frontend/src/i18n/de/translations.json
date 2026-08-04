@@ -1375,6 +1375,8 @@
       "skip": "Überspringen",
       "unskip": "Überspringen aufheben",
       "skipConfirm": "Slot „{{label}}“ um {{time}} wirklich überspringen? Die Kette lässt ihn dann aus.",
+      "skipRound": "Runde überspringen",
+      "skipRoundConfirm": "Alle {{count}} Slots der Runde „{{label}}“ wirklich überspringen? Bereits gestartete Läufe verhindern das Überspringen der ganzen Runde.",
       "managedHint": "Wird über den Zeitplan gepflegt",
       "unplanned": "Nicht verplante Läufe",
       "noUnplanned": "Alle Läufe sind eingeplant.",
