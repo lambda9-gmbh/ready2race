@@ -13,7 +13,9 @@ object LiveDashboardRepo {
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
+            COMPETITION_MATCH.STARTED_AT,
             COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.FINISHED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
@@ -166,6 +168,8 @@ object LiveDashboardRepo {
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.START_TIME.isNotNull)
             .and(COMPETITION_MATCH.CURRENTLY_RUNNING.isFalse)
+            // Ein beendeter Lauf ist nie wieder Kandidat.
+            .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             // mindestens eine Mannschaft ohne Ergebnis: der Lauf steht noch aus. Abgemeldete
             // Mannschaften zählen nicht — auf ihr Ergebnis wartet niemand.
             .and(

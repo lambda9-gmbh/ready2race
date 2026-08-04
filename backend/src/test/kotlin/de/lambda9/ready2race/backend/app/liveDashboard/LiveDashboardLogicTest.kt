@@ -113,7 +113,7 @@ class LiveDashboardLogicTest {
     fun currentlyRunningWinsOverEverything() {
         assertEquals(
             LiveDashboardMatchState.RUNNING,
-            LiveDashboardLogic.deriveMatchState(true, null, listOf(true, true))
+            LiveDashboardLogic.deriveMatchState(true, null, null, listOf(true, true))
         )
     }
 
@@ -121,7 +121,7 @@ class LiveDashboardLogicTest {
     fun allPlacesSetIsFinished() {
         assertEquals(
             LiveDashboardMatchState.FINISHED,
-            LiveDashboardLogic.deriveMatchState(false, start, listOf(true, true))
+            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(true, true))
         )
     }
 
@@ -129,7 +129,7 @@ class LiveDashboardLogicTest {
     fun noTeamsIsNeverFinished() {
         assertEquals(
             LiveDashboardMatchState.UPCOMING,
-            LiveDashboardLogic.deriveMatchState(false, start, emptyList())
+            LiveDashboardLogic.deriveMatchState(false, start, null, emptyList())
         )
     }
 
@@ -137,7 +137,7 @@ class LiveDashboardLogicTest {
     fun missingStartTimeIsUnscheduled() {
         assertEquals(
             LiveDashboardMatchState.UNSCHEDULED,
-            LiveDashboardLogic.deriveMatchState(false, null, listOf(false, false))
+            LiveDashboardLogic.deriveMatchState(false, null, null, listOf(false, false))
         )
     }
 
@@ -145,7 +145,7 @@ class LiveDashboardLogicTest {
     fun startTimeInPastWithoutPlacesIsStillUpcoming() {
         assertEquals(
             LiveDashboardMatchState.UPCOMING,
-            LiveDashboardLogic.deriveMatchState(false, LocalDateTime.now().minusHours(1), listOf(true, false))
+            LiveDashboardLogic.deriveMatchState(false, LocalDateTime.now().minusHours(1), null, listOf(true, false))
         )
     }
 
@@ -159,6 +159,7 @@ class LiveDashboardLogicTest {
             LiveDashboardLogic.deriveMatchState(
                 false,
                 start,
+                null,
                 listOf(
                     LiveDashboardLogic.teamHasResult(1, false, false),
                     LiveDashboardLogic.teamHasResult(null, true, false),
@@ -179,11 +180,29 @@ class LiveDashboardLogicTest {
             LiveDashboardLogic.deriveMatchState(
                 false,
                 start,
+                null,
                 listOf(
                     LiveDashboardLogic.teamHasResult(1, false, false),
                     LiveDashboardLogic.teamHasResult(null, false, true),
                 ),
             )
+        )
+    }
+
+    @Test
+    fun finishedAtBeatsIncompleteResults() {
+        // Ohne Ergebnisse beendet: bisher fiel das auf UPCOMING zurück (A4-Loch).
+        assertEquals(
+            LiveDashboardMatchState.FINISHED,
+            LiveDashboardLogic.deriveMatchState(false, start, start.plusMinutes(9), listOf(false, false)),
+        )
+    }
+
+    @Test
+    fun legacyFallbackAllResultsStillFinishes() {
+        assertEquals(
+            LiveDashboardMatchState.FINISHED,
+            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(true, true)),
         )
     }
 
@@ -199,6 +218,7 @@ class LiveDashboardLogicTest {
         matchName = name,
         executionOrder = 0,
         startTime = start,
+        startedAt = null,
         currentlyRunning = state == LiveDashboardMatchState.RUNNING,
         elapsedMinutes = null,
         teams = emptyList(),

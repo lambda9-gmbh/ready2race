@@ -27,6 +27,8 @@ data class AthleteBoardMatch(
     val startTime: LocalDateTime?,
     val startState: AthleteBoardStartState,
     val teams: List<AthleteBoardTeam>,
+    /** true für einen Platzhalter aus einem wartenden Zeitstrahl-Slot; teams ist dann immer leer. */
+    val pendingRound: Boolean = false,
 )
 
 data class AthleteBoardTeam(

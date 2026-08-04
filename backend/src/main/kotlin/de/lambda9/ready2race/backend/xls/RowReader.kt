@@ -11,6 +11,9 @@ class RowReader(
     private val row: Row,
 ) : KIO.ComprehensionScope<Any?, XLSReadError.CellError> by scope {
 
+    /** Physische Excel-Zeilennummer (1-basiert, wie in der Excel-Oberfläche angezeigt). */
+    val rowNum: Int get() = row.rowNum + 1
+
     fun <A> cell(header: String, parser: CellParser<A>): IO<XLSReadError.CellError, A> =
         cellInternal(header, parser)
 

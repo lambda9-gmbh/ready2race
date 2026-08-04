@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardConfig
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
+import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
 import java.time.LocalDateTime
 
 /**
@@ -87,4 +89,31 @@ object AthleteBoardLogic {
      */
     fun <T> sortByStartTime(items: List<T>, startTime: (T) -> LocalDateTime?): List<T> =
         items.sortedWith(compareBy(nullsLast<LocalDateTime>()) { startTime(it) })
+
+    /**
+     * Platzhalter für "nächste Läufe", deren Runde noch nicht erzeugt wurde. [slots] enthält per
+     * Konstruktion nur WAITING-Slots - die Filterung auf WAITING (SKIPPED, FREE, LINKED und
+     * OBSOLETE sind entweder kein Kandidat oder bereits anderweitig sichtbar) übernimmt
+     * `EventScheduleLogic.pendingSlotOrNull` beim Einlesen, gemeinsam für Athleten-Anzeige und
+     * Live-Dashboard. Bewusst ohne Team-/Personendaten: die Sparsamkeitsregel der Athleten-Anzeige
+     * gilt auch für Platzhalter, und für einen WAITING-Slot gibt es ohnehin noch keine Aufstellung.
+     */
+    fun placeholdersFromPendingSlots(slots: List<PendingScheduleSlotInfo>): List<UpcomingCompetitionMatchInfo> =
+        slots.map { slot ->
+            UpcomingCompetitionMatchInfo(
+                matchId = slot.setupMatchId,
+                matchNumber = null,
+                competitionId = slot.competitionId,
+                competitionName = slot.competitionName,
+                categoryName = null,
+                scheduledStartTime = slot.startTime,
+                placeName = null,
+                roundNumber = null,
+                roundName = slot.roundName,
+                matchName = slot.matchName,
+                executionOrder = 0,
+                teams = emptyList(),
+                pendingRound = true,
+            )
+        }
 }

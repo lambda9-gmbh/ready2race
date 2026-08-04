@@ -1,16 +1,19 @@
 import {
     createNextCompetitionRound,
     downloadStartList,
+    pullMatchResultsFromRaceClocker,
     getCompetitionExecutionProgress,
+    getEventSchedule,
     updateMatchData,
     updateMatchResults,
     uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {
     Box,
-    InputAdornment,
+    Button,
     Checkbox,
     Divider,
+    InputAdornment,
     Link,
     Stack,
     Table,
@@ -28,7 +31,8 @@ import {
 import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
-import {BaseSyntheticEvent, Fragment, useRef, useState} from 'react'
+import {BaseSyntheticEvent, Fragment, useMemo, useRef, useState} from 'react'
+import {format} from 'date-fns'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {Controller, FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
@@ -62,6 +66,7 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
 import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
+import RaceClockerConfigDialog from '@components/event/competition/excecution/RaceClockerConfigDialog.tsx'
 import FormInputTimecode from '@components/form/input/FormInputTimecode.tsx'
 import {
     EditMatchForm,
@@ -106,6 +111,24 @@ const CompetitionExecution = () => {
     const [submitting, setSubmitting] = useState(false)
 
     const [reloadData, setReloadData] = useState(false)
+
+    // Läufe, deren Startzeit über den Zeitplan (Tab Zeitplan) gepflegt wird — für sie bleibt das
+    // Startzeit-Feld hier read-only, damit die Kette (Task 10) nicht durch eine hier eingegebene
+    // abweichende Zeit ausgehebelt wird. Events ohne Zeitstrahl liefern eine leere Slot-Liste,
+    // dann bleibt das Feld wie bisher editierbar.
+    const {data: eventSchedule} = useFetch(
+        signal => getEventSchedule({signal, path: {eventId}}),
+        {deps: [eventId]},
+    )
+    const slotManagedMatchIds = useMemo(
+        () =>
+            new Set(
+                (eventSchedule?.slots ?? [])
+                    .filter(slot => slot.matchId != null)
+                    .map(slot => slot.matchId as string),
+            ),
+        [eventSchedule],
+    )
 
     const {data: progressDto, pending: progressDtoPending} = useFetch(
         signal =>
@@ -242,6 +265,8 @@ const CompetitionExecution = () => {
     const showStartListConfigDialog = startListMatch !== null
     const closeStartListConfigDialog = () => setStartListMatch(null)
 
+    const [showRaceClockerConfig, setShowRaceClockerConfig] = useState(false)
+
     const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
     const showMatchResultImportConfigDialog = resultImportMatch !== null
     const closeMatchResultImportConfigDialog = () => setResultImportMatch(null)
@@ -278,6 +303,61 @@ const CompetitionExecution = () => {
             anchor.click()
             anchor.href = ''
             anchor.download = ''
+        }
+    }
+
+    const handlePullRaceClockerResults = async (competitionMatchId: string) => {
+        setSubmitting(true)
+        const {error} = await pullMatchResultsFromRaceClocker({
+            path: {
+                eventId,
+                competitionId,
+                competitionMatchId,
+            },
+        })
+        setSubmitting(false)
+
+        if (error) {
+            const details = ('details' in error ? error.details : undefined) as
+                | Record<string, unknown>
+                | undefined
+            switch (error.errorCode) {
+                case 'RACECLOCKER_URL_MISSING':
+                    feedback.error(t('event.competition.execution.results.raceclocker.error.urlMissing'))
+                    break
+                case 'RACECLOCKER_URL_INVALID':
+                    feedback.error(t('event.competition.execution.results.raceclocker.error.urlInvalid'))
+                    break
+                case 'RACECLOCKER_UNREACHABLE':
+                case 'RACECLOCKER_MALFORMED_FEED':
+                    feedback.error(t('event.competition.execution.results.raceclocker.error.unreachable'))
+                    break
+                case 'RACECLOCKER_MATCH_NOT_IN_FEED':
+                    feedback.error(
+                        t('event.competition.execution.results.raceclocker.error.matchNotInFeed'),
+                    )
+                    break
+                case 'RACECLOCKER_MATCH_IS_BYE':
+                    feedback.error(
+                        t('event.competition.execution.results.raceclocker.error.matchIsBye'),
+                    )
+                    break
+                case 'RACECLOCKER_DUPLICATE_TEAMS':
+                    feedback.error(
+                        t('event.competition.execution.results.raceclocker.error.duplicateTeams', {
+                            teams: ((details?.teams as string[]) ?? []).join(', '),
+                        }),
+                    )
+                    break
+                case 'RACECLOCKER_NO_RESULTS':
+                    feedback.error(t('event.competition.execution.results.raceclocker.error.noResults'))
+                    break
+                default:
+                    feedback.error(t('common.error.unexpected'))
+            }
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.success'))
+            setReloadData(!reloadData)
         }
     }
 
@@ -704,6 +784,14 @@ const CompetitionExecution = () => {
                     )}
                 </Box>
             )}
+            <Box sx={{my: 2}}>
+                <Button
+                    variant={'outlined'}
+                    size={'small'}
+                    onClick={() => setShowRaceClockerConfig(true)}>
+                    {t('event.competition.execution.raceclocker.config.open')}
+                </Button>
+            </Box>
             <Stack spacing={6}>
                 {sortedRounds.map((round, roundIndex) => (
                     <CompetitionExecutionRound
@@ -723,6 +811,7 @@ const CompetitionExecution = () => {
                         smallScreenLayout={smallScreenLayout}
                         setStartListMatch={setStartListMatch}
                         setResultImportMatch={setResultImportMatch}
+                        pullRaceClockerResults={handlePullRaceClockerResults}
                         handleDownloadStartListPDF={matchId =>
                             handleDownloadStartList(matchId, 'PDF')
                         }
@@ -1052,11 +1141,33 @@ const CompetitionExecution = () => {
                                     currentRoundMatches.length >
                                     selectedMatchIndex(selectedEditMatch) + 1
                                 }>
-                                <FormInputDateTime
-                                    name={'startTime'}
-                                    label={t('event.competition.execution.match.startTime')}
-                                    timeSteps={{minutes: 1}}
-                                />
+                                {slotManagedMatchIds.has(selectedEditMatch.id) ? (
+                                    <Box sx={{mb: 2}}>
+                                        <Typography sx={{fontSize: '1.1rem', mb: 1}}>
+                                            {t('event.competition.execution.match.startTime')}
+                                        </Typography>
+                                        <Typography>
+                                            {selectedEditMatch.startTime
+                                                ? format(
+                                                      new Date(selectedEditMatch.startTime),
+                                                      t('format.datetime'),
+                                                  )
+                                                : '—'}
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            color="textSecondary"
+                                            sx={{mt: 0.5}}>
+                                            {t('event.schedule.managedHint')}
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <FormInputDateTime
+                                        name={'startTime'}
+                                        label={t('event.competition.execution.match.startTime')}
+                                        timeSteps={{minutes: 1}}
+                                    />
+                                )}
                                 <Box sx={{mt: 4}}>
                                     <LoadingButton
                                         pending={submitting}
@@ -1147,6 +1258,12 @@ const CompetitionExecution = () => {
                 open={showStartListConfigDialog}
                 onClose={closeStartListConfigDialog}
                 onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
+            />
+            <RaceClockerConfigDialog
+                open={showRaceClockerConfig}
+                eventId={eventId}
+                competitionId={competitionId}
+                onClose={() => setShowRaceClockerConfig(false)}
             />
             <MatchResultUploadDialog
                 open={showMatchResultImportConfigDialog}

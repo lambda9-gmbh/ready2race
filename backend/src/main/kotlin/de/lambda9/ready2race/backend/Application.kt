@@ -40,10 +40,13 @@ fun main(args: Array<String>): Unit = runBlocking {
     }.parseConfig()
     val (env, ds) = Env.create(config)
 
+    // Der issue/94-Merge bringt Migrationen mit älteren Versionsnummern als bereits angewendete —
+    // ohne outOfOrder schlägt der Start auf bestehenden Datenbanken fehl.
     Flyway(
         Flyway.configure()
             .dataSource(ds)
             .schemas("ready2race")
+            .outOfOrder(true)
     ).migrate()
 
     initializeDatabase(env)

@@ -93,6 +93,7 @@ fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCou
         startTime = scheduledStartTime,
         startState = AthleteBoardLogic.startState(scheduledStartTime, now, showCountdown),
         teams = teams.map { it.toAthleteBoardTeam() },
+        pendingRound = pendingRound,
     )
 
 fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(

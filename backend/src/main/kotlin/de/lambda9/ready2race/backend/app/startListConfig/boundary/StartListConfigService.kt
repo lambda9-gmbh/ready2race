@@ -53,6 +53,7 @@ object StartListConfigService {
             name = request.name
             colParticipantFirstname = request.colParticipantFirstname
             colParticipantLastname = request.colParticipantLastname
+            colParticipantFullname = request.colParticipantFullname
             colParticipantGender = request.colParticipantGender
             colParticipantRole = request.colParticipantRole
             colParticipantYear = request.colParticipantYear
@@ -61,6 +62,7 @@ object StartListConfigService {
             colTeamName = request.colTeamName
             colTeamStartNumber = request.colTeamStartNumber
             colTeamRegistrationId = request.colTeamRegistrationId
+            colTeamMatchId = request.colTeamMatchId
             colTeamRatingCategory = request.colTeamRatingCategory
             colTeamClub = request.colTeamClub
             colTeamDeregistered = request.colTeamDeregistered
@@ -72,6 +74,8 @@ object StartListConfigService {
             colCompetitionName = request.colCompetitionName
             colCompetitionShortName = request.colCompetitionShortName
             colCompetitionCategory = request.colCompetitionCategory
+            noHeader = request.noHeader
+            appendRatingToShortName = request.appendRatingToShortName
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()

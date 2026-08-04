@@ -4,6 +4,9 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
+import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.*
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
@@ -105,6 +108,8 @@ object LiveDashboardService {
             fun buildMatchDto(match: Record): App<Nothing, LiveDashboardMatchDto> = KIO.comprehension {
                 val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
                 val startTime = match[COMPETITION_MATCH.START_TIME]
+                val startedAt = match[COMPETITION_MATCH.STARTED_AT]
+                val finishedAt = match[COMPETITION_MATCH.FINISHED_AT]
                 val running = match[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
 
                 val teams = !(teamsByMatch[matchId] ?: emptyList())
@@ -116,7 +121,7 @@ object LiveDashboardService {
                 KIO.ok(
                     LiveDashboardMatchDto(
                         matchId = matchId,
-                        state = LiveDashboardLogic.deriveMatchState(running, startTime, teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) }),
+                        state = LiveDashboardLogic.deriveMatchState(running, startTime, finishedAt, teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) }),
                         competitionId = match.get("competition_id", UUID::class.java)!!,
                         competitionName = match.get("competition_name", String::class.java) ?: "",
                         categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
@@ -124,17 +129,68 @@ object LiveDashboardService {
                         matchName = match.get("match_name", String::class.java),
                         executionOrder = match[COMPETITION_SETUP_MATCH.EXECUTION_ORDER] ?: 0,
                         startTime = startTime,
+                        startedAt = startedAt,
                         currentlyRunning = running,
-                        elapsedMinutes = if (running) startTime?.let { Duration.between(it, now).toMinutes().coerceAtLeast(0) } else null,
+                        elapsedMinutes = startedAt?.let { Duration.between(it, now).toMinutes().coerceAtLeast(0) },
                         teams = teams,
                     )
                 )
             }
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
+            val pendingSlots = !getPendingSlots(eventId, matches.map { it.matchId }.toSet())
 
-            KIO.ok(ApiResponse.ETagged(LiveDashboardDto(LiveDashboardLogic.selectForScope(matches, scope))))
+            KIO.ok(
+                ApiResponse.ETagged(
+                    LiveDashboardDto(
+                        matches = LiveDashboardLogic.selectForScope(matches, scope),
+                        // Unabhängig vom Scope: auch im LIVE-Ausschnitt soll sichtbar bleiben, was
+                        // als nächstes ansteht, auch wenn die Runde noch nicht erzeugt ist.
+                        pendingSlots = pendingSlots,
+                    )
+                )
+            )
         }
+
+    /**
+     * WAITING-Slots des Events als Platzhalter (Task 14) - aufsteigend nach Startzeit, da
+     * [EventScheduleRepo.getSlots] bereits so sortiert liefert. Die "nur WAITING zählt"-Regel
+     * steckt gemeinsam mit der Athleten-Anzeige in [EventScheduleLogic.pendingSlotOrNull]: SKIPPED,
+     * FREE, LINKED und OBSOLETE liefern dort keinen Eintrag - LINKED ist bereits ein echter Lauf
+     * und steckt in [matches], die anderen sind kein Kandidat für einen künftigen Lauf.
+     */
+    private fun getPendingSlots(eventId: UUID, matchIds: Set<UUID>): App<Nothing, List<PendingSlotDto>> = KIO.comprehension {
+        val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
+
+        val result = slotRecords.mapNotNull { r ->
+            EventScheduleLogic.pendingSlotOrNull(
+                slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
+                setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
+                startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                competitionId = r.get("competition_id", UUID::class.java),
+                competitionName = r.get("competition_name", String::class.java),
+                roundName = r.get("round_name", String::class.java),
+                matchName = r.get("match_name", String::class.java),
+                skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+                roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
+                matchExists = r.get("match_exists", Boolean::class.java) == true,
+            )
+        }
+            // Zwei getrennte Reads — wenn zwischen ihnen eine Runde entsteht oder gelöscht wird,
+            // könnte derselbe Lauf doppelt auftauchen; echte Einträge gewinnen.
+            .filterNot { it.setupMatchId in matchIds }
+            .map { slot ->
+                PendingSlotDto(
+                    slotId = slot.slotId,
+                    startTime = slot.startTime,
+                    competitionName = slot.competitionName,
+                    roundName = slot.roundName,
+                    matchName = slot.matchName,
+                )
+            }
+
+        KIO.ok(result)
+    }
 
     /**
      * Personendaten einer Mannschaft für den Detail-Dialog: Aufstellung, Ummeldungen und die
@@ -200,19 +256,33 @@ object LiveDashboardService {
         // die sichere Wahl, solange der Zeitplan Lücken hat: Startzeiten stehen erst fest, wenn die
         // Läufe einer Runde gesetzt sind, und die Kette würde sonst den falschen Lauf greifen.
         val chainEnabled = !EventRepo.getAutoActivateNextMatch(eventId).orDie()
-        val candidates = if (chainEnabled) {
-            val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
-            (!LiveDashboardRepo.getActivationCandidates(eventId).orDie())
-                .filter { candidate ->
-                    val start = candidate[COMPETITION_MATCH.START_TIME]
-                    finishedStart == null || (start != null && start > finishedStart)
-                }
-        } else {
-            emptyList()
-        }
 
         !setRunning(matchId, false, userId)
-        !activateNext(candidates, userId)
+        !CompetitionMatchRepo.update(matchId) {
+            finishedAt = LocalDateTime.now()
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        if (chainEnabled) {
+            val slotTime = !EventScheduleRepo.getSlotBySetupMatch(matchId).orDie()
+            // Bei teilweise gepflegtem Zeitstrahl entscheidet jeder Lauf für sich — ein Lauf ohne
+            // Slot nutzt die Legacy-Logik, auch wenn andere Läufe Slots haben.
+            if (slotTime != null) {
+                // Zeitstrahl-Modus: der Kette entlang der Slots folgen, an wartenden Slots geduldig
+                // sein (createNewRound stößt die Kette dann später wieder an).
+                !ScheduleChainService.decideAndActivate(eventId, after = slotTime, userId)
+            } else {
+                // Legacy: Events ohne Zeitstrahl behalten das bisherige Verhalten.
+                val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
+                val candidates = (!LiveDashboardRepo.getActivationCandidates(eventId).orDie())
+                    .filter { candidate ->
+                        val start = candidate[COMPETITION_MATCH.START_TIME]
+                        finishedStart == null || (start != null && start > finishedStart)
+                    }
+                !activateNext(candidates, userId)
+            }
+        }
 
         noData
     }
@@ -230,6 +300,33 @@ object LiveDashboardService {
         }
 
         !setRunning(matchId, running, userId)
+
+        noData
+    }
+
+    /**
+     * Markiert den echten Start eines Laufs — getrennt von der geplanten Startzeit. Idempotent:
+     * ein zweiter Aufruf verschiebt den Zeitstempel nicht mehr, er ist nur beim ersten Mal gesetzt.
+     * Zugleich geht der Lauf auf "aktiv", da "gestartet" ohne "laufend" keinen Sinn ergibt.
+     */
+    fun markMatchStarted(
+        eventId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<LiveDashboardError, ApiResponse.NoData> = KIO.comprehension {
+        val exists = !EventRepo.exists(eventId).orDie()
+        if (!exists) {
+            return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
+        }
+
+        !CompetitionMatchRepo.update(matchId) {
+            if (startedAt == null) {
+                startedAt = LocalDateTime.now()
+            }
+            currentlyRunning = true
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
 
         noData
     }

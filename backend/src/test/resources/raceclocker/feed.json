@@ -1,0 +1,261 @@
+[
+  {
+    "Name": "Henrik Andersen",
+    "Bib number": "4",
+    "Club": "Aabenraa RK",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "AF1 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000004"
+      ]
+    ],
+    "Start": "11:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "11:02:22.5",
+    "Result": "00:02:22.5",
+    "Result in seconds": "142.5",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Piet Hauschild",
+    "Bib number": "13",
+    "Club": "Wilhelmshavener RV",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "AF1 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000013"
+      ]
+    ],
+    "Start": "00:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "00:00:00.0",
+    "Result": "DNF",
+    "Result in seconds": "0",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Mats Nielsen",
+    "Bib number": "7",
+    "Club": "Sønderborg Roklub",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "AF4 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000007"
+      ]
+    ],
+    "Start": "11:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "11:02:27.7",
+    "Result": "00:02:27.7",
+    "Result in seconds": "147.7",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Nils Boysen",
+    "Bib number": "10",
+    "Club": "Lübecker RG",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "AF4 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000010"
+      ]
+    ],
+    "Start": "00:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "00:00:00.0",
+    "Result": "DNS",
+    "Result in seconds": "0",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Moritz Korthals",
+    "Bib number": "3",
+    "Club": "Flensburger RC",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "VF4 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000003"
+      ]
+    ],
+    "Start": "11:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "11:02:23.1",
+    "Result": "00:02:23.1",
+    "Result in seconds": "143.1",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Thore Hansen",
+    "Bib number": "6",
+    "Club": "RC Eckernförde",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "VF4 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000006"
+      ]
+    ],
+    "Start": "00:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "00:00:00.0",
+    "Result": "DQ",
+    "Result in seconds": "0",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Lasse Jürgensen",
+    "Bib number": "1",
+    "Club": "Ruderklub Flensburg",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "None",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000001"
+      ]
+    ],
+    "Start": "10:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "10:02:18.4",
+    "Result": "00:02:18.4",
+    "Result in seconds": "138.4",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Dennis Gustafsson",
+    "Bib number": "2",
+    "Club": "Malmö RK",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "None",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [],
+    "Start": "10:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "10:02:20.1",
+    "Result": "00:02:20.1",
+    "Result in seconds": "140.1",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "RaceInfo": {
+      "Name": "R2R Devtest — Läufe (Wave starts)",
+      "Date": "2026-07-19",
+      "Sport": "Rowing",
+      "StartType": "Wave starts ",
+      "Distance": "250",
+      "DistanceUnit": "m",
+      "Splits": "0",
+      "Location": {
+        "Longitude": "4.850228",
+        "Latitude": "52.328875"
+      },
+      "URL": "",
+      "HasCategories": true,
+      "HasBibNumbers": true,
+      "HasAge": false,
+      "HasGender": false,
+      "HasClubNames": true,
+      "HasHandicaps": false,
+      "HasCustom": false,
+      "CustomLabel": "Custom"
+    }
+  }
+]

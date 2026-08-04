@@ -1,6 +1,6 @@
 import EntityTable, {ExtendedGridColDef} from "@components/EntityTable.tsx";
 import {BaseEntityTableProps} from "@utils/types.ts";
-import {MatchResultImportConfigDto, StartListConfigDto} from "@api/types.gen.ts";
+import {MatchResultImportConfigDto} from "@api/types.gen.ts";
 import {GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
 import {PaginationParameters} from "@utils/ApiUtils.ts";
 import {
@@ -22,7 +22,7 @@ const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParame
         query: {...paginationParameters}
     })
 
-const deleteRequest = (dto: StartListConfigDto) =>
+const deleteRequest = (dto: MatchResultImportConfigDto) =>
     deleteMatchResultImportConfig({path: {matchResultImportConfigId: dto.id}})
 
 const MatchResultImportConfigTable = (props: BaseEntityTableProps<MatchResultImportConfigDto>) => {

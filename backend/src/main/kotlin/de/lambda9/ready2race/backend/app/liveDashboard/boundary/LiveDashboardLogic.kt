@@ -42,9 +42,11 @@ object LiveDashboardLogic {
     fun deriveMatchState(
         currentlyRunning: Boolean,
         startTime: LocalDateTime?,
+        finishedAt: LocalDateTime?,
         teamResults: List<Boolean>,
     ): LiveDashboardMatchState = when {
         currentlyRunning -> LiveDashboardMatchState.RUNNING
+        finishedAt != null -> LiveDashboardMatchState.FINISHED
         teamResults.isNotEmpty() && teamResults.all { it } -> LiveDashboardMatchState.FINISHED
         startTime == null -> LiveDashboardMatchState.UNSCHEDULED
         else -> LiveDashboardMatchState.UPCOMING

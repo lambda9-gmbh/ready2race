@@ -492,7 +492,7 @@
     "submissionNeedsVerification": "Submitted results must be verified",
     "allowParticipantSelfRegistration": "Allow participants to register themselves",
     "autoActivateNextMatch": "Activate next races automatically",
-    "autoActivateNextMatchHint": "When a referee finishes a race in the dashboard, the races of the next start time become active. Only useful with a complete schedule — otherwise the chain picks the wrong race.",
+    "autoActivateNextMatchHint": "When a referee finishes a race in the dashboard, the races of the next start time become active. Only useful with a complete schedule — otherwise the chain picks the wrong race. With a maintained schedule (Schedule tab), the chain follows the slots and waits at races that haven't been set yet.",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -689,6 +689,7 @@
           "required": "Round must be held",
           "lockedInfo": "This round has already been started and can no longer be edited. Changes are only possible for following rounds.",
           "isQualification": "Qualification round",
+          "isQualificationHint": "Also decides which of the two RaceClocker races results are looked for first: the time trial race when marked, the heats race otherwise.",
           "finals": {
             "long": {
               "final": {
@@ -890,7 +891,8 @@
           "upload": "Upload match results",
           "type": {
             "form": "into Form",
-            "XLS": "as XLS-File"
+            "XLS": "as XLS-File",
+            "RACECLOCKER": "from RaceClocker"
           },
           "error": {
             "WRONG_TEAM_COUNT": "The team count is different from expected - actual: {{actual}}, expected: {{expected}}",
@@ -938,6 +940,18 @@
           "document": {
             "download": {
               "error": "An error has occurred when downloading the result document"
+            }
+          },
+          "raceclocker": {
+            "success": "Results taken over from RaceClocker",
+            "error": {
+              "urlMissing": "No RaceClocker results URL is configured for this competition.",
+              "urlInvalid": "The configured RaceClocker URL is invalid. An address on raceclocker.com is expected.",
+              "unreachable": "The results could not be loaded from RaceClocker. Please check the URL and the connection.",
+              "matchNotInFeed": "There are no entries for this heat in RaceClocker. Has the start list been imported there yet? If it was exported from an earlier version of the round, it has to be exported again.",
+              "duplicateTeams": "RaceClocker contains duplicate crews ({{teams}}). Please clean them up there and pull again.",
+              "noResults": "There are no times for this heat in RaceClocker yet.",
+              "matchIsBye": "This heat is a bye: the team moves on without racing, so there are no results to pull."
             }
           }
         },
@@ -1005,6 +1019,18 @@
               "unexpected": "An error has occurred when deleting the substitution"
             },
             "success": "Substitution successfully deleted"
+          }
+        },
+        "raceclocker": {
+          "config": {
+            "open": "RaceClocker settings",
+            "title": "RaceClocker settings",
+            "hint": "RaceClocker needs two races per competition: one of type \"individual starts (time trial)\" for the qualification round and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here. ready2race determines by itself which one applies to a given heat.",
+            "timeTrialUrl": "Results address for time trial",
+            "heatsUrl": "Results address for heats",
+            "importHint": "The RaceClocker presets export without a header row, because RaceClocker would otherwise import that row as a participant. Map the columns by their position when importing into RaceClocker – the internal identifier in particular onto \"Extra info\".",
+            "saved": "RaceClocker settings saved",
+            "invalid": "Please enter addresses on raceclocker.com."
           }
         }
       },
@@ -1213,6 +1239,7 @@
       "points": "Points",
       "matchTeams": "Match Teams",
       "executionOrder": "Execution Order: {{order}}",
+      "pendingRound": "Race not yet set",
       "athleteBoard": {
         "running": "Current race",
         "upcoming": "Next race",
@@ -1257,6 +1284,8 @@
       "noMatches": "No matches available.",
       "noStartTime": "No start time scheduled",
       "runningSince": "Running for {{duration}}",
+      "plannedAt": "planned {{time}}",
+      "startedAtLabel": "started {{time}}",
       "state": {
         "RUNNING": "Running",
         "FINISHED": "Finished",
@@ -1281,6 +1310,7 @@
         "finished": "Race finished — next races activated",
         "deactivate": "Deactivate race",
         "activate": "Activate race",
+        "start": "Start",
         "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
         "openResults": {
           "title": "Open results",
@@ -1316,6 +1346,69 @@
         "NOT_CHECKED": "Pending",
         "beforeStart": "{{delta}} before start",
         "afterStart": "{{delta}} after start"
+      }
+    },
+    "schedule": {
+      "tab": "Schedule",
+      "slot": "Slot",
+      "addSlot": "Add slot",
+      "slotType": "Type",
+      "freeSlot": "Free slot",
+      "matchSlot": "Race",
+      "competition": "Competition",
+      "round": "Round",
+      "match": "Race",
+      "startTime": "Start time",
+      "status": "Status",
+      "duration": "Duration (minutes)",
+      "durationValue": "{{minutes}} min",
+      "state": {
+        "FREE": "Program item",
+        "WAITING": "Race not yet set",
+        "LINKED": "Linked",
+        "OBSOLETE": "Obsolete",
+        "SKIPPED": "Skipped",
+        "finished": "Finished"
+      },
+      "skip": "Skip",
+      "unskip": "Undo skip",
+      "skipConfirm": "Really skip slot \"{{label}}\" at {{time}}? The chain will then leave it out.",
+      "managedHint": "Managed via the schedule",
+      "unplanned": "Unplanned races",
+      "noUnplanned": "All races are scheduled.",
+      "noSlots": "No schedule has been created for this event yet.",
+      "plan": "Schedule",
+      "adjust": "Adjust schedule",
+      "import": "Excel import",
+      "importDialog": {
+        "title": "Excel import",
+        "choose": "Choose file",
+        "replacesAll": "The import replaces all existing slots.",
+        "runningWarning": "The current schedule already contains started or finished races. These will also be replaced by the import.",
+        "row": "Row",
+        "time": "Time",
+        "text": "Text",
+        "rowLinked": "Linked: {{target}}",
+        "rowFree": "Free slot",
+        "rowAmbiguous": "Not unique — will be imported as a free slot",
+        "rowDuplicate": "Duplicate in the file — import blocked",
+        "apply": "Import"
+      },
+      "shift": {
+        "title": "Adjust schedule",
+        "fromSlot": "Start slot",
+        "modePlus": "+X minutes",
+        "modeSetTime": "Set start time",
+        "modeCompress": "Catch up by",
+        "targetSlot": "Target slot",
+        "minutes": "Minutes",
+        "newTime": "New start time",
+        "preview": "Preview",
+        "apply": "Apply",
+        "old": "Old",
+        "new": "New",
+        "unchanged": "\"Apply\" is only available while the form has not changed since the preview. Please run the preview again.",
+        "impossible": "Cannot catch up — only {{max}} minutes of slack. Choose a later target slot."
       }
     },
     "results": {
@@ -1625,6 +1718,7 @@
         "startlists": "Start-list configurations",
         "tableHint": "Define the columns for the CSV export of start lists when conducting competitions.",
         "name": "Name",
+        "noHeader": "Export without header row",
         "col": {
           "heading": "Columns",
           "participant": {
@@ -1634,7 +1728,8 @@
             "gender": "Gender",
             "role": "Role",
             "year": "Year of birth",
-            "club": "club"
+            "club": "club",
+            "fullname": "First and last name"
           },
           "club": {
             "heading": "Registering club",
@@ -1644,7 +1739,8 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Start number",
-            "registrationId": "Internal team identifier",
+            "registrationId": "Internal team identifier (across rounds)",
+            "matchId": "Internal heat identifier (per round)",
             "ratingCategory": "Rating category",
             "club": "Club (summarized)",
             "deregistered": "Deregistered",
@@ -1664,11 +1760,12 @@
             "identifier": "Identifier",
             "name": "Name",
             "shortName": "Short name",
+            "appendRatingToShortName": "Append rating category to the short name",
             "category": "Category"
           }
         },
         "error": {
-          "tooFewCols": "Please specify at least one column."
+          "tooFewCols": "Please specify at least one column, including one of the two internal identifiers."
         }
       }
     }
