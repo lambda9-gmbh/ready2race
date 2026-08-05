@@ -1048,7 +1048,8 @@
         "incomplete": {
           "title": "Denne tidtagning er endnu ikke klar til brug",
           "heatsUrl": "Resultatadressen for heat-løbet mangler – uden den kan der ikke hentes resultater fra RaceClocker.",
-          "startlistRounds": "Startlistepresettet mangler – uden det kan der ikke eksporteres en startliste som CSV."
+          "startlistRounds": "Startlistepresettet mangler – uden det kan der ikke eksporteres en startliste som CSV.",
+          "link": "Gå til tidtagningsindstillingerne"
         },
         "saved": "Tidtagningsindstillinger gemt",
         "invalid": "Angiv adresser på raceclocker.com."

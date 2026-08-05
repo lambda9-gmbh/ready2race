@@ -1048,7 +1048,8 @@
         "incomplete": {
           "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
           "heatsUrl": "Es fehlt die Ergebnis-Adresse des Läufe-Rennens – ohne sie lassen sich keine Ergebnisse aus RaceClocker holen.",
-          "startlistRounds": "Es fehlt das Startlisten-Preset – ohne es lässt sich keine Startliste als CSV exportieren."
+          "startlistRounds": "Es fehlt das Startlisten-Preset – ohne es lässt sich keine Startliste als CSV exportieren.",
+          "link": "Zu den Zeitnahme-Einstellungen"
         },
         "saved": "Zeitnahme-Einstellungen gespeichert",
         "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."

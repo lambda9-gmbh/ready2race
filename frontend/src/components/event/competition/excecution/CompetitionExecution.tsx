@@ -1,6 +1,7 @@
 import {
     createNextCompetitionRound,
     downloadStartList,
+    getTimingConfig,
     pullMatchResultsFromRaceClocker,
     getCompetitionExecutionProgress,
     getEventSchedule,
@@ -9,6 +10,8 @@ import {
     uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {
+    Alert,
+    AlertTitle,
     Box,
     Checkbox,
     Divider,
@@ -27,9 +30,9 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material'
-import {competitionRoute, eventRoute} from '@routes'
+import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {BaseSyntheticEvent, Fragment, useMemo, useRef, useState} from 'react'
 import {format} from 'date-fns'
 import LoadingButton from '@components/form/LoadingButton.tsx'
@@ -70,6 +73,10 @@ import {
     emptyEditMatchForm,
     mapMatchDtoToEditMatchForm,
 } from '@components/event/competition/excecution/editMatchForm.ts'
+import {
+    mapDtoToTimingForm,
+    timingConfigWarnings,
+} from '@components/event/competition/timing/timingConfigForm.ts'
 
 type EnterResultsTeam = {
     registrationId: string
@@ -126,6 +133,14 @@ const CompetitionExecution = () => {
             ),
         [eventSchedule],
     )
+
+    const {data: timingConfig} = useFetch(
+        signal => getTimingConfig({signal, path: {eventId, competitionId}}),
+        {deps: [eventId, competitionId]},
+    )
+
+    // Dieselbe Prüfung wie im Zeitnahme-Tab, damit beide Stellen nicht auseinanderlaufen.
+    const timingWarnings = timingConfig ? timingConfigWarnings(mapDtoToTimingForm(timingConfig)) : []
 
     const {data: progressDto, pending: progressDtoPending} = useFetch(
         signal =>
@@ -742,6 +757,21 @@ const CompetitionExecution = () => {
 
     return progressDto && sortedRounds ? (
         <Box>
+            {timingWarnings.length > 0 && (
+                <Alert variant={'outlined'} severity={'warning'} sx={{my: 2}}>
+                    <AlertTitle>
+                        <Trans i18nKey={'event.competition.timing.incomplete.title'} />
+                    </AlertTitle>
+                    {timingWarnings.map(warning => (
+                        <Typography key={warning}>
+                            {t(`event.competition.timing.incomplete.${warning}`)}
+                        </Typography>
+                    ))}
+                    <InlineLink from={competitionIndexRoute.fullPath} search={{tab: 'timing'}}>
+                        <Trans i18nKey={'event.competition.timing.incomplete.link'} />
+                    </InlineLink>
+                </Alert>
+            )}
             {!allRoundsCreated && (
                 <Box sx={{my: 2, display: 'flex', alignItems: 'center'}}>
                     <LoadingButton
@@ -800,6 +830,7 @@ const CompetitionExecution = () => {
                         handleDownloadStartListCSV={matchId =>
                             handleDownloadStartList(matchId, 'CSV')
                         }
+                        timingSystem={timingConfig?.timingSystem}
                     />
                 ))}
             </Stack>

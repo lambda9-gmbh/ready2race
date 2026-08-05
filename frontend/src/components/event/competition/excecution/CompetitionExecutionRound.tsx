@@ -1,4 +1,9 @@
-import {CompetitionMatchDto, CompetitionRoundDto, StartListFileType} from '@api/types.gen.ts'
+import {
+    CompetitionMatchDto,
+    CompetitionRoundDto,
+    StartListFileType,
+    TimingConfigDto,
+} from '@api/types.gen.ts'
 import {
     Accordion,
     AccordionDetails,
@@ -35,6 +40,7 @@ import {format} from 'date-fns'
 import Checkbox from '@mui/material/Checkbox'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
+import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
 
 type Props = {
     round: CompetitionRoundDto
@@ -52,10 +58,8 @@ type Props = {
     pullRaceClockerResults: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListCSV: (competitionMatchId: string) => Promise<void>
+    timingSystem: TimingConfigDto['timingSystem']
 }
-
-const MATCH_RESULT_OPTIONS = ['form', 'XLS', 'RACECLOCKER'] as const
-type MatchResultOption = (typeof MATCH_RESULT_OPTIONS)[number]
 
 const CompetitionExecutionRound = ({
     round,
@@ -67,6 +71,7 @@ const CompetitionExecutionRound = ({
     pullRaceClockerResults,
     handleDownloadStartListPDF,
     handleDownloadStartListCSV,
+    timingSystem,
     ...props
 }: Props) => {
     const {t} = useTranslation()
@@ -362,7 +367,7 @@ const CompetitionExecutionRound = ({
                                                         break
                                                 }
                                             }}
-                                            items={MATCH_RESULT_OPTIONS.map(
+                                            items={matchResultOptions(timingSystem).map(
                                                 o =>
                                                     ({
                                                         id: o,
