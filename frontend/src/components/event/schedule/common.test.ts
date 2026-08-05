@@ -7,6 +7,7 @@ import {
     hasBlockingImportRows,
     hasRunningOrFinishedSlots,
     importRowChipColor,
+    isCancellable,
     isEditable,
     parseMaxReductionMinutes,
     slotLabel,
@@ -115,6 +116,33 @@ describe('isEditable', () => {
                     state: 'OBSOLETE',
                     matchId: null,
                     setupMatchId: crypto.randomUUID(),
+                }),
+            ),
+        ).toBe(false)
+    })
+})
+
+describe('isCancellable', () => {
+    it('offers the cancel action for a slot whose match has not begun', () => {
+        expect(isCancellable(slot('2026-08-17T08:00:00', {state: 'LINKED'}))).toBe(true)
+    })
+
+    it('hides the cancel action for an activated match that has no recorded start yet', () => {
+        // Befund B: zwischen "Boote gehen an den Start" und der ersten Meldung der Zeitnahme ist
+        // matchStartedAt noch leer - der Server lehnt die Absage trotzdem ab.
+        expect(
+            isCancellable(
+                slot('2026-08-17T08:00:00', {state: 'LINKED', matchCurrentlyRunning: true}),
+            ),
+        ).toBe(false)
+    })
+
+    it('hides the cancel action once the timing has reported a start', () => {
+        expect(
+            isCancellable(
+                slot('2026-08-17T08:00:00', {
+                    state: 'LINKED',
+                    matchStartedAt: '2026-08-17T08:01:00',
                 }),
             ),
         ).toBe(false)

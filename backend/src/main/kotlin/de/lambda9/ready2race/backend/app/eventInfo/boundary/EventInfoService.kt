@@ -205,6 +205,15 @@ object EventInfoService {
      * eingegrenzt hat (Athleten-Anzeige: 30 Minuten, Kiosk: keine). Ohne sie blieben Platzhalter
      * beliebig lange in "nächste Läufe" stehen und verdrängten - der Block ist auf [limit]
      * gedeckelt - die tatsächlich anstehenden Läufe.
+     *
+     * Hier fallen außerdem die ECHTEN Läufe abgesagter Slots heraus
+     * ([EventScheduleLogic.skippedMatchIdOrNull]). Die Lauf-Abfragen selbst
+     * (`CompetitionMatchRepo.getUpcomingMatches`/`getUpcomingMatchesForBoard`) kennen den
+     * Zeitstrahl nicht; solange die Runde nicht gesetzt ist, fängt die Absage schon
+     * [EventScheduleLogic.pendingSlotOrNull] ab, danach nur noch dieser Filter. Er sitzt bewusst
+     * an dieser Stelle statt als weitere SQL-Bedingung: die Slots sind für die Platzhalter ohnehin
+     * schon gelesen, und beide öffentlichen Ansichten (Kiosk und Athleten-Anzeige) laufen durch
+     * genau diese Funktion - eine Regel, ein Ort.
      */
     private fun mergeWithPendingPlaceholders(
         eventId: UUID,
@@ -216,6 +225,16 @@ object EventInfoService {
         val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
         val realMatchIds = real.map { it.matchId }.toSet()
         val now = LocalDateTime.now()
+
+        val skippedMatchIds = slotRecords.mapNotNull { r ->
+            EventScheduleLogic.skippedMatchIdOrNull(
+                setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
+                skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+                roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
+                matchExists = r.get("match_exists", Boolean::class.java) == true,
+            )
+        }.toSet()
+        val upcomingReal = real.filterNot { it.matchId in skippedMatchIds }
 
         fun List<UpcomingCompetitionMatchInfo>.stillUpcoming() =
             filter { AthleteBoardLogic.isStillUpcoming(it.scheduledStartTime, now, grace) }
@@ -258,7 +277,7 @@ object EventInfoService {
         }
 
         KIO.ok(
-            AthleteBoardLogic.sortByStartTime(real + waitingPlaceholders + freePlaceholders) { it.scheduledStartTime }
+            AthleteBoardLogic.sortByStartTime(upcomingReal + waitingPlaceholders + freePlaceholders) { it.scheduledStartTime }
                 .take(limit)
         )
     }

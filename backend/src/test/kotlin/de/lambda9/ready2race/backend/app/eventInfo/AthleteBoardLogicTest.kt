@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.eventInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
+import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.FreeScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
 import java.time.Duration
@@ -292,6 +294,101 @@ class AthleteBoardLogicTest {
         val placeholders = AthleteBoardLogic.placeholdersFromFreeSlots(listOf(first, second))
 
         assertEquals(listOf("Frühstückspause", "Mittagspause"), placeholders.map { it.name })
+    }
+
+    // --- Absagen an echten Läufen ---
+    //
+    // Zwei Hälften derselben Zeitstrahl-Zeile, die zusammen die Regel "ein abgesagter Lauf steht
+    // nicht in 'nächste Läufe'" ergeben: solange die Runde nicht gesetzt ist, fängt
+    // EventScheduleLogic.pendingSlotOrNull die Absage ab (kein Platzhalter); danach gibt es einen
+    // echten Lauf, den nur EventScheduleLogic.skippedMatchIdOrNull noch herausnimmt. Vorher stand
+    // ein abgesagtes Finale unverändert in der Spalte "Nächster Lauf" der Athleten-Anzeige.
+    // EventInfoService.mergeWithPendingPlaceholders setzt genau diese beiden Funktionen auf
+    // dieselbe Slot-Liste an - hier nachgestellt, ohne Datenbank.
+
+    private data class SlotRow(
+        val setupMatchId: UUID,
+        val matchName: String,
+        val skipped: Boolean,
+        val roundMaterialized: Boolean,
+        val matchExists: Boolean,
+    )
+
+    private fun upcomingMatch(setupMatchId: UUID, matchName: String) =
+        UpcomingCompetitionMatchInfo(
+            matchId = setupMatchId,
+            matchNumber = null,
+            competitionId = UUID.randomUUID(),
+            competitionName = "Mixed Doppelzweier",
+            categoryName = null,
+            scheduledStartTime = now.plusMinutes(20),
+            placeName = null,
+            roundNumber = null,
+            roundName = "Finale",
+            matchName = matchName,
+            executionOrder = 0,
+            teams = emptyList(),
+        )
+
+    /** Wie in EventInfoService: echte Läufe minus die Läufe abgesagter Slots, plus Platzhalter. */
+    private fun upcomingFrom(rows: List<SlotRow>): List<String?> {
+        val real = rows.filter { it.matchExists }.map { upcomingMatch(it.setupMatchId, it.matchName) }
+        val hidden = rows.mapNotNull {
+            EventScheduleLogic.skippedMatchIdOrNull(
+                setupMatchId = it.setupMatchId,
+                skipped = it.skipped,
+                roundMaterialized = it.roundMaterialized,
+                matchExists = it.matchExists,
+            )
+        }.toSet()
+        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(
+            rows.mapNotNull { row ->
+                EventScheduleLogic.pendingSlotOrNull(
+                    slotId = UUID.randomUUID(),
+                    setupMatchId = row.setupMatchId,
+                    startTime = now.plusMinutes(20),
+                    competitionId = UUID.randomUUID(),
+                    competitionName = "Mixed Doppelzweier",
+                    roundName = "Finale",
+                    matchName = row.matchName,
+                    skipped = row.skipped,
+                    roundMaterialized = row.roundMaterialized,
+                    matchExists = row.matchExists,
+                )
+            }
+        )
+        return (real.filterNot { it.matchId in hidden } + placeholders).map { it.matchName }
+    }
+
+    @Test
+    fun cancelledMatchWithMaterializedRoundLeavesUpcoming() {
+        val rows = listOf(
+            SlotRow(UUID.randomUUID(), "abgesagt", skipped = true, roundMaterialized = true, matchExists = true),
+        )
+
+        assertEquals(emptyList(), upcomingFrom(rows))
+    }
+
+    @Test
+    fun matchWithoutCancellationStaysInUpcoming() {
+        val rows = listOf(
+            SlotRow(UUID.randomUUID(), "läuft noch", skipped = false, roundMaterialized = true, matchExists = true),
+        )
+
+        assertEquals(listOf("läuft noch"), upcomingFrom(rows))
+    }
+
+    @Test
+    fun cancellationHidesOnlyTheCancelledEntryBeforeAndAfterTheRoundIsSet() {
+        // Ein Slot je Zustand, wie er am Regattatag nebeneinander vorkommt.
+        val rows = listOf(
+            SlotRow(UUID.randomUUID(), "gesetzt, abgesagt", skipped = true, roundMaterialized = true, matchExists = true),
+            SlotRow(UUID.randomUUID(), "gesetzt, fährt", skipped = false, roundMaterialized = true, matchExists = true),
+            SlotRow(UUID.randomUUID(), "wartend, abgesagt", skipped = true, roundMaterialized = false, matchExists = false),
+            SlotRow(UUID.randomUUID(), "wartend", skipped = false, roundMaterialized = false, matchExists = false),
+        )
+
+        assertEquals(listOf("gesetzt, fährt", "wartend"), upcomingFrom(rows))
     }
 
     // --- isStillUpcoming ---

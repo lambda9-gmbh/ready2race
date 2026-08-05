@@ -4,6 +4,7 @@ import {
     computeNowMarkerPercent,
     computeTimelinePositions,
     dashboardEntriesForDay,
+    dashboardMatchState,
     dayOf,
     resolveDashboardDay,
     scheduleSlotsToEntries,
@@ -71,6 +72,18 @@ describe('scheduleSlotState', () => {
         expect(scheduleSlotState(slot('t', {state: 'FREE'}))).toBe('free')
         expect(scheduleSlotState(slot('t', {state: 'SKIPPED'}))).toBe('skipped')
         expect(scheduleSlotState(slot('t', {state: 'OBSOLETE'}))).toBe('skipped')
+    })
+})
+
+describe('dashboardMatchState', () => {
+    it('shows a cancelled match struck through like a cancelled slot, instead of dropping it', () => {
+        expect(dashboardMatchState(match({state: 'SKIPPED'}))).toBe('skipped')
+    })
+
+    it('keeps running and finished ahead of the cancellation', () => {
+        expect(dashboardMatchState(match({state: 'RUNNING'}))).toBe('running')
+        expect(dashboardMatchState(match({state: 'FINISHED'}))).toBe('finished')
+        expect(dashboardMatchState(match({state: 'UPCOMING'}))).toBe('linked')
     })
 })
 

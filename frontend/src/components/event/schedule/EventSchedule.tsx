@@ -43,7 +43,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
-import {groupSlotsByDay, isEditable, slotLabel, slotsInRound} from './common.ts'
+import {groupSlotsByDay, isCancellable, isEditable, slotLabel, slotsInRound} from './common.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
@@ -523,18 +523,24 @@ const EventSchedule = () => {
                                                                     </IconButton>
                                                                 </Tooltip>
                                                             ) : (
-                                                                <Tooltip
-                                                                    title={t(
-                                                                        slot.setupRoundId
-                                                                            ? 'event.schedule.skip'
-                                                                            : 'event.schedule.skipFree',
-                                                                    )}>
-                                                                    <IconButton
-                                                                        size={'small'}
-                                                                        onClick={() => handleSkip(slot)}>
-                                                                        <EventBusy fontSize={'small'} />
-                                                                    </IconButton>
-                                                                </Tooltip>
+                                                                isCancellable(slot) && (
+                                                                    <Tooltip
+                                                                        title={t(
+                                                                            slot.setupRoundId
+                                                                                ? 'event.schedule.skip'
+                                                                                : 'event.schedule.skipFree',
+                                                                        )}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            onClick={() =>
+                                                                                handleSkip(slot)
+                                                                            }>
+                                                                            <EventBusy
+                                                                                fontSize={'small'}
+                                                                            />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )
                                                             )}
                                                         </Box>
                                                         <Box sx={actionSlotSx}>

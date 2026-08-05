@@ -73,6 +73,9 @@ export const dashboardMatchState = (match: LiveDashboardMatchDto): TimelineEntry
             return 'running'
         case 'FINISHED':
             return 'finished'
+        // Same look as a cancelled slot in the Zeitplan tab: struck through and dimmed, not hidden.
+        case 'SKIPPED':
+            return 'skipped'
         case 'UPCOMING':
         case 'UNSCHEDULED':
         default:

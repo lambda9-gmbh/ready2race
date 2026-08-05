@@ -209,6 +209,7 @@ object EventScheduleRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.STARTED_AT.`as`("match_started_at"),
             COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
+            COMPETITION_MATCH.CURRENTLY_RUNNING,
             roundMaterialized,
         )
             .from(EVENT_SCHEDULE_SLOT)

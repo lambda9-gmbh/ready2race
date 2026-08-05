@@ -39,15 +39,25 @@ object LiveDashboardLogic {
         else -> LiveDashboardInvoiceState.PAID
     }
 
+    /**
+     * [skipped] kommt aus dem Zeitstrahl-Slot des Laufs (siehe
+     * `EventScheduleLogic.skippedMatchIdOrNull`) und steht bewusst HINTER "läuft" und "beendet":
+     * Was tatsächlich passiert ist, schlägt den zurückgenommenen Plan. Ein abgesagter Lauf, der
+     * trotzdem aktiv ist, zeigt deshalb weiter RUNNING statt zu behaupten, es passiere nichts -
+     * dass dieser Zustand gar nicht erst entsteht, sichert die Schutzregel in
+     * `EventScheduleService.setSlotSkipped`.
+     */
     fun deriveMatchState(
         currentlyRunning: Boolean,
         startTime: LocalDateTime?,
         finishedAt: LocalDateTime?,
         teamResults: List<Boolean>,
+        skipped: Boolean = false,
     ): LiveDashboardMatchState = when {
         currentlyRunning -> LiveDashboardMatchState.RUNNING
         finishedAt != null -> LiveDashboardMatchState.FINISHED
         teamResults.isNotEmpty() && teamResults.all { it } -> LiveDashboardMatchState.FINISHED
+        skipped -> LiveDashboardMatchState.SKIPPED
         startTime == null -> LiveDashboardMatchState.UNSCHEDULED
         else -> LiveDashboardMatchState.UPCOMING
     }

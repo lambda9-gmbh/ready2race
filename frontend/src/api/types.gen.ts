@@ -1476,7 +1476,15 @@ export type LiveDashboardMatchDto = {
     teams: Array<LiveDashboardTeamDto>
 }
 
-export type LiveDashboardMatchState = 'RUNNING' | 'FINISHED' | 'UPCOMING' | 'UNSCHEDULED'
+/**
+ * SKIPPED: the schedule slot of this match was cancelled. Unlike the public boards the referee dashboard marks such a match instead of hiding it - the referee has to see the cancellation to be able to undo it in the schedule.
+ */
+export type LiveDashboardMatchState =
+    | 'RUNNING'
+    | 'FINISHED'
+    | 'SKIPPED'
+    | 'UPCOMING'
+    | 'UNSCHEDULED'
 
 export type LiveDashboardParticipantDto = {
     participantId: string

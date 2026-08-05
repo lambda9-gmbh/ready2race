@@ -48,6 +48,10 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
+    // Abgesagt wird gekennzeichnet, nicht versteckt: der Schiedsrichter muss die Absage sehen, um
+    // sie im Zeitplan zurücknehmen zu können. Solange sie steht, gibt es hier aber nichts zu
+    // steuern - aktiviert würde der Lauf sonst wieder abgesagt UND laufend zugleich.
+    const skipped = match.state === 'SKIPPED'
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = match.teams.some(team => team.time || team.place != null || team.failed)
@@ -75,7 +79,11 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         columnGap: 1.5,
                         alignItems: 'baseline',
                     }}>
-                    <Typography variant="subtitle1" fontWeight={700} noWrap>
+                    <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        noWrap
+                        sx={{textDecoration: skipped ? 'line-through' : 'none'}}>
                         {match.matchName ?? match.roundName ?? match.competitionName}
                     </Typography>
                     <Box sx={{justifySelf: 'end', textAlign: 'right'}}>
@@ -124,8 +132,12 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                 fontSize: '0.8rem',
                                 fontWeight: 700,
                                 whiteSpace: 'nowrap',
-                                backgroundColor: running ? 'success.dark' : 'grey.200',
-                                color: running ? 'common.white' : 'grey.900',
+                                backgroundColor: running
+                                    ? 'success.dark'
+                                    : skipped
+                                      ? 'warning.dark'
+                                      : 'grey.200',
+                                color: running || skipped ? 'common.white' : 'grey.900',
                             }}>
                             {running && match.elapsedMinutes != null
                                 ? t('event.liveDashboard.runningSince', {
@@ -280,7 +292,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         </Box>
                     )
                 })}
-                {(onFinish || onSetRunning) && (match.state === 'RUNNING' || onSetRunning) && (
+                {!skipped && (onFinish || onSetRunning) && (match.state === 'RUNNING' || onSetRunning) && (
                     <Stack
                         direction="row"
                         spacing={1}

@@ -12636,9 +12636,14 @@ components:
 
     LiveDashboardMatchState:
       type: string
+      description: >-
+        SKIPPED: the schedule slot of this match was cancelled. Unlike the public boards the referee
+        dashboard marks such a match instead of hiding it - the referee has to see the cancellation
+        to be able to undo it in the schedule.
       enum:
         - RUNNING
         - FINISHED
+        - SKIPPED
         - UPCOMING
         - UNSCHEDULED
 
