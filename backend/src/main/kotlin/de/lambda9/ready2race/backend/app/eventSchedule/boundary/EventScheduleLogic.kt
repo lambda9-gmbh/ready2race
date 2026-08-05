@@ -71,6 +71,21 @@ object EventScheduleLogic {
     }
 
     /**
+     * Ist der Lauf eines Slots schon unterwegs und damit der Absage entzogen? Zwei Quellen, eine
+     * Antwort:
+     * - [startedAt] ist der IST-Start. Er kommt aus der Zeitnahme und ist der harte Beleg.
+     * - [currentlyRunning] ist die Aktivierung durch den Schiedsrichter. Sie geht dem Ist-Start
+     *   voraus: zwischen "Boote gehen an den Start" und "RaceClocker meldet den Start" liegt ein
+     *   Zeitfenster, in dem `started_at` noch leer ist, der Lauf aber längst passiert.
+     *
+     * Nur auf [startedAt] zu schauen, öffnete genau dieses Fenster für eine Absage - der Lauf war
+     * danach abgesagt UND laufend zugleich, und Anzeige wie Dashboard zeigten ihn unverändert. Aus
+     * Sicht des Schiedsrichters ist ein aktivierter Lauf gestartet, also zählt beides.
+     */
+    fun matchUnderway(startedAt: LocalDateTime?, currentlyRunning: Boolean): Boolean =
+        startedAt != null || currentlyRunning
+
+    /**
      * Baut aus einer rohen Zeitstrahl-Zeile einen WAITING-Platzhalter, oder liefert null - für
      * FREE-Slots (keine Setup-Zeile/Kompetition), SKIPPED, LINKED und OBSOLETE. Ersetzt die früher
      * getrennt in Athleten-Anzeige und Live-Dashboard gepflegte "nur WAITING zählt"-Regel: beide
@@ -118,6 +133,45 @@ object EventScheduleLogic {
                 matchName = matchName,
             )
         }
+    }
+
+    /**
+     * Das Gegenstück zu [pendingSlotOrNull] für die andere Seite derselben Zeile: die ID des
+     * ECHTEN Laufs, den ein abgesagter Slot verdeckt - oder null, wenn dieser Slot keinen
+     * abgesagten Lauf trägt. [pendingSlotOrNull] löst nur den Fall "Runde noch nicht gesetzt"
+     * (WAITING) auf; sobald die Runde gesetzt ist, gibt es einen Lauf, und der kennt die Absage
+     * seines Slots nicht. Genau diese Läufe müssen Athleten-Anzeige und Kiosk aus "nächste Läufe"
+     * herausnehmen - ein abgesagter Lauf steht sonst unverändert als nächster Start auf der
+     * öffentlichen Anzeige.
+     *
+     * [matchExists] ist Bedingung, nicht nur Zustandszutat: ohne Lauf gibt es nichts
+     * herauszufiltern (der Slot liefert dann schlicht keinen Platzhalter mehr). Die
+     * Zustandsableitung bleibt die gemeinsame [deriveSlotState], damit "abgesagt" hier nicht
+     * anders bewertet wird als im Zeitplan-Tab, in der Kette und beim Skip selbst.
+     *
+     * Bewusst OHNE Blick auf "läuft gerade": ein Lauf, der trotz Absage aktiv ist, gehört in den
+     * Laufend-Block der Anzeige und nicht ins Nichts. Die Anzeige verschweigt keine Wirklichkeit,
+     * sie nimmt nur den Plan zurück; dass dieser Zustand gar nicht erst entsteht, sichert die
+     * Schutzregel in `EventScheduleService.setSlotSkipped`.
+     */
+    fun skippedMatchIdOrNull(
+        setupMatchId: UUID?,
+        skipped: Boolean,
+        roundMaterialized: Boolean,
+        matchExists: Boolean,
+    ): UUID? {
+        if (setupMatchId == null || !matchExists) {
+            return null
+        }
+
+        val state = deriveSlotState(
+            isFree = false,
+            skipped = skipped,
+            roundMaterialized = roundMaterialized,
+            matchExists = true,
+        )
+
+        return if (state == EventScheduleSlotState.SKIPPED) setupMatchId else null
     }
 
     /**

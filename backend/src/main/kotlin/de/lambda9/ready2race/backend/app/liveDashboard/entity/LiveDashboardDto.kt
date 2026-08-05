@@ -4,7 +4,13 @@ import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import java.time.LocalDateTime
 import java.util.UUID
 
-enum class LiveDashboardMatchState { RUNNING, FINISHED, UPCOMING, UNSCHEDULED }
+/**
+ * [SKIPPED]: Der Zeitstrahl-Slot dieses Laufs ist abgesagt. Anders als auf den öffentlichen
+ * Anzeigen wird der Lauf im Schiedsrichter-Dashboard NICHT versteckt, sondern gekennzeichnet -
+ * der Schiedsrichter muss die Absage sehen, um sie im Zeitplan zurücknehmen zu können (`/unskip`).
+ * Ein still verschwundener Lauf wäre am Steg nicht von einem Anzeigefehler zu unterscheiden.
+ */
+enum class LiveDashboardMatchState { RUNNING, FINISHED, SKIPPED, UPCOMING, UNSCHEDULED }
 
 enum class LiveDashboardInvoiceState { PAID, OPEN, NONE }
 

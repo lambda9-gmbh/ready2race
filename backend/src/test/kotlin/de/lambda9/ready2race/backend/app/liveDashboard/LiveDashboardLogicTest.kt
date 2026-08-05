@@ -206,6 +206,35 @@ class LiveDashboardLogicTest {
         )
     }
 
+    @Test
+    fun cancelledSlotMarksItsMatchAsSkipped() {
+        // Befund A fürs Schiedsrichter-Dashboard: kennzeichnen statt verstecken - der
+        // Schiedsrichter muss die Absage sehen, um sie im Zeitplan zurücknehmen zu können.
+        assertEquals(
+            LiveDashboardMatchState.SKIPPED,
+            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(false, false), skipped = true),
+        )
+    }
+
+    @Test
+    fun cancelledButActiveMatchStillShowsRunning() {
+        // Wirklichkeit schlägt Plan: Der Zustand entsteht seit der Schutzregel in
+        // EventScheduleService.setSlotSkipped nicht mehr neu, Altdaten können ihn aber tragen -
+        // und dann darf das Dashboard nicht behaupten, es passiere gerade nichts.
+        assertEquals(
+            LiveDashboardMatchState.RUNNING,
+            LiveDashboardLogic.deriveMatchState(true, start, null, listOf(false, false), skipped = true),
+        )
+    }
+
+    @Test
+    fun cancelledMatchWithResultsStaysFinished() {
+        assertEquals(
+            LiveDashboardMatchState.FINISHED,
+            LiveDashboardLogic.deriveMatchState(false, start, start.plusMinutes(9), listOf(true, true), skipped = true),
+        )
+    }
+
     // --- selectForScope ---
 
     private fun match(state: LiveDashboardMatchState, name: String) = LiveDashboardMatchDto(
@@ -249,6 +278,22 @@ class LiveDashboardLogicTest {
         val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
 
         assertEquals(listOf("Vorlauf 2"), selected.map { it.matchName })
+    }
+
+    @Test
+    fun liveScopeSkipsCancelledMatchesWhenPickingTheNextOne() {
+        // Der Ausschnitt "was ist jetzt dran" darf nicht auf einem abgesagten Lauf stehen bleiben;
+        // in der Gesamtliste (ALL) bleibt er als gekennzeichneter Eintrag sichtbar.
+        val matches = listOf(
+            match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"),
+            match(LiveDashboardMatchState.SKIPPED, "Vorlauf 2"),
+            match(LiveDashboardMatchState.UPCOMING, "Finale"),
+        )
+
+        val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
+
+        assertEquals(listOf("Finale"), selected.map { it.matchName })
+        assertEquals(3, LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.ALL).size)
     }
 
     @Test

@@ -45,6 +45,18 @@ object LiveDashboardService {
             val checkRecords = !LiveDashboardRepo.getChecks(eventId).orDie()
             val invoiceRecords = !LiveDashboardRepo.getInvoicePaymentsByClub(eventId).orDie()
             val substitutionRecords = !SubstitutionRepo.getByEvent(eventId, null, Privilege.Scope.GLOBAL).orDie()
+            // Einmal gelesen und zweifach genutzt: für die Platzhalter (getPendingSlots) und für die
+            // Absagen, die an echten Läufen hängen. Zwei Reads würden hier auseinanderlaufen können.
+            val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
+
+            val skippedMatchIds = slotRecords.mapNotNull { r ->
+                EventScheduleLogic.skippedMatchIdOrNull(
+                    setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
+                    skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+                    roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
+                    matchExists = r.get("match_exists", Boolean::class.java) == true,
+                )
+            }.toSet()
 
             val context = ParticipantContext(requirementRecords, checkRecords, substitutionRecords)
 
@@ -122,7 +134,13 @@ object LiveDashboardService {
                 KIO.ok(
                     LiveDashboardMatchDto(
                         matchId = matchId,
-                        state = LiveDashboardLogic.deriveMatchState(running, startTime, finishedAt, teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) }),
+                        state = LiveDashboardLogic.deriveMatchState(
+                            currentlyRunning = running,
+                            startTime = startTime,
+                            finishedAt = finishedAt,
+                            teamResults = teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) },
+                            skipped = matchId in skippedMatchIds,
+                        ),
                         competitionId = match.get("competition_id", UUID::class.java)!!,
                         competitionName = match.get("competition_name", String::class.java) ?: "",
                         categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
@@ -139,7 +157,7 @@ object LiveDashboardService {
             }
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
-            val pendingSlots = !getPendingSlots(eventId, matches.map { it.matchId }.toSet())
+            val pendingSlots = getPendingSlots(slotRecords, matches.map { it.matchId }.toSet())
             val chainProgressionMode = !EventRepo.getChainProgressionMode(eventId).orDie()
 
             KIO.ok(
@@ -164,10 +182,11 @@ object LiveDashboardService {
      * (Programmpunkte) kommen zusätzlich über [EventScheduleLogic.freeSlotOrNull] hinzu - anders
      * als bei der Athleten-Anzeige/dem Kiosk ist das hier gewollt: Schiedsrichter sollen auch
      * Pausen im Ablauf sehen, öffentliche Boards bewusst nicht.
+     *
+     * [slotRecords] kommt von außen, weil dieselben Zeilen im Aufrufer bereits für die Absagen an
+     * echten Läufen gebraucht werden.
      */
-    private fun getPendingSlots(eventId: UUID, matchIds: Set<UUID>): App<Nothing, List<PendingSlotDto>> = KIO.comprehension {
-        val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
-
+    private fun getPendingSlots(slotRecords: List<Record>, matchIds: Set<UUID>): List<PendingSlotDto> {
         val waiting = slotRecords.mapNotNull { r ->
             EventScheduleLogic.pendingSlotOrNull(
                 slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
@@ -215,7 +234,7 @@ object LiveDashboardService {
             )
         }
 
-        KIO.ok((waiting + free).sortedBy { it.startTime })
+        return (waiting + free).sortedBy { it.startTime }
     }
 
     /**

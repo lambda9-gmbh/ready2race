@@ -182,10 +182,29 @@ object EventScheduleService {
     }
 
     /**
-     * Skip/Unskip mit Audit (Spec §8). skip: erlaubt für FREE, WAITING und LINKED ohne
-     * `started_at` am Lauf; OBSOLETE ist endgültig (SlotNotSkippable), ein bereits gestarteter
-     * Lauf schlägt mit MatchAlreadyStarted fehl. unskip: erlaubt solange kein Lauf des Slots
-     * `started_at` trägt.
+     * Skip/Unskip mit Audit (Spec §8).
+     *
+     * skip: erlaubt für FREE, WAITING und LINKED, solange der Lauf nicht unterwegs ist; OBSOLETE ist
+     * endgültig (SlotNotSkippable), ein Lauf, der schon unterwegs ist, schlägt mit
+     * MatchAlreadyStarted fehl. "Unterwegs" heißt seit dem 05.08.2026 nicht mehr nur `started_at`
+     * (Ist-Start aus der Zeitnahme), sondern auch `currently_running` (Aktivierung durch den
+     * Schiedsrichter) - siehe [EventScheduleLogic.matchUnderway]. Vorher ließ sich ein aktivierter
+     * Lauf im Fenster vor der ersten Zeitnahme-Meldung absagen und war danach abgesagt UND laufend.
+     *
+     * Von den beiden sauberen Auflösungen (Schutzregel erweitern vs. Absage deaktiviert den Lauf
+     * mit) ist bewusst die Schutzregel gewählt: Absagen ist eine Büro-Aktion aus dem Zeitplan-Tab,
+     * die einen laufenden Betrieb am Steg nicht im Vorbeigehen abräumen soll. Wer wirklich absagen
+     * will, deaktiviert den Lauf zuerst - eine bewusste zweite Handlung, die im Dashboard sichtbar
+     * ist und die der Schiedsrichter selbst wieder rückgängig machen kann. Die stille Variante
+     * hätte dagegen aus einem Fehlgriff im Büro ein abgebrochenes Rennen gemacht.
+     *
+     * Für [ScheduleChainService.resumeIfParked] am Ende ändert sich dadurch nichts: der eben
+     * übersprungene Slot kann jetzt kein laufender mehr sein, und dessen `hasRunningMatch`-Gate
+     * beantwortet weiterhin nur die alte Frage "läuft im Event gerade etwas anderes".
+     *
+     * unskip: erlaubt, solange kein Lauf des Slots `started_at` trägt - hier bewusst OHNE
+     * `currently_running`. Eine Zeile aus der Zeit vor der Schutzregel kann abgesagt und laufend
+     * zugleich sein, und das Zurücknehmen der Absage ist genau der Weg, sie zu heilen.
      */
     fun setSlotSkipped(
         eventId: UUID,
@@ -199,6 +218,7 @@ object EventScheduleService {
         val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
         val matchExists = row.get("match_exists", Boolean::class.java) == true
         val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
+        val matchCurrentlyRunning = row[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
         val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
         val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
 
@@ -213,7 +233,7 @@ object EventScheduleService {
             if (state == EventScheduleSlotState.OBSOLETE) {
                 return@comprehension KIO.fail(EventScheduleError.SlotNotSkippable(slotId))
             }
-            if (matchStartedAt != null) {
+            if (EventScheduleLogic.matchUnderway(matchStartedAt, matchCurrentlyRunning)) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
             }
 
@@ -247,9 +267,10 @@ object EventScheduleService {
      * - Bereits übersprungene Slots bleiben, wie sie sind - kein Fehler, kein erneutes Schreiben.
      * - OBSOLETE Slots (die Setup-Zeile existiert nicht mehr) werden übergangen: es gibt nichts mehr
      *   zu überspringen, das blockiert die restliche Runde aber nicht.
-     * - Ein bereits gestarteter Lauf lässt die GANZE Aktion mit MatchAlreadyStarted scheitern, auch
-     *   wenn andere Slots der Runde noch skippable wären - kein Teilerfolg, damit der Nutzer nicht
-     *   glaubt, die Runde sei vollständig übersprungen, obwohl ein laufender Start übrig bleibt.
+     * - Ein Lauf, der schon unterwegs ist ([EventScheduleLogic.matchUnderway]: Ist-Start ODER
+     *   aktiviert), lässt die GANZE Aktion mit MatchAlreadyStarted scheitern, auch wenn andere Slots
+     *   der Runde noch skippable wären - kein Teilerfolg, damit der Nutzer nicht glaubt, die Runde
+     *   sei vollständig übersprungen, obwohl ein laufender Start übrig bleibt.
      *
      * Produktentscheidung (verschoben aus dem Zeitplan in Wettkampf → Durchführung, siehe
      * CompetitionExecutionRound.tsx): "Runde entfällt" darf NUR angeboten werden, wenn es in der
@@ -304,7 +325,7 @@ object EventScheduleService {
             }
 
             val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
-            if (matchStartedAt != null) {
+            if (EventScheduleLogic.matchUnderway(matchStartedAt, row[COMPETITION_MATCH.CURRENTLY_RUNNING] == true)) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
             }
 

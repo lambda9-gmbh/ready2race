@@ -1360,6 +1360,7 @@
       "state": {
         "RUNNING": "I gang",
         "FINISHED": "Afsluttet",
+        "SKIPPED": "Aflyst",
         "UPCOMING": "Kommende",
         "UNSCHEDULED": "Ikke planlagt"
       },

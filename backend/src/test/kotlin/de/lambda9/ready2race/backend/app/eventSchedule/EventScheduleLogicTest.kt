@@ -8,9 +8,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class EventScheduleLogicTest {
 
@@ -214,6 +216,92 @@ class EventScheduleLogicTest {
                 skipped = true,
             ),
         )
+    }
+
+    // --- skippedMatchIdOrNull ---
+    //
+    // Die andere Seite derselben Zeile: pendingSlotOrNull löst nur den Fall "Runde noch nicht
+    // gesetzt" auf. Sobald die Runde gesetzt ist, gibt es einen echten Lauf, und der muss bei einer
+    // Absage aus "nächste Läufe" von Athleten-Anzeige und Kiosk herausfallen.
+
+    private fun skippedMatchArgs(
+        setupMatchId: UUID? = UUID.randomUUID(),
+        skipped: Boolean = true,
+        roundMaterialized: Boolean = true,
+        matchExists: Boolean = true,
+    ) = EventScheduleLogic.skippedMatchIdOrNull(
+        setupMatchId = setupMatchId,
+        skipped = skipped,
+        roundMaterialized = roundMaterialized,
+        matchExists = matchExists,
+    )
+
+    @Test
+    fun skippedSlotWithMaterializedRoundYieldsItsMatchId() {
+        val setupMatchId = UUID.randomUUID()
+
+        assertEquals(setupMatchId, skippedMatchArgs(setupMatchId = setupMatchId))
+    }
+
+    @Test
+    fun notSkippedSlotYieldsNoMatchIdToHide() {
+        // Der Regelfall: ein gesetzter, nicht abgesagter Lauf bleibt in "nächste Läufe" stehen.
+        assertNull(skippedMatchArgs(skipped = false))
+    }
+
+    @Test
+    fun skippedSlotWithoutMatchYieldsNoMatchIdToHide() {
+        // Runde noch nicht gesetzt: Es gibt keinen echten Lauf zu verbergen, der Slot liefert
+        // stattdessen schon über pendingSlotOrNull keinen Platzhalter mehr.
+        assertNull(skippedMatchArgs(roundMaterialized = false, matchExists = false))
+    }
+
+    @Test
+    fun freeSlotYieldsNoMatchIdToHide() {
+        assertNull(skippedMatchArgs(setupMatchId = null))
+    }
+
+    @Test
+    fun onlySkippedSlotsWithMatchAmongMixedStatesYieldMatchIds() {
+        val skippedLinked = UUID.randomUUID()
+        val plainLinked = UUID.randomUUID()
+        val skippedWaiting = UUID.randomUUID()
+
+        val hidden = listOfNotNull(
+            skippedMatchArgs(setupMatchId = skippedLinked),
+            skippedMatchArgs(setupMatchId = plainLinked, skipped = false),
+            skippedMatchArgs(setupMatchId = skippedWaiting, roundMaterialized = false, matchExists = false),
+            skippedMatchArgs(setupMatchId = null),
+        )
+
+        assertEquals(listOf(skippedLinked), hidden)
+    }
+
+    // --- matchUnderway ---
+
+    @Test
+    fun matchWithoutStartIsNotUnderway() {
+        assertFalse(EventScheduleLogic.matchUnderway(startedAt = null, currentlyRunning = false))
+    }
+
+    @Test
+    fun activatedMatchWithoutRecordedStartIsUnderway() {
+        // Befund B: das Fenster zwischen "Boote gehen an den Start" (Schiedsrichter aktiviert) und
+        // "die Zeitnahme meldet den Start". Nur auf started_at zu schauen, ließ hier eine Absage zu -
+        // der Lauf war danach abgesagt UND laufend zugleich.
+        assertTrue(EventScheduleLogic.matchUnderway(startedAt = null, currentlyRunning = true))
+    }
+
+    @Test
+    fun recordedStartIsUnderwayEvenWhenNoLongerActive() {
+        // Ein beendeter Lauf trägt started_at, aber currently_running = false - absagen lässt er
+        // sich trotzdem nicht mehr.
+        assertTrue(EventScheduleLogic.matchUnderway(startedAt = slotNow, currentlyRunning = false))
+    }
+
+    @Test
+    fun runningMatchWithRecordedStartIsUnderway() {
+        assertTrue(EventScheduleLogic.matchUnderway(startedAt = slotNow, currentlyRunning = true))
     }
 
     // --- computeShift ---

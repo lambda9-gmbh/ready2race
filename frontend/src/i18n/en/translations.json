@@ -1360,6 +1360,7 @@
       "state": {
         "RUNNING": "Running",
         "FINISHED": "Finished",
+        "SKIPPED": "Cancelled",
         "UPCOMING": "Upcoming",
         "UNSCHEDULED": "Unscheduled"
       },

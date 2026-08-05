@@ -29,6 +29,15 @@ export const slotLabel = (slot: EventScheduleSlotDto): string =>
 export const isEditable = (slot: EventScheduleSlotDto): boolean =>
     slot.state === 'FREE' || slot.state === 'WAITING' || slot.matchId != null
 
+// Spiegelt die serverseitige Schutzregel aus EventScheduleService.setSlotSkipped
+// (EventScheduleLogic.matchUnderway): Ein Lauf, der schon unterwegs ist, lässt sich nicht mehr
+// absagen. "Unterwegs" ist er nicht erst mit dem Ist-Start aus der Zeitnahme (matchStartedAt),
+// sondern schon mit der Aktivierung durch den Schiedsrichter (matchCurrentlyRunning) - dazwischen
+// liegt das Fenster, in dem die Boote längst am Start stehen. Die Absage-Aktion wird dafür gar
+// nicht erst angeboten; wer wirklich absagen will, beendet oder deaktiviert den Lauf zuerst.
+export const isCancellable = (slot: EventScheduleSlotDto): boolean =>
+    !slot.matchCurrentlyRunning && slot.matchStartedAt == null
+
 // Vorbelegung für den Shift-Dialog: der erste Slot des Tages, der noch nicht gelaufen ist - ein
 // bereits beendeter Lauf zu verschieben ergibt fachlich keinen Sinn. Sind alle Slots schon
 // beendet (Tag komplett abgeschlossen), bleibt trotzdem der erste Slot als Fallback, statt gar
