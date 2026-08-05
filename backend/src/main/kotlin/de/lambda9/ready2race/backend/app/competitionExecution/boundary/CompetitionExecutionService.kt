@@ -1132,7 +1132,7 @@ object CompetitionExecutionService {
         return currentRound to nextRound
     }
 
-    private fun getSeedingList(
+    internal fun getSeedingList(
         currentRoundTeams: List<Int?>,
         maxTeamsNeeded: Int
     ): List<List<Int>> {
@@ -1161,6 +1161,85 @@ object CompetitionExecutionService {
         }
 
         return currentRoundSeedings
+    }
+
+    /**
+     * Liefert die Seeding-Liste, mit der [computeCompetitionPlaces] aus dem Platz im Lauf das
+     * Rundenergebnis ("roundOutcome") macht — oder `null`, wenn die Platzvergabe der Runde ohne
+     * Seeding auskommt.
+     *
+     * Nur ASCENDING und CUSTOM lesen die Liste; EQUAL vergibt allen einen festen Platz. Die
+     * Bedingung an der Aufrufstelle war zuvor mit `!=` und `||` formuliert und damit immer wahr —
+     * die Liste wurde also auch für EQUAL berechnet, dort aber nie ausgewertet. Das Ergebnis
+     * ändert sich durch die Korrektur nicht, es wird nur nicht mehr unnötig gerechnet.
+     *
+     * ### Wie weit muss die Liste reichen?
+     *
+     * Beim Aufbau einer Folgerunde beantwortet [getSeedingList] die Frage "wer kommt weiter": dort
+     * reicht [seedsForNextRound], die Zahl der Plätze in der Folgerunde. Bei der Platzvergabe ist
+     * die Frage eine andere — hier geht es um alle Boote der Runde, gerade um die, die **nicht**
+     * weiterkommen. Die Liste muss deshalb jeden Starter erreichen, also mindestens
+     * [teamsInThisRound] Einträge hergeben.
+     *
+     * Das deckt sich mit dem Setup: die Platztabelle für CUSTOM wird im Frontend über die
+     * Rundenergebnisse `1..thisRoundTeams` aufgespannt (`getNewPlaces` in `common.ts`), abzüglich
+     * derer, die in die Folgerunde einziehen. Ohne Folgerunde ist dort der Platz schlicht das
+     * Rundenergebnis — also die Reihenfolge im Lauf.
+     *
+     * Ein größeres Maximum verschiebt keine bestehende Zuordnung: die Verteilung läuft in fester
+     * Schlangenreihenfolge und bricht nur früher ab. Alle Rundenergebnisse bis
+     * [seedsForNextRound] landen daher an genau derselben Stelle wie bisher, es kommen nur die
+     * Plätze dahinter neu dazu — "hinter allen Aufsteigern, in der Reihenfolge des Laufs".
+     *
+     * ### Was das repariert
+     *
+     * Beide bisherigen IndexOutOfBoundsExceptions beim Zugriff
+     * `seedingList[matchIndex][realPlace - 1]` betrafen Massenfelder (`teams IS NULL`), weil nur
+     * für sie das Maximum überhaupt begrenzend wirkt (siehe [getHighestTeamCount] und die
+     * `null`-Bedingung in [getSeedingList]):
+     * - **Letzte Runde**: keine Folgerunde, [seedsForNextRound] `= 0` — die Liste blieb leer
+     *   (`[[]]`), obwohl im Massenfeld-Finale alle Boote einen Platz brauchen.
+     * - **Qualifikation mit Nicht-Aufsteigern**: Zeitfahren als Massenfeld mit sechs Booten und
+     *   vier Halbfinalplätzen ergab `[[1, 2, 3, 4]]` — die Boote auf Platz 5 und 6 fielen heraus.
+     *
+     * Bei fest gesetzten Bootszahlen ändert sich nichts, dort war die Liste schon immer so lang
+     * wie der Lauf Boote hat. Ein Finale A/B behält damit seine Schlangenverteilung.
+     */
+    internal fun getPlacesSeedingList(
+        placesOption: String,
+        currentRoundTeams: List<Int?>,
+        seedsForNextRound: Int,
+        teamsInThisRound: Int,
+    ): List<List<Int>>? =
+        if (placesOption == CompetitionSetupPlacesOption.ASCENDING.name ||
+            placesOption == CompetitionSetupPlacesOption.CUSTOM.name
+        ) {
+            getSeedingList(
+                currentRoundTeams = currentRoundTeams,
+                maxTeamsNeeded = maxOf(seedsForNextRound, teamsInThisRound),
+            )
+        } else null
+
+    /**
+     * Das Rundenergebnis ("roundOutcome") eines Bootes, das im Lauf [matchIndex] auf [realPlace]
+     * gekommen ist.
+     *
+     * Die Seeding-Liste verteilt die Rundenergebnisse rechnerisch gleichmäßig auf die Läufe. Ist
+     * ein Lauf tatsächlich voller als die Rechnung hergibt — mehrere Massenfelder in einer Runde
+     * teilen sich das Feld, ohne dass im Setup steht, wie —, reicht sie nicht bis zu diesem Platz.
+     * Dann gilt dieselbe Regel wie für die Nicht-Aufsteiger: hinter allen verteilten Ergebnissen,
+     * in der Reihenfolge des Laufs. So bleibt die Platzvergabe auch dann auskunftsfähig, statt den
+     * Abruf der ganzen Veranstaltung (Platzierungen, Urkunden) scheitern zu lassen.
+     */
+    internal fun getRoundOutcome(
+        seedingList: List<List<Int>>,
+        matchIndex: Int,
+        realPlace: Int,
+    ): Int {
+        val seedingsOfMatch = seedingList.getOrNull(matchIndex) ?: emptyList()
+
+        return seedingsOfMatch.getOrNull(realPlace - 1)
+            ?: ((seedingList.flatten().maxOrNull() ?: 0) + realPlace - seedingsOfMatch.size)
     }
 
     private fun getHighestTeamCount(
@@ -1210,13 +1289,15 @@ object CompetitionExecutionService {
                         } else team.place != null || team.deregistered || team.out || team.failed
                     }
 
-                val seedingList =
-                    if (round.placesOption != CompetitionSetupPlacesOption.ASCENDING.name || round.placesOption != CompetitionSetupPlacesOption.CUSTOM.name) { // Only relevant if the placesOption is "ascending" or "custom"
-                        getSeedingList(
-                            currentRoundTeams = round.setupMatches.sortedBy { it.weighting }.map { it.teams },
-                            maxTeamsNeeded = setupRounds.getOrNull(roundIdx + 1)?.setupMatches?.sumOf { it.teams ?: 0 }
-                                ?: 0)
-                    } else null
+                val seedingList = getPlacesSeedingList(
+                    placesOption = round.placesOption,
+                    currentRoundTeams = round.setupMatches.sortedBy { it.weighting }.map { it.teams },
+                    // 0 = keine Folgerunde, also die letzte Runde
+                    seedsForNextRound = setupRounds.getOrNull(roundIdx + 1)?.setupMatches?.sumOf { it.teams ?: 0 }
+                        ?: 0,
+                    // Alle Startenden der Runde, auch abgemeldete/ausgeschiedene — realPlace zählt sie mit
+                    teamsInThisRound = round.matches.sumOf { it.teams.size },
+                )
 
 
                 val teamsToPlaces = nonAdvancingTeamsToMatchIndex.map { (team, matchIndex) ->
@@ -1243,10 +1324,15 @@ object CompetitionExecutionService {
                         }
 
                         CompetitionSetupPlacesOption.ASCENDING.name ->
-                            team to seedingList!![matchIndex][realPlace - 1]
+                            team to getRoundOutcome(seedingList!!, matchIndex, realPlace)
 
-                        else ->
-                            team to round.places.first { it.roundOutcome == seedingList!![matchIndex][realPlace - 1] }.place
+                        else -> {
+                            val roundOutcome = getRoundOutcome(seedingList!!, matchIndex, realPlace)
+                            // Für ein Massenfeld lässt sich im Setup keine Platztabelle pflegen, weil die
+                            // Zahl der Startenden dort erst zur Laufzeit feststeht. Fehlt der Eintrag,
+                            // gilt das Rundenergebnis selbst als Platz — wie bei ASCENDING.
+                            team to (round.places.firstOrNull { it.roundOutcome == roundOutcome }?.place ?: roundOutcome)
+                        }
                     }
                     teamToPlace
                 }
