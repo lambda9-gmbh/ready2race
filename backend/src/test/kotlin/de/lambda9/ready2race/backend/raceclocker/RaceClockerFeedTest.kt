@@ -204,6 +204,8 @@ class RaceClockerFeedTest {
         ids = emptyList(),
         result = "00:01:00.0",
         start = start,
+        penaltySeconds = null,
+        penaltyNote = null,
     )
 
     @Test
