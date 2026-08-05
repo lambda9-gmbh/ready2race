@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.FreeScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
+import java.time.Duration
 import java.time.LocalDateTime
 
 /**
@@ -77,6 +78,19 @@ object AthleteBoardLogic {
         showCountdown -> AthleteBoardStartState.COUNTDOWN
         else -> AthleteBoardStartState.SCHEDULED
     }
+
+    /**
+     * Gehört ein Eintrag mit dieser Startzeit noch in "nächste Läufe"? Die Nachfrist beginnt mit
+     * der Startzeit: bis [grace] verstrichen ist, bleibt der Eintrag als überfällig sichtbar,
+     * danach nicht mehr. Bewusst dieselbe Grenze wie in
+     * `CompetitionMatchRepo.getUpcomingMatchesForBoard` (dort als SQL-Bedingung
+     * `START_TIME IS NULL OR START_TIME > now - grace`), damit echte Läufe und Platzhalter nach
+     * derselben Regel verschwinden. Genau auf der Grenze ist die Frist abgelaufen.
+     *
+     * [now] wird hereingereicht statt hier geholt, damit die Entscheidung ohne Uhr prüfbar bleibt.
+     */
+    fun isStillUpcoming(startTime: LocalDateTime?, now: LocalDateTime, grace: Duration): Boolean =
+        startTime == null || startTime.isAfter(now.minus(grace))
 
     /**
      * Ein Eintrag ist frisch, solange er jünger als [CACHE_TTL_SECONDS] ist. Ein `builtAt`

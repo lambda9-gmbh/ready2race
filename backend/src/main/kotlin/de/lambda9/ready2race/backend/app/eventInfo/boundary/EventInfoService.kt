@@ -163,7 +163,9 @@ object EventInfoService {
             !CompetitionMatchRepo.getUpcomingMatches(eventId, limit).orDie()
 
         val real = !toUpcomingCompetitionMatchInfos(matches)
-        val result = !mergeWithPendingPlaceholders(eventId, real, limit)
+        // Ohne Nachfrist: CompetitionMatchRepo.getUpcomingMatches nimmt nur Läufe mit
+        // START_TIME > jetzt, für die Platzhalter der Kiosk-Ansicht gilt dieselbe Grenze.
+        val result = !mergeWithPendingPlaceholders(eventId, real, limit, Duration.ZERO)
 
         KIO.ok(ApiResponse.ListDto(result))
     }
@@ -181,7 +183,7 @@ object EventInfoService {
             !CompetitionMatchRepo.getUpcomingMatchesForBoard(eventId, limit, grace).orDie()
 
         val real = !toUpcomingCompetitionMatchInfos(matches)
-        val result = !mergeWithPendingPlaceholders(eventId, real, limit)
+        val result = !mergeWithPendingPlaceholders(eventId, real, limit, grace)
 
         KIO.ok(ApiResponse.ListDto(result))
     }
@@ -198,15 +200,25 @@ object EventInfoService {
      * V202608041900) - standardmäßig aus, weil Kiosk und Athleten-Anzeige sparsam bleiben sollen.
      * Die reine Filter-Entscheidung dafür teilt sich dieser Code mit dem Live-Dashboard über
      * [EventScheduleLogic.freeSlotOrNull].
+     *
+     * [grace] ist dieselbe Nachfrist, mit der die jeweilige Abfrage schon die echten Läufe
+     * eingegrenzt hat (Athleten-Anzeige: 30 Minuten, Kiosk: keine). Ohne sie blieben Platzhalter
+     * beliebig lange in "nächste Läufe" stehen und verdrängten - der Block ist auf [limit]
+     * gedeckelt - die tatsächlich anstehenden Läufe.
      */
     private fun mergeWithPendingPlaceholders(
         eventId: UUID,
         real: List<UpcomingCompetitionMatchInfo>,
         limit: Int,
+        grace: Duration,
     ): App<Nothing, List<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
         val showBreaks = !EventRepo.getShowBreaksOnPublicBoards(eventId).orDie()
         val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
         val realMatchIds = real.map { it.matchId }.toSet()
+        val now = LocalDateTime.now()
+
+        fun List<UpcomingCompetitionMatchInfo>.stillUpcoming() =
+            filter { AthleteBoardLogic.isStillUpcoming(it.scheduledStartTime, now, grace) }
 
         // Zwei getrennte Reads — wenn zwischen ihnen eine Runde entsteht oder gelöscht wird,
         // könnte derselbe Lauf doppelt auftauchen; echte Einträge gewinnen.
@@ -226,6 +238,7 @@ object EventInfoService {
         }
         val waitingPlaceholders = AthleteBoardLogic.placeholdersFromPendingSlots(pendingSlots)
             .filterNot { it.matchId in realMatchIds }
+            .stillUpcoming()
 
         val freePlaceholders = if (showBreaks) {
             val freeSlots = slotRecords.mapNotNull { r ->
@@ -239,6 +252,7 @@ object EventInfoService {
             }
             AthleteBoardLogic.placeholdersFromFreeSlots(freeSlots)
                 .filterNot { it.matchId in realMatchIds }
+                .stillUpcoming()
         } else {
             emptyList()
         }
