@@ -207,7 +207,7 @@ const EventSchedule = () => {
                     label: slotLabel(slot),
                     time: format(new Date(slot.startTime), t('format.time')),
                 }),
-                okText: t('event.schedule.skip'),
+                okText: t('event.schedule.state.SKIPPED'),
             },
         )
     }
@@ -247,7 +247,13 @@ const EventSchedule = () => {
                 }
                 reload()
             },
-            {okText: t('event.schedule.unskip')},
+            {
+                content: t('event.schedule.unskipConfirm', {
+                    label: slotLabel(slot),
+                    time: format(new Date(slot.startTime), t('format.time')),
+                }),
+                okText: t('event.schedule.unskip'),
+            },
         )
     }
 
