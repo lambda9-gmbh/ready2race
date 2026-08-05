@@ -194,6 +194,9 @@ const EventSchedule = () => {
     }
 
     const handleSkip = (slot: EventScheduleSlotDto) => {
+        const siblingCount = slot.setupRoundId
+            ? slotsInRound(data?.slots ?? [], slot.setupRoundId).length - 1
+            : 0
         confirmAction(
             async () => {
                 const {error} = await skipScheduleSlot({path: {eventId, slotId: slot.id}})
@@ -203,11 +206,29 @@ const EventSchedule = () => {
                 reload()
             },
             {
-                content: t('event.schedule.skipConfirm', {
-                    label: slotLabel(slot),
-                    time: format(new Date(slot.startTime), t('format.time')),
-                }),
-                okText: t('event.schedule.state.SKIPPED'),
+                // Der Umfang steht im Text UND auf dem Button: bei einer Runde aus mehreren Läufen
+                // muss unmissverständlich sein, dass hier nur dieser eine Lauf entfällt.
+                content: slot.setupRoundId
+                    ? t(
+                          siblingCount > 0
+                              ? 'event.schedule.skipConfirm'
+                              : 'event.schedule.skipConfirmOnly',
+                          {
+                              label: slotLabel(slot),
+                              time: format(new Date(slot.startTime), t('format.time')),
+                              round: slot.roundName ?? '',
+                              count: siblingCount,
+                          },
+                      )
+                    : t('event.schedule.skipConfirmFree', {
+                          label: slotLabel(slot),
+                          time: format(new Date(slot.startTime), t('format.time')),
+                      }),
+                okText: t(
+                    slot.setupRoundId
+                        ? 'event.schedule.skipOk'
+                        : 'event.schedule.skipOkFree',
+                ),
             },
         )
     }
@@ -218,7 +239,14 @@ const EventSchedule = () => {
             return
         }
         const affected = slotsInRound(data?.slots ?? [], setupRoundId)
-        const label = [slot.competitionName, slot.roundName].filter(Boolean).join(' – ')
+        // Die betroffenen Läufe werden namentlich mit Uhrzeit aufgezählt - eine Zahl allein sagt
+        // nicht, was gleich verschwindet.
+        const list = affected
+            .map(
+                s =>
+                    `${s.matchName ?? '?'} (${format(new Date(s.startTime), t('format.time'))})`,
+            )
+            .join(', ')
 
         confirmAction(
             async () => {
@@ -230,10 +258,12 @@ const EventSchedule = () => {
             },
             {
                 content: t('event.schedule.skipRoundConfirm', {
-                    label,
+                    round: slot.roundName ?? '',
+                    competition: slot.competitionName ?? '',
                     count: affected.length,
+                    list,
                 }),
-                okText: t('event.schedule.skipRound'),
+                okText: t('event.schedule.skipRoundOk', {count: affected.length}),
             },
         )
     }
@@ -394,6 +424,9 @@ const EventSchedule = () => {
                             <TableBody>
                                 {section.slots.map(slot => {
                                     const chip = stateChipProps(slot, t)
+                                    const roundSlotCount = slot.setupRoundId
+                                        ? slotsInRound(data?.slots ?? [], slot.setupRoundId).length
+                                        : 0
                                     return (
                                         <TableRow
                                             key={slot.id}
@@ -531,7 +564,11 @@ const EventSchedule = () => {
                                                                 </Tooltip>
                                                             ) : (
                                                                 <Tooltip
-                                                                    title={t('event.schedule.skip')}>
+                                                                    title={t(
+                                                                        slot.setupRoundId
+                                                                            ? 'event.schedule.skip'
+                                                                            : 'event.schedule.skipFree',
+                                                                    )}>
                                                                     <IconButton
                                                                         size={'small'}
                                                                         onClick={() => handleSkip(slot)}>
@@ -541,10 +578,16 @@ const EventSchedule = () => {
                                                             )}
                                                         </Box>
                                                         <Box sx={actionSlotSx}>
-                                                            {slot.setupRoundId && (
+                                                            {/* Nur anzeigen, wenn die Runde mehrere
+                                                                Slots hat - bei einer Runde aus einem
+                                                                einzigen Lauf (z.B. ein Finale) wäre
+                                                                die Aktion identisch mit der links
+                                                                daneben und nur verwirrend. */}
+                                                            {roundSlotCount > 1 && (
                                                                 <Tooltip
                                                                     title={t(
                                                                         'event.schedule.skipRound',
+                                                                        {count: roundSlotCount},
                                                                     )}>
                                                                     <IconButton
                                                                         size={'small'}
