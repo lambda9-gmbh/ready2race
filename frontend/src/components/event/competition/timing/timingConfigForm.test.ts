@@ -79,6 +79,21 @@ describe('mapTimingFormToRequest', () => {
 
         expect(request.timeTrialResultsUrl).toBeNull()
     })
+
+    it('verwirft alle Presets, wenn kein System gesetzt ist', () => {
+        // Bei NONE zeigt der Tab kein Preset-Feld. Ein gespeichertes Preset waere damit
+        // unsichtbar und wuerde vom Export trotzdem benutzt, weil die serverseitige
+        // Auflösung timing_system nicht liest.
+        const request = mapTimingFormToRequest({
+            ...emptyTimingForm,
+            timingSystem: 'NONE',
+            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
+        })
+
+        expect(request.startlistConfigRounds).toBeNull()
+        expect(request.resultImportConfig).toBeNull()
+    })
 })
 
 describe('timingConfigWarnings', () => {

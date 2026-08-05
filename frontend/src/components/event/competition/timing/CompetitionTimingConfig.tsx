@@ -78,7 +78,10 @@ const CompetitionTimingConfig = () => {
     })
 
     const timingSystem = useWatch({control: formContext.control, name: 'timingSystem'})
-    const warnings = timingConfigWarnings(formContext.watch())
+    // useWatch() without `name` types its result as DeepPartialSkipArrayKey<TimingForm>; every
+    // field is in fact populated because defaultValues (emptyTimingForm) already covers all of them.
+    const formValues = useWatch<TimingForm>({control: formContext.control}) as TimingForm
+    const warnings = timingConfigWarnings(formValues)
 
     return (
         <Card sx={{p: 3, maxWidth: 720}}>

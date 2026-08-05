@@ -50,6 +50,7 @@ const trimmedOrNull = (value: string): string | null => value.trim() || null
  */
 export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest => {
     const raceClocker = form.timingSystem === 'RACECLOCKER'
+    const configured = form.timingSystem !== 'NONE'
 
     return {
         timingSystem: form.timingSystem === 'NONE' ? null : form.timingSystem,
@@ -58,8 +59,8 @@ export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest =>
         startlistConfigQualification: raceClocker
             ? (form.startlistConfigQualification?.id ?? null)
             : null,
-        startlistConfigRounds: form.startlistConfigRounds?.id ?? null,
-        resultImportConfig: form.resultImportConfig?.id ?? null,
+        startlistConfigRounds: configured ? (form.startlistConfigRounds?.id ?? null) : null,
+        resultImportConfig: configured ? (form.resultImportConfig?.id ?? null) : null,
     }
 }
 
