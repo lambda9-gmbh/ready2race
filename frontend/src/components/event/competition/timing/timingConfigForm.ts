@@ -14,6 +14,14 @@ export type TimingForm = {
     startlistConfigQualification: AutocompleteOption
     startlistConfigRounds: AutocompleteOption
     resultImportConfig: AutocompleteOption
+    /**
+     * Kein Eingabefeld, sondern eine mitgeführte Angabe des Servers: hat der Ablauf dieses Wettkampfs
+     * eine Qualifikationsrunde? Sie hängt hier mit drin, weil der Zeitnahme- und der Durchführungs-Tab
+     * die Zeitnahme-Konfiguration ohnehin beide laden — so kommen beide ohne zusätzliche Abfrage an den
+     * Wert, und `timingConfigWarnings` bleibt eine reine Funktion über einem einzigen Objekt.
+     * `mapTimingFormToRequest` lässt das Feld aus, es wird nie zurückgeschrieben.
+     */
+    hasQualificationRound: boolean
 }
 
 export const emptyTimingForm: TimingForm = {
@@ -23,6 +31,7 @@ export const emptyTimingForm: TimingForm = {
     startlistConfigQualification: null,
     startlistConfigRounds: null,
     resultImportConfig: null,
+    hasQualificationRound: false,
 }
 
 /**
@@ -40,6 +49,7 @@ export const mapDtoToTimingForm = (dto: TimingConfigDto): TimingForm => ({
         ? {id: dto.startlistConfigRounds, label: ''}
         : null,
     resultImportConfig: dto.resultImportConfig ? {id: dto.resultImportConfig, label: ''} : null,
+    hasQualificationRound: dto.hasQualificationRound ?? false,
 })
 
 const trimmedOrNull = (value: string): string | null => value.trim() || null
@@ -64,23 +74,41 @@ export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest =>
     }
 }
 
-export type TimingWarning = 'heatsUrl' | 'startlistRounds'
+export type TimingWarning =
+    | 'heatsUrl'
+    | 'timeTrialUrl'
+    | 'startlistRounds'
+    | 'startlistQualification'
 
 /**
  * Was fehlt, um die Zeitnahme benutzen zu können.
  *
- * Bewusst NICHT dabei: die Zeitfahren-URL und das Qualifikations-Preset. Ein Wettkampf ohne
- * Qualifikationsrunde braucht beides nie, und eine Warnung, die dort dauerhaft steht, wird ignoriert.
+ * Die Zeitfahren-URL und das Qualifikations-Preset hängen an [TimingForm.hasQualificationRound]: ein
+ * Wettkampf ohne Qualifikationsrunde braucht beides nie, und eine Warnung, die dort dauerhaft steht,
+ * wird ignoriert. Hat er eine, sind beide genauso Pflicht wie die übrigen Felder — sonst antwortet der
+ * Startlisten-Export mit STARTLIST_CONFIG_NOT_CONFIGURED und der Lauf-Pull findet keine Ergebnisse,
+ * beides erst am Renntag sichtbar.
+ *
+ * Beide gelten nur für RaceClocker: Webscorer kennt die Zweiteilung nicht, füllt nur den Runden-Slot
+ * und fällt für die Qualifikation darauf zurück (siehe StartListConfigTarget im Backend).
  */
 export const timingConfigWarnings = (form: TimingForm): TimingWarning[] => {
     if (form.timingSystem === 'NONE') return []
 
+    const raceClocker = form.timingSystem === 'RACECLOCKER'
+
     const warnings: TimingWarning[] = []
-    if (form.timingSystem === 'RACECLOCKER' && !form.heatsResultsUrl.trim()) {
+    if (raceClocker && !form.heatsResultsUrl.trim()) {
         warnings.push('heatsUrl')
+    }
+    if (raceClocker && form.hasQualificationRound && !form.timeTrialResultsUrl.trim()) {
+        warnings.push('timeTrialUrl')
     }
     if (!form.startlistConfigRounds) {
         warnings.push('startlistRounds')
+    }
+    if (raceClocker && form.hasQualificationRound && !form.startlistConfigQualification) {
+        warnings.push('startlistQualification')
     }
     return warnings
 }

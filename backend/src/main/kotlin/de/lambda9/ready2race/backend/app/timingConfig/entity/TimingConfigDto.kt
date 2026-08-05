@@ -9,4 +9,13 @@ data class TimingConfigDto(
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,
+    /**
+     * Ob der Ablauf dieses Wettkampfs eine Qualifikationsrunde enthaelt. Steht hier und nicht in einer
+     * eigenen Abfrage, weil der Zeitnahme- und der Durchfuehrungs-Tab diese Konfiguration ohnehin beide
+     * laden: nur so kennen beide den Zustand ohne zusaetzlichen Roundtrip. Das Frontend entscheidet
+     * daran, ob es das fehlende Qualifikations-Preset und die fehlende Zeitfahren-Adresse anmahnt --
+     * ohne Qualifikationsrunde werden beide nie gebraucht, mit einer sind sie Pflicht (siehe
+     * [de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListConfigTarget]).
+     */
+    val hasQualificationRound: Boolean,
 )

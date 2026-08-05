@@ -1083,7 +1083,9 @@
         "incomplete": {
           "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
           "heatsUrl": "Es fehlt die Ergebnis-Adresse des Läufe-Rennens – ohne sie lassen sich keine Ergebnisse aus RaceClocker holen.",
+          "timeTrialUrl": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt die Ergebnis-Adresse des Zeitfahren-Rennens – ohne sie lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen.",
           "startlistRounds": "Es fehlt das Startlisten-Preset – ohne es lässt sich keine Startliste als CSV exportieren.",
+          "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt das Startlisten-Preset für die Qualifikation – ohne es lässt sich für die Qualifikation keine Startliste exportieren.",
           "link": "Zu den Zeitnahme-Einstellungen"
         },
         "saved": "Zeitnahme-Einstellungen gespeichert",

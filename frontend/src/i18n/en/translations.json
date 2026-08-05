@@ -1083,7 +1083,9 @@
         "incomplete": {
           "title": "This timing setup is not ready for use yet",
           "heatsUrl": "The results address for the heats race is missing – without it, results cannot be pulled from RaceClocker.",
+          "timeTrialUrl": "This competition has a qualification round, but the results address for the time trial race is missing – without it, no results can be pulled from RaceClocker for the qualification.",
           "startlistRounds": "The start list preset is missing – without it, no start list can be exported as CSV.",
+          "startlistQualification": "This competition has a qualification round, but the start list preset for the qualification is missing – without it, no start list can be exported for the qualification.",
           "link": "Go to the timing settings"
         },
         "saved": "Timing settings saved",
