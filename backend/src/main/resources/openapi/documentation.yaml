@@ -11648,21 +11648,27 @@ components:
       properties:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
+          nullable: true
         timeTrialResultsUrl:
           type: string
+          nullable: true
           description: Public results URL of the individual-start race used for the qualification round.
         heatsResultsUrl:
           type: string
+          nullable: true
           description: Public results URL of the wave-start race used for all other rounds.
         startlistConfigQualification:
           type: string
           format: uuid
+          nullable: true
         startlistConfigRounds:
           type: string
           format: uuid
+          nullable: true
         resultImportConfig:
           type: string
           format: uuid
+          nullable: true
 
     TimingSystem:
       type: string

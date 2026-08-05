@@ -904,7 +904,7 @@
             "RACECLOCKER": "hent fra RaceClocker"
           },
           "error": {
-            "notConfigured": "Der er ikke registreret et preset for resultatimport for denne konkurrence. Angiv det venligst under fanen \"Tidtagning\".",
+            "notConfigured": "Der er ikke registreret et resultatimportpreset for denne konkurrence. Angiv det venligst under fanen \"Tidtagning\".",
             "WRONG_TEAM_COUNT": "Antallet af hold stemmer ikke - læst: {{actual}}, forventet: {{expected}}",
             "DUPLICATE_PLACES": "Placeringer er tildelt flere gange til holdene",
             "DUPLICATE_START_NUMBERS": "Startnumre er tildelt flere gange til holdene",

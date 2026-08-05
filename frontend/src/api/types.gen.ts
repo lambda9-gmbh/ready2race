@@ -2390,18 +2390,18 @@ export type TimeCheckDto = {
 export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'
 
 export type TimingConfigDto = {
-    timingSystem?: TimingSystem
+    timingSystem?: TimingSystem | null
     /**
      * Public results URL of the individual-start race used for the qualification round.
      */
-    timeTrialResultsUrl?: string
+    timeTrialResultsUrl?: string | null
     /**
      * Public results URL of the wave-start race used for all other rounds.
      */
-    heatsResultsUrl?: string
-    startlistConfigQualification?: string
-    startlistConfigRounds?: string
-    resultImportConfig?: string
+    heatsResultsUrl?: string | null
+    startlistConfigQualification?: string | null
+    startlistConfigRounds?: string | null
+    resultImportConfig?: string | null
 }
 
 /**
