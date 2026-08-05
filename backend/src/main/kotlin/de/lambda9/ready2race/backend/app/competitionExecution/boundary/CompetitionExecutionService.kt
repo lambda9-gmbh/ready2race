@@ -29,8 +29,6 @@ import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchRe
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerConfigDto
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerConfigRequest
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
@@ -861,48 +859,6 @@ object CompetitionExecutionService {
         }.noDataResponse()
 
 
-    }
-
-    fun getRaceClockerConfig(
-        competitionId: UUID,
-    ): App<ServiceError, ApiResponse.Dto<RaceClockerConfigDto>> = KIO.comprehension {
-
-        val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
-            .onNullFail { CompetitionError.CompetitionNotFound }
-
-        KIO.ok(
-            ApiResponse.Dto(
-                RaceClockerConfigDto(
-                    timeTrialResultsUrl = competition.raceclockerTtResultsUrl,
-                    heatsResultsUrl = competition.raceclockerHeatsResultsUrl,
-                )
-            )
-        )
-    }
-
-    fun updateRaceClockerConfig(
-        competitionId: UUID,
-        userId: UUID,
-        request: RaceClockerConfigRequest,
-    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
-
-        // Stored normalised (scheme filled in, http lifted to https), so the config dialog shows
-        // afterwards what the pull actually requests. Blank means "not configured" - keeping empty
-        // strings would make the pull fail later with an unhelpful URL error instead of the clear
-        // "no URL configured" one.
-        val timeTrialUrl = request.timeTrialResultsUrl?.trim()?.takeIf { it.isNotBlank() }
-            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
-        val heatsUrl = request.heatsResultsUrl?.trim()?.takeIf { it.isNotBlank() }
-            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
-
-        !CompetitionRepo.update(competitionId) {
-            raceclockerTtResultsUrl = timeTrialUrl
-            raceclockerHeatsResultsUrl = heatsUrl
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie().onNullFail { CompetitionError.CompetitionNotFound }
-
-        noData
     }
 
     /**

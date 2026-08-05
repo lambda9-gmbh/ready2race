@@ -1585,20 +1585,20 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/competitionExecution/raceclocker-config:
+  /event/{eventId}/competition/{competitionId}/timing-config:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/competitionId'
     get:
-      operationId: getRaceClockerConfig
-      description: The two public RaceClocker results URLs of this competition.
+      operationId: getTimingConfig
+      description: The timing configuration of this competition - timing system, RaceClocker results URLs and the column presets used for export and import.
       responses:
         200:
-          description: RaceClocker configuration successfully retrieved
+          description: Timing configuration successfully retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceClockerConfigDto'
+                $ref: '#/components/schemas/TimingConfigDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -1610,13 +1610,13 @@ paths:
         500:
           $ref: '#/components/responses/500'
     put:
-      operationId: updateRaceClockerConfig
+      operationId: updateTimingConfig
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceClockerConfigRequest'
+              $ref: '#/components/schemas/TimingConfigRequest'
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -11651,26 +11651,60 @@ components:
 
 
 
-    RaceClockerConfigDto:
+    TimingConfigDto:
       type: object
       properties:
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
         timeTrialResultsUrl:
           type: string
           description: Public results URL of the individual-start race used for the qualification round.
         heatsResultsUrl:
           type: string
           description: Public results URL of the wave-start race used for all other rounds.
-    RaceClockerConfigRequest:
+        startlistConfigQualification:
+          type: string
+          format: uuid
+        startlistConfigRounds:
+          type: string
+          format: uuid
+        resultImportConfig:
+          type: string
+          format: uuid
+
+    TimingSystem:
+      type: string
+      enum:
+        - RACECLOCKER
+        - WEBSCORER
+
+    TimingConfigRequest:
       type: object
-      description: >-
-        Both URLs are optional. They must be https URLs on raceclocker.com; the host is pinned so the
-        backend cannot be pointed at other services.
+      description: >
+        Every field is optional - the RaceClocker races only exist shortly before the regatta, so an
+        incomplete configuration must be storable. The URLs must be https URLs on raceclocker.com; the
+        host is pinned so the backend cannot be pointed at other services.
       properties:
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
         timeTrialResultsUrl:
           type: string
           nullable: true
         heatsResultsUrl:
           type: string
+          nullable: true
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
           nullable: true
     StartListConfigRequest:
       type: object

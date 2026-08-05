@@ -1,19 +1,24 @@
-package de.lambda9.ready2race.backend.app.raceclocker.entity
+package de.lambda9.ready2race.backend.app.timingConfig.entity
 
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNull
+import java.util.UUID
 
 /**
- * The two public RaceClocker results URLs of a competition. Both are optional: a competition without a
- * qualification round needs no time trial URL, and until the URLs are filled in the results simply
- * keep arriving via the spreadsheet upload.
+ * Die Zeitnahme-Konfiguration eines Wettkampfs. Jedes Feld ist optional: die RaceClocker-Rennen
+ * entstehen dort erst kurz vor der Regatta, die Konfiguration muss also unvollstaendig speicherbar
+ * sein. Woran es fehlt, zeigt die Oberflaeche im Zeitnahme- und im Durchfuehrungs-Tab.
  */
-data class RaceClockerConfigRequest(
+data class TimingConfigRequest(
+    val timingSystem: TimingSystem?,
     val timeTrialResultsUrl: String?,
     val heatsResultsUrl: String?,
+    val startlistConfigQualification: UUID?,
+    val startlistConfigRounds: UUID?,
+    val resultImportConfig: UUID?,
 ) : Validatable {
 
     override fun validate(): ValidationResult =
@@ -25,9 +30,10 @@ data class RaceClockerConfigRequest(
     companion object {
 
         /**
-         * Rejected here rather than only at pull time, so a typo surfaces while editing instead of
-         * mid-regatta. Uses the same normalisation the pull does, which pins the host to RaceClocker but
-         * accepts an input without scheme - that is how a URL looks when copied out of a browser bar.
+         * Hier abgelehnt statt erst beim Abholen, damit ein Tippfehler beim Bearbeiten auffaellt und
+         * nicht mitten in der Regatta. Nutzt dieselbe Normalisierung wie der Pull: der Host ist auf
+         * RaceClocker festgenagelt, ein fehlendes Schema wird ergaenzt -- so sieht eine URL aus, die
+         * aus der Adresszeile kopiert wurde.
          */
         private fun validateUrl(value: String?, field: String): ValidationResult {
             if (value.isNullOrBlank()) return ValidationResult.Valid
@@ -40,9 +46,13 @@ data class RaceClockerConfigRequest(
         }
 
         val example
-            get() = RaceClockerConfigRequest(
+            get() = TimingConfigRequest(
+                timingSystem = TimingSystem.RACECLOCKER,
                 timeTrialResultsUrl = "https://www.raceclocker.com/7ffb822a",
                 heatsResultsUrl = "https://www.raceclocker.com/7c854955",
+                startlistConfigQualification = UUID.randomUUID(),
+                startlistConfigRounds = UUID.randomUUID(),
+                resultImportConfig = UUID.randomUUID(),
             )
     }
 }
