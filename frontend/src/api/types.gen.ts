@@ -1686,6 +1686,11 @@ export type QrCodeParticipantUpdate = {
     eventId: string
 }
 
+export type QrCodePublicResponse = {
+    eventId: string
+    type?: QrCodeDtoType
+}
+
 export type RaceClockerConfigDto = {
     /**
      * Public results URL of the individual-start race used for the qualification round.
@@ -5488,9 +5493,11 @@ export type CheckQrCodeData = {
     }
 }
 
-export type CheckQrCodeResponse = (QrCodeParticipantResponse | QrCodeAppuserResponse) | void
+export type CheckQrCodeResponse =
+    | (QrCodeParticipantResponse | QrCodeAppuserResponse | QrCodePublicResponse)
+    | void
 
-export type CheckQrCodeError = BadRequestError | ApiError | UnprocessableEntityError
+export type CheckQrCodeError = BadRequestError | UnprocessableEntityError | ApiError
 
 export type DeleteQrCodeData = {
     path: {

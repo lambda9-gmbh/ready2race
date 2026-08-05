@@ -113,6 +113,9 @@ fun ApplicationCall.authenticate(): App<AuthError, AppUserWithPrivilegesRecord> 
     AuthService.useSessionToken(userSession?.token)
 }
 
+fun ApplicationCall.optionalAuthenticate(): App<Nothing, AppUserWithPrivilegesRecord?> =
+    authenticate().recoverDefault { null }
+
 fun <T: Any> Parser<T>.param(key: String, input: String, kClass: KClass<T>): IO<RequestError, T> =
     invoke(input) { task ->
         task.mapError { RequestError.ParameterUnparsable(key, input, kClass) }

@@ -6057,6 +6057,7 @@ paths:
           type: string
     get:
       operationId: checkQrCode
+      description: Public - anonymous callers receive a reduced QrCodePublicResponse without personal data
       responses:
         200:
           description: OK
@@ -6066,14 +6067,11 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/QrCodeParticipantResponse'
                   - $ref: '#/components/schemas/QrCodeAppuserResponse'
+                  - $ref: '#/components/schemas/QrCodePublicResponse'
         204:
           $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -12032,6 +12030,13 @@ components:
         eventId: { type: string }
         type: { $ref: '#/components/schemas/QrCodeDtoType' }
         clubName: { type: string, nullable: true }
+
+    QrCodePublicResponse:
+      type: object
+      required: [ eventId ]
+      properties:
+        eventId: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/QrCodeDtoType' }
 
     QrCodeAppuserUpdate:
       type: object
