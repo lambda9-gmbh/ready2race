@@ -11,6 +11,12 @@ data class RunningMatchInfo(
     val competitionName: String,
     val categoryName: String?,
     val startTime: LocalDateTime?,
+    /**
+     * Tatsächlicher Start aus `competition_match.started_at`. Null heißt: der Lauf ist als
+     * aktuell markiert, aber noch nicht gestartet (Vorbereitung am Steg) - das Setzen des
+     * Laufstatus stempelt nicht, nur `markMatchStarted` tut es.
+     */
+    val startedAt: LocalDateTime?,
     val elapsedMinutes: Long?,
     val placeName: String?,
     val roundNumber: Int?,

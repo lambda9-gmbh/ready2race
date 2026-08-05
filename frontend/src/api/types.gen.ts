@@ -165,7 +165,14 @@ export type AthleteBoardMatch = {
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
+    /**
+     * scheduled start
+     */
     startTime?: string | null
+    /**
+     * real start; only filled in the running block - null there means the match is current but has not started yet
+     */
+    actualStartTime?: string | null
     startState: AthleteBoardStartState
     teams: Array<AthleteBoardTeam>
     /**
@@ -189,27 +196,67 @@ export type AthleteBoardResult = {
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
+    /**
+     * scheduled start
+     */
     startTime?: string | null
+    /**
+     * real start, if stamped - explains a deviation from the schedule
+     */
+    actualStartTime?: string | null
     teams: Array<AthleteBoardResultTeam>
 }
 
 export type AthleteBoardResultTeam = {
     place?: number | null
     lane: number
+    /**
+     * the nth team of this club in the competition - only shown when teamName is missing
+     */
+    teamNumber?: number | null
     clubName?: string | null
     teamName?: string | null
     timeString?: string | null
+    /**
+     * time penalty in seconds; only stated, never applied - timeString already includes it
+     */
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
     failed: boolean
     failedReason?: string | null
+    /**
+     * withdrawn for this round - listed but marked, since such a team has neither place nor time
+     */
+    deregistered: boolean
+    deregisteredReason?: string | null
 }
 
 export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
 
 export type AthleteBoardTeam = {
     lane?: number | null
+    /**
+     * the nth team of this club in the competition - only shown when teamName is missing
+     */
+    teamNumber?: number | null
     clubName?: string | null
     teamName?: string | null
     participants: Array<AthleteBoardParticipant>
+    /**
+     * partial result of a running match; always null in the upcoming block
+     */
+    place?: number | null
+    /**
+     * partial result of a running match; null means no time yet
+     */
+    timeString?: string | null
+    /**
+     * time penalty in seconds; only stated, never applied - timeString already includes it
+     */
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
+    failed: boolean
+    failedReason?: string | null
 }
 
 export type BadRequestError = ApiError & {
@@ -1352,6 +1399,10 @@ export type LatestMatchResultInfo = {
     matchNumber?: number | null
     updatedAt: string
     startTime?: string
+    /**
+     * real start, if stamped
+     */
+    startedAt?: string | null
     teams: Array<MatchResultTeamInfo>
 }
 
@@ -2090,6 +2141,10 @@ export type RunningMatchInfo = {
     competitionName: string
     categoryName?: string | null
     startTime?: string | null
+    /**
+     * real start; null means the match is marked as current but has not started yet
+     */
+    startedAt?: string | null
     elapsedMinutes?: number | null
     placeName?: string | null
     roundNumber?: number | null
@@ -2102,11 +2157,23 @@ export type RunningMatchInfo = {
 export type RunningMatchTeamInfo = {
     teamId: string
     teamName?: string | null
+    teamNumber?: number | null
     startNumber?: number | null
     clubName?: string | null
     actualClubName?: string
     currentScore?: number | null
     currentPosition?: number | null
+    /**
+     * partial result of a running match; null means no time yet
+     */
+    timeString?: string | null
+    /**
+     * time penalty in seconds; only stated, never applied - timeString already includes it
+     */
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
+    failed: boolean
+    failedReason?: string | null
     participants: Array<UpcomingMatchParticipantInfo>
 }
 
@@ -2409,6 +2476,7 @@ export type UpcomingMatchParticipantInfo = {
 export type UpcomingMatchTeamInfo = {
     teamId: string
     teamName?: string | null
+    teamNumber?: number | null
     startNumber?: number | null
     clubName?: string | null
     actualClubName?: string

@@ -146,6 +146,7 @@ object EventInfoService {
                 matchNumber = null, // Could be parsed from match name if needed
                 updatedAt = match[COMPETITION_MATCH.UPDATED_AT]!!,
                 startTime = match[COMPETITION_MATCH.START_TIME],
+                startedAt = match[COMPETITION_MATCH.STARTED_AT],
                 teams = teams
             )
         }
@@ -300,6 +301,7 @@ object EventInfoService {
                 competitionName = match.get("competition_name", String::class.java) ?: "",
                 categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
                 startTime = startTime,
+                startedAt = startedAt,
                 elapsedMinutes = elapsedMinutes,
                 placeName = null,
                 roundNumber = null,
@@ -372,6 +374,20 @@ object EventInfoService {
 
     // Helper Methods
 
+    /**
+     * Die erfasste Zeit als Anzeigetext, oder null solange keine Zeit vorliegt. Erwartet die
+     * TIMECODE-Spalten im Record (left join) - Ergebnis- und Laufabfrage liefern beide dieselbe
+     * Spaltenform.
+     */
+    private fun timeStringOrNull(record: Record): String? =
+        record[TIMECODE.TIME]?.let {
+            Timecode(
+                millis = it,
+                baseUnit = Timecode.BaseUnit.valueOf(record[TIMECODE.BASE_UNIT]!!),
+                millisecondPrecision = Timecode.MillisecondPrecision.valueOf(record[TIMECODE.MILLISECOND_PRECISION]!!)
+            ).toString()
+        }
+
     private fun getMatchResultTeams(matchId: UUID): App<Nothing, List<MatchResultTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamsForMatchResult(matchId).orDie()
 
@@ -381,18 +397,12 @@ object EventInfoService {
                 MatchResultTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
-                    teamNumber = null,
+                    teamNumber = first[COMPETITION_REGISTRATION.TEAM_NUMBER],
                     clubName = first.get("club_name", String::class.java),
                     actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
                     place = first[COMPETITION_MATCH_TEAM.PLACE],
-                    timeString = first[TIMECODE.TIME]?.let {
-                        Timecode(
-                            millis = it,
-                            baseUnit = Timecode.BaseUnit.valueOf(first[TIMECODE.BASE_UNIT]!!),
-                            millisecondPrecision = Timecode.MillisecondPrecision.valueOf(first[TIMECODE.MILLISECOND_PRECISION]!!)
-                        ).toString()
-                    },
+                    timeString = timeStringOrNull(first),
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                     failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
                     penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
@@ -425,6 +435,7 @@ object EventInfoService {
                 UpcomingMatchTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
+                    teamNumber = first[COMPETITION_REGISTRATION.TEAM_NUMBER],
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                     clubName = first.get("club_name", String::class.java),
                     actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
@@ -456,11 +467,17 @@ object EventInfoService {
                 RunningMatchTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
+                    teamNumber = first[COMPETITION_REGISTRATION.TEAM_NUMBER],
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                     clubName = first.get("club_name", String::class.java),
                     actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
                     currentScore = null, // Could be calculated if scoring data is available
                     currentPosition = first[COMPETITION_MATCH_TEAM.PLACE],
+                    timeString = timeStringOrNull(first),
+                    penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
+                    penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
+                    failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
+                    failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
                     participants = groupedRecords.mapNotNull { record ->
                         record.get("participant_id", UUID::class.java)?.let {
                             UpcomingMatchParticipantInfo(

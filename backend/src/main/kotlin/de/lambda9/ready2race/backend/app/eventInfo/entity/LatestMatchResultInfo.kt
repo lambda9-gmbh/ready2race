@@ -14,6 +14,8 @@ data class LatestMatchResultInfo(
     val matchNumber: Int?,
     val updatedAt: LocalDateTime,
     val startTime: LocalDateTime?,
+    /** Tatsächlicher Start aus `competition_match.started_at`, falls gestempelt. */
+    val startedAt: LocalDateTime?,
     val teams: List<MatchResultTeamInfo>
 )
 

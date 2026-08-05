@@ -58,14 +58,24 @@ fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant() = AthleteBoardParti
 
 fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
     lane = startNumber,
+    teamNumber = teamNumber,
     // Der tatsächliche Verein gewinnt; die Auflösung passiert hier statt in jeder Ansicht.
     clubName = actualClubName ?: clubName,
     teamName = teamName,
     participants = participants.map { it.toAthleteBoardParticipant() },
+    // Teilergebnis: gefüllt, sobald die Zeitnahme dieses Boot gewertet hat - der Lauf läuft
+    // dabei weiter, bis die Organisation ihn beendet.
+    place = currentPosition,
+    timeString = timeString,
+    penaltySeconds = penaltySeconds,
+    penaltyNote = penaltyNote,
+    failed = failed,
+    failedReason = failedReason,
 )
 
 fun UpcomingMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
     lane = startNumber,
+    teamNumber = teamNumber,
     clubName = actualClubName ?: clubName,
     teamName = teamName,
     participants = participants.map { it.toAthleteBoardParticipant() },
@@ -79,6 +89,7 @@ fun RunningMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCountdown: Bool
         roundName = roundName,
         matchName = matchName,
         startTime = startTime,
+        actualStartTime = startedAt,
         startState = AthleteBoardLogic.startState(startTime, now, showCountdown),
         teams = teams.map { it.toAthleteBoardTeam() },
     )
@@ -104,19 +115,24 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
     roundName = roundName,
     matchName = matchName,
     startTime = startTime,
-    // Abgemeldete Mannschaften sind nicht gefahren und würden ohne Platz und ohne Zeit
-    // wie ein Darstellungsfehler aussehen.
-    teams = teams
-        .filterNot { it.deregistered }
-        .map {
-            AthleteBoardResultTeam(
-                place = it.place,
-                lane = it.startNumber,
-                clubName = it.actualClubName ?: it.clubName,
-                teamName = it.teamName,
-                timeString = it.timeString,
-                failed = it.failed,
-                failedReason = it.failedReason,
-            )
-        },
+    actualStartTime = startedAt,
+    // Abgemeldete Mannschaften bleiben in der Liste, aber ausdrücklich als abgemeldet
+    // gekennzeichnet: ohne Platz und ohne Zeit sahen sie früher wie ein Darstellungsfehler aus,
+    // ganz weggelassen ließen sie die Besatzung nach ihrem Boot suchen.
+    teams = teams.map {
+        AthleteBoardResultTeam(
+            place = it.place,
+            lane = it.startNumber,
+            teamNumber = it.teamNumber,
+            clubName = it.actualClubName ?: it.clubName,
+            teamName = it.teamName,
+            timeString = it.timeString,
+            penaltySeconds = it.penaltySeconds,
+            penaltyNote = it.penaltyNote,
+            failed = it.failed,
+            failedReason = it.failedReason,
+            deregistered = it.deregistered,
+            deregisteredReason = it.deregisteredReason,
+        )
+    },
 )

@@ -91,7 +91,11 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                             sx={{
                                                 justifyContent: 'space-between',
                                             }}>
-                                            {'failed' in team ? (
+                                            {/* Unterscheidet die Ergebnis-Mannschaft von der
+                                                eines laufenden Laufs. Bewusst an `deregistered`:
+                                                Zeit, Zeitstrafe und `failed` trägt inzwischen
+                                                auch die laufende Mannschaft (Teilergebnisse). */}
+                                            {'deregistered' in team ? (
                                                 <Box>
                                                     <Typography
                                                         variant={team.place ? 'h5' : 'body1'}>
@@ -113,9 +117,7 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                       : '')
                                                                 : ''}
                                                     </Typography>
-                                                    {'failed' in team &&
-                                                        !team.failed &&
-                                                        team.timeString && (
+                                                    {!team.failed && team.timeString && (
                                                             <Box
                                                                 display="flex"
                                                                 gap={1}
@@ -131,8 +133,7 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                 </Typography>
                                                             </Box>
                                                         )}
-                                                    {'penaltySeconds' in team &&
-                                                        team.penaltySeconds != null && (
+                                                    {team.penaltySeconds != null && (
                                                             <Typography
                                                                 color={'warning.main'}
                                                                 variant={'body2'}>

@@ -2,6 +2,8 @@ import {Box, Card, CardContent, Chip, Stack, Typography} from '@mui/material'
 import {TFunction} from 'i18next'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch} from '@api/types.gen'
+import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
+import {formatClockTime, teamLabel} from './common'
 
 /**
  * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits auf dem Wasser,
@@ -20,9 +22,6 @@ interface AthleteBoardMatchCardProps {
     // auch die genaue Countdown-Zahl gezeigt wird (Einstellung der Veranstaltung).
     showCountdown?: boolean
 }
-
-const formatTime = (value: string) =>
-    new Date(value).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})
 
 const formatRemaining = (seconds: number, t: TFunction) => {
     const total = Math.max(0, Math.floor(seconds))
@@ -48,21 +47,45 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
         variant === 'upcoming' &&
         (match.startState === 'OVERDUE' || (startsInSeconds !== null && startsInSeconds <= 0))
 
+    // Im Block "Aktueller Lauf" trägt der tatsächliche Start die Aussage: ein Lauf ohne
+    // Zeitstempel ist als aktuell gesetzt, liegt aber noch am Steg. Im Block "Nächster Lauf"
+    // ist actualStartTime immer leer (siehe KDoc von AthleteBoardMatch im Backend).
+    const renderRunningStart = () =>
+        // Ein Programmpunkt (FREE-Platzhalter) startet nicht und wird nicht gestempelt.
+        match.name ? null : match.actualStartTime ? (
+            <Typography sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}} color="text.secondary">
+                {t('event.info.athleteBoard.startedAt', {
+                    time: formatClockTime(match.actualStartTime),
+                })}
+            </Typography>
+        ) : (
+            <Typography sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}} color="text.secondary">
+                {t('event.info.athleteBoard.preparing')}
+            </Typography>
+        )
+
     const renderTiming = () => {
         if (!match.startTime) {
             return (
-                <Typography sx={{fontSize: 'clamp(0.8rem, 1.4vw, 1.1rem)'}} color="text.secondary">
-                    {t('event.info.athleteBoard.unscheduled')}
-                </Typography>
+                <Stack alignItems="flex-end">
+                    <Typography
+                        sx={{fontSize: 'clamp(0.8rem, 1.4vw, 1.1rem)'}}
+                        color="text.secondary">
+                        {t('event.info.athleteBoard.unscheduled')}
+                    </Typography>
+                    {variant === 'running' && renderRunningStart()}
+                </Stack>
             )
         }
         return (
             <Stack alignItems="flex-end">
                 <Typography
                     sx={{fontSize: 'clamp(1.1rem, 2.4vw, 2rem)', fontWeight: 700, lineHeight: 1.1}}>
-                    {formatTime(match.startTime)}
+                    {formatClockTime(match.startTime)}
                 </Typography>
-                {overdue ? (
+                {variant === 'running' ? (
+                    renderRunningStart()
+                ) : overdue ? (
                     <Typography
                         sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}}
                         color="text.secondary">
@@ -153,14 +176,13 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                     }}>
                                     {team.lane ?? '–'}
                                 </Typography>
-                                <Box sx={{minWidth: 0}}>
+                                <Box sx={{flex: 1, minWidth: 0}}>
                                     <Typography
                                         sx={{
                                             fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)',
                                             fontWeight: 600,
                                         }}>
-                                        {team.clubName ?? ''}
-                                        {team.teamName ? ` | ${team.teamName}` : ''}
+                                        {teamLabel(team, t)}
                                     </Typography>
                                     {team.participants.length > 0 && (
                                         <Typography
@@ -174,6 +196,32 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                         </Typography>
                                     )}
                                 </Box>
+                                {/* Teilergebnis: sobald die Zeitnahme dieses Boot gewertet hat,
+                                    steht die Zeit hier — der Lauf läuft dabei weiter, bis die
+                                    Organisation ihn beendet, und eine später ergänzte Zeitstrafe
+                                    ändert die Zeile beim nächsten Abruf noch. */}
+                                {(team.failed || team.timeString) && (
+                                    <Stack
+                                        alignItems="flex-end"
+                                        sx={{flexShrink: 0, maxWidth: '45%'}}>
+                                        <Typography
+                                            sx={{
+                                                fontSize: 'clamp(0.9rem, 1.5vw, 1.3rem)',
+                                                fontWeight: 600,
+                                                textAlign: 'right',
+                                            }}
+                                            color={team.failed ? 'text.secondary' : 'text.primary'}>
+                                            {team.failed
+                                                ? (team.failedReason ??
+                                                  t('event.info.athleteBoard.failed'))
+                                                : `${team.place != null ? `${team.place}. ` : ''}${team.timeString}`}
+                                        </Typography>
+                                        <AthleteBoardPenaltyNote
+                                            penaltySeconds={team.penaltySeconds}
+                                            penaltyNote={team.penaltyNote}
+                                        />
+                                    </Stack>
+                                )}
                             </Stack>
                         ))}
                     </Stack>

@@ -11997,6 +11997,9 @@ components:
         teamName:
           type: string
           nullable: true
+        teamNumber:
+          type: integer
+          nullable: true
         startNumber:
           type: integer
           nullable: true
@@ -12072,6 +12075,11 @@ components:
         startTime:
           type: string
           format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start, if stamped"
         teams:
           type: array
           items:
@@ -12144,10 +12152,15 @@ components:
       type: object
       required:
         - participants
+        - failed
       properties:
         lane:
           type: integer
           nullable: true
+        teamNumber:
+          type: integer
+          nullable: true
+          description: "the nth team of this club in the competition - only shown when teamName is missing"
         clubName:
           type: string
           nullable: true
@@ -12158,6 +12171,26 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardParticipant'
+        place:
+          type: integer
+          nullable: true
+          description: "partial result of a running match; always null in the upcoming block"
+        timeString:
+          type: string
+          nullable: true
+          description: "partial result of a running match; null means no time yet"
+        penaltySeconds:
+          type: integer
+          nullable: true
+          description: "time penalty in seconds; only stated, never applied - timeString already includes it"
+        penaltyNote:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+          nullable: true
 
     AthleteBoardMatch:
       type: object
@@ -12186,6 +12219,12 @@ components:
           type: string
           format: date-time
           nullable: true
+          description: "scheduled start"
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start; only filled in the running block - null there means the match is current but has not started yet"
         startState:
           $ref: '#/components/schemas/AthleteBoardStartState'
         teams:
@@ -12205,12 +12244,17 @@ components:
       required:
         - lane
         - failed
+        - deregistered
       properties:
         place:
           type: integer
           nullable: true
         lane:
           type: integer
+        teamNumber:
+          type: integer
+          nullable: true
+          description: "the nth team of this club in the competition - only shown when teamName is missing"
         clubName:
           type: string
           nullable: true
@@ -12220,9 +12264,22 @@ components:
         timeString:
           type: string
           nullable: true
+        penaltySeconds:
+          type: integer
+          nullable: true
+          description: "time penalty in seconds; only stated, never applied - timeString already includes it"
+        penaltyNote:
+          type: string
+          nullable: true
         failed:
           type: boolean
         failedReason:
+          type: string
+          nullable: true
+        deregistered:
+          type: boolean
+          description: "withdrawn for this round - listed but marked, since such a team has neither place nor time"
+        deregisteredReason:
           type: string
           nullable: true
 
@@ -12251,6 +12308,12 @@ components:
           type: string
           format: date-time
           nullable: true
+          description: "scheduled start"
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start, if stamped - explains a deviation from the schedule"
         teams:
           type: array
           items:
@@ -12316,6 +12379,11 @@ components:
           type: string
           format: date-time
           nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start; null means the match is marked as current but has not started yet"
         elapsedMinutes:
           type: integer
           format: int64
@@ -12877,12 +12945,16 @@ components:
       required:
         - teamId
         - participants
+        - failed
       properties:
         teamId:
           type: string
           format: uuid
         teamName:
           type: string
+          nullable: true
+        teamNumber:
+          type: integer
           nullable: true
         startNumber:
           type: integer
@@ -12897,6 +12969,22 @@ components:
           nullable: true
         currentPosition:
           type: integer
+          nullable: true
+        timeString:
+          type: string
+          nullable: true
+          description: "partial result of a running match; null means no time yet"
+        penaltySeconds:
+          type: integer
+          nullable: true
+          description: "time penalty in seconds; only stated, never applied - timeString already includes it"
+        penaltyNote:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
           nullable: true
         participants:
           type: array
