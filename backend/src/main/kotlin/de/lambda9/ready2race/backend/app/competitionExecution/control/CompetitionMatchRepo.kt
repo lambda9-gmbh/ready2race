@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchForRun
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListConfigTarget
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
+import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
@@ -81,6 +82,7 @@ object CompetitionMatchRepo {
     fun getStartListConfigTarget(id: UUID) = Jooq.query {
         select(
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
+            COMPETITION.TIMING_SYSTEM,
             COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
             COMPETITION.STARTLIST_CONFIG_ROUNDS,
         )
@@ -97,6 +99,10 @@ object CompetitionMatchRepo {
                 StartListConfigTarget(
                     // Im Schema not null; die Projektion verliert nur die Garantie.
                     isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
+                    // Als Text gespeichert, kein jOOQ-Converter in diesem Projekt -- von Hand
+                    // konvertiert wie EventRepo.getChainProgressionMode. null ist hier legitim:
+                    // es bedeutet "kein Zeitnahmesystem gesetzt".
+                    timingSystem = it[COMPETITION.TIMING_SYSTEM]?.let { s -> TimingSystem.valueOf(s) },
                     qualificationConfig = it[COMPETITION.STARTLIST_CONFIG_QUALIFICATION],
                     roundsConfig = it[COMPETITION.STARTLIST_CONFIG_ROUNDS],
                 )
