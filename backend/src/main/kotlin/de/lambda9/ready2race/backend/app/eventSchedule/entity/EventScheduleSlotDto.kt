@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.entity
 
+import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -35,4 +36,7 @@ data class UnplannedSetupMatchDto(
 data class EventScheduleDto(
     val slots: List<EventScheduleSlotDto>,
     val unplannedSetupMatches: List<UnplannedSetupMatchDto>,
+    /** Steuert im Zeitplan-Tab, ob "Lauf aktivieren"/"Lauf beenden" ohne Warnung durchgehen
+     * (REGATTABUERO) oder als Eingriff ins Schiedsrichter-Dashboard markiert werden. */
+    val chainProgressionMode: ChainProgressionMode,
 )

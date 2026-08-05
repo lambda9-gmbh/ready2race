@@ -44,6 +44,7 @@ object EventScheduleService {
 
             val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
             val unplanned = !EventScheduleRepo.getUnplannedSetupMatches(eventId).orDie()
+            val chainProgressionMode = !EventRepo.getChainProgressionMode(eventId).orDie()
 
             val slots = slotRecords.map { r ->
                 val isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
@@ -82,7 +83,7 @@ object EventScheduleService {
                 )
             }
 
-            KIO.ok(ApiResponse.Dto(EventScheduleDto(slots, unplannedDtos)))
+            KIO.ok(ApiResponse.Dto(EventScheduleDto(slots, unplannedDtos, chainProgressionMode)))
         }
 
     fun createSlot(

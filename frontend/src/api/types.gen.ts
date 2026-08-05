@@ -1125,6 +1125,7 @@ export type EventRegistrationViewDto = {
 export type EventScheduleDto = {
     slots: Array<EventScheduleSlotDto>
     unplannedSetupMatches: Array<UnplannedSetupMatchDto>
+    chainProgressionMode: ChainProgressionMode
 }
 
 export type EventScheduleSlotDto = {

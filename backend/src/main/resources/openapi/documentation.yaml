@@ -12726,6 +12726,7 @@ components:
       required:
         - slots
         - unplannedSetupMatches
+        - chainProgressionMode
       properties:
         slots:
           type: array
@@ -12735,6 +12736,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UnplannedSetupMatchDto'
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
 
     UpsertScheduleSlotRequest:
       type: object

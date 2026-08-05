@@ -258,8 +258,14 @@ const EventSchedule = () => {
     }
 
     // Regattabüro greift direkt vom Zeitplan ein (C1) - unabhängig vom chainProgressionMode der
-    // Veranstaltung, die Aktion selbst prüft serverseitig nur, dass der Slot LINKED ist.
+    // Veranstaltung, die Aktion selbst prüft serverseitig nur, dass der Slot LINKED ist. Im
+    // Nicht-REGATTABUERO-Modus (SCHIEDSRICHTER/DEAKTIVIERT) ist Aktivieren/Beenden normalerweise
+    // Aufgabe des Schiedsrichter-Dashboards - die Bestätigung warnt hier zusätzlich und der
+    // OK-Button heißt "Trotzdem ..." (C2).
     const handleActivate = (slot: EventScheduleSlotDto) => {
+        const mode = data?.chainProgressionMode ?? 'DEAKTIVIERT'
+        const isOffice = mode === 'REGATTABUERO'
+
         confirmAction(
             async () => {
                 const {error} = await activateScheduleSlot({path: {eventId, slotId: slot.id}})
@@ -269,16 +275,33 @@ const EventSchedule = () => {
                 reload()
             },
             {
-                content: t('event.schedule.activateConfirm', {
-                    label: slotLabel(slot),
-                    time: format(new Date(slot.startTime), t('format.time')),
-                }),
-                okText: t('event.schedule.activate'),
+                content: isOffice ? (
+                    t('event.schedule.activateConfirm', {
+                        label: slotLabel(slot),
+                        time: format(new Date(slot.startTime), t('format.time')),
+                    })
+                ) : (
+                    <>
+                        {t('event.schedule.activateConfirm', {
+                            label: slotLabel(slot),
+                            time: format(new Date(slot.startTime), t('format.time')),
+                        })}
+                        <br />
+                        <br />
+                        {t('event.schedule.refereeModeWarning')}
+                    </>
+                ),
+                okText: isOffice
+                    ? t('event.schedule.activate')
+                    : t('event.schedule.activateAnyway'),
             },
         )
     }
 
     const handleFinishSlot = (slot: EventScheduleSlotDto) => {
+        const mode = data?.chainProgressionMode ?? 'DEAKTIVIERT'
+        const isOffice = mode === 'REGATTABUERO'
+
         confirmAction(
             async () => {
                 const {error} = await finishScheduleSlot({path: {eventId, slotId: slot.id}})
@@ -288,11 +311,23 @@ const EventSchedule = () => {
                 reload()
             },
             {
-                content: t('event.schedule.finishConfirm', {
-                    label: slotLabel(slot),
-                    time: format(new Date(slot.startTime), t('format.time')),
-                }),
-                okText: t('event.schedule.finish'),
+                content: isOffice ? (
+                    t('event.schedule.finishConfirm', {
+                        label: slotLabel(slot),
+                        time: format(new Date(slot.startTime), t('format.time')),
+                    })
+                ) : (
+                    <>
+                        {t('event.schedule.finishConfirm', {
+                            label: slotLabel(slot),
+                            time: format(new Date(slot.startTime), t('format.time')),
+                        })}
+                        <br />
+                        <br />
+                        {t('event.schedule.refereeModeWarning')}
+                    </>
+                ),
+                okText: isOffice ? t('event.schedule.finish') : t('event.schedule.finishAnyway'),
             },
         )
     }
