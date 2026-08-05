@@ -918,12 +918,19 @@ object CompetitionExecutionService {
             )
         }
 
-        // Crews that have not been timed yet are skipped rather than treated as an error, so the pull
-        // can be repeated as the heat progresses.
-        val timed = rowsByTeam.mapNotNull { (registrationId, rows) ->
-            rows.single().takeIf { it.result != null }?.let { registrationId to it }
+        // Crews without a usable result are skipped rather than treated as an error, so the pull can
+        // be repeated as the heat progresses. "Ohne Ergebnis" heißt hier: weder Zeit noch echte
+        // Ausscheidung - RaceClocker schreibt in dieselbe Spalte auch Verlaufszustände (`Not started`,
+        // `In race...`), und ein solcher Text als Ausscheidungsgrund würde ein noch fahrendes Boot als
+        // ausgeschieden markieren (siehe [RaceClockerFeedRow.noResultReason]). Ein bloßes
+        // `result != null` reicht dafür nicht.
+        //
+        // Übersprungene Zeilen bleiben in der DB unangetastet: eine vom Schiedsrichter von Hand
+        // eingetragene Ausscheidung darf ein Nachziehen des Laufs nicht wieder löschen.
+        val withResult = rowsByTeam.mapNotNull { (registrationId, rows) ->
+            rows.single().takeIf { it.hasResult }?.let { registrationId to it }
         }
-        if (timed.isEmpty()) return KIO.fail(RaceClockerError.NoResults(target.waveName))
+        if (withResult.isEmpty()) return KIO.fail(RaceClockerError.NoResults(target.waveName))
 
         // Externe Zeitnahme ist Quelle der Wahrheit: die früheste von RaceClocker gemessene
         // Startzeit unter den zugeordneten Booten überschreibt started_at bedingungslos, auch wenn
@@ -946,7 +953,7 @@ object CompetitionExecutionService {
         // out of their lanes.
         !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, rows) -> rows.single() }, userId)
 
-        val parsed = timed.map { (registrationId, row) ->
+        val parsed = withResult.map { (registrationId, row) ->
             ParsedTeamResult(
                 registrationId = registrationId,
                 // Lanes were written above from the feed's list positions; leaving this null keeps

@@ -7,7 +7,8 @@ import java.util.UUID
 /**
  * One participant row of a RaceClocker results feed, reduced to the fields this integration needs.
  *
- * Deliberately not modelled: `Result in seconds` (redundant with [result]) and the finish timestamp
+ * Deliberately not modelled: `Result in seconds` (redundant with [result], and no help in telling a
+ * progress state from an elimination - see [noResultReason]) and the finish timestamp
  * (its key is localised - `Finish` vs `Ziel` - and, unlike the start, nothing here needs it).
  *
  * [penaltySeconds] is carried over for display only: RaceClocker has already added it to [result],
@@ -32,7 +33,10 @@ data class RaceClockerFeedRow(
      * was mapped.
      */
     val ids: List<UUID>,
-    /** Either a formatted time (`HH:MM:SS.d`) or a status text such as `DNS`, `DNF` or `DQ`. */
+    /**
+     * Either a formatted time (`HH:MM:SS.d`), one of the elimination codes `DNS`, `DNF`, `DQ`, or one
+     * of RaceClocker's progress states (`Not started`, `In race...`) - see [noResultReason].
+     */
     val result: String?,
     /**
      * The real start time RaceClocker's clock recorded, read tolerantly from either the English or
@@ -44,18 +48,58 @@ data class RaceClockerFeedRow(
     val penaltySeconds: Int?,
     val penaltyNote: String?,
 ) {
+    val isTime: Boolean get() = result != null && timecodePattern.matches(result.trim())
+
+    val time: String? get() = result?.trim()?.takeIf { isTime }
+
     /**
-     * RaceClocker has no status field: a non-started or disqualified participant carries the status
-     * as text in the result column, with `Result in seconds` left at `0`. Anything that is not a
-     * parsable time is therefore a no-result reason.
+     * The elimination this row carries, normalised to upper case - `null` for a time and for every
+     * state that only says "no result yet".
+     *
+     * RaceClocker has no status field: the result column carries the outcome *and* the state an entry
+     * is currently in. Two of its values are pure progress states - `Not started` is what every entry
+     * holds right after the start list import, `In race...` while the crew is on the water. A real
+     * elimination is set separately by the timekeeper, through a dashboard dropdown that offers
+     * exactly [ELIMINATION_CODES]. (The earlier assumption that anything unparsable is an elimination
+     * was wrong and turned boats still on the water into failed ones.)
+     *
+     * Hence the allowlist: only those three codes count, everything else means "not finished yet".
+     * That choice is deliberate, because the two possible mistakes are not equally expensive. Reading
+     * an unknown text as an elimination claims something false - a boat that is still racing shows up
+     * as failed, and a referee has to notice and undo it. Reading it as pending claims nothing: the
+     * row stays untouched, the pull can be repeated as the heat progresses, and in the worst case a
+     * genuine elimination is entered by hand. Not claiming anything is the smaller mistake.
+     *
+     * The allowlist also removes any need to keep the progress texts themselves in sync: their exact
+     * wording, casing or ellipsis form (`...` vs `…`) cannot change the outcome, since they simply
+     * fail to be one of the three codes.
+     *
+     * `Result in seconds` was checked as a second signal and dropped: it is `0` for every row without
+     * a time, which only separates timed from untimed rows - something [isTime] already does - and
+     * says nothing about progress state versus elimination, the one distinction that matters here.
      */
-    val isTime: Boolean get() = result != null && timecodePattern.matches(result)
+    val noResultReason: String?
+        get() = result
+            ?.takeUnless { isTime }
+            ?.trim()
+            ?.uppercase()
+            ?.takeIf { it in ELIMINATION_CODES }
 
-    val time: String? get() = result?.takeIf { isTime }
-
-    val noResultReason: String? get() = result?.takeUnless { isTime }
+    /**
+     * Whether this row says anything that may be written back to a match team. `false` for rows that
+     * are merely waiting for their time; callers skip those instead of turning them into a result.
+     */
+    val hasResult: Boolean get() = isTime || noResultReason != null
 
     companion object {
+
+        /**
+         * The only texts in the result column that really mean a crew is out - the full contents of
+         * RaceClocker's status dropdown. Matched case-insensitively after trimming; extend this set
+         * (and only this set) if RaceClocker ever adds another status.
+         */
+        val ELIMINATION_CODES = setOf("DNS", "DNF", "DQ")
+
         /**
          * The earliest recorded start across a set of rows - what a match's `started_at` takes over
          * once RaceClocker has timed at least one of its crews. Pulled out as a pure function so the
