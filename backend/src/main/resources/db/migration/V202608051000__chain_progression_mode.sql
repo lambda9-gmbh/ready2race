@@ -11,5 +11,10 @@ alter table event
 update event
 set chain_progression_mode = case when auto_activate_next_match then 'SCHIEDSRICHTER' else 'DEAKTIVIERT' end;
 
+-- Auf bestehenden Datenbanken hängt event_view an der alten Spalte und blockiert das Drop.
+-- afterMigrate.sql droppt und erzeugt alle Views ohnehin bei jedem Lauf neu — hier vorab droppen
+-- ist deshalb gefahrlos.
+drop view if exists event_view;
+
 alter table event
     drop column auto_activate_next_match;
