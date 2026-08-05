@@ -203,10 +203,12 @@ object EventScheduleRepo {
             )
         ).`as`("round_materialized")
 
+        // Dieselben Aliasse wie in getSlots - die Aufrufer lesen die Zeile mit denselben Namen.
         select(
             EVENT_SCHEDULE_SLOT.asterisk(),
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.STARTED_AT.`as`("match_started_at"),
+            COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
             roundMaterialized,
         )
             .from(EVENT_SCHEDULE_SLOT)
