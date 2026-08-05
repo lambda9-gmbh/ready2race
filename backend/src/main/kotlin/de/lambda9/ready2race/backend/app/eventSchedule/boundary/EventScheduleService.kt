@@ -344,6 +344,12 @@ object EventScheduleService {
         val matchId = linkedMatchIdOrNull(row)
             ?: return@comprehension KIO.fail(EventScheduleError.SlotNotLinked(slotId))
 
+        // Ein beendeter Lauf darf nicht wieder aktiviert werden — sonst erscheint er mit altem finished_at als laufend.
+        val matchFinishedAt = row.get("match_finished_at", LocalDateTime::class.java)
+        if (matchFinishedAt != null) {
+            return@comprehension KIO.fail(EventScheduleError.MatchAlreadyFinished(slotId))
+        }
+
         !CompetitionMatchRepo.update(matchId) {
             currentlyRunning = true
             updatedBy = userId

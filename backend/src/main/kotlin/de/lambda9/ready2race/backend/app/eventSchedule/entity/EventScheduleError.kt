@@ -11,6 +11,8 @@ sealed interface EventScheduleError : ServiceError {
     data class SetupMatchNotFound(val setupMatchId: UUID) : EventScheduleError
     data class SetupMatchAlreadyPlanned(val setupMatchId: UUID) : EventScheduleError
     data class MatchAlreadyStarted(val slotId: UUID) : EventScheduleError
+    /** activateSlot (C1) - ein beendeter Lauf darf nicht wieder aktiviert werden, sonst erscheint er mit altem finished_at als laufend. */
+    data class MatchAlreadyFinished(val slotId: UUID) : EventScheduleError
     data class SlotNotSkippable(val slotId: UUID) : EventScheduleError
     /** finish/activate über den Zeitplan (C1) - der Slot muss LINKED sein, sonst gibt es keinen Lauf. */
     data class SlotNotLinked(val slotId: UUID) : EventScheduleError
@@ -25,6 +27,7 @@ sealed interface EventScheduleError : ServiceError {
         is SetupMatchNotFound -> ApiError(HttpStatusCode.NotFound, "Setup match $setupMatchId not found in this event")
         is SetupMatchAlreadyPlanned -> ApiError(HttpStatusCode.Conflict, "Setup match $setupMatchId already has a schedule slot")
         is MatchAlreadyStarted -> ApiError(HttpStatusCode.Conflict, "The match of slot $slotId has already started")
+        is MatchAlreadyFinished -> ApiError(HttpStatusCode.Conflict, "The match of slot $slotId is already finished")
         is SlotNotSkippable -> ApiError(HttpStatusCode.Conflict, "Slot $slotId cannot be skipped in its current state")
         is SlotNotLinked -> ApiError(HttpStatusCode.Conflict, "Slot $slotId is not linked to a match")
         is CompressionImpossible -> ApiError(
