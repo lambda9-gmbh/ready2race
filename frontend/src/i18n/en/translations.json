@@ -891,12 +891,6 @@
           },
           "dialog": {
             "title": "Upload result file",
-            "config": "Configuration",
-            "alert": {
-              "1": "You can create and update configurations ",
-              "2": "here",
-              "3": "."
-            },
             "file": {
               "missing": "Please provide a file.",
               "change": "Change .xls file",
@@ -992,15 +986,6 @@
         },
         "startList": {
           "download": "Download start-list",
-          "dialog": {
-            "title": "Select configuration",
-            "config": "Configuration",
-            "alert": {
-              "1": "You can create and update configurations ",
-              "2": "here",
-              "3": "."
-            }
-          },
           "type": {
             "PDF": "as PDF",
             "CSV": "as CSV"
@@ -1037,19 +1022,36 @@
             },
             "success": "Substitution successfully deleted"
           }
-        },
-        "raceclocker": {
-          "config": {
-            "open": "RaceClocker settings",
-            "title": "RaceClocker settings",
-            "hint": "RaceClocker needs two races per competition: one of type \"individual starts (time trial)\" for the qualification round and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here. ready2race determines by itself which one applies to a given heat.",
-            "timeTrialUrl": "Results address for time trial",
-            "heatsUrl": "Results address for heats",
-            "importHint": "The RaceClocker presets export without a header row, because RaceClocker would otherwise import that row as a participant. Map the columns by their position when importing into RaceClocker – the internal identifier in particular onto \"Extra info\".",
-            "saved": "RaceClocker settings saved",
-            "invalid": "Please enter addresses on raceclocker.com."
-          }
         }
+      },
+      "timing": {
+        "tabTitle": "Timing",
+        "system": "Timing system",
+        "systems": {
+          "none": "not set",
+          "raceclocker": "RaceClocker",
+          "webscorer": "Webscorer"
+        },
+        "raceclockerHint": "RaceClocker needs two races per competition: one of type \"individual starts (time trial)\" for the qualification round and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here. ready2race determines by itself which one applies to a given heat.",
+        "timeTrialUrl": "Results address for time trial",
+        "heatsUrl": "Results address for heats",
+        "startlistQualification": "Start list preset for qualification",
+        "startlistRounds": "Start list preset for other rounds",
+        "startlist": "Start list preset",
+        "resultImport": "Result import preset (xlsx)",
+        "importHint": "The RaceClocker presets export without a header row, because RaceClocker would otherwise import that row as a participant. Map the columns by their position when importing into RaceClocker – the internal identifier in particular onto \"Extra info\".",
+        "presetsHint": {
+          "1": "Presets are created ",
+          "2": "in the configuration",
+          "3": " and apply to all events."
+        },
+        "incomplete": {
+          "title": "This timing setup is not ready for use yet",
+          "heatsUrl": "The results address for the heats race is missing – without it, results cannot be pulled from RaceClocker.",
+          "startlistRounds": "The start list preset is missing – without it, no start list can be exported as CSV."
+        },
+        "saved": "Timing settings saved",
+        "invalid": "Please enter addresses on raceclocker.com."
       },
       "places": {
         "places": "Places",

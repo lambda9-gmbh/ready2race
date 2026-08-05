@@ -891,12 +891,6 @@
           },
           "dialog": {
             "title": "Ergebnisdatei hochladen",
-            "config": "Konfiguration",
-            "alert": {
-              "1": "Konfigurationen können ",
-              "2": "hier",
-              "3": " erstellt und bearbeitet werden."
-            },
             "file": {
               "missing": "Bitte wählen Sie eine Datei aus.",
               "change": ".xls Datei ändern",
@@ -992,15 +986,6 @@
         },
         "startList": {
           "download": "Startliste herunterladen",
-          "dialog": {
-            "title": "Konfiguration auswählen",
-            "config": "Konfiguration",
-            "alert": {
-              "1": "Konfigurationen können ",
-              "2": "hier",
-              "3": " erstellt und bearbeitet werden."
-            }
-          },
           "type": {
             "PDF": "als PDF",
             "CSV": "als CSV"
@@ -1037,19 +1022,36 @@
             "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
             "success": "Ummeldungen erfolgreich gelöscht"
           }
-        },
-        "raceclocker": {
-          "config": {
-            "open": "RaceClocker-Einstellungen",
-            "title": "RaceClocker-Einstellungen",
-            "hint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
-            "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
-            "heatsUrl": "Ergebnis-Adresse Läufe",
-            "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
-            "saved": "RaceClocker-Einstellungen gespeichert",
-            "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
-          }
         }
+      },
+      "timing": {
+        "tabTitle": "Zeitnahme",
+        "system": "Zeitnahme-System",
+        "systems": {
+          "none": "nicht gesetzt",
+          "raceclocker": "RaceClocker",
+          "webscorer": "Webscorer"
+        },
+        "raceclockerHint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
+        "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
+        "heatsUrl": "Ergebnis-Adresse Läufe",
+        "startlistQualification": "Startlisten-Preset Qualifikation",
+        "startlistRounds": "Startlisten-Preset übrige Runden",
+        "startlist": "Startlisten-Preset",
+        "resultImport": "Ergebnis-Import-Preset (xlsx)",
+        "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
+        "presetsHint": {
+          "1": "Presets werden ",
+          "2": "in der Konfiguration",
+          "3": " angelegt und gelten für alle Veranstaltungen."
+        },
+        "incomplete": {
+          "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
+          "heatsUrl": "Es fehlt die Ergebnis-Adresse des Läufe-Rennens – ohne sie lassen sich keine Ergebnisse aus RaceClocker holen.",
+          "startlistRounds": "Es fehlt das Startlisten-Preset – ohne es lässt sich keine Startliste als CSV exportieren."
+        },
+        "saved": "Zeitnahme-Einstellungen gespeichert",
+        "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
       },
       "places": {
         "places": "Platzierungen",

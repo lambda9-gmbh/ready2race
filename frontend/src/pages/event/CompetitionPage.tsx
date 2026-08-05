@@ -30,6 +30,7 @@ import CompetitionTeamCompositionEntry from '@components/event/competition/Compe
 import CompetitionRegistrations from '@components/event/competition/registration/CompetitionRegistrations.tsx'
 import {a11yProps, getRegistrationState} from '@utils/helpers.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
+import CompetitionTimingConfig from '@components/event/competition/timing/CompetitionTimingConfig.tsx'
 import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
 import CompetitionRegistrationTeams from '@components/event/competition/registration/CompetitionRegistrationTeams.tsx'
 import {format} from 'date-fns'
@@ -40,6 +41,7 @@ const COMPETITION_TABS = [
     'teams',
     'setup',
     'execution',
+    'timing',
     'places',
 ] as const
 export type CompetitionTab = (typeof COMPETITION_TABS)[number]
@@ -187,6 +189,12 @@ const CompetitionPage = () => {
                                 <Tab
                                     label={t('event.competition.execution.tabTitle')}
                                     {...tabProps('execution')}
+                                />
+                            )}
+                            {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
+                                <Tab
+                                    label={t('event.competition.timing.tabTitle')}
+                                    {...tabProps('timing')}
                                 />
                             )}
                             {user.checkPrivilege(readResultGlobal) && !eventData.challengeEvent && (
@@ -412,6 +420,11 @@ const CompetitionPage = () => {
                         {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
                             <TabPanel index={'execution'} activeTab={activeTab}>
                                 <CompetitionExecution/>
+                            </TabPanel>
+                        )}
+                        {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
+                            <TabPanel index={'timing'} activeTab={activeTab}>
+                                <CompetitionTimingConfig />
                             </TabPanel>
                         )}
                         {user.checkPrivilege(readResultGlobal) && !eventData.challengeEvent && (

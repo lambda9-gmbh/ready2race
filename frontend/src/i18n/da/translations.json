@@ -891,12 +891,6 @@
           },
           "dialog": {
             "title": "Upload resultatfil",
-            "config": "Konfiguration",
-            "alert": {
-              "1": "Konfigurationer kan ",
-              "2": "her",
-              "3": " oprettes og redigeres."
-            },
             "file": {
               "missing": "Vælg venligst en fil.",
               "change": "Skift .xls-fil",
@@ -992,15 +986,6 @@
         },
         "startList": {
           "download": "Download startliste",
-          "dialog": {
-            "title": "Vælg konfiguration",
-            "config": "Konfiguration",
-            "alert": {
-              "1": "Konfigurationer kan ",
-              "2": "her",
-              "3": " oprettes og redigeres."
-            }
-          },
           "type": {
             "PDF": "som PDF",
             "CSV": "som CSV"
@@ -1037,19 +1022,36 @@
             "error": "Der opstod en fejl ved sletning af ombytningerne",
             "success": "Ombytninger slettet"
           }
-        },
-        "raceclocker": {
-          "config": {
-            "open": "RaceClocker-indstillinger",
-            "title": "RaceClocker-indstillinger",
-            "hint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
-            "timeTrialUrl": "Resultatadresse for enkeltstart",
-            "heatsUrl": "Resultatadresse for heat",
-            "importHint": "RaceClocker-skabelonerne eksporterer uden overskriftsrække, fordi RaceClocker ellers importerer den som deltager. Tilknyt derfor kolonnerne efter deres rækkefølge ved import i RaceClocker – især den interne id til \"Extra info\".",
-            "saved": "RaceClocker-indstillinger gemt",
-            "invalid": "Angiv adresser på raceclocker.com."
-          }
         }
+      },
+      "timing": {
+        "tabTitle": "Tidtagning",
+        "system": "Tidtagningssystem",
+        "systems": {
+          "none": "ikke angivet",
+          "raceclocker": "RaceClocker",
+          "webscorer": "Webscorer"
+        },
+        "raceclockerHint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
+        "timeTrialUrl": "Resultatadresse for enkeltstart",
+        "heatsUrl": "Resultatadresse for heat",
+        "startlistQualification": "Startlistepreset til kvalifikation",
+        "startlistRounds": "Startlistepreset til øvrige runder",
+        "startlist": "Startlistepreset",
+        "resultImport": "Resultatimportpreset (xlsx)",
+        "importHint": "RaceClocker-skabelonerne eksporterer uden overskriftsrække, fordi RaceClocker ellers importerer den som deltager. Tilknyt derfor kolonnerne efter deres rækkefølge ved import i RaceClocker – især den interne id til \"Extra info\".",
+        "presetsHint": {
+          "1": "Presets oprettes ",
+          "2": "i konfigurationen",
+          "3": " og gælder for alle arrangementer."
+        },
+        "incomplete": {
+          "title": "Denne tidtagning er endnu ikke klar til brug",
+          "heatsUrl": "Resultatadressen for heat-løbet mangler – uden den kan der ikke hentes resultater fra RaceClocker.",
+          "startlistRounds": "Startlistepresettet mangler – uden det kan der ikke eksporteres en startliste som CSV."
+        },
+        "saved": "Tidtagningsindstillinger gemt",
+        "invalid": "Angiv adresser på raceclocker.com."
       },
       "places": {
         "places": "Placeringer",
