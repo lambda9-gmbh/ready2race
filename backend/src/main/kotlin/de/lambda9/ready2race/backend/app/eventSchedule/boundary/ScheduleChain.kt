@@ -3,8 +3,10 @@ package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleSlotState
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_SCHEDULE_SLOT
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -19,6 +21,13 @@ data class ChainSlot(
     val matchId: UUID?,
     val matchFinished: Boolean,
     val matchOpen: Boolean,
+    /**
+     * War der Lauf schon aktiviert (competition_match.currently_running), bevor er beendet wurde?
+     * Unterscheidet in [ScheduleChain.decideNext] einen noch laufenden Sibling-Lauf derselben
+     * Startzeit (blockiert das Vorrücken) von einem frisch aktivierbaren Lauf derselben Gruppe
+     * (Default `false`, unkritisch für alle Aufrufer, die parallele Starts nicht testen).
+     */
+    val currentlyRunning: Boolean = false,
 )
 
 sealed interface ChainDecision {
@@ -30,14 +39,20 @@ sealed interface ChainDecision {
 object ScheduleChain {
 
     /**
-     * Wandert die Slots hinter dem beendeten Lauf vorwärts, gruppiert nach Startzeit — parallele
-     * Starts gehören zusammen und entscheiden als Einheit, nicht die zufällige Zeilenreihenfolge
-     * innerhalb derselben Startzeit. Für jede Gruppe (aufsteigend sortiert):
+     * Wandert die Slots ab dem beendeten Lauf (einschließlich seiner eigenen Gruppe, siehe
+     * [EventScheduleRepo.getChainSlots]) vorwärts, gruppiert nach Startzeit — parallele Starts
+     * gehören zusammen und entscheiden als Einheit, nicht die zufällige Zeilenreihenfolge innerhalb
+     * derselben Startzeit. Für jede Gruppe (aufsteigend sortiert):
      * - Enthält sie einen wartenden Slot, stoppt die Suche bewusst OHNE Fehler: Ein paralleler
      *   Start darf nicht halb losgeschickt werden. Die Kette wartet, bis die Runde gesetzt wird —
      *   createNewRound stößt sie dann wieder an (zweiter Auslöser).
-     * - Sonst werden alle aktivierbaren Läufe der Gruppe (LINKED, nicht beendet, noch offen)
-     *   gemeinsam aktiviert.
+     * - Läuft in dieser Gruppe noch ein anderer (paralleler) Lauf, der weder beendet noch
+     *   geschlossen ist, wird NICHTS getan: die Regel "die ganze Startgruppe muss fertig sein,
+     *   bevor die nächste losgeht" (Vorgabe von Thomas) bedeutet, dass der zuletzt fertige Lauf der
+     *   Gruppe den Vorstoß auslöst, nicht der erste. Ohne diese Prüfung würde ein einzeln beendeter
+     *   Lauf sofort die nächste Gruppe aktivieren, während sein Parallel-Lauf noch läuft.
+     * - Sonst werden alle noch nicht aktivierten, aktivierbaren Läufe der Gruppe (LINKED, nicht
+     *   beendet, noch offen, noch nicht laufend) gemeinsam aktiviert.
      * - Hat die Gruppe nur übersprungene, entfallene, freie oder bereits erledigte/geschlossene
      *   Slots, wird sie übergangen und die nächste Gruppe betrachtet.
      */
@@ -50,8 +65,15 @@ object ScheduleChain {
                 return ChainDecision.WaitingForRound
             }
 
+            val siblingStillRunning = group.any {
+                it.state == EventScheduleSlotState.LINKED && !it.matchFinished && it.matchOpen && it.currentlyRunning
+            }
+            if (siblingStillRunning) {
+                return ChainDecision.NothingToDo
+            }
+
             val activatable = group.filter {
-                it.state == EventScheduleSlotState.LINKED && !it.matchFinished && it.matchOpen
+                it.state == EventScheduleSlotState.LINKED && !it.matchFinished && it.matchOpen && !it.currentlyRunning
             }
             if (activatable.isNotEmpty()) {
                 return ChainDecision.Activate(activatable.mapNotNull { it.matchId })
@@ -90,8 +112,8 @@ object ScheduleChainService {
      * will die Kette gar nicht.
      */
     fun resumeIfParked(eventId: UUID, userId: UUID): App<Nothing, Unit> = KIO.comprehension {
-        val chainEnabled = !EventRepo.getAutoActivateNextMatch(eventId).orDie()
-        if (!chainEnabled) {
+        val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        if (mode == ChainProgressionMode.DEAKTIVIERT) {
             return@comprehension KIO.unit
         }
 
@@ -134,6 +156,7 @@ object ScheduleChainService {
                     matchId = if (matchExists) r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] else null,
                     matchFinished = r.get("match_finished_at", LocalDateTime::class.java) != null,
                     matchOpen = r.get("match_open", Boolean::class.java) == true,
+                    currentlyRunning = r[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
                 )
             })
         }

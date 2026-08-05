@@ -1,4 +1,4 @@
-import {createContext, useContext} from 'react'
+import {createContext, ReactNode, useContext} from 'react'
 import {SxProps, Theme} from '@mui/material'
 
 export type Confirmation = {
@@ -17,7 +17,7 @@ export const useConfirmation = (): Confirmation => {
 
 export type ConfirmationOptions = {
     title?: string
-    content?: string
+    content?: ReactNode
     cancelText?: string
     okText?: string
     cancelAction?: () => void

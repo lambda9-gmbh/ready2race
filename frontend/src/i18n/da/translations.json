@@ -491,8 +491,14 @@
     "allowSelfSubmission": "Tillad selvstændig indsendelse af resultater",
     "submissionNeedsVerification": "Indsendte resultater skal verificeres",
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
-    "autoActivateNextMatch": "Aktiver næste løb automatisk",
-    "autoActivateNextMatchHint": "Når en dommer afslutter et løb i dashboardet, aktiveres løbene med næste starttid. Kun nyttigt med en komplet tidsplan — ellers rammer kæden det forkerte løb. Med en vedligeholdt tidsplan (fanen Tidsplan) følger kæden slottene og venter ved løb, der endnu ikke er fastsat.",
+    "chainProgressionMode": {
+      "label": "Kædetilstand",
+      "SCHIEDSRICHTER": "Dommer — afslut og kæde via dommer-dashboardet",
+      "REGATTABUERO": "Regattakontor — afslut og aktiver udelukkende via tidsplanen",
+      "DEAKTIVIERT": "Deaktiveret — ingen automatisk aktivering"
+    },
+    "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
+    "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
     "invoice": {
       "prefix": "Fakturapræfiks",
       "paymentDueBy": "Betalingsfrist for tilmeldingsgebyrer",
@@ -855,11 +861,11 @@
             "DNF": "Ikke fuldført",
             "DSQ": "Diskvalificeret"
           },
-            "penalty": "Tidsstraf inkl. {{seconds}} s",
-            "penaltySeconds": "Straf (s)",
-            "penaltyShort": "Straf",
-            "penaltyNote": "Årsag til straf",
-            "penaltyNoteShort": "Årsag",
+          "penalty": "Tidsstraf inkl. {{seconds}} s",
+          "penaltySeconds": "Straf (s)",
+          "penaltyShort": "Straf",
+          "penaltyNote": "Årsag til straf",
+          "penaltyNoteShort": "Årsag",
           "validation": {
             "duplicates": {
               "single": "Placeringen: {{places}} bruges flere gange.",
@@ -1240,6 +1246,7 @@
       "matchTeams": "Løbshold",
       "executionOrder": "Udførelsesrækkefølge: {{order}}",
       "pendingRound": "Løb endnu ikke fastsat",
+      "freeSlot": "Programpunkt",
       "athleteBoard": {
         "running": "Aktuelt løb",
         "upcoming": "Næste løb",
@@ -1303,6 +1310,7 @@
         "everySeconds": "Hvert {{seconds}}. sekund"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
+      "resultsCompleteWaiting": "Resultater komplette — venter på afslutning",
       "control": {
         "finish": "Afslut løb",
         "finishing": "Afsluttes …",
@@ -1310,7 +1318,6 @@
         "finished": "Løbet er afsluttet — næste løb aktiveret",
         "deactivate": "Deaktiver løb",
         "activate": "Aktiver løb",
-        "start": "Start",
         "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
         "openResults": {
           "title": "Manglende resultater",
@@ -1366,13 +1373,23 @@
         "FREE": "Programpunkt",
         "WAITING": "Løb endnu ikke fastsat",
         "LINKED": "Forbundet",
-        "OBSOLETE": "Bortfalder",
-        "SKIPPED": "Sprunget over",
+        "OBSOLETE": "Forfaldet",
+        "SKIPPED": "Aflyst",
         "finished": "Afsluttet"
       },
-      "skip": "Spring over",
-      "unskip": "Fortryd spring over",
-      "skipConfirm": "Vil du virkelig springe slot „{{label}}“ over kl. {{time}}? Kæden springer den så over.",
+      "skip": "Marker som aflyst",
+      "unskip": "Fortryd aflysning",
+      "skipConfirm": "„{{label}}“ kl. {{time}} aflyses? Slotten markeres som aflyst og udelades af kæden.",
+      "unskipConfirm": "Aflysning af „{{label}}“ kl. {{time}} fortrydes? Slotten indgår igen normalt.",
+      "skipRound": "Runden aflyses",
+      "skipRoundConfirm": "Alle {{count}} slots i runden „{{label}}“ aflyses? Løbene afholdes ikke og udelades af kæden.",
+      "activate": "Aktiver løb",
+      "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
+      "activateAnyway": "Aktiver alligevel",
+      "finish": "Afslut løb",
+      "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Afhængigt af kædetilstanden aktiveres de næste løb.",
+      "finishAnyway": "Afslut alligevel",
+      "refereeModeWarning": "Dommertilstand er aktiv: løb aktiveres og afsluttes normalt af en dommer via dommer-dashboardet. Et indgreb herfra omgår denne vej.",
       "managedHint": "Vedligeholdes via tidsplanen",
       "unplanned": "Ikke planlagte løb",
       "noUnplanned": "Alle løb er planlagt.",
@@ -1408,7 +1425,27 @@
         "old": "Gammel",
         "new": "Ny",
         "unchanged": "„Anvend“ er kun muligt, så længe formularen ikke er ændret siden forhåndsvisningen. Kør venligst forhåndsvisningen igen.",
-        "impossible": "Kan ikke indhente — kun {{max}} minutters spillerum. Vælg en senere mål-slot."
+        "impossible": "Kan ikke indhente — kun {{max}} minutters spillerum. Vælg en senere mål-slot.",
+        "mode": "Metode",
+        "delayMinutes": "Forsinkelse (minutter)",
+        "help": {
+          "plus": "Alle slots fra den valgte slot og frem flyttes med de angivne minutter (negativ = tidligere).",
+          "setTime": "Den valgte slot får den nye starttid; alle efterfølgende slots beholder deres afstande.",
+          "compress": "Den angivne forsinkelse indhentes frem til mål-slotten: afstandene indimellem forkortes, mål-slotten beholder sit oprindelige tidspunkt."
+        }
+      },
+      "allPlanned": "Alle planlagte løb er allerede indsat.",
+      "goToExecution": "Til gennemførelse",
+      "indicator": {
+        "now": "Nu",
+        "state": {
+          "finished": "Afsluttet",
+          "running": "Kører",
+          "linked": "Tilknyttet",
+          "waiting": "Løb ikke sat endnu",
+          "free": "Programpunkt",
+          "skipped": "Sprunget over"
+        }
       }
     },
     "results": {

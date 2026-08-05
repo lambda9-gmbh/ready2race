@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
@@ -139,6 +140,7 @@ object LiveDashboardService {
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
             val pendingSlots = !getPendingSlots(eventId, matches.map { it.matchId }.toSet())
+            val chainProgressionMode = !EventRepo.getChainProgressionMode(eventId).orDie()
 
             KIO.ok(
                 ApiResponse.ETagged(
@@ -147,22 +149,26 @@ object LiveDashboardService {
                         // Unabhängig vom Scope: auch im LIVE-Ausschnitt soll sichtbar bleiben, was
                         // als nächstes ansteht, auch wenn die Runde noch nicht erzeugt ist.
                         pendingSlots = pendingSlots,
+                        chainProgressionMode = chainProgressionMode,
                     )
                 )
             )
         }
 
     /**
-     * WAITING-Slots des Events als Platzhalter (Task 14) - aufsteigend nach Startzeit, da
-     * [EventScheduleRepo.getSlots] bereits so sortiert liefert. Die "nur WAITING zählt"-Regel
-     * steckt gemeinsam mit der Athleten-Anzeige in [EventScheduleLogic.pendingSlotOrNull]: SKIPPED,
-     * FREE, LINKED und OBSOLETE liefern dort keinen Eintrag - LINKED ist bereits ein echter Lauf
-     * und steckt in [matches], die anderen sind kein Kandidat für einen künftigen Lauf.
+     * WAITING- und FREE-Slots des Events als Platzhalter (Task 14, erweitert um Programmpunkte) -
+     * gemeinsam nach Startzeit sortiert. Die "nur WAITING zählt"-Regel für Lauf-Platzhalter steckt
+     * gemeinsam mit der Athleten-Anzeige in [EventScheduleLogic.pendingSlotOrNull]: SKIPPED, FREE,
+     * LINKED und OBSOLETE liefern dort keinen Eintrag - LINKED ist bereits ein echter Lauf und
+     * steckt in [matches], die anderen sind kein Kandidat für einen künftigen Lauf. FREE-Slots
+     * (Programmpunkte) kommen zusätzlich über [EventScheduleLogic.freeSlotOrNull] hinzu - anders
+     * als bei der Athleten-Anzeige/dem Kiosk ist das hier gewollt: Schiedsrichter sollen auch
+     * Pausen im Ablauf sehen, öffentliche Boards bewusst nicht.
      */
     private fun getPendingSlots(eventId: UUID, matchIds: Set<UUID>): App<Nothing, List<PendingSlotDto>> = KIO.comprehension {
         val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
 
-        val result = slotRecords.mapNotNull { r ->
+        val waiting = slotRecords.mapNotNull { r ->
             EventScheduleLogic.pendingSlotOrNull(
                 slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
                 setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
@@ -183,13 +189,33 @@ object LiveDashboardService {
                 PendingSlotDto(
                     slotId = slot.slotId,
                     startTime = slot.startTime,
+                    name = null,
                     competitionName = slot.competitionName,
                     roundName = slot.roundName,
                     matchName = slot.matchName,
                 )
             }
 
-        KIO.ok(result)
+        val free = slotRecords.mapNotNull { r ->
+            EventScheduleLogic.freeSlotOrNull(
+                slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
+                isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null,
+                name = r[EVENT_SCHEDULE_SLOT.NAME],
+                startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+            )
+        }.map { slot ->
+            PendingSlotDto(
+                slotId = slot.slotId,
+                startTime = slot.startTime,
+                name = slot.name,
+                competitionName = null,
+                roundName = null,
+                matchName = null,
+            )
+        }
+
+        KIO.ok((waiting + free).sortedBy { it.startTime })
     }
 
     /**
@@ -231,6 +257,11 @@ object LiveDashboardService {
      *
      * Damit hält sich das Feld ohne Zutun aktuell: Schiedsrichter sehen den Lauf, den sie gerade
      * vorbereiten oder abnehmen, und geben ihn nach der Ergebniskontrolle selbst frei.
+     *
+     * Steht die Veranstaltung auf `chainProgressionMode = REGATTABUERO`, ist dieser Weg gesperrt —
+     * dort beendet ausschließlich das Büro über den Zeitplan
+     * ([de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleService.finishSlot],
+     * das denselben [finishMatchInternal] ungegatet aufruft).
      */
     fun finishMatch(
         eventId: UUID,
@@ -243,19 +274,42 @@ object LiveDashboardService {
             return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
         }
 
+        val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        if (mode == ChainProgressionMode.REGATTABUERO) {
+            return@comprehension KIO.fail(LiveDashboardError.FinishReservedForOffice)
+        }
+
+        !finishMatchInternal(eventId, matchId, userId, openResults, mode)
+
+        noData
+    }
+
+    /**
+     * Der eigentliche Beenden-Ablauf, geteilt zwischen dem Schiedsrichter-Dashboard ([finishMatch],
+     * oben mode-gated) und dem Regattabüro
+     * ([de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleService.finishSlot],
+     * das IMMER beenden darf, unabhängig vom Modus — das Büro kann jederzeit eingreifen).
+     *
+     * Bewusst hier statt im eventSchedule-Paket: `finishMatch` importiert bereits dessen
+     * `ScheduleChainService`/`EventScheduleRepo` (liveDashboard -> eventSchedule); ein Aufruf in die
+     * Gegenrichtung wäre ein zweiter Paket-Zyklus, der den ersten nur verdoppelt, nicht auflöst.
+     * Kotlin kompiliert beide Pakete ohnehin in einem Modul (kein getrennter Kompilierungsschritt
+     * wie bei Java-Multimodul-Grenzen) — der Zyklus ist technisch folgenlos. Die Alternative, den
+     * ganzen bereits getesteten `finishMatch`-Ablauf samt Kettenlogik nach eventSchedule zu
+     * verschieben, hätte den bestehenden Code nur umständlicher gemacht, ohne den Zyklus wirklich
+     * zu vermeiden — deshalb bleibt die Logik hier, `EventScheduleService` ruft sie auf.
+     */
+    internal fun finishMatchInternal(
+        eventId: UUID,
+        matchId: UUID,
+        userId: UUID,
+        openResults: OpenResultHandling?,
+        mode: ChainProgressionMode,
+    ): App<Nothing, Unit> = KIO.comprehension {
         // Sammelentscheidung für die Boote ohne Ergebnis, bevor der Lauf aus der Ansicht geht.
         if (openResults != null) {
             !LiveDashboardRepo.markOpenTeamsFailed(matchId, openResults.name, userId).orDie()
         }
-
-        // Die Kette läuft vorwärts: aktiviert werden nur Läufe, die später starten als der eben
-        // beendete. Sonst würde ein ohne vollständige Ergebnisse freigegebener Lauf sich selbst
-        // wieder einreihen — zurückholen geht bewusst nur von Hand.
-        //
-        // Ist die Automatik für die Veranstaltung aus, beendet der Aufruf nur diesen Lauf. Das ist
-        // die sichere Wahl, solange der Zeitplan Lücken hat: Startzeiten stehen erst fest, wenn die
-        // Läufe einer Runde gesetzt sind, und die Kette würde sonst den falschen Lauf greifen.
-        val chainEnabled = !EventRepo.getAutoActivateNextMatch(eventId).orDie()
 
         !setRunning(matchId, false, userId)
         !CompetitionMatchRepo.update(matchId) {
@@ -264,7 +318,14 @@ object LiveDashboardService {
             updatedAt = LocalDateTime.now()
         }.orDie()
 
-        if (chainEnabled) {
+        // Die Kette läuft vorwärts: aktiviert werden nur Läufe, die später starten als der eben
+        // beendete. Sonst würde ein ohne vollständige Ergebnisse freigegebener Lauf sich selbst
+        // wieder einreihen — zurückholen geht bewusst nur von Hand.
+        //
+        // Steht die Veranstaltung auf DEAKTIVIERT, beendet der Aufruf nur diesen Lauf. Das ist die
+        // sichere Wahl, solange der Zeitplan Lücken hat: Startzeiten stehen erst fest, wenn die
+        // Läufe einer Runde gesetzt sind, und die Kette würde sonst den falschen Lauf greifen.
+        if (mode != ChainProgressionMode.DEAKTIVIERT) {
             val slotTime = !EventScheduleRepo.getSlotBySetupMatch(matchId).orDie()
             // Bei teilweise gepflegtem Zeitstrahl entscheidet jeder Lauf für sich — ein Lauf ohne
             // Slot nutzt die Legacy-Logik, auch wenn andere Läufe Slots haben.
@@ -284,7 +345,7 @@ object LiveDashboardService {
             }
         }
 
-        noData
+        KIO.unit
     }
 
     /** Manuelles Übersteuern, falls zu viele oder zu wenige Läufe aktiv sind. */

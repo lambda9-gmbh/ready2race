@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {
     Box,
@@ -16,20 +16,61 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material'
-import {Add, Delete, Edit, EventBusy, EventRepeat} from '@mui/icons-material'
+import {
+    Add,
+    Delete,
+    Edit,
+    EventBusy,
+    EventRepeat,
+    OpenInNew,
+    PlayArrow,
+    PlaylistRemove,
+    Stop,
+} from '@mui/icons-material'
 import {format} from 'date-fns'
+import {Link} from '@tanstack/react-router'
 import {eventRoute} from '@routes'
-import {deleteScheduleSlot, getEventSchedule, skipScheduleSlot, unskipScheduleSlot} from '@api/sdk.gen.ts'
+import {
+    activateScheduleSlot,
+    deleteScheduleSlot,
+    finishScheduleSlot,
+    getEventSchedule,
+    skipScheduleRound,
+    skipScheduleSlot,
+    unskipScheduleSlot,
+} from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
-import {groupSlotsByDay, isEditable, slotLabel} from './common.ts'
+import {groupSlotsByDay, isEditable, slotLabel, slotsInRound} from './common.ts'
+import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 import ScheduleImportDialog from './ScheduleImportDialog.tsx'
+import ScheduleTimelineIndicator from './ScheduleTimelineIndicator.tsx'
+
+/** Clock for the timeline's now-marker: the Zeitplan tab has no server-time feed of its own, so a
+ * locally ticking clock (refreshed every 30s, plenty for a position marker) stands in for it. */
+const useLocalClock = (intervalMs: number): Date => {
+    const [now, setNow] = useState(() => new Date())
+    useEffect(() => {
+        const id = window.setInterval(() => setNow(new Date()), intervalMs)
+        return () => window.clearInterval(id)
+    }, [intervalMs])
+    return now
+}
+
+/** Einheitliche Breite eines Aktions-Platzes (IconButton size=small: 20px Icon + 2×5px Padding). */
+const actionSlotSx = {
+    width: 30,
+    height: 30,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+} as const
 
 const stateChipProps = (
     slot: EventScheduleSlotDto,
@@ -77,6 +118,29 @@ const EventSchedule = () => {
     const [shiftDaySlots, setShiftDaySlots] = useState<EventScheduleSlotDto[]>([])
 
     const [importDialogOpen, setImportDialogOpen] = useState(false)
+
+    const now = useLocalClock(30_000)
+    const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
+    const [highlightedSlotId, setHighlightedSlotId] = useState<string | null>(null)
+    const highlightTimeoutRef = useRef<number | null>(null)
+
+    const scrollToSlot = (slotId: string) => {
+        rowRefs.current.get(slotId)?.scrollIntoView({behavior: 'smooth', block: 'center'})
+        if (highlightTimeoutRef.current != null) {
+            window.clearTimeout(highlightTimeoutRef.current)
+        }
+        setHighlightedSlotId(slotId)
+        highlightTimeoutRef.current = window.setTimeout(() => setHighlightedSlotId(null), 1500)
+    }
+
+    useEffect(
+        () => () => {
+            if (highlightTimeoutRef.current != null) {
+                window.clearTimeout(highlightTimeoutRef.current)
+            }
+        },
+        [],
+    )
 
     const {data, pending} = useFetch(signal => getEventSchedule({signal, path: {eventId}}), {
         onResponse: ({error}) => {
@@ -143,7 +207,33 @@ const EventSchedule = () => {
                     label: slotLabel(slot),
                     time: format(new Date(slot.startTime), t('format.time')),
                 }),
-                okText: t('event.schedule.skip'),
+                okText: t('event.schedule.state.SKIPPED'),
+            },
+        )
+    }
+
+    const handleSkipRound = (slot: EventScheduleSlotDto) => {
+        const setupRoundId = slot.setupRoundId
+        if (!setupRoundId) {
+            return
+        }
+        const affected = slotsInRound(data?.slots ?? [], setupRoundId)
+        const label = [slot.competitionName, slot.roundName].filter(Boolean).join(' – ')
+
+        confirmAction(
+            async () => {
+                const {error} = await skipScheduleRound({path: {eventId, setupRoundId}})
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+                reload()
+            },
+            {
+                content: t('event.schedule.skipRoundConfirm', {
+                    label,
+                    count: affected.length,
+                }),
+                okText: t('event.schedule.skipRound'),
             },
         )
     }
@@ -157,7 +247,88 @@ const EventSchedule = () => {
                 }
                 reload()
             },
-            {okText: t('event.schedule.unskip')},
+            {
+                content: t('event.schedule.unskipConfirm', {
+                    label: slotLabel(slot),
+                    time: format(new Date(slot.startTime), t('format.time')),
+                }),
+                okText: t('event.schedule.unskip'),
+            },
+        )
+    }
+
+    // Regattabüro greift direkt vom Zeitplan ein (C1) - unabhängig vom chainProgressionMode der
+    // Veranstaltung, die Aktion selbst prüft serverseitig nur, dass der Slot LINKED ist. Im
+    // Nicht-REGATTABUERO-Modus (SCHIEDSRICHTER/DEAKTIVIERT) ist Aktivieren/Beenden normalerweise
+    // Aufgabe des Schiedsrichter-Dashboards - die Bestätigung warnt hier zusätzlich und der
+    // OK-Button heißt "Trotzdem ..." (C2).
+    const handleActivate = (slot: EventScheduleSlotDto) => {
+        const mode = data?.chainProgressionMode ?? 'DEAKTIVIERT'
+        const isOffice = mode === 'REGATTABUERO'
+
+        confirmAction(
+            async () => {
+                const {error} = await activateScheduleSlot({path: {eventId, slotId: slot.id}})
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+                reload()
+            },
+            {
+                content: isOffice ? (
+                    t('event.schedule.activateConfirm', {
+                        label: slotLabel(slot),
+                        time: format(new Date(slot.startTime), t('format.time')),
+                    })
+                ) : (
+                    <>
+                        {t('event.schedule.activateConfirm', {
+                            label: slotLabel(slot),
+                            time: format(new Date(slot.startTime), t('format.time')),
+                        })}
+                        <br />
+                        <br />
+                        {t('event.schedule.refereeModeWarning')}
+                    </>
+                ),
+                okText: isOffice
+                    ? t('event.schedule.activate')
+                    : t('event.schedule.activateAnyway'),
+            },
+        )
+    }
+
+    const handleFinishSlot = (slot: EventScheduleSlotDto) => {
+        const mode = data?.chainProgressionMode ?? 'DEAKTIVIERT'
+        const isOffice = mode === 'REGATTABUERO'
+
+        confirmAction(
+            async () => {
+                const {error} = await finishScheduleSlot({path: {eventId, slotId: slot.id}})
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+                reload()
+            },
+            {
+                content: isOffice ? (
+                    t('event.schedule.finishConfirm', {
+                        label: slotLabel(slot),
+                        time: format(new Date(slot.startTime), t('format.time')),
+                    })
+                ) : (
+                    <>
+                        {t('event.schedule.finishConfirm', {
+                            label: slotLabel(slot),
+                            time: format(new Date(slot.startTime), t('format.time')),
+                        })}
+                        <br />
+                        <br />
+                        {t('event.schedule.refereeModeWarning')}
+                    </>
+                ),
+                okText: isOffice ? t('event.schedule.finish') : t('event.schedule.finishAnyway'),
+            },
         )
     }
 
@@ -202,6 +373,13 @@ const EventSchedule = () => {
                             </Button>
                         )}
                     </Stack>
+                    <Box sx={{mb: 2}}>
+                        <ScheduleTimelineIndicator
+                            entries={scheduleSlotsToEntries(section.slots)}
+                            now={now}
+                            onEntryClick={scrollToSlot}
+                        />
+                    </Box>
                     <TableContainer>
                         <Table size={'small'}>
                             <TableHead>
@@ -217,11 +395,57 @@ const EventSchedule = () => {
                                 {section.slots.map(slot => {
                                     const chip = stateChipProps(slot, t)
                                     return (
-                                        <TableRow key={slot.id}>
+                                        <TableRow
+                                            key={slot.id}
+                                            ref={el => {
+                                                if (el) {
+                                                    rowRefs.current.set(slot.id, el)
+                                                } else {
+                                                    rowRefs.current.delete(slot.id)
+                                                }
+                                            }}
+                                            sx={{
+                                                backgroundColor:
+                                                    highlightedSlotId === slot.id
+                                                        ? 'action.selected'
+                                                        : undefined,
+                                                transition: 'background-color 0.3s ease',
+                                            }}>
                                             <TableCell>
                                                 {format(new Date(slot.startTime), t('format.time'))}
                                             </TableCell>
-                                            <TableCell>{slotLabel(slot)}</TableCell>
+                                            <TableCell>
+                                                <Stack
+                                                    direction={'row'}
+                                                    spacing={0.5}
+                                                    alignItems={'center'}>
+                                                    <span>{slotLabel(slot)}</span>
+                                                    {slot.matchId && (
+                                                        <Tooltip
+                                                            title={t('event.schedule.goToExecution')}>
+                                                            <Link
+                                                                to={
+                                                                    '/event/$eventId/competition/$competitionId'
+                                                                }
+                                                                params={{
+                                                                    eventId,
+                                                                    competitionId: slot.competitionId!,
+                                                                }}
+                                                                search={{tab: 'execution'}}
+                                                                style={{
+                                                                    display: 'inline-flex',
+                                                                    color: 'inherit',
+                                                                }}>
+                                                                <IconButton
+                                                                    size={'small'}
+                                                                    component={'span'}>
+                                                                    <OpenInNew fontSize={'small'} />
+                                                                </IconButton>
+                                                            </Link>
+                                                        </Tooltip>
+                                                    )}
+                                                </Stack>
+                                            </TableCell>
                                             <TableCell>
                                                 <Chip
                                                     size={'small'}
@@ -239,40 +463,110 @@ const EventSchedule = () => {
                                             </TableCell>
                                             {canEdit && (
                                                 <TableCell>
+                                                    {/* Feste Spalten pro Aktion: fehlt eine, bleibt ihr
+                                                        Platz leer — so stehen gleiche Symbole über alle
+                                                        Zeilen sauber untereinander. */}
                                                     <Stack direction={'row'} spacing={0.5}>
-                                                        {isEditable(slot) && (
-                                                            <Tooltip title={t('common.edit')}>
+                                                        <Box sx={actionSlotSx}>
+                                                            {isEditable(slot) && (
+                                                                <Tooltip title={t('common.edit')}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        onClick={() =>
+                                                                            openEditDialog(slot)
+                                                                        }>
+                                                                        <Edit fontSize={'small'} />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
+                                                            {slot.state === 'LINKED' &&
+                                                                !slot.matchFinishedAt &&
+                                                                !slot.matchCurrentlyRunning && (
+                                                                    <Tooltip
+                                                                        title={t(
+                                                                            'event.schedule.activate',
+                                                                        )}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            onClick={() =>
+                                                                                handleActivate(slot)
+                                                                            }>
+                                                                            <PlayArrow
+                                                                                fontSize={'small'}
+                                                                            />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+                                                            {slot.state === 'LINKED' &&
+                                                                slot.matchCurrentlyRunning && (
+                                                                    <Tooltip
+                                                                        title={t(
+                                                                            'event.schedule.finish',
+                                                                        )}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            onClick={() =>
+                                                                                handleFinishSlot(slot)
+                                                                            }>
+                                                                            <Stop fontSize={'small'} />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
+                                                            {slot.state === 'SKIPPED' ? (
+                                                                <Tooltip
+                                                                    title={t('event.schedule.unskip')}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        onClick={() =>
+                                                                            handleUnskip(slot)
+                                                                        }>
+                                                                        <EventRepeat
+                                                                            fontSize={'small'}
+                                                                        />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <Tooltip
+                                                                    title={t('event.schedule.skip')}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        onClick={() => handleSkip(slot)}>
+                                                                        <EventBusy fontSize={'small'} />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
+                                                            {slot.setupRoundId && (
+                                                                <Tooltip
+                                                                    title={t(
+                                                                        'event.schedule.skipRound',
+                                                                    )}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        onClick={() =>
+                                                                            handleSkipRound(slot)
+                                                                        }>
+                                                                        <PlaylistRemove
+                                                                            fontSize={'small'}
+                                                                        />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
+                                                            <Tooltip title={t('common.delete')}>
                                                                 <IconButton
                                                                     size={'small'}
-                                                                    onClick={() => openEditDialog(slot)}>
-                                                                    <Edit fontSize={'small'} />
+                                                                    onClick={() => handleDelete(slot)}>
+                                                                    <Delete fontSize={'small'} />
                                                                 </IconButton>
                                                             </Tooltip>
-                                                        )}
-                                                        {slot.state === 'SKIPPED' ? (
-                                                            <Tooltip title={t('event.schedule.unskip')}>
-                                                                <IconButton
-                                                                    size={'small'}
-                                                                    onClick={() => handleUnskip(slot)}>
-                                                                    <EventRepeat fontSize={'small'} />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        ) : (
-                                                            <Tooltip title={t('event.schedule.skip')}>
-                                                                <IconButton
-                                                                    size={'small'}
-                                                                    onClick={() => handleSkip(slot)}>
-                                                                    <EventBusy fontSize={'small'} />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-                                                        <Tooltip title={t('common.delete')}>
-                                                            <IconButton
-                                                                size={'small'}
-                                                                onClick={() => handleDelete(slot)}>
-                                                                <Delete fontSize={'small'} />
-                                                            </IconButton>
-                                                        </Tooltip>
+                                                        </Box>
                                                     </Stack>
                                                 </TableCell>
                                             )}

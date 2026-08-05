@@ -3,13 +3,16 @@ package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.ShiftScheduleRequest
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.UpsertScheduleSlotRequest
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.calls.requests.RequestError
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.authenticateAny
+import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.ready2race.backend.xls.checkValidXls
 import de.lambda9.tailwind.core.KIO
@@ -71,6 +74,37 @@ fun Route.eventSchedule() {
                 val slotId = !pathParam("slotId", uuid)
 
                 EventScheduleService.setSlotSkipped(eventId, slotId, skipped = false, userId = user.id!!)
+            }
+        }
+        // Regattabüro beendet/aktiviert einen Lauf direkt vom Zeitplan aus (C1) - in JEDEM
+        // chainProgressionMode, anders als das Schiedsrichter-Dashboard (dort in REGATTABUERO
+        // gesperrt). Der Slot muss LINKED sein.
+        put("/slot/{slotId}/finish") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val slotId = !pathParam("slotId", uuid)
+                val openResults = !optionalQueryParam("openResults", enum<OpenResultHandling>())
+
+                EventScheduleService.finishSlot(eventId, slotId, user.id!!, openResults)
+            }
+        }
+        put("/slot/{slotId}/activate") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val slotId = !pathParam("slotId", uuid)
+
+                EventScheduleService.activateSlot(eventId, slotId, user.id!!)
+            }
+        }
+        put("/round/{setupRoundId}/skip") {
+            call.respondComprehension {
+                val user = !authenticateAny(Privilege.UpdateEventGlobal, Privilege.UpdateLiveDashboardGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val setupRoundId = !pathParam("setupRoundId", uuid)
+
+                EventScheduleService.setRoundSkipped(eventId, setupRoundId, userId = user.id!!)
             }
         }
         post("/shift") {

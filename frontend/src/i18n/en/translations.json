@@ -491,8 +491,14 @@
     "allowSelfSubmission": "Allow self submission of results",
     "submissionNeedsVerification": "Submitted results must be verified",
     "allowParticipantSelfRegistration": "Allow participants to register themselves",
-    "autoActivateNextMatch": "Activate next races automatically",
-    "autoActivateNextMatchHint": "When a referee finishes a race in the dashboard, the races of the next start time become active. Only useful with a complete schedule — otherwise the chain picks the wrong race. With a maintained schedule (Schedule tab), the chain follows the slots and waits at races that haven't been set yet.",
+    "chainProgressionMode": {
+      "label": "Chain progression mode",
+      "SCHIEDSRICHTER": "Referee — finish and chain via the referee dashboard",
+      "REGATTABUERO": "Regatta office — finish and activate exclusively via the schedule",
+      "DEAKTIVIERT": "Disabled — no automatic activation"
+    },
+    "showBreaksOnPublicBoards": "Show breaks on public boards",
+    "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -855,11 +861,11 @@
             "DNF": "Did not finish",
             "DSQ": "Disqualified"
           },
-            "penalty": "Time penalty incl. {{seconds}} s",
-            "penaltySeconds": "Penalty (s)",
-            "penaltyShort": "Penalty",
-            "penaltyNote": "Penalty reason",
-            "penaltyNoteShort": "Reason",
+          "penalty": "Time penalty incl. {{seconds}} s",
+          "penaltySeconds": "Penalty (s)",
+          "penaltyShort": "Penalty",
+          "penaltyNote": "Penalty reason",
+          "penaltyNoteShort": "Reason",
           "validation": {
             "duplicates": {
               "single": "The place: {{places}} is used several times.",
@@ -1240,6 +1246,7 @@
       "matchTeams": "Match Teams",
       "executionOrder": "Execution Order: {{order}}",
       "pendingRound": "Race not yet set",
+      "freeSlot": "Schedule item",
       "athleteBoard": {
         "running": "Current race",
         "upcoming": "Next race",
@@ -1303,6 +1310,7 @@
         "everySeconds": "Every {{seconds}} seconds"
       },
       "penaltyIncluded": "incl. {{seconds}} s",
+      "resultsCompleteWaiting": "Results complete — waiting to finish",
       "control": {
         "finish": "Finish race",
         "finishing": "Finishing …",
@@ -1310,7 +1318,6 @@
         "finished": "Race finished — next races activated",
         "deactivate": "Deactivate race",
         "activate": "Activate race",
-        "start": "Start",
         "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
         "openResults": {
           "title": "Open results",
@@ -1366,13 +1373,23 @@
         "FREE": "Program item",
         "WAITING": "Race not yet set",
         "LINKED": "Linked",
-        "OBSOLETE": "Obsolete",
-        "SKIPPED": "Skipped",
+        "OBSOLETE": "Voided",
+        "SKIPPED": "Cancelled",
         "finished": "Finished"
       },
-      "skip": "Skip",
-      "unskip": "Undo skip",
-      "skipConfirm": "Really skip slot \"{{label}}\" at {{time}}? The chain will then leave it out.",
+      "skip": "Mark as cancelled",
+      "unskip": "Undo cancellation",
+      "skipConfirm": "\"{{label}}\" at {{time}} is cancelled? The slot will be marked as cancelled and left out of the chain.",
+      "unskipConfirm": "Undo cancellation for \"{{label}}\" at {{time}}? The slot will be considered normally again.",
+      "skipRound": "Round is cancelled",
+      "skipRoundConfirm": "All {{count}} slots of round \"{{label}}\" are cancelled? The races will not take place and will be left out of the chain.",
+      "activate": "Activate race",
+      "activateConfirm": "Activate race \"{{label}}\" at {{time}} now?",
+      "activateAnyway": "Activate anyway",
+      "finish": "Finish race",
+      "finishConfirm": "Finish race \"{{label}}\" at {{time}} now? Depending on the chain progression mode, this activates the next races.",
+      "finishAnyway": "Finish anyway",
+      "refereeModeWarning": "Referee mode is active: races are normally activated and finished by a referee via the referee dashboard. Acting from here bypasses that path.",
       "managedHint": "Managed via the schedule",
       "unplanned": "Unplanned races",
       "noUnplanned": "All races are scheduled.",
@@ -1408,7 +1425,27 @@
         "old": "Old",
         "new": "New",
         "unchanged": "\"Apply\" is only available while the form has not changed since the preview. Please run the preview again.",
-        "impossible": "Cannot catch up — only {{max}} minutes of slack. Choose a later target slot."
+        "impossible": "Cannot catch up — only {{max}} minutes of slack. Choose a later target slot.",
+        "mode": "Method",
+        "delayMinutes": "Delay (minutes)",
+        "help": {
+          "plus": "All slots from the selected slot onward are shifted by the given minutes (negative = move earlier).",
+          "setTime": "The selected slot gets the new start time; all following slots keep their gaps.",
+          "compress": "The given delay is caught up by the target slot: the gaps in between are shortened, and the target slot keeps its original time."
+        }
+      },
+      "allPlanned": "All scheduled races are already planned.",
+      "goToExecution": "Go to execution",
+      "indicator": {
+        "now": "Now",
+        "state": {
+          "finished": "Finished",
+          "running": "Running",
+          "linked": "Linked",
+          "waiting": "Race not set yet",
+          "free": "Program item",
+          "skipped": "Skipped"
+        }
       }
     },
     "results": {

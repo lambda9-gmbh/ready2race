@@ -172,6 +172,10 @@ export type AthleteBoardMatch = {
      * true for a placeholder from a waiting timeline slot; teams is then always empty
      */
     pendingRound: boolean
+    /**
+     * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
+     */
+    name?: string | null
 }
 
 export type AthleteBoardParticipant = {
@@ -256,6 +260,11 @@ export type CatererTransactionViewDto = {
     price: string
     createdAt: string
 }
+
+/**
+ * Three modes for the finish/activate chain: SCHIEDSRICHTER keeps finish+chain on the referee dashboard (as before); REGATTABUERO moves both exclusively to the schedule tab (the finish button disappears from the referee dashboard); DEAKTIVIERT lets finish affect only the match itself, without activating the next start time's matches.
+ */
+export type ChainProgressionMode = 'SCHIEDSRICHTER' | 'REGATTABUERO' | 'DEAKTIVIERT'
 
 export type ChallengeCompetitionInfoDto = {
     id: string
@@ -760,10 +769,11 @@ export type CreateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    chainProgressionMode?: ChainProgressionMode
     /**
-     * Finishing a race in the referee dashboard activates the races of the next start time
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
-    autoActivateNextMatch?: boolean
+    showBreaksOnPublicBoards?: boolean
 }
 
 export type CustomFontDto = {
@@ -949,10 +959,11 @@ export type EventDto = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    chainProgressionMode?: ChainProgressionMode
     /**
-     * Finishing a race in the referee dashboard activates the races of the next start time
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
-    autoActivateNextMatch?: boolean
+    showBreaksOnPublicBoards?: boolean
     challengesFinished?: boolean
 }
 
@@ -1114,6 +1125,7 @@ export type EventRegistrationViewDto = {
 export type EventScheduleDto = {
     slots: Array<EventScheduleSlotDto>
     unplannedSetupMatches: Array<UnplannedSetupMatchDto>
+    chainProgressionMode: ChainProgressionMode
 }
 
 export type EventScheduleSlotDto = {
@@ -1128,8 +1140,13 @@ export type EventScheduleSlotDto = {
     matchName?: string | null
     matchId?: string | null
     setupMatchId?: string | null
+    setupRoundId?: string | null
     matchStartedAt?: string | null
     matchFinishedAt?: string | null
+    /**
+     * Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot
+     */
+    matchCurrentlyRunning: boolean
 }
 
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
@@ -1344,6 +1361,7 @@ export type LiveDashboardDto = {
      * Ascending by start time; included in both scopes (ALL and LIVE) - the list is small
      */
     pendingSlots: Array<PendingSlotDto>
+    chainProgressionMode: ChainProgressionMode
 }
 
 export type LiveDashboardInvoiceState = 'PAID' | 'OPEN' | 'NONE'
@@ -1839,11 +1857,12 @@ export type PendingClubRepresentativeApprovalDto = {
 }
 
 /**
- * A waiting timeline slot (round not yet materialized) - deliberately without team/participant data, since a WAITING slot has none yet
+ * A placeholder in the live dashboard timeline - either a waiting match slot (round not yet materialized) or a FREE slot/program item (e.g. lunch break). Deliberately without team/participant data, since neither kind has any yet. 'name' distinguishes the cases: set for program items, null for match placeholders.
  */
 export type PendingSlotDto = {
     slotId: string
     startTime: string
+    name?: string | null
     competitionName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -2345,13 +2364,19 @@ export type UnprocessableEntityError = ApiError & {
         | {
               result: Invalid
           }
+        | {
+              maxReductionMinutes: number
+          }
         | unknown
 }
 
 export type UpcomingCompetitionMatchInfo = {
     matchId: string
     matchNumber?: number | null
-    competitionId: string
+    /**
+     * null for a FREE placeholder (break/schedule item, see name) - there is no competition then
+     */
+    competitionId?: string | null
     competitionName: string
     categoryName?: string | null
     scheduledStartTime?: string | null
@@ -2365,6 +2390,10 @@ export type UpcomingCompetitionMatchInfo = {
      * true for a placeholder from a waiting timeline slot (round not yet materialized) - matchId then points at the setup round, not a real match, and teams is always empty
      */
     pendingRound: boolean
+    /**
+     * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
+     */
+    name?: string | null
 }
 
 export type UpcomingMatchParticipantInfo = {
@@ -2439,10 +2468,11 @@ export type UpdateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    chainProgressionMode?: ChainProgressionMode
     /**
-     * Finishing a race in the referee dashboard activates the races of the next start time
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
-    autoActivateNextMatch?: boolean
+    showBreaksOnPublicBoards?: boolean
 }
 
 export type UpdateGlobalConfigurationsRequest = {
@@ -5764,6 +5794,45 @@ export type UnskipScheduleSlotData = {
 export type UnskipScheduleSlotResponse = void
 
 export type UnskipScheduleSlotError = ApiError
+
+export type FinishScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+    query?: {
+        /**
+         * Marks every team without a result as failed with this reason. Deregistered teams are left alone.
+         */
+        openResults?: 'DNS' | 'DNF' | 'DSQ'
+    }
+}
+
+export type FinishScheduleSlotResponse = void
+
+export type FinishScheduleSlotError = ApiError
+
+export type ActivateScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type ActivateScheduleSlotResponse = void
+
+export type ActivateScheduleSlotError = ApiError
+
+export type SkipScheduleRoundData = {
+    path: {
+        eventId: string
+        setupRoundId: string
+    }
+}
+
+export type SkipScheduleRoundResponse = void
+
+export type SkipScheduleRoundError = ApiError
 
 export type ShiftEventScheduleData = {
     body: ShiftScheduleRequest

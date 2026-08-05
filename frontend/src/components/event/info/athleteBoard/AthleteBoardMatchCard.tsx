@@ -90,29 +90,44 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
             <CardContent sx={{p: 'clamp(0.75rem, 1.2vw, 1.5rem)'}}>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
                     <Box sx={{minWidth: 0}}>
-                        <Typography sx={{fontSize: 'clamp(1rem, 1.8vw, 1.6rem)', fontWeight: 700}}>
-                            {match.competitionName}
-                        </Typography>
-                        <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-                            {match.roundName && (
+                        {/* Programmpunkt (FREE-Slot, z.B. Mittagspause): schlanke, neutrale
+                            Darstellung ohne Wettkampf-/Team-Bezug und ohne Interaktion. */}
+                        {match.name ? (
+                            <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                                <Chip label={t('event.info.freeSlot')} size="small" variant="outlined" />
                                 <Typography
-                                    sx={{fontSize: 'clamp(0.75rem, 1.2vw, 1rem)'}}
+                                    sx={{fontSize: 'clamp(1rem, 1.8vw, 1.6rem)', fontWeight: 700}}
                                     color="text.secondary">
-                                    {match.roundName}
+                                    {match.name}
                                 </Typography>
-                            )}
-                            {match.matchName && match.matchName !== match.roundName && (
-                                <Chip label={match.matchName} size="small" variant="outlined" />
-                            )}
-                            {match.categoryName && (
-                                <Chip label={match.categoryName} size="small" color="primary" variant="outlined" />
-                            )}
-                        </Stack>
+                            </Stack>
+                        ) : (
+                            <>
+                                <Typography sx={{fontSize: 'clamp(1rem, 1.8vw, 1.6rem)', fontWeight: 700}}>
+                                    {match.competitionName}
+                                </Typography>
+                                <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                                    {match.roundName && (
+                                        <Typography
+                                            sx={{fontSize: 'clamp(0.75rem, 1.2vw, 1rem)'}}
+                                            color="text.secondary">
+                                            {match.roundName}
+                                        </Typography>
+                                    )}
+                                    {match.matchName && match.matchName !== match.roundName && (
+                                        <Chip label={match.matchName} size="small" variant="outlined" />
+                                    )}
+                                    {match.categoryName && (
+                                        <Chip label={match.categoryName} size="small" color="primary" variant="outlined" />
+                                    )}
+                                </Stack>
+                            </>
+                        )}
                     </Box>
                     {renderTiming()}
                 </Stack>
 
-                {match.pendingRound ? (
+                {match.name ? null : match.pendingRound ? (
                     <Typography
                         sx={{fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)', mt: 1.5}}
                         color="text.secondary"

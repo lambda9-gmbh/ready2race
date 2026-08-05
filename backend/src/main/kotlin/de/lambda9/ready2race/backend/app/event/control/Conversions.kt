@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventForExportDto
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventForExportRecord
+import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
 import de.lambda9.ready2race.backend.app.event.entity.MatchResultType
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
@@ -37,7 +38,8 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 selfSubmission = allowSelfSubmission,
                 submissionNeedsVerification = submissionNeedsVerification,
                 participantSelfRegistration = allowParticipantSelfRegistration,
-                autoActivateNextMatch = autoActivateNextMatch,
+                chainProgressionMode = chainProgressionMode.name,
+                showBreaksOnPublicBoards = showBreaksOnPublicBoards,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -74,7 +76,9 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         allowSelfSubmission = selfSubmission!!,
         submissionNeedsVerification = submissionNeedsVerification!!,
         allowParticipantSelfRegistration = participantSelfRegistration!!,
-        autoActivateNextMatch = autoActivateNextMatch ?: false,
+        chainProgressionMode = chainProgressionMode?.let { ChainProgressionMode.valueOf(it) }
+            ?: ChainProgressionMode.DEAKTIVIERT,
+        showBreaksOnPublicBoards = showBreaksOnPublicBoards ?: false,
         challengesFinished = challengeEnd?.let { it < LocalDateTime.now() },
     )
 )

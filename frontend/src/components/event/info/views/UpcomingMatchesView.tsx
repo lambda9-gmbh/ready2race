@@ -105,42 +105,57 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
 
                                 {/* Match Details */}
                                 <Box sx={{flex: 1}}>
-                                    <Stack mb={1}>
-                                        <Box
-                                            sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 1,
-                                            }}>
-                                            {match.matchName && (
+                                    {/* Programmpunkt (FREE-Slot, z.B. Mittagspause): schlanke, neutrale
+                                        Darstellung ohne Wettkampf-/Team-Bezug und ohne Interaktion. */}
+                                    {match.name ? (
+                                        <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                                            <Chip
+                                                label={t('event.info.freeSlot')}
+                                                size="small"
+                                                variant="outlined"
+                                            />
+                                            <Typography variant="h6" color="text.secondary">
+                                                {match.name}
+                                            </Typography>
+                                        </Stack>
+                                    ) : (
+                                        <Stack mb={1}>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 1,
+                                                }}>
+                                                {match.matchName && (
+                                                    <Typography
+                                                        variant="subtitle1"
+                                                        fontWeight="bold"
+                                                        color="primary">
+                                                        {match.matchName}
+                                                    </Typography>
+                                                )}
+                                                <Typography variant="h6">
+                                                    {match.competitionName}
+                                                </Typography>
+                                                {match.categoryName && (
+                                                    <Chip
+                                                        label={match.categoryName}
+                                                        size="small"
+                                                        color="primary"
+                                                        variant="outlined"
+                                                    />
+                                                )}
+                                            </Box>
+                                            {match.roundName && match.roundName !== match.matchName && (
                                                 <Typography
-                                                    variant="subtitle1"
-                                                    fontWeight="bold"
-                                                    color="primary">
-                                                    {match.matchName}
+                                                    variant="subtitle2"
+                                                    color="text.secondary"
+                                                    sx={{mr: 1}}>
+                                                    {match.roundName}
                                                 </Typography>
                                             )}
-                                            <Typography variant="h6">
-                                                {match.competitionName}
-                                            </Typography>
-                                            {match.categoryName && (
-                                                <Chip
-                                                    label={match.categoryName}
-                                                    size="small"
-                                                    color="primary"
-                                                    variant="outlined"
-                                                />
-                                            )}
-                                        </Box>
-                                        {match.roundName && match.roundName !== match.matchName && (
-                                            <Typography
-                                                variant="subtitle2"
-                                                color="text.secondary"
-                                                sx={{mr: 1}}>
-                                                {match.roundName}
-                                            </Typography>
-                                        )}
-                                    </Stack>
+                                        </Stack>
+                                    )}
                                     {/* Platzhalter: die Runde ist noch nicht gesetzt, es gibt keine Teams */}
                                     {match.pendingRound && (
                                         <Typography variant="body1" color="text.secondary" fontStyle="italic">
@@ -148,7 +163,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                         </Typography>
                                     )}
                                     {/* Teams */}
-                                    {!match.pendingRound && match.teams.length > 0 && (
+                                    {!match.pendingRound && !match.name && match.teams.length > 0 && (
                                         <Box
                                             sx={{
                                                 display: 'flex',

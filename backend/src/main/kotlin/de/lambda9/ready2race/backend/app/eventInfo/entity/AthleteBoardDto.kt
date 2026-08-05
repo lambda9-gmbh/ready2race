@@ -29,6 +29,12 @@ data class AthleteBoardMatch(
     val teams: List<AthleteBoardTeam>,
     /** true für einen Platzhalter aus einem wartenden Zeitstrahl-Slot; teams ist dann immer leer. */
     val pendingRound: Boolean = false,
+    /**
+     * Name eines FREE-Platzhalters (Programmpunkt wie "Mittagspause") - null für echte Läufe und
+     * für wartende Rund-Platzhalter ([pendingRound]). Nur gesetzt, wenn die Veranstaltung Pausen
+     * auf öffentlichen Anzeigen zeigt.
+     */
+    val name: String? = null,
 )
 
 data class AthleteBoardTeam(

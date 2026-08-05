@@ -491,8 +491,14 @@
     "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
     "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
-    "autoActivateNextMatch": "Nächste Läufe automatisch aktivieren",
-    "autoActivateNextMatchHint": "Beendet eine Schiedsrichterin einen Lauf im Dashboard, werden die Läufe der nächsten Startzeit aktiv. Nur sinnvoll, wenn der Zeitplan durchgängig gepflegt ist — sonst greift die Kette den falschen Lauf. Mit gepflegtem Zeitplan (Tab Zeitplan) folgt die Kette den Slots und wartet an noch nicht gesetzten Läufen.",
+    "chainProgressionMode": {
+      "label": "Kettenmodus",
+      "SCHIEDSRICHTER": "Schiedsrichter — Beenden und Kette über das Schiedsrichter-Dashboard",
+      "REGATTABUERO": "Regattabüro — Beenden und Aktivieren exklusiv über den Zeitplan",
+      "DEAKTIVIERT": "Deaktiviert — keine automatische Aktivierung"
+    },
+    "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
+    "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -855,11 +861,11 @@
             "DNF": "Nicht beendet",
             "DSQ": "Disqualifiziert"
           },
-            "penalty": "Zeitstrafe inkl. {{seconds}} s",
-            "penaltySeconds": "Strafe (s)",
-            "penaltyShort": "Strafe",
-            "penaltyNote": "Grund der Strafe",
-            "penaltyNoteShort": "Grund",
+          "penalty": "Zeitstrafe inkl. {{seconds}} s",
+          "penaltySeconds": "Strafe (s)",
+          "penaltyShort": "Strafe",
+          "penaltyNote": "Grund der Strafe",
+          "penaltyNoteShort": "Grund",
           "validation": {
             "duplicates": {
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",
@@ -1240,6 +1246,7 @@
       "matchTeams": "Lauf-Teams",
       "executionOrder": "Ausführungsreihenfolge: {{order}}",
       "pendingRound": "Lauf noch nicht gesetzt",
+      "freeSlot": "Programmpunkt",
       "athleteBoard": {
         "running": "Aktueller Lauf",
         "upcoming": "Nächster Lauf",
@@ -1303,6 +1310,7 @@
         "everySeconds": "Alle {{seconds}} Sekunden"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
+      "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",
       "control": {
         "finish": "Lauf beenden",
         "finishing": "Wird beendet …",
@@ -1310,7 +1318,6 @@
         "finished": "Lauf beendet — nächste Läufe aktiviert",
         "deactivate": "Lauf deaktivieren",
         "activate": "Lauf aktivieren",
-        "start": "Start",
         "incompleteWarning": "Es fehlen noch Ergebnisse — beenden aktiviert trotzdem die nächsten Läufe.",
         "openResults": {
           "title": "Offene Ergebnisse",
@@ -1366,13 +1373,23 @@
         "FREE": "Programmpunkt",
         "WAITING": "Lauf noch nicht gesetzt",
         "LINKED": "Verknüpft",
-        "OBSOLETE": "Entfällt",
-        "SKIPPED": "Übersprungen",
+        "OBSOLETE": "Verfallen",
+        "SKIPPED": "Entfällt",
         "finished": "Beendet"
       },
-      "skip": "Überspringen",
-      "unskip": "Überspringen aufheben",
-      "skipConfirm": "Slot „{{label}}“ um {{time}} wirklich überspringen? Die Kette lässt ihn dann aus.",
+      "skip": "Als entfallen markieren",
+      "unskip": "Entfall aufheben",
+      "skipConfirm": "„{{label}}“ um {{time}} entfällt? Der Slot wird als entfallen markiert und von der Kette ausgelassen.",
+      "unskipConfirm": "Entfall für „{{label}}“ um {{time}} aufheben? Der Slot wird wieder normal berücksichtigt.",
+      "skipRound": "Runde entfällt",
+      "skipRoundConfirm": "Alle {{count}} Slots der Runde „{{label}}“ entfallen? Die Läufe finden nicht statt und werden von der Kette ausgelassen.",
+      "activate": "Lauf aktivieren",
+      "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",
+      "activateAnyway": "Trotzdem aktivieren",
+      "finish": "Lauf beenden",
+      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Je nach Kettenmodus werden dabei die nächsten Läufe aktiviert.",
+      "finishAnyway": "Trotzdem beenden",
+      "refereeModeWarning": "Der Schiedsrichter-Modus ist aktiv: Läufe werden normalerweise von einem Schiedsrichter über das Schiedsrichter-Dashboard aktiviert und beendet. Ein Eingriff von hier übergeht diesen Weg.",
       "managedHint": "Wird über den Zeitplan gepflegt",
       "unplanned": "Nicht verplante Läufe",
       "noUnplanned": "Alle Läufe sind eingeplant.",
@@ -1408,7 +1425,27 @@
         "old": "Alt",
         "new": "Neu",
         "unchanged": "„Anwenden“ ist nur möglich, solange sich das Formular seit der Vorschau nicht geändert hat. Bitte die Vorschau erneut ausführen.",
-        "impossible": "Aufholen nicht möglich — nur {{max}} Minuten Spielraum. Wähle einen späteren Ziel-Slot."
+        "impossible": "Aufholen nicht möglich — nur {{max}} Minuten Spielraum. Wähle einen späteren Ziel-Slot.",
+        "mode": "Methode",
+        "delayMinutes": "Verzug (Minuten)",
+        "help": {
+          "plus": "Alle Slots ab dem gewählten Slot werden um die angegebenen Minuten verschoben (negativ = vorziehen).",
+          "setTime": "Der gewählte Slot bekommt die neue Startzeit; alle folgenden Slots behalten ihre Abstände.",
+          "compress": "Der angegebene Verzug wird bis zum Ziel-Slot aufgeholt: Die Abstände dazwischen werden verkürzt, der Ziel-Slot behält seine ursprüngliche Zeit."
+        }
+      },
+      "allPlanned": "Alle geplanten Läufe sind bereits eingeplant.",
+      "goToExecution": "Zur Durchführung",
+      "indicator": {
+        "now": "Jetzt",
+        "state": {
+          "finished": "Beendet",
+          "running": "Läuft",
+          "linked": "Verknüpft",
+          "waiting": "Lauf noch nicht gesetzt",
+          "free": "Programmpunkt",
+          "skipped": "Übersprungen"
+        }
       }
     },
     "results": {

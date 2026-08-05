@@ -1,10 +1,13 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.*
+import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventScheduleSlotRecord
@@ -15,6 +18,7 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
+import org.jooq.Record
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,6 +44,7 @@ object EventScheduleService {
 
             val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
             val unplanned = !EventScheduleRepo.getUnplannedSetupMatches(eventId).orDie()
+            val chainProgressionMode = !EventRepo.getChainProgressionMode(eventId).orDie()
 
             val slots = slotRecords.map { r ->
                 val isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
@@ -61,8 +66,10 @@ object EventScheduleService {
                     matchName = r.get("match_name", String::class.java),
                     matchId = if (matchExists) r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] else null,
                     setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
+                    setupRoundId = r.get("setup_round_id", UUID::class.java),
                     matchStartedAt = r.get("match_started_at", java.time.LocalDateTime::class.java),
                     matchFinishedAt = r.get("match_finished_at", java.time.LocalDateTime::class.java),
+                    matchCurrentlyRunning = r[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
                 )
             }
 
@@ -76,7 +83,7 @@ object EventScheduleService {
                 )
             }
 
-            KIO.ok(ApiResponse.Dto(EventScheduleDto(slots, unplannedDtos)))
+            KIO.ok(ApiResponse.Dto(EventScheduleDto(slots, unplannedDtos, chainProgressionMode)))
         }
 
     fun createSlot(
@@ -233,6 +240,148 @@ object EventScheduleService {
     }
 
     /**
+     * Skip einer ganzen Setup-Runde auf einmal - dieselben Regeln wie [setSlotSkipped], nur für alle
+     * Slots dieser Runde im Event. Zwei Durchgänge, damit die Aktion atomar wirkt: erst validieren
+     * (nichts schreiben, solange nicht klar ist, dass die ganze Runde durchgeht), dann anwenden.
+     *
+     * - Bereits übersprungene Slots bleiben, wie sie sind - kein Fehler, kein erneutes Schreiben.
+     * - OBSOLETE Slots (die Setup-Zeile existiert nicht mehr) werden übergangen: es gibt nichts mehr
+     *   zu überspringen, das blockiert die restliche Runde aber nicht.
+     * - Ein bereits gestarteter Lauf lässt die GANZE Aktion mit MatchAlreadyStarted scheitern, auch
+     *   wenn andere Slots der Runde noch skippable wären - kein Teilerfolg, damit der Nutzer nicht
+     *   glaubt, die Runde sei vollständig übersprungen, obwohl ein laufender Start übrig bleibt.
+     */
+    fun setRoundSkipped(
+        eventId: UUID,
+        setupRoundId: UUID,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val rows = !EventScheduleRepo.getSlots(eventId, setupRoundId).orDie()
+
+        val toSkip = mutableListOf<UUID>()
+        for (row in rows) {
+            val slotId = row[EVENT_SCHEDULE_SLOT.ID]!!
+            val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
+            if (alreadySkipped) {
+                continue
+            }
+
+            val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+            val matchExists = row.get("match_exists", Boolean::class.java) == true
+            val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
+            val state = EventScheduleLogic.deriveSlotState(
+                isFree = isFree,
+                skipped = false,
+                roundMaterialized = roundMaterialized,
+                matchExists = matchExists,
+            )
+
+            if (state == EventScheduleSlotState.OBSOLETE) {
+                continue
+            }
+
+            val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
+            if (matchStartedAt != null) {
+                return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
+            }
+
+            toSkip.add(slotId)
+        }
+
+        val now = LocalDateTime.now()
+        !toSkip.traverse { slotId ->
+            EventScheduleRepo.updateSlot(eventId, slotId) {
+                skippedAt = now
+                skippedBy = userId
+            }.orDie().map { }
+        }
+
+        // Wie beim Einzel-Skip: die Kette könnte an einem der jetzt übersprungenen Slots geparkt
+        // gewesen sein.
+        !ScheduleChainService.resumeIfParked(eventId, userId)
+
+        noData
+    }
+
+    /**
+     * Beendet den Lauf eines LINKED-Slots vom Zeitplan aus (C1) - das Regattabüro darf das in
+     * JEDEM `chainProgressionMode` (anders als [LiveDashboardService.finishMatch], das bei
+     * REGATTABUERO mit `FinishReservedForOffice` scheitert). Ruft dieselbe Beenden-Logik wie das
+     * Schiedsrichter-Dashboard auf ([LiveDashboardService.finishMatchInternal], dort dokumentiert,
+     * warum sie dort statt hier liegt), nur ohne den Modus-Gate - der Modus selbst entscheidet
+     * trotzdem weiterhin, ob die Kette danach zieht (DEAKTIVIERT beendet nur den Lauf).
+     */
+    fun finishSlot(
+        eventId: UUID,
+        slotId: UUID,
+        userId: UUID,
+        openResults: OpenResultHandling? = null,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val row = !EventScheduleRepo.getSlotWithContext(eventId, slotId).orDie()
+            .onNullFail { EventScheduleError.SlotNotFound(slotId) }
+
+        val matchId = linkedMatchIdOrNull(row)
+            ?: return@comprehension KIO.fail(EventScheduleError.SlotNotLinked(slotId))
+
+        val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        !LiveDashboardService.finishMatchInternal(eventId, matchId, userId, openResults, mode)
+
+        noData
+    }
+
+    /**
+     * Aktiviert den Lauf eines LINKED-Slots vom Zeitplan aus (C1) - Notfall-Override wie
+     * `LiveDashboardService.setMatchRunning`, nur vom Büro statt vom Schiedsrichter-Dashboard aus
+     * und in JEDEM Modus erlaubt.
+     */
+    fun activateSlot(
+        eventId: UUID,
+        slotId: UUID,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val row = !EventScheduleRepo.getSlotWithContext(eventId, slotId).orDie()
+            .onNullFail { EventScheduleError.SlotNotFound(slotId) }
+
+        val matchId = linkedMatchIdOrNull(row)
+            ?: return@comprehension KIO.fail(EventScheduleError.SlotNotLinked(slotId))
+
+        // Ein beendeter Lauf darf nicht wieder aktiviert werden — sonst erscheint er mit altem finished_at als laufend.
+        val matchFinishedAt = row.get("match_finished_at", LocalDateTime::class.java)
+        if (matchFinishedAt != null) {
+            return@comprehension KIO.fail(EventScheduleError.MatchAlreadyFinished(slotId))
+        }
+
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = true
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
+    }
+
+    /**
+     * matchId eines Slots, wenn er LINKED ist - sonst null. Gemeinsame Vorbedingung für
+     * [finishSlot]/[activateSlot]: das Büro darf nur einen echten, verknüpften Lauf beenden oder
+     * aktivieren, keinen Platzhalter. Erwartet dieselbe Zeile wie [getSlotWithContext].
+     */
+    private fun linkedMatchIdOrNull(row: Record): UUID? {
+        val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+        val matchExists = row.get("match_exists", Boolean::class.java) == true
+        val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
+        val skipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
+
+        val state = EventScheduleLogic.deriveSlotState(
+            isFree = isFree,
+            skipped = skipped,
+            roundMaterialized = roundMaterialized,
+            matchExists = matchExists,
+        )
+
+        return row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH].takeIf { state == EventScheduleSlotState.LINKED }
+    }
+
+    /**
      * Verschiebt den Zeitstrahl ab [ShiftScheduleRequest.fromSlotId] (Task 11). Betroffen sind nur
      * Slots desselben Renntags ab diesem Slot (aufsteigend) — [EventScheduleRepo.getSlots] liefert
      * bereits nach start_time sortiert, ein Tageswechsel kommt danach also nie zurück.
@@ -301,6 +450,21 @@ object EventScheduleService {
         // Ein Shift bleibt im Renntag — über Mitternacht hinaus wäre der Plan des Folgetags still betroffen.
         if (entries.any { it.newStartTime.toLocalDate() != day }) {
             return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+        }
+
+        // Bei einem Vorziehen (deltaMinutes < 0) darf der verschobene Block seinen Vorgänger nicht
+        // überholen: der letzte UNverschobene Slot desselben Tages VOR dem Start-Slot behält seine
+        // Zeit, keiner der verschobenen Slots darf davor zu liegen kommen - sonst würde die
+        // Reihenfolge im Zeitstrahl durcheinandergeraten. Kein Vorgänger am selben Tag (Start-Slot
+        // ist der erste des Tages) heißt: keine Grenze von dieser Seite.
+        if (deltaMinutes < 0) {
+            val predecessor = allSlots.getOrNull(fromIndex - 1)
+                ?.takeIf { it[EVENT_SCHEDULE_SLOT.START_TIME]!!.toLocalDate() == day }
+                ?.get(EVENT_SCHEDULE_SLOT.START_TIME)
+
+            if (EventScheduleLogic.overtakesPredecessor(entries, predecessor)) {
+                return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+            }
         }
 
         if (!request.dryRun) {

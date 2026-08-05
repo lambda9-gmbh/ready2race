@@ -662,6 +662,15 @@ import type {
     UnskipScheduleSlotData,
     UnskipScheduleSlotError,
     UnskipScheduleSlotResponse,
+    FinishScheduleSlotData,
+    FinishScheduleSlotError,
+    FinishScheduleSlotResponse,
+    ActivateScheduleSlotData,
+    ActivateScheduleSlotError,
+    ActivateScheduleSlotResponse,
+    SkipScheduleRoundData,
+    SkipScheduleRoundError,
+    SkipScheduleRoundResponse,
     ShiftEventScheduleData,
     ShiftEventScheduleError,
     ShiftEventScheduleResponse,
@@ -3432,7 +3441,7 @@ export const getAthleteBoard = <ThrowOnError extends boolean = false>(
 }
 
 /**
- * Marks the match as finished and activates the matches of the next start time
+ * Marks the match as finished and activates the matches of the next start time. Fails with 409 if the event's chainProgressionMode is REGATTABUERO - there, finishing goes exclusively through the schedule tab (see finishScheduleSlot).
  */
 export const finishLiveDashboardMatch = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<FinishLiveDashboardMatchData, ThrowOnError>,
@@ -3592,6 +3601,54 @@ export const unskipScheduleSlot = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule/slot/{slotId}/unskip',
+    })
+}
+
+/**
+ * Finishes the match of a LINKED slot from the regatta office side. Works in every chainProgressionMode (the office can always intervene) - unlike finishLiveDashboardMatch, which is gated in REGATTABUERO mode.
+ */
+export const finishScheduleSlot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<FinishScheduleSlotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        FinishScheduleSlotResponse,
+        FinishScheduleSlotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/slot/{slotId}/finish',
+    })
+}
+
+/**
+ * Marks the match of a LINKED slot as currently running from the regatta office side. Works in every chainProgressionMode.
+ */
+export const activateScheduleSlot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ActivateScheduleSlotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        ActivateScheduleSlotResponse,
+        ActivateScheduleSlotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/slot/{slotId}/activate',
+    })
+}
+
+/**
+ * Skips every schedule slot of this setup round belonging to the event - same rules as skipping a single slot (already skipped slots are left as they are, a started match blocks the whole action)
+ */
+export const skipScheduleRound = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SkipScheduleRoundData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SkipScheduleRoundResponse,
+        SkipScheduleRoundError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/round/{setupRoundId}/skip',
     })
 }
 

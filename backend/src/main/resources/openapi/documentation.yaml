@@ -5719,7 +5719,7 @@ paths:
           format: uuid
     put:
       operationId: finishLiveDashboardMatch
-      description: "Marks the match as finished and activates the matches of the next start time"
+      description: "Marks the match as finished and activates the matches of the next start time. Fails with 409 if the event's chainProgressionMode is REGATTABUERO - there, finishing goes exclusively through the schedule tab (see finishScheduleSlot)."
       parameters:
         - name: openResults
           in: query
@@ -5735,6 +5735,8 @@ paths:
           $ref: '#/components/responses/401'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
 
@@ -5992,6 +5994,92 @@ paths:
           format: uuid
     put:
       operationId: unskipScheduleSlot
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/finish:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: finishScheduleSlot
+      description: "Finishes the match of a LINKED slot from the regatta office side. Works in every chainProgressionMode (the office can always intervene) - unlike finishLiveDashboardMatch, which is gated in REGATTABUERO mode."
+      parameters:
+        - name: openResults
+          in: query
+          required: false
+          description: "Marks every team without a result as failed with this reason. Deregistered teams are left alone."
+          schema:
+            type: string
+            enum: [DNS, DNF, DSQ]
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/activate:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: activateScheduleSlot
+      description: "Marks the match of a LINKED slot as currently running from the regatta office side. Works in every chainProgressionMode."
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/round/{setupRoundId}/skip:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: setupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: skipScheduleRound
+      description: "Skips every schedule slot of this setup round belonging to the event - same rules as skipping a single slot (already skipped slots are left as they are, a started match blocks the whole action)"
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -7861,6 +7949,13 @@ components:
                   properties:
                     result:
                       $ref: '#/components/schemas/Invalid'
+                - type: object
+                  required:
+                    - maxReductionMinutes
+                  properties:
+                    maxReductionMinutes:
+                      type: integer
+                      format: int64
                 - { }
 
     TooManyRequestsError:
@@ -8433,6 +8528,18 @@ components:
 
     # event
 
+    ChainProgressionMode:
+      type: string
+      description: >-
+        Three modes for the finish/activate chain: SCHIEDSRICHTER keeps finish+chain on the referee
+        dashboard (as before); REGATTABUERO moves both exclusively to the schedule tab (the finish
+        button disappears from the referee dashboard); DEAKTIVIERT lets finish affect only the
+        match itself, without activating the next start time's matches.
+      enum:
+        - 'SCHIEDSRICHTER'
+        - 'REGATTABUERO'
+        - 'DEAKTIVIERT'
+
     EventDto:
       type: object
       required:
@@ -8497,9 +8604,11 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
-        autoActivateNextMatch:
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
+        showBreaksOnPublicBoards:
           type: boolean
-          description: "Finishing a race in the referee dashboard activates the races of the next start time"
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         challengesFinished:
           type: boolean
 
@@ -8644,9 +8753,11 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
-        autoActivateNextMatch:
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
+        showBreaksOnPublicBoards:
           type: boolean
-          description: "Finishing a race in the referee dashboard activates the races of the next start time"
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
 
     UpdateEventRequest:
       type: object
@@ -8693,9 +8804,11 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
-        autoActivateNextMatch:
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
+        showBreaksOnPublicBoards:
           type: boolean
-          description: "Finishing a race in the referee dashboard activates the races of the next start time"
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
 
 
     # eventDay
@@ -11821,7 +11934,6 @@ components:
       type: object
       required:
         - matchId
-        - competitionId
         - competitionName
         - executionOrder
         - teams
@@ -11836,6 +11948,8 @@ components:
         competitionId:
           type: string
           format: uuid
+          nullable: true
+          description: "null for a FREE placeholder (break/schedule item, see name) - there is no competition then"
         competitionName:
           type: string
         categoryName:
@@ -11866,6 +11980,10 @@ components:
         pendingRound:
           type: boolean
           description: "true for a placeholder from a waiting timeline slot (round not yet materialized) - matchId then points at the setup round, not a real match, and teams is always empty"
+        name:
+          type: string
+          nullable: true
+          description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
 
     UpcomingMatchTeamInfo:
       type: object
@@ -12077,6 +12195,10 @@ components:
         pendingRound:
           type: boolean
           description: "true for a placeholder from a waiting timeline slot; teams is then always empty"
+        name:
+          type: string
+          nullable: true
+          description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
 
     AthleteBoardResultTeam:
       type: object
@@ -12465,7 +12587,7 @@ components:
 
     PendingSlotDto:
       type: object
-      description: "A waiting timeline slot (round not yet materialized) - deliberately without team/participant data, since a WAITING slot has none yet"
+      description: "A placeholder in the live dashboard timeline - either a waiting match slot (round not yet materialized) or a FREE slot/program item (e.g. lunch break). Deliberately without team/participant data, since neither kind has any yet. 'name' distinguishes the cases: set for program items, null for match placeholders."
       required:
         - slotId
         - startTime
@@ -12476,6 +12598,9 @@ components:
         startTime:
           type: string
           format: date-time
+        name:
+          type: string
+          nullable: true
         competitionName:
           type: string
           nullable: true
@@ -12491,6 +12616,7 @@ components:
       required:
         - matches
         - pendingSlots
+        - chainProgressionMode
       properties:
         matches:
           type: array
@@ -12501,6 +12627,8 @@ components:
           description: "Ascending by start time; included in both scopes (ALL and LIVE) - the list is small"
           items:
             $ref: '#/components/schemas/PendingSlotDto'
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
 
     EventScheduleSlotState:
       type: string
@@ -12517,6 +12645,7 @@ components:
         - id
         - startTime
         - state
+        - matchCurrentlyRunning
       properties:
         id:
           type: string
@@ -12553,6 +12682,10 @@ components:
           type: string
           format: uuid
           nullable: true
+        setupRoundId:
+          type: string
+          format: uuid
+          nullable: true
         matchStartedAt:
           type: string
           format: date-time
@@ -12561,6 +12694,9 @@ components:
           type: string
           format: date-time
           nullable: true
+        matchCurrentlyRunning:
+          type: boolean
+          description: "Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot"
 
     UnplannedSetupMatchDto:
       type: object
@@ -12590,6 +12726,7 @@ components:
       required:
         - slots
         - unplannedSetupMatches
+        - chainProgressionMode
       properties:
         slots:
           type: array
@@ -12599,6 +12736,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UnplannedSetupMatchDto'
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
 
     UpsertScheduleSlotRequest:
       type: object

@@ -13,7 +13,6 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
-import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -192,33 +191,25 @@ object EventInfoService {
      * Board-Antworten es ohne Platzhalter schon waren. Die reine Filter-/Mapping-Entscheidung
      * steckt in [AthleteBoardLogic.placeholdersFromPendingSlots] und ist dort ohne Datenbank
      * geprüft; hier passiert nur das Zusammenführen der beiden Quellen.
+     *
+     * FREE-Slots (Programmpunkte wie "Mittagspause") kommen zusätzlich hinzu, wenn die
+     * Veranstaltung das über `Event.showBreaksOnPublicBoards` erlaubt hat (Migration
+     * V202608041900) - standardmäßig aus, weil Kiosk und Athleten-Anzeige sparsam bleiben sollen.
+     * Die reine Filter-Entscheidung dafür teilt sich dieser Code mit dem Live-Dashboard über
+     * [EventScheduleLogic.freeSlotOrNull].
      */
     private fun mergeWithPendingPlaceholders(
         eventId: UUID,
         real: List<UpcomingCompetitionMatchInfo>,
         limit: Int,
     ): App<Nothing, List<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
-        val pendingSlots = !getPendingScheduleSlots(eventId)
+        val showBreaks = !EventRepo.getShowBreaksOnPublicBoards(eventId).orDie()
+        val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
         val realMatchIds = real.map { it.matchId }.toSet()
 
         // Zwei getrennte Reads — wenn zwischen ihnen eine Runde entsteht oder gelöscht wird,
         // könnte derselbe Lauf doppelt auftauchen; echte Einträge gewinnen.
-        val placeholders = AthleteBoardLogic.placeholdersFromPendingSlots(pendingSlots)
-            .filterNot { it.matchId in realMatchIds }
-
-        KIO.ok(
-            AthleteBoardLogic.sortByStartTime(real + placeholders) { it.scheduledStartTime }.take(limit)
-        )
-    }
-
-    /**
-     * Alle WAITING-Slots des Events, gemeinsam mit dem Live-Dashboard über
-     * [EventScheduleLogic.pendingSlotOrNull] bestimmt - Grundlage für [mergeWithPendingPlaceholders].
-     */
-    private fun getPendingScheduleSlots(eventId: UUID): App<Nothing, List<PendingScheduleSlotInfo>> = KIO.comprehension {
-        val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
-
-        val result = slotRecords.mapNotNull { r ->
+        val pendingSlots = slotRecords.mapNotNull { r ->
             EventScheduleLogic.pendingSlotOrNull(
                 slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
                 setupMatchId = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH],
@@ -232,8 +223,29 @@ object EventInfoService {
                 matchExists = r.get("match_exists", Boolean::class.java) == true,
             )
         }
+        val waitingPlaceholders = AthleteBoardLogic.placeholdersFromPendingSlots(pendingSlots)
+            .filterNot { it.matchId in realMatchIds }
 
-        KIO.ok(result)
+        val freePlaceholders = if (showBreaks) {
+            val freeSlots = slotRecords.mapNotNull { r ->
+                EventScheduleLogic.freeSlotOrNull(
+                    slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
+                    isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null,
+                    name = r[EVENT_SCHEDULE_SLOT.NAME],
+                    startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                    skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
+                )
+            }
+            AthleteBoardLogic.placeholdersFromFreeSlots(freeSlots)
+                .filterNot { it.matchId in realMatchIds }
+        } else {
+            emptyList()
+        }
+
+        KIO.ok(
+            AthleteBoardLogic.sortByStartTime(real + waitingPlaceholders + freePlaceholders) { it.scheduledStartTime }
+                .take(limit)
+        )
     }
 
     // Gemeinsame Abbildung von Roh-Records auf UpcomingCompetitionMatchInfo, genutzt von

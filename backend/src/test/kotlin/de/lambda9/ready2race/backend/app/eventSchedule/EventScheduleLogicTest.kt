@@ -169,6 +169,53 @@ class EventScheduleLogicTest {
         assertEquals(listOf("wartend"), results.mapNotNull { it?.matchName })
     }
 
+    // --- freeSlotOrNull ---
+
+    @Test
+    fun freeSlotYieldsFreeSlotInfo() {
+        val slotId = UUID.randomUUID()
+        val startTime = slotNow.plusMinutes(30)
+
+        val result = EventScheduleLogic.freeSlotOrNull(
+            slotId = slotId,
+            isFree = true,
+            name = "Mittagspause",
+            startTime = startTime,
+            skipped = false,
+        )
+
+        val info = assertNotNull(result)
+        assertEquals(slotId, info.slotId)
+        assertEquals(startTime, info.startTime)
+        assertEquals("Mittagspause", info.name)
+    }
+
+    @Test
+    fun nonFreeSlotYieldsNoFreeSlotInfo() {
+        assertNull(
+            EventScheduleLogic.freeSlotOrNull(
+                slotId = UUID.randomUUID(),
+                isFree = false,
+                name = null,
+                startTime = slotNow,
+                skipped = false,
+            ),
+        )
+    }
+
+    @Test
+    fun skippedFreeSlotYieldsNoFreeSlotInfo() {
+        assertNull(
+            EventScheduleLogic.freeSlotOrNull(
+                slotId = UUID.randomUUID(),
+                isFree = true,
+                name = "Mittagspause",
+                startTime = slotNow,
+                skipped = true,
+            ),
+        )
+    }
+
     // --- computeShift ---
 
     private val base = LocalDateTime.of(2026, 8, 17, 10, 0)
@@ -225,5 +272,45 @@ class EventScheduleLogicTest {
         val result = EventScheduleLogic.computeShift(slots, deltaMinutes = 12, targetSlotId = slots[2].id)
         val impossible = assertIs<ShiftResult.CompressionImpossible>(result)
         assertEquals(10L, impossible.maxReductionMinutes)
+    }
+
+    // --- overtakesPredecessor ---
+
+    private fun entry(minutesAfterBase: Long) =
+        de.lambda9.ready2race.backend.app.eventSchedule.boundary.ShiftPreviewEntry(
+            UUID.randomUUID(),
+            base.plusMinutes(minutesAfterBase),
+            base.plusMinutes(minutesAfterBase),
+        )
+
+    @Test
+    fun noPredecessorMeansNoLimit() {
+        assertEquals(false, EventScheduleLogic.overtakesPredecessor(listOf(entry(-100)), null))
+    }
+
+    @Test
+    fun newTimeBeforeThePredecessorOvertakesIt() {
+        val predecessor = base.minusMinutes(5)
+        val entries = listOf(entry(0).copy(newStartTime = base.minusMinutes(10)))
+        assertEquals(true, EventScheduleLogic.overtakesPredecessor(entries, predecessor))
+    }
+
+    @Test
+    fun newTimeAtOrAfterThePredecessorIsFine() {
+        val predecessor = base.minusMinutes(5)
+        val atPredecessor = listOf(entry(0).copy(newStartTime = predecessor))
+        val afterPredecessor = listOf(entry(0).copy(newStartTime = predecessor.plusMinutes(1)))
+        assertEquals(false, EventScheduleLogic.overtakesPredecessor(atPredecessor, predecessor))
+        assertEquals(false, EventScheduleLogic.overtakesPredecessor(afterPredecessor, predecessor))
+    }
+
+    @Test
+    fun oneOffendingEntryAmongManyIsEnoughToBlock() {
+        val predecessor = base.minusMinutes(5)
+        val entries = listOf(
+            entry(0).copy(newStartTime = predecessor.plusMinutes(10)),
+            entry(10).copy(newStartTime = predecessor.minusMinutes(1)),
+        )
+        assertEquals(true, EventScheduleLogic.overtakesPredecessor(entries, predecessor))
     }
 }

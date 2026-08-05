@@ -144,6 +144,9 @@ export const buildLiveDashboardTimeline = (
         return timeA.localeCompare(timeB)
     })
 
-/** Anzeige-Label eines wartenden Slots — dieselbe Zusammensetzung wie slotLabel im Zeitplan-Tab. */
+/**
+ * Anzeige-Label eines Platzhalters — für Programmpunkte (FREE, `name` gesetzt) schlicht der Name,
+ * für wartende Lauf-Slots dieselbe Zusammensetzung wie slotLabel im Zeitplan-Tab.
+ */
 export const pendingSlotLabel = (slot: PendingSlotDto): string =>
-    [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' · ')
+    slot.name ?? [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' · ')

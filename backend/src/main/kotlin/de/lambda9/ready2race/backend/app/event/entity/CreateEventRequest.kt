@@ -27,8 +27,10 @@ data class CreateEventRequest(
     val allowSelfSubmission: Boolean,
     val submissionNeedsVerification: Boolean,
     val allowParticipantSelfRegistration: Boolean,
-    /** Beendet ein Schiedsrichter einen Lauf, werden die Läufe der nächsten Startzeit aktiv. */
-    val autoActivateNextMatch: Boolean,
+    /** Steuert, wer Läufe beenden/aktivieren darf und ob die Kette dabei automatisch weiterzieht. */
+    val chainProgressionMode: ChainProgressionMode,
+    /** Zeigt Pausen/Programmpunkte aus dem Zeitplan auch auf Kiosk und Athleten-Anzeige. */
+    val showBreaksOnPublicBoards: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -68,7 +70,8 @@ data class CreateEventRequest(
                 allowSelfSubmission = false,
                 submissionNeedsVerification = false,
                 allowParticipantSelfRegistration = false,
-                autoActivateNextMatch = false,
+                chainProgressionMode = ChainProgressionMode.DEAKTIVIERT,
+                showBreaksOnPublicBoards = false,
             )
     }
 }

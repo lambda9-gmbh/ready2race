@@ -9,6 +9,7 @@ import {
     Paper,
     Stack,
     Typography,
+    useTheme,
 } from '@mui/material'
 import LiveTvIcon from '@mui/icons-material/LiveTv'
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered'
@@ -19,7 +20,6 @@ import {
     getLiveDashboard,
     setLiveDashboardMatchRunning,
     skipScheduleSlot,
-    startLiveDashboardMatch,
 } from '@api/sdk.gen.ts'
 import {LiveDashboardDto} from '@api/types.gen.ts'
 import {useFetch, useFeedback} from '@utils/hooks.ts'
@@ -33,19 +33,42 @@ import LiveDashboardMatchCard, {
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
 import {buildLiveDashboardTimeline, storedPollInterval} from '@components/event/liveDashboard/common.ts'
+import ScheduleTimelineIndicator from '@components/event/schedule/ScheduleTimelineIndicator.tsx'
+import {dashboardEntriesForDay, resolveDashboardDay} from '@components/event/schedule/timelineIndicator.ts'
 import {MatchResultStatus} from '@utils/matchResultStatus.ts'
+
+/** DOM id for a dashboard entry's card wrapper, shared between the render loops below and the
+ * indicator's click-to-scroll handler. */
+const dashboardEntryDomId = (id: string) => `live-dashboard-entry-${id}`
+
+/** The dashboard payload carries no server clock of its own (unlike the athlete board), so the
+ * now-marker ticks off the local clock every 30s - plenty for a position on a day-long axis. */
+const useLocalClock = (intervalMs: number): Date => {
+    const [now, setNow] = useState(() => new Date())
+    useEffect(() => {
+        const id = window.setInterval(() => setNow(new Date()), intervalMs)
+        return () => window.clearInterval(id)
+    }, [intervalMs])
+    return now
+}
 
 const LiveDashboardPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const {confirmAction} = useConfirmation()
     const user = useUser()
+    const theme = useTheme()
     const {eventId} = eventLiveDashboardRoute.useParams()
     const mayControl = user.checkPrivilege(updateLiveDashboardGlobal)
+    const now = useLocalClock(30_000)
 
     const [tab, setTab] = useState<'live' | 'matches'>('live')
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(null)
+    // In REGATTABUERO läuft "Lauf beenden" ausschließlich über den Zeitplan-Tab (siehe
+    // EventSchedule.tsx) - der Button verschwindet hier dafür, das Notfall-Override
+    // (onSetRunning) bleibt unabhängig vom Modus verfügbar.
+    const mayFinish = mayControl && dashboard?.chainProgressionMode !== 'REGATTABUERO'
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
     const [stale, setStale] = useState(false)
     const [liveChanged, setLiveChanged] = useState(false)
@@ -120,6 +143,23 @@ const LiveDashboardPage = () => {
     // Startzeit, damit ein Platzhalter genau zwischen seinen Nachbarn auftaucht.
     const scheduledTimeline = buildLiveDashboardTimeline(scheduledMatches, pendingSlots)
 
+    // Kompakter "wo stehen wir gerade"-Balken über den Listen: ein Tag, ausgewählt über den
+    // ersten laufenden bzw. nächsten anstehenden Eintrag (Fallback: heute).
+    const indicatorDay = resolveDashboardDay(dashboard?.matches ?? [], pendingSlots, now)
+    const indicatorEntries = dashboardEntriesForDay(dashboard?.matches ?? [], pendingSlots, indicatorDay)
+
+    const scrollToTimelineEntry = (id: string) => {
+        const el = document.getElementById(dashboardEntryDomId(id))
+        if (!el) {
+            return
+        }
+        el.scrollIntoView({behavior: 'smooth', block: 'center'})
+        el.animate(
+            [{backgroundColor: theme.palette.action.selected}, {backgroundColor: 'transparent'}],
+            {duration: 1200, easing: 'ease-out'},
+        )
+    }
+
     const selectedTeam = selectedTeamRef
         ? (dashboard?.matches
               .find(m => m.matchId === selectedTeamRef.matchId)
@@ -152,14 +192,6 @@ const LiveDashboardPage = () => {
             path: {eventId, matchId},
             query: {running},
         })
-        if (error) {
-            feedback.error(t('event.liveDashboard.control.error'))
-        }
-        dashboardData.reload()
-    }
-
-    const handleStart = async (matchId: string) => {
-        const {error} = await startLiveDashboardMatch({path: {eventId, matchId}})
         if (error) {
             feedback.error(t('event.liveDashboard.control.error'))
         }
@@ -230,20 +262,27 @@ const LiveDashboardPage = () => {
                         <CircularProgress />
                     </Box>
                 )}
+                {dashboard && indicatorEntries.length > 0 && (
+                    <ScheduleTimelineIndicator
+                        entries={indicatorEntries}
+                        now={now}
+                        onEntryClick={scrollToTimelineEntry}
+                    />
+                )}
                 {tab === 'live' && (
                     <>
                         {runningMatches.length === 0 && dashboard && (
                             <Alert severity="info">{t('event.liveDashboard.noRunning')}</Alert>
                         )}
                         {runningMatches.map(match => (
-                            <LiveDashboardMatchCard
-                                key={match.matchId}
-                                match={match}
-                                onTeamClick={handleTeamClick}
-                                onFinish={mayControl ? handleFinish : undefined}
-                                onSetRunning={mayControl ? handleSetRunning : undefined}
-                                onStart={mayControl ? handleStart : undefined}
-                            />
+                            <Box key={match.matchId} id={dashboardEntryDomId(match.matchId)}>
+                                <LiveDashboardMatchCard
+                                    match={match}
+                                    onTeamClick={handleTeamClick}
+                                    onFinish={mayFinish ? handleFinish : undefined}
+                                    onSetRunning={mayControl ? handleSetRunning : undefined}
+                                />
+                            </Box>
                         ))}
                         {runningMatches.length === 0 && nextEntry && (
                             <>
@@ -251,16 +290,20 @@ const LiveDashboardPage = () => {
                                     {t('event.liveDashboard.nextUp')}
                                 </Typography>
                                 {nextEntry.kind === 'match' ? (
-                                    <LiveDashboardMatchCard
-                                        match={nextEntry.match}
-                                        onTeamClick={handleTeamClick}
-                                        onSetRunning={mayControl ? handleSetRunning : undefined}
-                                    />
+                                    <Box id={dashboardEntryDomId(nextEntry.match.matchId)}>
+                                        <LiveDashboardMatchCard
+                                            match={nextEntry.match}
+                                            onTeamClick={handleTeamClick}
+                                            onSetRunning={mayControl ? handleSetRunning : undefined}
+                                        />
+                                    </Box>
                                 ) : (
-                                    <LiveDashboardPendingSlotCard
-                                        slot={nextEntry.slot}
-                                        onSkip={mayControl ? handleSkipSlot : undefined}
-                                    />
+                                    <Box id={dashboardEntryDomId(nextEntry.slot.slotId)}>
+                                        <LiveDashboardPendingSlotCard
+                                            slot={nextEntry.slot}
+                                            onSkip={mayControl ? handleSkipSlot : undefined}
+                                        />
+                                    </Box>
                                 )}
                             </>
                         )}
@@ -270,20 +313,21 @@ const LiveDashboardPage = () => {
                     <>
                         {scheduledTimeline.map(entry =>
                             entry.kind === 'match' ? (
-                                <LiveDashboardMatchCard
-                                    key={entry.match.matchId}
-                                    match={entry.match}
-                                    onTeamClick={handleTeamClick}
-                                    onFinish={mayControl ? handleFinish : undefined}
-                                    onSetRunning={mayControl ? handleSetRunning : undefined}
-                                    onStart={mayControl ? handleStart : undefined}
-                                />
+                                <Box key={entry.match.matchId} id={dashboardEntryDomId(entry.match.matchId)}>
+                                    <LiveDashboardMatchCard
+                                        match={entry.match}
+                                        onTeamClick={handleTeamClick}
+                                        onFinish={mayFinish ? handleFinish : undefined}
+                                        onSetRunning={mayControl ? handleSetRunning : undefined}
+                                    />
+                                </Box>
                             ) : (
-                                <LiveDashboardPendingSlotCard
-                                    key={entry.slot.slotId}
-                                    slot={entry.slot}
-                                    onSkip={mayControl ? handleSkipSlot : undefined}
-                                />
+                                <Box key={entry.slot.slotId} id={dashboardEntryDomId(entry.slot.slotId)}>
+                                    <LiveDashboardPendingSlotCard
+                                        slot={entry.slot}
+                                        onSkip={mayControl ? handleSkipSlot : undefined}
+                                    />
+                                </Box>
                             ),
                         )}
                         {unscheduledMatches.length > 0 && (
@@ -292,14 +336,14 @@ const LiveDashboardPage = () => {
                                     {t('event.liveDashboard.unscheduled')}
                                 </Typography>
                                 {unscheduledMatches.map(match => (
-                                    <LiveDashboardMatchCard
-                                        key={match.matchId}
-                                        match={match}
-                                        onTeamClick={handleTeamClick}
-                                        onFinish={mayControl ? handleFinish : undefined}
-                                        onSetRunning={mayControl ? handleSetRunning : undefined}
-                                        onStart={mayControl ? handleStart : undefined}
-                                    />
+                                    <Box key={match.matchId} id={dashboardEntryDomId(match.matchId)}>
+                                        <LiveDashboardMatchCard
+                                            match={match}
+                                            onTeamClick={handleTeamClick}
+                                            onFinish={mayFinish ? handleFinish : undefined}
+                                            onSetRunning={mayControl ? handleSetRunning : undefined}
+                                        />
+                                    </Box>
                                 ))}
                             </>
                         )}

@@ -38,6 +38,17 @@ data class PendingScheduleSlotInfo(
     val matchName: String?,
 )
 
+/**
+ * Ein FREE-Slot (Programmpunkt wie "Mittagspause") mit seinem Namen - nur fürs Live-Dashboard
+ * (siehe [EventScheduleLogic.freeSlotOrNull]). Athleten-Anzeige und Kiosk bleiben bei
+ * [PendingScheduleSlotInfo]/WAITING-Slots; öffentliche Boards zeigen bewusst keine Pausen.
+ */
+data class FreeScheduleSlotInfo(
+    val slotId: UUID,
+    val startTime: LocalDateTime,
+    val name: String?,
+)
+
 object EventScheduleLogic {
 
     const val MIN_GAP_MINUTES = 5L
@@ -110,6 +121,38 @@ object EventScheduleLogic {
     }
 
     /**
+     * Baut aus einer rohen Zeitstrahl-Zeile einen FREE-Platzhalter (Programmpunkt), oder liefert
+     * null - für Slots, die keine FREE-Slots sind, oder die übersprungen wurden. Getrennt von
+     * [pendingSlotOrNull], weil beide Platzhalter-Arten unterschiedliche Konsumenten haben: WAITING
+     * zeigen Athleten-Anzeige, Kiosk und Live-Dashboard gemeinsam, FREE nur das Live-Dashboard
+     * (öffentliche Boards bekommen keine Pausen zu sehen).
+     */
+    fun freeSlotOrNull(
+        slotId: UUID,
+        isFree: Boolean,
+        name: String?,
+        startTime: LocalDateTime,
+        skipped: Boolean,
+    ): FreeScheduleSlotInfo? {
+        if (!isFree) {
+            return null
+        }
+
+        val state = deriveSlotState(
+            isFree = true,
+            skipped = skipped,
+            roundMaterialized = false,
+            matchExists = false,
+        )
+
+        return if (state != EventScheduleSlotState.FREE) {
+            null
+        } else {
+            FreeScheduleSlotInfo(slotId = slotId, startTime = startTime, name = name)
+        }
+    }
+
+    /**
      * [slots]: ab dem gewählten Start-Slot, aufsteigend sortiert, nur derselbe Renntag.
      * Ohne [targetSlotId] werden alle Slots stumpf um [deltaMinutes] verschoben. Mit Ziel-Slot
      * behält dieser seine Zeit; die Verspätung wird aus den Abständen davor herausgestaucht.
@@ -173,5 +216,20 @@ object EventScheduleLogic {
             entries.add(ShiftPreviewEntry(slots[idx].id, slots[idx].startTime, slots[idx].startTime))
         }
         return ShiftResult.Ok(entries)
+    }
+
+    /**
+     * Guard gegen "Überholen des Vorgängers" bei einem negativen Shift (Vorziehen):
+     * [predecessorStartTime] ist die Startzeit des letzten UNverschobenen Slots desselben Tages vor
+     * dem Start-Slot - der bleibt an seiner Zeit stehen. Fällt eine der neuen Zeiten davor, würde der
+     * verschobene Block zeitlich vor seinen Vorgänger rutschen und die Reihenfolge im Zeitstrahl
+     * durcheinanderbringen; das ist kein zulässiges Ergebnis. Ohne Vorgänger am selben Tag (der
+     * Start-Slot ist der erste des Tages) gibt es von dieser Seite keine Grenze.
+     */
+    fun overtakesPredecessor(entries: List<ShiftPreviewEntry>, predecessorStartTime: LocalDateTime?): Boolean {
+        if (predecessorStartTime == null) {
+            return false
+        }
+        return entries.any { it.newStartTime < predecessorStartTime }
     }
 }

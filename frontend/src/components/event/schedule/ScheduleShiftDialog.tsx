@@ -26,7 +26,7 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {shiftEventSchedule} from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, ShiftMode, ShiftScheduleRequest} from '@api/types.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
-import {buildShiftPreviewRows, defaultFromSlotId, parseMaxReductionMinutes, slotsAfter} from './common.ts'
+import {buildShiftPreviewRows, defaultFromSlotId, extractMaxReductionMinutes, slotsAfter} from './common.ts'
 
 type ShiftForm = {
     fromSlotId: string
@@ -129,7 +129,7 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
             if (error.status.value === 422) {
                 setPreviewError({
                     message: error.message,
-                    max: parseMaxReductionMinutes(error.message),
+                    max: extractMaxReductionMinutes(error),
                 })
             } else {
                 feedback.error(t('common.error.unexpected'))
@@ -174,17 +174,26 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
                         />
                         <FormInputRadioButtonGroup
                             name={'mode'}
-                            label={t('event.schedule.shift.title')}
+                            label={t('event.schedule.shift.mode')}
                             options={[
                                 {id: 'PLUS_MINUTES', label: t('event.schedule.shift.modePlus')},
                                 {id: 'SET_TIME', label: t('event.schedule.shift.modeSetTime')},
                                 {id: 'COMPRESS_TO_TARGET', label: t('event.schedule.shift.modeCompress')},
                             ]}
                         />
+                        <Typography variant={'body2'} color={'text.secondary'}>
+                            {mode === 'PLUS_MINUTES' && t('event.schedule.shift.help.plus')}
+                            {mode === 'SET_TIME' && t('event.schedule.shift.help.setTime')}
+                            {mode === 'COMPRESS_TO_TARGET' && t('event.schedule.shift.help.compress')}
+                        </Typography>
                         {(mode === 'PLUS_MINUTES' || mode === 'COMPRESS_TO_TARGET') && (
                             <FormInputNumber
                                 name={'minutes'}
-                                label={t('event.schedule.shift.minutes')}
+                                label={t(
+                                    mode === 'COMPRESS_TO_TARGET'
+                                        ? 'event.schedule.shift.delayMinutes'
+                                        : 'event.schedule.shift.minutes',
+                                )}
                                 required
                                 transform={{
                                     output: value =>

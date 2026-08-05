@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.entity
 
+import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -97,13 +98,16 @@ data class LiveDashboardMatchDto(
 )
 
 /**
- * Ein wartender Zeitstrahl-Slot (Runde noch nicht erzeugt) - für die Schiedsrichter-Ansicht, die
- * so sieht, was als nächstes kommt, auch bevor der Lauf existiert. Bewusst ohne Team-/
- * Personendaten, die gibt es für einen WAITING-Slot ohnehin noch nicht.
+ * Ein Platzhalter im Zeitstrahl des Live-Dashboards - entweder ein wartender Lauf-Slot (Runde noch
+ * nicht erzeugt) oder ein FREE-Slot/Programmpunkt (z.B. "Mittagspause"). Bewusst ohne Team-/
+ * Personendaten, die gibt es für beide Platzhalter-Arten ohnehin nicht. [name] unterscheidet die
+ * Fälle: gesetzt für Programmpunkte, null für Lauf-Platzhalter.
  */
 data class PendingSlotDto(
     val slotId: UUID,
     val startTime: LocalDateTime,
+    /** Name des Programmpunkts - null bei einem Lauf-Platzhalter. */
+    val name: String?,
     val competitionName: String?,
     val roundName: String?,
     val matchName: String?,
@@ -113,4 +117,6 @@ data class LiveDashboardDto(
     val matches: List<LiveDashboardMatchDto>,
     /** Aufsteigend nach Startzeit; in beiden Scopes (ALL und LIVE) enthalten - die Liste ist klein. */
     val pendingSlots: List<PendingSlotDto>,
+    /** Steuert im Frontend, ob "Lauf beenden" im Dashboard überhaupt angeboten wird (C1). */
+    val chainProgressionMode: ChainProgressionMode,
 )
