@@ -34,7 +34,7 @@ const InfoViewDisplay = ({eventId, view}: InfoViewDisplayProps) => {
             case 'ATHLETE_BOARD':
                 // Limits und Countdown-Schalter kommen aus der Antwort des Endpoints,
                 // damit Kiosk und eigene Seite dieselbe Konfiguration zeigen.
-                return <AthleteBoardView eventId={eventId} />
+                return <AthleteBoardView eventId={eventId} controlsOverlayed />
             default:
                 return (
                     <Box sx={{p: 3}}>

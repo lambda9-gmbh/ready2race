@@ -8,11 +8,17 @@ import AthleteBoardResultCard from '../athleteBoard/AthleteBoardResultCard'
 
 interface AthleteBoardViewProps {
     eventId: string
+    /**
+     * Auf der Info-Seite liegen die Knöpfe für Konfiguration und Vollbild als Overlay über
+     * der rechten oberen Ecke und verdecken sonst die Uhr. Dann beginnt der Kopf weiter
+     * unten. Auf der eigenen Seite (fest montierter Bildschirm) gibt es keine Knöpfe.
+     */
+    controlsOverlayed?: boolean
 }
 
 const STALE_AFTER_MISSED_INTERVALS = 2
 
-const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
+const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardViewProps) => {
     const {t} = useTranslation()
     const {data, lastUpdated, notFound, initialLoad, loadFailed} = useAthleteBoardData(eventId)
     const now = useServerClock(data?.serverTime)
@@ -93,7 +99,14 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
     )
 
     return (
-        <Box sx={{height: '100%', overflow: 'auto', p: 'clamp(0.75rem, 1.5vw, 2rem)'}}>
+        <Box
+            sx={{
+                height: '100%',
+                overflow: 'auto',
+                p: 'clamp(0.75rem, 1.5vw, 2rem)',
+                // Höhe der Overlay-Knöpfe (top: 16 + Knopfhöhe) plus Luft
+                ...(controlsOverlayed && {pt: '4rem'}),
+            }}>
             <Stack
                 direction="row"
                 justifyContent="space-between"
@@ -127,6 +140,14 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
                 direction={{xs: 'column', lg: 'row'}}
                 gap={{xs: 2, lg: 3}}
                 alignItems="stretch">
+                {/* Leserichtung der Zeit: gelaufen (links) — läuft (Mitte) — kommt (rechts) */}
+                {column(
+                    t('event.info.athleteBoard.results'),
+                    t('event.info.athleteBoard.noResults'),
+                    (data?.results ?? []).map(result => (
+                        <AthleteBoardResultCard key={result.matchId} result={result} />
+                    )),
+                )}
                 {column(
                     t('event.info.athleteBoard.running'),
                     t('event.info.athleteBoard.noRunning'),
@@ -150,13 +171,6 @@ const AthleteBoardView = ({eventId}: AthleteBoardViewProps) => {
                             variant="upcoming"
                             showCountdown={data?.showCountdown ?? true}
                         />
-                    )),
-                )}
-                {column(
-                    t('event.info.athleteBoard.results'),
-                    t('event.info.athleteBoard.noResults'),
-                    (data?.results ?? []).map(result => (
-                        <AthleteBoardResultCard key={result.matchId} result={result} />
                     )),
                 )}
             </Stack>
