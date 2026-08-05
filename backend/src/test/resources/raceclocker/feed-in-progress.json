@@ -1,0 +1,150 @@
+[
+  {
+    "Name": "Henrik Andersen",
+    "Rank": "1",
+    "Bib number": "4",
+    "Club": "Aabenraa RK",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "AF1 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000004"
+      ]
+    ],
+    "Start": "11:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "11:21:15.3",
+    "Result": "00:21:15.3",
+    "Result in seconds": "1275.3",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Piet Hauschild",
+    "Rank": "2",
+    "Bib number": "13",
+    "Club": "Wilhelmshavener RV",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "AF1 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000013"
+      ]
+    ],
+    "Start": "11:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "00:00:00.0",
+    "Result": "In race...",
+    "Result in seconds": "0",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Mats Nielsen",
+    "Rank": "3",
+    "Bib number": "7",
+    "Club": "Sønderborg Roklub",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "AF1 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000007"
+      ]
+    ],
+    "Start": "00:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "00:00:00.0",
+    "Result": "Not started",
+    "Result in seconds": "0",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "Name": "Nils Boysen",
+    "Rank": "4",
+    "Bib number": "10",
+    "Club": "Lübecker RG",
+    "Category": "CM1x",
+    "CategoryDistance": null,
+    "Wave": "AF1 CM1x",
+    "WaveDistance": null,
+    "Age": "0",
+    "Gender": "",
+    "Custom": "",
+    "Handicap": "1.000",
+    "ExtraInfo": [
+      [
+        "R2R-ID",
+        "00000000-0000-4000-8000-000000000010"
+      ]
+    ],
+    "Start": "00:00:00.0",
+    "Split 1": "00:00:00.0",
+    "Split 2": "00:00:00.0",
+    "Split 3": "00:00:00.0",
+    "Split 4": "00:00:00.0",
+    "Finish": "00:00:00.0",
+    "Result": "DNF",
+    "Result in seconds": "0",
+    "Handicap Result in seconds": "",
+    "Penalty": "0",
+    "Penalty note": ""
+  },
+  {
+    "RaceInfo": {
+      "Name": "R2R Devtest — Läufe (Wave starts)",
+      "Date": "2026-07-19",
+      "Sport": "Rowing",
+      "StartType": "Wave starts ",
+      "Distance": "250",
+      "DistanceUnit": "m",
+      "Splits": "0",
+      "Location": {
+        "Longitude": "4.850228",
+        "Latitude": "52.328875"
+      },
+      "URL": "",
+      "HasCategories": true,
+      "HasBibNumbers": true,
+      "HasAge": false,
+      "HasGender": false,
+      "HasClubNames": true,
+      "HasHandicaps": false,
+      "HasCustom": false,
+      "CustomLabel": "Custom"
+    }
+  }
+]

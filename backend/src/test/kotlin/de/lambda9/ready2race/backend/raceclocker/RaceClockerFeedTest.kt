@@ -21,12 +21,19 @@ import kotlin.test.assertTrue
  */
 class RaceClockerFeedTest {
 
-    private fun feed(): List<RaceClockerFeedRow> {
-        val body = javaClass.getResourceAsStream("/raceclocker/feed.json")!!.bufferedReader().readText()
+    private fun feed(name: String = "feed"): List<RaceClockerFeedRow> {
+        val body = javaClass.getResourceAsStream("/raceclocker/$name.json")!!.bufferedReader().readText()
         val rows = RaceClockerFeed.parse(body).unsafeRunSync().getOrNull()
         assertNotNull(rows, "fixture feed could not be parsed")
         return rows
     }
+
+    /**
+     * One heat as it looks while it is still running: one boat timed, one on the water, one that the
+     * timekeeper has not started yet, one real DNF. Recorded from a RaceClocker race in exactly that
+     * state - the four rows are the cases a pull has to tell apart.
+     */
+    private fun inProgressFeed() = feed("feed-in-progress")
 
     private fun uuidOf(bib: Int) = UUID.fromString("00000000-0000-4000-8000-%012d".format(bib))
 
@@ -106,6 +113,7 @@ class RaceClockerFeedTest {
         assertEquals("00:02:22.5", row.time)
         assertNull(row.noResultReason)
         assertTrue(row.isTime)
+        assertTrue(row.hasResult)
     }
 
     @Test
@@ -118,8 +126,97 @@ class RaceClockerFeedTest {
             assertEquals(expected, row.noResultReason, "bib $bib should carry a no-result reason")
             assertNull(row.time, "bib $bib must not yield a time")
             assertTrue(!row.isTime)
+            assertTrue(row.hasResult, "bib $bib is a real elimination and must be written back")
         }
     }
+
+    @Test
+    fun progressStatesAreNotAnElimination() {
+        // The bug this guards against: RaceClocker uses the result column for progress as well.
+        // "In race..." (bib 13) means the crew is on the water, "Not started" (bib 7) is what every
+        // entry carries right after the start list import. Neither may become a failure reason.
+        val byBib = inProgressFeed().associateBy { it.bib }
+
+        listOf(13 to "In race...", 7 to "Not started").forEach { (bib, raw) ->
+            val row = byBib[bib]!!
+            assertEquals(raw, row.result, "fixture should carry the raw progress text for bib $bib")
+            assertNull(row.noResultReason, "'$raw' must not be read as an elimination")
+            assertNull(row.time, "'$raw' must not yield a time")
+            assertTrue(!row.isTime)
+            assertTrue(!row.hasResult, "'$raw' must be skipped, not written back")
+        }
+    }
+
+    @Test
+    fun aTimeStaysATimeWhileTheHeatIsStillRunning() {
+        val row = inProgressFeed().single { it.bib == 4 }
+        assertEquals("00:21:15.3", row.time)
+        assertNull(row.noResultReason)
+        assertTrue(row.hasResult)
+    }
+
+    @Test
+    fun eliminationStaysAnEliminationWhileTheHeatIsStillRunning() {
+        val row = inProgressFeed().single { it.bib == 10 }
+        assertEquals("DNF", row.noResultReason)
+        assertNull(row.time)
+        assertTrue(row.hasResult)
+    }
+
+    @Test
+    fun onlyRowsWithATimeOrAnEliminationAreWrittenBack() {
+        // Mirrors the filter CompetitionExecutionService.updateMatchResultFromRaceClocker applies
+        // before it builds its ParsedTeamResults: a mid-heat pull writes the finisher and the DNF and
+        // leaves the two crews that have no result yet untouched, so it can be repeated.
+        val written = inProgressFeed().filter { it.hasResult }.map { it.bib }
+        assertEquals(listOf(4, 10), written)
+    }
+
+    @Test
+    fun eliminationCodesAreRecognisedRegardlessOfSpacingAndCase() {
+        listOf(" dnf ", "DNS", "dq", "Dnf").forEach { raw ->
+            val reason = rowWithResult(raw).noResultReason
+            assertEquals(raw.trim().uppercase(), reason, "'$raw' should be read as an elimination")
+        }
+    }
+
+    @Test
+    fun unknownResultTextIsTreatedAsPendingRatherThanAsElimination() {
+        // Deliberate: only DNS/DNF/DQ - the full contents of RaceClocker's status dropdown - are
+        // eliminations. Anything else is assumed to be a state we have not seen yet, because calling a
+        // boat that is still racing "failed" is worse than making a referee enter an elimination by
+        // hand. This also makes the exact spelling of the progress states irrelevant.
+        listOf(
+            "In race…",      // the same state with a unicode ellipsis
+            "IN RACE...",
+            "  Not Started  ",
+            "In Rennen...",  // a localisation we have not observed
+            "Underway",
+            "",
+            null,
+        ).forEach { raw ->
+            val row = rowWithResult(raw)
+            assertNull(row.noResultReason, "'$raw' must not be read as an elimination")
+            assertTrue(!row.hasResult, "'$raw' must be skipped")
+        }
+    }
+
+    @Test
+    fun theStatusDropdownIsTheSourceOfTheEliminationCodes() {
+        assertEquals(setOf("DNS", "DNF", "DQ"), RaceClockerFeedRow.ELIMINATION_CODES)
+    }
+
+    private fun rowWithResult(result: String?) = RaceClockerFeedRow(
+        name = "Test",
+        rank = null,
+        bib = null,
+        wave = null,
+        ids = emptyList(),
+        result = result?.takeIf { it.isNotBlank() },
+        start = null,
+        penaltySeconds = null,
+        penaltyNote = null,
+    )
 
     @Test
     fun startTimeIsParsedFromFeed() {
@@ -163,6 +260,13 @@ class RaceClockerFeedTest {
         """.trimIndent()
         val rows = RaceClockerFeed.parse(body).unsafeRunSync().getOrNull()!!
         assertEquals(LocalTime.of(11, 0), RaceClockerFeedRow.earliestStart(rows))
+    }
+
+    @Test
+    fun earliestStartAlsoCountsCrewsThatAreStillOnTheWater() {
+        // started_at is taken from every assigned row, not just the ones with a result: a crew whose
+        // result column still says "In race..." has very much started.
+        assertEquals(LocalTime.of(11, 0), RaceClockerFeedRow.earliestStart(inProgressFeed()))
     }
 
     @Test
