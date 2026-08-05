@@ -624,7 +624,6 @@ object CompetitionExecutionService {
         competitionId: UUID,
         matchId: UUID,
         file: File,
-        request: UploadMatchResultRequest,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
@@ -632,7 +631,13 @@ object CompetitionExecutionService {
         val match = !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId)
 
-        val config = !MatchResultImportConfigRepo.get(request.config).orDie()
+        // Das Preset gehoert zum Wettkampf (Zeitnahme-Tab), nicht mehr zur einzelnen Anfrage.
+        val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
+        val configId = !KIO.failOnNull(competition.resultImportConfig) {
+            MatchResultImportConfigError.NotConfigured
+        }
+        val config = !MatchResultImportConfigRepo.get(configId).orDie()
             .onNullFail { MatchResultImportConfigError.NotFound }
 
         val identifierColumn = config.colTeamRegistrationId

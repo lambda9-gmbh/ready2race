@@ -117,7 +117,6 @@ fun Route.competitionExecution() {
                     val multiPartData = receiveMultipart()
 
                     var upload: File? = null
-                    var request: UploadMatchResultRequest? = null
 
                     var done = false
                     while (!done) {
@@ -137,12 +136,6 @@ fun Route.competitionExecution() {
                                     }
                                 }
 
-                                is PartData.FormItem -> {
-                                    if (part.name == "request") {
-                                        request = jsonMapper.readValue<UploadMatchResultRequest>(part.value)
-                                    }
-                                }
-
                                 else -> {}
                             }
                             part.dispose()
@@ -150,7 +143,6 @@ fun Route.competitionExecution() {
                     }
 
                     val file = !KIO.failOnNull(upload) { RequestError.File.Missing }
-                    val req = !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
 
                     !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
 
@@ -159,7 +151,6 @@ fun Route.competitionExecution() {
                         competitionId = competitionId,
                         matchId = competitionMatchId,
                         file = file,
-                        request = req,
                         userId = user.id!!
                     )
 
@@ -271,7 +262,7 @@ fun Route.competitionExecution() {
                         }
 
                         val req =
-                            !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
+                            !KIO.failOnNull(request) { RequestError.BodyMissing(CompetitionChallengeResultRequest.example) }
 
                         // TODO: check valid image
                         // !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
@@ -364,7 +355,7 @@ fun Route.competitionExecution() {
                         }
 
                         val req =
-                            !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
+                            !KIO.failOnNull(request) { RequestError.BodyMissing(CompetitionChallengeResultRequest.example) }
 
                         // TODO: check valid image
                         // !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }

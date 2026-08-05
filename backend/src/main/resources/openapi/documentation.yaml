@@ -6496,11 +6496,8 @@ paths:
             schema:
               type: object
               required:
-                - request
                 - files
               properties:
-                request:
-                  $ref: '#/components/schemas/UploadMatchResultRequest'
                 files:
                   type: array
                   items:
@@ -13293,15 +13290,6 @@ components:
           type: string
         colTeamTime:
           type: string
-
-    UploadMatchResultRequest:
-      type: object
-      required:
-        - config
-      properties:
-        config:
-          type: string
-          format: uuid
 
     EventInvoicesInfoDto:
       type: object
