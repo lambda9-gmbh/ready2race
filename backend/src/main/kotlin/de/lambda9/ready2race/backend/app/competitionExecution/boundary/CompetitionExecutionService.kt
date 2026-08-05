@@ -530,23 +530,20 @@ object CompetitionExecutionService {
         KIO.ok(match)
     }
 
+    /**
+     * Setzt alle Plätze eines Laufs zurück, damit eine neue Ergebnis-Eingabe nicht auf alten
+     * Werten aufsetzt.
+     *
+     * Rührt `currently_running` NICHT MEHR an (C1): egal ob die Ergebnisse aus der manuellen
+     * Eingabe, einem Datei-Upload oder dem RaceClocker-Pull vollständig sind, der Lauf bleibt
+     * aktiv, bis ein aktives Beenden ihn stempelt (`LiveDashboardService.finishMatch` bzw.
+     * `EventScheduleService.finishSlot`). Vorher deaktivierte diese Funktion einen Lauf mit
+     * vollständigen Ergebnissen still, ohne `finished_at` zu setzen und ohne die Kette zu ziehen -
+     * genau das Loch, das C1 schließt ("Ergebnisse vollständig — wartet auf Beenden").
+     */
     private fun prepareForNewPlaces(
         matchId: UUID,
-        userId: UUID,
-        /**
-         * Whether the match is done. Partial results (only some boats finished) leave the
-         * match running, so the live views keep showing it as the current race.
-         */
-        stopRunning: Boolean = true,
     ): App<Nothing, Unit> = KIO.comprehension {
-
-        if (stopRunning) {
-            !CompetitionMatchRepo.update(matchId) {
-                currentlyRunning = false
-                updatedBy = userId
-                updatedAt = LocalDateTime.now()
-            }.orDie()
-        }
 
         !CompetitionMatchTeamRepo.updateManyByMatch(matchId) {
             place = null
@@ -566,14 +563,7 @@ object CompetitionExecutionService {
 
         !checkUpdateMatchResult(competitionId, matchId)
 
-        // A submission may cover only part of the field (first boats across the line). The match
-        // counts as done only once every participating team has a result.
-        val matchTeams = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
-        val resultsComplete = matchTeams
-            .filter { it.out != true }
-            .all { team -> request.teamResults.any { it.registrationId == team.competitionRegistration } }
-
-        !prepareForNewPlaces(matchId, userId, stopRunning = resultsComplete)
+        !prepareForNewPlaces(matchId)
 
         val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
 
@@ -642,7 +632,7 @@ object CompetitionExecutionService {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val match = !checkUpdateMatchResult(competitionId, matchId)
-        !prepareForNewPlaces(matchId, userId)
+        !prepareForNewPlaces(matchId)
 
         val config = !MatchResultImportConfigRepo.get(request.config).orDie()
             .onNullFail { MatchResultImportConfigError.NotFound }
@@ -1001,7 +991,7 @@ object CompetitionExecutionService {
             }.orDie()
         }
 
-        !prepareForNewPlaces(matchId, userId)
+        !prepareForNewPlaces(matchId)
 
         val parsed = timed.map { (registrationId, row) ->
             ParsedTeamResult(

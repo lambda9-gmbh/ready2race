@@ -293,6 +293,11 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                 {t('event.liveDashboard.control.incompleteWarning')}
                             </Typography>
                         )}
+                        {match.state === 'RUNNING' && resultsComplete && (
+                            <Typography variant="caption" sx={{color: 'success.dark', mr: 'auto'}}>
+                                {t('event.liveDashboard.resultsCompleteWaiting')}
+                            </Typography>
+                        )}
                         {onSetRunning && (
                             <Button
                                 size="small"
