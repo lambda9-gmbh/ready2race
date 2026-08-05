@@ -819,6 +819,15 @@
           "error": "Der opstod en fejl ved sletning af runden",
           "success": "Runden blev slettet"
         },
+        "cancelRound": {
+          "action": "Aflys runden",
+          "confirmation": {
+            "content": "Runden „{{round}}“ aflyses helt? I denne runde er der ingen løb at afvikle (alle både har frirunde). De tilhørende slots i tidsplanen markeres som aflyst og springes over af kæden.",
+            "ok": "Aflys runden"
+          },
+          "error": "Der opstod en fejl ved aflysning af runden",
+          "success": "Runden er markeret som aflyst"
+        },
         "teamsWithBye": "Hold med frirunde",
         "match": {
           "startTime": "Starttid",
@@ -1392,9 +1401,6 @@
       "skipConfirmOnly": "Løbet „{{label}}“ kl. {{time}} aflyses og springes over af kæden.",
       "skipConfirmFree": "Programpunktet „{{label}}“ kl. {{time}} aflyses.",
       "unskipConfirm": "Aflysning af „{{label}}“ kl. {{time}} fortrydes? Slotten indgår igen normalt.",
-      "skipRound": "Aflys hele runden ({{count}} løb)",
-      "skipRoundOk": "Alle {{count}} løb",
-      "skipRoundConfirm": "Hele runden „{{round}}“ ({{competition}}) aflyses - alle {{count}} løb: {{list}}. De afholdes ikke og springes over af kæden.",
       "activate": "Aktiver løb",
       "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
       "activateAnyway": "Aktiver alligevel",

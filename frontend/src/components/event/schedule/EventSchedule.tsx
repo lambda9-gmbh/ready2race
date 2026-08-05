@@ -24,7 +24,6 @@ import {
     EventRepeat,
     OpenInNew,
     PlayArrow,
-    PlaylistRemove,
     Stop,
 } from '@mui/icons-material'
 import {format} from 'date-fns'
@@ -35,7 +34,6 @@ import {
     deleteScheduleSlot,
     finishScheduleSlot,
     getEventSchedule,
-    skipScheduleRound,
     skipScheduleSlot,
     unskipScheduleSlot,
 } from '@api/sdk.gen.ts'
@@ -233,41 +231,6 @@ const EventSchedule = () => {
         )
     }
 
-    const handleSkipRound = (slot: EventScheduleSlotDto) => {
-        const setupRoundId = slot.setupRoundId
-        if (!setupRoundId) {
-            return
-        }
-        const affected = slotsInRound(data?.slots ?? [], setupRoundId)
-        // Die betroffenen Läufe werden namentlich mit Uhrzeit aufgezählt - eine Zahl allein sagt
-        // nicht, was gleich verschwindet.
-        const list = affected
-            .map(
-                s =>
-                    `${s.matchName ?? '?'} (${format(new Date(s.startTime), t('format.time'))})`,
-            )
-            .join(', ')
-
-        confirmAction(
-            async () => {
-                const {error} = await skipScheduleRound({path: {eventId, setupRoundId}})
-                if (error) {
-                    feedback.error(t('common.error.unexpected'))
-                }
-                reload()
-            },
-            {
-                content: t('event.schedule.skipRoundConfirm', {
-                    round: slot.roundName ?? '',
-                    competition: slot.competitionName ?? '',
-                    count: affected.length,
-                    list,
-                }),
-                okText: t('event.schedule.skipRoundOk', {count: affected.length}),
-            },
-        )
-    }
-
     const handleUnskip = (slot: EventScheduleSlotDto) => {
         confirmAction(
             async () => {
@@ -424,9 +387,6 @@ const EventSchedule = () => {
                             <TableBody>
                                 {section.slots.map(slot => {
                                     const chip = stateChipProps(slot, t)
-                                    const roundSlotCount = slot.setupRoundId
-                                        ? slotsInRound(data?.slots ?? [], slot.setupRoundId).length
-                                        : 0
                                     return (
                                         <TableRow
                                             key={slot.id}
@@ -573,30 +533,6 @@ const EventSchedule = () => {
                                                                         size={'small'}
                                                                         onClick={() => handleSkip(slot)}>
                                                                         <EventBusy fontSize={'small'} />
-                                                                    </IconButton>
-                                                                </Tooltip>
-                                                            )}
-                                                        </Box>
-                                                        <Box sx={actionSlotSx}>
-                                                            {/* Nur anzeigen, wenn die Runde mehrere
-                                                                Slots hat - bei einer Runde aus einem
-                                                                einzigen Lauf (z.B. ein Finale) wäre
-                                                                die Aktion identisch mit der links
-                                                                daneben und nur verwirrend. */}
-                                                            {roundSlotCount > 1 && (
-                                                                <Tooltip
-                                                                    title={t(
-                                                                        'event.schedule.skipRound',
-                                                                        {count: roundSlotCount},
-                                                                    )}>
-                                                                    <IconButton
-                                                                        size={'small'}
-                                                                        onClick={() =>
-                                                                            handleSkipRound(slot)
-                                                                        }>
-                                                                        <PlaylistRemove
-                                                                            fontSize={'small'}
-                                                                        />
                                                                     </IconButton>
                                                                 </Tooltip>
                                                             )}

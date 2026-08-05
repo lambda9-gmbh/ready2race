@@ -819,6 +819,15 @@
           "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
           "success": "Runde erfolgreich gelöscht"
         },
+        "cancelRound": {
+          "action": "Runde entfällt",
+          "confirmation": {
+            "content": "Die Runde „{{round}}“ entfällt komplett? In dieser Runde gibt es keine Läufe zu fahren (alle Boote haben ein Freilos). Die zugehörigen Slots im Zeitplan werden als entfallen markiert und von der Kette ausgelassen.",
+            "ok": "Runde entfällt"
+          },
+          "error": "Beim Entfallenlassen der Runde ist ein Fehler aufgetreten",
+          "success": "Runde als entfallen markiert"
+        },
         "teamsWithBye": "Teams mit Freilos",
         "match": {
           "startTime": "Startzeit",
@@ -1392,9 +1401,6 @@
       "skipConfirmOnly": "Der Lauf „{{label}}“ um {{time}} entfällt und wird von der Kette ausgelassen.",
       "skipConfirmFree": "Der Programmpunkt „{{label}}“ um {{time}} entfällt.",
       "unskipConfirm": "Entfall für „{{label}}“ um {{time}} aufheben? Der Slot wird wieder normal berücksichtigt.",
-      "skipRound": "Ganze Runde entfallen lassen ({{count}} Läufe)",
-      "skipRoundOk": "Alle {{count}} Läufe",
-      "skipRoundConfirm": "Die ganze Runde „{{round}}“ ({{competition}}) entfällt — alle {{count}} Läufe: {{list}}. Sie finden nicht statt und werden von der Kette ausgelassen.",
       "activate": "Lauf aktivieren",
       "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",
       "activateAnyway": "Trotzdem aktivieren",
