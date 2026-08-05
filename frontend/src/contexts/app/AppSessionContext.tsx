@@ -8,7 +8,7 @@ import React, {
     useRef,
     useState,
 } from 'react'
-import {CheckQrCodeResponse, EventDto} from '@api/types.gen.ts'
+import {EventDto, QrCodeAppuserResponse, QrCodeParticipantResponse} from '@api/types.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {useNavigate} from '@tanstack/react-router'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -48,9 +48,13 @@ export type AppViewState = {
     replace?: boolean
 }
 
+// The app's QR scanning flow requires an authenticated staff session, so the backend
+// never returns the anonymous QrCodePublicResponse variant here.
+export type StaffQrCodeResponse = QrCodeParticipantResponse | QrCodeAppuserResponse
+
 export type QrState = {
     qrCodeId: string | null
-    response: CheckQrCodeResponse | null
+    response: StaffQrCodeResponse | null
     received: boolean
     handled: boolean
     update: (state: Omit<QrState, 'update' | 'reset'>) => void

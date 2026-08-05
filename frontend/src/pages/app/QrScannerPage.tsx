@@ -1,9 +1,8 @@
 import {Button, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
-import {CheckQrCodeResponse} from '@api/types.gen.ts'
 import {useEffect, useRef} from 'react'
 import QrNimiqScanner from '@components/qrApp/QrNimiqScanner.tsx'
 import {useTranslation} from 'react-i18next'
-import {useAppSession} from '@contexts/app/AppSessionContext'
+import {StaffQrCodeResponse, useAppSession} from '@contexts/app/AppSessionContext'
 import {checkQrCode} from '@api/sdk.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
 import Config from '../../Config.ts'
@@ -55,9 +54,15 @@ const QrScannerPage = () => {
                         path: {qrCodeId},
                         throwOnError: true,
                     })
-                    let response: CheckQrCodeResponse | null = null
+                    let response: StaffQrCodeResponse | null = null
                     if (result.data && Object.keys(result.data).length > 0) {
-                        response = result.data
+                        if ('id' in result.data) {
+                            response = result.data
+                        } else {
+                            // The staff app is always authenticated, so the backend should
+                            // never return the anonymous QrCodePublicResponse variant here.
+                            throw new Error('Unexpected anonymous QR code response in app scanner')
+                        }
                     }
                     qr.update({...qr, qrCodeId: qrCodeId, response: response, received: true})
                 } catch {
