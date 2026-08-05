@@ -145,6 +145,36 @@ export const buildLiveDashboardTimeline = (
     })
 
 /**
+ * Nachfrist, nach der ein Zeitplan-Platzhalter nicht mehr als "als Nächstes" gilt — dieselben 30
+ * Minuten wie `AthleteBoardLogic.DEFAULT_OVERDUE_GRACE_MINUTES` im Backend.
+ */
+export const NEXT_UP_GRACE_MINUTES = 30
+
+/**
+ * Der Eintrag für "Als Nächstes" im Live-Tab: der chronologisch erste aus dem nächsten echten Lauf
+ * und den wartenden Slots — Platzhalter allerdings nur, solange ihre Startzeit höchstens
+ * [NEXT_UP_GRACE_MINUTES] zurückliegt. Sonst bliebe die Morgenbesprechung bis zum Abend als
+ * "als Nächstes" stehen und verdeckte den Lauf, der wirklich ansteht.
+ *
+ * Bewusst nur auf Platzhalter angewandt, nicht auf den echten Lauf: Im Live-Tab (scope=LIVE)
+ * liefert der Server ohnehin nur den einen nächsten anstehenden Lauf, ein Filter darüber ließe die
+ * Karte leer statt den nächsten Lauf zu zeigen. Und ein überfälliger echter Lauf ist genau das, was
+ * der Schiedsrichter noch starten muss. Die vollständige Liste im "Läufe"-Tab bleibt unberührt —
+ * dort lässt sich ein überfälliger Slot weiterhin absagen oder setzen.
+ *
+ * [now] kommt von außen, damit die Auswahl ohne Uhr prüfbar bleibt.
+ */
+export const nextUpEntry = (
+    nextUpcomingMatch: LiveDashboardMatchDto | undefined,
+    pendingSlots: PendingSlotDto[],
+    now: Date,
+): LiveDashboardTimelineEntry | undefined => {
+    const threshold = now.getTime() - NEXT_UP_GRACE_MINUTES * 60_000
+    const stillUpcoming = pendingSlots.filter(slot => new Date(slot.startTime).getTime() > threshold)
+    return buildLiveDashboardTimeline(nextUpcomingMatch ? [nextUpcomingMatch] : [], stillUpcoming)[0]
+}
+
+/**
  * Anzeige-Label eines Platzhalters — für Programmpunkte (FREE, `name` gesetzt) schlicht der Name,
  * für wartende Lauf-Slots dieselbe Zusammensetzung wie slotLabel im Zeitplan-Tab.
  */

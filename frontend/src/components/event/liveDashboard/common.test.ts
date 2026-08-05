@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest'
 import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
     buildLiveDashboardTimeline,
+    nextUpEntry,
     openResultTeams,
     pendingSlotLabel,
     teamHasResult,
@@ -162,6 +163,70 @@ describe('buildLiveDashboardTimeline', () => {
             'scheduled',
             'unscheduled',
         ])
+    })
+})
+
+describe('nextUpEntry', () => {
+    // Nachgestellt an der Förde Testregatta: um 22:32 stand die Wettkampfrichter-Besprechung von
+    // 20:00 immer noch als "Als Nächstes", während der Lauf um 22:50 unsichtbar blieb.
+    const now = new Date('2026-08-17T22:32:00')
+
+    it('überspringt einen längst vergangenen Programmpunkt', () => {
+        const besprechung = pendingSlot({
+            slotId: 'besprechung',
+            startTime: '2026-08-17T20:00:00',
+            name: 'Wettkampfrichter-Besprechung',
+        })
+        const naechsterLauf = match({matchId: 'lauf', startTime: '2026-08-17T22:50:00'})
+
+        const entry = nextUpEntry(naechsterLauf, [besprechung], now)
+
+        expect(entry?.kind).toBe('match')
+        expect(entry?.kind === 'match' && entry.match.matchId).toBe('lauf')
+    })
+
+    it('behält einen gerade erst überfälligen Slot', () => {
+        const eben = pendingSlot({slotId: 'eben', startTime: '2026-08-17T22:20:00'})
+        const spaeter = match({matchId: 'lauf', startTime: '2026-08-17T22:50:00'})
+
+        const entry = nextUpEntry(spaeter, [eben], now)
+
+        expect(entry?.kind === 'pending' && entry.slot.slotId).toBe('eben')
+    })
+
+    it('lässt einen Slot genau auf der Nachfrist fallen', () => {
+        const grenze = pendingSlot({slotId: 'grenze', startTime: '2026-08-17T22:02:00'})
+        const spaeter = match({matchId: 'lauf', startTime: '2026-08-17T22:50:00'})
+
+        const entry = nextUpEntry(spaeter, [grenze], now)
+
+        expect(entry?.kind === 'match' && entry.match.matchId).toBe('lauf')
+    })
+
+    it('zeigt einen überfälligen echten Lauf weiterhin an', () => {
+        // Ein überfälliger Lauf ist genau das, was der Schiedsrichter noch starten muss — und im
+        // Live-Tab liefert der Server ohnehin nur diesen einen anstehenden Lauf.
+        const ueberfaellig = match({matchId: 'lauf', startTime: '2026-08-17T20:00:00'})
+
+        const entry = nextUpEntry(ueberfaellig, [], now)
+
+        expect(entry?.kind === 'match' && entry.match.matchId).toBe('lauf')
+    })
+
+    it('liefert nichts, wenn weder Lauf noch gültiger Slot übrig sind', () => {
+        const alt = pendingSlot({slotId: 'alt', startTime: '2026-08-17T20:30:00'})
+
+        expect(nextUpEntry(undefined, [alt], now)).toBeUndefined()
+    })
+
+    it('nimmt den nächsten gültigen Slot vor dem nächsten Lauf', () => {
+        const alt = pendingSlot({slotId: 'alt', startTime: '2026-08-17T20:30:00'})
+        const gueltig = pendingSlot({slotId: 'gueltig', startTime: '2026-08-17T22:40:00'})
+        const lauf = match({matchId: 'lauf', startTime: '2026-08-17T22:50:00'})
+
+        const entry = nextUpEntry(lauf, [alt, gueltig], now)
+
+        expect(entry?.kind === 'pending' && entry.slot.slotId).toBe('gueltig')
     })
 })
 

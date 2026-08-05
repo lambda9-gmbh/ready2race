@@ -32,7 +32,11 @@ import LiveDashboardMatchCard, {
 } from '@components/event/liveDashboard/LiveDashboardMatchCard.tsx'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
-import {buildLiveDashboardTimeline, storedPollInterval} from '@components/event/liveDashboard/common.ts'
+import {
+    buildLiveDashboardTimeline,
+    nextUpEntry,
+    storedPollInterval,
+} from '@components/event/liveDashboard/common.ts'
 import ScheduleTimelineIndicator from '@components/event/schedule/ScheduleTimelineIndicator.tsx'
 import {dashboardEntriesForDay, resolveDashboardDay} from '@components/event/schedule/timelineIndicator.ts'
 import {MatchResultStatus} from '@utils/matchResultStatus.ts'
@@ -137,8 +141,9 @@ const LiveDashboardPage = () => {
     const unscheduledMatches = dashboard?.matches.filter(m => m.state === 'UNSCHEDULED') ?? []
     const pendingSlots = dashboard?.pendingSlots ?? []
     // "Als Nächstes" ist das chronologisch nächste Ding überhaupt — das kann auch ein noch nicht
-    // gesetzter Slot vor dem nächsten echten Lauf sein.
-    const nextEntry = buildLiveDashboardTimeline(nextUpcoming ? [nextUpcoming] : [], pendingSlots)[0]
+    // gesetzter Slot vor dem nächsten echten Lauf sein, solange dessen Startzeit nicht längst
+    // vorbei ist (siehe nextUpEntry).
+    const nextEntry = nextUpEntry(nextUpcoming, pendingSlots, now)
     // Zeitplan-Ansicht: geplante/laufende/beendete Läufe und wartende Slots gemeinsam nach
     // Startzeit, damit ein Platzhalter genau zwischen seinen Nachbarn auftaucht.
     const scheduledTimeline = buildLiveDashboardTimeline(scheduledMatches, pendingSlots)

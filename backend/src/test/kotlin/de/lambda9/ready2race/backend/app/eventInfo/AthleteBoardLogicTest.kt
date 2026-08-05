@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.FreeScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.Test
@@ -291,5 +292,84 @@ class AthleteBoardLogicTest {
         val placeholders = AthleteBoardLogic.placeholdersFromFreeSlots(listOf(first, second))
 
         assertEquals(listOf("Frühstückspause", "Mittagspause"), placeholders.map { it.name })
+    }
+
+    // --- isStillUpcoming ---
+    //
+    // Dieselbe Nachfrist wie in CompetitionMatchRepo.getUpcomingMatchesForBoard, angewandt auf die
+    // Platzhalter, die EventInfoService.mergeWithPendingPlaceholders dazumischt. Ohne sie blieb ein
+    // Programmpunkt ("Obleute-Besprechung, 20:30") auch um 22:32 noch in "nächste Läufe" stehen und
+    // verdrängte aus dem gedeckelten Block die Läufe, die wirklich anstanden.
+
+    private val grace: Duration =
+        Duration.ofMinutes(AthleteBoardLogic.DEFAULT_OVERDUE_GRACE_MINUTES.toLong())
+
+    @Test
+    fun placeholderWithinGraceStays() {
+        val slot = pendingSlot(startTime = now.minusMinutes(29))
+
+        assertTrue(AthleteBoardLogic.isStillUpcoming(slot.startTime, now, grace))
+    }
+
+    @Test
+    fun placeholderBeyondGraceDropsOut() {
+        val slot = pendingSlot(startTime = now.minusMinutes(82))
+
+        assertFalse(AthleteBoardLogic.isStillUpcoming(slot.startTime, now, grace))
+    }
+
+    @Test
+    fun programItemBeyondGraceDropsOutAsWell() {
+        val slot = freeSlot(startTime = now.minusMinutes(150))
+
+        assertFalse(AthleteBoardLogic.isStillUpcoming(slot.startTime, now, grace))
+    }
+
+    @Test
+    fun programItemWithinGraceStays() {
+        val slot = freeSlot(startTime = now.minusMinutes(10))
+
+        assertTrue(AthleteBoardLogic.isStillUpcoming(slot.startTime, now, grace))
+    }
+
+    @Test
+    fun startExactlyOnTheGraceBoundaryDropsOut() {
+        // `START_TIME > jetzt - Nachfrist` in getUpcomingMatchesForBoard ist echt größer; genau auf
+        // der Grenze ist die Frist abgelaufen. Eine Minute davor gilt noch.
+        assertFalse(AthleteBoardLogic.isStillUpcoming(now.minus(grace), now, grace))
+        assertTrue(AthleteBoardLogic.isStillUpcoming(now.minus(grace).plusMinutes(1), now, grace))
+    }
+
+    @Test
+    fun justPassedStartStaysVisibleAsOverdue() {
+        // Das Zusammenspiel mit startState: gerade verstrichen heißt sichtbar bleiben und
+        // "erwartet" zeigen, statt einen negativen Countdown zu rechnen.
+        val startTime = now.minusSeconds(30)
+        assertTrue(AthleteBoardLogic.isStillUpcoming(startTime, now, grace))
+        assertEquals(
+            AthleteBoardStartState.OVERDUE,
+            AthleteBoardLogic.startState(startTime, now, true),
+        )
+    }
+
+    @Test
+    fun futureStartIsAlwaysUpcoming() {
+        assertTrue(AthleteBoardLogic.isStillUpcoming(now.plusMinutes(45), now, grace))
+    }
+
+    @Test
+    fun entryWithoutStartTimeStaysUpcoming() {
+        // Wie in der Abfrage (`START_TIME IS NULL OR ...`): ein Lauf ohne gepflegte Startzeit
+        // kann nicht überfällig sein und bleibt sichtbar.
+        assertTrue(AthleteBoardLogic.isStillUpcoming(null, now, grace))
+    }
+
+    @Test
+    fun withoutGraceEveryPassedStartDropsOut() {
+        // Die Kiosk-Ansicht fragt ohne Nachfrist ab (START_TIME > jetzt); ihre Platzhalter
+        // verschwinden entsprechend mit der Startzeit.
+        assertFalse(AthleteBoardLogic.isStillUpcoming(now, now, Duration.ZERO))
+        assertFalse(AthleteBoardLogic.isStillUpcoming(now.minusSeconds(1), now, Duration.ZERO))
+        assertTrue(AthleteBoardLogic.isStillUpcoming(now.plusSeconds(1), now, Duration.ZERO))
     }
 }
