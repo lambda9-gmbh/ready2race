@@ -19,11 +19,6 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 
-private enum class StartListFileTypeParam {
-    PDF,
-    CSV
-}
-
 fun Route.competitionExecution() {
     route("/competitionExecution") {
         get {
@@ -192,20 +187,12 @@ fun Route.competitionExecution() {
                     !authenticate(Privilege.ReadEventGlobal)
                     val eventId = !pathParam("eventId", uuid)
                     val competitionMatchId = !pathParam("competitionMatchId", uuid)
-                    val typeParam = !queryParam("fileType", enum<StartListFileTypeParam>())
-
-                    val type = when (typeParam) {
-                        StartListFileTypeParam.PDF -> StartListFileType.PDF
-                        StartListFileTypeParam.CSV -> {
-                            val config = !queryParam("config", uuid)
-                            StartListFileType.CSV(config)
-                        }
-                    }
+                    val fileType = !queryParam("fileType", enum<StartListFileType>())
 
                     CompetitionExecutionService.downloadStartlist(
                         eventId = eventId,
                         matchId = competitionMatchId,
-                        type = type
+                        type = fileType
                     )
                 }
             }

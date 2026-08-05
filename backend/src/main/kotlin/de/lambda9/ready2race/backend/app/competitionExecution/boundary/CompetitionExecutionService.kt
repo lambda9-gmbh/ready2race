@@ -1384,8 +1384,11 @@ object CompetitionExecutionService {
                 buildPdf(data, pdfTemplate) to "pdf"
             }
 
-            is StartListFileType.CSV -> {
-                val config = !StartListConfigRepo.get(startListType.config).orDie()
+            StartListFileType.CSV -> {
+                val target = !CompetitionMatchRepo.getStartListConfigTarget(matchId).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchNotFound }
+                val configId = !KIO.failOnNull(target.configId) { StartListConfigError.NotConfigured }
+                val config = !StartListConfigRepo.get(configId).orDie()
                     .onNullFail { StartListConfigError.NotFound }
                 buildCsv(data, config) to "csv"
             }

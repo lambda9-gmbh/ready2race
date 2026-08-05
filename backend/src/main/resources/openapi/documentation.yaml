@@ -1685,13 +1685,6 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/StartListFileType'
-        - name: config
-          description: This parameter is required with fileType 'CSV', otherwise discarded.
-          in: query
-          required: false
-          schema:
-            type: string
-            format: uuid
       operationId: downloadStartList
       responses:
         200:

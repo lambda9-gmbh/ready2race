@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchForRunningStatusDto
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListConfigTarget
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
 import de.lambda9.ready2race.backend.database.*
@@ -68,6 +69,36 @@ object CompetitionMatchRepo {
                     isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
                     timeTrialUrl = it[COMPETITION.RACECLOCKER_TT_RESULTS_URL],
                     heatsUrl = it[COMPETITION.RACECLOCKER_HEATS_RESULTS_URL],
+                )
+            }
+    }
+
+    /**
+     * Welches Spalten-Preset die Startliste dieses Laufs bekommt. Dieselbe Join-Kette wie
+     * [getForRaceClockerPull] und aus demselben Grund dieselbe Weiche: die Runde entscheidet, weil
+     * RaceClocker pro Wettkampf zwei Rennen mit unterschiedlichen Spalten braucht.
+     */
+    fun getStartListConfigTarget(id: UUID) = Jooq.query {
+        select(
+            COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
+            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
+            COMPETITION.STARTLIST_CONFIG_ROUNDS,
+        )
+            .from(COMPETITION_MATCH)
+            .join(COMPETITION_SETUP_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
+            .fetchOne {
+                StartListConfigTarget(
+                    // Im Schema not null; die Projektion verliert nur die Garantie.
+                    isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
+                    qualificationConfig = it[COMPETITION.STARTLIST_CONFIG_QUALIFICATION],
+                    roundsConfig = it[COMPETITION.STARTLIST_CONFIG_ROUNDS],
                 )
             }
     }
