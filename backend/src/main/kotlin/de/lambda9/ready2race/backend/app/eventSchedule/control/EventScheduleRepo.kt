@@ -272,6 +272,62 @@ object EventScheduleRepo {
             .fetch()
     }
 
+    /**
+     * Ob die Setup-Runde überhaupt materialisiert ist - mindestens ein Lauf (competition_match)
+     * existiert für eine ihrer Setup-Zeilen. Scoped aufs Event: eine setupRoundId aus einem anderen
+     * Event darf hier nicht fälschlich als "materialisiert" durchgehen (siehe
+     * EventScheduleService.setRoundSkipped, RoundNotMaterialized).
+     */
+    fun countMatchesInRound(eventId: UUID, setupRoundId: UUID) = Jooq.query {
+        fetchCount(
+            select(COMPETITION_MATCH.COMPETITION_SETUP_MATCH)
+                .from(COMPETITION_MATCH)
+                .join(COMPETITION_SETUP_MATCH)
+                .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+                .join(COMPETITION_SETUP_ROUND)
+                .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                .join(COMPETITION_PROPERTIES)
+                .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+                .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+                .where(COMPETITION.EVENT.eq(eventId))
+                .and(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(setupRoundId))
+        )
+    }
+
+    /**
+     * Zählt die Läufe der Runde, die noch mindestens 2 tatsächlich fahrende Mannschaften haben -
+     * dasselbe "fahrend"-Prädikat wie [de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo.getActivationCandidates]
+     * (nicht `out`, keine Abmeldung für diese Runde), nur pro Lauf gruppiert/gezählt statt auf
+     * Existenz geprüft. >0 heißt: die Runde muss noch gefahren werden, "Runde entfällt" ist dann
+     * nicht erlaubt (siehe EventScheduleService.setRoundSkipped, RoundHasRunsToRace).
+     */
+    fun countRaceableMatchesInRound(eventId: UUID, setupRoundId: UUID) = Jooq.query {
+        select(COMPETITION_MATCH.COMPETITION_SETUP_MATCH)
+            .from(COMPETITION_MATCH)
+            .join(COMPETITION_SETUP_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .join(COMPETITION_MATCH_TEAM)
+            .on(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(setupRoundId))
+            .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
+            .andNotExists(
+                selectOne()
+                    .from(COMPETITION_DEREGISTRATION)
+                    .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                    .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(setupRoundId))
+            )
+            .groupBy(COMPETITION_MATCH.COMPETITION_SETUP_MATCH)
+            .having(DSL.count(COMPETITION_MATCH_TEAM.ID).ge(2))
+            .fetch()
+            .size
+    }
+
     /** Alle Slots des Events löschen — Vorstufe des Re-Imports (Task 12): der Import ersetzt den ganzen Zeitstrahl. */
     fun deleteAllSlots(eventId: UUID) = EVENT_SCHEDULE_SLOT.delete { EVENT.eq(eventId) }
 

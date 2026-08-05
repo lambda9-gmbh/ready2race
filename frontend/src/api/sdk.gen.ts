@@ -3637,7 +3637,7 @@ export const activateScheduleSlot = <ThrowOnError extends boolean = false>(
 }
 
 /**
- * Skips every schedule slot of this setup round belonging to the event - same rules as skipping a single slot (already skipped slots are left as they are, a started match blocks the whole action)
+ * Skips every schedule slot of this setup round belonging to the event - same rules as skipping a single slot (already skipped slots are left as they are, a started match blocks the whole action). Only allowed when the round has nothing left to race: 409 if the round has no materialized matches yet (cancel its slots individually instead), and 409 if any match of the round still has 2 or more racing (non-deregistered, non-out) teams - those must be executed so the next round can be seeded.
  */
 export const skipScheduleRound = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<SkipScheduleRoundData, ThrowOnError>,

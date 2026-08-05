@@ -250,12 +250,35 @@ object EventScheduleService {
      * - Ein bereits gestarteter Lauf lässt die GANZE Aktion mit MatchAlreadyStarted scheitern, auch
      *   wenn andere Slots der Runde noch skippable wären - kein Teilerfolg, damit der Nutzer nicht
      *   glaubt, die Runde sei vollständig übersprungen, obwohl ein laufender Start übrig bleibt.
+     *
+     * Produktentscheidung (verschoben aus dem Zeitplan in Wettkampf → Durchführung, siehe
+     * CompetitionExecutionRound.tsx): "Runde entfällt" darf NUR angeboten werden, wenn es in der
+     * Runde nichts zu fahren gibt - sonst müssen die Läufe ausgetragen werden, damit die nächste
+     * Runde sauber ausgelost werden kann. Das Frontend blendet die Aktion dafür schon aus
+     * (roundHasNothingToRace), hier zusätzlich serverseitig erzwungen, bevor überhaupt etwas
+     * gelesen/geschrieben wird:
+     * - Keine materialisierten Läufe (competition_match existiert noch nicht) → RoundNotMaterialized,
+     *   es gibt nichts, das "entfallen" könnte - die einzelnen Slots sind stattdessen individuell zu
+     *   überspringen.
+     * - Mindestens ein Lauf mit 2+ tatsächlich fahrenden Mannschaften (nicht `out`, keine Abmeldung
+     *   für diese Runde - dasselbe Prädikat wie LiveDashboardRepo.getActivationCandidates) →
+     *   RoundHasRunsToRace.
      */
     fun setRoundSkipped(
         eventId: UUID,
         setupRoundId: UUID,
         userId: UUID,
     ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val materializedMatchCount = !EventScheduleRepo.countMatchesInRound(eventId, setupRoundId).orDie()
+        if (materializedMatchCount == 0) {
+            return@comprehension KIO.fail(EventScheduleError.RoundNotMaterialized(setupRoundId))
+        }
+
+        val raceableMatchCount = !EventScheduleRepo.countRaceableMatchesInRound(eventId, setupRoundId).orDie()
+        if (raceableMatchCount > 0) {
+            return@comprehension KIO.fail(EventScheduleError.RoundHasRunsToRace(setupRoundId))
+        }
+
         val rows = !EventScheduleRepo.getSlots(eventId, setupRoundId).orDie()
 
         val toSkip = mutableListOf<UUID>()

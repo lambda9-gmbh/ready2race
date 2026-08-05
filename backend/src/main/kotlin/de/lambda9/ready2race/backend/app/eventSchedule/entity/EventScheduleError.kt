@@ -20,6 +20,10 @@ sealed interface EventScheduleError : ServiceError {
     data object InvalidShiftRequest : EventScheduleError
     data class DuplicateImportRow(val rowNumbers: List<Int>) : EventScheduleError
     data object ImportFileUnreadable : EventScheduleError
+    /** setRoundSkipped (Wettkampf → Durchführung) - die Runde hat noch keine Läufe (competition_match), es gibt nichts, was "entfallen" könnte; die einzelnen Slots sind stattdessen individuell zu überspringen. */
+    data class RoundNotMaterialized(val setupRoundId: UUID) : EventScheduleError
+    /** setRoundSkipped - mindestens ein Lauf der Runde hat noch 2+ tatsächlich fahrende Mannschaften; diese müssen ausgetragen werden, damit die nächste Runde sauber ausgelost werden kann. */
+    data class RoundHasRunsToRace(val setupRoundId: UUID) : EventScheduleError
 
     override fun respond(): ApiError = when (this) {
         is EventNotFound -> ApiError(HttpStatusCode.NotFound, "Event with id $eventId not found")
@@ -41,5 +45,7 @@ sealed interface EventScheduleError : ServiceError {
         InvalidShiftRequest -> ApiError(HttpStatusCode.UnprocessableEntity, "Shift request parameters are inconsistent")
         is DuplicateImportRow -> ApiError(HttpStatusCode.UnprocessableEntity, "Import contains duplicate matches in rows $rowNumbers")
         ImportFileUnreadable -> ApiError(HttpStatusCode.UnprocessableEntity, "Import file could not be read")
+        is RoundNotMaterialized -> ApiError(HttpStatusCode.Conflict, "Round $setupRoundId has no runs yet - cancel its slots individually instead")
+        is RoundHasRunsToRace -> ApiError(HttpStatusCode.Conflict, "Round $setupRoundId still has runs to race - they must be executed for seeding")
     }
 }
