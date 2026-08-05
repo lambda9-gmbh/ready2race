@@ -1346,19 +1346,25 @@ create view gap_document_template_view as
 select gdt.id,
        gdt.name,
        gdt.type,
-       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
+       gdt.font_name,
+       (f.template is not null)                                            as has_font,
+       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}')   as placeholders
 from gap_document_template gdt
+         left join gap_document_template_font f on f.template = gdt.id
          left join gap_document_placeholder gdp on gdp.template = gdt.id
-group by gdt.id
+group by gdt.id, f.template
 ;
 
 create view gap_document_template_assignment as
 select u.type,
        td.data,
+       gdt.font_name,
+       f.data                                                            as font_data,
        coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
 from gap_document_template_usage u
          join gap_document_template gdt on gdt.id = u.template
          join gap_document_template_data td on gdt.id = td.template
+         left join gap_document_template_font f on f.template = gdt.id
          left join gap_document_placeholder gdp on gdt.id = gdp.template
-group by u.type, td.data
+group by u.type, td.data, gdt.font_name, f.data
 ;

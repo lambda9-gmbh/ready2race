@@ -1,15 +1,18 @@
-import {Trans} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {GapDocumentType} from '@api/types.gen.ts'
 import {
     assignGapDocumentTemplate,
     getGapDocumentTemplates,
     getGapDocumentTemplateTypes,
 } from '@api/sdk.gen.ts'
-import {useFetch} from '@utils/hooks.ts'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {Box, List, ListItem, MenuItem, Select, Typography} from '@mui/material'
 import Throbber from '@components/Throbber.tsx'
 
 const AssignGapDocumentTemplate = () => {
+    const {t} = useTranslation()
+    const feedback = useFeedback()
+
     const {data: templates, reload: reloadTemplates} = useFetch(signal =>
         getGapDocumentTemplates({signal}),
     )
@@ -22,7 +25,7 @@ const AssignGapDocumentTemplate = () => {
         gapDocumentType: GapDocumentType,
         template?: string,
     ) => {
-        await assignGapDocumentTemplate({
+        const {error} = await assignGapDocumentTemplate({
             path: {
                 gapDocumentType,
             },
@@ -30,6 +33,15 @@ const AssignGapDocumentTemplate = () => {
                 template,
             },
         })
+
+        if (error) {
+            feedback.error(
+                error.status.value === 400
+                    ? t('gap.document.template.assignments.error.typeMismatch')
+                    : t('common.error.unexpected'),
+            )
+            return
+        }
 
         reloadTemplates()
         reloadTypes()
@@ -68,11 +80,13 @@ const AssignGapDocumentTemplate = () => {
                                         <MenuItem value={'none'}>
                                             <Trans i18nKey={'document.template.none'} />
                                         </MenuItem>
-                                        {templates.data.map(template => (
-                                            <MenuItem key={template.id} value={template.id}>
-                                                {template.name}
-                                            </MenuItem>
-                                        ))}
+                                        {templates.data
+                                            .filter(template => template.type === type.type)
+                                            .map(template => (
+                                                <MenuItem key={template.id} value={template.id}>
+                                                    {template.name}
+                                                </MenuItem>
+                                            ))}
                                     </Select>
                                 </Box>
                             </ListItem>

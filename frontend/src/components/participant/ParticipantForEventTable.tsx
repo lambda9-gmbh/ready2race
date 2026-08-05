@@ -442,12 +442,16 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
         })
     }
 
-    const handleCOPDownload = async (entity: ParticipantForEventDto) => {
+    const handleCOPDownload = async (
+        entity: ParticipantForEventDto,
+        format: 'pdf' | 'docx' = 'pdf',
+    ) => {
         const {data, error, response} = await downloadCertificateOfParticipation({
             path: {
                 eventId,
                 participantId: entity.id,
             },
+            query: {format},
         })
 
         const anchor = downloadRef.current
@@ -458,7 +462,7 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
             anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
             anchor.download =
                 getFilename(response) ??
-                `certificate_of_participation_${eventData.name}_${entity.firstname}_${entity.lastname}.pdf`
+                `certificate_of_participation_${eventData.name}_${entity.firstname}_${entity.lastname}.${format}`
             anchor.click()
             anchor.href = ''
             anchor.download = ''
@@ -499,7 +503,13 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                     <GridActionsCellItem
                         icon={<WorkspacePremium/>}
                         label={t('club.participant.downloadCOP')}
-                        onClick={() => handleCOPDownload(entity)}
+                        onClick={() => handleCOPDownload(entity, 'pdf')}
+                        showInMenu
+                    />,
+                    <GridActionsCellItem
+                        icon={<WorkspacePremium/>}
+                        label={t('club.participant.downloadCOPWord')}
+                        onClick={() => handleCOPDownload(entity, 'docx')}
                         showInMenu
                     />,
                 ]

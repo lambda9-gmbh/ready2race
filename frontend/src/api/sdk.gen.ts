@@ -822,6 +822,15 @@ import type {
     DownloadCertificatesOfParticipationData,
     DownloadCertificatesOfParticipationError,
     DownloadCertificatesOfParticipationResponse,
+    DownloadAwardCertificatesForEventData,
+    DownloadAwardCertificatesForEventError,
+    DownloadAwardCertificatesForEventResponse,
+    DownloadAwardCertificatesForCompetitionData,
+    DownloadAwardCertificatesForCompetitionError,
+    DownloadAwardCertificatesForCompetitionResponse,
+    DownloadAwardCertificateData,
+    DownloadAwardCertificateError,
+    DownloadAwardCertificateResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2730,6 +2739,11 @@ export const updateGapDocumentTemplate = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
         url: '/gapDocumentTemplate/{gapDocumentTemplateId}',
     })
 }
@@ -4368,5 +4382,44 @@ export const downloadCertificatesOfParticipation = <ThrowOnError extends boolean
     >({
         ...options,
         url: '/event/{eventId}/certificatesOfParticipation',
+    })
+}
+
+export const downloadAwardCertificatesForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadAwardCertificatesForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadAwardCertificatesForEventResponse,
+        DownloadAwardCertificatesForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/awardCertificates',
+    })
+}
+
+export const downloadAwardCertificatesForCompetition = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadAwardCertificatesForCompetitionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadAwardCertificatesForCompetitionResponse,
+        DownloadAwardCertificatesForCompetitionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/awardCertificates',
+    })
+}
+
+export const downloadAwardCertificate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadAwardCertificateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadAwardCertificateResponse,
+        DownloadAwardCertificateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/awardCertificates/{registrationId}',
     })
 }

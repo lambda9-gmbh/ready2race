@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.appUserWithQrCode.boundary.appUserWithQ
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.caterer.boundary.CatererService
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
+import de.lambda9.ready2race.backend.app.certificate.boundary.awardCertificate
 import de.lambda9.ready2race.backend.app.certificate.boundary.certificate
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
@@ -93,6 +94,7 @@ fun Route.event() {
             appUserWithQrCode()
             participantTracking()
             certificate()
+            awardCertificate()
 
             get("/matches") {
                 call.respondComprehension {

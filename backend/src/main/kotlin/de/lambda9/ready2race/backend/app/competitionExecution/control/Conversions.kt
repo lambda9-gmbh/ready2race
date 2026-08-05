@@ -175,6 +175,7 @@ fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) =
         place = place,
         deregistered = deregistered,
         deregistrationReason = deregistrationReason,
+        excluded = deregistered || out || failed,
         actualClubName = singletonOrFallback(participants.map { it.externalClubName }.toSet(), mixedTeamTerm)
     )
 )

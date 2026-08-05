@@ -8,7 +8,8 @@ enum class CertificateError : ServiceError {
     NoResults,
     MissingTemplate,
     NotAChallengeEvent,
-    ChallengeStillInProgress;
+    ChallengeStillInProgress,
+    UnreadableTemplate;
 
     override fun respond(): ApiError = when (this) {
         NotAChallengeEvent -> ApiError(
@@ -29,6 +30,11 @@ enum class CertificateError : ServiceError {
         MissingTemplate -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "There is no template assigned for this type of certificate"
+        )
+
+        UnreadableTemplate -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "The assigned certificate of participation template cannot be read"
         )
     }
 }

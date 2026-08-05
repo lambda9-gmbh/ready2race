@@ -4118,6 +4118,10 @@ paths:
                   items:
                     type: string
                     format: binary
+                font:
+                  description: Optionale Schriftdatei (TTF/OTF), die in die erzeugten PDFs eingebettet wird.
+                  type: string
+                  format: binary
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -4146,9 +4150,20 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/GapDocumentTemplateRequest'
+              type: object
+              required:
+                - request
+              properties:
+                request:
+                  $ref: '#/components/schemas/GapDocumentTemplateRequest'
+                font:
+                  description: >-
+                    Optionale Schriftdatei (TTF/OTF). Ein leerer Teil löscht eine zuvor gesetzte
+                    Schrift, ein fehlender Teil lässt sie unverändert.
+                  type: string
+                  format: binary
       responses:
         204:
           description: Successfully updates template
@@ -7501,6 +7516,13 @@ paths:
           type: string
     get:
       operationId: downloadCertificateOfParticipation
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
       responses:
         200:
           $ref: '#/components/responses/file'
@@ -7520,6 +7542,13 @@ paths:
       - $ref: '#/components/parameters/eventId'
     get:
       operationId: downloadCertificatesOfParticipation
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
       responses:
         200:
           $ref: '#/components/responses/file'
@@ -7531,6 +7560,146 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/awardCertificates:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: downloadAwardCertificatesForEvent
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
+        - name: maxPlace
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ PER_ATHLETE, PER_TEAM ]
+        - name: background
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/awardCertificates:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: downloadAwardCertificatesForCompetition
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
+        - name: maxPlace
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ PER_ATHLETE, PER_TEAM ]
+        - name: background
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/awardCertificates/{registrationId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: registrationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadAwardCertificate
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
+        - name: maxPlace
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ PER_ATHLETE, PER_TEAM ]
+        - name: background
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
 
@@ -7868,6 +8037,7 @@ components:
       type: string
       enum:
         - 'CERTIFICATE_OF_PARTICIPATION'
+        - 'AWARD_CERTIFICATE'
 
     GapDocumentPlaceholderType:
       type: string
@@ -7877,6 +8047,14 @@ components:
         - 'FULL_NAME'
         - 'RESULT'
         - 'EVENT_NAME'
+        - 'PLACE'
+        - 'COMPETITION_NAME'
+        - 'COMPETITION_SHORT_NAME'
+        - 'CLUB_NAME'
+        - 'TEAM_NAME'
+        - 'EVENT_DATE'
+        - 'EVENT_LOCATION'
+        - 'FREE_TEXT'
 
     TextAlign:
       type: string
@@ -11332,6 +11510,7 @@ components:
         - namedParticipants
         - place
         - deregistered
+        - excluded
       properties:
         competitionRegistrationId:
           type: string
@@ -11357,6 +11536,8 @@ components:
           type: boolean
         deregistrationReason:
           type: string
+        excluded:
+          type: boolean
 
     CompetitionTeamNamedParticipantDto:
       type: object
@@ -14285,6 +14466,8 @@ components:
         - relWidth
         - relHeight
         - textAlign
+        - bold
+        - italic
       properties:
         id:
           type: string
@@ -14305,6 +14488,15 @@ components:
           type: number
         textAlign:
           $ref: '#/components/schemas/TextAlign'
+        fontSize:
+          type: integer
+        bold:
+          type: boolean
+        italic:
+          type: boolean
+        staticText:
+          description: Fester Text für den Platzhaltertyp FREE_TEXT, z. B. der Name des Unterzeichners.
+          type: string
 
     GapDocumentTemplateDto:
       type: object
@@ -14312,6 +14504,7 @@ components:
         - id
         - name
         - type
+        - hasFont
         - placeholders
       properties:
         id:
@@ -14321,6 +14514,12 @@ components:
           type: string
         type:
           $ref: '#/components/schemas/GapDocumentType'
+        fontName:
+          description: Schriftname für die Word-Ausgabe, z. B. "TheSansOffice".
+          type: string
+        hasFont:
+          description: Ob eine Schriftdatei zum Einbetten in die erzeugten PDFs hochgeladen wurde.
+          type: boolean
         placeholders:
           type: array
           items:
@@ -14330,11 +14529,16 @@ components:
       type: object
       required:
         - type
+        - allowedPlaceholders
       properties:
         type:
           $ref: '#/components/schemas/GapDocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
+        allowedPlaceholders:
+          type: array
+          items:
+            $ref: '#/components/schemas/GapDocumentPlaceholderType'
 
     GapDocumentPlaceholderRequest:
       type: object
@@ -14363,6 +14567,17 @@ components:
           type: number
         textAlign:
           $ref: '#/components/schemas/TextAlign'
+        fontSize:
+          type: integer
+        bold:
+          type: boolean
+          default: false
+        italic:
+          type: boolean
+          default: false
+        staticText:
+          description: Fester Text für den Platzhaltertyp FREE_TEXT, z. B. der Name des Unterzeichners.
+          type: string
 
     GapDocumentTemplateRequest:
       type: object
@@ -14372,6 +14587,9 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/GapDocumentType'
+        fontName:
+          description: Schriftname für die Word-Ausgabe, z. B. "TheSansOffice".
+          type: string
         placeholders:
           type: array
           items:

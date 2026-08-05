@@ -210,7 +210,10 @@
     "document": {
       "template": {
         "assignments": {
-          "global": "Globally assigned certificate templates"
+          "global": "Globally assigned certificate templates",
+          "error": {
+            "typeMismatch": "This template does not match the certificate type and could not be assigned."
+          }
         },
         "loading": "Loading...",
         "template": "Certificate template",
@@ -219,12 +222,30 @@
         "name": "Filename",
         "type": "Certificate type",
         "types": {
-          "CERTIFICATE_OF_PARTICIPATION": "Certificate of Participation"
+          "CERTIFICATE_OF_PARTICIPATION": "Certificate of Participation",
+          "AWARD_CERTIFICATE": "Award Certificate"
         },
+        "typeLockedHelp": "The certificate type cannot be changed for an existing template, since its assignment and placed placeholders are built around it.",
+        "typePlaceholdersRemoved_one": "{{count}} placeholder was removed because it is not allowed for the new certificate type.",
+        "typePlaceholdersRemoved_other": "{{count}} placeholders were removed because they are not allowed for the new certificate type.",
+        "singlePageNotice": "Award certificates only use page 1 of the PDF template. Further pages are not shown, since no placeholders can be placed there.",
         "file": {
           "choose": "Choose PDF template",
           "change": "Change PDF template",
           "missing": "Please choose a PDF document."
+        },
+        "font": {
+          "name": "Font Name",
+          "nameHelp": "Written into the generated Word document.",
+          "upload": "Font File (TTF/OTF, optional)",
+          "uploadHelp": "Optional — without a font file the PDF uses Helvetica. Upload one yourself if you need a specific font (e.g. a commercially licensed font like the DRV's), since we are not allowed to ship it for you.",
+          "choose": "Choose font file",
+          "change": "Replace font file",
+          "current": "A font file is currently stored.",
+          "none": "No font file is stored.",
+          "remove": "Remove",
+          "willBeRemoved": "The stored font file will be removed when you save.",
+          "undoRemove": "Undo"
         },
         "noPdfSelected": "No PDF selected. Please upload a PDF template.",
         "page": "Page {{page}}",
@@ -251,7 +272,14 @@
           "FULL_NAME": "Full Name",
           "PLACE": "Place",
           "RESULT": "Result",
-          "EVENT_NAME": "Event Name"
+          "EVENT_NAME": "Event Name",
+          "COMPETITION_NAME": "Competition Name",
+          "COMPETITION_SHORT_NAME": "Competition Short Name",
+          "CLUB_NAME": "Club Name",
+          "TEAM_NAME": "Team Name",
+          "EVENT_DATE": "Event Date",
+          "EVENT_LOCATION": "Event Location",
+          "FREE_TEXT": "Free Text"
         },
         "name": "Custom Label (optional)",
         "nameHelp": "A custom name to help you identify this placeholder",
@@ -263,7 +291,13 @@
         },
         "page": "Page",
         "position": "Position",
-        "size": "Size"
+        "size": "Size",
+        "fontSize": "Font Size (pt)",
+        "fontSizeHelp": "Leave empty to use the placeholder box height.",
+        "bold": "Bold",
+        "italic": "Italic",
+        "staticText": "Fixed Text",
+        "staticTextHelp": "Shown unchanged for every recipient, e.g. the signer's name."
       }
     }
   },
@@ -441,6 +475,7 @@
       "resendAccessToken": "Send new access token",
       "resendAccessTokenSuccess": "New token sent.",
       "downloadCOP": "Download certificate of participation",
+      "downloadCOPWord": "Download certificate of participation as Word",
       "userQrCode": "User QR Code",
       "qrCode": "QR Code",
       "id": "Participant ID",
@@ -1092,6 +1127,8 @@
     },
     "action": {
       "downloadCertificates": "Download certificated of participation",
+      "downloadCertificatesWord": "Download certificates of participation as Word",
+      "downloadAwardCertificates": "Download award certificates",
       "sendCertificates": "Send certificates of participation",
       "sendCertificatesSucceeded": "Sending of Certificates of participation successfully engaged",
       "registrationsReport": {
@@ -2288,5 +2325,35 @@
     "proofRequired": "Proof document required for this competition",
     "notFound": "Challenge not found",
     "submitResult": "Submit result"
+  },
+  "awardCertificate": {
+    "download": {
+      "button": "Download award certificates",
+      "buttonSingle": "Download award certificate",
+      "title": "Download award certificates",
+      "action": "Download",
+      "format": {
+        "label": "Format",
+        "pdf": "PDF",
+        "docx": "Word"
+      },
+      "maxPlace": {
+        "label": "Up to place"
+      },
+      "mode": {
+        "label": "Grouping",
+        "perAthlete": "Per athlete",
+        "perTeam": "Per boat"
+      },
+      "background": {
+        "label": "Print design as well",
+        "hint": "Only needed when not printing onto pre-printed paper."
+      },
+      "error": {
+        "missingTemplate": "There is no usable template configured for award certificates.",
+        "missingTemplateLink": "Go to configuration",
+        "noResults": "There are no placements to print yet."
+      }
+    }
   }
 }

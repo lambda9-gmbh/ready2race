@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 data class GapDocumentTemplateRequest(
     val type: GapDocumentType,
     val placeholders: List<GapDocumentPlaceholderRequest>,
+    val fontName: String? = null,
 ): Validatable {
     override fun validate(): ValidationResult = ValidationResult.Valid
 

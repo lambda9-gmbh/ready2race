@@ -1,7 +1,7 @@
 import {Box, IconButton, Paper, Stack, Typography} from '@mui/material'
 import {Document, Page} from 'react-pdf'
 import {useCallback, useEffect, useRef, useState} from 'react'
-import {GapDocumentPlaceholderType, TextAlign} from '@api/types.gen.ts'
+import {GapDocumentPlaceholderType, GapDocumentType, TextAlign} from '@api/types.gen.ts'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import {Delete, DragIndicator} from '@mui/icons-material'
@@ -18,10 +18,15 @@ type PlaceholderData = {
     relWidth: number
     relHeight: number
     textAlign: TextAlign
+    fontSize?: number
+    bold: boolean
+    italic: boolean
+    staticText?: string
 }
 
 type Props = {
     pdfFile: File | Blob | null
+    documentType: GapDocumentType
     placeholders: PlaceholderData[]
     onPlaceholdersChange: (placeholders: PlaceholderData[]) => void
     onAddPlaceholder: (type: GapDocumentPlaceholderType, page: number) => void
@@ -346,11 +351,19 @@ const PdfPlaceholderEditor = (props: Props) => {
         )
     }
 
+    const isSinglePageDocumentType = props.documentType === 'AWARD_CERTIFICATE'
+    const visiblePages = isSinglePageDocumentType ? Math.min(numPages, 1) : numPages
+
     return (
         <Box ref={containerRef} sx={{overflow: 'auto', maxHeight: '70vh'}}>
+            {isSinglePageDocumentType && numPages > 1 && (
+                <Typography variant="caption" color="text.secondary" sx={{display: 'block', mb: 1}}>
+                    {t('gap.document.template.singlePageNotice')}
+                </Typography>
+            )}
             <Document file={props.pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
                 <Stack spacing={2}>
-                    {Array.from(new Array(numPages), (_, index) => (
+                    {Array.from(new Array(visiblePages), (_, index) => (
                         <Paper
                             key={`page_${index + 1}`}
                             elevation={3}

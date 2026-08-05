@@ -210,7 +210,10 @@
     "document": {
       "template": {
         "assignments": {
-          "global": "Globalt tildelte diplomskabeloner"
+          "global": "Globalt tildelte diplomskabeloner",
+          "error": {
+            "typeMismatch": "This template does not match the certificate type and could not be assigned."
+          }
         },
         "loading": "Indlæser...",
         "template": "Diplomskabelon",
@@ -219,12 +222,30 @@
         "name": "Filnavn",
         "type": "Diplomtype",
         "types": {
-          "CERTIFICATE_OF_PARTICIPATION": "Deltagelsesbevis"
+          "CERTIFICATE_OF_PARTICIPATION": "Deltagelsesbevis",
+          "AWARD_CERTIFICATE": "Sejrsdiplom"
         },
+        "typeLockedHelp": "Diplomtypen kan ikke ændres for en eksisterende skabelon, da tildelingen og de placerede pladsholdere er bygget op omkring den.",
+        "typePlaceholdersRemoved_one": "{{count}} pladsholder blev fjernet, fordi den ikke er tilladt for den nye diplomtype.",
+        "typePlaceholdersRemoved_other": "{{count}} pladsholdere blev fjernet, fordi de ikke er tilladt for den nye diplomtype.",
+        "singlePageNotice": "Sejrsdiplomer bruger kun side 1 af PDF-skabelonen. Yderligere sider vises ikke, da der ikke kan placeres pladsholdere dér.",
         "file": {
           "choose": "Vælg PDF-skabelon",
           "change": "Skift PDF-skabelon",
           "missing": "Vælg venligst et PDF-dokument."
+        },
+        "font": {
+          "name": "Skriftnavn",
+          "nameHelp": "Skrives ind i det genererede Word-dokument.",
+          "upload": "Skriftfil (TTF/OTF, valgfrit)",
+          "uploadHelp": "Valgfrit – uden en skriftfil bruger PDF'en Helvetica. Upload selv en skriftfil, hvis du har brug for en bestemt skrift (f.eks. en kommercielt licenseret skrift som DRV's), da vi ikke må levere den for dig.",
+          "choose": "Vælg skriftfil",
+          "change": "Skift skriftfil",
+          "current": "Der er allerede gemt en skriftfil.",
+          "none": "Der er ikke gemt en skriftfil.",
+          "remove": "Fjern",
+          "willBeRemoved": "Den gemte skriftfil fjernes, når du gemmer.",
+          "undoRemove": "Fortryd"
         },
         "noPdfSelected": "Ingen PDF valgt. Upload venligst en PDF-skabelon.",
         "page": "Side {{page}}",
@@ -251,7 +272,14 @@
           "FULL_NAME": "Fulde navn",
           "PLACE": "Placering",
           "RESULT": "Resultat",
-          "EVENT_NAME": "Arrangementnavn"
+          "EVENT_NAME": "Arrangementnavn",
+          "COMPETITION_NAME": "Konkurrencenavn",
+          "COMPETITION_SHORT_NAME": "Konkurrencens kortnavn",
+          "CLUB_NAME": "Klubnavn",
+          "TEAM_NAME": "Holdnavn",
+          "EVENT_DATE": "Arrangementdato",
+          "EVENT_LOCATION": "Arrangementsted",
+          "FREE_TEXT": "Fri tekst"
         },
         "name": "Egen betegnelse (valgfrit)",
         "nameHelp": "En egen betegnelse til at identificere denne pladsholder",
@@ -263,7 +291,13 @@
         },
         "page": "Side",
         "position": "Position",
-        "size": "Størrelse"
+        "size": "Størrelse",
+        "fontSize": "Skriftstørrelse (pt)",
+        "fontSizeHelp": "Lad stå tomt for at bruge højden af pladsholderboksen.",
+        "bold": "Fed",
+        "italic": "Kursiv",
+        "staticText": "Fast tekst",
+        "staticTextHelp": "Vises uændret for alle modtagere, f.eks. underskriverens navn."
       }
     }
   },
@@ -441,6 +475,7 @@
       "resendAccessToken": "Send ny adgangstoken",
       "resendAccessTokenSuccess": "Ny token sendt.",
       "downloadCOP": "Download deltagelsesbevis",
+      "downloadCOPWord": "Download deltagelsesbevis som Word",
       "userQrCode": "Bruger-QR-kode",
       "qrCode": "QR-kode",
       "id": "Deltager-ID",
@@ -1092,6 +1127,8 @@
     },
     "action": {
       "downloadCertificates": "Download deltagelsesbeviser",
+      "downloadCertificatesWord": "Download deltagelsesbeviser som Word",
+      "downloadAwardCertificates": "Download sejrsdiplomer",
       "sendCertificates": "Send deltagelsesbeviser",
       "sendCertificatesSucceeded": "Afsendelse af deltagelsesbeviser igangsat",
       "registrationsReport": {
@@ -2288,5 +2325,35 @@
     "proofRequired": "Dokumentation påkrævet for denne konkurrence",
     "notFound": "Challenge ikke fundet",
     "submitResult": "Indsend resultat"
+  },
+  "awardCertificate": {
+    "download": {
+      "button": "Download sejrsdiplomer",
+      "buttonSingle": "Download sejrsdiplom",
+      "title": "Download sejrsdiplomer",
+      "action": "Download",
+      "format": {
+        "label": "Format",
+        "pdf": "PDF",
+        "docx": "Word"
+      },
+      "maxPlace": {
+        "label": "Op til placering"
+      },
+      "mode": {
+        "label": "Gruppering",
+        "perAthlete": "Per atlet",
+        "perTeam": "Per båd"
+      },
+      "background": {
+        "label": "Udskriv også design",
+        "hint": "Kun nødvendigt, hvis der ikke printes på fortrykt papir."
+      },
+      "error": {
+        "missingTemplate": "Der er ikke tilknyttet en brugbar skabelon til sejrsdiplomer.",
+        "missingTemplateLink": "Gå til konfiguration",
+        "noResults": "Der er endnu ingen placeringer at udskrive."
+      }
+    }
   }
 }
