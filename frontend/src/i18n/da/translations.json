@@ -1083,7 +1083,9 @@
         "incomplete": {
           "title": "Denne tidtagning er endnu ikke klar til brug",
           "heatsUrl": "Resultatadressen for heat-løbet mangler – uden den kan der ikke hentes resultater fra RaceClocker.",
+          "timeTrialUrl": "Denne konkurrence har en kvalifikationsrunde, men resultatadressen for enkeltstart-løbet mangler – uden den kan der ikke hentes resultater fra RaceClocker til kvalifikationen.",
           "startlistRounds": "Startlistepresettet mangler – uden det kan der ikke eksporteres en startliste som CSV.",
+          "startlistQualification": "Denne konkurrence har en kvalifikationsrunde, men startlistepresettet til kvalifikationen mangler – uden det kan der ikke eksporteres en startliste til kvalifikationen.",
           "link": "Gå til tidtagningsindstillingerne"
         },
         "saved": "Tidtagningsindstillinger gemt",

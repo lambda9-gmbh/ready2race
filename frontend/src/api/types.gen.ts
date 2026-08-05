@@ -2438,6 +2438,11 @@ export type TimingConfigDto = {
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
+    /**
+     * Whether this competition's setup contains a qualification round. Read-only; it comes along with the timing config because both the timing tab and the execution tab already load it, and both need to know whether the qualification start list preset and the time trial results URL are required at all.
+     *
+     */
+    hasQualificationRound?: boolean
 }
 
 /**

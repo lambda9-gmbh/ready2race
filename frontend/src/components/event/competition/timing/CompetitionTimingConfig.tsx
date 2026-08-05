@@ -174,10 +174,17 @@ const CompetitionTimingConfig = () => {
                             />
                             {/* Die RaceClocker-Presets exportieren ohne Kopfzeile, weil RaceClocker
                                 eine solche Zeile als Teilnehmer importiert. Der Spaltenmapper zeigt
-                                dann Positionen statt Namen, was leicht unbemerkt schiefgeht. */}
-                            <Alert variant={'outlined'} severity={'info'}>
-                                <Trans i18nKey={'event.competition.timing.importHint'} />
-                            </Alert>
+                                dann Positionen statt Namen, was leicht unbemerkt schiefgeht.
+
+                                Eigener Alert und nicht in raceclockerHint aufgenommen: jener erklärt
+                                die beiden Ergebnis-Adressen darüber, dieser die Presets darunter.
+                                Nur bei RaceClocker, weil Webscorer weder „Extra info" noch einen
+                                Spaltenmapper kennt — dort zeigte der Hinweis ins Leere. */}
+                            {timingSystem === 'RACECLOCKER' && (
+                                <Alert variant={'outlined'} severity={'info'}>
+                                    <Trans i18nKey={'event.competition.timing.importHint'} />
+                                </Alert>
+                            )}
                             <FormInputAutocomplete
                                 name={'resultImportConfig'}
                                 options={importConfigs ?? []}

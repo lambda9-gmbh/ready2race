@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
+import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingConfigDto
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingConfigRequest
@@ -25,6 +26,8 @@ object TimingConfigService {
         val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
             .onNullFail { CompetitionError.CompetitionNotFound }
 
+        val hasQualificationRound = !CompetitionSetupRoundRepo.existsQualificationRound(competitionId).orDie()
+
         KIO.ok(
             ApiResponse.Dto(
                 TimingConfigDto(
@@ -34,6 +37,7 @@ object TimingConfigService {
                     startlistConfigQualification = competition.startlistConfigQualification,
                     startlistConfigRounds = competition.startlistConfigRounds,
                     resultImportConfig = competition.resultImportConfig,
+                    hasQualificationRound = hasQualificationRound,
                 )
             )
         )

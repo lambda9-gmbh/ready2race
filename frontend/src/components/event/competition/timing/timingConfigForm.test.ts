@@ -22,6 +22,12 @@ describe('mapDtoToTimingForm', () => {
 
         expect(Object.keys(form).sort()).toEqual(Object.keys(emptyTimingForm).sort())
     })
+
+    it('übernimmt die Qualifikationsrunde des Ablaufs', () => {
+        expect(mapDtoToTimingForm({hasQualificationRound: true}).hasQualificationRound).toBe(true)
+        // Ein alter Server ohne das Feld darf keine Warnung ausloesen.
+        expect(mapDtoToTimingForm({}).hasQualificationRound).toBe(false)
+    })
 })
 
 describe('mapTimingFormToRequest', () => {
@@ -63,6 +69,7 @@ describe('mapTimingFormToRequest', () => {
             startlistConfigQualification: {id: qualificationPreset, label: 'Zeitfahren'},
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
             resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
+            hasQualificationRound: true,
         })
 
         expect(request.startlistConfigQualification).toBe(qualificationPreset)
@@ -117,12 +124,53 @@ describe('timingConfigWarnings', () => {
         expect(warnings).toEqual(['startlistRounds'])
     })
 
-    it('mahnt die Zeitfahren-URL nicht an — nicht jeder Wettkampf hat eine Qualifikation', () => {
+    it('mahnt die Zeitfahren-URL nicht an, solange der Wettkampf keine Qualifikation hat', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
             heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+        })
+
+        expect(warnings).toEqual([])
+    })
+
+    it('mahnt bei einer Qualifikationsrunde die Zeitfahren-URL und ihr Preset an', () => {
+        // Genau der stille Fall: ohne Quali-Preset antwortet der Startlisten-Export mit
+        // STARTLIST_CONFIG_NOT_CONFIGURED, und das faellt sonst erst am Renntag auf.
+        const warnings = timingConfigWarnings({
+            ...emptyTimingForm,
+            timingSystem: 'RACECLOCKER',
+            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            hasQualificationRound: true,
+        })
+
+        expect(warnings).toEqual(['timeTrialUrl', 'startlistQualification'])
+    })
+
+    it('schweigt, wenn die Qualifikation vollstaendig eingerichtet ist', () => {
+        const warnings = timingConfigWarnings({
+            timingSystem: 'RACECLOCKER',
+            timeTrialResultsUrl: 'https://www.raceclocker.com/7ffb822a',
+            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            startlistConfigQualification: {id: qualificationPreset, label: 'Zeitfahren'},
+            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
+            hasQualificationRound: true,
+        })
+
+        expect(warnings).toEqual([])
+    })
+
+    it('mahnt die Quali-Felder bei Webscorer nicht an', () => {
+        // Webscorer kennt die Zweiteilung nicht: es hat keine zweite URL, und die Qualifikation
+        // faellt serverseitig auf das Runden-Preset zurueck.
+        const warnings = timingConfigWarnings({
+            ...emptyTimingForm,
+            timingSystem: 'WEBSCORER',
+            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            hasQualificationRound: true,
         })
 
         expect(warnings).toEqual([])

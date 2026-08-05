@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.competitionSetup.control
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND_WITH_MATCHES
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_TEMPLATE
@@ -60,5 +61,23 @@ object CompetitionSetupRoundRepo {
         COMPETITION_SETUP_ROUND.selectAsJson { COMPETITION_SETUP.`in`(keys).or(COMPETITION_SETUP_TEMPLATE.`in`(keys)) }
 
     fun insertJsonData(data: String) = COMPETITION_SETUP_ROUND.insertJsonData(data)
+
+    /**
+     * Ob der Ablauf dieses Wettkampfs eine Qualifikationsrunde enthaelt. Der Ablauf haengt nicht am
+     * Wettkampf selbst, sondern an dessen competition_properties -- dieselbe Join-Kette wie in
+     * [de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo.getStartListConfigTarget],
+     * nur ohne den konkreten Lauf.
+     */
+    fun existsQualificationRound(competitionId: UUID): JIO<Boolean> = Jooq.query {
+        fetchExists(
+            selectFrom(
+                COMPETITION_SETUP_ROUND
+                    .join(COMPETITION_PROPERTIES)
+                    .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+            )
+                .where(COMPETITION_PROPERTIES.COMPETITION.eq(competitionId))
+                .and(COMPETITION_SETUP_ROUND.IS_QUALIFICATION.isTrue)
+        )
+    }
 
 }
