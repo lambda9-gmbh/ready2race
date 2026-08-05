@@ -491,8 +491,12 @@
     "allowSelfSubmission": "Tillad selvstændig indsendelse af resultater",
     "submissionNeedsVerification": "Indsendte resultater skal verificeres",
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
-    "autoActivateNextMatch": "Aktiver næste løb automatisk",
-    "autoActivateNextMatchHint": "Når en dommer afslutter et løb i dashboardet, aktiveres løbene med næste starttid. Kun nyttigt med en komplet tidsplan — ellers rammer kæden det forkerte løb. Med en vedligeholdt tidsplan (fanen Tidsplan) følger kæden slottene og venter ved løb, der endnu ikke er fastsat.",
+    "chainProgressionMode": {
+      "label": "Kædetilstand",
+      "SCHIEDSRICHTER": "Dommer — afslut og kæde via dommer-dashboardet",
+      "REGATTABUERO": "Regattakontor — afslut og aktiver udelukkende via tidsplanen",
+      "DEAKTIVIERT": "Deaktiveret — ingen automatisk aktivering"
+    },
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
     "invoice": {
@@ -1306,6 +1310,7 @@
         "everySeconds": "Hvert {{seconds}}. sekund"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
+      "resultsCompleteWaiting": "Resultater komplette — venter på afslutning",
       "control": {
         "finish": "Afslut løb",
         "finishing": "Afsluttes …",
@@ -1377,6 +1382,10 @@
       "skipConfirm": "Vil du virkelig springe slot „{{label}}“ over kl. {{time}}? Kæden springer den så over.",
       "skipRound": "Spring runde over",
       "skipRoundConfirm": "Vil du virkelig springe alle {{count}} slots i runden „{{label}}“ over? Allerede påbegyndte løb forhindrer, at hele runden springes over.",
+      "activate": "Aktiver løb",
+      "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
+      "finish": "Afslut løb",
+      "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Afhængigt af kædetilstanden aktiveres de næste løb.",
       "managedHint": "Vedligeholdes via tidsplanen",
       "unplanned": "Ikke planlagte løb",
       "noUnplanned": "Alle løb er planlagt.",

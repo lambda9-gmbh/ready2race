@@ -7,7 +7,13 @@ import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {useForm} from 'react-hook-form-mui'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {useCallback} from 'react'
-import {CreateEventRequest, EventDto, MatchResultType, UpdateEventRequest} from '@api/types.gen.ts'
+import {
+    ChainProgressionMode,
+    CreateEventRequest,
+    EventDto,
+    MatchResultType,
+    UpdateEventRequest,
+} from '@api/types.gen.ts'
 import {addEvent, updateEvent} from '@api/sdk.gen.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import FormInputDate from '@components/form/input/FormInputDate.tsx'
@@ -30,7 +36,7 @@ type EventForm = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
-    autoActivateNextMatch: boolean
+    chainProgressionMode: ChainProgressionMode
     showBreaksOnPublicBoards: boolean
 }
 
@@ -67,7 +73,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         allowSelfSubmission: false,
         submissionNeedsVerification: false,
         allowParticipantSelfRegistration: false,
-        autoActivateNextMatch: false,
+        chainProgressionMode: 'DEAKTIVIERT',
         showBreaksOnPublicBoards: false,
     }
 
@@ -79,6 +85,11 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
 
     const challengeEventWatch = formContext.watch('challengeEvent')
     const challengeResultTypes = [{id: 'DISTANCE', label: 'Distance (m)'}]
+    const chainProgressionModes: {id: ChainProgressionMode; label: string}[] = [
+        {id: 'SCHIEDSRICHTER', label: t('event.chainProgressionMode.SCHIEDSRICHTER')},
+        {id: 'REGATTABUERO', label: t('event.chainProgressionMode.REGATTABUERO')},
+        {id: 'DEAKTIVIERT', label: t('event.chainProgressionMode.DEAKTIVIERT')},
+    ]
 
     return (
         <EntityDialog
@@ -149,13 +160,13 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     name={`allowParticipantSelfRegistration`}
                     label={t('event.allowParticipantSelfRegistration')}
                 />
-                <FormInputCheckbox
-                    name={`autoActivateNextMatch`}
-                    label={t('event.autoActivateNextMatch')}
+                <FormInputSelect
+                    label={t('event.chainProgressionMode.label')}
+                    required={true}
+                    name="chainProgressionMode"
+                    options={chainProgressionModes}
+                    fullWidth
                 />
-                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
-                    {t('event.autoActivateNextMatchHint')}
-                </Typography>
                 <FormInputCheckbox
                     name={`showBreaksOnPublicBoards`}
                     label={t('event.showBreaksOnPublicBoards')}
@@ -192,7 +203,7 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         allowSelfSubmission: formData.allowSelfSubmission,
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
-        autoActivateNextMatch: formData.autoActivateNextMatch,
+        chainProgressionMode: formData.chainProgressionMode,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
     }
 }
@@ -214,7 +225,7 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         allowSelfSubmission: formData.allowSelfSubmission,
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
-        autoActivateNextMatch: formData.autoActivateNextMatch,
+        chainProgressionMode: formData.chainProgressionMode,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
     }
 }
@@ -237,7 +248,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         allowSelfSubmission: dto.allowSelfSubmission,
         submissionNeedsVerification: dto.submissionNeedsVerification,
         allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
-        autoActivateNextMatch: dto.autoActivateNextMatch ?? false,
+        chainProgressionMode: dto.chainProgressionMode ?? 'DEAKTIVIERT',
         showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards ?? false,
     }
 }

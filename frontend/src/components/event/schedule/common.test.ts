@@ -30,6 +30,7 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     setupRoundId: crypto.randomUUID(),
     matchStartedAt: null,
     matchFinishedAt: null,
+    matchCurrentlyRunning: false,
     ...over,
 })
 

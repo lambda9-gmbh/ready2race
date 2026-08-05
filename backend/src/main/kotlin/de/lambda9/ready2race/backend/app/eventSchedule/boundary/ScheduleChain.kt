@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleSlotState
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
@@ -111,8 +112,8 @@ object ScheduleChainService {
      * will die Kette gar nicht.
      */
     fun resumeIfParked(eventId: UUID, userId: UUID): App<Nothing, Unit> = KIO.comprehension {
-        val chainEnabled = !EventRepo.getAutoActivateNextMatch(eventId).orDie()
-        if (!chainEnabled) {
+        val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        if (mode == ChainProgressionMode.DEAKTIVIERT) {
             return@comprehension KIO.unit
         }
 

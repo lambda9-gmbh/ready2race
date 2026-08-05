@@ -65,6 +65,10 @@ const LiveDashboardPage = () => {
     const [tab, setTab] = useState<'live' | 'matches'>('live')
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(null)
+    // In REGATTABUERO läuft "Lauf beenden" ausschließlich über den Zeitplan-Tab (siehe
+    // EventSchedule.tsx) - der Button verschwindet hier dafür, das Notfall-Override
+    // (onSetRunning) bleibt unabhängig vom Modus verfügbar.
+    const mayFinish = mayControl && dashboard?.chainProgressionMode !== 'REGATTABUERO'
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
     const [stale, setStale] = useState(false)
     const [liveChanged, setLiveChanged] = useState(false)
@@ -275,7 +279,7 @@ const LiveDashboardPage = () => {
                                 <LiveDashboardMatchCard
                                     match={match}
                                     onTeamClick={handleTeamClick}
-                                    onFinish={mayControl ? handleFinish : undefined}
+                                    onFinish={mayFinish ? handleFinish : undefined}
                                     onSetRunning={mayControl ? handleSetRunning : undefined}
                                 />
                             </Box>
@@ -313,7 +317,7 @@ const LiveDashboardPage = () => {
                                     <LiveDashboardMatchCard
                                         match={entry.match}
                                         onTeamClick={handleTeamClick}
-                                        onFinish={mayControl ? handleFinish : undefined}
+                                        onFinish={mayFinish ? handleFinish : undefined}
                                         onSetRunning={mayControl ? handleSetRunning : undefined}
                                     />
                                 </Box>
@@ -336,7 +340,7 @@ const LiveDashboardPage = () => {
                                         <LiveDashboardMatchCard
                                             match={match}
                                             onTeamClick={handleTeamClick}
-                                            onFinish={mayControl ? handleFinish : undefined}
+                                            onFinish={mayFinish ? handleFinish : undefined}
                                             onSetRunning={mayControl ? handleSetRunning : undefined}
                                         />
                                     </Box>

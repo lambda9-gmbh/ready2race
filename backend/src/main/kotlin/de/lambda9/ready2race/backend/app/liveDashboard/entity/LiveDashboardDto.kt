@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.entity
 
+import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -116,4 +117,6 @@ data class LiveDashboardDto(
     val matches: List<LiveDashboardMatchDto>,
     /** Aufsteigend nach Startzeit; in beiden Scopes (ALL und LIVE) enthalten - die Liste ist klein. */
     val pendingSlots: List<PendingSlotDto>,
+    /** Steuert im Frontend, ob "Lauf beenden" im Dashboard überhaupt angeboten wird (C1). */
+    val chainProgressionMode: ChainProgressionMode,
 )

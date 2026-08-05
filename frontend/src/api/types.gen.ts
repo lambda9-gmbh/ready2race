@@ -261,6 +261,11 @@ export type CatererTransactionViewDto = {
     createdAt: string
 }
 
+/**
+ * Three modes for the finish/activate chain: SCHIEDSRICHTER keeps finish+chain on the referee dashboard (as before); REGATTABUERO moves both exclusively to the schedule tab (the finish button disappears from the referee dashboard); DEAKTIVIERT lets finish affect only the match itself, without activating the next start time's matches.
+ */
+export type ChainProgressionMode = 'SCHIEDSRICHTER' | 'REGATTABUERO' | 'DEAKTIVIERT'
+
 export type ChallengeCompetitionInfoDto = {
     id: string
     name: string
@@ -764,10 +769,7 @@ export type CreateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
-    /**
-     * Finishing a race in the referee dashboard activates the races of the next start time
-     */
-    autoActivateNextMatch?: boolean
+    chainProgressionMode?: ChainProgressionMode
     /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
@@ -957,10 +959,7 @@ export type EventDto = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
-    /**
-     * Finishing a race in the referee dashboard activates the races of the next start time
-     */
-    autoActivateNextMatch?: boolean
+    chainProgressionMode?: ChainProgressionMode
     /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
@@ -1143,6 +1142,10 @@ export type EventScheduleSlotDto = {
     setupRoundId?: string | null
     matchStartedAt?: string | null
     matchFinishedAt?: string | null
+    /**
+     * Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot
+     */
+    matchCurrentlyRunning: boolean
 }
 
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
@@ -1357,6 +1360,7 @@ export type LiveDashboardDto = {
      * Ascending by start time; included in both scopes (ALL and LIVE) - the list is small
      */
     pendingSlots: Array<PendingSlotDto>
+    chainProgressionMode: ChainProgressionMode
 }
 
 export type LiveDashboardInvoiceState = 'PAID' | 'OPEN' | 'NONE'
@@ -2463,10 +2467,7 @@ export type UpdateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
-    /**
-     * Finishing a race in the referee dashboard activates the races of the next start time
-     */
-    autoActivateNextMatch?: boolean
+    chainProgressionMode?: ChainProgressionMode
     /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
@@ -5792,6 +5793,34 @@ export type UnskipScheduleSlotData = {
 export type UnskipScheduleSlotResponse = void
 
 export type UnskipScheduleSlotError = ApiError
+
+export type FinishScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+    query?: {
+        /**
+         * Marks every team without a result as failed with this reason. Deregistered teams are left alone.
+         */
+        openResults?: 'DNS' | 'DNF' | 'DSQ'
+    }
+}
+
+export type FinishScheduleSlotResponse = void
+
+export type FinishScheduleSlotError = ApiError
+
+export type ActivateScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type ActivateScheduleSlotResponse = void
+
+export type ActivateScheduleSlotError = ApiError
 
 export type SkipScheduleRoundData = {
     path: {

@@ -491,8 +491,12 @@
     "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
     "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
-    "autoActivateNextMatch": "Nächste Läufe automatisch aktivieren",
-    "autoActivateNextMatchHint": "Beendet eine Schiedsrichterin einen Lauf im Dashboard, werden die Läufe der nächsten Startzeit aktiv. Nur sinnvoll, wenn der Zeitplan durchgängig gepflegt ist — sonst greift die Kette den falschen Lauf. Mit gepflegtem Zeitplan (Tab Zeitplan) folgt die Kette den Slots und wartet an noch nicht gesetzten Läufen.",
+    "chainProgressionMode": {
+      "label": "Kettenmodus",
+      "SCHIEDSRICHTER": "Schiedsrichter — Beenden und Kette über das Schiedsrichter-Dashboard",
+      "REGATTABUERO": "Regattabüro — Beenden und Aktivieren exklusiv über den Zeitplan",
+      "DEAKTIVIERT": "Deaktiviert — keine automatische Aktivierung"
+    },
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
     "invoice": {
@@ -1306,6 +1310,7 @@
         "everySeconds": "Alle {{seconds}} Sekunden"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
+      "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",
       "control": {
         "finish": "Lauf beenden",
         "finishing": "Wird beendet …",
@@ -1377,6 +1382,10 @@
       "skipConfirm": "Slot „{{label}}“ um {{time}} wirklich überspringen? Die Kette lässt ihn dann aus.",
       "skipRound": "Runde überspringen",
       "skipRoundConfirm": "Alle {{count}} Slots der Runde „{{label}}“ wirklich überspringen? Bereits gestartete Läufe verhindern das Überspringen der ganzen Runde.",
+      "activate": "Lauf aktivieren",
+      "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",
+      "finish": "Lauf beenden",
+      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Je nach Kettenmodus werden dabei die nächsten Läufe aktiviert.",
       "managedHint": "Wird über den Zeitplan gepflegt",
       "unplanned": "Nicht verplante Läufe",
       "noUnplanned": "Alle Läufe sind eingeplant.",
