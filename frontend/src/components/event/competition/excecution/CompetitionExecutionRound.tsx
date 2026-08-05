@@ -23,13 +23,18 @@ import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
-import {deleteCurrentCompetitionExecutionRound, updateMatchRunningState} from '@api/sdk.gen.ts'
+import {
+    deleteCurrentCompetitionExecutionRound,
+    skipScheduleRound,
+    updateMatchRunningState,
+} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
 import Checkbox from '@mui/material/Checkbox'
 import {failedLabel} from '@utils/matchResultStatus.ts'
+import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
 
 type Props = {
     round: CompetitionRoundDto
@@ -94,6 +99,38 @@ const CompetitionExecutionRound = ({
             {
                 content: t('event.competition.execution.deleteRound.confirmation.content'),
                 okText: t('common.delete'),
+            },
+        )
+    }
+
+    // Runde entfällt (Wettkampf → Durchführung, verschoben aus dem Zeitplan): nur anbieten, wenn es
+    // in der Runde nichts zu fahren gibt (siehe roundHasNothingToRace) - sonst müssen die Läufe
+    // ausgetragen werden, damit die nächste Runde sauber ausgelost werden kann. Ruft denselben
+    // Endpunkt wie der frühere Zeitplan-Button (skipScheduleRound); der Server prüft die Regel
+    // ohnehin noch einmal serverseitig (EventScheduleService.setRoundSkipped).
+    const cancelRound = async () => {
+        confirmAction(
+            async () => {
+                props.setSubmitting(true)
+                const {error} = await skipScheduleRound({
+                    path: {
+                        eventId: eventId,
+                        setupRoundId: round.setupRoundId,
+                    },
+                })
+                props.setSubmitting(false)
+                if (error) {
+                    feedback.error(t('event.competition.execution.cancelRound.error'))
+                } else {
+                    feedback.success(t('event.competition.execution.cancelRound.success'))
+                }
+                props.reloadRoundDto()
+            },
+            {
+                content: t('event.competition.execution.cancelRound.confirmation.content', {
+                    round: round.name,
+                }),
+                okText: t('event.competition.execution.cancelRound.confirmation.ok'),
             },
         )
     }
@@ -481,12 +518,22 @@ const CompetitionExecutionRound = ({
                     ))}
                 </Box>
                 {roundIndex === 0 && (
-                    <LoadingButton
-                        pending={submitting}
-                        onClick={deleteCurrentRound}
-                        variant={'outlined'}>
-                        {t('event.competition.execution.deleteRound.delete')}
-                    </LoadingButton>
+                    <Stack direction={'row'} spacing={2}>
+                        <LoadingButton
+                            pending={submitting}
+                            onClick={deleteCurrentRound}
+                            variant={'outlined'}>
+                            {t('event.competition.execution.deleteRound.delete')}
+                        </LoadingButton>
+                        {roundHasNothingToRace(round.matches) && (
+                            <LoadingButton
+                                pending={submitting}
+                                onClick={cancelRound}
+                                variant={'outlined'}>
+                                {t('event.competition.execution.cancelRound.action')}
+                            </LoadingButton>
+                        )}
+                    </Stack>
                 )}
             </Stack>
         </Fragment>

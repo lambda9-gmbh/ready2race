@@ -819,6 +819,15 @@
           "error": "An error has occurred when deleting the round",
           "success": "Round successfully deleted"
         },
+        "cancelRound": {
+          "action": "Cancel round",
+          "confirmation": {
+            "content": "The round \"{{round}}\" is cancelled entirely? There are no runs to race in this round (every boat has a bye). The corresponding slots in the schedule will be marked as cancelled and passed over by the chain.",
+            "ok": "Cancel round"
+          },
+          "error": "An error has occurred when cancelling the round",
+          "success": "Round marked as cancelled"
+        },
         "teamsWithBye": "Teams with a bye",
         "match": {
           "startTime": "Start time",
@@ -1387,9 +1396,6 @@
       "skipConfirmOnly": "The run \"{{label}}\" at {{time}} is cancelled and will be passed over by the chain.",
       "skipConfirmFree": "The programme item \"{{label}}\" at {{time}} is cancelled.",
       "unskipConfirm": "Undo cancellation for \"{{label}}\" at {{time}}? The slot will be considered normally again.",
-      "skipRound": "Cancel the whole round ({{count}} runs)",
-      "skipRoundOk": "All {{count}} runs",
-      "skipRoundConfirm": "The whole round \"{{round}}\" ({{competition}}) is cancelled - all {{count}} runs: {{list}}. They will not take place and will be passed over by the chain.",
       "activate": "Activate race",
       "activateConfirm": "Activate race \"{{label}}\" at {{time}} now?",
       "activateAnyway": "Activate anyway",
