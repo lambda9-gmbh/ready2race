@@ -53,31 +53,120 @@ private class GapFonts(
 }
 
 /**
- * Ersetzt Zeichen, die [font] nicht kodieren kann. Für jedes nicht kodierbare Zeichen wird zunächst
- * die Unicode-NFD-Zerlegung ohne Kombinationszeichen versucht (ř -> r, é -> e); bleibt das Ergebnis
- * weiterhin nicht kodierbar, tritt ein '?' an dessen Stelle. Kodierbare Zeichen durchlaufen die
- * Funktion unverändert - das ist entscheidend, weil dieselbe Funktion auch die heute schon
- * funktionierende Teilnahmeurkunde durchläuft (document(original, additions)) und deren Ausgabe
- * unverändert bleiben muss.
+ * Lesbare ASCII-Entsprechungen für Zeichen, bei denen weder die Schrift noch die NFD-Zerlegung
+ * weiterhelfen. Die Tabelle greift ausschließlich für Zeichen, die [sanitizeForFont] vorher als
+ * *nicht kodierbar* erkannt hat — kodierbare Zeichen laufen unverändert durch und sehen die
+ * Tabelle nie.
+ *
+ * Zwei Gruppen, jeweils mit demselben Grund: „lieber lesbar als '?'".
+ *
+ * 1. Typografie. Diese Zeichen haben keine NFD-Zerlegung (ein Gedankenstrich zerfällt in nichts),
+ *    landen also ohne Tabelle direkt beim '?'. Bei Helvetica sind sie zwar in WinAnsi enthalten
+ *    und kommen hier gar nicht an; eine hochgeladene Vorlagenschrift mit reduziertem Zeichensatz
+ *    hat sie aber oft nicht — und dann ist „5.-16. August 2026" allemal besser als „5.?16.".
+ * 2. Buchstaben mit Strich oder Ligaturen. Die sind eigenständige Buchstaben und keine
+ *    Kombination aus Grundzeichen und Akzent, deshalb greift die NFD-Zerlegung nicht (ł bleibt ł).
+ *    Ersetzt wird jeweils durch die übliche Transliteration, wie sie auch in Meldelisten steht.
+ *
+ * Bewusst nicht aufgenommen: alles, was die NFD-Zerlegung ohnehin löst (ř, é, ź, Č, å …) — dafür
+ * gibt es keinen zweiten Weg, und eine doppelte Pflegestelle wäre nur eine Fehlerquelle.
+ */
+private val asciiFallbacks: Map<Int, String> = mapOf(
+    // Striche: alle Varianten auf den ASCII-Bindestrich, inkl. Minuszeichen.
+    0x2010 to "-", // ‐ Hyphen
+    0x2011 to "-", // ‑ Non-breaking hyphen
+    0x2012 to "-", // ‒ Figure dash
+    0x2013 to "-", // – Gedankenstrich (En dash) - der Fall aus formatEventDate
+    0x2014 to "-", // — Geviertstrich (Em dash)
+    0x2015 to "-", // ― Horizontal bar
+    0x2212 to "-", // − Minuszeichen
+
+    // Anführungszeichen und Apostrophe: auf die geraden ASCII-Varianten.
+    0x2018 to "'", // ‘
+    0x2019 to "'", // ’ - auch als Apostroph gebräuchlich
+    0x201A to "'", // ‚
+    0x201B to "'", // ‛
+    0x201C to "\"", // “
+    0x201D to "\"", // ”
+    0x201E to "\"", // „
+    0x201F to "\"", // ‟
+    0x2032 to "'", // ′ Prime
+    0x2033 to "\"", // ″ Double prime
+
+    // Guillemets: doppelte auf zwei Winkel, einfache auf einen - so bleibt die Richtung erhalten.
+    0x00AB to "<<", // «
+    0x00BB to ">>", // »
+    0x2039 to "<", // ‹
+    0x203A to ">", // ›
+
+    // Restliche Satzzeichen.
+    0x2022 to "-", // • Aufzählungspunkt - in einer Textzeile ist ein Strich die nächste Entsprechung
+    0x2023 to "-", // ‣ Triangular bullet
+    0x2043 to "-", // ⁃ Hyphen bullet
+    0x2026 to "...", // … Auslassungspunkte
+    0x2044 to "/", // ⁄ Bruchstrich
+
+    // Buchstaben mit Strich (keine NFD-Zerlegung, da eigenständige Buchstaben).
+    0x0141 to "L", // Ł - polnisch, z. B. „AZS Łódź"
+    0x0142 to "l", // ł
+    0x00D8 to "O", // Ø - dänisch/norwegisch
+    0x00F8 to "o", // ø
+    0x0110 to "D", // Đ - kroatisch/vietnamesisch
+    0x0111 to "d", // đ
+    0x00D0 to "D", // Ð - isländisches Eth
+    0x00F0 to "d", // ð
+    0x0131 to "i", // ı - türkisches punktloses i
+
+    // Ligaturen und Sonderbuchstaben mit fester Transliteration.
+    0x00C6 to "AE", // Æ
+    0x00E6 to "ae", // æ
+    0x0152 to "OE", // Œ
+    0x0153 to "oe", // œ
+    0x00DE to "Th", // Þ - isländisches Thorn
+    0x00FE to "th", // þ
+    0x00DF to "ss", // ß - nur relevant, wenn eine Vorlagenschrift kein Eszett mitbringt
+)
+
+/**
+ * Ersetzt Zeichen, die [font] nicht kodieren kann. Für jedes nicht kodierbare Zeichen wird zuerst
+ * in [asciiFallbacks] nachgesehen (– -> -, ł -> l, … -> ...), danach die Unicode-NFD-Zerlegung ohne
+ * Kombinationszeichen versucht (ř -> r, é -> e); bleibt das Ergebnis weiterhin nicht kodierbar,
+ * tritt ein '?' an dessen Stelle. Kodierbare Zeichen durchlaufen die Funktion unverändert - das ist
+ * entscheidend, weil dieselbe Funktion auch die heute schon funktionierende Teilnahmeurkunde
+ * durchläuft (document(original, additions)) und deren Ausgabe unverändert bleiben muss.
  *
  * Ohne das würde ein einziger nicht kodierbarer Vereins- oder Ortsname (z. B. ein polnischer oder
  * tschechischer Clubname bei einer Küstenregatta) den gesamten Urkunden-Export einer Veranstaltung
  * mit einer untypisierten IllegalArgumentException abbrechen, weil `font.getStringWidth`/
  * `content.showText` das Zeichen nicht kodieren können.
  */
-fun String.sanitizeForFont(font: PDFont): String = buildString {
-    this@sanitizeForFont.codePoints().forEach { codePoint ->
+fun String.sanitizeForFont(font: PDFont): String = sanitizeForEncoder { font.canEncodeSafely(it) }
+
+/**
+ * Der Kern von [sanitizeForFont], losgelöst von PDFBox: [canEncode] beantwortet, ob die Zielschrift
+ * einen Text darstellen kann. So lässt sich das Verhalten auch für eine Schrift mit reduziertem
+ * Zeichensatz prüfen, ohne eine passende Schriftdatei ins Repo zu legen.
+ */
+internal fun String.sanitizeForEncoder(canEncode: (String) -> Boolean): String = buildString {
+    this@sanitizeForEncoder.codePoints().forEach { codePoint ->
         val original = String(Character.toChars(codePoint))
-        if (font.canEncodeSafely(original)) {
+        if (canEncode(original)) {
             append(original)
+            return@forEach
+        }
+
+        val fallback = asciiFallbacks[codePoint]
+        if (fallback != null && canEncode(fallback)) {
+            append(fallback)
+            return@forEach
+        }
+
+        val decomposed = Normalizer.normalize(original, Normalizer.Form.NFD)
+            .filter { !it.isCombiningMark() }
+        if (decomposed.isNotEmpty() && decomposed.all { canEncode(it.toString()) }) {
+            append(decomposed)
         } else {
-            val decomposed = Normalizer.normalize(original, Normalizer.Form.NFD)
-                .filter { !it.isCombiningMark() }
-            if (decomposed.isNotEmpty() && decomposed.all { font.canEncodeSafely(it.toString()) }) {
-                append(decomposed)
-            } else {
-                append('?')
-            }
+            append('?')
         }
     }
 }

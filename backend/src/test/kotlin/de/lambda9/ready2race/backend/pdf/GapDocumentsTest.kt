@@ -295,12 +295,64 @@ class GapDocumentsTest {
     @Test
     fun sanitizeForFontMakesAPolishClubNameEncodableByHelvetica() {
         // Helvetica (WinAnsi) kann Ł/ź nicht kodieren; die NFD-Zerlegung entfernt das Kombinationszeichen
-        // von ź (-> z), Ł hat keine Zerlegung und wird zu '?'. Das Ergebnis muss vollständig kodierbar sein.
+        // von ź (-> z), Ł hat keine Zerlegung und wird über die ASCII-Tabelle zu 'L'. Das Ergebnis muss
+        // vollständig kodierbar - und vor allem lesbar - sein: "AZS Lodz", nicht "AZS ?odz".
         val font = PDType1Font(Standard14Fonts.FontName.HELVETICA)
         val sanitized = "AZS Łódź".sanitizeForFont(font)
 
-        assertTrue(sanitized.isNotBlank())
+        // ó liegt in WinAnsi und bleibt deshalb unangetastet - nur was Helvetica nicht kann,
+        // wird ersetzt.
+        assertEquals("AZS Lódz", sanitized)
         assertTrue(canEncodeEveryCharacter(sanitized, font))
+    }
+
+    /**
+     * Eine Zielschrift, die außer ASCII nichts kann - so verhält sich eine hochgeladene
+     * Vorlagenschrift mit reduziertem Zeichensatz. Damit lässt sich die ASCII-Tabelle auch für
+     * Zeichen prüfen, die Helvetica (WinAnsi) zufällig selbst kodieren kann.
+     */
+    private val asciiOnly: (String) -> Boolean = { text -> text.all { it.code < 0x80 } }
+
+    @Test
+    fun sanitizeForFontReplacesTypographyWithAsciiInsteadOfQuestionMarks() {
+        // Der Fall aus formatEventDate plus typografische Anführungszeichen: eine Schrift ohne
+        // diese Glyphen darf daraus keine Fragezeichen machen.
+        assertEquals("5.-16. August 2026", "5.–16. August 2026".sanitizeForEncoder(asciiOnly))
+        assertEquals("- gedacht -", "— gedacht —".sanitizeForEncoder(asciiOnly))
+        assertEquals("CVK Praha 'Vltava'", "ČVK Praha ’Vltava’".sanitizeForEncoder(asciiOnly))
+        assertEquals("\"Seenot\"", "„Seenot“".sanitizeForEncoder(asciiOnly))
+        assertEquals("und so weiter...", "und so weiter…".sanitizeForEncoder(asciiOnly))
+        assertEquals("- Punkt", "• Punkt".sanitizeForEncoder(asciiOnly))
+        assertEquals("<<hier>>", "«hier»".sanitizeForEncoder(asciiOnly))
+        assertEquals("<hier>", "‹hier›".sanitizeForEncoder(asciiOnly))
+    }
+
+    @Test
+    fun sanitizeForFontTransliteratesLettersWithoutDecomposition() {
+        // Buchstaben mit Strich und Ligaturen haben keine NFD-Zerlegung; ohne Tabelle würden sie
+        // zu '?'. Erwartet wird die übliche Transliteration.
+        assertEquals("Lodz", "Łódź".sanitizeForEncoder(asciiOnly))
+        assertEquals("Kobenhavn Ro", "København Ro".sanitizeForEncoder(asciiOnly))
+        assertEquals("AEro Roklub", "Ærø Roklub".sanitizeForEncoder(asciiOnly))
+        assertEquals("Coeur", "Cœur".sanitizeForEncoder(asciiOnly))
+        assertEquals("Dakovo", "Đakovo".sanitizeForEncoder(asciiOnly))
+        assertEquals("Strasse", "Straße".sanitizeForEncoder(asciiOnly))
+    }
+
+    @Test
+    fun sanitizeForFontStillFallsBackToQuestionMarkForUnmappableCharacters() {
+        // Alles, wofür es weder eine Tabelle noch eine Zerlegung gibt, wird weiterhin zu '?' -
+        // der Export darf daran nicht scheitern.
+        assertEquals("??", "東京".sanitizeForEncoder(asciiOnly))
+    }
+
+    @Test
+    fun sanitizeForEncoderLeavesEncodableTextCharacterByCharacterUnchanged() {
+        // Gegenprobe zur Tabelle: was die Schrift kann, wird nicht angefasst - auch nicht die
+        // Zeichen, für die es einen ASCII-Eintrag gäbe.
+        val text = "5.–16. August 2026 „Łódź\" • …"
+
+        assertEquals(text, text.sanitizeForEncoder { true })
     }
 
     @Test
