@@ -319,5 +319,32 @@ class GapDocumentsDocxTest {
         document.close()
     }
 
+    @Test
+    fun wordKeepsTheOriginalTypographyInsteadOfAsciiReplacements() {
+        // Bewusste Entscheidung: der Word-Weg läuft nur durch sanitizeNonPrintable, nicht durch
+        // sanitizeForFont. Die ASCII-Tabelle ist ein Notbehelf für Schriften, die ein Zeichen nicht
+        // kodieren können - im PDF ist das eine harte Grenze (PDFBox wirft sonst), in Word nicht:
+        // dort wählt Word bei einer fehlenden Glyphe automatisch eine Ersatzschrift und stellt das
+        // Zeichen dar. Eine Ersetzung wäre hier reiner Verlust, zumal das Dokument nachbearbeitet
+        // werden soll.
+        val text = "5.–16. August 2026 – AZS Łódź „Vltava\""
+        val document = doc(listOf(listOf(addition(text, 0.45))))
+
+        assertEquals(text, document.paragraphs.first { it.ctp.pPr?.framePr != null }.text)
+        document.close()
+    }
+
+    @Test
+    fun wordStillDropsInvisibleFormatCharacters() {
+        // Was unsichtbar ist, gehört auch im Word-Dokument nicht in den Text.
+        val document = doc(listOf(listOf(addition("Ruder​klub⁠ Flens‎burg", 0.45))))
+
+        assertEquals(
+            "Ruderklub Flensburg",
+            document.paragraphs.first { it.ctp.pPr?.framePr != null }.text,
+        )
+        document.close()
+    }
+
     private fun twips(points: Float): Long = (points * 20f).roundToLong()
 }
