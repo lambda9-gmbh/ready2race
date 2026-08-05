@@ -63,6 +63,15 @@ const useLocalClock = (intervalMs: number): Date => {
     return now
 }
 
+/** Einheitliche Breite eines Aktions-Platzes (IconButton size=small: 20px Icon + 2×5px Padding). */
+const actionSlotSx = {
+    width: 30,
+    height: 30,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+} as const
+
 const stateChipProps = (
     slot: EventScheduleSlotDto,
     t: (key: string) => string,
@@ -413,76 +422,110 @@ const EventSchedule = () => {
                                             </TableCell>
                                             {canEdit && (
                                                 <TableCell>
+                                                    {/* Feste Spalten pro Aktion: fehlt eine, bleibt ihr
+                                                        Platz leer — so stehen gleiche Symbole über alle
+                                                        Zeilen sauber untereinander. */}
                                                     <Stack direction={'row'} spacing={0.5}>
-                                                        {isEditable(slot) && (
-                                                            <Tooltip title={t('common.edit')}>
-                                                                <IconButton
-                                                                    size={'small'}
-                                                                    onClick={() => openEditDialog(slot)}>
-                                                                    <Edit fontSize={'small'} />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-                                                        {slot.state === 'LINKED' &&
-                                                            !slot.matchFinishedAt &&
-                                                            !slot.matchCurrentlyRunning && (
-                                                                <Tooltip
-                                                                    title={t('event.schedule.activate')}>
+                                                        <Box sx={actionSlotSx}>
+                                                            {isEditable(slot) && (
+                                                                <Tooltip title={t('common.edit')}>
                                                                     <IconButton
                                                                         size={'small'}
                                                                         onClick={() =>
-                                                                            handleActivate(slot)
+                                                                            openEditDialog(slot)
                                                                         }>
-                                                                        <PlayArrow fontSize={'small'} />
+                                                                        <Edit fontSize={'small'} />
                                                                     </IconButton>
                                                                 </Tooltip>
                                                             )}
-                                                        {slot.state === 'LINKED' &&
-                                                            slot.matchCurrentlyRunning && (
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
+                                                            {slot.state === 'LINKED' &&
+                                                                !slot.matchFinishedAt &&
+                                                                !slot.matchCurrentlyRunning && (
+                                                                    <Tooltip
+                                                                        title={t(
+                                                                            'event.schedule.activate',
+                                                                        )}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            onClick={() =>
+                                                                                handleActivate(slot)
+                                                                            }>
+                                                                            <PlayArrow
+                                                                                fontSize={'small'}
+                                                                            />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+                                                            {slot.state === 'LINKED' &&
+                                                                slot.matchCurrentlyRunning && (
+                                                                    <Tooltip
+                                                                        title={t(
+                                                                            'event.schedule.finish',
+                                                                        )}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            onClick={() =>
+                                                                                handleFinishSlot(slot)
+                                                                            }>
+                                                                            <Stop fontSize={'small'} />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
+                                                            {slot.state === 'SKIPPED' ? (
                                                                 <Tooltip
-                                                                    title={t('event.schedule.finish')}>
+                                                                    title={t('event.schedule.unskip')}>
                                                                     <IconButton
                                                                         size={'small'}
                                                                         onClick={() =>
-                                                                            handleFinishSlot(slot)
+                                                                            handleUnskip(slot)
                                                                         }>
-                                                                        <Stop fontSize={'small'} />
+                                                                        <EventRepeat
+                                                                            fontSize={'small'}
+                                                                        />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <Tooltip
+                                                                    title={t('event.schedule.skip')}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        onClick={() => handleSkip(slot)}>
+                                                                        <EventBusy fontSize={'small'} />
                                                                     </IconButton>
                                                                 </Tooltip>
                                                             )}
-                                                        {slot.state === 'SKIPPED' ? (
-                                                            <Tooltip title={t('event.schedule.unskip')}>
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
+                                                            {slot.setupRoundId && (
+                                                                <Tooltip
+                                                                    title={t(
+                                                                        'event.schedule.skipRound',
+                                                                    )}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        onClick={() =>
+                                                                            handleSkipRound(slot)
+                                                                        }>
+                                                                        <PlaylistRemove
+                                                                            fontSize={'small'}
+                                                                        />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
+                                                            <Tooltip title={t('common.delete')}>
                                                                 <IconButton
                                                                     size={'small'}
-                                                                    onClick={() => handleUnskip(slot)}>
-                                                                    <EventRepeat fontSize={'small'} />
+                                                                    onClick={() => handleDelete(slot)}>
+                                                                    <Delete fontSize={'small'} />
                                                                 </IconButton>
                                                             </Tooltip>
-                                                        ) : (
-                                                            <Tooltip title={t('event.schedule.skip')}>
-                                                                <IconButton
-                                                                    size={'small'}
-                                                                    onClick={() => handleSkip(slot)}>
-                                                                    <EventBusy fontSize={'small'} />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-                                                        {slot.setupRoundId && (
-                                                            <Tooltip title={t('event.schedule.skipRound')}>
-                                                                <IconButton
-                                                                    size={'small'}
-                                                                    onClick={() => handleSkipRound(slot)}>
-                                                                    <PlaylistRemove fontSize={'small'} />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-                                                        <Tooltip title={t('common.delete')}>
-                                                            <IconButton
-                                                                size={'small'}
-                                                                onClick={() => handleDelete(slot)}>
-                                                                <Delete fontSize={'small'} />
-                                                            </IconButton>
-                                                        </Tooltip>
+                                                        </Box>
                                                     </Stack>
                                                 </TableCell>
                                             )}
