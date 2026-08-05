@@ -1995,25 +1995,6 @@ export type QrCodeParticipantUpdate = {
     eventId: string
 }
 
-export type RaceClockerConfigDto = {
-    /**
-     * Public results URL of the individual-start race used for the qualification round.
-     */
-    timeTrialResultsUrl?: string
-    /**
-     * Public results URL of the wave-start race used for all other rounds.
-     */
-    heatsResultsUrl?: string
-}
-
-/**
- * Both URLs are optional. They must be https URLs on raceclocker.com; the host is pinned so the backend cannot be pointed at other services.
- */
-export type RaceClockerConfigRequest = {
-    timeTrialResultsUrl?: string | null
-    heatsResultsUrl?: string | null
-}
-
 export type RatingCategoriesToEventRequest = {
     ratingCategories: Array<RatingCategoryToEventRequest>
 }
@@ -2406,6 +2387,36 @@ export type TimeCheckDto = {
 
 export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'
 
+export type TimingConfigDto = {
+    timingSystem?: TimingSystem
+    /**
+     * Public results URL of the individual-start race used for the qualification round.
+     */
+    timeTrialResultsUrl?: string
+    /**
+     * Public results URL of the wave-start race used for all other rounds.
+     */
+    heatsResultsUrl?: string
+    startlistConfigQualification?: string
+    startlistConfigRounds?: string
+    resultImportConfig?: string
+}
+
+/**
+ * Every field is optional - the RaceClocker races only exist shortly before the regatta, so an incomplete configuration must be storable. The URLs must be https URLs on raceclocker.com; the host is pinned so the backend cannot be pointed at other services.
+ *
+ */
+export type TimingConfigRequest = {
+    timingSystem?: TimingSystem | null
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+    startlistConfigQualification?: string | null
+    startlistConfigRounds?: string | null
+    resultImportConfig?: string | null
+}
+
+export type TimingSystem = 'RACECLOCKER' | 'WEBSCORER'
+
 export type TooManyRequestsError = ApiError & {
     details: {
         retryAfter: number
@@ -2560,10 +2571,6 @@ export type UpdateThemeRequest = {
     backgroundColor: string
     enableCustomFont: boolean
     enableCustomLogo: boolean
-}
-
-export type UploadMatchResultRequest = {
-    config: string
 }
 
 /**
@@ -3654,28 +3661,28 @@ export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type GetRaceClockerConfigData = {
+export type GetTimingConfigData = {
     path: {
         competitionId: string
         eventId: string
     }
 }
 
-export type GetRaceClockerConfigResponse = RaceClockerConfigDto
+export type GetTimingConfigResponse = TimingConfigDto
 
-export type GetRaceClockerConfigError = BadRequestError | ApiError
+export type GetTimingConfigError = BadRequestError | ApiError
 
-export type UpdateRaceClockerConfigData = {
-    body: RaceClockerConfigRequest
+export type UpdateTimingConfigData = {
+    body: TimingConfigRequest
     path: {
         competitionId: string
         eventId: string
     }
 }
 
-export type UpdateRaceClockerConfigResponse = void
+export type UpdateTimingConfigResponse = void
 
-export type UpdateRaceClockerConfigError = BadRequestError | ApiError | UnprocessableEntityError
+export type UpdateTimingConfigError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type PullMatchResultsFromRaceClockerData = {
     path: {
@@ -3696,10 +3703,6 @@ export type DownloadStartListData = {
         eventId: string
     }
     query: {
-        /**
-         * This parameter is required with fileType 'CSV', otherwise discarded.
-         */
-        config?: string
         fileType: StartListFileType
     }
 }
@@ -6093,7 +6096,6 @@ export type DeleteMatchResultImportConfigError = BadRequestError | ApiError
 
 export type UploadResultFileData = {
     body: {
-        request: UploadMatchResultRequest
         files: Array<Blob | File>
     }
     path: {

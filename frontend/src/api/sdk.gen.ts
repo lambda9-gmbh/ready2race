@@ -180,12 +180,12 @@ import type {
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
-    GetRaceClockerConfigData,
-    GetRaceClockerConfigError,
-    GetRaceClockerConfigResponse,
-    UpdateRaceClockerConfigData,
-    UpdateRaceClockerConfigError,
-    UpdateRaceClockerConfigResponse,
+    GetTimingConfigData,
+    GetTimingConfigError,
+    GetTimingConfigResponse,
+    UpdateTimingConfigData,
+    UpdateTimingConfigError,
+    UpdateTimingConfigResponse,
     PullMatchResultsFromRaceClockerData,
     PullMatchResultsFromRaceClockerError,
     PullMatchResultsFromRaceClockerResponse,
@@ -1516,31 +1516,31 @@ export const updateMatchResults = <ThrowOnError extends boolean = false>(
 }
 
 /**
- * The two public RaceClocker results URLs of this competition.
+ * The timing configuration of this competition - timing system, RaceClocker results URLs and the column presets used for export and import.
  */
-export const getRaceClockerConfig = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetRaceClockerConfigData, ThrowOnError>,
+export const getTimingConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetTimingConfigData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetRaceClockerConfigResponse,
-        GetRaceClockerConfigError,
+        GetTimingConfigResponse,
+        GetTimingConfigError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/raceclocker-config',
+        url: '/event/{eventId}/competition/{competitionId}/timing-config',
     })
 }
 
-export const updateRaceClockerConfig = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateRaceClockerConfigData, ThrowOnError>,
+export const updateTimingConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateTimingConfigData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
-        UpdateRaceClockerConfigResponse,
-        UpdateRaceClockerConfigError,
+        UpdateTimingConfigResponse,
+        UpdateTimingConfigError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/raceclocker-config',
+        url: '/event/{eventId}/competition/{competitionId}/timing-config',
     })
 }
 

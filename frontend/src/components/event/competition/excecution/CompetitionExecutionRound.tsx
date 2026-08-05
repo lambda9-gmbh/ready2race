@@ -49,9 +49,9 @@ type Props = {
     handleAccordionExpandedChange: (accordionIndex: number, isExpanded: boolean) => void
     smallScreenLayout: boolean
     setResultImportMatch: Dispatch<SetStateAction<string | null>>
-    setStartListMatch: Dispatch<SetStateAction<string | null>>
     pullRaceClockerResults: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
+    handleDownloadStartListCSV: (competitionMatchId: string) => Promise<void>
 }
 
 const MATCH_RESULT_OPTIONS = ['form', 'XLS', 'RACECLOCKER'] as const
@@ -64,9 +64,9 @@ const CompetitionExecutionRound = ({
     submitting,
     smallScreenLayout,
     setResultImportMatch,
-    setStartListMatch,
     pullRaceClockerResults,
     handleDownloadStartListPDF,
+    handleDownloadStartListCSV,
     ...props
 }: Props) => {
     const {t} = useTranslation()
@@ -407,7 +407,7 @@ const CompetitionExecutionRound = ({
                                                     await handleDownloadStartListPDF(match.id)
                                                     break
                                                 case 'CSV':
-                                                    setStartListMatch(match.id)
+                                                    await handleDownloadStartListCSV(match.id)
                                                     break
                                             }
                                         }}

@@ -10,7 +10,6 @@ import {
 } from '@api/sdk.gen.ts'
 import {
     Box,
-    Button,
     Checkbox,
     Divider,
     InputAdornment,
@@ -64,9 +63,7 @@ import InlineLink from '@components/InlineLink.tsx'
 import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
-import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
-import RaceClockerConfigDialog from '@components/event/competition/excecution/RaceClockerConfigDialog.tsx'
 import FormInputTimecode from '@components/form/input/FormInputTimecode.tsx'
 import {
     EditMatchForm,
@@ -261,12 +258,6 @@ const CompetitionExecution = () => {
             })
     }
 
-    const [startListMatch, setStartListMatch] = useState<string | null>(null)
-    const showStartListConfigDialog = startListMatch !== null
-    const closeStartListConfigDialog = () => setStartListMatch(null)
-
-    const [showRaceClockerConfig, setShowRaceClockerConfig] = useState(false)
-
     const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
     const showMatchResultImportConfigDialog = resultImportMatch !== null
     const closeMatchResultImportConfigDialog = () => setResultImportMatch(null)
@@ -274,7 +265,6 @@ const CompetitionExecution = () => {
     const handleDownloadStartList = async (
         competitionMatchId: string,
         fileType: StartListFileType,
-        config?: string,
     ) => {
         const {data, error, response} = await downloadStartList({
             path: {
@@ -284,7 +274,6 @@ const CompetitionExecution = () => {
             },
             query: {
                 fileType,
-                config,
             },
         })
         const anchor = downloadRef.current
@@ -292,6 +281,19 @@ const CompetitionExecution = () => {
         if (error) {
             if (error.status.value === 409) {
                 feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
+            } else if (
+                error.status.value === 400 &&
+                // Cast nötig: STARTLIST_CONFIG_NOT_CONFIGURED fehlt noch im generierten ErrorCode-Typ
+                // (Lücke in der OpenAPI-Doku aus Tasks 1-5 — der Wert existiert im Backend-Enum, aber
+                // nicht im dokumentierten Schema).
+                (error as {errorCode?: string}).errorCode === 'STARTLIST_CONFIG_NOT_CONFIGURED'
+            ) {
+                // Übersetzungsschlüssel existiert noch nicht (Task 7 ergänzt ihn zusammen mit dem
+                // neuen Zeitnahme-Tab); Cast bis dahin, damit der Build nicht auf dem fehlenden Key
+                // scheitert, ohne die Übersetzungsdateien in diesem Task anzufassen.
+                feedback.error(
+                    t('event.competition.execution.startList.error.notConfigured' as never),
+                )
             } else {
                 feedback.error(t('common.error.unexpected'))
             }
@@ -361,11 +363,7 @@ const CompetitionExecution = () => {
         }
     }
 
-    const handleUploadMatchResults = async (
-        competitionMatchId: string,
-        file: File,
-        config: string,
-    ) => {
+    const handleUploadMatchResults = async (competitionMatchId: string, file: File) => {
         const {error} = await uploadResultFile({
             path: {
                 eventId,
@@ -373,7 +371,6 @@ const CompetitionExecution = () => {
                 competitionMatchId,
             },
             body: {
-                request: {config},
                 files: [file],
             },
         })
@@ -382,6 +379,17 @@ const CompetitionExecution = () => {
             if (error.status.value === 400) {
                 if (error.errorCode === 'FILE_ERROR') {
                     feedback.error(t('common.error.upload.FILE_ERROR'))
+                } else if (
+                    // Cast nötig: RESULT_IMPORT_CONFIG_NOT_CONFIGURED fehlt noch im generierten
+                    // ErrorCode-Typ (dieselbe Doku-Lücke wie bei STARTLIST_CONFIG_NOT_CONFIGURED).
+                    (error as {errorCode?: string}).errorCode ===
+                    'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
+                ) {
+                    // Übersetzungsschlüssel existiert noch nicht (Task 7 ergänzt ihn); Cast bis
+                    // dahin, siehe Begründung bei handleDownloadStartList.
+                    feedback.error(
+                        t('event.competition.execution.results.error.notConfigured' as never),
+                    )
                 } else if (error.message === 'Unsupported file type') {
                     // TODO: replace with error code!
                     feedback.error(t('common.error.upload.unsupportedType'))
@@ -784,14 +792,6 @@ const CompetitionExecution = () => {
                     )}
                 </Box>
             )}
-            <Box sx={{my: 2}}>
-                <Button
-                    variant={'outlined'}
-                    size={'small'}
-                    onClick={() => setShowRaceClockerConfig(true)}>
-                    {t('event.competition.execution.raceclocker.config.open')}
-                </Button>
-            </Box>
             <Stack spacing={6}>
                 {sortedRounds.map((round, roundIndex) => (
                     <CompetitionExecutionRound
@@ -809,11 +809,13 @@ const CompetitionExecution = () => {
                             handleAccordionExpandedChange({roundIndex, accordionIndex, isExpanded})
                         }
                         smallScreenLayout={smallScreenLayout}
-                        setStartListMatch={setStartListMatch}
                         setResultImportMatch={setResultImportMatch}
                         pullRaceClockerResults={handlePullRaceClockerResults}
                         handleDownloadStartListPDF={matchId =>
                             handleDownloadStartList(matchId, 'PDF')
+                        }
+                        handleDownloadStartListCSV={matchId =>
+                            handleDownloadStartList(matchId, 'CSV')
                         }
                     />
                 ))}
@@ -1254,23 +1256,10 @@ const CompetitionExecution = () => {
                     </FormContainer>
                 </Box>
             </BaseDialog>
-            <StartListConfigPicker
-                open={showStartListConfigDialog}
-                onClose={closeStartListConfigDialog}
-                onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
-            />
-            <RaceClockerConfigDialog
-                open={showRaceClockerConfig}
-                eventId={eventId}
-                competitionId={competitionId}
-                onClose={() => setShowRaceClockerConfig(false)}
-            />
             <MatchResultUploadDialog
                 open={showMatchResultImportConfigDialog}
                 onClose={closeMatchResultImportConfigDialog}
-                onSuccess={async (config, file) =>
-                    handleUploadMatchResults(resultImportMatch!, file, config)
-                }
+                onSuccess={async file => handleUploadMatchResults(resultImportMatch!, file)}
             />
             <Link ref={downloadRef} display={'none'}></Link>
         </Box>
