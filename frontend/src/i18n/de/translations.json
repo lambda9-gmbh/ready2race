@@ -699,7 +699,13 @@
         },
         "deregister": {
           "deregister": "Abmelden",
-          "error": "Beim Abmelden ist ein Fehler aufgetreten.",
+          "error": {
+            "unexpected": "Beim Abmelden ist ein Fehler aufgetreten.",
+            "DEREGISTRATION_ALREADY_EXISTS": "Diese Meldung ist bereits abgemeldet.",
+            "DEREGISTRATION_RESULTS_ALREADY_EXIST": "Der Lauf wird bereits gewertet. Die Abmeldung muss direkt im Ergebnis eingetragen werden.",
+            "DEREGISTRATION_NOT_IN_CURRENT_ROUND": "Die Mannschaft ist in der aktuellen Runde nicht dabei - sie ist bereits ausgeschieden oder war nie dabei.",
+            "DEREGISTRATION_REGISTRATION_STILL_OPEN": "Der Meldezeitraum läuft noch. Eine Abmeldung ist erst nach Meldeschluss möglich."
+          },
           "success": "Abmeldung erfolgreich",
           "revertDeregistration": {
             "revertDeregistration": "Abmeldung zurücknehmen",

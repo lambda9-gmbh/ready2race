@@ -699,7 +699,13 @@
         },
         "deregister": {
           "deregister": "Afmeld",
-          "error": "Der opstod en fejl ved afmelding.",
+          "error": {
+            "unexpected": "Der opstod en fejl ved afmelding.",
+            "DEREGISTRATION_ALREADY_EXISTS": "Denne tilmelding er allerede afmeldt.",
+            "DEREGISTRATION_RESULTS_ALREADY_EXIST": "Løbet er allerede ved at blive bedømt. Afmeldingen skal indtastes direkte i resultatet.",
+            "DEREGISTRATION_NOT_IN_CURRENT_ROUND": "Holdet er ikke med i den aktuelle runde - det er allerede ude eller har aldrig været med.",
+            "DEREGISTRATION_REGISTRATION_STILL_OPEN": "Tilmeldingsperioden er stadig åben. Afmelding er først mulig efter tilmeldingsfristen."
+          },
           "success": "Afmelding lykkedes",
           "revertDeregistration": {
             "revertDeregistration": "Fortryd afmelding",

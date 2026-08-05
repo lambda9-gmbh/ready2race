@@ -699,7 +699,13 @@
         },
         "deregister": {
           "deregister": "Deregister",
-          "error": "An error has occurred on deregistration",
+          "error": {
+            "unexpected": "An error has occurred on deregistration",
+            "DEREGISTRATION_ALREADY_EXISTS": "This registration has already been deregistered.",
+            "DEREGISTRATION_RESULTS_ALREADY_EXIST": "The match is already being scored. The deregistration has to be entered in the results directly.",
+            "DEREGISTRATION_NOT_IN_CURRENT_ROUND": "The team is not part of the current round - it has already dropped out or never took part.",
+            "DEREGISTRATION_REGISTRATION_STILL_OPEN": "The registration period is still open. Deregistration is only possible once it has closed."
+          },
           "success": "Deregistration successful",
           "revertDeregistration": {
             "revertDeregistration": "Revert deregistration",

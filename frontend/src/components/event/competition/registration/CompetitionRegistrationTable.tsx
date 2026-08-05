@@ -245,7 +245,7 @@ const CompetitionRegistrationTable = ({
                     },
                 })
                 if (error) {
-                    if (error.status.value === 409) {
+                    if (error.errorCode === 'DEREGISTRATION_IS_LOCKED') {
                         feedback.error(
                             t(
                                 'event.competition.registration.deregister.revertDeregistration.error.locked',
