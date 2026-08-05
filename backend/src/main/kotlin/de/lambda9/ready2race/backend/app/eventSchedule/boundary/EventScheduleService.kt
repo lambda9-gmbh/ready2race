@@ -1,10 +1,13 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.*
+import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventScheduleSlotRecord
@@ -15,6 +18,7 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
+import org.jooq.Record
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -64,6 +68,7 @@ object EventScheduleService {
                     setupRoundId = r.get("setup_round_id", UUID::class.java),
                     matchStartedAt = r.get("match_started_at", java.time.LocalDateTime::class.java),
                     matchFinishedAt = r.get("match_finished_at", java.time.LocalDateTime::class.java),
+                    matchCurrentlyRunning = r[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
                 )
             }
 
@@ -295,6 +300,78 @@ object EventScheduleService {
         !ScheduleChainService.resumeIfParked(eventId, userId)
 
         noData
+    }
+
+    /**
+     * Beendet den Lauf eines LINKED-Slots vom Zeitplan aus (C1) - das Regattabüro darf das in
+     * JEDEM `chainProgressionMode` (anders als [LiveDashboardService.finishMatch], das bei
+     * REGATTABUERO mit `FinishReservedForOffice` scheitert). Ruft dieselbe Beenden-Logik wie das
+     * Schiedsrichter-Dashboard auf ([LiveDashboardService.finishMatchInternal], dort dokumentiert,
+     * warum sie dort statt hier liegt), nur ohne den Modus-Gate - der Modus selbst entscheidet
+     * trotzdem weiterhin, ob die Kette danach zieht (DEAKTIVIERT beendet nur den Lauf).
+     */
+    fun finishSlot(
+        eventId: UUID,
+        slotId: UUID,
+        userId: UUID,
+        openResults: OpenResultHandling? = null,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val row = !EventScheduleRepo.getSlotWithContext(eventId, slotId).orDie()
+            .onNullFail { EventScheduleError.SlotNotFound(slotId) }
+
+        val matchId = linkedMatchIdOrNull(row)
+            ?: return@comprehension KIO.fail(EventScheduleError.SlotNotLinked(slotId))
+
+        val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        !LiveDashboardService.finishMatchInternal(eventId, matchId, userId, openResults, mode)
+
+        noData
+    }
+
+    /**
+     * Aktiviert den Lauf eines LINKED-Slots vom Zeitplan aus (C1) - Notfall-Override wie
+     * `LiveDashboardService.setMatchRunning`, nur vom Büro statt vom Schiedsrichter-Dashboard aus
+     * und in JEDEM Modus erlaubt.
+     */
+    fun activateSlot(
+        eventId: UUID,
+        slotId: UUID,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
+        val row = !EventScheduleRepo.getSlotWithContext(eventId, slotId).orDie()
+            .onNullFail { EventScheduleError.SlotNotFound(slotId) }
+
+        val matchId = linkedMatchIdOrNull(row)
+            ?: return@comprehension KIO.fail(EventScheduleError.SlotNotLinked(slotId))
+
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = true
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
+    }
+
+    /**
+     * matchId eines Slots, wenn er LINKED ist - sonst null. Gemeinsame Vorbedingung für
+     * [finishSlot]/[activateSlot]: das Büro darf nur einen echten, verknüpften Lauf beenden oder
+     * aktivieren, keinen Platzhalter. Erwartet dieselbe Zeile wie [getSlotWithContext].
+     */
+    private fun linkedMatchIdOrNull(row: Record): UUID? {
+        val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+        val matchExists = row.get("match_exists", Boolean::class.java) == true
+        val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
+        val skipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
+
+        val state = EventScheduleLogic.deriveSlotState(
+            isFree = isFree,
+            skipped = skipped,
+            roundMaterialized = roundMaterialized,
+            matchExists = matchExists,
+        )
+
+        return row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH].takeIf { state == EventScheduleSlotState.LINKED }
     }
 
     /**

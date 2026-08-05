@@ -16,12 +16,24 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material'
-import {Add, Delete, Edit, EventBusy, EventRepeat, OpenInNew, PlaylistRemove} from '@mui/icons-material'
+import {
+    Add,
+    Delete,
+    Edit,
+    EventBusy,
+    EventRepeat,
+    OpenInNew,
+    PlayArrow,
+    PlaylistRemove,
+    Stop,
+} from '@mui/icons-material'
 import {format} from 'date-fns'
 import {Link} from '@tanstack/react-router'
 import {eventRoute} from '@routes'
 import {
+    activateScheduleSlot,
     deleteScheduleSlot,
+    finishScheduleSlot,
     getEventSchedule,
     skipScheduleRound,
     skipScheduleSlot,
@@ -230,6 +242,46 @@ const EventSchedule = () => {
         )
     }
 
+    // Regattabüro greift direkt vom Zeitplan ein (C1) - unabhängig vom chainProgressionMode der
+    // Veranstaltung, die Aktion selbst prüft serverseitig nur, dass der Slot LINKED ist.
+    const handleActivate = (slot: EventScheduleSlotDto) => {
+        confirmAction(
+            async () => {
+                const {error} = await activateScheduleSlot({path: {eventId, slotId: slot.id}})
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+                reload()
+            },
+            {
+                content: t('event.schedule.activateConfirm', {
+                    label: slotLabel(slot),
+                    time: format(new Date(slot.startTime), t('format.time')),
+                }),
+                okText: t('event.schedule.activate'),
+            },
+        )
+    }
+
+    const handleFinishSlot = (slot: EventScheduleSlotDto) => {
+        confirmAction(
+            async () => {
+                const {error} = await finishScheduleSlot({path: {eventId, slotId: slot.id}})
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+                reload()
+            },
+            {
+                content: t('event.schedule.finishConfirm', {
+                    label: slotLabel(slot),
+                    time: format(new Date(slot.startTime), t('format.time')),
+                }),
+                okText: t('event.schedule.finish'),
+            },
+        )
+    }
+
     const daySections = groupSlotsByDay(data?.slots ?? [])
     const unplannedSetupMatches = data?.unplannedSetupMatches ?? []
 
@@ -371,6 +423,33 @@ const EventSchedule = () => {
                                                                 </IconButton>
                                                             </Tooltip>
                                                         )}
+                                                        {slot.state === 'LINKED' &&
+                                                            !slot.matchFinishedAt &&
+                                                            !slot.matchCurrentlyRunning && (
+                                                                <Tooltip
+                                                                    title={t('event.schedule.activate')}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        onClick={() =>
+                                                                            handleActivate(slot)
+                                                                        }>
+                                                                        <PlayArrow fontSize={'small'} />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                        {slot.state === 'LINKED' &&
+                                                            slot.matchCurrentlyRunning && (
+                                                                <Tooltip
+                                                                    title={t('event.schedule.finish')}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        onClick={() =>
+                                                                            handleFinishSlot(slot)
+                                                                        }>
+                                                                        <Stop fontSize={'small'} />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
                                                         {slot.state === 'SKIPPED' ? (
                                                             <Tooltip title={t('event.schedule.unskip')}>
                                                                 <IconButton

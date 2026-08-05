@@ -19,6 +19,9 @@ data class EventScheduleSlotDto(
     val setupRoundId: UUID?,
     val matchStartedAt: LocalDateTime?,
     val matchFinishedAt: LocalDateTime?,
+    /** Ob der verknüpfte Lauf gerade aktiv ist - steuert im Zeitplan-Tab, ob "Lauf aktivieren" oder
+     * "Lauf beenden" angeboten wird (C1). Immer false ohne verknüpften Lauf. */
+    val matchCurrentlyRunning: Boolean,
 )
 
 data class UnplannedSetupMatchDto(
