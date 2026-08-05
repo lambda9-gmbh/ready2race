@@ -890,7 +890,7 @@
             "success": "Ergebnis gespeichert"
           },
           "dialog": {
-            "title": "Konfiguration auswählen",
+            "title": "Ergebnisdatei hochladen",
             "config": "Konfiguration",
             "alert": {
               "1": "Konfigurationen können ",
@@ -910,6 +910,7 @@
             "RACECLOCKER": "von RaceClocker holen"
           },
           "error": {
+            "notConfigured": "Für diesen Wettkampf ist kein Ergebnis-Import-Preset hinterlegt. Bitte im Tab \"Zeitnahme\" eintragen.",
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
             "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
             "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
@@ -1005,7 +1006,8 @@
             "CSV": "als CSV"
           },
           "error": {
-            "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
+            "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt.",
+            "notConfigured": "Für diesen Wettkampf ist kein Startlisten-Preset hinterlegt. Bitte im Tab \"Zeitnahme\" eintragen."
           }
         },
         "substitution": {

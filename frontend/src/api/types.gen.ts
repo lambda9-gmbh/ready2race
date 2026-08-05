@@ -939,6 +939,8 @@ export type ErrorCode =
     | 'RACECLOCKER_DUPLICATE_TEAMS'
     | 'RACECLOCKER_NO_RESULTS'
     | 'RACECLOCKER_MATCH_IS_BYE'
+    | 'STARTLIST_CONFIG_NOT_CONFIGURED'
+    | 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
 
 export type EventDayDto = {
     id: string

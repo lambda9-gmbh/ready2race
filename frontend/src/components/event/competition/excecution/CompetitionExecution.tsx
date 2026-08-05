@@ -283,17 +283,9 @@ const CompetitionExecution = () => {
                 feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
             } else if (
                 error.status.value === 400 &&
-                // Cast nötig: STARTLIST_CONFIG_NOT_CONFIGURED fehlt noch im generierten ErrorCode-Typ
-                // (Lücke in der OpenAPI-Doku aus Tasks 1-5 — der Wert existiert im Backend-Enum, aber
-                // nicht im dokumentierten Schema).
-                (error as {errorCode?: string}).errorCode === 'STARTLIST_CONFIG_NOT_CONFIGURED'
+                error.errorCode === 'STARTLIST_CONFIG_NOT_CONFIGURED'
             ) {
-                // Übersetzungsschlüssel existiert noch nicht (Task 7 ergänzt ihn zusammen mit dem
-                // neuen Zeitnahme-Tab); Cast bis dahin, damit der Build nicht auf dem fehlenden Key
-                // scheitert, ohne die Übersetzungsdateien in diesem Task anzufassen.
-                feedback.error(
-                    t('event.competition.execution.startList.error.notConfigured' as never),
-                )
+                feedback.error(t('event.competition.execution.startList.error.notConfigured'))
             } else {
                 feedback.error(t('common.error.unexpected'))
             }
@@ -379,17 +371,8 @@ const CompetitionExecution = () => {
             if (error.status.value === 400) {
                 if (error.errorCode === 'FILE_ERROR') {
                     feedback.error(t('common.error.upload.FILE_ERROR'))
-                } else if (
-                    // Cast nötig: RESULT_IMPORT_CONFIG_NOT_CONFIGURED fehlt noch im generierten
-                    // ErrorCode-Typ (dieselbe Doku-Lücke wie bei STARTLIST_CONFIG_NOT_CONFIGURED).
-                    (error as {errorCode?: string}).errorCode ===
-                    'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
-                ) {
-                    // Übersetzungsschlüssel existiert noch nicht (Task 7 ergänzt ihn); Cast bis
-                    // dahin, siehe Begründung bei handleDownloadStartList.
-                    feedback.error(
-                        t('event.competition.execution.results.error.notConfigured' as never),
-                    )
+                } else if (error.errorCode === 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED') {
+                    feedback.error(t('event.competition.execution.results.error.notConfigured'))
                 } else if (error.message === 'Unsupported file type') {
                     // TODO: replace with error code!
                     feedback.error(t('common.error.upload.unsupportedType'))

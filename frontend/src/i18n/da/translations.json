@@ -890,7 +890,7 @@
             "success": "Resultat gemt"
           },
           "dialog": {
-            "title": "Vælg konfiguration",
+            "title": "Upload resultatfil",
             "config": "Konfiguration",
             "alert": {
               "1": "Konfigurationer kan ",
@@ -910,6 +910,7 @@
             "RACECLOCKER": "hent fra RaceClocker"
           },
           "error": {
+            "notConfigured": "Der er ikke registreret et preset for resultatimport for denne konkurrence. Angiv det venligst under fanen \"Tidtagning\".",
             "WRONG_TEAM_COUNT": "Antallet af hold stemmer ikke - læst: {{actual}}, forventet: {{expected}}",
             "DUPLICATE_PLACES": "Placeringer er tildelt flere gange til holdene",
             "DUPLICATE_START_NUMBERS": "Startnumre er tildelt flere gange til holdene",
@@ -1005,7 +1006,8 @@
             "CSV": "som CSV"
           },
           "error": {
-            "missingStartTime": "Der er endnu ikke sat en starttid for denne kamp."
+            "missingStartTime": "Der er endnu ikke sat en starttid for denne kamp.",
+            "notConfigured": "Der er ikke registreret et startlistepreset for denne konkurrence. Angiv det venligst under fanen \"Tidtagning\"."
           }
         },
         "substitution": {
