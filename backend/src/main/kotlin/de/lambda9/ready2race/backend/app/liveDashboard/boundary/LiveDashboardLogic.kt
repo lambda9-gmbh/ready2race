@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequi
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardRequirementSummaryDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckDto
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.TimeCheckStatus
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
@@ -83,6 +84,24 @@ object LiveDashboardLogic {
      * Abgemeldete Mannschaften brauchen kein Ergebnis — für sie kommt keins mehr. Ohne diesen
      * Fall erreicht ein Lauf mit einer Abmeldung nie den Zustand [LiveDashboardMatchState.FINISHED].
      */
+    /**
+     * Wann ist die Mannschaft aufs Wasser gegangen? Ein Boot gilt als "auf dem Wasser", wenn
+     * JEDE bekannte Person der Crew zuletzt ausgecheckt ist (letzter Scan = EXIT am Steg) -
+     * dann zählt der späteste dieser Scans als Ablegezeit. Fehlt auch nur ein Scan oder ist
+     * jemand wieder eingecheckt, ist das Boot nicht (mehr) vollständig draußen -> null.
+     * Ohne bekannte Crew lässt sich nichts belegen -> ebenfalls null; die Anzeige behandelt
+     * null bei aktivem Lauf als Fehler, denn genau dann muss das Boot draußen sein.
+     *
+     * [lastScans] enthält je Crew-Mitglied den letzten Scan (scanType zu Zeitpunkt) oder null,
+     * wenn die Person nie gescannt wurde.
+     */
+    fun teamOnWaterAt(lastScans: List<Pair<String, LocalDateTime>?>): LocalDateTime? =
+        if (lastScans.isNotEmpty() && lastScans.all { it?.first == ParticipantScanType.EXIT.name }) {
+            lastScans.maxOf { it!!.second }
+        } else {
+            null
+        }
+
     fun teamHasResult(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
         deregistered || place != null || failed
 

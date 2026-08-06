@@ -87,6 +87,12 @@ data class LiveDashboardTeamDto(
     val requirements: LiveDashboardRequirementSummaryDto,
     /** Ob mindestens eine Person für diese Runde umgemeldet wurde. */
     val substituted: Boolean,
+    /**
+     * Wann das Boot aufs Wasser gegangen ist (spätester Auscheck-Scan, wenn die gesamte Crew
+     * zuletzt ausgecheckt ist) - null, solange mindestens eine Person nicht ausgecheckt ist
+     * oder keine Crew bekannt ist. Siehe [LiveDashboardLogic.teamOnWaterAt].
+     */
+    val onWaterAt: LocalDateTime?,
 )
 
 /** Was der Detail-Dialog zusätzlich braucht; wird einzeln je Mannschaft geladen. */

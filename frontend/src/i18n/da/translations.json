@@ -1467,7 +1467,8 @@
         "place": "Plads {{place}}",
         "deregistered": "Afmeldt",
         "failed": "Udgået",
-        "failedShort": "DNF"
+        "failedShort": "DNF",
+        "onWaterAt": "på vandet {{time}}"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",

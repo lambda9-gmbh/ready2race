@@ -20,6 +20,35 @@ class LiveDashboardLogicTest {
 
     private val start = LocalDateTime.of(2026, 7, 29, 14, 0)
 
+    // --- teamOnWaterAt ---
+
+    @Test
+    fun onWaterWhenWholeCrewCheckedOut() {
+        val scans = listOf(
+            "EXIT" to start.minusMinutes(10),
+            "EXIT" to start.minusMinutes(8),
+            "EXIT" to start.minusMinutes(12),
+        )
+        assertEquals(start.minusMinutes(8), LiveDashboardLogic.teamOnWaterAt(scans))
+    }
+
+    @Test
+    fun notOnWaterWhenAnyCrewMemberMissingOrCheckedIn() {
+        // Eine Person nie gescannt
+        assertNull(
+            LiveDashboardLogic.teamOnWaterAt(listOf("EXIT" to start, null))
+        )
+        // Eine Person wieder eingecheckt (letzter Scan ENTRY)
+        assertNull(
+            LiveDashboardLogic.teamOnWaterAt(listOf("EXIT" to start, "ENTRY" to start.plusMinutes(1)))
+        )
+    }
+
+    @Test
+    fun notOnWaterWithoutKnownCrew() {
+        assertNull(LiveDashboardLogic.teamOnWaterAt(emptyList()))
+    }
+
     // --- computeTimeCheck ---
 
     @Test

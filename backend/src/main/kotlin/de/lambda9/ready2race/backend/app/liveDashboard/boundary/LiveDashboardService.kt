@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainSer
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.*
+import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -45,6 +46,15 @@ object LiveDashboardService {
             val checkRecords = !LiveDashboardRepo.getChecks(eventId).orDie()
             val invoiceRecords = !LiveDashboardRepo.getInvoicePaymentsByClub(eventId).orDie()
             val substitutionRecords = !SubstitutionRepo.getByEvent(eventId, null, Privilege.Scope.GLOBAL).orDie()
+            // Letzter Steg-Scan je Person: Grundlage für "Boot ist auf dem Wasser" pro Team.
+            val lastScanByParticipant = !ParticipantTrackingRepo.getScansByEvent(eventId).orDie()
+                .map { scans ->
+                    scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }
+                        .mapValues { (_, rows) ->
+                            val last = rows.maxBy { it[PARTICIPANT_TRACKING.SCANNED_AT]!! }
+                            last[PARTICIPANT_TRACKING.SCAN_TYPE]!! to last[PARTICIPANT_TRACKING.SCANNED_AT]!!
+                        }
+                }
             // Einmal gelesen und zweifach genutzt: für die Platzhalter (getPendingSlots) und für die
             // Absagen, die an echten Läufen hängen. Zwei Reads würden hier auseinanderlaufen können.
             val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
@@ -115,6 +125,9 @@ object LiveDashboardService {
                             participants.flatMap { it.requirements }
                         ),
                         substituted = participants.any { it.substitutedFor != null },
+                        onWaterAt = LiveDashboardLogic.teamOnWaterAt(
+                            participants.map { lastScanByParticipant[it.participantId] }
+                        ),
                     )
                 )
             }

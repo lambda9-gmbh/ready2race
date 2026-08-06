@@ -46,6 +46,20 @@ describe('teamHasResult', () => {
 })
 
 describe('teamSeverity', () => {
+    it('meldet ein Boot ohne Auscheck-Scan bei aktivem Lauf als Fehler', () => {
+        expect(teamSeverity(team({}), true)).toBe('error')
+        expect(teamSeverity(team({onWaterAt: '2026-08-15T07:48:41'}), true)).not.toBe('error')
+    })
+
+    it('ignoriert den Auscheck-Scan, solange der Lauf nicht aktiv ist', () => {
+        expect(teamSeverity(team({}), false)).toBe('neutral')
+        expect(teamSeverity(team({}))).toBe('neutral')
+    })
+
+    it('verlangt von abgemeldeten Booten keinen Auscheck-Scan', () => {
+        expect(teamSeverity(team({deregistered: true}), true)).toBe('neutral')
+    })
+
     it('meldet eine fehlende Pflichtbedingung als Fehler', () => {
         const severity = teamSeverity(
             team({requirements: {...noRequirements, total: 3, fulfilled: 2, missingRequired: 1}}),

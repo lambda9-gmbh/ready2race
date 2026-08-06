@@ -1467,7 +1467,8 @@
         "place": "Place {{place}}",
         "deregistered": "Deregistered",
         "failed": "Did not finish",
-        "failedShort": "DNF"
+        "failedShort": "DNF",
+        "onWaterAt": "on water {{time}}"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",

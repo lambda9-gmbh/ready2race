@@ -254,6 +254,19 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                         {clubLine}
                                     </Typography>
                                 )}
+                                {team.onWaterAt && (
+                                    <Typography
+                                        variant="caption"
+                                        display="block"
+                                        sx={{
+                                            color: 'success.dark',
+                                            fontVariantNumeric: 'tabular-nums',
+                                        }}>
+                                        {t('event.liveDashboard.team.onWaterAt', {
+                                            time: format(new Date(team.onWaterAt), t('format.time')),
+                                        })}
+                                    </Typography>
+                                )}
                             </Box>
                             {hasResults && (
                                 <>
@@ -314,7 +327,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                     </Box>
                                 </>
                             )}
-                            {severityIcon(teamSeverity(team))}
+                            {/* "Auf dem Wasser" zählt nur bei aktivem Lauf in die Ampel. */}
+                            {severityIcon(teamSeverity(team, running))}
                         </Box>
                     )
                 })}

@@ -68,13 +68,18 @@ export const participantSeverity = (p: LiveDashboardParticipantDto): Severity =>
 /**
  * Dieselbe Bewertung wie [requirementSeverity], nur aus den verdichteten Zahlen der Liste: die
  * Bedingungen selbst kommen erst mit dem Detail-Dialog.
+ *
+ * "Auf dem Wasser" fließt mit in die Ampel ein, obwohl es keine konfigurierbare Bedingung ist:
+ * bei aktivem Lauf ([matchActive]) muss das Boot ausgecheckt sein, sonst ist die Zeile ein
+ * Fehler. Abgemeldete Boote fahren nicht mehr und sind ausgenommen.
  */
-export const teamSeverity = (team: LiveDashboardTeamDto): Severity =>
+export const teamSeverity = (team: LiveDashboardTeamDto, matchActive = false): Severity =>
     worstSeverity([
         team.requirements.missingRequired > 0 ? 'error' : 'neutral',
         team.requirements.timeIssues > 0 ? 'warning' : 'neutral',
         team.requirements.fulfilled > 0 ? 'ok' : 'neutral',
         team.invoiceState === 'OPEN' ? 'error' : 'neutral',
+        matchActive && !team.deregistered && !team.onWaterAt ? 'error' : 'neutral',
     ])
 
 /**

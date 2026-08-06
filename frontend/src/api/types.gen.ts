@@ -1606,6 +1606,10 @@ export type LiveDashboardTeamDto = {
     invoiceState: LiveDashboardInvoiceState
     requirements: LiveDashboardRequirementSummaryDto
     substituted: boolean
+    /**
+     * When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known
+     */
+    onWaterAt?: string | null
 }
 
 export type LoginDto = {
