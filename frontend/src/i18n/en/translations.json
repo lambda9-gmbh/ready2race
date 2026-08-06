@@ -508,7 +508,13 @@
           "error": "Error checking out participant"
         },
         "noTeamsFound": "No teams found",
-        "participantNotFound": "Participant not found"
+        "participantNotFound": "Participant not found",
+        "errorReason": {
+          "alreadyCheckedIn": "This person is already checked in — there is nothing left to do.",
+          "notCheckedIn": "This person is not checked in and therefore cannot be checked out.",
+          "qrCodeNotAssociated": "This wristband does not belong to any participant. Please assign it to a person in the QR administration first.",
+          "qrCodeNotFound": "This wristband is unknown to the system. Please check the code or use a different wristband."
+        }
       },
       "certificate": {
         "error": {
@@ -519,6 +525,9 @@
           "challengeStillInProgress": "The challenge is still running. Certificates of participation can only be created once all challenge competitions have finished.",
           "unexpected": "The certificate could not be created. Please reload the page and try again."
         }
+      },
+      "importError": {
+        "unknownGenderValue": "The value “{{value}}” in the gender column is unknown. Please use one of the mapped values in the file, or adjust the mapping in the import wizard."
       }
     }
   },
@@ -1436,7 +1445,10 @@
           "DNF": "Did not finish",
           "DSQ": "Disqualified"
         },
-        "error": "The race could not be changed."
+        "error": "The race could not be changed.",
+        "errorReason": {
+          "finishReservedForOffice": "For this event the regatta office finishes runs via the schedule. The run stays active — please tell the regatta office that it has finished."
+        }
       },
       "substitution": {
         "short": "Substitution",
@@ -2055,7 +2067,10 @@
     "confirmSelection": "Confirm selection",
     "confirm": "Add",
     "success": "QR Code successfully assigned",
-    "deleteSuccess": "QR code assignment successfully removed"
+    "deleteSuccess": "QR code assignment successfully removed",
+    "errorReason": {
+      "alreadyInUse": "This wristband is already assigned to someone else. Please use a different one — or remove the existing assignment first."
+    }
   },
   "qrCode": {
     "qrCode": "QR Code",

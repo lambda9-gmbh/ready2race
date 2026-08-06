@@ -508,7 +508,13 @@
           "error": "Fejl ved check-out af deltager"
         },
         "noTeamsFound": "Ingen hold fundet",
-        "participantNotFound": "Deltager ikke fundet"
+        "participantNotFound": "Deltager ikke fundet",
+        "errorReason": {
+          "alreadyCheckedIn": "Denne person er allerede tjekket ind — der er ikke mere at gøre.",
+          "notCheckedIn": "Denne person er slet ikke tjekket ind og kan derfor ikke tjekkes ud.",
+          "qrCodeNotAssociated": "Dette armbånd hører ikke til nogen deltager. Tildel det først til en person i QR-administrationen.",
+          "qrCodeNotFound": "Dette armbånd kendes ikke i systemet. Kontrollér koden, eller tag et andet armbånd."
+        }
       },
       "certificate": {
         "error": {
@@ -519,6 +525,9 @@
           "challengeStillInProgress": "Challengen er stadig i gang. Deltagerdiplomer kan først oprettes, når alle challenge-konkurrencer er afsluttet.",
           "unexpected": "Diplomet kunne ikke oprettes. Genindlæs siden, og prøv igen."
         }
+      },
+      "importError": {
+        "unknownGenderValue": "Værdien „{{value}}“ i kolonnen for køn er ukendt. Angiv en af de tilknyttede værdier i filen, eller justér tilknytningen i importguiden."
       }
     }
   },
@@ -1436,7 +1445,10 @@
           "DNF": "Ikke fuldført",
           "DSQ": "Diskvalificeret"
         },
-        "error": "Løbet kunne ikke ændres."
+        "error": "Løbet kunne ikke ændres.",
+        "errorReason": {
+          "finishReservedForOffice": "Ved dette stævne afslutter regattakontoret løbene via tidsplanen. Løbet forbliver aktivt — meld til regattakontoret, at det er i mål."
+        }
       },
       "substitution": {
         "short": "Ombytning",
@@ -2055,7 +2067,10 @@
     "confirmSelection": "Bekræft valg",
     "confirm": "Tilføj",
     "success": "QR-kode tildelt",
-    "deleteSuccess": "QR-kode-tildeling ophævet"
+    "deleteSuccess": "QR-kode-tildeling ophævet",
+    "errorReason": {
+      "alreadyInUse": "Dette armbånd er allerede tildelt en anden. Tag et andet armbånd — eller ophæv først den eksisterende tildeling."
+    }
   },
   "qrCode": {
     "qrCode": "QR-kode",

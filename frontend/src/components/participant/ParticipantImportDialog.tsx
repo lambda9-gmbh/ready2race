@@ -163,6 +163,16 @@ const ParticipantImportDialog = ({open, onClose, reloadParticipants}: Props) => 
                             ),
                         )
                         break
+                    // Der Code existierte schon, wurde hier aber nie behandelt - die Meldung fiel
+                    // trotzdem in den default, weil der Switch nur SPREADSHEET_* kennt.
+                    case 'PARTICIPANT_IMPORT_UNKNOWN_GENDER_VALUE':
+                        feedback.error(
+                            t(
+                                'club.participant.importError.unknownGenderValue',
+                                details as {value: string},
+                            ),
+                        )
+                        break
                     default:
                         feedback.error(t('common.error.unexpected'))
                         break

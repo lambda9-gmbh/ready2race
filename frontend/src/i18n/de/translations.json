@@ -508,7 +508,13 @@
           "error": "Fehler beim Auschecken des Teilnehmenden"
         },
         "noTeamsFound": "Keine Teams gefunden",
-        "participantNotFound": "Teilnehmer nicht gefunden"
+        "participantNotFound": "Teilnehmer nicht gefunden",
+        "errorReason": {
+          "alreadyCheckedIn": "Diese Person ist bereits eingecheckt — es ist nichts weiter zu tun.",
+          "notCheckedIn": "Diese Person ist gar nicht eingecheckt und kann deshalb nicht ausgecheckt werden.",
+          "qrCodeNotAssociated": "Dieses Bändchen gehört zu keinem Teilnehmer. Bitte es zuerst in der QR-Verwaltung einer Person zuweisen.",
+          "qrCodeNotFound": "Dieses Bändchen ist im System nicht bekannt. Bitte den Code prüfen oder ein anderes Bändchen nehmen."
+        }
       },
       "certificate": {
         "error": {
@@ -519,6 +525,9 @@
           "challengeStillInProgress": "Die Challenge läuft noch. Teilnahmeurkunden lassen sich erst erzeugen, wenn alle Challenge-Wettkämpfe beendet sind.",
           "unexpected": "Die Urkunde konnte nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
         }
+      },
+      "importError": {
+        "unknownGenderValue": "Der Wert „{{value}}“ in der Spalte für das Geschlecht ist unbekannt. Bitte in der Datei einen der zugeordneten Werte eintragen oder die Zuordnung im Import-Assistenten anpassen."
       }
     }
   },
@@ -1436,7 +1445,10 @@
           "DNF": "Nicht beendet",
           "DSQ": "Disqualifiziert"
         },
-        "error": "Der Lauf konnte nicht geändert werden."
+        "error": "Der Lauf konnte nicht geändert werden.",
+        "errorReason": {
+          "finishReservedForOffice": "Für diese Veranstaltung beendet das Regattabüro die Läufe über den Zeitplan. Der Lauf bleibt aktiv — bitte dem Regattabüro melden, dass er im Ziel ist."
+        }
       },
       "substitution": {
         "short": "Ummeldung",
@@ -2055,7 +2067,10 @@
     "confirmSelection": "Auswahl bestätigen",
     "confirm": "Hinzufügen",
     "success": "QR-Code erfolgreich zugewiesen",
-    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben"
+    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben",
+    "errorReason": {
+      "alreadyInUse": "Dieses Bändchen ist bereits jemand anderem zugewiesen. Bitte ein anderes Bändchen nehmen — oder die bestehende Zuweisung zuerst aufheben."
+    }
   },
   "qrCode": {
     "qrCode": "QR-Code",

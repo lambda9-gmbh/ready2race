@@ -40,6 +40,7 @@ import {
 import ScheduleTimelineIndicator from '@components/event/schedule/ScheduleTimelineIndicator.tsx'
 import {dashboardEntriesForDay, resolveDashboardDay} from '@components/event/schedule/timelineIndicator.ts'
 import {MatchResultStatus} from '@utils/matchResultStatus.ts'
+import {liveDashboardErrorKey} from '@components/event/liveDashboard/liveDashboardError.ts'
 
 /** DOM id for a dashboard entry's card wrapper, shared between the render loops below and the
  * indicator's click-to-scroll handler. */
@@ -185,7 +186,9 @@ const LiveDashboardPage = () => {
             query: openResults ? {openResults} : undefined,
         })
         if (error) {
-            feedback.error(t('event.liveDashboard.control.error'))
+            // Der haeufigste Fall am Steg ist gar keine Stoerung: die Veranstaltung laeuft im
+            // Modus REGATTABUERO, dort beendet das Buero ueber den Zeitplan.
+            feedback.error(t(liveDashboardErrorKey(error) ?? 'event.liveDashboard.control.error'))
         } else {
             feedback.success(t('event.liveDashboard.control.finished'))
         }
