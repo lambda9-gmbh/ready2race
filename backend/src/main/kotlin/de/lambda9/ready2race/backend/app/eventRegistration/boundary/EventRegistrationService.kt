@@ -1167,9 +1167,11 @@ object EventRegistrationService {
                                             fontStyle = FontStyle.BOLD,
                                             newLine = false,
                                             ) { category?.name ?: "Unkategorisiert / " }
-                                        text(
-                                            newLine = false,
-                                        ) { "uncategorized" }
+                                        if (category?.name == null) {
+                                            text(
+                                                newLine = false,
+                                            ) { "uncategorized" }
+                                        }
                                     }
 
                                     categoryTeams.groupBy { it.clubId }.forEach { (_, clubTeams) ->
