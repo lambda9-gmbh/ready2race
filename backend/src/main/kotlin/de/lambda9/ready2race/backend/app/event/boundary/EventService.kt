@@ -97,6 +97,7 @@ object EventService {
             participantSelfRegistration = request.allowParticipantSelfRegistration
             chainProgressionMode = request.chainProgressionMode.name
             showBreaksOnPublicBoards = request.showBreaksOnPublicBoards
+            publicResultsVisibility = request.publicResultsVisibility.name
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

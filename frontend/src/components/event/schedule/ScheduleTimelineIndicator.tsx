@@ -43,6 +43,10 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
                 return theme.palette.success.main
             case 'running':
                 return theme.palette.primary.main
+            // Eigener Ton, weder "läuft" noch "beendet": der Lauf ist gewertet, aber der
+            // Beenden-Klick fehlt noch - auf dem Balken soll genau das auffallen.
+            case 'awaitingFinish':
+                return theme.palette.info.main
             case 'waiting':
                 return theme.palette.warning.main
             case 'linked':

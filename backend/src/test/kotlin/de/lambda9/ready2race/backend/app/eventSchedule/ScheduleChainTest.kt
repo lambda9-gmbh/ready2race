@@ -130,6 +130,47 @@ class ScheduleChainTest {
         )
     }
 
+    // --- die Kette hängt an finished_at, nicht am Anzeigezustand ---
+
+    @Test
+    fun aFullyScoredButUnfinishedMatchDoesNotAdvanceTheChain() {
+        // Seit dem 06.08.2026 heißt "alle Boote gewertet" im Dashboard AWAITING_FINISH statt
+        // FINISHED. Die Kette darf davon nichts merken: ChainSlot kennt nur matchFinished
+        // (= competition_match.finished_at) und keine Ergebnis-Vollständigkeit. Ein solcher Lauf
+        // ist weiterhin unbeendet und offen - die Gruppe blockiert, die nächste Startzeit bleibt
+        // stehen, bis jemand beendet.
+        val t = base.plusMinutes(10)
+        val scoredButNotFinished = ChainSlot(
+            UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
+            matchFinished = false, matchOpen = true, currentlyRunning = true,
+        )
+        val next = ChainSlot(
+            UUID.randomUUID(), base.plusMinutes(20), LINKED, UUID.randomUUID(),
+            matchFinished = false, matchOpen = true,
+        )
+
+        assertIs<ChainDecision.NothingToDo>(
+            ScheduleChain.decideNext(listOf(scoredButNotFinished, next)),
+        )
+    }
+
+    @Test
+    fun theSameMatchAdvancesTheChainOnceItIsFinished() {
+        // Gegenprobe zum Test darüber: erst der Beenden-Klick (finished_at) rückt die Kette vor.
+        val t = base.plusMinutes(10)
+        val finished = ChainSlot(
+            UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
+            matchFinished = true, matchOpen = false, currentlyRunning = true,
+        )
+        val m = UUID.randomUUID()
+        val next = ChainSlot(
+            UUID.randomUUID(), base.plusMinutes(20), LINKED, m,
+            matchFinished = false, matchOpen = true,
+        )
+
+        assertEquals(ChainDecision.Activate(listOf(m)), ScheduleChain.decideNext(listOf(finished, next)))
+    }
+
     @Test
     fun aSoloFinishWithNoRunningSiblingStillAdvances() {
         // Kein paralleler Lauf in der Gruppe (nur der gerade beendete selbst) - unverändertes

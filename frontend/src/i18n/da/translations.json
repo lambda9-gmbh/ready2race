@@ -534,6 +534,12 @@
     },
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
+    "publicResultsVisibility": {
+      "label": "Vis resultater offentligt fra",
+      "FINISHED_ONLY": "Kun afsluttede løb",
+      "RESULTS_COMPLETE": "Også fuldt bedømte løb",
+      "hint": "Gælder for atletskærmen, kiosk-visningen og den offentlige resultatside. Som standard kun afsluttede løb: så længe et løb ikke er afsluttet, kan der stadig komme en tidsstraf, og et allerede offentliggjort resultat kan ikke trækkes tilbage."
+    },
     "invoice": {
       "prefix": "Fakturapræfiks",
       "paymentDueBy": "Betalingsfrist for tilmeldingsgebyrer",
@@ -1361,6 +1367,7 @@
         "RUNNING": "I gang",
         "FINISHED": "Afsluttet",
         "SKIPPED": "Aflyst",
+        "AWAITING_FINISH": "Resultater komplette — venter på afslutning",
         "UPCOMING": "Kommende",
         "UNSCHEDULED": "Ikke planlagt"
       },
@@ -1510,6 +1517,7 @@
         "state": {
           "finished": "Afsluttet",
           "running": "Kører",
+          "awaitingFinish": "Venter på afslutning",
           "linked": "Tilknyttet",
           "waiting": "Løb ikke sat endnu",
           "free": "Programpunkt",

@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.competitionExecution.control
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchForRunningStatusDto
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListConfigTarget
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
 import de.lambda9.ready2race.backend.database.*
@@ -109,11 +110,47 @@ object CompetitionMatchRepo {
             }
     }
 
+    /**
+     * Die Läufe, die auf den öffentlichen Ansichten als Ergebnis erscheinen dürfen. [visibility]
+     * kommt aus `Event.publicResultsVisibility`; die Regel selbst steht als reine Funktion in
+     * [de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic.isPublicResult] und
+     * ein zweites Mal in der View `competition_having_results` (Wettbewerbsauswahl derselben
+     * Seite). Die drei Stellen gehören zusammen.
+     */
     fun getMatchResults(
         eventId: UUID,
         competitionId: UUID?,
-        limit: Int
+        limit: Int,
+        visibility: PublicResultsVisibility,
     ) = Jooq.query {
+        // Kein Boot mehr ohne Ergebnis: abgemeldete und ausgeschiedene Boote zählen nicht mit,
+        // für sie kommt keins mehr (dieselbe Auslegung wie LiveDashboardLogic.teamHasResult).
+        val allTeamsScored = notExists(
+            selectOne()
+                .from(COMPETITION_MATCH_TEAM)
+                .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
+                .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
+                .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
+                .and(COMPETITION_MATCH_TEAM.FAILED.isFalse)
+                .and(
+                    notExists(
+                        selectOne()
+                            .from(COMPETITION_DEREGISTRATION)
+                            .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                            .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                    )
+                )
+        )
+
+        // Ein beendeter Lauf (finished_at gesetzt) ist immer ein Ergebnis. Ein vollständig
+        // gewerteter, aber nicht beendeter Lauf (Zustand AWAITING_FINISH) nur dann, wenn die
+        // Veranstaltung das erlaubt — bis zum Beenden kann noch eine Zeitstrafe kommen.
+        val publiclyVisible = when (visibility) {
+            PublicResultsVisibility.FINISHED_ONLY -> COMPETITION_MATCH.FINISHED_AT.isNotNull
+            PublicResultsVisibility.RESULTS_COMPLETE ->
+                COMPETITION_MATCH.FINISHED_AT.isNotNull.or(allTeamsScored)
+        }
+
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.UPDATED_AT,
@@ -135,27 +172,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
-            .and(
-                // Beendet heißt: entweder explizit abgeschlossen (finished_at gesetzt), oder —
-                // Altdaten-Fallback für Läufe ohne finished_at — alle Mannschaften haben ein
-                // Ergebnis (die bisherige notExists-Bedingung).
-                COMPETITION_MATCH.FINISHED_AT.isNotNull.or(
-                    notExists(
-                        selectOne()
-                            .from(COMPETITION_MATCH_TEAM)
-                            .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                            .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
-                            .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
-                            .and(COMPETITION_MATCH_TEAM.FAILED.isFalse)
-                            .and(notExists(
-                                selectOne()
-                                    .from(COMPETITION_DEREGISTRATION)
-                                    .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
-                                    .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
-                            ))
-                    )
-                )
-            )
+            .and(publiclyVisible)
             .and(
                 field(
                     select(count())

@@ -569,6 +569,7 @@ select e.id,
        e.participant_self_registration,
        e.chain_progression_mode,
        e.show_breaks_on_public_boards,
+       e.public_results_visibility,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        max(cpcc.end_at)                                                                 as challenge_end,
        err.event is not null                                                            as registrations_finalized
@@ -1103,6 +1104,11 @@ FROM caterer_transaction ct
          INNER JOIN app_user caterer ON ct.caterer_id = caterer.id
          INNER JOIN app_user ON ct.app_user_id = app_user.id;
 
+-- Welche Wettbewerbe die öffentliche Ergebnisseite zur Auswahl anbietet. Die Sichtbarkeitsregel
+-- muss dieselbe sein wie in CompetitionMatchRepo.getMatchResults, sonst steht ein Wettbewerb in
+-- der Liste, dessen Ergebnisseite dann leer bleibt: beendet (finished_at) zählt immer, vollständig
+-- gewertet nur, wenn die Veranstaltung public_results_visibility = 'RESULTS_COMPLETE' gesetzt hat
+-- (siehe AthleteBoardLogic.isPublicResult und Migration V202608061200).
 create view competition_having_results as
 select c.id,
        c.event,
@@ -1111,6 +1117,7 @@ select c.id,
        cp.short_name,
        cc.name as category
 from competition c
+         join event e on e.id = c.event
          join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
 where exists(select 1
@@ -1119,16 +1126,18 @@ where exists(select 1
                       join competition_setup_round csr on csm.competition_setup_round = csr.id
                       join competition_setup cs on csr.competition_setup = cs.competition_properties
              where cs.competition_properties = cp.id
-               and not exists (select 1
-                               from competition_match_team cmt
-                               where cmt.competition_match = csm.id
-                                 and cmt.place is null
-                                 and cmt.failed is false
-                                 and cmt.out is false
-                                 and not exists(select 1
-                                                from competition_deregistration cd
-                                                where cd.competition_registration = cmt.competition_registration
-                                                  and cd.competition_setup_round = csr.id)));
+               and (cm.finished_at is not null
+                 or (e.public_results_visibility = 'RESULTS_COMPLETE'
+                     and not exists (select 1
+                                     from competition_match_team cmt
+                                     where cmt.competition_match = csm.id
+                                       and cmt.place is null
+                                       and cmt.failed is false
+                                       and cmt.out is false
+                                       and not exists(select 1
+                                                      from competition_deregistration cd
+                                                      where cd.competition_registration = cmt.competition_registration
+                                                        and cd.competition_setup_round = csr.id)))));
 
 create view competition_match_for_event as
 select cm.competition_setup_match                                                      as match_id,

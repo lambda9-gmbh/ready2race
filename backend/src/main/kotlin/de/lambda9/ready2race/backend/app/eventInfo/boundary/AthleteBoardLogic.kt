@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardConfig
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.FreeScheduleSlotInfo
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.PendingScheduleSlotInfo
@@ -64,6 +65,32 @@ object AthleteBoardLogic {
             ?.intValue()
             ?.coerceIn(MIN_LIMIT, MAX_LIMIT)
             ?: default
+
+    /**
+     * Ab wann ein Lauf als Ergebnis öffentlich sichtbar ist — die Regel hinter
+     * `Event.publicResultsVisibility` und damit hinter Athleten-Anzeige, Kiosk und öffentlicher
+     * Ergebnisseite gleichermaßen.
+     *
+     * Ein beendeter Lauf ([finishedAt] gesetzt) ist immer sichtbar; das ist der Klick, mit dem der
+     * zuständige Akteur den Stand für final erklärt. Ein vollständig gewerteter, aber nicht
+     * beendeter Lauf (Zustand `AWAITING_FINISH`) erscheint nur, wenn die Veranstaltung das
+     * ausdrücklich erlaubt hat: bis zum Beenden kann noch eine Zeitstrafe eintreffen, und ein
+     * veröffentlichtes Ergebnis, das sich danach ändert, lässt sich nicht zurückholen.
+     *
+     * Diese Funktion trifft die Entscheidung an einem Lauf; die eigentliche Auswahl passiert aus
+     * Mengengründen in SQL (`CompetitionMatchRepo.getMatchResults` und die View
+     * `competition_having_results`). Beide Stellen bilden genau diese beiden Zweige nach — ändert
+     * sich die Regel, ändern sie sich zusammen.
+     */
+    fun isPublicResult(
+        finishedAt: LocalDateTime?,
+        allTeamsScored: Boolean,
+        visibility: PublicResultsVisibility,
+    ): Boolean = when {
+        finishedAt != null -> true
+        visibility == PublicResultsVisibility.RESULTS_COMPLETE -> allTeamsScored
+        else -> false
+    }
 
     /**
      * Eine verstrichene Startzeit ergibt OVERDUE statt eines negativen Countdowns.

@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.event.control
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
@@ -28,6 +29,15 @@ object EventRepo {
             .where(EVENT.ID.eq(eventId))
             .fetchOne(EVENT.CHAIN_PROGRESSION_MODE)
             ?.let { ChainProgressionMode.valueOf(it) } ?: ChainProgressionMode.DEAKTIVIERT
+    }
+
+    /** Nie null: die Spalte ist not-null mit Default, ein fehlendes Event fällt auf die sichere Stufe zurück. */
+    fun getPublicResultsVisibility(eventId: UUID) = Jooq.query {
+        select(EVENT.PUBLIC_RESULTS_VISIBILITY)
+            .from(EVENT)
+            .where(EVENT.ID.eq(eventId))
+            .fetchOne(EVENT.PUBLIC_RESULTS_VISIBILITY)
+            ?.let { PublicResultsVisibility.valueOf(it) } ?: PublicResultsVisibility.FINISHED_ONLY
     }
 
     fun getShowBreaksOnPublicBoards(eventId: UUID) = Jooq.query {

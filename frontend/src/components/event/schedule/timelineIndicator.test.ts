@@ -85,6 +85,10 @@ describe('dashboardMatchState', () => {
         expect(dashboardMatchState(match({state: 'FINISHED'}))).toBe('finished')
         expect(dashboardMatchState(match({state: 'UPCOMING'}))).toBe('linked')
     })
+
+    it('gives a match waiting to be finished its own look, neither running nor finished', () => {
+        expect(dashboardMatchState(match({state: 'AWAITING_FINISH'}))).toBe('awaitingFinish')
+    })
 })
 
 describe('scheduleSlotsToEntries', () => {
@@ -140,6 +144,18 @@ describe('resolveDashboardDay', () => {
             [
                 match({startTime: '2026-08-18T09:00:00', state: 'RUNNING'}),
                 match({startTime: '2026-08-17T09:00:00', state: 'FINISHED'}),
+            ],
+            [],
+            new Date('2026-08-20T00:00:00'),
+        )
+        expect(day).toBe('2026-08-18')
+    })
+
+    it('also stays on a day whose match is only waiting to be finished', () => {
+        const day = resolveDashboardDay(
+            [
+                match({startTime: '2026-08-18T09:00:00', state: 'AWAITING_FINISH'}),
+                match({startTime: '2026-08-19T09:00:00', state: 'UPCOMING'}),
             ],
             [],
             new Date('2026-08-20T00:00:00'),

@@ -6,6 +6,45 @@ import {
     PendingSlotDto,
 } from '@api/types.gen.ts'
 
+/**
+ * Die Läufe, die im Live-Tab stehen: die aktiven und die, die auf ihr Beenden warten. Gegenstück
+ * zu `LiveDashboardLogic.selectForScope(LIVE)` im Backend — dort entscheidet dieselbe Regel, was
+ * der Server im Live-Ausschnitt überhaupt ausliefert.
+ *
+ * AWAITING_FINISH gehört dazu, weil der Lauf sonst genau dort fehlte, wo jemand handeln muss:
+ * alle Boote sind gewertet, aber niemand hat beendet.
+ */
+export const isLiveMatch = (match: LiveDashboardMatchDto): boolean =>
+    match.state === 'RUNNING' || match.state === 'AWAITING_FINISH'
+
+export const liveMatches = (matches: LiveDashboardMatchDto[]): LiveDashboardMatchDto[] =>
+    matches.filter(isLiveMatch)
+
+/**
+ * Welche Knöpfe die Karte anbietet — die Entscheidung liegt hier statt im JSX, damit sie ohne
+ * Rendering prüfbar bleibt. `mayFinish`/`mayControl` sind die Rechte der Nutzerin.
+ *
+ * - Beendet wird nur durch aktiven Input (Entscheidung vom 04.08.2026), also solange der Lauf
+ *   läuft ODER vollständig gewertet auf genau diesen Klick wartet.
+ * - Bei AWAITING_FINISH tritt "Lauf beenden" an die Stelle von "Lauf aktivieren": das ist die
+ *   Handlung, auf die alles wartet — ein Aktivieren würde den fertigen Lauf zurückwerfen.
+ * - Ein abgesagter Lauf bietet gar nichts an: aktiviert wäre er abgesagt UND laufend zugleich,
+ *   und beenden muss ihn niemand.
+ */
+export const matchControls = (
+    match: LiveDashboardMatchDto,
+    mayFinish: boolean,
+    mayControl: boolean,
+): {showFinish: boolean; showRunToggle: boolean} => {
+    if (match.state === 'SKIPPED') {
+        return {showFinish: false, showRunToggle: false}
+    }
+    return {
+        showFinish: mayFinish && isLiveMatch(match),
+        showRunToggle: mayControl && match.state !== 'AWAITING_FINISH',
+    }
+}
+
 export type Severity = 'ok' | 'warning' | 'error' | 'neutral'
 
 const rank: Record<Severity, number> = {neutral: 0, ok: 1, warning: 2, error: 3}

@@ -10,6 +10,7 @@ import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {
     formatMinutes,
+    matchControls,
     openResultTeams,
     pendingSlotLabel,
     Severity,
@@ -52,6 +53,9 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
     // sie im Zeitplan zurücknehmen zu können. Solange sie steht, gibt es hier aber nichts zu
     // steuern - aktiviert würde der Lauf sonst wieder abgesagt UND laufend zugleich.
     const skipped = match.state === 'SKIPPED'
+    // Vollständig gewertet, aber nicht beendet: der Lauf wartet auf den Beenden-Klick.
+    const awaitingFinish = match.state === 'AWAITING_FINISH'
+    const {showFinish, showRunToggle} = matchControls(match, onFinish != null, onSetRunning != null)
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = match.teams.some(team => team.time || team.place != null || team.failed)
@@ -136,8 +140,13 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                     ? 'success.dark'
                                     : skipped
                                       ? 'warning.dark'
-                                      : 'grey.200',
-                                color: running || skipped ? 'common.white' : 'grey.900',
+                                      : awaitingFinish
+                                        ? 'info.dark'
+                                        : 'grey.200',
+                                color:
+                                    running || skipped || awaitingFinish
+                                        ? 'common.white'
+                                        : 'grey.900',
                             }}>
                             {running && match.elapsedMinutes != null
                                 ? t('event.liveDashboard.runningSince', {
@@ -292,7 +301,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         </Box>
                     )
                 })}
-                {!skipped && (onFinish || onSetRunning) && (match.state === 'RUNNING' || onSetRunning) && (
+                {(showFinish || showRunToggle) && (
                     <Stack
                         direction="row"
                         spacing={1}
@@ -300,17 +309,17 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         justifyContent="flex-end"
                         alignItems="center"
                         sx={{pt: 1.5}}>
-                        {match.state === 'RUNNING' && !resultsComplete && (
+                        {running && !resultsComplete && (
                             <Typography variant="caption" sx={{color: 'grey.700', mr: 'auto'}}>
                                 {t('event.liveDashboard.control.incompleteWarning')}
                             </Typography>
                         )}
-                        {match.state === 'RUNNING' && resultsComplete && (
+                        {(awaitingFinish || (running && resultsComplete)) && (
                             <Typography variant="caption" sx={{color: 'success.dark', mr: 'auto'}}>
                                 {t('event.liveDashboard.resultsCompleteWaiting')}
                             </Typography>
                         )}
-                        {onSetRunning && (
+                        {showRunToggle && onSetRunning && (
                             <Button
                                 size="small"
                                 variant="text"
@@ -320,7 +329,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                     : t('event.liveDashboard.control.activate')}
                             </Button>
                         )}
-                        {onFinish && match.state === 'RUNNING' && (
+                        {showFinish && onFinish && (
                             <FinishMatchButton
                                 openTeamCount={openTeams.length}
                                 onFinish={openResults => onFinish(match.matchId, openResults)}

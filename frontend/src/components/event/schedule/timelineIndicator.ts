@@ -1,7 +1,7 @@
 import {format} from 'date-fns'
 import {EventScheduleSlotDto, LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {slotLabel} from './common.ts'
-import {pendingSlotLabel} from '@components/event/liveDashboard/common.ts'
+import {isLiveMatch, pendingSlotLabel} from '@components/event/liveDashboard/common.ts'
 
 /**
  * Generic, display-only state a timeline segment can be in - independent of whether it came from
@@ -9,7 +9,14 @@ import {pendingSlotLabel} from '@components/event/liveDashboard/common.ts'
  * dashboard). Both call sites map their own richer state onto this small set so the indicator
  * component and its color/label mapping only need to know about one shape.
  */
-export type TimelineEntryState = 'finished' | 'running' | 'linked' | 'waiting' | 'free' | 'skipped'
+export type TimelineEntryState =
+    | 'finished'
+    | 'running'
+    | 'awaitingFinish'
+    | 'linked'
+    | 'waiting'
+    | 'free'
+    | 'skipped'
 
 export type TimelineEntry = {
     id: string
@@ -34,6 +41,10 @@ export const dayOf = (isoLikeTime: string): string => isoLikeTime.slice(0, 10)
  * Same precedence as the state chip in EventSchedule.tsx: a slot with a recorded finish counts as
  * finished regardless of its raw `state`, a started-but-not-finished slot is running, and OBSOLETE
  * behaves like SKIPPED for the indicator (both are "won't happen", just for different reasons).
+ *
+ * Kein 'awaitingFinish' hier: EventScheduleSlotDto trägt nur Start- und Endzeitpunkt des Laufs,
+ * nicht die Vollständigkeit seiner Ergebnisse - diese Unterscheidung kann nur das Dashboard treffen
+ * (siehe dashboardMatchState).
  */
 export const scheduleSlotState = (slot: EventScheduleSlotDto): TimelineEntryState => {
     if (slot.matchFinishedAt) {
@@ -73,6 +84,10 @@ export const dashboardMatchState = (match: LiveDashboardMatchDto): TimelineEntry
             return 'running'
         case 'FINISHED':
             return 'finished'
+        // Eigenes Aussehen, kein "beendet": der Lauf ist gewertet, aber niemand hat ihn beendet -
+        // auf dem Balken soll genau das ins Auge fallen, weil dort noch eine Handlung aussteht.
+        case 'AWAITING_FINISH':
+            return 'awaitingFinish'
         // Same look as a cancelled slot in the Zeitplan tab: struck through and dimmed, not hidden.
         case 'SKIPPED':
             return 'skipped'
@@ -121,16 +136,17 @@ export const dashboardEntriesForDay = (
 }
 
 /**
- * Which day the dashboard indicator should show: the day of the first running match if one is
- * live, else the day of the chronologically next entry (upcoming match or pending slot), else
- * today - mirrors the "als Nächstes" fallback already used for the single-entry preview.
+ * Which day the dashboard indicator should show: the day of the first match that is live in the
+ * sense of the Live tab (running, or fully scored and waiting to be finished - see `isLiveMatch`),
+ * else the day of the chronologically next entry (upcoming match or pending slot), else today -
+ * mirrors the "als Nächstes" fallback already used for the single-entry preview.
  */
 export const resolveDashboardDay = (
     matches: LiveDashboardMatchDto[],
     pendingSlots: PendingSlotDto[],
     now: Date,
 ): string => {
-    const running = matches.find(m => m.state === 'RUNNING' && m.startTime != null)
+    const running = matches.find(m => isLiveMatch(m) && m.startTime != null)
     if (running?.startTime) {
         return dayOf(running.startTime)
     }

@@ -40,12 +40,29 @@ object LiveDashboardLogic {
     }
 
     /**
-     * [skipped] kommt aus dem Zeitstrahl-Slot des Laufs (siehe
-     * `EventScheduleLogic.skippedMatchIdOrNull`) und steht bewusst HINTER "läuft" und "beendet":
-     * Was tatsächlich passiert ist, schlägt den zurückgenommenen Plan. Ein abgesagter Lauf, der
-     * trotzdem aktiv ist, zeigt deshalb weiter RUNNING statt zu behaupten, es passiere nichts -
-     * dass dieser Zustand gar nicht erst entsteht, sichert die Schutzregel in
-     * `EventScheduleService.setSlotSkipped`.
+     * Die Reihenfolge der Zweige ist die eigentliche Aussage:
+     *
+     * 1. [LiveDashboardMatchState.RUNNING] bleibt vorn. Ein aktiver Lauf mit vollständigen
+     *    Ergebnissen zeigt weiter "Läuft" und hat den Beenden-Knopf - dort ist nichts kaputt.
+     * 2. [LiveDashboardMatchState.FINISHED] heißt ausschließlich `finished_at is not null`, also
+     *    "jemand hat beendet". Bis zum 06.08.2026 fiel hier auch "alle gewertet" hinein; genau das
+     *    war der Fehler (Testkatalog D15): der Lauf verschwand aus dem Live-Tab und bot
+     *    "Lauf aktivieren" statt "Lauf beenden" an.
+     * 3. [skipped] kommt aus dem Zeitstrahl-Slot des Laufs (siehe
+     *    `EventScheduleLogic.skippedMatchIdOrNull`) und steht bewusst HINTER "läuft" und "beendet":
+     *    Was tatsächlich passiert ist, schlägt den zurückgenommenen Plan. Ein abgesagter Lauf, der
+     *    trotzdem aktiv ist, zeigt deshalb weiter RUNNING statt zu behaupten, es passiere nichts -
+     *    dass dieser Zustand gar nicht erst entsteht, sichert die Schutzregel in
+     *    `EventScheduleService.setSlotSkipped`. Aus derselben Überlegung steht SKIPPED VOR
+     *    [LiveDashboardMatchState.AWAITING_FINISH]: ein abgesagter Lauf braucht niemanden mehr,
+     *    der ihn beendet.
+     * 4. [LiveDashboardMatchState.AWAITING_FINISH] trifft damit genau den Fall "nicht aktiv, nicht
+     *    beendet, aber vollständig gewertet" - das Büro trägt nach, oder der Lauf wurde
+     *    deaktiviert. Der Lauf bleibt sichtbar und wartet auf den Beenden-Klick; der
+     *    RaceClocker-Pull meldet nur Daten und beendet nie (Entscheidung vom 04.08.2026).
+     *
+     * Der Zustand ist reine Anzeige. Die Lauf-Kette hängt unverändert an `finished_at`
+     * (`ScheduleChain.decideNext` über `ChainSlot.matchFinished`) und kennt diese Aufzählung nicht.
      */
     fun deriveMatchState(
         currentlyRunning: Boolean,
@@ -56,8 +73,8 @@ object LiveDashboardLogic {
     ): LiveDashboardMatchState = when {
         currentlyRunning -> LiveDashboardMatchState.RUNNING
         finishedAt != null -> LiveDashboardMatchState.FINISHED
-        teamResults.isNotEmpty() && teamResults.all { it } -> LiveDashboardMatchState.FINISHED
         skipped -> LiveDashboardMatchState.SKIPPED
+        teamResults.isNotEmpty() && teamResults.all { it } -> LiveDashboardMatchState.AWAITING_FINISH
         startTime == null -> LiveDashboardMatchState.UNSCHEDULED
         else -> LiveDashboardMatchState.UPCOMING
     }
@@ -70,9 +87,15 @@ object LiveDashboardLogic {
         deregistered || place != null || failed
 
     /**
-     * Was eine Abfrage im gewünschten Umfang zurückgibt: alles, oder die laufenden Läufe und —
-     * wenn keiner läuft — der nächste anstehende. Die Reihenfolge bleibt erhalten; die Läufe
-     * kommen bereits nach Startzeit sortiert aus der Datenbank.
+     * Was eine Abfrage im gewünschten Umfang zurückgibt: alles, oder die Läufe, die jetzt eine
+     * Handlung verlangen — und wenn es keine gibt, der nächste anstehende. Die Reihenfolge bleibt
+     * erhalten; die Läufe kommen bereits nach Startzeit sortiert aus der Datenbank.
+     *
+     * [LiveDashboardMatchState.AWAITING_FINISH] zählt hier wie
+     * [LiveDashboardMatchState.RUNNING] dazu, und das ist der eigentliche Kern der Korrektur:
+     * Ohne diesen Zweig bliebe ein vollständig gewerteter, aber nicht beendeter Lauf aus dem
+     * Live-Tab verschwunden — genau das Verschwinden, das der neue Zustand beheben soll. Er ist
+     * der Lauf, auf dessen Beenden gerade alles wartet.
      */
     fun selectForScope(
         matches: List<LiveDashboardMatchDto>,
@@ -80,7 +103,10 @@ object LiveDashboardLogic {
     ): List<LiveDashboardMatchDto> = when (scope) {
         LiveDashboardScope.ALL -> matches
         LiveDashboardScope.LIVE -> matches
-            .filter { it.state == LiveDashboardMatchState.RUNNING }
+            .filter {
+                it.state == LiveDashboardMatchState.RUNNING ||
+                    it.state == LiveDashboardMatchState.AWAITING_FINISH
+            }
             .ifEmpty {
                 listOfNotNull(matches.firstOrNull { it.state == LiveDashboardMatchState.UPCOMING })
             }

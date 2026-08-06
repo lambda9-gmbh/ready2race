@@ -34,6 +34,7 @@ import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboa
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
 import {
     buildLiveDashboardTimeline,
+    liveMatches,
     nextUpEntry,
     storedPollInterval,
 } from '@components/event/liveDashboard/common.ts'
@@ -113,8 +114,9 @@ const LiveDashboardPage = () => {
                     setDashboard(data)
                     setLastUpdated(new Date())
                     setStale(false)
-                    const ids = data.matches
-                        .filter(m => m.state === 'RUNNING')
+                    // Auch ein Lauf, der neu auf sein Beenden wartet, ist eine Änderung im
+                    // Live-Tab und soll den Hinweispunkt setzen.
+                    const ids = liveMatches(data.matches)
                         .map(m => m.matchId)
                         .join(',')
                     if (
@@ -135,7 +137,9 @@ const LiveDashboardPage = () => {
         },
     )
 
-    const runningMatches = dashboard?.matches.filter(m => m.state === 'RUNNING') ?? []
+    // Der Live-Tab zeigt, was jetzt eine Handlung verlangt: die laufenden Läufe UND die, die
+    // vollständig gewertet auf ihr Beenden warten (siehe liveMatches / selectForScope im Backend).
+    const currentMatches = liveMatches(dashboard?.matches ?? [])
     const nextUpcoming = dashboard?.matches.find(m => m.state === 'UPCOMING')
     const scheduledMatches = dashboard?.matches.filter(m => m.state !== 'UNSCHEDULED') ?? []
     const unscheduledMatches = dashboard?.matches.filter(m => m.state === 'UNSCHEDULED') ?? []
@@ -276,10 +280,10 @@ const LiveDashboardPage = () => {
                 )}
                 {tab === 'live' && (
                     <>
-                        {runningMatches.length === 0 && dashboard && (
+                        {currentMatches.length === 0 && dashboard && (
                             <Alert severity="info">{t('event.liveDashboard.noRunning')}</Alert>
                         )}
-                        {runningMatches.map(match => (
+                        {currentMatches.map(match => (
                             <Box key={match.matchId} id={dashboardEntryDomId(match.matchId)}>
                                 <LiveDashboardMatchCard
                                     match={match}
@@ -289,7 +293,7 @@ const LiveDashboardPage = () => {
                                 />
                             </Box>
                         ))}
-                        {runningMatches.length === 0 && nextEntry && (
+                        {currentMatches.length === 0 && nextEntry && (
                             <>
                                 <Typography variant="subtitle2" color="text.secondary">
                                     {t('event.liveDashboard.nextUp')}

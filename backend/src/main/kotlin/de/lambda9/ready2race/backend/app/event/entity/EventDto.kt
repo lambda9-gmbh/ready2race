@@ -31,5 +31,7 @@ data class EventDto(
     val chainProgressionMode: ChainProgressionMode,
     /** Zeigt Pausen/Programmpunkte aus dem Zeitplan auch auf Kiosk und Athleten-Anzeige. */
     val showBreaksOnPublicBoards: Boolean,
+    /** Ab welchem Zustand ein Lauf als Ergebnis auf den öffentlichen Ansichten erscheint. */
+    val publicResultsVisibility: PublicResultsVisibility,
     val challengesFinished: Boolean?,
 )

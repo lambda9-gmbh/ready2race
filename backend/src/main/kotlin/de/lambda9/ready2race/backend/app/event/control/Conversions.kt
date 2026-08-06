@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.EventForE
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
 import de.lambda9.ready2race.backend.app.event.entity.MatchResultType
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventViewRecord
@@ -40,6 +41,7 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 participantSelfRegistration = allowParticipantSelfRegistration,
                 chainProgressionMode = chainProgressionMode.name,
                 showBreaksOnPublicBoards = showBreaksOnPublicBoards,
+                publicResultsVisibility = publicResultsVisibility.name,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -79,6 +81,8 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         chainProgressionMode = chainProgressionMode?.let { ChainProgressionMode.valueOf(it) }
             ?: ChainProgressionMode.DEAKTIVIERT,
         showBreaksOnPublicBoards = showBreaksOnPublicBoards ?: false,
+        publicResultsVisibility = publicResultsVisibility?.let { PublicResultsVisibility.valueOf(it) }
+            ?: PublicResultsVisibility.FINISHED_ONLY,
         challengesFinished = challengeEnd?.let { it < LocalDateTime.now() },
     )
 )

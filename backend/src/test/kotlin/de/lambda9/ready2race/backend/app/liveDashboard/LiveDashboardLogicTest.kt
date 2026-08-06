@@ -118,10 +118,30 @@ class LiveDashboardLogicTest {
     }
 
     @Test
-    fun allPlacesSetIsFinished() {
+    fun allPlacesSetButNobodyFinishedAwaitsFinish() {
+        // Testkatalog D15: vollständige Ergebnisse sind KEIN Beenden. Bis zum 06.08.2026 stand
+        // hier FINISHED - der Lauf verschwand damit aus dem Live-Tab und bot "Lauf aktivieren"
+        // statt "Lauf beenden" an.
+        assertEquals(
+            LiveDashboardMatchState.AWAITING_FINISH,
+            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(true, true))
+        )
+    }
+
+    @Test
+    fun activeMatchWithCompleteResultsStaysRunning() {
+        // RUNNING steht vor AWAITING_FINISH: ein aktiver Lauf hat den Beenden-Knopf ohnehin.
+        assertEquals(
+            LiveDashboardMatchState.RUNNING,
+            LiveDashboardLogic.deriveMatchState(true, start, null, listOf(true, true))
+        )
+    }
+
+    @Test
+    fun finishedStaysFinishedEvenWithCompleteResults() {
         assertEquals(
             LiveDashboardMatchState.FINISHED,
-            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(true, true))
+            LiveDashboardLogic.deriveMatchState(false, start, start.plusMinutes(9), listOf(true, true))
         )
     }
 
@@ -155,7 +175,7 @@ class LiveDashboardLogicTest {
         assertTrue(LiveDashboardLogic.teamHasResult(null, true, false))
         assertFalse(LiveDashboardLogic.teamHasResult(null, false, false))
         assertEquals(
-            LiveDashboardMatchState.FINISHED,
+            LiveDashboardMatchState.AWAITING_FINISH,
             LiveDashboardLogic.deriveMatchState(
                 false,
                 start,
@@ -176,7 +196,7 @@ class LiveDashboardLogicTest {
     @Test
     fun matchWithDeregisteredTeamCanFinish() {
         assertEquals(
-            LiveDashboardMatchState.FINISHED,
+            LiveDashboardMatchState.AWAITING_FINISH,
             LiveDashboardLogic.deriveMatchState(
                 false,
                 start,
@@ -199,10 +219,11 @@ class LiveDashboardLogicTest {
     }
 
     @Test
-    fun legacyFallbackAllResultsStillFinishes() {
+    fun cancelledMatchWithCompleteResultsStaysSkipped() {
+        // SKIPPED steht vor AWAITING_FINISH: einen abgesagten Lauf muss niemand mehr beenden.
         assertEquals(
-            LiveDashboardMatchState.FINISHED,
-            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(true, true)),
+            LiveDashboardMatchState.SKIPPED,
+            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(true, true), skipped = true),
         )
     }
 
@@ -265,6 +286,34 @@ class LiveDashboardLogicTest {
         val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
 
         assertEquals(listOf("Vorlauf 2", "Vorlauf 3"), selected.map { it.matchName })
+    }
+
+    @Test
+    fun liveScopeKeepsMatchesWaitingToBeFinished() {
+        // Der Kern der D15-Korrektur: ohne diesen Zweig bliebe der Lauf, auf dessen Beenden alles
+        // wartet, aus dem Live-Tab verschwunden.
+        val matches = listOf(
+            match(LiveDashboardMatchState.FINISHED, "Vorlauf 1"),
+            match(LiveDashboardMatchState.AWAITING_FINISH, "Vorlauf 2"),
+            match(LiveDashboardMatchState.UPCOMING, "Finale"),
+        )
+
+        val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
+
+        assertEquals(listOf("Vorlauf 2"), selected.map { it.matchName })
+    }
+
+    @Test
+    fun liveScopeKeepsRunningAndAwaitingSideBySide() {
+        val matches = listOf(
+            match(LiveDashboardMatchState.AWAITING_FINISH, "Vorlauf 1"),
+            match(LiveDashboardMatchState.RUNNING, "Vorlauf 2"),
+            match(LiveDashboardMatchState.UPCOMING, "Finale"),
+        )
+
+        val selected = LiveDashboardLogic.selectForScope(matches, LiveDashboardScope.LIVE)
+
+        assertEquals(listOf("Vorlauf 1", "Vorlauf 2"), selected.map { it.matchName })
     }
 
     @Test
