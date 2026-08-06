@@ -22,6 +22,7 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {submitChallengeTeamResults, submitChallengeTeamResultsByToken} from '@api/sdk.gen.ts'
 import ChallengeResultForm from '@components/event/competition/registration/ChallengeResultForm.tsx'
+import {challengeErrorKey} from '@components/event/competition/excecution/executionError.ts'
 
 export type ResultInputTeamInfo = {
     id: string
@@ -107,7 +108,15 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
         setSubmitting(false)
         setConfirming(false)
         if (error) {
-            feedback.error(t('event.competition.execution.results.challenge.error'))
+            // Die sieben Challenge-Gründe teilten sich diese eine Meldung, obwohl sie
+            // Verschiedenes verlangen: warten, aufhören, jemand anderen bitten oder einen
+            // Administrator holen.
+            feedback.error(
+                t(
+                    challengeErrorKey(error) ??
+                        'event.competition.execution.results.challenge.error.unexpected',
+                ),
+            )
         } else {
             feedback.success(t('event.competition.execution.results.challenge.success'))
             props.closeDialog()

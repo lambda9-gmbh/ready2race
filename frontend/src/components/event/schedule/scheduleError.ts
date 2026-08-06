@@ -27,9 +27,32 @@ const importKeys = {
     unexpected: 'event.schedule.importDialog.error.unexpected',
 } as const
 
+// Die Slot-Aktionen des Zeitplan-Tabs (löschen, entfallen lassen, Entfall aufheben, aktivieren,
+// beenden) lehnten bislang alle mit common.error.unexpected ab. Die Gründe sind aber keineswegs
+// austauschbar: "läuft schon" verlangt etwas anderes als "Runde noch nicht gesetzt".
+const slotActionKeys = {
+    matchAlreadyStarted: 'event.schedule.error.matchAlreadyStarted',
+    matchAlreadyFinished: 'event.schedule.error.matchAlreadyFinished',
+    slotNotSkippable: 'event.schedule.error.slotNotSkippable',
+    slotNotLinked: 'event.schedule.error.slotNotLinked',
+    setupMatchAlreadyPlanned: 'event.schedule.error.setupMatchAlreadyPlanned',
+    unexpected: 'event.schedule.error.unexpected',
+} as const
+
+// "Runde entfällt" in Wettkampf → Durchführung. RoundNotMaterialized und RoundHasRunsToRace teilten
+// sich hier bis zuletzt denselben Text, obwohl der eine Fall "setz die Runde erst" heißt und der
+// andere "diese Läufe müssen gefahren werden".
+const roundSkipKeys = {
+    notMaterialized: 'event.competition.execution.cancelRound.error.notMaterialized',
+    hasRunsToRace: 'event.competition.execution.cancelRound.error.hasRunsToRace',
+    unexpected: 'event.competition.execution.cancelRound.error.unexpected',
+} as const
+
 export type ScheduleErrorKey =
     | (typeof shiftKeys)[keyof typeof shiftKeys]
     | (typeof importKeys)[keyof typeof importKeys]
+    | (typeof slotActionKeys)[keyof typeof slotActionKeys]
+    | (typeof roundSkipKeys)[keyof typeof roundSkipKeys]
 
 /**
  * Ein übersetzbarer Meldungstext: i18n-Key plus die Werte, die er einsetzt. Bewusst nur der Key
@@ -59,6 +82,8 @@ const asNumber = (value: unknown): number | undefined =>
 
 export const shiftUnexpectedKey = shiftKeys.unexpected
 export const importUnexpectedKey = importKeys.unexpected
+export const slotActionUnexpectedKey = slotActionKeys.unexpected
+export const roundSkipUnexpectedKey = roundSkipKeys.unexpected
 
 /**
  * Kontext, den nur der Dialog liefern kann: Slot-Namen und die Zeitformatierung des aktuellen
@@ -121,8 +146,9 @@ export const shiftErrorText = (
         }
     }
 
-    // CompressionImpossible trägt (noch) keinen ErrorCode, wohl aber die Minutenzahl in details —
-    // siehe extractMaxReductionMinutes samt Regex-Fallback auf den Freitext.
+    // CompressionImpossible trägt inzwischen einen eigenen Code; der Weg über
+    // extractMaxReductionMinutes bleibt trotzdem, weil er zusätzlich den Freitext auswertet und
+    // damit eine ältere Backend-Version ohne den Code weiterhin verständlich anzeigt.
     const maxReduction = extractMaxReductionMinutes(error)
     return maxReduction !== undefined
         ? {key: shiftKeys.compressionImpossible, values: {max: maxReduction}}
@@ -188,4 +214,49 @@ export const importErrorText = (error: ScheduleApiError): ScheduleErrorText => {
     }
 
     return {key: importKeys.unexpected}
+}
+
+/**
+ * Der Meldungstext zu einer abgelehnten Slot-Aktion (löschen, entfallen lassen, Entfall aufheben,
+ * aktivieren, beenden) und zum Slot-Dialog. Deckt alle Ablehnungsgründe ab, die ein Nutzer über den
+ * Zeitplan-Tab auslösen kann; alles andere bleibt bei der allgemeinen Meldung.
+ */
+export const slotActionErrorText = (error: ScheduleApiError): ScheduleErrorText => {
+    switch (error.errorCode) {
+        case 'SCHEDULE_SLOT_MATCH_ALREADY_STARTED':
+            return {key: slotActionKeys.matchAlreadyStarted}
+
+        case 'SCHEDULE_SLOT_MATCH_ALREADY_FINISHED':
+            return {key: slotActionKeys.matchAlreadyFinished}
+
+        case 'SCHEDULE_SLOT_NOT_SKIPPABLE':
+            return {key: slotActionKeys.slotNotSkippable}
+
+        case 'SCHEDULE_SLOT_NOT_LINKED':
+            return {key: slotActionKeys.slotNotLinked}
+
+        case 'SCHEDULE_SETUP_MATCH_ALREADY_PLANNED':
+            return {key: slotActionKeys.setupMatchAlreadyPlanned}
+    }
+
+    return {key: slotActionKeys.unexpected}
+}
+
+/**
+ * Der Meldungstext zu einem abgelehnten "Runde entfällt". Die Anzahl der noch zu fahrenden Läufe
+ * kommt in details mit und steht im Text — ohne sie bliebe offen, ob noch ein Lauf oder die halbe
+ * Runde aussteht.
+ */
+export const roundSkipErrorText = (error: ScheduleApiError): ScheduleErrorText => {
+    switch (error.errorCode) {
+        case 'SCHEDULE_ROUND_NOT_MATERIALIZED':
+            return {key: roundSkipKeys.notMaterialized}
+
+        case 'SCHEDULE_ROUND_HAS_RUNS_TO_RACE': {
+            const count = asNumber(detailsOf(error).raceableMatchCount)
+            return {key: roundSkipKeys.hasRunsToRace, values: {count: count ?? 0}}
+        }
+    }
+
+    return {key: roundSkipKeys.unexpected}
 }

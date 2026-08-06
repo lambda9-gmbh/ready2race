@@ -13,6 +13,7 @@ import de.lambda9.ready2race.backend.app.documentTemplate.boundary.GapPlaceholde
 import de.lambda9.ready2race.backend.app.documentTemplate.control.GapDocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toGapPlaceholders
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
@@ -24,6 +25,7 @@ import de.lambda9.ready2race.backend.docx.toByteArray
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.gapDocuments
 import de.lambda9.ready2race.backend.singletonOrFallback
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -101,6 +103,13 @@ object AwardCertificateService {
         competitionId: UUID?,
         registrationId: UUID?,
     ): App<ServiceError, List<AwardCertificateEntry>> = KIO.comprehension {
+        // Ein Challenge-Event kennt weder Läufe noch Platzierungen - Siegerurkunden gibt es dort
+        // grundsätzlich nicht. Ohne diese Prüfung lief der Fall in NoResults ("keine platzierten
+        // Teams"): richtiges Ergebnis, falsche Begründung, denn das klingt nach "noch nicht
+        // fertig" und lässt das Büro auf Ergebnisse warten, die nie kommen. Steht bewusst vor
+        // allem anderen, damit die Antwort nicht davon abhängt, was das Event sonst enthält.
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { AwardCertificateError.IsChallengeEvent }
+
         // Der Einzeldownload dient Nachdrucken und Korrekturen einer bestimmten Urkunde, daher
         // darf die Platzgrenze dort nicht greifen. `null` bedeutet in AwardCertificateLogic
         // "unbegrenzt", statt einen Sentinel-Wert durch die Options zu schmuggeln.

@@ -3,8 +3,12 @@ import {
     ScheduleApiError,
     importErrorText,
     importUnexpectedKey,
+    roundSkipErrorText,
+    roundSkipUnexpectedKey,
     shiftErrorText,
     shiftUnexpectedKey,
+    slotActionErrorText,
+    slotActionUnexpectedKey,
 } from './scheduleError.ts'
 import deTranslations from '@i18n/de/translations.json'
 import enTranslations from '@i18n/en/translations.json'
@@ -187,6 +191,63 @@ describe('importErrorText', () => {
     })
 })
 
+describe('slotActionErrorText', () => {
+    it.each([
+        ['SCHEDULE_SLOT_MATCH_ALREADY_STARTED', 'event.schedule.error.matchAlreadyStarted'],
+        ['SCHEDULE_SLOT_MATCH_ALREADY_FINISHED', 'event.schedule.error.matchAlreadyFinished'],
+        ['SCHEDULE_SLOT_NOT_SKIPPABLE', 'event.schedule.error.slotNotSkippable'],
+        ['SCHEDULE_SLOT_NOT_LINKED', 'event.schedule.error.slotNotLinked'],
+        ['SCHEDULE_SETUP_MATCH_ALREADY_PLANNED', 'event.schedule.error.setupMatchAlreadyPlanned'],
+    ] as const)('bildet %s auf einen eigenen Text ab', (errorCode, key) => {
+        expect(slotActionErrorText(error({errorCode}))).toEqual({key})
+    })
+
+    it('trennt "läuft schon" von "bereits beendet"', () => {
+        // Bis zuletzt teilten sich beide common.error.unexpected, obwohl der eine Fall zum
+        // Deaktivieren auffordert und der andere gar nicht mehr zu retten ist.
+        expect(slotActionErrorText(error({errorCode: 'SCHEDULE_SLOT_MATCH_ALREADY_STARTED'}))).not
+            .toEqual(slotActionErrorText(error({errorCode: 'SCHEDULE_SLOT_MATCH_ALREADY_FINISHED'})))
+    })
+
+    it('reicht Unbekanntes nicht als englischen Backend-Text durch', () => {
+        expect(slotActionErrorText(error({}))).toEqual({key: slotActionUnexpectedKey})
+    })
+})
+
+describe('roundSkipErrorText', () => {
+    it('sagt bei einer ungesetzten Runde, dass es nichts zu entfallen gibt', () => {
+        expect(roundSkipErrorText(error({errorCode: 'SCHEDULE_ROUND_NOT_MATERIALIZED'}))).toEqual({
+            key: 'event.competition.execution.cancelRound.error.notMaterialized',
+        })
+    })
+
+    it('nennt die Anzahl der noch zu fahrenden Läufe', () => {
+        expect(
+            roundSkipErrorText(
+                error({
+                    errorCode: 'SCHEDULE_ROUND_HAS_RUNS_TO_RACE',
+                    details: {raceableMatchCount: 3},
+                }),
+            ),
+        ).toEqual({
+            key: 'event.competition.execution.cancelRound.error.hasRunsToRace',
+            values: {count: 3},
+        })
+    })
+
+    it('unterscheidet die beiden gegensätzlichen Runden-Gründe', () => {
+        // Der eine Fall heißt "setz die Runde erst", der andere "diese Läufe müssen gefahren
+        // werden" - genau die Verwechslung, die der gemeinsame Text cancelRound.error erzeugte.
+        expect(roundSkipErrorText(error({errorCode: 'SCHEDULE_ROUND_NOT_MATERIALIZED'})).key).not.toBe(
+            roundSkipErrorText(error({errorCode: 'SCHEDULE_ROUND_HAS_RUNS_TO_RACE'})).key,
+        )
+    })
+
+    it('reicht Unbekanntes nicht als englischen Backend-Text durch', () => {
+        expect(roundSkipErrorText(error({}))).toEqual({key: roundSkipUnexpectedKey})
+    })
+})
+
 describe('Übersetzungen', () => {
     // Ein falsch geschriebener Key fällt sonst erst am Renntag auf - dann steht der rohe Key im
     // Dialog. Die Pluralformen (count) liegen unter _one/_other, deshalb hier getrennt geprüft.
@@ -208,6 +269,14 @@ describe('Übersetzungen', () => {
         'common.error.upload.COLUMN_UNKNOWN',
         'common.error.upload.NO_HEADERS',
         'common.error.upload.FILE_ERROR',
+        'event.schedule.error.matchAlreadyStarted',
+        'event.schedule.error.matchAlreadyFinished',
+        'event.schedule.error.slotNotSkippable',
+        'event.schedule.error.slotNotLinked',
+        'event.schedule.error.setupMatchAlreadyPlanned',
+        slotActionUnexpectedKey,
+        'event.competition.execution.cancelRound.error.notMaterialized',
+        roundSkipUnexpectedKey,
     ]
 
     it.each(singleKeys)('hat einen deutschen Text für %s', key => {
@@ -227,6 +296,23 @@ describe('Übersetzungen', () => {
             ).toBe('string')
             expect(
                 typeof lookup(translations, 'event.schedule.importDialog.error.duplicateRows_other'),
+            ).toBe('string')
+        }
+    })
+
+    it('hat beide Pluralformen für die noch zu fahrenden Läufe', () => {
+        for (const translations of [deTranslations, enTranslations, daTranslations]) {
+            expect(
+                typeof lookup(
+                    translations,
+                    'event.competition.execution.cancelRound.error.hasRunsToRace_one',
+                ),
+            ).toBe('string')
+            expect(
+                typeof lookup(
+                    translations,
+                    'event.competition.execution.cancelRound.error.hasRunsToRace_other',
+                ),
             ).toBe('string')
         }
     })

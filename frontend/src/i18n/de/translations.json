@@ -259,6 +259,12 @@
           "title": "Urkundenvorlagenvorschau",
           "error": "Vorschau konnte nicht geladen werden.",
           "show": "Urkunde in der Vorschau anzeigen"
+        },
+        "error": {
+          "invalidFont": "Die Schriftdatei konnte nicht gelesen werden. Bitte eine gültige TTF- oder OTF-Datei hochladen.",
+          "typeMismatch": "Die Vorlage passt nicht zu dem Dokumenttyp, dem sie zugewiesen werden soll.",
+          "placeholderPageNotSupported": "Siegerurkunden haben genau eine Seite — alle Platzhalter müssen auf Seite 1 liegen.",
+          "placeholderTypeNotSupported": "Dieser Platzhalter ist für den gewählten Dokumenttyp nicht vorgesehen. Bitte einen Platzhalter aus der Liste dieses Typs wählen."
         }
       },
       "placeholder": {
@@ -502,7 +508,26 @@
           "error": "Fehler beim Auschecken des Teilnehmenden"
         },
         "noTeamsFound": "Keine Teams gefunden",
-        "participantNotFound": "Teilnehmer nicht gefunden"
+        "participantNotFound": "Teilnehmer nicht gefunden",
+        "errorReason": {
+          "alreadyCheckedIn": "Diese Person ist bereits eingecheckt — es ist nichts weiter zu tun.",
+          "notCheckedIn": "Diese Person ist gar nicht eingecheckt und kann deshalb nicht ausgecheckt werden.",
+          "qrCodeNotAssociated": "Dieses Bändchen gehört zu keinem Teilnehmer. Bitte es zuerst in der QR-Verwaltung einer Person zuweisen.",
+          "qrCodeNotFound": "Dieses Bändchen ist im System nicht bekannt. Bitte den Code prüfen oder ein anderes Bändchen nehmen."
+        }
+      },
+      "certificate": {
+        "error": {
+          "noResults": "Für diese Person ist in dieser Veranstaltung kein Ergebnis hinterlegt. Eine Teilnahmeurkunde gibt es erst, wenn ein Ergebnis erfasst und — falls erforderlich — bestätigt ist.",
+          "missingTemplate": "Für Teilnahmeurkunden ist keine Vorlage hinterlegt. Bitte unter Konfiguration → Veranstaltungselemente eine Vorlage zuweisen.",
+          "unreadableTemplate": "Die hinterlegte Vorlage für Teilnahmeurkunden lässt sich nicht lesen. Bitte die PDF-Datei prüfen und neu hochladen.",
+          "notAChallengeEvent": "Teilnahmeurkunden gibt es nur bei Challenge-Veranstaltungen.",
+          "challengeStillInProgress": "Die Challenge läuft noch. Teilnahmeurkunden lassen sich erst erzeugen, wenn alle Challenge-Wettkämpfe beendet sind.",
+          "unexpected": "Die Urkunde konnte nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
+        }
+      },
+      "importError": {
+        "unknownGenderValue": "Der Wert „{{value}}“ in der Spalte für das Geschlecht ist unbekannt. Bitte in der Datei einen der zugeordneten Werte eintragen oder die Zuordnung im Import-Assistenten anpassen."
       }
     }
   },
@@ -872,7 +897,12 @@
             "content": "Die Runde „{{round}}“ entfällt komplett? In dieser Runde gibt es keine Läufe zu fahren (alle Boote haben ein Freilos). Die zugehörigen Slots im Zeitplan werden als entfallen markiert und von der Kette ausgelassen.",
             "ok": "Runde entfällt"
           },
-          "error": "Beim Entfallenlassen der Runde ist ein Fehler aufgetreten",
+          "error": {
+            "notMaterialized": "Die Runde ist noch nicht gesetzt — es gibt noch keine Läufe, die entfallen könnten. Bitte zuerst die Runde setzen, oder die einzelnen Slots im Zeitplan entfallen lassen.",
+            "hasRunsToRace_one": "In dieser Runde steht noch {{count}} Lauf mit mindestens zwei Booten an. Er muss gefahren werden, damit die nächste Runde sauber ausgelost werden kann.",
+            "hasRunsToRace_other": "In dieser Runde stehen noch {{count}} Läufe mit mindestens zwei Booten an. Sie müssen gefahren werden, damit die nächste Runde sauber ausgelost werden kann.",
+            "unexpected": "Beim Entfallenlassen der Runde ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen."
+          },
           "success": "Runde als entfallen markiert"
         },
         "teamsWithBye": "Teams mit Freilos",
@@ -965,7 +995,16 @@
           },
           "challenge": {
             "challengeResults": "Challenge Ergebnis",
-            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+            "error": {
+              "notAChallengeEvent": "Diese Veranstaltung ist keine Challenge-Veranstaltung.",
+              "alreadyStarted": "Die Challenge hat bereits begonnen und lässt sich nicht mehr ändern.",
+              "notStartedYet": "Die Challenge hat noch nicht begonnen. Ergebnisse lassen sich erst ab dem Startzeitpunkt eintragen.",
+              "corruptedSetup": "Das Wettkampf-Setup ist fehlerhaft und verhält sich nicht wie erwartet. Bitte einen Administrator informieren — von hier aus lässt sich das nicht beheben.",
+              "resultAlreadySubmitted": "Für dieses Boot wurde bereits ein Ergebnis eingereicht. Das bestehende Ergebnis muss zuerst gelöscht werden.",
+              "noResultSubmitted": "Für dieses Boot liegt noch kein Ergebnis vor.",
+              "selfSubmissionNotAllowed": "Für diese Veranstaltung dürfen Ergebnisse nicht selbst eingereicht werden. Bitte das Ergebnis dem Regattabüro melden.",
+              "unexpected": "Beim Speichern des Ergebnisses ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen."
+            },
             "success": "Das Ergebnis wurde erfolgreich übermittelt.",
             "confirmTitle": "Bestätigung erforderlich",
             "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
@@ -1058,17 +1097,30 @@
           "reason": "Begründung",
           "add": {
             "add": "Ummeldungen hinzufügen",
-            "error": {
-              "conflict": "Später erzeugte Ummeldungen hängen von dieser ab. Diese müssten zuerst gelöscht werden.",
-              "unexpected": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten"
-            },
+            "error": "Beim Hinzufügen der Ummeldung ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen.",
             "success": "Ummeldungen erfolgreich hinzugefügt"
           },
           "delete": {
             "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
-            "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
+            "error": "Beim Löschen der Ummeldung ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen.",
             "success": "Ummeldungen erfolgreich gelöscht"
+          },
+          "error": {
+            "notFound": "Diese Ummeldung gibt es nicht mehr — vermutlich hat sie jemand anderes bereits gelöscht. Bitte die Ansicht neu laden.",
+            "participantOutNotFound": "Der auszutauschende Teilnehmer wurde nicht gefunden. Bitte die Ansicht neu laden und erneut auswählen.",
+            "participantInNotFound": "Der ausgewählte Ersatz wurde nicht gefunden. Bitte die Ansicht neu laden und erneut auswählen.",
+            "participantOutNotAvailable": "Der auszutauschende Teilnehmer fährt in dieser Runde nicht (mehr) mit. Vermutlich gibt es für ihn bereits eine spätere Ummeldung — bitte die Ansicht neu laden.",
+            "participantInNotAvailable": "Der ausgewählte Ersatz steht für diese Runde nicht zur Verfügung. Bitte die Ansicht neu laden und aus der aktualisierten Liste wählen.",
+            "dependentFound": "Auf dieser Ummeldung bauen spätere Ummeldungen auf. Diese müssen zuerst gelöscht werden, beginnend mit der jüngsten.",
+            "createdInPreviousRound": "Diese Ummeldung stammt aus einer früheren Runde. Zurücknehmen lässt sie sich nur in der Runde, in der sie erstellt wurde."
           }
+        },
+        "error": {
+          "matchResultsLocked": "Bearbeiten lassen sich nur die Ergebnisse der aktuellen Runde. Für einen Lauf aus einer früheren Runde muss zuerst die neuere Runde zurückgenommen werden.",
+          "matchIsBye": "Dieser Lauf ist ein Freilos: das Boot zieht ohne zu fahren weiter, es gibt kein Ergebnis einzutragen.",
+          "placesNotContinuous": "Die Plätze müssen lückenlos bei 1 beginnen. Erwartet war Platz {{expected}}, eingetragen ist Platz {{actual}}.",
+          "startTimeManagedBySchedule": "Die Startzeit dieses Laufs wird über den Zeitplan gepflegt und lässt sich hier nicht ändern. Bitte den Slot im Zeitplan-Tab anpassen.",
+          "teamsNotMatching": "Die übertragenen Boote passen nicht zu den Booten dieses Laufs — vermutlich hat sich die Aufstellung zwischenzeitlich geändert (Ummeldung oder Abmeldung). Bitte die Ansicht neu laden und erneut speichern."
         }
       },
       "timing": {
@@ -1400,7 +1452,10 @@
           "DNF": "Nicht beendet",
           "DSQ": "Disqualifiziert"
         },
-        "error": "Der Lauf konnte nicht geändert werden."
+        "error": "Der Lauf konnte nicht geändert werden.",
+        "errorReason": {
+          "finishReservedForOffice": "Für diese Veranstaltung beendet das Regattabüro die Läufe über den Zeitplan. Der Lauf bleibt aktiv — bitte dem Regattabüro melden, dass er im Ziel ist."
+        }
       },
       "substitution": {
         "short": "Ummeldung",
@@ -1539,6 +1594,14 @@
           "free": "Programmpunkt",
           "skipped": "Übersprungen"
         }
+      },
+      "error": {
+        "matchAlreadyStarted": "Der Lauf ist bereits unterwegs — er wurde aktiviert oder hat schon einen Ist-Start. Bitte den Lauf zuerst im Schiedsrichter-Dashboard deaktivieren, danach ist die Aktion wieder möglich.",
+        "matchAlreadyFinished": "Der Lauf ist bereits beendet und lässt sich nicht noch einmal aktivieren.",
+        "slotNotSkippable": "Der Slot ist verfallen — den zugehörigen Lauf gibt es im Wettkampf-Setup nicht mehr. Es gibt nichts, was entfallen könnte; der Slot lässt sich stattdessen löschen.",
+        "slotNotLinked": "Für diesen Slot gibt es noch keinen Lauf. Bitte die Runde zuerst unter Wettkampf → Durchführung setzen, danach lässt sich der Lauf aktivieren und beenden.",
+        "setupMatchAlreadyPlanned": "Dieser Lauf ist bereits in einem anderen Slot eingeplant. Bitte den Zeitplan neu laden und einen noch nicht verplanten Lauf wählen.",
+        "unexpected": "Die Aktion konnte nicht ausgeführt werden. Bitte den Zeitplan neu laden und es erneut versuchen."
       }
     },
     "results": {
@@ -2012,7 +2075,10 @@
     "confirmSelection": "Auswahl bestätigen",
     "confirm": "Hinzufügen",
     "success": "QR-Code erfolgreich zugewiesen",
-    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben"
+    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben",
+    "errorReason": {
+      "alreadyInUse": "Dieses Bändchen ist bereits jemand anderem zugewiesen. Bitte ein anderes Bändchen nehmen — oder die bestehende Zuweisung zuerst aufheben."
+    }
   },
   "qrCode": {
     "qrCode": "QR-Code",
@@ -2383,9 +2449,13 @@
         "hint": "Nur nötig, wenn nicht auf vorgedrucktes Papier gedruckt wird."
       },
       "error": {
-        "missingTemplate": "Für Siegerurkunden ist keine nutzbare Vorlage hinterlegt.",
+        "missingTemplate": "Für Siegerurkunden ist keine Vorlage hinterlegt.",
         "missingTemplateLink": "Zur Konfiguration",
-        "noResults": "Es gibt noch keine Platzierungen, die gedruckt werden können."
+        "unreadableTemplate": "Die hinterlegte Vorlage für Siegerurkunden lässt sich nicht lesen. Bitte die PDF-Datei prüfen und neu hochladen.",
+        "noResults": "Es gibt noch keine Platzierungen, die gedruckt werden können.",
+        "competitionNotInEvent": "Dieser Wettkampf gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.",
+        "isChallengeEvent": "Für eine Challenge-Veranstaltung gibt es keine Siegerurkunden — dort werden keine Läufe gefahren und keine Plätze vergeben. Teilnahmeurkunden lassen sich in der Teilnehmerliste herunterladen.",
+        "unexpected": "Die Urkunden konnten nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
       }
     }
   }

@@ -19,6 +19,15 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object TeamsNotMatching : CompetitionExecutionError
     data object RoundNotFound : CompetitionExecutionError
     data object MatchResultsLocked : CompetitionExecutionError
+
+    /**
+     * Ein Freilos: eine einzelne Mannschaft in einer nicht verpflichtenden Runde zieht weiter, ohne
+     * zu fahren - es gibt kein Ergebnis einzutragen. Lief bislang unter [MatchResultsLocked] mit,
+     * las sich für den Nutzer also als "nur die aktuelle Runde ist bearbeitbar" und schickte ihn
+     * damit auf die falsche Fährte. RaceClocker trennt die beiden Fälle längst
+     * (RaceClockerError.MatchIsBye), die Ergebniserfassung zieht hier nach.
+     */
+    data object MatchIsBye : CompetitionExecutionError
     data object StartTimeNotSet : CompetitionExecutionError
     data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
     data object IsChallengeEvent : CompetitionExecutionError
@@ -26,7 +35,13 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object ResultDocumentNotFound : CompetitionExecutionError
     data object NotInChallengeTimespan : CompetitionExecutionError
     data object PlaceAndTimeBothNull : CompetitionExecutionError
-    data object PlacesNotContinuous : CompetitionExecutionError
+
+    /**
+     * Die vergebenen Plätze haben eine Lücke oder fangen nicht bei 1 an. [expected] ist der Platz,
+     * der an dieser Stelle stehen müsste, [actual] der eingetragene - ohne beide Zahlen muss der
+     * Nutzer die Liste selbst durchzählen, um die Lücke zu finden.
+     */
+    data class PlacesNotContinuous(val expected: Int, val actual: Int) : CompetitionExecutionError
     data object StartTimeManagedBySchedule : CompetitionExecutionError
 
     sealed interface ResultUploadError : CompetitionExecutionError {
@@ -105,7 +120,8 @@ sealed interface CompetitionExecutionError : ServiceError {
 
         TeamsNotMatching -> ApiError(
             status = HttpStatusCode.BadRequest,
-            message = "The specified teams do not match the actual teams of the match"
+            message = "The specified teams do not match the actual teams of the match",
+            errorCode = ErrorCode.EXECUTION_TEAMS_NOT_MATCHING,
         )
 
         RoundNotFound -> ApiError(
@@ -116,6 +132,13 @@ sealed interface CompetitionExecutionError : ServiceError {
         MatchResultsLocked -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Match results locked. Only results of the latest round can be edited.",
+            errorCode = ErrorCode.EXECUTION_MATCH_RESULTS_LOCKED,
+        )
+
+        MatchIsBye -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "This match is a bye - the team moves on without racing, there is no result to record.",
+            errorCode = ErrorCode.EXECUTION_MATCH_IS_BYE,
         )
 
         StartTimeNotSet -> ApiError(
@@ -177,14 +200,17 @@ sealed interface CompetitionExecutionError : ServiceError {
             message = "Results must have Places or Times completely filled out if not failed."
         )
 
-        PlacesNotContinuous -> ApiError(
+        is PlacesNotContinuous -> ApiError(
             status = HttpStatusCode.BadRequest,
-            message = "The places are not continuous."
+            message = "The places are not continuous: expected $expected, got $actual.",
+            errorCode = ErrorCode.EXECUTION_PLACES_NOT_CONTINUOUS,
+            details = mapOf("expected" to expected, "actual" to actual),
         )
 
         StartTimeManagedBySchedule -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "Start time is managed by the event schedule",
+            errorCode = ErrorCode.EXECUTION_START_TIME_MANAGED_BY_SCHEDULE,
         )
 
         is ResultUploadError.CellBlank -> ApiError(

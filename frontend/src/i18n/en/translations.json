@@ -259,6 +259,12 @@
           "title": "Certificate template preview",
           "error": "Cannot load preview.",
           "show": "Preview certificate"
+        },
+        "error": {
+          "invalidFont": "The font file could not be read. Please upload a valid TTF or OTF file.",
+          "typeMismatch": "The template does not match the document type it is being assigned to.",
+          "placeholderPageNotSupported": "Award certificates have exactly one page — every placeholder has to be on page 1.",
+          "placeholderTypeNotSupported": "This placeholder is not available for the chosen document type. Please pick one from that type's list."
         }
       },
       "placeholder": {
@@ -502,7 +508,26 @@
           "error": "Error checking out participant"
         },
         "noTeamsFound": "No teams found",
-        "participantNotFound": "Participant not found"
+        "participantNotFound": "Participant not found",
+        "errorReason": {
+          "alreadyCheckedIn": "This person is already checked in — there is nothing left to do.",
+          "notCheckedIn": "This person is not checked in and therefore cannot be checked out.",
+          "qrCodeNotAssociated": "This wristband does not belong to any participant. Please assign it to a person in the QR administration first.",
+          "qrCodeNotFound": "This wristband is unknown to the system. Please check the code or use a different wristband."
+        }
+      },
+      "certificate": {
+        "error": {
+          "noResults": "There is no result for this person in this event. A certificate of participation is only available once a result has been recorded and — where required — confirmed.",
+          "missingTemplate": "No template is configured for certificates of participation. Please assign one under Configuration → Event elements.",
+          "unreadableTemplate": "The template configured for certificates of participation cannot be read. Please check the PDF file and upload it again.",
+          "notAChallengeEvent": "Certificates of participation only exist for challenge events.",
+          "challengeStillInProgress": "The challenge is still running. Certificates of participation can only be created once all challenge competitions have finished.",
+          "unexpected": "The certificate could not be created. Please reload the page and try again."
+        }
+      },
+      "importError": {
+        "unknownGenderValue": "The value “{{value}}” in the gender column is unknown. Please use one of the mapped values in the file, or adjust the mapping in the import wizard."
       }
     }
   },
@@ -872,7 +897,12 @@
             "content": "The round \"{{round}}\" is cancelled entirely? There are no runs to race in this round (every boat has a bye). The corresponding slots in the schedule will be marked as cancelled and passed over by the chain.",
             "ok": "Cancel round"
           },
-          "error": "An error has occurred when cancelling the round",
+          "error": {
+            "notMaterialized": "This round has not been created yet — there are no runs that could be cancelled. Create the round first, or cancel the individual slots in the schedule.",
+            "hasRunsToRace_one": "This round still has {{count}} run with at least two boats. It has to be raced so that the next round can be drawn properly.",
+            "hasRunsToRace_other": "This round still has {{count}} runs with at least two boats. They have to be raced so that the next round can be drawn properly.",
+            "unexpected": "An error has occurred when cancelling the round. Please reload the view and try again."
+          },
           "success": "Round marked as cancelled"
         },
         "teamsWithBye": "Teams with a bye",
@@ -965,7 +995,16 @@
           },
           "challenge": {
             "challengeResults": "Challenge result",
-            "error": "An error has occurred when saving the results",
+            "error": {
+              "notAChallengeEvent": "This event is not a challenge event.",
+              "alreadyStarted": "The challenge has already started and can no longer be changed.",
+              "notStartedYet": "The challenge has not started yet. Results can only be entered from the start time onwards.",
+              "corruptedSetup": "The competition setup is corrupted and does not behave as expected. Please contact an administrator — this cannot be fixed from here.",
+              "resultAlreadySubmitted": "A result has already been submitted for this boat. The existing result has to be deleted first.",
+              "noResultSubmitted": "There is no result for this boat yet.",
+              "selfSubmissionNotAllowed": "Results cannot be submitted by participants for this event. Please report the result to the regatta office.",
+              "unexpected": "An error has occurred when saving the result. Please reload the view and try again."
+            },
             "success": "The challenge result was transmitted successfully.",
             "confirmTitle": "Confirmation required",
             "confirmBody": "The result can no longer be changed after submission. Please make sure the results are correct.",
@@ -1058,17 +1097,30 @@
           "reason": "Reason",
           "add": {
             "add": "Add substitution",
-            "error": "An error has occurred when creating the substitution",
+            "error": "An error has occurred when creating the substitution. Please reload the view and try again.",
             "success": "Substitution successfully created"
           },
           "delete": {
             "confirmation": "Are you sure you want to delete the latest substitution?",
-            "error": {
-              "conflict": "Later created substitutions depend on this one. These would have to be deleted first.",
-              "unexpected": "An error has occurred when deleting the substitution"
-            },
+            "error": "An error has occurred when deleting the substitution. Please reload the view and try again.",
             "success": "Substitution successfully deleted"
+          },
+          "error": {
+            "notFound": "This substitution no longer exists — someone else has probably deleted it already. Please reload the view.",
+            "participantOutNotFound": "The participant to be substituted was not found. Please reload the view and select again.",
+            "participantInNotFound": "The selected substitute was not found. Please reload the view and select again.",
+            "participantOutNotAvailable": "The participant to be substituted is no longer racing in this round. There is probably a later substitution for them already — please reload the view.",
+            "participantInNotAvailable": "The selected substitute is not available for this round. Please reload the view and pick from the updated list.",
+            "dependentFound": "Later substitutions build on this one. They have to be deleted first, starting with the most recent.",
+            "createdInPreviousRound": "This substitution was created in an earlier round. It can only be undone in the round it was created in."
           }
+        },
+        "error": {
+          "matchResultsLocked": "Only the results of the current round can be edited. For a run from an earlier round the newer round has to be withdrawn first.",
+          "matchIsBye": "This run is a bye: the boat moves on without racing, there is no result to record.",
+          "placesNotContinuous": "Places have to start at 1 without gaps. Place {{expected}} was expected, place {{actual}} was entered.",
+          "startTimeManagedBySchedule": "The start time of this run is managed by the event schedule and cannot be changed here. Please adjust the slot in the schedule tab.",
+          "teamsNotMatching": "The submitted boats do not match the boats of this run — the line-up has probably changed in the meantime (substitution or deregistration). Please reload the view and save again."
         }
       },
       "timing": {
@@ -1400,7 +1452,10 @@
           "DNF": "Did not finish",
           "DSQ": "Disqualified"
         },
-        "error": "The race could not be changed."
+        "error": "The race could not be changed.",
+        "errorReason": {
+          "finishReservedForOffice": "For this event the regatta office finishes runs via the schedule. The run stays active — please tell the regatta office that it has finished."
+        }
       },
       "substitution": {
         "short": "Substitution",
@@ -1539,6 +1594,14 @@
           "free": "Program item",
           "skipped": "Skipped"
         }
+      },
+      "error": {
+        "matchAlreadyStarted": "The run is already underway — it has been activated or already has an actual start time. Deactivate it in the referee dashboard first, then the action will work again.",
+        "matchAlreadyFinished": "The run has already finished and cannot be activated again.",
+        "slotNotSkippable": "This slot is obsolete — its run no longer exists in the competition setup. There is nothing left to cancel; you can delete the slot instead.",
+        "slotNotLinked": "There is no run for this slot yet. Create the round under Competition → Execution first, then the run can be activated and finished.",
+        "setupMatchAlreadyPlanned": "This run is already planned in another slot. Please reload the schedule and pick a run that has not been planned yet.",
+        "unexpected": "The action could not be carried out. Please reload the schedule and try again."
       }
     },
     "results": {
@@ -2012,7 +2075,10 @@
     "confirmSelection": "Confirm selection",
     "confirm": "Add",
     "success": "QR Code successfully assigned",
-    "deleteSuccess": "QR code assignment successfully removed"
+    "deleteSuccess": "QR code assignment successfully removed",
+    "errorReason": {
+      "alreadyInUse": "This wristband is already assigned to someone else. Please use a different one — or remove the existing assignment first."
+    }
   },
   "qrCode": {
     "qrCode": "QR Code",
@@ -2383,9 +2449,13 @@
         "hint": "Only needed when not printing onto pre-printed paper."
       },
       "error": {
-        "missingTemplate": "There is no usable template configured for award certificates.",
+        "missingTemplate": "There is no template configured for award certificates.",
         "missingTemplateLink": "Go to configuration",
-        "noResults": "There are no placements to print yet."
+        "unreadableTemplate": "The template configured for award certificates cannot be read. Please check the PDF file and upload it again.",
+        "noResults": "There are no placements to print yet.",
+        "competitionNotInEvent": "This competition does not belong to this event. Please reload the page.",
+        "isChallengeEvent": "A challenge event has no award certificates — there are no runs and no placements. Certificates of participation can be downloaded from the participant list.",
+        "unexpected": "The certificates could not be created. Please reload the page and try again."
       }
     }
   }

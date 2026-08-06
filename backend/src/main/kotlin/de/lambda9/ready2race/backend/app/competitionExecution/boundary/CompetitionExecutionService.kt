@@ -451,7 +451,7 @@ object CompetitionExecutionService {
         val (expectedTeams, outTeams) = teamRecords.partition { !it.out!! }
 
         if (!setupRound.required && teamRecords.size == 1) {
-            return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
+            return@comprehension KIO.fail(CompetitionExecutionError.MatchIsBye)
         }
 
         val slotTime = !EventScheduleRepo.getSlotBySetupMatch(matchId).orDie()
@@ -508,7 +508,7 @@ object CompetitionExecutionService {
          * is no result to record. Callers that can say something more useful about that than "locked"
          * pass their own error.
          */
-        byeError: ServiceError = CompetitionExecutionError.MatchResultsLocked,
+        byeError: ServiceError = CompetitionExecutionError.MatchIsBye,
     ): App<ServiceError, CompetitionMatchWithTeams> = KIO.comprehension {
 
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
@@ -570,7 +570,9 @@ object CompetitionExecutionService {
             val places = request.teamResults.filter { !it.failed }.mapNotNull { it.place }.sorted()
             places.forEachIndexed { index, place ->
                 val expected = index + 1
-                !KIO.failOn(expected != place) { CompetitionExecutionError.PlacesNotContinuous }
+                !KIO.failOn(expected != place) {
+                    CompetitionExecutionError.PlacesNotContinuous(expected = expected, actual = place)
+                }
             }
         }
 

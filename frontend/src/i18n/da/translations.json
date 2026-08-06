@@ -259,6 +259,12 @@
           "title": "Forhåndsvisning af diplomskabeloner",
           "error": "Forhåndsvisningen kunne ikke indlæses.",
           "show": "Vis diplom i forhåndsvisning"
+        },
+        "error": {
+          "invalidFont": "Skrifttypefilen kunne ikke læses. Upload en gyldig TTF- eller OTF-fil.",
+          "typeMismatch": "Skabelonen passer ikke til den dokumenttype, den skal tilknyttes.",
+          "placeholderPageNotSupported": "Sejrsdiplomer har præcis én side — alle pladsholdere skal være på side 1.",
+          "placeholderTypeNotSupported": "Denne pladsholder findes ikke for den valgte dokumenttype. Vælg en pladsholder fra typens liste."
         }
       },
       "placeholder": {
@@ -502,7 +508,26 @@
           "error": "Fejl ved check-out af deltager"
         },
         "noTeamsFound": "Ingen hold fundet",
-        "participantNotFound": "Deltager ikke fundet"
+        "participantNotFound": "Deltager ikke fundet",
+        "errorReason": {
+          "alreadyCheckedIn": "Denne person er allerede tjekket ind — der er ikke mere at gøre.",
+          "notCheckedIn": "Denne person er slet ikke tjekket ind og kan derfor ikke tjekkes ud.",
+          "qrCodeNotAssociated": "Dette armbånd hører ikke til nogen deltager. Tildel det først til en person i QR-administrationen.",
+          "qrCodeNotFound": "Dette armbånd kendes ikke i systemet. Kontrollér koden, eller tag et andet armbånd."
+        }
+      },
+      "certificate": {
+        "error": {
+          "noResults": "Der er ikke registreret et resultat for denne person i dette stævne. Et deltagerdiplom kan først udstedes, når et resultat er registreret og — om nødvendigt — bekræftet.",
+          "missingTemplate": "Der er ikke tilknyttet en skabelon til deltagerdiplomer. Tilknyt en skabelon under Konfiguration → Stævneelementer.",
+          "unreadableTemplate": "Den tilknyttede skabelon til deltagerdiplomer kan ikke læses. Kontrollér PDF-filen, og upload den igen.",
+          "notAChallengeEvent": "Deltagerdiplomer findes kun ved challenge-stævner.",
+          "challengeStillInProgress": "Challengen er stadig i gang. Deltagerdiplomer kan først oprettes, når alle challenge-konkurrencer er afsluttet.",
+          "unexpected": "Diplomet kunne ikke oprettes. Genindlæs siden, og prøv igen."
+        }
+      },
+      "importError": {
+        "unknownGenderValue": "Værdien „{{value}}“ i kolonnen for køn er ukendt. Angiv en af de tilknyttede værdier i filen, eller justér tilknytningen i importguiden."
       }
     }
   },
@@ -872,7 +897,12 @@
             "content": "Runden „{{round}}“ aflyses helt? I denne runde er der ingen løb at afvikle (alle både har frirunde). De tilhørende slots i tidsplanen markeres som aflyst og springes over af kæden.",
             "ok": "Aflys runden"
           },
-          "error": "Der opstod en fejl ved aflysning af runden",
+          "error": {
+            "notMaterialized": "Runden er endnu ikke oprettet — der findes ingen løb, der kan aflyses. Opret først runden, eller lad de enkelte slots i tidsplanen udgå.",
+            "hasRunsToRace_one": "I denne runde mangler stadig {{count}} løb med mindst to både. Det skal afvikles, før den næste runde kan trækkes korrekt.",
+            "hasRunsToRace_other": "I denne runde mangler stadig {{count}} løb med mindst to både. De skal afvikles, før den næste runde kan trækkes korrekt.",
+            "unexpected": "Der opstod en fejl ved aflysning af runden. Genindlæs visningen, og prøv igen."
+          },
           "success": "Runden er markeret som aflyst"
         },
         "teamsWithBye": "Hold med frirunde",
@@ -965,7 +995,16 @@
           },
           "challenge": {
             "challengeResults": "Challenge-resultat",
-            "error": "Der opstod en fejl ved lagring af resultatet",
+            "error": {
+              "notAChallengeEvent": "Dette stævne er ikke et challenge-stævne.",
+              "alreadyStarted": "Challengen er allerede begyndt og kan ikke længere ændres.",
+              "notStartedYet": "Challengen er endnu ikke begyndt. Resultater kan først indtastes fra starttidspunktet.",
+              "corruptedSetup": "Konkurrenceopsætningen er fejlbehæftet og opfører sig ikke som forventet. Kontakt en administrator — det kan ikke rettes herfra.",
+              "resultAlreadySubmitted": "Der er allerede indsendt et resultat for denne båd. Det eksisterende resultat skal slettes først.",
+              "noResultSubmitted": "Der foreligger endnu ikke et resultat for denne båd.",
+              "selfSubmissionNotAllowed": "Ved dette stævne må resultater ikke indsendes af deltagerne selv. Meld resultatet til regattakontoret.",
+              "unexpected": "Der opstod en fejl ved lagring af resultatet. Genindlæs visningen, og prøv igen."
+            },
             "success": "Resultatet blev sendt.",
             "confirmTitle": "Bekræftelse påkrævet",
             "confirmBody": "Resultatet kan ikke ændres efter indsendelse. Sørg venligst for, at resultatet er korrekt.",
@@ -1058,17 +1097,30 @@
           "reason": "Begrundelse",
           "add": {
             "add": "Tilføj ombytninger",
-            "error": {
-              "conflict": "Senere oprettede ombytninger afhænger af denne. De skal slettes først.",
-              "unexpected": "Der opstod en fejl ved tilføjelse af ombytningerne"
-            },
+            "error": "Der opstod en fejl ved tilføjelse af ombytningen. Genindlæs visningen, og prøv igen.",
             "success": "Ombytninger tilføjet"
           },
           "delete": {
             "confirmation": "Er du sikker på, at den sidste ombytning skal slettes?",
-            "error": "Der opstod en fejl ved sletning af ombytningerne",
+            "error": "Der opstod en fejl ved sletning af ombytningen. Genindlæs visningen, og prøv igen.",
             "success": "Ombytninger slettet"
+          },
+          "error": {
+            "notFound": "Denne ombytning findes ikke længere — sandsynligvis har en anden allerede slettet den. Genindlæs visningen.",
+            "participantOutNotFound": "Den deltager, der skal udskiftes, blev ikke fundet. Genindlæs visningen, og vælg igen.",
+            "participantInNotFound": "Den valgte reserve blev ikke fundet. Genindlæs visningen, og vælg igen.",
+            "participantOutNotAvailable": "Den deltager, der skal udskiftes, deltager ikke længere i denne runde. Der findes sandsynligvis allerede en senere ombytning — genindlæs visningen.",
+            "participantInNotAvailable": "Den valgte reserve er ikke tilgængelig i denne runde. Genindlæs visningen, og vælg fra den opdaterede liste.",
+            "dependentFound": "Senere ombytninger bygger på denne. De skal slettes først, begyndende med den nyeste.",
+            "createdInPreviousRound": "Denne ombytning stammer fra en tidligere runde. Den kan kun fortrydes i den runde, hvor den blev oprettet."
           }
+        },
+        "error": {
+          "matchResultsLocked": "Kun resultaterne fra den aktuelle runde kan redigeres. For et løb fra en tidligere runde skal den nyere runde først trækkes tilbage.",
+          "matchIsBye": "Dette løb er en frirunde: båden går videre uden at ro, der er intet resultat at registrere.",
+          "placesNotContinuous": "Placeringerne skal begynde ved 1 uden huller. Der blev forventet placering {{expected}}, men placering {{actual}} er indtastet.",
+          "startTimeManagedBySchedule": "Starttidspunktet for dette løb styres via tidsplanen og kan ikke ændres her. Justér slotten under fanen Tidsplan.",
+          "teamsNotMatching": "De indsendte både passer ikke til bådene i dette løb — opstillingen er sandsynligvis ændret i mellemtiden (ombytning eller afmelding). Genindlæs visningen, og gem igen."
         }
       },
       "timing": {
@@ -1400,7 +1452,10 @@
           "DNF": "Ikke fuldført",
           "DSQ": "Diskvalificeret"
         },
-        "error": "Løbet kunne ikke ændres."
+        "error": "Løbet kunne ikke ændres.",
+        "errorReason": {
+          "finishReservedForOffice": "Ved dette stævne afslutter regattakontoret løbene via tidsplanen. Løbet forbliver aktivt — meld til regattakontoret, at det er i mål."
+        }
       },
       "substitution": {
         "short": "Ombytning",
@@ -1539,6 +1594,14 @@
           "free": "Programpunkt",
           "skipped": "Sprunget over"
         }
+      },
+      "error": {
+        "matchAlreadyStarted": "Løbet er allerede i gang — det er aktiveret eller har allerede et faktisk starttidspunkt. Deaktivér det først i dommer-dashboardet, derefter kan handlingen udføres igen.",
+        "matchAlreadyFinished": "Løbet er allerede afsluttet og kan ikke aktiveres igen.",
+        "slotNotSkippable": "Slotten er forældet — det tilhørende løb findes ikke længere i konkurrenceopsætningen. Der er intet at aflyse; slotten kan i stedet slettes.",
+        "slotNotLinked": "Der findes endnu ikke et løb til denne slot. Opret først runden under Konkurrence → Afvikling, derefter kan løbet aktiveres og afsluttes.",
+        "setupMatchAlreadyPlanned": "Dette løb er allerede planlagt i en anden slot. Genindlæs tidsplanen, og vælg et løb, der endnu ikke er planlagt.",
+        "unexpected": "Handlingen kunne ikke udføres. Genindlæs tidsplanen, og prøv igen."
       }
     },
     "results": {
@@ -2012,7 +2075,10 @@
     "confirmSelection": "Bekræft valg",
     "confirm": "Tilføj",
     "success": "QR-kode tildelt",
-    "deleteSuccess": "QR-kode-tildeling ophævet"
+    "deleteSuccess": "QR-kode-tildeling ophævet",
+    "errorReason": {
+      "alreadyInUse": "Dette armbånd er allerede tildelt en anden. Tag et andet armbånd — eller ophæv først den eksisterende tildeling."
+    }
   },
   "qrCode": {
     "qrCode": "QR-kode",
@@ -2383,9 +2449,13 @@
         "hint": "Kun nødvendigt, hvis der ikke printes på fortrykt papir."
       },
       "error": {
-        "missingTemplate": "Der er ikke tilknyttet en brugbar skabelon til sejrsdiplomer.",
+        "missingTemplate": "Der er ikke tilknyttet en skabelon til sejrsdiplomer.",
         "missingTemplateLink": "Gå til konfiguration",
-        "noResults": "Der er endnu ingen placeringer at udskrive."
+        "unreadableTemplate": "Den tilknyttede skabelon til sejrsdiplomer kan ikke læses. Kontrollér PDF-filen, og upload den igen.",
+        "noResults": "Der er endnu ingen placeringer at udskrive.",
+        "competitionNotInEvent": "Denne konkurrence hører ikke til dette stævne. Genindlæs siden.",
+        "isChallengeEvent": "Et challenge-stævne har ingen sejrsdiplomer — der afvikles ingen løb, og der gives ingen placeringer. Deltagerdiplomer kan hentes fra deltagerlisten.",
+        "unexpected": "Diplomerne kunne ikke oprettes. Genindlæs siden, og prøv igen."
       }
     }
   }

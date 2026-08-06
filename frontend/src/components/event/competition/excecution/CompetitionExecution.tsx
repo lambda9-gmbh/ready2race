@@ -77,6 +77,10 @@ import {
     mapDtoToTimingForm,
     timingConfigWarnings,
 } from '@components/event/competition/timing/timingConfigForm.ts'
+import {
+    ExecutionApiError,
+    matchErrorText,
+} from '@components/event/competition/excecution/executionError.ts'
 
 type EnterResultsTeam = {
     registrationId: string
@@ -161,6 +165,20 @@ const CompetitionExecution = () => {
             deps: [eventId, competitionId, reloadData],
         },
     )
+    /**
+     * Warum die Ergebnis- oder Laufdaten-Eingabe abgelehnt wurde. [fallbackKey] ist die bisherige
+     * Sammelmeldung der jeweiligen Maske und greift nur noch für Gründe ohne eigenen Code.
+     */
+    const showMatchError = (
+        error: ExecutionApiError,
+        fallbackKey:
+            | 'event.competition.execution.results.submit.error'
+            | 'event.competition.execution.matchData.submit.error',
+    ) => {
+        const text = matchErrorText(error)
+        feedback.error(text === undefined ? t(fallbackKey) : t(text.key, text.values))
+    }
+
     const sortedRounds = progressDto?.rounds
         .map((r, idx) => ({roundIndex: idx, round: r}))
         .sort((a, b) => b.roundIndex - a.roundIndex)
@@ -559,7 +577,7 @@ const CompetitionExecution = () => {
                 },
             })
             if (error) {
-                feedback.error(t('event.competition.execution.results.submit.error'))
+                showMatchError(error, 'event.competition.execution.results.submit.error')
             } else {
                 feedback.success(t('event.competition.execution.results.submit.success'))
             }
@@ -661,7 +679,7 @@ const CompetitionExecution = () => {
                 },
             })
             if (error) {
-                feedback.error(t('event.competition.execution.matchData.submit.error'))
+                showMatchError(error, 'event.competition.execution.matchData.submit.error')
             } else {
                 feedback.success(t('event.competition.execution.matchData.submit.success'))
             }

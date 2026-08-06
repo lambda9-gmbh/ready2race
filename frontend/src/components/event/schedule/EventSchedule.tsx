@@ -44,6 +44,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
 import {groupSlotsByDay, isCancellable, isEditable, slotLabel, slotsInRound} from './common.ts'
+import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
@@ -149,6 +150,16 @@ const EventSchedule = () => {
         deps: [eventId, lastRequested],
     })
 
+    // Warum die Slot-Aktion abgelehnt wurde, statt des bisherigen "Es ist ein Fehler aufgetreten".
+    // [fallback] erlaubt der aufrufenden Aktion, für den unbekannten Rest bei ihrer eigenen,
+    // spezifischeren Sammelmeldung zu bleiben (z. B. "Löschen fehlgeschlagen").
+    const showSlotActionError = (error: ScheduleApiError, fallback?: string) => {
+        const {key, values} = slotActionErrorText(error)
+        feedback.error(
+            key === slotActionUnexpectedKey && fallback !== undefined ? fallback : t(key, values),
+        )
+    }
+
     const openAddDialog = () => {
         setEditingSlot(undefined)
         setPresetMatch(undefined)
@@ -183,7 +194,10 @@ const EventSchedule = () => {
         confirmAction(async () => {
             const {error} = await deleteScheduleSlot({path: {eventId, slotId: slot.id}})
             if (error) {
-                feedback.error(t('entity.delete.error', {entity: t('event.schedule.slot')}))
+                showSlotActionError(
+                    error,
+                    t('entity.delete.error', {entity: t('event.schedule.slot')}),
+                )
             } else {
                 feedback.success(t('entity.delete.success', {entity: t('event.schedule.slot')}))
             }
@@ -199,7 +213,7 @@ const EventSchedule = () => {
             async () => {
                 const {error} = await skipScheduleSlot({path: {eventId, slotId: slot.id}})
                 if (error) {
-                    feedback.error(t('common.error.unexpected'))
+                    showSlotActionError(error)
                 }
                 reload()
             },
@@ -236,7 +250,7 @@ const EventSchedule = () => {
             async () => {
                 const {error} = await unskipScheduleSlot({path: {eventId, slotId: slot.id}})
                 if (error) {
-                    feedback.error(t('common.error.unexpected'))
+                    showSlotActionError(error)
                 }
                 reload()
             },
@@ -263,7 +277,7 @@ const EventSchedule = () => {
             async () => {
                 const {error} = await activateScheduleSlot({path: {eventId, slotId: slot.id}})
                 if (error) {
-                    feedback.error(t('common.error.unexpected'))
+                    showSlotActionError(error)
                 }
                 reload()
             },
@@ -299,7 +313,7 @@ const EventSchedule = () => {
             async () => {
                 const {error} = await finishScheduleSlot({path: {eventId, slotId: slot.id}})
                 if (error) {
-                    feedback.error(t('common.error.unexpected'))
+                    showSlotActionError(error)
                 }
                 reload()
             },

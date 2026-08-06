@@ -1,5 +1,6 @@
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {
+    ErrorCode,
     GapDocumentPlaceholderType,
     GapDocumentTemplateDto,
     GapDocumentTemplateRequest,
@@ -23,6 +24,7 @@ import {v4 as uuidv4} from 'uuid'
 import PdfPlaceholderEditor from '@components/gapDocumentTemplate/PdfPlaceholderEditor.tsx'
 import PlaceholderSidebar from '@components/gapDocumentTemplate/PlaceholderSidebar.tsx'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {documentTemplateErrorKey} from '@components/certificate/certificateError.ts'
 
 type PlaceholderData = {
     id: string
@@ -133,6 +135,18 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [hasExistingFont, setHasExistingFont] = useState<boolean>(false)
 
+    // Die Ablehnungsgründe des Servers ("Schriftdatei nicht lesbar", "Platzhalter nicht auf Seite
+    // 1") verschwanden bislang in "Vorlage konnte nicht angelegt werden". Unbekanntes bleibt
+    // dagegen bewusst bei dieser Sammelmeldung: Rückgabe false überlässt sie dem EntityDialog.
+    const handleError = (error: {message: string; errorCode?: ErrorCode}): boolean => {
+        const key = documentTemplateErrorKey(error)
+        if (key === undefined) {
+            return false
+        }
+        feedback.error(t(key))
+        return true
+    }
+
     const {data: documentTypes} = useFetch(signal => getGapDocumentTemplateTypes({signal}))
 
     const {fields, append, update} = useFieldArray({
@@ -241,6 +255,8 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
             onOpen={onOpen}
             addAction={addAction}
             editAction={editAction}
+            onAddError={handleError}
+            onEditError={handleError}
             fullScreen>
             <Stack spacing={3}>
                 {/* Document Type Selection */}
