@@ -1478,7 +1478,12 @@
         "rowFree": "Freier Slot",
         "rowAmbiguous": "Nicht eindeutig — wird als freier Slot importiert",
         "rowDuplicate": "Doppelt in der Datei — Import blockiert",
-        "apply": "Importieren"
+        "apply": "Importieren",
+        "error": {
+          "duplicateRows_one": "Zeile {{rows}} verweist auf denselben Lauf wie eine andere Zeile. Bitte die doppelte Zeile in der Datei entfernen oder einem anderen Lauf zuordnen und erneut importieren.",
+          "duplicateRows_other": "Die Zeilen {{rows}} verweisen mehrfach auf denselben Lauf. Bitte die doppelten Zeilen in der Datei entfernen oder anderen Läufen zuordnen und erneut importieren.",
+          "unexpected": "Die Datei konnte nicht importiert werden. Bitte Aufbau und Inhalt der Datei prüfen und es erneut versuchen."
+        }
       },
       "shift": {
         "title": "Zeitplan anpassen",
@@ -1495,6 +1500,17 @@
         "new": "Neu",
         "unchanged": "„Anwenden“ ist nur möglich, solange sich das Formular seit der Vorschau nicht geändert hat. Bitte die Vorschau erneut ausführen.",
         "impossible": "Aufholen nicht möglich — nur {{max}} Minuten Spielraum. Wähle einen späteren Ziel-Slot.",
+        "error": {
+          "withoutChange": "Die Verschiebung beträgt 0 Minuten — am Zeitplan würde sich nichts ändern. Bitte eine Minutenzahl ungleich 0 eintragen oder eine Startzeit wählen, die von der bisherigen abweicht.",
+          "targetNotAfterStart": "Der Ziel-Slot muss am selben Renntag nach dem Start-Slot liegen. Bitte einen späteren Slot aus der Liste wählen.",
+          "negativeDelay": "Beim Aufholen muss der Verzug größer als 0 Minuten sein — aufgeholt wird eine Verspätung. Zum Vorziehen bitte die Methode „+X Minuten“ mit einem negativen Wert verwenden.",
+          "leavesRaceDay": "Die Verschiebung schiebt „{{slot}}“ auf {{time}} und damit über den Renntag hinaus. Bitte weniger weit verschieben; der Zeitplan des Folgetags wird getrennt angepasst.",
+          "leavesRaceDayNoSlot": "Die Verschiebung schiebt einen Slot auf {{time}} und damit über den Renntag hinaus. Bitte weniger weit verschieben; der Zeitplan des Folgetags wird getrennt angepasst.",
+          "leavesRaceDayPlain": "Die Verschiebung schiebt mindestens einen Slot über den Renntag hinaus. Bitte weniger weit verschieben; der Zeitplan des Folgetags wird getrennt angepasst.",
+          "overtakesPredecessor": "So weit vorziehen ist nicht möglich: Der vorherige Slot beginnt um {{earliest}} und würde überholt. Höchstens {{max}} Minuten vorziehen — vor {{earliest}} darf kein verschobener Lauf starten.",
+          "overtakesPredecessorPlain": "So weit vorziehen ist nicht möglich: Der verschobene Block würde den vorherigen Slot überholen. Bitte weniger weit vorziehen.",
+          "unexpected": "Die Verschiebung wurde abgelehnt. Bitte die Angaben im Formular prüfen und die Vorschau erneut ausführen."
+        },
         "mode": "Methode",
         "delayMinutes": "Verzug (Minuten)",
         "help": {

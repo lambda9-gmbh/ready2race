@@ -1,7 +1,11 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
+import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleError
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleSlotState
+import de.lambda9.ready2race.backend.app.eventSchedule.entity.ShiftTargetProblem
+import de.lambda9.ready2race.backend.xls.XLSReadError
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -285,5 +289,77 @@ object EventScheduleLogic {
             return false
         }
         return entries.any { it.newStartTime < predecessorStartTime }
+    }
+
+    /**
+     * Prüft die beiden Eingaben des Modus "Aufholen bis" und benennt, welche davon nicht taugt -
+     * oder null, wenn beide in Ordnung sind. Beide Fälle landeten früher in derselben Meldung,
+     * verlangen vom Nutzer aber Gegensätzliches: einen anderen Ziel-Slot bzw. ein anderes Vorzeichen.
+     * [daySlots] beginnt beim Start-Slot; der Ziel-Slot muss deshalb an Index > 0 liegen (Index 0 ist
+     * der Start-Slot selbst, -1 heißt "gehört nicht zu diesem Renntag").
+     */
+    fun shiftTargetProblem(
+        daySlots: List<ShiftSlot>,
+        targetSlotId: UUID?,
+        deltaMinutes: Long,
+    ): ShiftTargetProblem? = when {
+        deltaMinutes <= 0 -> ShiftTargetProblem.NEGATIVE_DELAY
+        daySlots.indexOfFirst { it.id == targetSlotId } <= 0 -> ShiftTargetProblem.TARGET_NOT_AFTER_START
+        else -> null
+    }
+
+    /**
+     * Wie viele Minuten sich der Block höchstens vorziehen lässt, ohne [predecessorStartTime] zu
+     * überholen - die Zahl, die dem Nutzer beim abgelehnten Vorziehen fehlt (B21). Maßgeblich ist der
+     * Slot mit dem kleinsten Abstand zum Vorgänger, gemessen an seiner ALTEN Zeit; steht schon einer
+     * davon auf oder vor dem Vorgänger, ist gar kein Vorziehen mehr möglich (0).
+     */
+    fun maxAdvanceMinutes(entries: List<ShiftPreviewEntry>, predecessorStartTime: LocalDateTime): Long =
+        entries.minOfOrNull { Duration.between(predecessorStartTime, it.oldStartTime).toMinutes() }
+            ?.coerceAtLeast(0) ?: 0
+
+    /**
+     * Der erste Slot, den die Verschiebung aus [day] hinausträgt - oder null, wenn alle im Renntag
+     * bleiben. "Der erste" ist bewusst der zeitlich früheste Übertreter: er ist die Stelle, an der
+     * der Nutzer die Verschiebung kappen muss, alle weiteren folgen ihm ohnehin.
+     */
+    fun firstEntryLeavingDay(entries: List<ShiftPreviewEntry>, day: LocalDate): ShiftPreviewEntry? =
+        entries.filter { it.newStartTime.toLocalDate() != day }.minByOrNull { it.newStartTime }
+
+    /**
+     * Apache POI zählt Zeilen ab 0, Excel zeigt sie ab 1 an. [XLSReadError] trägt die POI-Nummer;
+     * dem Regattabüro hilft nur die Nummer, die auch links im Tabellenblatt steht - bei einem
+     * Zeitplan mit 100 Zeilen ist eine um eins verschobene Angabe schlimmer als gar keine.
+     * (Kopfzeile = Excel-Zeile 1, erste Datenzeile = 2; genauso rechnet RowReader.rowNum, das die
+     * Zeilennummern der Import-Vorschau liefert.)
+     */
+    fun excelRowNumber(poiRowNum: Int): Int = poiRowNum + 1
+
+    /**
+     * Übersetzt den präzisen Lesefehler des XLS-Lesers in den Zeitplan-Fehler, der ihn beim Nutzer
+     * ankommen lässt. Früher fiel hier alles in ein pauschales "Import file could not be read" -
+     * Zeile, Spalte und beanstandeter Wert gingen dabei verloren.
+     */
+    fun importErrorFor(error: XLSReadError): EventScheduleError = when (error) {
+        XLSReadError.FileError -> EventScheduleError.ImportFileUnreadable
+        XLSReadError.NoHeaders -> EventScheduleError.ImportNoHeaders
+        is XLSReadError.CellError.ColumnUnknown -> EventScheduleError.ImportColumnMissing(error.expected)
+        is XLSReadError.CellError.ParseError.CellBlank -> EventScheduleError.ImportCellBlank(
+            row = excelRowNumber(error.row),
+            column = error.col,
+        )
+
+        is XLSReadError.CellError.ParseError.WrongCellType -> EventScheduleError.ImportWrongCellType(
+            row = excelRowNumber(error.row),
+            column = error.col,
+            actual = error.actual.name,
+            expected = error.expected.name,
+        )
+
+        is XLSReadError.CellError.ParseError.UnparsableStringValue -> EventScheduleError.ImportCellUnparsable(
+            row = excelRowNumber(error.row),
+            column = error.col,
+            value = error.value,
+        )
     }
 }
