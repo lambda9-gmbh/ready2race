@@ -26,7 +26,8 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {shiftEventSchedule} from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, ShiftMode, ShiftScheduleRequest} from '@api/types.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
-import {buildShiftPreviewRows, defaultFromSlotId, extractMaxReductionMinutes, slotsAfter} from './common.ts'
+import {buildShiftPreviewRows, defaultFromSlotId, slotLabel, slotsAfter} from './common.ts'
+import {ScheduleErrorText, shiftErrorText} from './scheduleError.ts'
 
 type ShiftForm = {
     fromSlotId: string
@@ -75,7 +76,7 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
         null,
     )
     const [previewSnapshot, setPreviewSnapshot] = useState<string | null>(null)
-    const [previewError, setPreviewError] = useState<{message: string; max?: number} | null>(null)
+    const [previewError, setPreviewError] = useState<ScheduleErrorText | null>(null)
     const [previewing, setPreviewing] = useState(false)
     const [applying, setApplying] = useState(false)
 
@@ -115,6 +116,21 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
     // Formularfeld geändert hat - jede Änderung "entwertet" sie, "Anwenden" bleibt dann gesperrt.
     const previewStale = previewSnapshot !== null && previewSnapshot !== JSON.stringify(watched)
 
+    // Server-Meldungen nennen Slot und Zeitpunkt nur als ID bzw. ISO-Zeit; lesbar macht sie erst
+    // die Slot-Liste, die dieser Dialog ohnehin hat. Ein Slot, der über den Renntag hinausrutscht,
+    // bekommt bewusst Datum UND Uhrzeit - "01:15" allein verschwiege den Folgetag.
+    const errorContext = useMemo(
+        () => ({
+            slotName: (slotId: string) => {
+                const slot = slots.find(s => s.id === slotId)
+                return slot ? slotLabel(slot) : undefined
+            },
+            formatTime: (isoDateTime: string) =>
+                format(new Date(isoDateTime), t('format.datetime')),
+        }),
+        [slots, t],
+    )
+
     const runPreview = async (data: ShiftForm) => {
         setPreviewing(true)
         setPreviewError(null)
@@ -127,10 +143,7 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
             setPreviewRows(null)
             setPreviewSnapshot(null)
             if (error.status.value === 422) {
-                setPreviewError({
-                    message: error.message,
-                    max: extractMaxReductionMinutes(error),
-                })
+                setPreviewError(shiftErrorText(error, errorContext))
             } else {
                 feedback.error(t('common.error.unexpected'))
             }
@@ -151,7 +164,16 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
         })
         setApplying(false)
         if (error) {
-            feedback.error(t('common.error.unexpected'))
+            // Zwischen Vorschau und Anwenden kann sich der Zeitplan geändert haben (Zeitnahme,
+            // zweiter Nutzer) - dann trifft dieselbe Ablehnung wie in der Vorschau zu und verdient
+            // dieselbe Meldung, statt in einem pauschalen "unerwarteter Fehler" zu verschwinden.
+            if (error.status.value === 422) {
+                setPreviewRows(null)
+                setPreviewSnapshot(null)
+                setPreviewError(shiftErrorText(error, errorContext))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
         } else {
             reloadData()
             onClose()
@@ -219,9 +241,7 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
                         )}
                         {previewError && (
                             <Alert severity={'warning'}>
-                                {previewError.max !== undefined
-                                    ? t('event.schedule.shift.impossible', {max: previewError.max})
-                                    : previewError.message}
+                                {t(previewError.key, previewError.values)}
                             </Alert>
                         )}
                         {previewRows && (

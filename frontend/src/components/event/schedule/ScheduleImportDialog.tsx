@@ -24,6 +24,7 @@ import {importEventSchedule} from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, ImportRowResultDto} from '@api/types.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
 import {hasBlockingImportRows, hasRunningOrFinishedSlots, importRowChipColor} from './common.ts'
+import {ScheduleErrorText, importErrorText} from './scheduleError.ts'
 
 type Props = {
     eventId: string
@@ -58,7 +59,7 @@ const ScheduleImportDialog = ({eventId, open, onClose, reloadData, slots}: Props
 
     const [file, setFile] = useState<File | null>(null)
     const [rows, setRows] = useState<ImportRowResultDto[] | null>(null)
-    const [previewError, setPreviewError] = useState<string | null>(null)
+    const [previewError, setPreviewError] = useState<ScheduleErrorText | null>(null)
     const [previewing, setPreviewing] = useState(false)
     const [applying, setApplying] = useState(false)
 
@@ -83,7 +84,7 @@ const ScheduleImportDialog = ({eventId, open, onClose, reloadData, slots}: Props
         setPreviewing(false)
         if (error) {
             if (error.status.value === 422) {
-                setPreviewError(error.message)
+                setPreviewError(importErrorText(error))
             } else {
                 feedback.error(t('common.error.unexpected'))
             }
@@ -112,7 +113,7 @@ const ScheduleImportDialog = ({eventId, open, onClose, reloadData, slots}: Props
         setApplying(false)
         if (error) {
             if (error.status.value === 422) {
-                setPreviewError(error.message)
+                setPreviewError(importErrorText(error))
             } else {
                 feedback.error(t('common.error.unexpected'))
             }
@@ -146,7 +147,9 @@ const ScheduleImportDialog = ({eventId, open, onClose, reloadData, slots}: Props
                         </SelectFileButton>
                         {file && <Typography>{file.name}</Typography>}
                     </Stack>
-                    {previewError && <Alert severity={'error'}>{previewError}</Alert>}
+                    {previewError && (
+                        <Alert severity={'error'}>{t(previewError.key, previewError.values)}</Alert>
+                    )}
                     {rows && (
                         <TableContainer>
                             <Table size={'small'}>

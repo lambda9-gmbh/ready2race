@@ -471,13 +471,16 @@ object EventScheduleService {
         }
 
         if (deltaMinutes == 0L) {
-            return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+            return@comprehension KIO.fail(EventScheduleError.ShiftWithoutChange)
         }
 
         val targetSlotId = if (request.mode == ShiftMode.COMPRESS_TO_TARGET) {
-            val targetIndex = daySlots.indexOfFirst { it.id == request.targetSlotId }
-            if (targetIndex <= 0 || deltaMinutes < 0) {
-                return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+            // Zwei getrennte Gründe, zwei getrennte Meldungen: ein Ziel-Slot, der nicht hinter dem
+            // Start-Slot liegt (oder gar nicht zu diesem Renntag gehört), verlangt eine andere
+            // Korrektur als ein negativer Verzug.
+            val problem = EventScheduleLogic.shiftTargetProblem(daySlots, request.targetSlotId, deltaMinutes)
+            if (problem != null) {
+                return@comprehension KIO.fail(EventScheduleError.ShiftTargetInvalid(problem))
             }
             request.targetSlotId
         } else {
@@ -492,8 +495,15 @@ object EventScheduleService {
         }
 
         // Ein Shift bleibt im Renntag — über Mitternacht hinaus wäre der Plan des Folgetags still betroffen.
-        if (entries.any { it.newStartTime.toLocalDate() != day }) {
-            return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+        val leavingEntry = EventScheduleLogic.firstEntryLeavingDay(entries, day)
+        if (leavingEntry != null) {
+            return@comprehension KIO.fail(
+                EventScheduleError.ShiftLeavesRaceDay(
+                    slotId = leavingEntry.slotId,
+                    newStartTime = leavingEntry.newStartTime,
+                    raceDay = day,
+                )
+            )
         }
 
         // Bei einem Vorziehen (deltaMinutes < 0) darf der verschobene Block seinen Vorgänger nicht
@@ -506,8 +516,13 @@ object EventScheduleService {
                 ?.takeIf { it[EVENT_SCHEDULE_SLOT.START_TIME]!!.toLocalDate() == day }
                 ?.get(EVENT_SCHEDULE_SLOT.START_TIME)
 
-            if (EventScheduleLogic.overtakesPredecessor(entries, predecessor)) {
-                return@comprehension KIO.fail(EventScheduleError.InvalidShiftRequest)
+            if (predecessor != null && EventScheduleLogic.overtakesPredecessor(entries, predecessor)) {
+                return@comprehension KIO.fail(
+                    EventScheduleError.ShiftOvertakesPredecessor(
+                        earliestStartTime = predecessor,
+                        maxAdvanceMinutes = EventScheduleLogic.maxAdvanceMinutes(entries, predecessor),
+                    )
+                )
             }
         }
 
@@ -576,7 +591,7 @@ object EventScheduleService {
                 lauf = lauf,
                 duration = duration,
             )
-        }.mapError { EventScheduleError.ImportFileUnreadable }
+        }.mapError { EventScheduleLogic.importErrorFor(it) }
 
         val candidateRecords = !EventScheduleRepo.getImportCandidates(eventId).orDie()
 

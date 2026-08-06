@@ -1478,7 +1478,12 @@
         "rowFree": "Free slot",
         "rowAmbiguous": "Not unique — will be imported as a free slot",
         "rowDuplicate": "Duplicate in the file — import blocked",
-        "apply": "Import"
+        "apply": "Import",
+        "error": {
+          "duplicateRows_one": "Row {{rows}} points to the same run as another row. Please remove the duplicate row from the file or assign it to a different run, then import again.",
+          "duplicateRows_other": "Rows {{rows}} point to the same run more than once. Please remove the duplicate rows from the file or assign them to different runs, then import again.",
+          "unexpected": "The file could not be imported. Please check its structure and contents and try again."
+        }
       },
       "shift": {
         "title": "Adjust schedule",
@@ -1495,6 +1500,17 @@
         "new": "New",
         "unchanged": "\"Apply\" is only available while the form has not changed since the preview. Please run the preview again.",
         "impossible": "Cannot catch up — only {{max}} minutes of slack. Choose a later target slot.",
+        "error": {
+          "withoutChange": "The shift amounts to 0 minutes — nothing in the schedule would change. Please enter a number of minutes other than 0, or choose a start time that differs from the current one.",
+          "targetNotAfterStart": "The target slot must come after the start slot on the same race day. Please choose a later slot from the list.",
+          "negativeDelay": "Catching up needs a delay greater than 0 minutes — what is caught up is a delay. To move slots earlier, use the \"+X minutes\" method with a negative value.",
+          "leavesRaceDay": "The shift would move \"{{slot}}\" to {{time}} and thus past the end of the race day. Please shift by less; the next day's schedule is adjusted separately.",
+          "leavesRaceDayNoSlot": "The shift would move a slot to {{time}} and thus past the end of the race day. Please shift by less; the next day's schedule is adjusted separately.",
+          "leavesRaceDayPlain": "The shift would move at least one slot past the end of the race day. Please shift by less; the next day's schedule is adjusted separately.",
+          "overtakesPredecessor": "Cannot move that far ahead: the preceding slot starts at {{earliest}} and would be overtaken. Move up by at most {{max}} minutes — no shifted run may start before {{earliest}}.",
+          "overtakesPredecessorPlain": "Cannot move that far ahead: the shifted block would overtake the preceding slot. Please move up by less.",
+          "unexpected": "The shift was rejected. Please check the values in the form and run the preview again."
+        },
         "mode": "Method",
         "delayMinutes": "Delay (minutes)",
         "help": {

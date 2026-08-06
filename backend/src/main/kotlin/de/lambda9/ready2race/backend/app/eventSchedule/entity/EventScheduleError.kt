@@ -2,8 +2,24 @@ package de.lambda9.ready2race.backend.app.eventSchedule.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.calls.responses.ApiError
+import de.lambda9.ready2race.backend.calls.responses.ErrorCode
 import io.ktor.http.*
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
+
+/**
+ * Warum ein "Aufholen bis" abgelehnt wird. Beide Fälle betreffen dieselbe Eingabemaske, verlangen
+ * vom Nutzer aber Gegensätzliches (anderer Ziel-Slot vs. anderes Vorzeichen beim Verzug) - deshalb
+ * reisen sie maschinenlesbar mit, statt in einem gemeinsamen Text zu verschwimmen.
+ */
+enum class ShiftTargetProblem {
+    /** Der Ziel-Slot liegt nicht (mehr) hinter dem Start-Slot desselben Renntags. */
+    TARGET_NOT_AFTER_START,
+
+    /** Der angegebene Verzug ist 0 oder negativ - aufholen lässt sich nur eine Verspätung. */
+    NEGATIVE_DELAY,
+}
 
 sealed interface EventScheduleError : ServiceError {
     data class EventNotFound(val eventId: UUID) : EventScheduleError
@@ -17,9 +33,65 @@ sealed interface EventScheduleError : ServiceError {
     /** finish/activate über den Zeitplan (C1) - der Slot muss LINKED sein, sonst gibt es keinen Lauf. */
     data class SlotNotLinked(val slotId: UUID) : EventScheduleError
     data class CompressionImpossible(val maxReductionMinutes: Long) : EventScheduleError
-    data object InvalidShiftRequest : EventScheduleError
+
+    // --- Ablehnungsgründe des Verschiebe-Dialogs (B4/B21) ---
+    // Früher waren das vier Wege in ein und dasselbe "Shift request parameters are inconsistent".
+    // Das Regattabüro sah am Renntag in allen vier Fällen denselben Satz und musste raten, was zu
+    // ändern ist. Jeder Grund hat deshalb jetzt einen eigenen ErrorCode und - wo es beim Korrigieren
+    // hilft - strukturierte Werte (Grenzzeit, betroffener Slot), so wie bei CompressionImpossible.
+
+    /** Die gewählte Verschiebung ergibt 0 Minuten Unterschied - es gäbe nichts zu speichern. */
+    data object ShiftWithoutChange : EventScheduleError
+
+    /** "Aufholen bis" mit unbrauchbarem Ziel-Slot oder unbrauchbarem Verzug. */
+    data class ShiftTargetInvalid(val problem: ShiftTargetProblem) : EventScheduleError
+
+    /**
+     * Ein Slot würde durch die Verschiebung auf den Folgetag rutschen. Ein Shift bleibt bewusst im
+     * Renntag - sonst wäre der Plan des nächsten Tages still mitbetroffen.
+     */
+    data class ShiftLeavesRaceDay(
+        val slotId: UUID,
+        val newStartTime: LocalDateTime,
+        val raceDay: LocalDate,
+    ) : EventScheduleError
+
+    /**
+     * Ein Vorziehen, das den unverschobenen Vorgänger-Slot überholen würde. [earliestStartTime] ist
+     * die Startzeit dieses Vorgängers und damit die Untergrenze; [maxAdvanceMinutes] sagt, wie viele
+     * Minuten das Vorziehen höchstens betragen darf.
+     */
+    data class ShiftOvertakesPredecessor(
+        val earliestStartTime: LocalDateTime,
+        val maxAdvanceMinutes: Long,
+    ) : EventScheduleError
+
     data class DuplicateImportRow(val rowNumbers: List<Int>) : EventScheduleError
+
+    // --- Lesefehler des Excel-Imports ---
+    // Der XLS-Leser weiß genau, welche Zelle nicht lesbar war; früher landete alles davon in einem
+    // pauschalen "Import file could not be read". Die Varianten spiegeln XLSReadError 1:1 und
+    // benutzen dieselben SPREADSHEET_*-Codes wie der Ergebnis-Upload, damit das Frontend die
+    // vorhandenen Übersetzungen (common.error.upload.*) weiterverwenden kann.
+    // [row] ist immer die in Excel angezeigte Zeilennummer (Kopfzeile = 1, erste Datenzeile = 2).
+
+    /** Die Datei ließ sich gar nicht als Arbeitsmappe öffnen. */
     data object ImportFileUnreadable : EventScheduleError
+
+    /** Erste Zeile ohne verwertbare Spaltenüberschriften. */
+    data object ImportNoHeaders : EventScheduleError
+
+    data class ImportColumnMissing(val column: String) : EventScheduleError
+    data class ImportCellBlank(val row: Int, val column: String) : EventScheduleError
+    data class ImportWrongCellType(
+        val row: Int,
+        val column: String,
+        val actual: String,
+        val expected: String,
+    ) : EventScheduleError
+
+    data class ImportCellUnparsable(val row: Int, val column: String, val value: String) : EventScheduleError
+
     /** setRoundSkipped (Wettkampf → Durchführung) - die Runde hat noch keine Läufe (competition_match), es gibt nichts, was "entfallen" könnte; die einzelnen Slots sind stattdessen individuell zu überspringen. */
     data class RoundNotMaterialized(val setupRoundId: UUID) : EventScheduleError
     /** setRoundSkipped - mindestens ein Lauf der Runde hat noch 2+ tatsächlich fahrende Mannschaften; diese müssen ausgetragen werden, damit die nächste Runde sauber ausgelost werden kann. */
@@ -42,9 +114,95 @@ sealed interface EventScheduleError : ServiceError {
             // parseMaxReductionMinutes/extractMaxReductionMinutes).
             details = mapOf("maxReductionMinutes" to maxReductionMinutes),
         )
-        InvalidShiftRequest -> ApiError(HttpStatusCode.UnprocessableEntity, "Shift request parameters are inconsistent")
-        is DuplicateImportRow -> ApiError(HttpStatusCode.UnprocessableEntity, "Import contains duplicate matches in rows $rowNumbers")
-        ImportFileUnreadable -> ApiError(HttpStatusCode.UnprocessableEntity, "Import file could not be read")
+
+        ShiftWithoutChange -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Shift of 0 minutes would not change anything - pick a different number of minutes or a different time",
+            errorCode = ErrorCode.SCHEDULE_SHIFT_WITHOUT_CHANGE,
+        )
+
+        is ShiftTargetInvalid -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            when (problem) {
+                ShiftTargetProblem.TARGET_NOT_AFTER_START ->
+                    "Compression target must be a slot after the start slot on the same race day"
+
+                ShiftTargetProblem.NEGATIVE_DELAY ->
+                    "Compression needs a positive delay - to move slots earlier use a negative plain shift instead"
+            },
+            details = mapOf("problem" to problem.name),
+            errorCode = ErrorCode.SCHEDULE_SHIFT_TARGET_INVALID,
+        )
+
+        is ShiftLeavesRaceDay -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Shift would move slot $slotId to $newStartTime and thus past race day $raceDay",
+            details = mapOf(
+                "slotId" to slotId.toString(),
+                "newStartTime" to newStartTime.toString(),
+                "raceDay" to raceDay.toString(),
+            ),
+            errorCode = ErrorCode.SCHEDULE_SHIFT_LEAVES_RACE_DAY,
+        )
+
+        is ShiftOvertakesPredecessor -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Cannot move earlier than $earliestStartTime without overtaking the preceding slot " +
+                "(at most $maxAdvanceMinutes minutes earlier)",
+            details = mapOf(
+                "earliestStartTime" to earliestStartTime.toString(),
+                "maxAdvanceMinutes" to maxAdvanceMinutes,
+            ),
+            errorCode = ErrorCode.SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR,
+        )
+
+        is DuplicateImportRow -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Import contains duplicate matches in rows $rowNumbers",
+            details = mapOf("rowNumbers" to rowNumbers),
+            errorCode = ErrorCode.SCHEDULE_IMPORT_DUPLICATE_ROWS,
+        )
+
+        ImportFileUnreadable -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Import file could not be read",
+            errorCode = ErrorCode.FILE_ERROR,
+        )
+
+        ImportNoHeaders -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Cannot find column headers, expected them in the first row",
+            errorCode = ErrorCode.SPREADSHEET_NO_HEADERS,
+        )
+
+        is ImportColumnMissing -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Required column '$column' is missing",
+            details = mapOf("expected" to column),
+            errorCode = ErrorCode.SPREADSHEET_COLUMN_UNKNOWN,
+        )
+
+        is ImportCellBlank -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Required value in row $row and column '$column' is missing",
+            details = mapOf("row" to row, "column" to column),
+            errorCode = ErrorCode.SPREADSHEET_CELL_BLANK,
+        )
+
+        is ImportWrongCellType -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Wrong cell type in row $row and column '$column'; actual: $actual, expected: $expected",
+            details = mapOf("row" to row, "column" to column, "actual" to actual, "expected" to expected),
+            errorCode = ErrorCode.SPREADSHEET_WRONG_CELL_TYPE,
+        )
+
+        is ImportCellUnparsable -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Cannot parse '$value' in row $row and column '$column'",
+            details = mapOf("row" to row, "column" to column, "value" to value),
+            errorCode = ErrorCode.SPREADSHEET_UNPARSABLE_STRING,
+        )
+
         is RoundNotMaterialized -> ApiError(HttpStatusCode.Conflict, "Round $setupRoundId has no runs yet - cancel its slots individually instead")
         is RoundHasRunsToRace -> ApiError(HttpStatusCode.Conflict, "Round $setupRoundId still has runs to race - they must be executed for seeding")
     }

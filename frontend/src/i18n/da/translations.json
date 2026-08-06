@@ -1478,7 +1478,12 @@
         "rowFree": "Fri slot",
         "rowAmbiguous": "Ikke entydig — importeres som en fri slot",
         "rowDuplicate": "Duplikeret i filen — import blokeret",
-        "apply": "Importér"
+        "apply": "Importér",
+        "error": {
+          "duplicateRows_one": "Række {{rows}} peger på det samme løb som en anden række. Fjern venligst den duplikerede række i filen, eller tilknyt den et andet løb, og importér igen.",
+          "duplicateRows_other": "Rækkerne {{rows}} peger flere gange på det samme løb. Fjern venligst de duplikerede rækker i filen, eller tilknyt dem andre løb, og importér igen.",
+          "unexpected": "Filen kunne ikke importeres. Kontrollér venligst filens opbygning og indhold, og prøv igen."
+        }
       },
       "shift": {
         "title": "Juster tidsplan",
@@ -1495,6 +1500,17 @@
         "new": "Ny",
         "unchanged": "„Anvend“ er kun muligt, så længe formularen ikke er ændret siden forhåndsvisningen. Kør venligst forhåndsvisningen igen.",
         "impossible": "Kan ikke indhente — kun {{max}} minutters spillerum. Vælg en senere mål-slot.",
+        "error": {
+          "withoutChange": "Forskydningen er på 0 minutter — der ville ikke ske nogen ændring i tidsplanen. Angiv venligst et minuttal forskelligt fra 0, eller vælg en starttid, der afviger fra den nuværende.",
+          "targetNotAfterStart": "Mål-slotten skal ligge efter start-slotten på samme løbsdag. Vælg venligst en senere slot på listen.",
+          "negativeDelay": "Ved indhentning skal forsinkelsen være større end 0 minutter — det er en forsinkelse, der indhentes. Brug metoden „+X minutter“ med en negativ værdi for at rykke frem.",
+          "leavesRaceDay": "Forskydningen flytter „{{slot}}“ til {{time}} og dermed ud over løbsdagen. Forskyd venligst mindre; den følgende dags tidsplan justeres separat.",
+          "leavesRaceDayNoSlot": "Forskydningen flytter en slot til {{time}} og dermed ud over løbsdagen. Forskyd venligst mindre; den følgende dags tidsplan justeres separat.",
+          "leavesRaceDayPlain": "Forskydningen flytter mindst én slot ud over løbsdagen. Forskyd venligst mindre; den følgende dags tidsplan justeres separat.",
+          "overtakesPredecessor": "Det er ikke muligt at rykke så langt frem: Den foregående slot begynder kl. {{earliest}} og ville blive overhalet. Ryk højst {{max}} minutter frem — intet forskudt løb må starte før {{earliest}}.",
+          "overtakesPredecessorPlain": "Det er ikke muligt at rykke så langt frem: Den forskudte blok ville overhale den foregående slot. Ryk venligst mindre frem.",
+          "unexpected": "Forskydningen blev afvist. Kontrollér venligst oplysningerne i formularen, og kør forhåndsvisningen igen."
+        },
         "mode": "Metode",
         "delayMinutes": "Forsinkelse (minutter)",
         "help": {
