@@ -6545,6 +6545,7 @@ paths:
           type: string
     get:
       operationId: checkQrCode
+      description: Public - anonymous callers receive a reduced QrCodePublicResponse without personal data
       responses:
         200:
           description: OK
@@ -6554,14 +6555,11 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/QrCodeParticipantResponse'
                   - $ref: '#/components/schemas/QrCodeAppuserResponse'
+                  - $ref: '#/components/schemas/QrCodePublicResponse'
         204:
           $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -13681,6 +13679,13 @@ components:
         type: { $ref: '#/components/schemas/QrCodeDtoType' }
         clubName: { type: string, nullable: true }
 
+    QrCodePublicResponse:
+      type: object
+      required: [ eventId ]
+      properties:
+        eventId: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/QrCodeDtoType' }
+
     QrCodeAppuserUpdate:
       type: object
       required: [ id, qrCodeId, eventId ]
@@ -14182,6 +14187,8 @@ components:
         - EVENT_REGISTRATION_INVOICE
         - PARTICIPANT_CHALLENGE_REGISTERED
         - CERTIFICATE_OF_PARTICIPATION_PARTICIPANT
+        - CLUB_REPRESENTATIVE_APPROVAL_REQUESTED
+        - COMPETITION_REGISTRATION_EDITED
 
     EmailTemplaplatePlaceholder:
       type: string

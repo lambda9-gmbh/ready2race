@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.EveryAppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
+import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_HAS_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVERY_APP_USER_WITH_ROLES
@@ -67,6 +68,31 @@ object AppUserRepo {
         with(APP_USER_WITH_ROLES) {
             selectFrom(this)
                 .where(CLUB.eq(clubId))
+                .fetch()
+        }
+    }
+
+    // Used to notify all current club representatives by email (e.g. pending approvals, edited
+    // registrations). Queried from the base table (not app_user_with_roles) because it needs
+    // `language`, which the view does not expose.
+    fun getClubRepresentatives(
+        clubId: UUID
+    ): JIO<List<AppUserRecord>> = Jooq.query {
+        with(APP_USER) {
+            selectFrom(this)
+                .where(
+                    CLUB.eq(clubId)
+                        .and(
+                            DSL.exists(
+                                DSL.selectOne()
+                                    .from(APP_USER_HAS_ROLE)
+                                    .where(
+                                        APP_USER_HAS_ROLE.APP_USER.eq(ID)
+                                            .and(APP_USER_HAS_ROLE.ROLE.eq(CLUB_REPRESENTATIVE_ROLE))
+                                    )
+                            )
+                        )
+                )
                 .fetch()
         }
     }

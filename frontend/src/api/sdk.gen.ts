@@ -3873,6 +3873,9 @@ export const uploadResultFile = <ThrowOnError extends boolean = false>(
     })
 }
 
+/**
+ * Public - anonymous callers receive a reduced QrCodePublicResponse without personal data
+ */
 export const checkQrCode = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<CheckQrCodeData, ThrowOnError>,
 ) => {

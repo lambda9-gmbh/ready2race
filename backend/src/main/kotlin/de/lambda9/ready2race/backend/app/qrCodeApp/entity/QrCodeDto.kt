@@ -28,4 +28,15 @@ sealed class QrCodeDto() {
         val type: QrCodeDtoType,
         val clubName: String? = null,
     ) : QrCodeDto()
+
+    data class QrCodePublicResponseDto(
+        val eventId: UUID,
+        val type: QrCodeDtoType,
+    ) : QrCodeDto()
+}
+
+fun QrCodeDto.toPublic(): QrCodeDto.QrCodePublicResponseDto = when (this) {
+    is QrCodeDto.QrCodeParticipantResponseDto -> QrCodeDto.QrCodePublicResponseDto(eventId, type)
+    is QrCodeDto.QrCodeAppuserResponseDto -> QrCodeDto.QrCodePublicResponseDto(eventId, type)
+    is QrCodeDto.QrCodePublicResponseDto -> this
 }

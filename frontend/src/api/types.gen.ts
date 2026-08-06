@@ -313,11 +313,6 @@ export type CatererTransactionViewDto = {
  */
 export type ChainProgressionMode = 'SCHIEDSRICHTER' | 'REGATTABUERO' | 'DEAKTIVIERT'
 
-/**
- * From which state on a match shows up as a result on the public views (athlete board, kiosk, public results page): FINISHED_ONLY only for finished matches (finished_at set), RESULTS_COMPLETE additionally for matches whose boats are all scored (AWAITING_FINISH). Defaults to FINISHED_ONLY, because until a match is finished a time penalty can still arrive and a published result that changes afterwards cannot be taken back.
- */
-export type PublicResultsVisibility = 'FINISHED_ONLY' | 'RESULTS_COMPLETE'
-
 export type ChallengeCompetitionInfoDto = {
     id: string
     name: string
@@ -898,6 +893,8 @@ export type EmailTemplateKey =
     | 'EVENT_REGISTRATION_INVOICE'
     | 'PARTICIPANT_CHALLENGE_REGISTERED'
     | 'CERTIFICATE_OF_PARTICIPATION_PARTICIPANT'
+    | 'CLUB_REPRESENTATIVE_APPROVAL_REQUESTED'
+    | 'COMPETITION_REGISTRATION_EDITED'
 
 export type EmailTemplateRequest = {
     subject: string
@@ -2074,6 +2071,11 @@ export type ProduceInvoicesRequest = {
     type: RegistrationInvoiceType
 }
 
+/**
+ * From which state on a match shows up as a result on the public views (athlete board, kiosk, public results page): FINISHED_ONLY only for finished matches (finished_at set), RESULTS_COMPLETE additionally for matches whose boats are all scored (AWAITING_FINISH). Defaults to FINISHED_ONLY, because until a match is finished a time penalty can still arrive and a published result that changes afterwards cannot be taken back.
+ */
+export type PublicResultsVisibility = 'FINISHED_ONLY' | 'RESULTS_COMPLETE'
+
 export type QrCodeAppuserResponse = {
     firstname: string
     lastname: string
@@ -2107,6 +2109,11 @@ export type QrCodeParticipantUpdate = {
     id: string
     qrCodeId: string
     eventId: string
+}
+
+export type QrCodePublicResponse = {
+    eventId: string
+    type?: QrCodeDtoType
 }
 
 export type RatingCategoriesToEventRequest = {
@@ -6245,9 +6252,11 @@ export type CheckQrCodeData = {
     }
 }
 
-export type CheckQrCodeResponse = (QrCodeParticipantResponse | QrCodeAppuserResponse) | void
+export type CheckQrCodeResponse =
+    | (QrCodeParticipantResponse | QrCodeAppuserResponse | QrCodePublicResponse)
+    | void
 
-export type CheckQrCodeError = BadRequestError | ApiError | UnprocessableEntityError
+export type CheckQrCodeError = BadRequestError | UnprocessableEntityError | ApiError
 
 export type DeleteQrCodeData = {
     path: {

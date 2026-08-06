@@ -317,6 +317,18 @@ object EmailService {
         EmailTemplateKey.CERTIFICATE_OF_PARTICIPATION_PARTICIPANT to EmailPlaceholders(
             optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
                 EmailTemplatePlaceholder.EVENT.name.lowercase())
+        ),
+        EmailTemplateKey.CLUB_REPRESENTATIVE_APPROVAL_REQUESTED to EmailPlaceholders(
+            optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
+                EmailTemplatePlaceholder.SENDER.name.lowercase(),
+                EmailTemplatePlaceholder.CLUB.name.lowercase())
+        ),
+        EmailTemplateKey.COMPETITION_REGISTRATION_EDITED to EmailPlaceholders(
+            optional = listOf(EmailTemplatePlaceholder.RECIPIENT.name.lowercase(),
+                EmailTemplatePlaceholder.SENDER.name.lowercase(),
+                EmailTemplatePlaceholder.CLUB.name.lowercase(),
+                EmailTemplatePlaceholder.EVENT.name.lowercase(),
+                EmailTemplatePlaceholder.COMPETITIONS.name.lowercase())
         )
     )
 

@@ -389,7 +389,7 @@
     "create": {
       "option": "„{{name}}“ neu anlegen",
       "existingSelected": "Bestehender Verein ausgewählt",
-      "joinRequest": "Beitrittsanfrage: Ein Administrator von „{{name}}“ muss Ihre Anfrage bestätigen, bevor Sie den Verein verwalten können. Der Administrator wird nicht automatisch benachrichtigt – bitte informieren Sie ihn selbst, damit er die Anfrage annimmt.",
+      "joinRequest": "Beitrittsanfrage: Ein Administrator von „{{name}}“ muss Ihre Anfrage bestätigen, bevor Sie den Verein verwalten können. Die bestehenden Administratoren werden automatisch per E-Mail über Ihre Anfrage informiert.",
       "willCreate": "Neuer Verein „{{name}}“ wird angelegt"
     },
     "settings": {
@@ -427,7 +427,7 @@
       },
       "pending": {
         "title": "Anfrage zur Vereinsverwaltung",
-        "message": "Die Anfrage, dem Verein {{club}} als Vereinsvertretung beizutreten, ist bisher unbeantwortet. Die Vereinsvertretungen werden nicht automatisch benachrichtigt – bitte wende dich direkt an sie."
+        "message": "Die Anfrage, dem Verein {{club}} als Vereinsvertretung beizutreten, ist bisher unbeantwortet. Die bestehenden Vereinsvertretungen wurden bereits per E-Mail benachrichtigt."
       }
     },
     "participant": {
@@ -2325,7 +2325,9 @@
         "EVENT_REGISTRATION_CONFIRMATION": "Anmeldebestätigung für Veranstaltung",
         "EVENT_REGISTRATION_INVOICE": "Rechnung zur Veranstaltungsanmeldung",
         "PARTICIPANT_CHALLENGE_REGISTERED": "Anmeldebestätigung für Challenge",
-        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Teilnahmezertifikat"
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Teilnahmezertifikat",
+        "CLUB_REPRESENTATIVE_APPROVAL_REQUESTED": "Verwalter-Anfrage für Verein",
+        "COMPETITION_REGISTRATION_EDITED": "Meldung bearbeitet"
       },
       "requiredPlaceholders": "Benötigte Platzhalter:",
       "optionalPlaceholders": "Optionale Platzhalter:",

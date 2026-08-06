@@ -108,6 +108,28 @@
         "",
         "Wir wünschen weiterhin alles Gute."
       ]
+    },
+    {
+      "key": "CLUB_REPRESENTATIVE_APPROVAL_REQUESTED",
+      "subject": "Ready2Race - Neue Verwalter-Anfrage für ##club##",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "##sender## möchte sich als weitere:r Verwalter:in für euren Verein „##club##“ registrieren.",
+        "",
+        "Bitte melde dich bei Ready2Race an und bestätige oder lehne die Anfrage auf der Vereinsseite ab, damit ##sender## den Verein mitverwalten kann."
+      ]
+    },
+    {
+      "key": "COMPETITION_REGISTRATION_EDITED",
+      "subject": "Ready2Race - Meldung für ##event## wurde bearbeitet",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "##sender## hat eine Meldung von ##club## zu ##competitions## bei der Veranstaltung '##event##' bearbeitet.",
+        "",
+        "Bitte prüfe die Meldung in Ready2Race, falls dir die Änderung nicht bekannt war."
+      ]
     }
   ]
 }

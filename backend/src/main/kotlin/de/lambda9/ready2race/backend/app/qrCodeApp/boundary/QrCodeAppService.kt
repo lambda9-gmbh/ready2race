@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.toRecord
 import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeError
 import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeUpdateDto
+import de.lambda9.ready2race.backend.app.qrCodeApp.entity.toPublic
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
@@ -19,14 +20,16 @@ import de.lambda9.tailwind.core.extensions.kio.orDie
 object QrCodeAppService {
 
     fun loadQrCode(
-        qrCodeId: String
+        qrCodeId: String,
+        isAnonymous: Boolean,
     ): App<ServiceError, ApiResponse> = KIO.comprehension {
         val userOrParticipant = !QrCodeRepo.getUserOrParticipantByQrCodeIdWithDetails(qrCodeId).orDie()
         //.onNullFail { QrCodeError.QrCodeNotFound }
 
         when {
-            userOrParticipant != null -> KIO.ok(ApiResponse.Dto(userOrParticipant))
-            else -> KIO.ok(ApiResponse.NoData)
+            userOrParticipant == null -> KIO.ok(ApiResponse.NoData)
+            isAnonymous -> KIO.ok(ApiResponse.Dto(userOrParticipant.toPublic()))
+            else -> KIO.ok(ApiResponse.Dto(userOrParticipant))
         }
     }
 
