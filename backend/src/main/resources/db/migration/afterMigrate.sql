@@ -715,13 +715,16 @@ create view event_registration_for_invoice as
 select er.id,
        er.event,
        c.name                                                                               as club_name,
-       au                                                                                   as recipient,
+       coalesce(recipients.recipients, '{}')                                                as recipients,
        coalesce(array_agg(crwf) filter ( where crwf.event_registration is not null ), '{}') as competitions
 from event_registration er
          join club c on er.club = c.id
-         left join app_user au on c.id = au.club
+         left join (select au.club,
+                           array_agg(au) filter ( where au.id is not null ) as recipients
+                    from app_user au
+                    group by au.club) recipients on c.id = recipients.club
          left join competition_registration_with_fees crwf on er.id = crwf.event_registration
-group by er.id, c.id, au.id
+group by er.id, c.id, recipients.recipients
 ;
 
 create view task_with_responsible_users as

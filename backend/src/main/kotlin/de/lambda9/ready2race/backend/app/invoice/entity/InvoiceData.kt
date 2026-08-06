@@ -13,7 +13,7 @@ data class InvoiceData(
     val contact: InvoiceContactData,
     val payee: InvoicePayeeData,
     val billedToOrga: String?,
-    val billedToName: String,
+    val billedToName: String?,
     val paymentDueBy: LocalDate,
     val positions: List<InvoicePositionData>,
     val createdAt: LocalDateTime,
