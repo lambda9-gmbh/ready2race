@@ -222,12 +222,15 @@ object CertificateService {
         !CompetitionRepo.getByEvent(eventId).orDie()
             .failIf({it.any { c -> c.challengeEndAt!! > LocalDateTime.now() }}) { CertificateError.ChallengeStillInProgress }
 
+        // Die Abfrage liefert eine Liste, nie null - `onNullFail` lief hier deshalb immer ins Leere
+        // und eine Person ohne (oder ohne bestätigtes) Ergebnis bekam eine Urkunde über "0 m",
+        // also einen Nachweis über eine Teilnahme, die es nicht gab. Geprüft wird die leere Liste.
         val result = !ChallengeResultParticipantViewRepo.getByEventIdAndParticipantId(
             eventId = eventId,
             participantId = participantId,
             verifiedIfNeededOnly = true,
         ).orDie()
-            .onNullFail { CertificateError.NoResults }
+            .failIf({ it.isEmpty() }) { CertificateError.NoResults }
 
         val resultTotal = result.sumOf { it.teamResultValue ?: 0 }
         val resultUnit = MatchResultType.valueOf(event.challengeMatchResultType!!).unit
