@@ -313,6 +313,11 @@ export type CatererTransactionViewDto = {
  */
 export type ChainProgressionMode = 'SCHIEDSRICHTER' | 'REGATTABUERO' | 'DEAKTIVIERT'
 
+/**
+ * From which state on a match shows up as a result on the public views (athlete board, kiosk, public results page): FINISHED_ONLY only for finished matches (finished_at set), RESULTS_COMPLETE additionally for matches whose boats are all scored (AWAITING_FINISH). Defaults to FINISHED_ONLY, because until a match is finished a time penalty can still arrive and a published result that changes afterwards cannot be taken back.
+ */
+export type PublicResultsVisibility = 'FINISHED_ONLY' | 'RESULTS_COMPLETE'
+
 export type ChallengeCompetitionInfoDto = {
     id: string
     name: string
@@ -822,6 +827,7 @@ export type CreateEventRequest = {
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
+    publicResultsVisibility?: PublicResultsVisibility
 }
 
 export type CustomFontDto = {
@@ -1024,6 +1030,7 @@ export type EventDto = {
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
+    publicResultsVisibility?: PublicResultsVisibility
     challengesFinished?: boolean
 }
 
@@ -1483,11 +1490,14 @@ export type LiveDashboardMatchDto = {
 
 /**
  * SKIPPED: the schedule slot of this match was cancelled. Unlike the public boards the referee dashboard marks such a match instead of hiding it - the referee has to see the cancellation to be able to undo it in the schedule.
+ *
+ * AWAITING_FINISH: every boat is scored but nobody finished the match yet. FINISHED means exclusively that competition_match.finished_at is set - a match only ends by an explicit action, because until then a time penalty can still arrive.
  */
 export type LiveDashboardMatchState =
     | 'RUNNING'
     | 'FINISHED'
     | 'SKIPPED'
+    | 'AWAITING_FINISH'
     | 'UPCOMING'
     | 'UNSCHEDULED'
 
@@ -2613,6 +2623,7 @@ export type UpdateEventRequest = {
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
+    publicResultsVisibility?: PublicResultsVisibility
 }
 
 export type UpdateGlobalConfigurationsRequest = {

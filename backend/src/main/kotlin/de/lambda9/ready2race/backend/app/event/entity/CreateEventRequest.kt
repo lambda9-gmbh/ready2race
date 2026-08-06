@@ -31,6 +31,8 @@ data class CreateEventRequest(
     val chainProgressionMode: ChainProgressionMode,
     /** Zeigt Pausen/Programmpunkte aus dem Zeitplan auch auf Kiosk und Athleten-Anzeige. */
     val showBreaksOnPublicBoards: Boolean,
+    /** Ab welchem Zustand ein Lauf als Ergebnis auf den öffentlichen Ansichten erscheint. */
+    val publicResultsVisibility: PublicResultsVisibility,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -72,6 +74,7 @@ data class CreateEventRequest(
                 allowParticipantSelfRegistration = false,
                 chainProgressionMode = ChainProgressionMode.DEAKTIVIERT,
                 showBreaksOnPublicBoards = false,
+                publicResultsVisibility = PublicResultsVisibility.FINISHED_ONLY,
             )
     }
 }

@@ -9,8 +9,16 @@ import java.util.UUID
  * Anzeigen wird der Lauf im Schiedsrichter-Dashboard NICHT versteckt, sondern gekennzeichnet -
  * der Schiedsrichter muss die Absage sehen, um sie im Zeitplan zurücknehmen zu können (`/unskip`).
  * Ein still verschwundener Lauf wäre am Steg nicht von einem Anzeigefehler zu unterscheiden.
+ *
+ * [AWAITING_FINISH]: Alle Boote sind gewertet, aber niemand hat den Lauf beendet
+ * ([FINISHED] heißt ausschließlich: `competition_match.finished_at` ist gesetzt). Bis zum
+ * 06.08.2026 fielen beide Sachverhalte auf [FINISHED] zusammen; der Lauf verschwand damit aus dem
+ * Live-Tab und bot "Lauf aktivieren" statt "Lauf beenden" an. Die Trennung setzt die Entscheidung
+ * vom 04.08.2026 um (Backlog C1/A1): Beendet wird nur durch aktiven Input, weil der Beenden-Klick
+ * das Signal ans Regattabüro ist, dass der Stand final ist - bis dahin kann noch eine Zeitstrafe
+ * kommen.
  */
-enum class LiveDashboardMatchState { RUNNING, FINISHED, SKIPPED, UPCOMING, UNSCHEDULED }
+enum class LiveDashboardMatchState { RUNNING, FINISHED, SKIPPED, AWAITING_FINISH, UPCOMING, UNSCHEDULED }
 
 enum class LiveDashboardInvoiceState { PAID, OPEN, NONE }
 

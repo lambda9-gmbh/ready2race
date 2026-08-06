@@ -12,6 +12,7 @@ import {
     CreateEventRequest,
     EventDto,
     MatchResultType,
+    PublicResultsVisibility,
     UpdateEventRequest,
 } from '@api/types.gen.ts'
 import {addEvent, updateEvent} from '@api/sdk.gen.ts'
@@ -38,6 +39,7 @@ type EventForm = {
     allowParticipantSelfRegistration: boolean
     chainProgressionMode: ChainProgressionMode
     showBreaksOnPublicBoards: boolean
+    publicResultsVisibility: PublicResultsVisibility
 }
 
 const addAction = (formData: EventForm) => {
@@ -75,6 +77,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         allowParticipantSelfRegistration: false,
         chainProgressionMode: 'DEAKTIVIERT',
         showBreaksOnPublicBoards: false,
+        publicResultsVisibility: 'FINISHED_ONLY',
     }
 
     const formContext = useForm<EventForm>()
@@ -89,6 +92,10 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         {id: 'SCHIEDSRICHTER', label: t('event.chainProgressionMode.SCHIEDSRICHTER')},
         {id: 'REGATTABUERO', label: t('event.chainProgressionMode.REGATTABUERO')},
         {id: 'DEAKTIVIERT', label: t('event.chainProgressionMode.DEAKTIVIERT')},
+    ]
+    const publicResultsVisibilities: {id: PublicResultsVisibility; label: string}[] = [
+        {id: 'FINISHED_ONLY', label: t('event.publicResultsVisibility.FINISHED_ONLY')},
+        {id: 'RESULTS_COMPLETE', label: t('event.publicResultsVisibility.RESULTS_COMPLETE')},
     ]
 
     return (
@@ -174,6 +181,16 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                 <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
                     {t('event.showBreaksOnPublicBoardsHint')}
                 </Typography>
+                <FormInputSelect
+                    label={t('event.publicResultsVisibility.label')}
+                    required={true}
+                    name="publicResultsVisibility"
+                    options={publicResultsVisibilities}
+                    fullWidth
+                />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.publicResultsVisibility.hint')}
+                </Typography>
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate
@@ -205,6 +222,7 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         chainProgressionMode: formData.chainProgressionMode,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
+        publicResultsVisibility: formData.publicResultsVisibility,
     }
 }
 
@@ -227,6 +245,7 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         chainProgressionMode: formData.chainProgressionMode,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
+        publicResultsVisibility: formData.publicResultsVisibility,
     }
 }
 
@@ -250,6 +269,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
         chainProgressionMode: dto.chainProgressionMode ?? 'DEAKTIVIERT',
         showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards ?? false,
+        publicResultsVisibility: dto.publicResultsVisibility ?? 'FINISHED_ONLY',
     }
 }
 

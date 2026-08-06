@@ -534,6 +534,12 @@
     },
     "showBreaksOnPublicBoards": "Show breaks on public boards",
     "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
+    "publicResultsVisibility": {
+      "label": "Publish results from",
+      "FINISHED_ONLY": "Finished matches only",
+      "RESULTS_COMPLETE": "Fully scored matches too",
+      "hint": "Applies to the athlete board, the kiosk view and the public results page. Finished matches only by default: as long as a match is not finished a time penalty can still arrive, and a result that is already public cannot be taken back."
+    },
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -1361,6 +1367,7 @@
         "RUNNING": "Running",
         "FINISHED": "Finished",
         "SKIPPED": "Cancelled",
+        "AWAITING_FINISH": "Results complete — waiting to finish",
         "UPCOMING": "Upcoming",
         "UNSCHEDULED": "Unscheduled"
       },
@@ -1526,6 +1533,7 @@
         "state": {
           "finished": "Finished",
           "running": "Running",
+          "awaitingFinish": "Waiting to finish",
           "linked": "Linked",
           "waiting": "Race not set yet",
           "free": "Program item",

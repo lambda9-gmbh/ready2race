@@ -8722,6 +8722,18 @@ components:
         - 'REGATTABUERO'
         - 'DEAKTIVIERT'
 
+    PublicResultsVisibility:
+      type: string
+      description: >-
+        From which state on a match shows up as a result on the public views (athlete board, kiosk,
+        public results page): FINISHED_ONLY only for finished matches (finished_at set),
+        RESULTS_COMPLETE additionally for matches whose boats are all scored (AWAITING_FINISH).
+        Defaults to FINISHED_ONLY, because until a match is finished a time penalty can still
+        arrive and a published result that changes afterwards cannot be taken back.
+      enum:
+        - 'FINISHED_ONLY'
+        - 'RESULTS_COMPLETE'
+
     EventDto:
       type: object
       required:
@@ -8791,6 +8803,8 @@ components:
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        publicResultsVisibility:
+          $ref: '#/components/schemas/PublicResultsVisibility'
         challengesFinished:
           type: boolean
 
@@ -8940,6 +8954,8 @@ components:
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        publicResultsVisibility:
+          $ref: '#/components/schemas/PublicResultsVisibility'
 
     UpdateEventRequest:
       type: object
@@ -8991,6 +9007,8 @@ components:
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        publicResultsVisibility:
+          $ref: '#/components/schemas/PublicResultsVisibility'
 
 
     # eventDay
@@ -12645,10 +12663,16 @@ components:
         SKIPPED: the schedule slot of this match was cancelled. Unlike the public boards the referee
         dashboard marks such a match instead of hiding it - the referee has to see the cancellation
         to be able to undo it in the schedule.
+
+
+        AWAITING_FINISH: every boat is scored but nobody finished the match yet. FINISHED means
+        exclusively that competition_match.finished_at is set - a match only ends by an explicit
+        action, because until then a time penalty can still arrive.
       enum:
         - RUNNING
         - FINISHED
         - SKIPPED
+        - AWAITING_FINISH
         - UPCOMING
         - UNSCHEDULED
 

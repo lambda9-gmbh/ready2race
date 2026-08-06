@@ -2,6 +2,8 @@ import {describe, expect, it} from 'vitest'
 import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
     buildLiveDashboardTimeline,
+    liveMatches,
+    matchControls,
     nextUpEntry,
     openResultTeams,
     pendingSlotLabel,
@@ -136,6 +138,62 @@ const pendingSlot = (overrides: Partial<PendingSlotDto>): PendingSlotDto => ({
     slotId: crypto.randomUUID(),
     startTime: '2026-08-17T08:00:00',
     ...overrides,
+})
+
+describe('liveMatches', () => {
+    it('nimmt laufende Läufe und solche, die auf ihr Beenden warten', () => {
+        const laeuft = match({matchId: 'laeuft', state: 'RUNNING', currentlyRunning: true})
+        const wartet = match({matchId: 'wartet', state: 'AWAITING_FINISH'})
+        const beendet = match({matchId: 'beendet', state: 'FINISHED'})
+        const anstehend = match({matchId: 'anstehend', state: 'UPCOMING'})
+        const abgesagt = match({matchId: 'abgesagt', state: 'SKIPPED'})
+
+        expect(liveMatches([beendet, laeuft, wartet, anstehend, abgesagt]).map(m => m.matchId)).toEqual([
+            'laeuft',
+            'wartet',
+        ])
+    })
+})
+
+describe('matchControls', () => {
+    it('bietet bei einem laufenden Lauf Beenden und Deaktivieren an', () => {
+        expect(matchControls(match({state: 'RUNNING', currentlyRunning: true}), true, true)).toEqual({
+            showFinish: true,
+            showRunToggle: true,
+        })
+    })
+
+    it('ersetzt beim wartenden Lauf "Lauf aktivieren" durch "Lauf beenden"', () => {
+        expect(matchControls(match({state: 'AWAITING_FINISH'}), true, true)).toEqual({
+            showFinish: true,
+            showRunToggle: false,
+        })
+    })
+
+    it('bietet bei einem beendeten Lauf nur noch das Aktivieren an', () => {
+        expect(matchControls(match({state: 'FINISHED'}), true, true)).toEqual({
+            showFinish: false,
+            showRunToggle: true,
+        })
+    })
+
+    it('lässt einen abgesagten Lauf ohne jede Schaltfläche', () => {
+        expect(matchControls(match({state: 'SKIPPED'}), true, true)).toEqual({
+            showFinish: false,
+            showRunToggle: false,
+        })
+    })
+
+    it('zeigt nichts, wozu die Rechte fehlen', () => {
+        expect(matchControls(match({state: 'AWAITING_FINISH'}), false, true)).toEqual({
+            showFinish: false,
+            showRunToggle: false,
+        })
+        expect(matchControls(match({state: 'RUNNING', currentlyRunning: true}), false, false)).toEqual({
+            showFinish: false,
+            showRunToggle: false,
+        })
+    })
 })
 
 describe('buildLiveDashboardTimeline', () => {

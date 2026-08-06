@@ -124,13 +124,24 @@ object EventInfoService {
     // Data Fetching Methods
 
 
+    /**
+     * Die Ergebnisse, die öffentlich gezeigt werden dürfen. Ab welchem Zustand ein Lauf dazugehört,
+     * entscheidet die Veranstaltung über `Event.publicResultsVisibility` — die Begründung für die
+     * Regel und die Voreinstellung steht bei [AthleteBoardLogic.isPublicResult] und in Migration
+     * V202608061200. Bewusst hier und nicht in der Ansichts-Konfiguration: dieser Endpoint bedient
+     * auch die öffentliche Ergebnisseite, die gar keine `info_view_configuration`-Zeile hat.
+     *
+     * Das Schiedsrichter-Dashboard geht einen anderen Weg (LiveDashboardService) und bleibt
+     * unberührt — dort ist ohnehin alles sichtbar.
+     */
     fun getLatestMatchResults(
         eventId: UUID,
         limit: Int = 10,
         competitionId: UUID?,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
 
-        val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit).orDie()
+        val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
+        val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit, visibility).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!

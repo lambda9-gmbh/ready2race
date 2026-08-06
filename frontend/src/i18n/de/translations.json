@@ -534,6 +534,12 @@
     },
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
+    "publicResultsVisibility": {
+      "label": "Ergebnisse öffentlich zeigen ab",
+      "FINISHED_ONLY": "Nur beendete Läufe",
+      "RESULTS_COMPLETE": "Auch vollständig gewertete Läufe",
+      "hint": "Gilt für Athleten-Anzeige, Kiosk-Ansicht und die öffentliche Ergebnisseite. Standardmäßig nur beendete Läufe: solange ein Lauf nicht beendet ist, kann noch eine Zeitstrafe kommen, und ein bereits veröffentlichtes Ergebnis lässt sich nicht zurückholen."
+    },
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -1361,6 +1367,7 @@
         "RUNNING": "Läuft",
         "FINISHED": "Beendet",
         "SKIPPED": "Abgesagt",
+        "AWAITING_FINISH": "Ergebnisse vollständig — wartet auf Beenden",
         "UPCOMING": "Anstehend",
         "UNSCHEDULED": "Ungeplant"
       },
@@ -1526,6 +1533,7 @@
         "state": {
           "finished": "Beendet",
           "running": "Läuft",
+          "awaitingFinish": "Wartet auf Beenden",
           "linked": "Verknüpft",
           "waiting": "Lauf noch nicht gesetzt",
           "free": "Programmpunkt",

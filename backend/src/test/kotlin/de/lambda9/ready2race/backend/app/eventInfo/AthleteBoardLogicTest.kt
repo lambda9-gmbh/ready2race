@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventInfo
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardStartState
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
@@ -468,5 +469,49 @@ class AthleteBoardLogicTest {
         assertFalse(AthleteBoardLogic.isStillUpcoming(now, now, Duration.ZERO))
         assertFalse(AthleteBoardLogic.isStillUpcoming(now.minusSeconds(1), now, Duration.ZERO))
         assertTrue(AthleteBoardLogic.isStillUpcoming(now.plusSeconds(1), now, Duration.ZERO))
+    }
+
+    // --- isPublicResult: ab welchem Zustand ein Lauf öffentlich als Ergebnis erscheint ---
+
+    private val finishedAt: LocalDateTime = now.minusMinutes(5)
+
+    @Test
+    fun finishedMatchIsPublicOnBothStages() {
+        // Der Beenden-Klick ist die Erklärung "der Stand ist final" - er zählt in beiden Stufen.
+        assertTrue(
+            AthleteBoardLogic.isPublicResult(finishedAt, true, PublicResultsVisibility.FINISHED_ONLY)
+        )
+        assertTrue(
+            AthleteBoardLogic.isPublicResult(finishedAt, false, PublicResultsVisibility.FINISHED_ONLY)
+        )
+        assertTrue(
+            AthleteBoardLogic.isPublicResult(finishedAt, true, PublicResultsVisibility.RESULTS_COMPLETE)
+        )
+    }
+
+    @Test
+    fun completeButUnfinishedMatchStaysHiddenOnTheStrictStage() {
+        // Die Voreinstellung: bis zum Beenden kann noch eine Zeitstrafe kommen.
+        assertFalse(
+            AthleteBoardLogic.isPublicResult(null, true, PublicResultsVisibility.FINISHED_ONLY)
+        )
+    }
+
+    @Test
+    fun completeButUnfinishedMatchIsPublicOnTheLenientStage() {
+        // Das Verhalten vor der Einstellung - weiter wählbar, aber nicht mehr die Vorgabe.
+        assertTrue(
+            AthleteBoardLogic.isPublicResult(null, true, PublicResultsVisibility.RESULTS_COMPLETE)
+        )
+    }
+
+    @Test
+    fun incompleteAndUnfinishedMatchIsNeverPublic() {
+        assertFalse(
+            AthleteBoardLogic.isPublicResult(null, false, PublicResultsVisibility.FINISHED_ONLY)
+        )
+        assertFalse(
+            AthleteBoardLogic.isPublicResult(null, false, PublicResultsVisibility.RESULTS_COMPLETE)
+        )
     }
 }
