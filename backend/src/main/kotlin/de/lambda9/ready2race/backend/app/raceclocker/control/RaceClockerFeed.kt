@@ -81,13 +81,21 @@ object RaceClockerFeed {
      */
     fun feedUrl(url: Url): Url = URLBuilder(url).apply { parameters["json"] = "1" }.build()
 
-    suspend fun fetch(url: Url): IO<RaceClockerError, List<RaceClockerFeedRow>> {
+    /**
+     * [client] is injectable so tests can swap in a [io.ktor.client.engine.mock.MockEngine]-backed
+     * client instead of talking to the real raceclocker.com - the default recreates exactly the CIO
+     * client this function always used, so production behaviour is unchanged.
+     */
+    suspend fun fetch(
+        url: Url,
+        client: HttpClient = HttpClient(CIO) {
+            engine { requestTimeout = TIMEOUT_MS }
+            expectSuccess = false
+        },
+    ): IO<RaceClockerError, List<RaceClockerFeedRow>> {
         val body = try {
-            HttpClient(CIO) {
-                engine { requestTimeout = TIMEOUT_MS }
-                expectSuccess = false
-            }.use { client ->
-                val response = client.get(url)
+            client.use { c ->
+                val response = c.get(url)
                 if (!response.status.isSuccess()) {
                     return KIO.fail(RaceClockerError.Unreachable(url.toString(), "HTTP ${response.status.value}"))
                 }
