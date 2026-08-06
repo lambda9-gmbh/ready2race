@@ -325,3 +325,44 @@ Zeitplan — dort wäre es zu prominent) und erscheint nur, wenn die Runde nicht
 materialisiert und kein Lauf mit zwei oder mehr startenden Booten (Freilos-Fall). Sonst müssen die
 Läufe gefahren werden, damit die Setzung der Folgerunde stimmt — der Endpoint lehnt das serverseitig
 mit 409 ab (auch bei noch nicht gesetzter Runde; dort bleibt nur der Einzel-Slot-Entfall).
+
+---
+
+## D. Ideen aus der Präsentations-Vorbereitung (06.08.2026)
+
+### D1. Sportler-Ansicht per QR-Code
+
+**Wunsch:** Sportler:innen scannen ihren QR-Code und bekommen genau die für sie relevanten
+Informationen — zukünftige Rennen, aktuelle Rennen und vergangene Rennen mit allem, was dazugehört.
+Die Leitfrage: **„Welches Boot habe ich, wann muss ich wo sein und wie gut war ich?"** Das sollen
+die QR-Codes ermöglichen.
+
+**Ausgangslage:**
+- QR-Codes pro Teilnehmer:in existieren bereits (QR-App: Zuordnung, `RequirementsChecklist`,
+  Team-Check-in/-out über `participant_tracking`; Backend `appUserWithQrCode`,
+  `ParticipantTrackingService.getByParticipantQrCode`). Der Code identifiziert eine Person also
+  schon heute — er wird bisher nur vom Orga-Personal gescannt, nicht von den Sportler:innen selbst.
+- Die Athleten-Anzeige (`/api/event/{id}/info/athlete-board`) ist öffentlich, aber
+  veranstaltungsweit: laufende/nächste Läufe und letzte Ergebnisse für alle, ohne Personenbezug.
+  Die persönliche Sicht wäre die Filterung derselben Daten auf „meine Boote".
+- Über `competition_registration_named_participant` ist bekannt, in welchen Booten eine Person
+  sitzt; über `competition_match_team` + Zeitstrahl-Slots liegen Startzeiten, Bahnen und
+  Ergebnisse (inkl. Strafen) vor. „Wo muss ich sein" könnte aus dem Slot (Startzeit) plus
+  Treffpunkt-Konvention kommen — einen Ort pro Slot gibt es im Datenmodell bisher nicht.
+- Seit 06.08. gibt es die „Boot auf dem Wasser"-Ableitung (`LiveDashboardLogic.teamOnWaterAt`) —
+  für Sportler:innen wäre der eigene Check-in-Status ebenfalls sichtbar machbar.
+
+**Offene Fragen:**
+- **Zugang:** Reicht der bestehende Personen-QR (Scan öffnet eine öffentliche, tokenisierte URL
+  ohne Login)? Dann ist der QR-Inhalt de facto ein Bearer-Token — klären, wie viel Personenbezug
+  (Name? Verein? Jahrgang?) hinter einem unauthentifizierten Link stehen darf und ob der Token
+  rotierbar sein muss.
+- **Datenschnitt:** Persönliche Sicht pro Person oder pro Boot (die ganze Crew sieht dasselbe)?
+  Umgemeldete Personen (Substitutionen) müssen die Runde sehen, in der sie tatsächlich sitzen.
+- **„Wann muss ich wo sein":** Braucht der Zeitstrahl-Slot einen optionalen Treffpunkt/Ort, oder
+  reicht eine veranstaltungsweite Konvention („Meldung am Steg X Minuten vor Start")? Verwandt mit
+  den Requirement-Zeitfenstern (Ampel im Schiedsrichter-Dashboard).
+- **„Wie gut war ich":** Nur eigene Ergebnisse oder auch die Platzierung im Feld (Ergebnisliste
+  des Laufs)? Öffentliche Sichtbarkeitsregel `public_results_visibility` gilt vermutlich auch hier.
+- **Takt/Betrieb:** Dieselben Cache-/Rate-Limit-Überlegungen wie bei der Athleten-Anzeige — viele
+  Telefone, ein Endpoint (siehe Betriebshärtung der Athleten-Anzeige).
