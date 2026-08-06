@@ -62,7 +62,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
     const openTeams = openResultTeams(match)
     const resultsComplete = match.teams.length > 0 && openTeams.length === 0
     const columns = hasResults
-        ? '2ch minmax(0, 1fr) 7.5ch 2rem 26px'
+        ? '2ch minmax(0, 1fr) 10.5ch 2rem 26px'
         : '2ch minmax(0, 1fr) 26px'
 
     return (
@@ -148,11 +148,28 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                         ? 'common.white'
                                         : 'grey.900',
                             }}>
-                            {running && match.elapsedMinutes != null
-                                ? t('event.liveDashboard.runningSince', {
-                                      duration: formatMinutes(match.elapsedMinutes),
-                                  })
-                                : t(`event.liveDashboard.state.${match.state}`)}
+                            {running && match.elapsedMinutes != null ? (
+                                t('event.liveDashboard.runningSince', {
+                                    duration: formatMinutes(match.elapsedMinutes),
+                                })
+                            ) : awaitingFinish ? (
+                                // Der volle Text sprengt schmale Karten; auf Telefonbreite
+                                // trägt die Kurzform dieselbe Aussage.
+                                <>
+                                    <Box
+                                        component="span"
+                                        sx={{display: {xs: 'none', sm: 'inline'}}}>
+                                        {t('event.liveDashboard.state.AWAITING_FINISH')}
+                                    </Box>
+                                    <Box
+                                        component="span"
+                                        sx={{display: {xs: 'inline', sm: 'none'}}}>
+                                        {t('event.liveDashboard.state.AWAITING_FINISH_SHORT')}
+                                    </Box>
+                                </>
+                            ) : (
+                                t(`event.liveDashboard.state.${match.state}`)
+                            )}
                         </Box>
                     </Box>
                 </Box>
@@ -406,7 +423,9 @@ export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProp
                         }}>
                         {stateLabel}
                     </Box>
-                    {onSkip && (
+                    {/* Programmpunkte sagt nur die Orga ab (Zeitplan-Tab), nicht das
+                        Schiedsrichter-Dashboard - das Backend lehnt das inzwischen auch ab. */}
+                    {onSkip && !isFree && (
                         <Button
                             size="small"
                             variant="text"

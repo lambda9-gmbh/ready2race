@@ -1421,6 +1421,7 @@
         "FINISHED": "Beendet",
         "SKIPPED": "Abgesagt",
         "AWAITING_FINISH": "Ergebnisse vollständig — wartet auf Beenden",
+        "AWAITING_FINISH_SHORT": "wartet auf Beenden",
         "UPCOMING": "Anstehend",
         "UNSCHEDULED": "Ungeplant"
       },

@@ -1421,6 +1421,7 @@
         "FINISHED": "Finished",
         "SKIPPED": "Cancelled",
         "AWAITING_FINISH": "Results complete — waiting to finish",
+        "AWAITING_FINISH_SHORT": "waiting to finish",
         "UPCOMING": "Upcoming",
         "UNSCHEDULED": "Unscheduled"
       },

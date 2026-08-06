@@ -1421,6 +1421,7 @@
         "FINISHED": "Afsluttet",
         "SKIPPED": "Aflyst",
         "AWAITING_FINISH": "Resultater komplette — venter på afslutning",
+        "AWAITING_FINISH_SHORT": "venter på afslutning",
         "UPCOMING": "Kommende",
         "UNSCHEDULED": "Ikke planlagt"
       },

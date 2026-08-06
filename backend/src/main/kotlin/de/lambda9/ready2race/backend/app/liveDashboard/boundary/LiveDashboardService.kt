@@ -73,6 +73,7 @@ object LiveDashboardService {
                 registrationId: UUID,
                 rows: List<Record>,
                 startTime: LocalDateTime?,
+                timePrecision: Timecode.MillisecondPrecision,
             ): App<Nothing, LiveDashboardTeamDto> = KIO.comprehension {
                 val first = rows.first()
                 val clubId = first.get("club_id", UUID::class.java)
@@ -96,7 +97,7 @@ object LiveDashboardService {
                             Timecode(
                                 millis = it,
                                 baseUnit = Timecode.BaseUnit.valueOf(first[TIMECODE.BASE_UNIT]!!),
-                                millisecondPrecision = Timecode.MillisecondPrecision.valueOf(first[TIMECODE.MILLISECOND_PRECISION]!!),
+                                millisecondPrecision = timePrecision,
                             ).toString()
                         },
                         failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
@@ -125,10 +126,14 @@ object LiveDashboardService {
                 val finishedAt = match[COMPETITION_MATCH.FINISHED_AT]
                 val running = match[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
 
-                val teams = !(teamsByMatch[matchId] ?: emptyList())
+                val matchRows = teamsByMatch[matchId] ?: emptyList()
+                // Anzeige-Präzision pro Lauf: standardmäßig eine Nachkommastelle, feiner nur,
+                // wenn sonst unterschiedliche Zeiten gleich aussähen.
+                val timePrecision = Timecode.displayPrecision(matchRows.mapNotNull { it[TIMECODE.TIME] })
+                val teams = !matchRows
                     .groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION]!! }
                     .toList()
-                    .traverse { (registrationId, rows) -> buildTeamDto(registrationId, rows, startTime) }
+                    .traverse { (registrationId, rows) -> buildTeamDto(registrationId, rows, startTime, timePrecision) }
                     .map { list -> list.sortedWith(compareBy(nullsLast()) { it.startNumber }) }
 
                 KIO.ok(

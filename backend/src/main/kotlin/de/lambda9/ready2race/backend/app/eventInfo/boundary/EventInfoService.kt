@@ -421,19 +421,21 @@ object EventInfoService {
     /**
      * Die erfasste Zeit als Anzeigetext, oder null solange keine Zeit vorliegt. Erwartet die
      * TIMECODE-Spalten im Record (left join) - Ergebnis- und Laufabfrage liefern beide dieselbe
-     * Spaltenform.
+     * Spaltenform. [precision] kommt pro Lauf aus [Timecode.displayPrecision], damit alle Zeiten
+     * eines Laufs einheitlich und so grob wie möglich angezeigt werden.
      */
-    private fun timeStringOrNull(record: Record): String? =
+    private fun timeStringOrNull(record: Record, precision: Timecode.MillisecondPrecision): String? =
         record[TIMECODE.TIME]?.let {
             Timecode(
                 millis = it,
                 baseUnit = Timecode.BaseUnit.valueOf(record[TIMECODE.BASE_UNIT]!!),
-                millisecondPrecision = Timecode.MillisecondPrecision.valueOf(record[TIMECODE.MILLISECOND_PRECISION]!!)
+                millisecondPrecision = precision,
             ).toString()
         }
 
     private fun getMatchResultTeams(matchId: UUID): App<Nothing, List<MatchResultTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamsForMatchResult(matchId).orDie()
+        val timePrecision = Timecode.displayPrecision(records.mapNotNull { it[TIMECODE.TIME] })
 
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
@@ -446,7 +448,7 @@ object EventInfoService {
                     actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
                     place = first[COMPETITION_MATCH_TEAM.PLACE],
-                    timeString = timeStringOrNull(first),
+                    timeString = timeStringOrNull(first, timePrecision),
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                     failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
                     penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
@@ -504,6 +506,7 @@ object EventInfoService {
 
     private fun getRunningMatchTeams(matchId: UUID): App<Nothing, List<RunningMatchTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamForRunningMatch(matchId).orDie()
+        val timePrecision = Timecode.displayPrecision(records.mapNotNull { it[TIMECODE.TIME] })
 
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
@@ -517,7 +520,7 @@ object EventInfoService {
                     actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
                     currentScore = null, // Could be calculated if scoring data is available
                     currentPosition = first[COMPETITION_MATCH_TEAM.PLACE],
-                    timeString = timeStringOrNull(first),
+                    timeString = timeStringOrNull(first, timePrecision),
                     penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
                     penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
