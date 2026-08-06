@@ -237,7 +237,9 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
                                 }}>
                                 <img
                                     src={previewImageUrl}
-                                    alt="Challenge confirmation"
+                                    alt={t(
+                                        'event.competition.execution.results.confirmationImage.preview',
+                                    )}
                                     style={{
                                         maxWidth: '100%',
                                         maxHeight: '600px',

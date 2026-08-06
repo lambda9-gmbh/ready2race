@@ -43,10 +43,21 @@ const matchKeys = {
     teamsNotMatching: 'event.competition.execution.error.teamsNotMatching',
 } as const
 
+const raceClockerKeys = {
+    urlMissing: 'event.competition.execution.results.raceclocker.error.urlMissing',
+    urlInvalid: 'event.competition.execution.results.raceclocker.error.urlInvalid',
+    unreachable: 'event.competition.execution.results.raceclocker.error.unreachable',
+    matchNotInFeed: 'event.competition.execution.results.raceclocker.error.matchNotInFeed',
+    duplicateTeams: 'event.competition.execution.results.raceclocker.error.duplicateTeams',
+    noResults: 'event.competition.execution.results.raceclocker.error.noResults',
+    matchIsBye: 'event.competition.execution.results.raceclocker.error.matchIsBye',
+} as const
+
 export type ExecutionErrorKey =
     | (typeof substitutionKeys)[keyof typeof substitutionKeys]
     | (typeof challengeKeys)[keyof typeof challengeKeys]
     | (typeof matchKeys)[keyof typeof matchKeys]
+    | (typeof raceClockerKeys)[keyof typeof raceClockerKeys]
 
 /** Ein übersetzbarer Meldungstext: i18n-Key plus die Werte, die er einsetzt. */
 export type ExecutionErrorText = {
@@ -63,6 +74,9 @@ export type ExecutionApiError = {
 
 const asNumber = (value: unknown): number | undefined =>
     typeof value === 'number' ? value : undefined
+
+const asStringArray = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
 
 /** Der i18n-Key zur abgelehnten Ummeldung, oder `undefined` für Unbekanntes. */
 export const substitutionErrorKey = (error: ExecutionApiError): ExecutionErrorKey | undefined => {
@@ -137,6 +151,45 @@ export const matchErrorText = (error: ExecutionApiError): ExecutionErrorText | u
                 },
             }
         }
+    }
+
+    return undefined
+}
+
+/**
+ * Der Meldungstext zu einem abgelehnten RaceClocker-Ergebnis-Pull, oder `undefined` für Unbekanntes.
+ * Die Codes stammen aus RaceClockerError.respond() im Backend; Unreachable und MalformedFeed teilen
+ * sich hier bewusst einen Text ("Feed konnte nicht gelesen werden") - für das Schiedsgericht am Steg
+ * verlangen beide dieselbe Handlung: URL und Verbindung prüfen, notfalls in RaceClocker nachsehen.
+ */
+export const raceClockerErrorText = (error: ExecutionApiError): ExecutionErrorText | undefined => {
+    switch (error.errorCode) {
+        case 'RACECLOCKER_URL_MISSING':
+            return {key: raceClockerKeys.urlMissing}
+
+        case 'RACECLOCKER_URL_INVALID':
+            return {key: raceClockerKeys.urlInvalid}
+
+        case 'RACECLOCKER_UNREACHABLE':
+        case 'RACECLOCKER_MALFORMED_FEED':
+            return {key: raceClockerKeys.unreachable}
+
+        case 'RACECLOCKER_MATCH_NOT_IN_FEED':
+            return {key: raceClockerKeys.matchNotInFeed}
+
+        case 'RACECLOCKER_DUPLICATE_TEAMS': {
+            const details = (error.details as Record<string, unknown> | undefined) ?? {}
+            return {
+                key: raceClockerKeys.duplicateTeams,
+                values: {teams: asStringArray(details.teams).join(', ')},
+            }
+        }
+
+        case 'RACECLOCKER_NO_RESULTS':
+            return {key: raceClockerKeys.noResults}
+
+        case 'RACECLOCKER_MATCH_IS_BYE':
+            return {key: raceClockerKeys.matchIsBye}
     }
 
     return undefined

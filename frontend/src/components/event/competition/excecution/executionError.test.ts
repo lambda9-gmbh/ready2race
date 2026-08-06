@@ -3,6 +3,7 @@ import {
     ExecutionApiError,
     challengeErrorKey,
     matchErrorText,
+    raceClockerErrorText,
     substitutionErrorKey,
 } from './executionError.ts'
 import deTranslations from '@i18n/de/translations.json'
@@ -112,6 +113,46 @@ describe('matchErrorText', () => {
     })
 })
 
+describe('raceClockerErrorText', () => {
+    it.each([
+        ['RACECLOCKER_URL_MISSING', 'urlMissing'],
+        ['RACECLOCKER_URL_INVALID', 'urlInvalid'],
+        ['RACECLOCKER_MATCH_NOT_IN_FEED', 'matchNotInFeed'],
+        ['RACECLOCKER_NO_RESULTS', 'noResults'],
+        ['RACECLOCKER_MATCH_IS_BYE', 'matchIsBye'],
+    ] as const)('bildet %s auf einen eigenen Text ab', (errorCode, leaf) => {
+        expect(raceClockerErrorText(error({errorCode}))).toEqual({
+            key: `event.competition.execution.results.raceclocker.error.${leaf}`,
+        })
+    })
+
+    it('teilt sich für Unreachable und MalformedFeed denselben Text', () => {
+        // Für das Schiedsgericht am Steg verlangen beide dieselbe Handlung: URL und Verbindung
+        // prüfen. Ein eigener Text je Code würde hier keinen zusätzlichen Hinweis liefern.
+        expect(raceClockerErrorText(error({errorCode: 'RACECLOCKER_UNREACHABLE'}))).toEqual(
+            raceClockerErrorText(error({errorCode: 'RACECLOCKER_MALFORMED_FEED'})),
+        )
+    })
+
+    it('nennt die doppelt vorhandenen Crews', () => {
+        expect(
+            raceClockerErrorText(
+                error({
+                    errorCode: 'RACECLOCKER_DUPLICATE_TEAMS',
+                    details: {wave: 'A', teams: ['Team Rot', 'Team Blau']},
+                }),
+            ),
+        ).toEqual({
+            key: 'event.competition.execution.results.raceclocker.error.duplicateTeams',
+            values: {teams: 'Team Rot, Team Blau'},
+        })
+    })
+
+    it('überlässt Unbekanntes der Sammelmeldung des Pull-Buttons', () => {
+        expect(raceClockerErrorText(error({}))).toBeUndefined()
+    })
+})
+
 describe('Übersetzungen', () => {
     const keys = [
         'event.competition.execution.substitution.error.notFound',
@@ -134,6 +175,13 @@ describe('Übersetzungen', () => {
         'event.competition.execution.error.placesNotContinuous',
         'event.competition.execution.error.startTimeManagedBySchedule',
         'event.competition.execution.error.teamsNotMatching',
+        'event.competition.execution.results.raceclocker.error.urlMissing',
+        'event.competition.execution.results.raceclocker.error.urlInvalid',
+        'event.competition.execution.results.raceclocker.error.unreachable',
+        'event.competition.execution.results.raceclocker.error.matchNotInFeed',
+        'event.competition.execution.results.raceclocker.error.duplicateTeams',
+        'event.competition.execution.results.raceclocker.error.noResults',
+        'event.competition.execution.results.raceclocker.error.matchIsBye',
         // Die Sammelmeldungen, auf die der jeweilige Aufrufer zurückfällt. In de/da waren
         // add.error und delete.error vertauscht (Objekt statt String und umgekehrt), sodass der
         // rohe Schlüssel in der Oberfläche stand - genau das fängt diese Prüfung ab.

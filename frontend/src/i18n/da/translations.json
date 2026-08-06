@@ -1028,6 +1028,7 @@
             "confirmationImage": "Bekræftelsesbillede",
             "select": "Vælg billede",
             "change": "Skift billedfil",
+            "preview": "Forhåndsvisning af bekræftelsesbilledet",
             "error": {
               "empty": "Vælg venligst et billede",
               "tooMany": "Vælg venligst maks. 1 billede"

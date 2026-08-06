@@ -80,6 +80,7 @@ import {
 import {
     ExecutionApiError,
     matchErrorText,
+    raceClockerErrorText,
 } from '@components/event/competition/excecution/executionError.ts'
 
 type EnterResultsTeam = {
@@ -345,43 +346,8 @@ const CompetitionExecution = () => {
         setSubmitting(false)
 
         if (error) {
-            const details = ('details' in error ? error.details : undefined) as
-                | Record<string, unknown>
-                | undefined
-            switch (error.errorCode) {
-                case 'RACECLOCKER_URL_MISSING':
-                    feedback.error(t('event.competition.execution.results.raceclocker.error.urlMissing'))
-                    break
-                case 'RACECLOCKER_URL_INVALID':
-                    feedback.error(t('event.competition.execution.results.raceclocker.error.urlInvalid'))
-                    break
-                case 'RACECLOCKER_UNREACHABLE':
-                case 'RACECLOCKER_MALFORMED_FEED':
-                    feedback.error(t('event.competition.execution.results.raceclocker.error.unreachable'))
-                    break
-                case 'RACECLOCKER_MATCH_NOT_IN_FEED':
-                    feedback.error(
-                        t('event.competition.execution.results.raceclocker.error.matchNotInFeed'),
-                    )
-                    break
-                case 'RACECLOCKER_MATCH_IS_BYE':
-                    feedback.error(
-                        t('event.competition.execution.results.raceclocker.error.matchIsBye'),
-                    )
-                    break
-                case 'RACECLOCKER_DUPLICATE_TEAMS':
-                    feedback.error(
-                        t('event.competition.execution.results.raceclocker.error.duplicateTeams', {
-                            teams: ((details?.teams as string[]) ?? []).join(', '),
-                        }),
-                    )
-                    break
-                case 'RACECLOCKER_NO_RESULTS':
-                    feedback.error(t('event.competition.execution.results.raceclocker.error.noResults'))
-                    break
-                default:
-                    feedback.error(t('common.error.unexpected'))
-            }
+            const text = raceClockerErrorText(error)
+            feedback.error(text === undefined ? t('common.error.unexpected') : t(text.key, text.values))
         } else {
             feedback.success(t('event.competition.execution.results.raceclocker.success'))
             setReloadData(!reloadData)

@@ -1028,6 +1028,7 @@
             "confirmationImage": "Bestätigungsbild",
             "select": "Bild auswählen",
             "change": "Bild Datei ändern",
+            "preview": "Vorschau des Bestätigungsbilds",
             "error": {
               "empty": "Bitte wählen Sie ein Bild aus",
               "tooMany": "Bitte wählen Sie maximal 1 Bild aus"

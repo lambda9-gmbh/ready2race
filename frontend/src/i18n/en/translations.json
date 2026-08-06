@@ -1028,6 +1028,7 @@
             "confirmationImage": "Confirmation Image",
             "select": "Select an image",
             "change": "Change image file",
+            "preview": "Preview of the confirmation image",
             "error": {
               "empty": "Please select an image",
               "tooMany": "Please select a maximum of 1 image"
