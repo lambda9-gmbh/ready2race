@@ -4,8 +4,8 @@ Dieser Branch (`feature/crf-2026`) bündelt alle Erweiterungen für die Coastal-
 in einem Merge-Request. Das Dokument erklärt, **was** gebaut wurde, **warum** es so gebaut wurde
 und **wie** es verifiziert ist — als Lesegrundlage für das Review.
 
-**Eckdaten:** Basis `origin/main` (f0707f3a), reiner Fast-Forward (main hat sich seit Abzweig
-nicht bewegt, keinerlei Merge-Konflikte). Enthält zusätzlich den Merge von `origin/issue/94`
+**Eckdaten:** Basis `origin/main`; der aktuelle main-Stand (inkl. PR #93) ist in den Branch
+gemergt, der Merge ist konfliktfrei. Enthält zusätzlich den Merge von `origin/issue/94`
 (RaceClocker-Integration inkl. der drei Hotfix-Commits bis c820c99a). 12 neue Flyway-Migrationen,
 alle versioniert **nach** dem letzten Stand von main (V202606221000); keine bestehende Migration
 wurde verändert, nur die wiederholbare `afterMigrate.sql` erweitert.
@@ -234,8 +234,8 @@ Lasttest-Messung des Polling-Verhaltens (siehe 1.10).
 
 ### 3.4 Merge-Sicherheit
 
-- `origin/main` hat sich seit dem Abzweig nicht bewegt → der Merge ist ein Fast-Forward
-  ohne textuelle Konflikte.
+- Der aktuelle `origin/main`-Stand (inkl. des Fallback-String-Fixes aus PR #93) ist in den
+  Branch gemergt — konfliktfrei; der Merge in main hat damit keine offenen Konflikte.
 - `origin/issue/94` ist vollständig enthalten (inkl. der drei Hotfix-Commits bis c820c99a,
   Konfliktauflösung im generierten API-Client durch Neugenerierung aus der gemergten
   OpenAPI-Spec). Ein separater Merge von issue/94 nach main erzeugt damit keine
