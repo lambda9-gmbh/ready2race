@@ -259,6 +259,12 @@
           "title": "Forhåndsvisning af diplomskabeloner",
           "error": "Forhåndsvisningen kunne ikke indlæses.",
           "show": "Vis diplom i forhåndsvisning"
+        },
+        "error": {
+          "invalidFont": "Skrifttypefilen kunne ikke læses. Upload en gyldig TTF- eller OTF-fil.",
+          "typeMismatch": "Skabelonen passer ikke til den dokumenttype, den skal tilknyttes.",
+          "placeholderPageNotSupported": "Sejrsdiplomer har præcis én side — alle pladsholdere skal være på side 1.",
+          "placeholderTypeNotSupported": "Denne pladsholder findes ikke for den valgte dokumenttype. Vælg en pladsholder fra typens liste."
         }
       },
       "placeholder": {
@@ -503,6 +509,16 @@
         },
         "noTeamsFound": "Ingen hold fundet",
         "participantNotFound": "Deltager ikke fundet"
+      },
+      "certificate": {
+        "error": {
+          "noResults": "Der er ikke registreret et resultat for denne person i dette stævne. Et deltagerdiplom kan først udstedes, når et resultat er registreret og — om nødvendigt — bekræftet.",
+          "missingTemplate": "Der er ikke tilknyttet en skabelon til deltagerdiplomer. Tilknyt en skabelon under Konfiguration → Stævneelementer.",
+          "unreadableTemplate": "Den tilknyttede skabelon til deltagerdiplomer kan ikke læses. Kontrollér PDF-filen, og upload den igen.",
+          "notAChallengeEvent": "Deltagerdiplomer findes kun ved challenge-stævner.",
+          "challengeStillInProgress": "Challengen er stadig i gang. Deltagerdiplomer kan først oprettes, når alle challenge-konkurrencer er afsluttet.",
+          "unexpected": "Diplomet kunne ikke oprettes. Genindlæs siden, og prøv igen."
+        }
       }
     }
   },
@@ -2388,9 +2404,13 @@
         "hint": "Kun nødvendigt, hvis der ikke printes på fortrykt papir."
       },
       "error": {
-        "missingTemplate": "Der er ikke tilknyttet en brugbar skabelon til sejrsdiplomer.",
+        "missingTemplate": "Der er ikke tilknyttet en skabelon til sejrsdiplomer.",
         "missingTemplateLink": "Gå til konfiguration",
-        "noResults": "Der er endnu ingen placeringer at udskrive."
+        "unreadableTemplate": "Den tilknyttede skabelon til sejrsdiplomer kan ikke læses. Kontrollér PDF-filen, og upload den igen.",
+        "noResults": "Der er endnu ingen placeringer at udskrive.",
+        "competitionNotInEvent": "Denne konkurrence hører ikke til dette stævne. Genindlæs siden.",
+        "isChallengeEvent": "Et challenge-stævne har ingen sejrsdiplomer — der afvikles ingen løb, og der gives ingen placeringer. Deltagerdiplomer kan hentes fra deltagerlisten.",
+        "unexpected": "Diplomerne kunne ikke oprettes. Genindlæs siden, og prøv igen."
       }
     }
   }

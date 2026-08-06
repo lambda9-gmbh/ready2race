@@ -259,6 +259,12 @@
           "title": "Urkundenvorlagenvorschau",
           "error": "Vorschau konnte nicht geladen werden.",
           "show": "Urkunde in der Vorschau anzeigen"
+        },
+        "error": {
+          "invalidFont": "Die Schriftdatei konnte nicht gelesen werden. Bitte eine gültige TTF- oder OTF-Datei hochladen.",
+          "typeMismatch": "Die Vorlage passt nicht zu dem Dokumenttyp, dem sie zugewiesen werden soll.",
+          "placeholderPageNotSupported": "Siegerurkunden haben genau eine Seite — alle Platzhalter müssen auf Seite 1 liegen.",
+          "placeholderTypeNotSupported": "Dieser Platzhalter ist für den gewählten Dokumenttyp nicht vorgesehen. Bitte einen Platzhalter aus der Liste dieses Typs wählen."
         }
       },
       "placeholder": {
@@ -503,6 +509,16 @@
         },
         "noTeamsFound": "Keine Teams gefunden",
         "participantNotFound": "Teilnehmer nicht gefunden"
+      },
+      "certificate": {
+        "error": {
+          "noResults": "Für diese Person ist in dieser Veranstaltung kein Ergebnis hinterlegt. Eine Teilnahmeurkunde gibt es erst, wenn ein Ergebnis erfasst und — falls erforderlich — bestätigt ist.",
+          "missingTemplate": "Für Teilnahmeurkunden ist keine Vorlage hinterlegt. Bitte unter Konfiguration → Veranstaltungselemente eine Vorlage zuweisen.",
+          "unreadableTemplate": "Die hinterlegte Vorlage für Teilnahmeurkunden lässt sich nicht lesen. Bitte die PDF-Datei prüfen und neu hochladen.",
+          "notAChallengeEvent": "Teilnahmeurkunden gibt es nur bei Challenge-Veranstaltungen.",
+          "challengeStillInProgress": "Die Challenge läuft noch. Teilnahmeurkunden lassen sich erst erzeugen, wenn alle Challenge-Wettkämpfe beendet sind.",
+          "unexpected": "Die Urkunde konnte nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
+        }
       }
     }
   },
@@ -2388,9 +2404,13 @@
         "hint": "Nur nötig, wenn nicht auf vorgedrucktes Papier gedruckt wird."
       },
       "error": {
-        "missingTemplate": "Für Siegerurkunden ist keine nutzbare Vorlage hinterlegt.",
+        "missingTemplate": "Für Siegerurkunden ist keine Vorlage hinterlegt.",
         "missingTemplateLink": "Zur Konfiguration",
-        "noResults": "Es gibt noch keine Platzierungen, die gedruckt werden können."
+        "unreadableTemplate": "Die hinterlegte Vorlage für Siegerurkunden lässt sich nicht lesen. Bitte die PDF-Datei prüfen und neu hochladen.",
+        "noResults": "Es gibt noch keine Platzierungen, die gedruckt werden können.",
+        "competitionNotInEvent": "Dieser Wettkampf gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.",
+        "isChallengeEvent": "Für eine Challenge-Veranstaltung gibt es keine Siegerurkunden — dort werden keine Läufe gefahren und keine Plätze vergeben. Teilnahmeurkunden lassen sich in der Teilnehmerliste herunterladen.",
+        "unexpected": "Die Urkunden konnten nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
       }
     }
   }

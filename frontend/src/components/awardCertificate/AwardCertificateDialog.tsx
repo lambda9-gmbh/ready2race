@@ -12,9 +12,13 @@ import {
     downloadAwardCertificatesForCompetition,
     downloadAwardCertificatesForEvent,
 } from '@api/sdk.gen.ts'
-import {useFeedback} from '@utils/hooks.ts'
 import {getFilename} from '@utils/helpers.ts'
 import InlineLink from '@components/InlineLink.tsx'
+import {
+    CertificateErrorKey,
+    awardCertificateErrorKey,
+    awardCertificateErrorLinksToConfig,
+} from '@components/certificate/certificateError.ts'
 
 type Props = {
     open: boolean
@@ -48,11 +52,9 @@ const defaultValues: AwardCertificateForm = {
  */
 const AwardCertificateDialog = ({open, onClose, eventId, competitionId, registrationId}: Props) => {
     const {t} = useTranslation()
-    const feedback = useFeedback()
     const formContext = useForm<AwardCertificateForm>()
     const [submitting, setSubmitting] = useState(false)
-    const [missingTemplate, setMissingTemplate] = useState(false)
-    const [noResults, setNoResults] = useState(false)
+    const [errorKey, setErrorKey] = useState<CertificateErrorKey | null>(null)
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const isSingle = registrationId !== undefined
@@ -60,22 +62,19 @@ const AwardCertificateDialog = ({open, onClose, eventId, competitionId, registra
     useEffect(() => {
         if (open) {
             formContext.reset(defaultValues)
-            setMissingTemplate(false)
-            setNoResults(false)
+            setErrorKey(null)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open])
 
     const handleClose = () => {
-        setMissingTemplate(false)
-        setNoResults(false)
+        setErrorKey(null)
         onClose()
     }
 
     const handleSubmit = async (formData: AwardCertificateForm) => {
         setSubmitting(true)
-        setMissingTemplate(false)
-        setNoResults(false)
+        setErrorKey(null)
 
         const query = {
             format: formData.format,
@@ -102,17 +101,11 @@ const AwardCertificateDialog = ({open, onClose, eventId, competitionId, registra
         setSubmitting(false)
 
         if (error) {
-            // 409 covers both "no template assigned" (MissingTemplate) and "template unreadable"
-            // (UnreadableTemplate) - the message below is worded to be honest about both. 400 is
-            // NoResults, by far the most likely response before results are finalised, so it gets
-            // its own explanation instead of falling into the generic "unexpected error" bucket.
-            if (error.status.value === 409) {
-                setMissingTemplate(true)
-            } else if (error.status.value === 400) {
-                setNoResults(true)
-            } else {
-                feedback.error(t('common.error.unexpected'))
-            }
+            // Früher unterschied der Dialog nur nach HTTP-Status: 409 hieß pauschal "keine
+            // nutzbare Vorlage" (fehlend ODER unlesbar), 400 pauschal "keine Platzierungen" -
+            // auch dann, wenn es sich um ein Challenge-Event handelte, das grundsätzlich keine
+            // Siegerurkunden kennt. Jetzt entscheidet der ErrorCode.
+            setErrorKey(awardCertificateErrorKey(error))
             return
         }
 
@@ -139,21 +132,24 @@ const AwardCertificateDialog = ({open, onClose, eventId, competitionId, registra
             <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                 <DialogContent>
                     <Stack spacing={4}>
-                        {missingTemplate && (
+                        {errorKey !== null && (
                             <Alert severity={'warning'}>
-                                <Trans i18nKey={'awardCertificate.download.error.missingTemplate'} />{' '}
-                                <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
-                                    <Trans
-                                        i18nKey={
-                                            'awardCertificate.download.error.missingTemplateLink'
-                                        }
-                                    />
-                                </InlineLink>
-                            </Alert>
-                        )}
-                        {noResults && (
-                            <Alert severity={'warning'}>
-                                <Trans i18nKey={'awardCertificate.download.error.noResults'} />
+                                <Trans i18nKey={errorKey} />
+                                {/* Der Verweis in die Konfiguration hilft nur, wenn dort auch
+                                    etwas zu tun ist - bei "keine Platzierungen" wäre er eine
+                                    Sackgasse. */}
+                                {awardCertificateErrorLinksToConfig(errorKey) && (
+                                    <>
+                                        {' '}
+                                        <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
+                                            <Trans
+                                                i18nKey={
+                                                    'awardCertificate.download.error.missingTemplateLink'
+                                                }
+                                            />
+                                        </InlineLink>
+                                    </>
+                                )}
                             </Alert>
                         )}
                         <FormInputRadioButtonGroup

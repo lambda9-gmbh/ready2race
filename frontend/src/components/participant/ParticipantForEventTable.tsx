@@ -44,6 +44,7 @@ import {deleteQrCode} from '@api/sdk.gen.ts'
 import {QrCodeEditDialog} from '@components/participant/QrCodeEditDialog.tsx'
 import QrCodeIcon from '@mui/icons-material/QrCode'
 import {getFilename} from '@utils/helpers.ts'
+import {participationCertificateErrorKey} from '@components/certificate/certificateError.ts'
 
 // TODO: validate/sanitize basepath (also in routes.tsx)
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
@@ -457,7 +458,9 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
         const anchor = downloadRef.current
 
         if (error) {
-            feedback.error(error.message)
+            // Bis hierher stand der englische Backend-Satz ("No results in this event for this
+            // participant") mitten in der deutschen Oberfläche.
+            feedback.error(t(participationCertificateErrorKey(error)))
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
             anchor.download =

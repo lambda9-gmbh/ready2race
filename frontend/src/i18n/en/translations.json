@@ -259,6 +259,12 @@
           "title": "Certificate template preview",
           "error": "Cannot load preview.",
           "show": "Preview certificate"
+        },
+        "error": {
+          "invalidFont": "The font file could not be read. Please upload a valid TTF or OTF file.",
+          "typeMismatch": "The template does not match the document type it is being assigned to.",
+          "placeholderPageNotSupported": "Award certificates have exactly one page — every placeholder has to be on page 1.",
+          "placeholderTypeNotSupported": "This placeholder is not available for the chosen document type. Please pick one from that type's list."
         }
       },
       "placeholder": {
@@ -503,6 +509,16 @@
         },
         "noTeamsFound": "No teams found",
         "participantNotFound": "Participant not found"
+      },
+      "certificate": {
+        "error": {
+          "noResults": "There is no result for this person in this event. A certificate of participation is only available once a result has been recorded and — where required — confirmed.",
+          "missingTemplate": "No template is configured for certificates of participation. Please assign one under Configuration → Event elements.",
+          "unreadableTemplate": "The template configured for certificates of participation cannot be read. Please check the PDF file and upload it again.",
+          "notAChallengeEvent": "Certificates of participation only exist for challenge events.",
+          "challengeStillInProgress": "The challenge is still running. Certificates of participation can only be created once all challenge competitions have finished.",
+          "unexpected": "The certificate could not be created. Please reload the page and try again."
+        }
       }
     }
   },
@@ -2388,9 +2404,13 @@
         "hint": "Only needed when not printing onto pre-printed paper."
       },
       "error": {
-        "missingTemplate": "There is no usable template configured for award certificates.",
+        "missingTemplate": "There is no template configured for award certificates.",
         "missingTemplateLink": "Go to configuration",
-        "noResults": "There are no placements to print yet."
+        "unreadableTemplate": "The template configured for award certificates cannot be read. Please check the PDF file and upload it again.",
+        "noResults": "There are no placements to print yet.",
+        "competitionNotInEvent": "This competition does not belong to this event. Please reload the page.",
+        "isChallengeEvent": "A challenge event has no award certificates — there are no runs and no placements. Certificates of participation can be downloaded from the participant list.",
+        "unexpected": "The certificates could not be created. Please reload the page and try again."
       }
     }
   }

@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.documentTemplate.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.calls.responses.ApiError
+import de.lambda9.ready2race.backend.calls.responses.ErrorCode
 import io.ktor.http.HttpStatusCode
 
 enum class GapDocumentTemplateError : ServiceError {
@@ -21,25 +22,29 @@ enum class GapDocumentTemplateError : ServiceError {
         TemplateTypeMismatch ->
             ApiError(
                 status = HttpStatusCode.BadRequest,
-                message = "Template type does not match the document type it is assigned to"
+                message = "Template type does not match the document type it is assigned to",
+                errorCode = ErrorCode.DOCUMENT_TEMPLATE_TYPE_MISMATCH,
             )
 
         InvalidFont ->
             ApiError(
                 status = HttpStatusCode.BadRequest,
-                message = "Font file could not be read"
+                message = "Font file could not be read",
+                errorCode = ErrorCode.DOCUMENT_TEMPLATE_INVALID_FONT,
             )
 
         PlaceholderPageNotSupported ->
             ApiError(
                 status = HttpStatusCode.BadRequest,
-                message = "Award certificates have a single page, placeholders must be on page 1"
+                message = "Award certificates have a single page, placeholders must be on page 1",
+                errorCode = ErrorCode.DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED,
             )
 
         PlaceholderTypeNotSupported ->
             ApiError(
                 status = HttpStatusCode.BadRequest,
-                message = "Placeholder type is not supported for the chosen document type"
+                message = "Placeholder type is not supported for the chosen document type",
+                errorCode = ErrorCode.DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED,
             )
     }
 }
