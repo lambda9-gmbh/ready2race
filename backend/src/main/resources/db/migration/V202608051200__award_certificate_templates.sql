@@ -1,3 +1,5 @@
+set search_path to ready2race, pg_catalog, public;
+
 alter table gap_document_placeholder
     add column font_size   int,
     add column bold        boolean not null default false,
