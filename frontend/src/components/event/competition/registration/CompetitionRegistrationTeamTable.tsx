@@ -60,6 +60,10 @@ import {currentlyInTimespan} from '@utils/helpers.ts'
 import BaseDialog from '@components/BaseDialog.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
+import {
+    ExecutionApiError,
+    challengeErrorKey,
+} from '@components/event/competition/excecution/executionError.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -85,6 +89,15 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     const {competitionId} = competitionRoute.useParams()
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
+
+    const showChallengeError = (error: ExecutionApiError) => {
+        feedback.error(
+            t(
+                challengeErrorKey(error) ??
+                    'event.competition.execution.results.challenge.error.unexpected',
+            ),
+        )
+    }
 
     const [onlyUnverified, setOnlyUnverified] = useState<boolean>()
 
@@ -114,13 +127,18 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     const handleVerification = (id: string) => {
         confirmAction(
             async () => {
-                await verifyChallengeTeamResult({
+                const {error} = await verifyChallengeTeamResult({
                     path: {
                         eventId,
                         competitionId,
                         competitionRegistrationId: id,
                     },
                 })
+                // Beide Challenge-Aktionen verwarfen ihren Fehler bisher stillschweigend: die
+                // Ansicht lud neu, das Ergebnis blieb unverändert, und niemand erfuhr warum.
+                if (error) {
+                    showChallengeError(error)
+                }
 
                 props.reloadData()
                 closeViewDocumentDialog()
@@ -135,13 +153,16 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     const handleResultDelete = (id: string) => {
         confirmAction(
             async () => {
-                await deleteChallengeTeamResult({
+                const {error} = await deleteChallengeTeamResult({
                     path: {
                         eventId,
                         competitionId,
                         competitionRegistrationId: id,
                     },
                 })
+                if (error) {
+                    showChallengeError(error)
+                }
 
                 props.reloadData()
                 closeViewDocumentDialog()

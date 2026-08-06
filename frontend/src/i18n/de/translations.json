@@ -980,7 +980,16 @@
           },
           "challenge": {
             "challengeResults": "Challenge Ergebnis",
-            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+            "error": {
+              "notAChallengeEvent": "Diese Veranstaltung ist keine Challenge-Veranstaltung.",
+              "alreadyStarted": "Die Challenge hat bereits begonnen und lässt sich nicht mehr ändern.",
+              "notStartedYet": "Die Challenge hat noch nicht begonnen. Ergebnisse lassen sich erst ab dem Startzeitpunkt eintragen.",
+              "corruptedSetup": "Das Wettkampf-Setup ist fehlerhaft und verhält sich nicht wie erwartet. Bitte einen Administrator informieren — von hier aus lässt sich das nicht beheben.",
+              "resultAlreadySubmitted": "Für dieses Boot wurde bereits ein Ergebnis eingereicht. Das bestehende Ergebnis muss zuerst gelöscht werden.",
+              "noResultSubmitted": "Für dieses Boot liegt noch kein Ergebnis vor.",
+              "selfSubmissionNotAllowed": "Für diese Veranstaltung dürfen Ergebnisse nicht selbst eingereicht werden. Bitte das Ergebnis dem Regattabüro melden.",
+              "unexpected": "Beim Speichern des Ergebnisses ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen."
+            },
             "success": "Das Ergebnis wurde erfolgreich übermittelt.",
             "confirmTitle": "Bestätigung erforderlich",
             "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
@@ -1073,17 +1082,30 @@
           "reason": "Begründung",
           "add": {
             "add": "Ummeldungen hinzufügen",
-            "error": {
-              "conflict": "Später erzeugte Ummeldungen hängen von dieser ab. Diese müssten zuerst gelöscht werden.",
-              "unexpected": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten"
-            },
+            "error": "Beim Hinzufügen der Ummeldung ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen.",
             "success": "Ummeldungen erfolgreich hinzugefügt"
           },
           "delete": {
             "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
-            "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
+            "error": "Beim Löschen der Ummeldung ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen.",
             "success": "Ummeldungen erfolgreich gelöscht"
+          },
+          "error": {
+            "notFound": "Diese Ummeldung gibt es nicht mehr — vermutlich hat sie jemand anderes bereits gelöscht. Bitte die Ansicht neu laden.",
+            "participantOutNotFound": "Der auszutauschende Teilnehmer wurde nicht gefunden. Bitte die Ansicht neu laden und erneut auswählen.",
+            "participantInNotFound": "Der ausgewählte Ersatz wurde nicht gefunden. Bitte die Ansicht neu laden und erneut auswählen.",
+            "participantOutNotAvailable": "Der auszutauschende Teilnehmer fährt in dieser Runde nicht (mehr) mit. Vermutlich gibt es für ihn bereits eine spätere Ummeldung — bitte die Ansicht neu laden.",
+            "participantInNotAvailable": "Der ausgewählte Ersatz steht für diese Runde nicht zur Verfügung. Bitte die Ansicht neu laden und aus der aktualisierten Liste wählen.",
+            "dependentFound": "Auf dieser Ummeldung bauen spätere Ummeldungen auf. Diese müssen zuerst gelöscht werden, beginnend mit der jüngsten.",
+            "createdInPreviousRound": "Diese Ummeldung stammt aus einer früheren Runde. Zurücknehmen lässt sie sich nur in der Runde, in der sie erstellt wurde."
           }
+        },
+        "error": {
+          "matchResultsLocked": "Bearbeiten lassen sich nur die Ergebnisse der aktuellen Runde. Für einen Lauf aus einer früheren Runde muss zuerst die neuere Runde zurückgenommen werden.",
+          "matchIsBye": "Dieser Lauf ist ein Freilos: das Boot zieht ohne zu fahren weiter, es gibt kein Ergebnis einzutragen.",
+          "placesNotContinuous": "Die Plätze müssen lückenlos bei 1 beginnen. Erwartet war Platz {{expected}}, eingetragen ist Platz {{actual}}.",
+          "startTimeManagedBySchedule": "Die Startzeit dieses Laufs wird über den Zeitplan gepflegt und lässt sich hier nicht ändern. Bitte den Slot im Zeitplan-Tab anpassen.",
+          "teamsNotMatching": "Die übertragenen Boote passen nicht zu den Booten dieses Laufs — vermutlich hat sich die Aufstellung zwischenzeitlich geändert (Ummeldung oder Abmeldung). Bitte die Ansicht neu laden und erneut speichern."
         }
       },
       "timing": {

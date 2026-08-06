@@ -980,7 +980,16 @@
           },
           "challenge": {
             "challengeResults": "Challenge result",
-            "error": "An error has occurred when saving the results",
+            "error": {
+              "notAChallengeEvent": "This event is not a challenge event.",
+              "alreadyStarted": "The challenge has already started and can no longer be changed.",
+              "notStartedYet": "The challenge has not started yet. Results can only be entered from the start time onwards.",
+              "corruptedSetup": "The competition setup is corrupted and does not behave as expected. Please contact an administrator — this cannot be fixed from here.",
+              "resultAlreadySubmitted": "A result has already been submitted for this boat. The existing result has to be deleted first.",
+              "noResultSubmitted": "There is no result for this boat yet.",
+              "selfSubmissionNotAllowed": "Results cannot be submitted by participants for this event. Please report the result to the regatta office.",
+              "unexpected": "An error has occurred when saving the result. Please reload the view and try again."
+            },
             "success": "The challenge result was transmitted successfully.",
             "confirmTitle": "Confirmation required",
             "confirmBody": "The result can no longer be changed after submission. Please make sure the results are correct.",
@@ -1073,17 +1082,30 @@
           "reason": "Reason",
           "add": {
             "add": "Add substitution",
-            "error": "An error has occurred when creating the substitution",
+            "error": "An error has occurred when creating the substitution. Please reload the view and try again.",
             "success": "Substitution successfully created"
           },
           "delete": {
             "confirmation": "Are you sure you want to delete the latest substitution?",
-            "error": {
-              "conflict": "Later created substitutions depend on this one. These would have to be deleted first.",
-              "unexpected": "An error has occurred when deleting the substitution"
-            },
+            "error": "An error has occurred when deleting the substitution. Please reload the view and try again.",
             "success": "Substitution successfully deleted"
+          },
+          "error": {
+            "notFound": "This substitution no longer exists — someone else has probably deleted it already. Please reload the view.",
+            "participantOutNotFound": "The participant to be substituted was not found. Please reload the view and select again.",
+            "participantInNotFound": "The selected substitute was not found. Please reload the view and select again.",
+            "participantOutNotAvailable": "The participant to be substituted is no longer racing in this round. There is probably a later substitution for them already — please reload the view.",
+            "participantInNotAvailable": "The selected substitute is not available for this round. Please reload the view and pick from the updated list.",
+            "dependentFound": "Later substitutions build on this one. They have to be deleted first, starting with the most recent.",
+            "createdInPreviousRound": "This substitution was created in an earlier round. It can only be undone in the round it was created in."
           }
+        },
+        "error": {
+          "matchResultsLocked": "Only the results of the current round can be edited. For a run from an earlier round the newer round has to be withdrawn first.",
+          "matchIsBye": "This run is a bye: the boat moves on without racing, there is no result to record.",
+          "placesNotContinuous": "Places have to start at 1 without gaps. Place {{expected}} was expected, place {{actual}} was entered.",
+          "startTimeManagedBySchedule": "The start time of this run is managed by the event schedule and cannot be changed here. Please adjust the slot in the schedule tab.",
+          "teamsNotMatching": "The submitted boats do not match the boats of this run — the line-up has probably changed in the meantime (substitution or deregistration). Please reload the view and save again."
         }
       },
       "timing": {

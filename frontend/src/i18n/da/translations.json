@@ -980,7 +980,16 @@
           },
           "challenge": {
             "challengeResults": "Challenge-resultat",
-            "error": "Der opstod en fejl ved lagring af resultatet",
+            "error": {
+              "notAChallengeEvent": "Dette stævne er ikke et challenge-stævne.",
+              "alreadyStarted": "Challengen er allerede begyndt og kan ikke længere ændres.",
+              "notStartedYet": "Challengen er endnu ikke begyndt. Resultater kan først indtastes fra starttidspunktet.",
+              "corruptedSetup": "Konkurrenceopsætningen er fejlbehæftet og opfører sig ikke som forventet. Kontakt en administrator — det kan ikke rettes herfra.",
+              "resultAlreadySubmitted": "Der er allerede indsendt et resultat for denne båd. Det eksisterende resultat skal slettes først.",
+              "noResultSubmitted": "Der foreligger endnu ikke et resultat for denne båd.",
+              "selfSubmissionNotAllowed": "Ved dette stævne må resultater ikke indsendes af deltagerne selv. Meld resultatet til regattakontoret.",
+              "unexpected": "Der opstod en fejl ved lagring af resultatet. Genindlæs visningen, og prøv igen."
+            },
             "success": "Resultatet blev sendt.",
             "confirmTitle": "Bekræftelse påkrævet",
             "confirmBody": "Resultatet kan ikke ændres efter indsendelse. Sørg venligst for, at resultatet er korrekt.",
@@ -1073,17 +1082,30 @@
           "reason": "Begrundelse",
           "add": {
             "add": "Tilføj ombytninger",
-            "error": {
-              "conflict": "Senere oprettede ombytninger afhænger af denne. De skal slettes først.",
-              "unexpected": "Der opstod en fejl ved tilføjelse af ombytningerne"
-            },
+            "error": "Der opstod en fejl ved tilføjelse af ombytningen. Genindlæs visningen, og prøv igen.",
             "success": "Ombytninger tilføjet"
           },
           "delete": {
             "confirmation": "Er du sikker på, at den sidste ombytning skal slettes?",
-            "error": "Der opstod en fejl ved sletning af ombytningerne",
+            "error": "Der opstod en fejl ved sletning af ombytningen. Genindlæs visningen, og prøv igen.",
             "success": "Ombytninger slettet"
+          },
+          "error": {
+            "notFound": "Denne ombytning findes ikke længere — sandsynligvis har en anden allerede slettet den. Genindlæs visningen.",
+            "participantOutNotFound": "Den deltager, der skal udskiftes, blev ikke fundet. Genindlæs visningen, og vælg igen.",
+            "participantInNotFound": "Den valgte reserve blev ikke fundet. Genindlæs visningen, og vælg igen.",
+            "participantOutNotAvailable": "Den deltager, der skal udskiftes, deltager ikke længere i denne runde. Der findes sandsynligvis allerede en senere ombytning — genindlæs visningen.",
+            "participantInNotAvailable": "Den valgte reserve er ikke tilgængelig i denne runde. Genindlæs visningen, og vælg fra den opdaterede liste.",
+            "dependentFound": "Senere ombytninger bygger på denne. De skal slettes først, begyndende med den nyeste.",
+            "createdInPreviousRound": "Denne ombytning stammer fra en tidligere runde. Den kan kun fortrydes i den runde, hvor den blev oprettet."
           }
+        },
+        "error": {
+          "matchResultsLocked": "Kun resultaterne fra den aktuelle runde kan redigeres. For et løb fra en tidligere runde skal den nyere runde først trækkes tilbage.",
+          "matchIsBye": "Dette løb er en frirunde: båden går videre uden at ro, der er intet resultat at registrere.",
+          "placesNotContinuous": "Placeringerne skal begynde ved 1 uden huller. Der blev forventet placering {{expected}}, men placering {{actual}} er indtastet.",
+          "startTimeManagedBySchedule": "Starttidspunktet for dette løb styres via tidsplanen og kan ikke ændres her. Justér slotten under fanen Tidsplan.",
+          "teamsNotMatching": "De indsendte både passer ikke til bådene i dette løb — opstillingen er sandsynligvis ændret i mellemtiden (ombytning eller afmelding). Genindlæs visningen, og gem igen."
         }
       },
       "timing": {
