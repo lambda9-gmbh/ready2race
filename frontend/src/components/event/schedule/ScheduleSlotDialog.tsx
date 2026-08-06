@@ -15,6 +15,8 @@ import {
     UpsertScheduleSlotRequest,
 } from '@api/types.gen.ts'
 import {slotLabel} from './common.ts'
+import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
+import {useFeedback} from '@utils/hooks.ts'
 
 type ScheduleSlotMode = 'MATCH' | 'FREE'
 
@@ -87,6 +89,7 @@ const ScheduleSlotDialog = ({
     presetMatch,
 }: Props) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
 
     const formContext = useForm<ScheduleSlotForm>()
 
@@ -133,6 +136,18 @@ const ScheduleSlotDialog = ({
     const editAction = (formData: ScheduleSlotForm, entity: EventScheduleSlotDto) =>
         updateScheduleSlot({path: {eventId, slotId: entity.id}, body: toRequest(formData)})
 
+    // "Lauf ist schon verplant" ist der einzige Grund, aus dem der Server hier regelmäßig ablehnt -
+    // und der einzige, bei dem der Nutzer selbst etwas tun kann (Liste neu laden, anderen Lauf
+    // wählen). Alles Übrige bleibt bei der Sammelmeldung von EntityDialog (Rückgabe false).
+    const handleError = (error: ScheduleApiError): boolean => {
+        const {key, values} = slotActionErrorText(error)
+        if (key === slotActionUnexpectedKey) {
+            return false
+        }
+        feedback.error(t(key, values))
+        return true
+    }
+
     return (
         <EntityDialog
             entityName={t('event.schedule.slot')}
@@ -143,7 +158,9 @@ const ScheduleSlotDialog = ({
             formContext={formContext}
             onOpen={onOpen}
             addAction={addAction}
-            editAction={editAction}>
+            editAction={editAction}
+            onAddError={handleError}
+            onEditError={handleError}>
             <Stack spacing={3}>
                 {editingMatchSlot ? (
                     <Typography>{slotLabel(editingSlot)}</Typography>

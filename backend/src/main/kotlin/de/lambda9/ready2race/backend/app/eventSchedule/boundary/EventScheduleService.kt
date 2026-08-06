@@ -297,7 +297,9 @@ object EventScheduleService {
 
         val raceableMatchCount = !EventScheduleRepo.countRaceableMatchesInRound(eventId, setupRoundId).orDie()
         if (raceableMatchCount > 0) {
-            return@comprehension KIO.fail(EventScheduleError.RoundHasRunsToRace(setupRoundId))
+            return@comprehension KIO.fail(
+                EventScheduleError.RoundHasRunsToRace(setupRoundId, raceableMatchCount)
+            )
         }
 
         val rows = !EventScheduleRepo.getSlots(eventId, setupRoundId).orDie()

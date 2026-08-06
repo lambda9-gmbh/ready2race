@@ -592,4 +592,48 @@ class EventScheduleLogicTest {
         assertEquals("viertel nach zehn", error.details?.get("value"))
         assertTrue(error.message.contains("row 3"))
     }
+
+    @Test
+    fun everySlotActionRejectionCarriesItsOwnCode() {
+        val slotId = UUID.randomUUID()
+        val responses = listOf(
+            EventScheduleError.SetupMatchAlreadyPlanned(slotId),
+            EventScheduleError.MatchAlreadyStarted(slotId),
+            EventScheduleError.MatchAlreadyFinished(slotId),
+            EventScheduleError.SlotNotSkippable(slotId),
+            EventScheduleError.SlotNotLinked(slotId),
+            EventScheduleError.CompressionImpossible(20),
+        ).map { it.respond() }
+
+        assertEquals(
+            setOf(
+                ErrorCode.SCHEDULE_SETUP_MATCH_ALREADY_PLANNED,
+                ErrorCode.SCHEDULE_SLOT_MATCH_ALREADY_STARTED,
+                ErrorCode.SCHEDULE_SLOT_MATCH_ALREADY_FINISHED,
+                ErrorCode.SCHEDULE_SLOT_NOT_SKIPPABLE,
+                ErrorCode.SCHEDULE_SLOT_NOT_LINKED,
+                ErrorCode.SCHEDULE_COMPRESSION_IMPOSSIBLE,
+            ),
+            responses.mapNotNull { it.errorCode }.toSet(),
+        )
+    }
+
+    /**
+     * Der eine Fall heißt "setz die Runde erst", der andere "diese Läufe müssen gefahren werden".
+     * Sie teilten sich im Frontend denselben Text, weil sie serverseitig nicht unterscheidbar waren
+     * - genau das darf nicht zurückkommen.
+     */
+    @Test
+    fun theTwoOppositeRoundReasonsAreToldApart() {
+        val roundId = UUID.randomUUID()
+        val notMaterialized = EventScheduleError.RoundNotMaterialized(roundId).respond()
+        val hasRunsToRace = EventScheduleError.RoundHasRunsToRace(roundId, 3).respond()
+
+        assertEquals(ErrorCode.SCHEDULE_ROUND_NOT_MATERIALIZED, notMaterialized.errorCode)
+        assertEquals(ErrorCode.SCHEDULE_ROUND_HAS_RUNS_TO_RACE, hasRunsToRace.errorCode)
+        assertTrue(notMaterialized.message != hasRunsToRace.message)
+
+        // Wie viele Läufe noch anstehen, entscheidet, ob das Büro noch eingreifen kann.
+        assertEquals(3, hasRunsToRace.details?.get("raceableMatchCount"))
+    }
 }

@@ -866,7 +866,12 @@
             "content": "Runden „{{round}}“ aflyses helt? I denne runde er der ingen løb at afvikle (alle både har frirunde). De tilhørende slots i tidsplanen markeres som aflyst og springes over af kæden.",
             "ok": "Aflys runden"
           },
-          "error": "Der opstod en fejl ved aflysning af runden",
+          "error": {
+            "notMaterialized": "Runden er endnu ikke oprettet — der findes ingen løb, der kan aflyses. Opret først runden, eller lad de enkelte slots i tidsplanen udgå.",
+            "hasRunsToRace_one": "I denne runde mangler stadig {{count}} løb med mindst to både. Det skal afvikles, før den næste runde kan trækkes korrekt.",
+            "hasRunsToRace_other": "I denne runde mangler stadig {{count}} løb med mindst to både. De skal afvikles, før den næste runde kan trækkes korrekt.",
+            "unexpected": "Der opstod en fejl ved aflysning af runden. Genindlæs visningen, og prøv igen."
+          },
           "success": "Runden er markeret som aflyst"
         },
         "teamsWithBye": "Hold med frirunde",
@@ -1531,6 +1536,14 @@
           "free": "Programpunkt",
           "skipped": "Sprunget over"
         }
+      },
+      "error": {
+        "matchAlreadyStarted": "Løbet er allerede i gang — det er aktiveret eller har allerede et faktisk starttidspunkt. Deaktivér det først i dommer-dashboardet, derefter kan handlingen udføres igen.",
+        "matchAlreadyFinished": "Løbet er allerede afsluttet og kan ikke aktiveres igen.",
+        "slotNotSkippable": "Slotten er forældet — det tilhørende løb findes ikke længere i konkurrenceopsætningen. Der er intet at aflyse; slotten kan i stedet slettes.",
+        "slotNotLinked": "Der findes endnu ikke et løb til denne slot. Opret først runden under Konkurrence → Afvikling, derefter kan løbet aktiveres og afsluttes.",
+        "setupMatchAlreadyPlanned": "Dette løb er allerede planlagt i en anden slot. Genindlæs tidsplanen, og vælg et løb, der endnu ikke er planlagt.",
+        "unexpected": "Handlingen kunne ikke udføres. Genindlæs tidsplanen, og prøv igen."
       }
     },
     "results": {

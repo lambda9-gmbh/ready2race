@@ -94,18 +94,49 @@ sealed interface EventScheduleError : ServiceError {
 
     /** setRoundSkipped (Wettkampf → Durchführung) - die Runde hat noch keine Läufe (competition_match), es gibt nichts, was "entfallen" könnte; die einzelnen Slots sind stattdessen individuell zu überspringen. */
     data class RoundNotMaterialized(val setupRoundId: UUID) : EventScheduleError
-    /** setRoundSkipped - mindestens ein Lauf der Runde hat noch 2+ tatsächlich fahrende Mannschaften; diese müssen ausgetragen werden, damit die nächste Runde sauber ausgelost werden kann. */
-    data class RoundHasRunsToRace(val setupRoundId: UUID) : EventScheduleError
+
+    /**
+     * setRoundSkipped - mindestens ein Lauf der Runde hat noch 2+ tatsächlich fahrende Mannschaften;
+     * diese müssen ausgetragen werden, damit die nächste Runde sauber ausgelost werden kann.
+     * [raceableMatchCount] ist die Anzahl dieser Läufe und steht in der Meldung: "noch 3 Läufe" sagt
+     * dem Regattabüro, wie weit es vom Ziel entfernt ist, "es sind noch Läufe offen" nicht.
+     */
+    data class RoundHasRunsToRace(val setupRoundId: UUID, val raceableMatchCount: Int) : EventScheduleError
 
     override fun respond(): ApiError = when (this) {
         is EventNotFound -> ApiError(HttpStatusCode.NotFound, "Event with id $eventId not found")
         is SlotNotFound -> ApiError(HttpStatusCode.NotFound, "Schedule slot $slotId not found")
         is SetupMatchNotFound -> ApiError(HttpStatusCode.NotFound, "Setup match $setupMatchId not found in this event")
-        is SetupMatchAlreadyPlanned -> ApiError(HttpStatusCode.Conflict, "Setup match $setupMatchId already has a schedule slot")
-        is MatchAlreadyStarted -> ApiError(HttpStatusCode.Conflict, "The match of slot $slotId has already started")
-        is MatchAlreadyFinished -> ApiError(HttpStatusCode.Conflict, "The match of slot $slotId is already finished")
-        is SlotNotSkippable -> ApiError(HttpStatusCode.Conflict, "Slot $slotId cannot be skipped in its current state")
-        is SlotNotLinked -> ApiError(HttpStatusCode.Conflict, "Slot $slotId is not linked to a match")
+        is SetupMatchAlreadyPlanned -> ApiError(
+            HttpStatusCode.Conflict,
+            "Setup match $setupMatchId already has a schedule slot",
+            errorCode = ErrorCode.SCHEDULE_SETUP_MATCH_ALREADY_PLANNED,
+        )
+
+        is MatchAlreadyStarted -> ApiError(
+            HttpStatusCode.Conflict,
+            "The match of slot $slotId has already started",
+            errorCode = ErrorCode.SCHEDULE_SLOT_MATCH_ALREADY_STARTED,
+        )
+
+        is MatchAlreadyFinished -> ApiError(
+            HttpStatusCode.Conflict,
+            "The match of slot $slotId is already finished",
+            errorCode = ErrorCode.SCHEDULE_SLOT_MATCH_ALREADY_FINISHED,
+        )
+
+        is SlotNotSkippable -> ApiError(
+            HttpStatusCode.Conflict,
+            "Slot $slotId cannot be skipped in its current state",
+            errorCode = ErrorCode.SCHEDULE_SLOT_NOT_SKIPPABLE,
+        )
+
+        is SlotNotLinked -> ApiError(
+            HttpStatusCode.Conflict,
+            "Slot $slotId is not linked to a match",
+            errorCode = ErrorCode.SCHEDULE_SLOT_NOT_LINKED,
+        )
+
         is CompressionImpossible -> ApiError(
             HttpStatusCode.UnprocessableEntity,
             "Cannot compress: only $maxReductionMinutes minutes available",
@@ -113,6 +144,7 @@ sealed interface EventScheduleError : ServiceError {
             // aus der (übersetzbaren/änderbaren) Nachricht herausparsen muss (siehe common.ts,
             // parseMaxReductionMinutes/extractMaxReductionMinutes).
             details = mapOf("maxReductionMinutes" to maxReductionMinutes),
+            errorCode = ErrorCode.SCHEDULE_COMPRESSION_IMPOSSIBLE,
         )
 
         ShiftWithoutChange -> ApiError(
@@ -203,7 +235,21 @@ sealed interface EventScheduleError : ServiceError {
             errorCode = ErrorCode.SPREADSHEET_UNPARSABLE_STRING,
         )
 
-        is RoundNotMaterialized -> ApiError(HttpStatusCode.Conflict, "Round $setupRoundId has no runs yet - cancel its slots individually instead")
-        is RoundHasRunsToRace -> ApiError(HttpStatusCode.Conflict, "Round $setupRoundId still has runs to race - they must be executed for seeding")
+        // Gegensätzliche Ursachen, die sich lange denselben Frontend-Text teilten: einmal ist die
+        // Runde noch NICHT gesetzt ("setz sie erst"), einmal ist sie gesetzt und hat noch etwas zu
+        // fahren ("diese Läufe müssen gefahren werden"). Wer den falschen der beiden Sätze liest,
+        // sucht am Renntag in der genau verkehrten Richtung - deshalb je ein eigener Code.
+        is RoundNotMaterialized -> ApiError(
+            HttpStatusCode.Conflict,
+            "Round $setupRoundId has no runs yet - cancel its slots individually instead",
+            errorCode = ErrorCode.SCHEDULE_ROUND_NOT_MATERIALIZED,
+        )
+
+        is RoundHasRunsToRace -> ApiError(
+            HttpStatusCode.Conflict,
+            "Round $setupRoundId still has $raceableMatchCount run(s) to race - they must be executed for seeding",
+            details = mapOf("raceableMatchCount" to raceableMatchCount),
+            errorCode = ErrorCode.SCHEDULE_ROUND_HAS_RUNS_TO_RACE,
+        )
     }
 }

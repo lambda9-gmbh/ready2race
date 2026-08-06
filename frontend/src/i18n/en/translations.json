@@ -866,7 +866,12 @@
             "content": "The round \"{{round}}\" is cancelled entirely? There are no runs to race in this round (every boat has a bye). The corresponding slots in the schedule will be marked as cancelled and passed over by the chain.",
             "ok": "Cancel round"
           },
-          "error": "An error has occurred when cancelling the round",
+          "error": {
+            "notMaterialized": "This round has not been created yet — there are no runs that could be cancelled. Create the round first, or cancel the individual slots in the schedule.",
+            "hasRunsToRace_one": "This round still has {{count}} run with at least two boats. It has to be raced so that the next round can be drawn properly.",
+            "hasRunsToRace_other": "This round still has {{count}} runs with at least two boats. They have to be raced so that the next round can be drawn properly.",
+            "unexpected": "An error has occurred when cancelling the round. Please reload the view and try again."
+          },
           "success": "Round marked as cancelled"
         },
         "teamsWithBye": "Teams with a bye",
@@ -1531,6 +1536,14 @@
           "free": "Program item",
           "skipped": "Skipped"
         }
+      },
+      "error": {
+        "matchAlreadyStarted": "The run is already underway — it has been activated or already has an actual start time. Deactivate it in the referee dashboard first, then the action will work again.",
+        "matchAlreadyFinished": "The run has already finished and cannot be activated again.",
+        "slotNotSkippable": "This slot is obsolete — its run no longer exists in the competition setup. There is nothing left to cancel; you can delete the slot instead.",
+        "slotNotLinked": "There is no run for this slot yet. Create the round under Competition → Execution first, then the run can be activated and finished.",
+        "setupMatchAlreadyPlanned": "This run is already planned in another slot. Please reload the schedule and pick a run that has not been planned yet.",
+        "unexpected": "The action could not be carried out. Please reload the schedule and try again."
       }
     },
     "results": {

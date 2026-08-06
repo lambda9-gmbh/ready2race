@@ -866,7 +866,12 @@
             "content": "Die Runde „{{round}}“ entfällt komplett? In dieser Runde gibt es keine Läufe zu fahren (alle Boote haben ein Freilos). Die zugehörigen Slots im Zeitplan werden als entfallen markiert und von der Kette ausgelassen.",
             "ok": "Runde entfällt"
           },
-          "error": "Beim Entfallenlassen der Runde ist ein Fehler aufgetreten",
+          "error": {
+            "notMaterialized": "Die Runde ist noch nicht gesetzt — es gibt noch keine Läufe, die entfallen könnten. Bitte zuerst die Runde setzen, oder die einzelnen Slots im Zeitplan entfallen lassen.",
+            "hasRunsToRace_one": "In dieser Runde steht noch {{count}} Lauf mit mindestens zwei Booten an. Er muss gefahren werden, damit die nächste Runde sauber ausgelost werden kann.",
+            "hasRunsToRace_other": "In dieser Runde stehen noch {{count}} Läufe mit mindestens zwei Booten an. Sie müssen gefahren werden, damit die nächste Runde sauber ausgelost werden kann.",
+            "unexpected": "Beim Entfallenlassen der Runde ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen."
+          },
           "success": "Runde als entfallen markiert"
         },
         "teamsWithBye": "Teams mit Freilos",
@@ -1531,6 +1536,14 @@
           "free": "Programmpunkt",
           "skipped": "Übersprungen"
         }
+      },
+      "error": {
+        "matchAlreadyStarted": "Der Lauf ist bereits unterwegs — er wurde aktiviert oder hat schon einen Ist-Start. Bitte den Lauf zuerst im Schiedsrichter-Dashboard deaktivieren, danach ist die Aktion wieder möglich.",
+        "matchAlreadyFinished": "Der Lauf ist bereits beendet und lässt sich nicht noch einmal aktivieren.",
+        "slotNotSkippable": "Der Slot ist verfallen — den zugehörigen Lauf gibt es im Wettkampf-Setup nicht mehr. Es gibt nichts, was entfallen könnte; der Slot lässt sich stattdessen löschen.",
+        "slotNotLinked": "Für diesen Slot gibt es noch keinen Lauf. Bitte die Runde zuerst unter Wettkampf → Durchführung setzen, danach lässt sich der Lauf aktivieren und beenden.",
+        "setupMatchAlreadyPlanned": "Dieser Lauf ist bereits in einem anderen Slot eingeplant. Bitte den Zeitplan neu laden und einen noch nicht verplanten Lauf wählen.",
+        "unexpected": "Die Aktion konnte nicht ausgeführt werden. Bitte den Zeitplan neu laden und es erneut versuchen."
       }
     },
     "results": {

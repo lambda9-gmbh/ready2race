@@ -40,6 +40,7 @@ import {format} from 'date-fns'
 import Checkbox from '@mui/material/Checkbox'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
+import {roundSkipErrorText} from '@components/event/schedule/scheduleError.ts'
 import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
 
 type Props = {
@@ -125,7 +126,10 @@ const CompetitionExecutionRound = ({
                 })
                 props.setSubmitting(false)
                 if (error) {
-                    feedback.error(t('event.competition.execution.cancelRound.error'))
+                    // "Runde noch nicht gesetzt" und "in der Runde ist noch zu fahren" verlangen
+                    // Gegensätzliches; bis zuletzt lasen beide denselben Satz.
+                    const {key, values} = roundSkipErrorText(error)
+                    feedback.error(t(key, values))
                 } else {
                     feedback.success(t('event.competition.execution.cancelRound.success'))
                 }
