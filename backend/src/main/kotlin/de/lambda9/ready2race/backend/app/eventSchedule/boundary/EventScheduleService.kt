@@ -211,11 +211,18 @@ object EventScheduleService {
         slotId: UUID,
         skipped: Boolean,
         userId: UUID,
+        maySkipFreeSlots: Boolean = true,
     ): App<EventScheduleError, ApiResponse.NoData> = KIO.comprehension {
         val row = !EventScheduleRepo.getSlotWithContext(eventId, slotId).orDie()
             .onNullFail { EventScheduleError.SlotNotFound(slotId) }
 
         val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+
+        // Programmpunkte sind Orga-Sache: das Schiedsrichter-Dashboard (UPDATE LIVE_DASHBOARD ohne
+        // UPDATE EVENT) darf nur Lauf-Slots absagen und zurückholen.
+        if (isFree && !maySkipFreeSlots) {
+            return@comprehension KIO.fail(EventScheduleError.FreeSlotSkipReservedForOffice(slotId))
+        }
         val matchExists = row.get("match_exists", Boolean::class.java) == true
         val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
         val matchCurrentlyRunning = row[COMPETITION_MATCH.CURRENTLY_RUNNING] == true

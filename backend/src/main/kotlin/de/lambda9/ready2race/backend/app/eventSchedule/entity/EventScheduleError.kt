@@ -30,6 +30,12 @@ sealed interface EventScheduleError : ServiceError {
     /** activateSlot (C1) - ein beendeter Lauf darf nicht wieder aktiviert werden, sonst erscheint er mit altem finished_at als laufend. */
     data class MatchAlreadyFinished(val slotId: UUID) : EventScheduleError
     data class SlotNotSkippable(val slotId: UUID) : EventScheduleError
+    /**
+     * setSlotSkipped - Programmpunkte (FREE-Slots) sagt nur die Orga ab (UPDATE EVENT), nicht das
+     * Schiedsrichter-Dashboard: Pausen und Siegerehrungen sind Veranstaltungsorganisation, kein
+     * Renngeschehen.
+     */
+    data class FreeSlotSkipReservedForOffice(val slotId: UUID) : EventScheduleError
     /** finish/activate über den Zeitplan (C1) - der Slot muss LINKED sein, sonst gibt es keinen Lauf. */
     data class SlotNotLinked(val slotId: UUID) : EventScheduleError
     data class CompressionImpossible(val maxReductionMinutes: Long) : EventScheduleError
@@ -129,6 +135,11 @@ sealed interface EventScheduleError : ServiceError {
             HttpStatusCode.Conflict,
             "Slot $slotId cannot be skipped in its current state",
             errorCode = ErrorCode.SCHEDULE_SLOT_NOT_SKIPPABLE,
+        )
+
+        is FreeSlotSkipReservedForOffice -> ApiError(
+            HttpStatusCode.Forbidden,
+            "Slot $slotId is a program item - only the event office may skip or restore it",
         )
 
         is SlotNotLinked -> ApiError(

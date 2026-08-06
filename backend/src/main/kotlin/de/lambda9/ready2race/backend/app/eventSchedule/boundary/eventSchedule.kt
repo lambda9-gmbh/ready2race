@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.calls.requests.RequestError
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.authenticateAny
+import de.lambda9.ready2race.backend.calls.requests.hasPrivilege
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
@@ -64,7 +65,12 @@ fun Route.eventSchedule() {
                 val eventId = !pathParam("eventId", uuid)
                 val slotId = !pathParam("slotId", uuid)
 
-                EventScheduleService.setSlotSkipped(eventId, slotId, skipped = true, userId = user.id!!)
+                EventScheduleService.setSlotSkipped(
+                    eventId, slotId, skipped = true, userId = user.id!!,
+                    // Programmpunkte absagen bleibt der Orga vorbehalten - Schiedsrichter
+                    // (nur UPDATE LIVE_DASHBOARD) sagen ausschließlich Läufe ab.
+                    maySkipFreeSlots = user.hasPrivilege(Privilege.UpdateEventGlobal),
+                )
             }
         }
         put("/slot/{slotId}/unskip") {
@@ -73,7 +79,10 @@ fun Route.eventSchedule() {
                 val eventId = !pathParam("eventId", uuid)
                 val slotId = !pathParam("slotId", uuid)
 
-                EventScheduleService.setSlotSkipped(eventId, slotId, skipped = false, userId = user.id!!)
+                EventScheduleService.setSlotSkipped(
+                    eventId, slotId, skipped = false, userId = user.id!!,
+                    maySkipFreeSlots = user.hasPrivilege(Privilege.UpdateEventGlobal),
+                )
             }
         }
         // Regattabüro beendet/aktiviert einen Lauf direkt vom Zeitplan aus (C1) - in JEDEM
