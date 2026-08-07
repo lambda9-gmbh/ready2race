@@ -117,6 +117,25 @@ describe('documentTemplateErrorKey', () => {
     it('überlässt Unbekanntes der Sammelmeldung des Dialogs', () => {
         expect(documentTemplateErrorKey(error({}))).toBeUndefined()
     })
+
+    it('benennt ein unlesbares Paket', () => {
+        expect(documentTemplateErrorKey({message: '', errorCode: 'DOCUMENT_TEMPLATE_INVALID_PACKAGE'}))
+            .toBe('gap.document.template.error.invalidPackage')
+    })
+
+    it('benennt eine unbekannte Paketversion', () => {
+        expect(
+            documentTemplateErrorKey({
+                message: '',
+                errorCode: 'DOCUMENT_TEMPLATE_UNSUPPORTED_PACKAGE_VERSION',
+            }),
+        ).toBe('gap.document.template.error.unsupportedPackageVersion')
+    })
+
+    it('benennt eine Datei, die kein PDF ist', () => {
+        expect(documentTemplateErrorKey({message: '', errorCode: 'DOCUMENT_TEMPLATE_INVALID_PDF'}))
+            .toBe('gap.document.template.error.invalidPdf')
+    })
 })
 
 describe('Übersetzungen', () => {
@@ -138,6 +157,9 @@ describe('Übersetzungen', () => {
         'gap.document.template.error.typeMismatch',
         'gap.document.template.error.placeholderPageNotSupported',
         'gap.document.template.error.placeholderTypeNotSupported',
+        'gap.document.template.error.invalidPdf',
+        'gap.document.template.error.invalidPackage',
+        'gap.document.template.error.unsupportedPackageVersion',
     ]
 
     // Ein falsch geschriebener Key faellt sonst erst auf, wenn der rohe Key im Dialog steht.

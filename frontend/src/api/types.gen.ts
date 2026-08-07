@@ -986,9 +986,12 @@ export type ErrorCode =
     | 'AWARD_CERTIFICATE_COMPETITION_NOT_IN_EVENT'
     | 'AWARD_CERTIFICATE_IS_CHALLENGE_EVENT'
     | 'DOCUMENT_TEMPLATE_INVALID_FONT'
+    | 'DOCUMENT_TEMPLATE_INVALID_PDF'
     | 'DOCUMENT_TEMPLATE_TYPE_MISMATCH'
     | 'DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED'
     | 'DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED'
+    | 'DOCUMENT_TEMPLATE_INVALID_PACKAGE'
+    | 'DOCUMENT_TEMPLATE_UNSUPPORTED_PACKAGE_VERSION'
     | 'SUBSTITUTION_NOT_FOUND'
     | 'SUBSTITUTION_PARTICIPANT_OUT_NOT_FOUND'
     | 'SUBSTITUTION_PARTICIPANT_IN_NOT_FOUND'
@@ -5227,6 +5230,19 @@ export type AddGapDocumentTemplateResponse = void
 
 export type AddGapDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type ImportGapDocumentTemplateData = {
+    body: {
+        /**
+         * Austauschpaket (.r2rtpl.zip) einer Urkundenvorlage.
+         */
+        file: Blob | File
+    }
+}
+
+export type ImportGapDocumentTemplateResponse = string
+
+export type ImportGapDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type UpdateGapDocumentTemplateData = {
     body: {
         request: GapDocumentTemplateRequest
@@ -5273,6 +5289,16 @@ export type DownloadGapDocumentTemplateSampleData = {
 export type DownloadGapDocumentTemplateSampleResponse = Blob | File
 
 export type DownloadGapDocumentTemplateSampleError = BadRequestError | ApiError
+
+export type ExportGapDocumentTemplateData = {
+    path: {
+        gapDocumentTemplateId: string
+    }
+}
+
+export type ExportGapDocumentTemplateResponse = Blob | File
+
+export type ExportGapDocumentTemplateError = ApiError
 
 export type GetGapDocumentTemplateTypesResponse = Array<GapDocumentTypeDto>
 

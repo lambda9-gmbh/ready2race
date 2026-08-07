@@ -262,10 +262,17 @@
         },
         "error": {
           "invalidFont": "Die Schriftdatei konnte nicht gelesen werden. Bitte eine gültige TTF- oder OTF-Datei hochladen.",
+          "invalidPdf": "Die gewählte Datei lässt sich nicht als PDF lesen.",
+          "invalidPackage": "Das Paket lässt sich nicht lesen. Es muss eine unveränderte .r2rtpl.zip-Datei sein.",
+          "unsupportedPackageVersion": "Das Paket stammt aus einer neueren Version. Bitte ready2race aktualisieren.",
           "typeMismatch": "Die Vorlage passt nicht zu dem Dokumenttyp, dem sie zugewiesen werden soll.",
           "placeholderPageNotSupported": "Siegerurkunden haben genau eine Seite — alle Platzhalter müssen auf Seite 1 liegen.",
           "placeholderTypeNotSupported": "Dieser Platzhalter ist für den gewählten Dokumenttyp nicht vorgesehen. Bitte einen Platzhalter aus der Liste dieses Typs wählen."
-        }
+        },
+        "export": "Vorlage exportieren",
+        "exportHint": "Das Paket enthält PDF, Platzhalter und die hinterlegte Schrift.",
+        "import": "Vorlage importieren",
+        "importSucceeded": "Vorlage importiert"
       },
       "placeholder": {
         "available": "Verfügbare Platzhalter",

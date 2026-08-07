@@ -31,6 +31,9 @@ const awardKeys = {
 // Dokumentvorlage (GapDocumentTemplateError) - Anlegen und Bearbeiten einer PDF-Vorlage.
 const templateKeys = {
     invalidFont: 'gap.document.template.error.invalidFont',
+    invalidPdf: 'gap.document.template.error.invalidPdf',
+    invalidPackage: 'gap.document.template.error.invalidPackage',
+    unsupportedPackageVersion: 'gap.document.template.error.unsupportedPackageVersion',
     typeMismatch: 'gap.document.template.error.typeMismatch',
     placeholderPageNotSupported: 'gap.document.template.error.placeholderPageNotSupported',
     placeholderTypeNotSupported: 'gap.document.template.error.placeholderTypeNotSupported',
@@ -114,6 +117,12 @@ export const documentTemplateErrorKey = (
     switch (error.errorCode) {
         case 'DOCUMENT_TEMPLATE_INVALID_FONT':
             return templateKeys.invalidFont
+        case 'DOCUMENT_TEMPLATE_INVALID_PDF':
+            return templateKeys.invalidPdf
+        case 'DOCUMENT_TEMPLATE_INVALID_PACKAGE':
+            return templateKeys.invalidPackage
+        case 'DOCUMENT_TEMPLATE_UNSUPPORTED_PACKAGE_VERSION':
+            return templateKeys.unsupportedPackageVersion
         case 'DOCUMENT_TEMPLATE_TYPE_MISMATCH':
             return templateKeys.typeMismatch
         case 'DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED':

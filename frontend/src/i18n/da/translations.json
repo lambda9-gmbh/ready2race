@@ -262,10 +262,17 @@
         },
         "error": {
           "invalidFont": "Skrifttypefilen kunne ikke læses. Upload en gyldig TTF- eller OTF-fil.",
+          "invalidPdf": "Den valgte fil kan ikke læses som en PDF.",
+          "invalidPackage": "Pakken kan ikke læses. Den skal være en uændret .r2rtpl.zip-fil.",
+          "unsupportedPackageVersion": "Pakken stammer fra en nyere version. Opdater venligst ready2race.",
           "typeMismatch": "Skabelonen passer ikke til den dokumenttype, den skal tilknyttes.",
           "placeholderPageNotSupported": "Sejrsdiplomer har præcis én side — alle pladsholdere skal være på side 1.",
           "placeholderTypeNotSupported": "Denne pladsholder findes ikke for den valgte dokumenttype. Vælg en pladsholder fra typens liste."
-        }
+        },
+        "export": "Eksportér skabelon",
+        "exportHint": "Pakken indeholder PDF, pladsholdere og den gemte skrifttype.",
+        "import": "Importér skabelon",
+        "importSucceeded": "Skabelon importeret"
       },
       "placeholder": {
         "available": "Tilgængelige pladsholdere",

@@ -466,6 +466,9 @@ import type {
     AddGapDocumentTemplateData,
     AddGapDocumentTemplateError,
     AddGapDocumentTemplateResponse,
+    ImportGapDocumentTemplateData,
+    ImportGapDocumentTemplateError,
+    ImportGapDocumentTemplateResponse,
     UpdateGapDocumentTemplateData,
     UpdateGapDocumentTemplateError,
     UpdateGapDocumentTemplateResponse,
@@ -478,6 +481,9 @@ import type {
     DownloadGapDocumentTemplateSampleData,
     DownloadGapDocumentTemplateSampleError,
     DownloadGapDocumentTemplateSampleResponse,
+    ExportGapDocumentTemplateData,
+    ExportGapDocumentTemplateError,
+    ExportGapDocumentTemplateResponse,
     GetGapDocumentTemplateTypesError,
     GetGapDocumentTemplateTypesResponse,
     AssignGapDocumentTemplateData,
@@ -2768,6 +2774,24 @@ export const addGapDocumentTemplate = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const importGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ImportGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ImportGapDocumentTemplateResponse,
+        ImportGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/gapDocumentTemplate/import',
+    })
+}
+
 export const updateGapDocumentTemplate = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<UpdateGapDocumentTemplateData, ThrowOnError>,
 ) => {
@@ -2822,6 +2846,19 @@ export const downloadGapDocumentTemplateSample = <ThrowOnError extends boolean =
     >({
         ...options,
         url: '/gapDocumentTemplate/{gapDocumentTemplateId}/preview',
+    })
+}
+
+export const exportGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ExportGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        ExportGapDocumentTemplateResponse,
+        ExportGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}/export',
     })
 }
 

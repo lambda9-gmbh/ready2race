@@ -4185,6 +4185,35 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /gapDocumentTemplate/import:
+    post:
+      operationId: importGapDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  description: Austauschpaket (.r2rtpl.zip) einer Urkundenvorlage.
+                  type: string
+                  format: binary
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /gapDocumentTemplate/{gapDocumentTemplateId}:
     parameters:
       - in: path
@@ -4274,6 +4303,32 @@ paths:
           $ref: '#/components/responses/file'
         400:
           $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /gapDocumentTemplate/{gapDocumentTemplateId}/export:
+    parameters:
+      - in: path
+        name: gapDocumentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: exportGapDocumentTemplate
+      responses:
+        200:
+          description: Template package successfully created
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
         401:
           $ref: '#/components/responses/401'
         403:
@@ -8073,9 +8128,12 @@ components:
         - AWARD_CERTIFICATE_COMPETITION_NOT_IN_EVENT
         - AWARD_CERTIFICATE_IS_CHALLENGE_EVENT
         - DOCUMENT_TEMPLATE_INVALID_FONT
+        - DOCUMENT_TEMPLATE_INVALID_PDF
         - DOCUMENT_TEMPLATE_TYPE_MISMATCH
         - DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED
         - DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED
+        - DOCUMENT_TEMPLATE_INVALID_PACKAGE
+        - DOCUMENT_TEMPLATE_UNSUPPORTED_PACKAGE_VERSION
         - SUBSTITUTION_NOT_FOUND
         - SUBSTITUTION_PARTICIPANT_OUT_NOT_FOUND
         - SUBSTITUTION_PARTICIPANT_IN_NOT_FOUND

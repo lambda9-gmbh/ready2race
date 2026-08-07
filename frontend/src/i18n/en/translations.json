@@ -262,10 +262,17 @@
         },
         "error": {
           "invalidFont": "The font file could not be read. Please upload a valid TTF or OTF file.",
+          "invalidPdf": "The selected file cannot be read as a PDF.",
+          "invalidPackage": "The package cannot be read. It must be an unmodified .r2rtpl.zip file.",
+          "unsupportedPackageVersion": "This package comes from a newer version. Please update ready2race.",
           "typeMismatch": "The template does not match the document type it is being assigned to.",
           "placeholderPageNotSupported": "Award certificates have exactly one page — every placeholder has to be on page 1.",
           "placeholderTypeNotSupported": "This placeholder is not available for the chosen document type. Please pick one from that type's list."
-        }
+        },
+        "export": "Export template",
+        "exportHint": "The package contains the PDF, the placeholders and the stored font.",
+        "import": "Import template",
+        "importSucceeded": "Template imported"
       },
       "placeholder": {
         "available": "Available Placeholders",
