@@ -126,6 +126,35 @@ object RaceClockerPollRepo {
     }
 
     /**
+     * Ob es für diesen Lauf überhaupt eine Automatik gibt, die man pausieren könnte: eingeschaltete
+     * Automatik an der Veranstaltung und RaceClocker als (geerbtes) Zeitnahmesystem.
+     *
+     * Ohne diese Frage sammelt jede Handeingabe auf jeder Veranstaltung ein
+     * `raceclocker_auto_paused_at` ein - auch dort, wo gar kein Zeitnahmesystem gesetzt ist. Die
+     * Oberfläche schriebe dann dauerhaft „Automatischer Abruf pausiert" an einen Lauf und meinte
+     * damit etwas, das es nicht gibt. Die Bedingungen sind bewusst dieselben wie in
+     * [getPollingEvents] und [getCandidates]: Was der Job nie anfasst, wird auch nicht pausiert.
+     */
+    fun isAutoPullConfigured(matchId: UUID) = Jooq.query {
+        fetchExists(
+            selectOne()
+                .from(COMPETITION_MATCH)
+                .join(COMPETITION_SETUP_MATCH)
+                .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+                .join(COMPETITION_SETUP_ROUND)
+                .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                .join(COMPETITION_PROPERTIES)
+                .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+                .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+                .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
+                .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(matchId))
+                .and(EVENT.RACECLOCKER_AUTO_PULL.isTrue)
+                .and(EVENT.CHALLENGE_EVENT.isFalse)
+                .and(DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM).eq(TimingSystem.RACECLOCKER.name))
+        )
+    }
+
+    /**
      * Der Ausgang eines Abrufversuchs. Rührt `updated_at`/`updated_by` bewusst NICHT an: Der
      * Zeitstempel sagt "der Job war hier", nicht "am Lauf hat sich etwas geändert" - sonst sähe im
      * Änderungsprotokoll alle fünf Sekunden jeder aktive Lauf bearbeitet aus.

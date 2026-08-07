@@ -29,6 +29,7 @@ import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchRe
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
+import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
@@ -579,8 +580,17 @@ object CompetitionExecutionService {
      *
      * Der manuelle Pull pausiert bewusst NICHT: Er ist derselbe Weg wie die Automatik, nur von Hand
      * ausgelöst, und darf sie nicht abwürgen.
+     *
+     * Pausiert wird nur dort, wo es eine Automatik gibt. Sonst sammelte jede Veranstaltung ohne
+     * RaceClocker - und das sind nach der Migration erst einmal alle - an jedem von Hand
+     * eingetragenen Lauf einen Vermerk ein, den die Oberfläche als „Automatischer Abruf pausiert"
+     * anzeigt und der sich auf nichts bezieht. Die Prüfung steht im Repo des Jobs, damit die
+     * Bedingung an genau einer Stelle formuliert ist.
      */
     private fun pauseRaceClockerAutoPull(matchId: UUID): App<Nothing, Unit> = KIO.comprehension {
+        val configured = !RaceClockerPollRepo.isAutoPullConfigured(matchId).orDie()
+        if (!configured) return@comprehension unit
+
         !CompetitionMatchRepo.update(matchId) {
             if (raceclockerAutoPausedAt == null) {
                 raceclockerAutoPausedAt = LocalDateTime.now()
