@@ -90,12 +90,20 @@ object CompetitionMatchRepo {
     fun getStartListConfigTarget(id: UUID) = Jooq.query {
         // Wettkampf-Wert vor Veranstaltungs-Voreinstellung, wie in getForRaceClockerPull.
         val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM).`as`("timing_system")
+        val qualificationConfig = DSL.coalesce(
+            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
+            EVENT.STARTLIST_CONFIG_QUALIFICATION,
+        ).`as`("qualification_config")
+        val roundsConfig = DSL.coalesce(
+            COMPETITION.STARTLIST_CONFIG_ROUNDS,
+            EVENT.STARTLIST_CONFIG_ROUNDS,
+        ).`as`("rounds_config")
 
         select(
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
             timingSystem,
-            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
-            COMPETITION.STARTLIST_CONFIG_ROUNDS,
+            qualificationConfig,
+            roundsConfig,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -115,8 +123,8 @@ object CompetitionMatchRepo {
                     // konvertiert wie EventRepo.getChainProgressionMode. null ist hier legitim:
                     // es bedeutet "kein Zeitnahmesystem gesetzt".
                     timingSystem = it[timingSystem]?.let { s -> TimingSystem.valueOf(s) },
-                    qualificationConfig = it[COMPETITION.STARTLIST_CONFIG_QUALIFICATION],
-                    roundsConfig = it[COMPETITION.STARTLIST_CONFIG_ROUNDS],
+                    qualificationConfig = it[qualificationConfig],
+                    roundsConfig = it[roundsConfig],
                 )
             }
     }

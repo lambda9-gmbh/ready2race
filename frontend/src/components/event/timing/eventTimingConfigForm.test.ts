@@ -33,6 +33,32 @@ describe('mapEventTimingFormToRequest', () => {
         expect(request.heatsResultsUrl).toBeNull()
     })
 
+    it('verwirft das Qualifikations-Format, wenn nicht RaceClocker gewählt ist', () => {
+        // Webscorer kennt die Zweiteilung Zeitfahren/Läufe nicht und zeigt nur ein Export-Feld.
+        const request = mapEventTimingFormToRequest({
+            ...emptyEventTimingForm,
+            timingSystem: 'WEBSCORER',
+            startlistConfigQualification: {id: '11111111-1111-1111-1111-111111111111', label: 'Q'},
+            startlistConfigRounds: {id: '22222222-2222-2222-2222-222222222222', label: 'R'},
+            resultImportConfig: {id: '33333333-3333-3333-3333-333333333333', label: 'I'},
+        })
+
+        expect(request.startlistConfigQualification).toBeNull()
+        expect(request.startlistConfigRounds).toBe('22222222-2222-2222-2222-222222222222')
+        expect(request.resultImportConfig).toBe('33333333-3333-3333-3333-333333333333')
+    })
+
+    it('verwirft die Formate, wenn kein System gesetzt ist', () => {
+        const request = mapEventTimingFormToRequest({
+            ...emptyEventTimingForm,
+            startlistConfigRounds: {id: '22222222-2222-2222-2222-222222222222', label: 'R'},
+            resultImportConfig: {id: '33333333-3333-3333-3333-333333333333', label: 'I'},
+        })
+
+        expect(request.startlistConfigRounds).toBeNull()
+        expect(request.resultImportConfig).toBeNull()
+    })
+
     it('macht aus einer leeren URL null statt eines Leerstrings', () => {
         const request = mapEventTimingFormToRequest({
             ...emptyEventTimingForm,

@@ -794,6 +794,9 @@ export type CompetitionTimingDeviationDto = {
     timingSystem?: TimingSystem | null
     timeTrialResultsUrl?: string | null
     heatsResultsUrl?: string | null
+    startlistConfigQualification?: string | null
+    startlistConfigRounds?: string | null
+    resultImportConfig?: string | null
 }
 
 export type ContactInformationDto = {
@@ -1284,6 +1287,9 @@ export type EventTimingConfigDto = {
     timingSystem?: TimingSystem | null
     timeTrialResultsUrl?: string | null
     heatsResultsUrl?: string | null
+    startlistConfigQualification?: string | null
+    startlistConfigRounds?: string | null
+    resultImportConfig?: string | null
     /**
      * The competitions that do not follow these defaults but set at least one of the three fields themselves.
      */
@@ -1298,6 +1304,9 @@ export type EventTimingConfigRequest = {
     timingSystem?: TimingSystem | null
     timeTrialResultsUrl?: string | null
     heatsResultsUrl?: string | null
+    startlistConfigQualification?: string | null
+    startlistConfigRounds?: string | null
+    resultImportConfig?: string | null
 }
 
 export type FeeDto = {
@@ -2579,6 +2588,18 @@ export type TimingConfigDto = {
      * Event-wide default heats results URL; inherited while the competition's own field is null.
      */
     eventHeatsResultsUrl?: string | null
+    /**
+     * Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
+     */
+    eventStartlistConfigQualification?: string | null
+    /**
+     * Event-wide default start list export for the other rounds; inherited while the competition's own field is null.
+     */
+    eventStartlistConfigRounds?: string | null
+    /**
+     * Event-wide default race results import; inherited while the competition's own field is null.
+     */
+    eventResultImportConfig?: string | null
 }
 
 /**

@@ -49,6 +49,9 @@ object TimingConfigService {
                     eventTimingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
                     eventTimeTrialResultsUrl = event.raceclockerTtResultsUrl,
                     eventHeatsResultsUrl = event.raceclockerHeatsResultsUrl,
+                    eventStartlistConfigQualification = event.startlistConfigQualification,
+                    eventStartlistConfigRounds = event.startlistConfigRounds,
+                    eventResultImportConfig = event.resultImportConfig,
                 )
             )
         )
@@ -69,6 +72,9 @@ object TimingConfigService {
                     timingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
                     timeTrialResultsUrl = event.raceclockerTtResultsUrl,
                     heatsResultsUrl = event.raceclockerHeatsResultsUrl,
+                    startlistConfigQualification = event.startlistConfigQualification,
+                    startlistConfigRounds = event.startlistConfigRounds,
+                    resultImportConfig = event.resultImportConfig,
                     deviatingCompetitions = deviations,
                 )
             )
@@ -94,6 +100,9 @@ object TimingConfigService {
             timingSystem = request.timingSystem?.name
             raceclockerTtResultsUrl = timeTrialUrl
             raceclockerHeatsResultsUrl = heatsUrl
+            startlistConfigQualification = request.startlistConfigQualification
+            startlistConfigRounds = request.startlistConfigRounds
+            resultImportConfig = request.resultImportConfig
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

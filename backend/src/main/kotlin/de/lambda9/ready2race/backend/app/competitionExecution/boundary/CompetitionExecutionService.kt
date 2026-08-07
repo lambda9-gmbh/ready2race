@@ -633,10 +633,14 @@ object CompetitionExecutionService {
         val match = !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId)
 
-        // Das Preset gehoert zum Wettkampf (Zeitnahme-Tab), nicht mehr zur einzelnen Anfrage.
+        // Das Format gehoert zum Wettkampf (Zeitnahme-Tab), nicht mehr zur einzelnen Anfrage --
+        // und der Wettkampf erbt es von der Veranstaltung, solange er selbst keines gesetzt hat
+        // (Migration V202608071300, dieselbe Regel wie beim Startlisten-Export).
         val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
             .onNullFail { CompetitionError.CompetitionNotFound }
-        val configId = !KIO.failOnNull(competition.resultImportConfig) {
+        val event = !EventRepo.get(eventId).orDie()
+            .onNullFail { EventError.NotFound }
+        val configId = !KIO.failOnNull(competition.resultImportConfig ?: event.resultImportConfig) {
             MatchResultImportConfigError.NotConfigured
         }
         val config = !MatchResultImportConfigRepo.get(configId).orDie()

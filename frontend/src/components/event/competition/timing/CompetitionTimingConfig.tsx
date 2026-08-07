@@ -24,6 +24,10 @@ import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioBu
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import InlineLink from '@components/InlineLink.tsx'
+import {AutocompleteOption} from '@utils/types.ts'
+
+/** Ein geladenes Format aus den Listen der Konfiguration — anders als [AutocompleteOption] nie null. */
+type ConfigOption = {id: string; label: string}
 import {
     effectiveTimingSystem,
     emptyTimingForm,
@@ -114,9 +118,19 @@ const CompetitionTimingConfig = () => {
     const eventSystem = formValues.eventTimingSystem
 
     /**
-     * Einschalten füllt die Felder mit dem, was gerade gilt — man weicht von einem Stand ab, statt
-     * vor drei leeren Feldern zu stehen. Ausschalten leert sie wieder; das ist die einzige Art, das
-     * Erben zurückzubekommen, und der Schalter macht sie sichtbar statt sie zu verstecken.
+     * Die Veranstaltung liefert ihre Formate als blanke ID; den Namen dazu kennen erst die geladenen
+     * Listen. Solange die noch laufen, bleibt das Feld leer statt eine UUID zu zeigen.
+     */
+    const configOption = (options: ConfigOption[] | null, id: string): AutocompleteOption =>
+        (id && options?.find(option => option.id === id)) || null
+
+    const configName = (options: ConfigOption[] | null, id: string) =>
+        configOption(options, id)?.label || t('event.competition.timing.eventDefaults.unset')
+
+    /**
+     * Einschalten füllt alle Felder mit dem, was gerade gilt — man weicht von einem Stand ab, statt
+     * vor leeren Feldern zu stehen. Ausschalten leert sie wieder; das ist die einzige Art, das Erben
+     * zurückzubekommen, und der Schalter macht sie sichtbar statt sie zu verstecken.
      */
     const toggleOverride = (checked: boolean) => {
         setOverride(checked)
@@ -127,10 +141,25 @@ const CompetitionTimingConfig = () => {
             )
             formContext.setValue('timeTrialResultsUrl', formValues.eventTimeTrialResultsUrl)
             formContext.setValue('heatsResultsUrl', formValues.eventHeatsResultsUrl)
+            formContext.setValue(
+                'startlistConfigQualification',
+                configOption(startListConfigs, formValues.eventStartlistConfigQualification),
+            )
+            formContext.setValue(
+                'startlistConfigRounds',
+                configOption(startListConfigs, formValues.eventStartlistConfigRounds),
+            )
+            formContext.setValue(
+                'resultImportConfig',
+                configOption(importConfigs, formValues.eventResultImportConfig),
+            )
         } else {
             formContext.setValue('timingSystem', 'NONE')
             formContext.setValue('timeTrialResultsUrl', '')
             formContext.setValue('heatsResultsUrl', '')
+            formContext.setValue('startlistConfigQualification', null)
+            formContext.setValue('startlistConfigRounds', null)
+            formContext.setValue('resultImportConfig', null)
         }
     }
 
@@ -181,6 +210,29 @@ const CompetitionTimingConfig = () => {
                                     {t('event.competition.timing.heatsUrl')}:{' '}
                                     {formValues.eventHeatsResultsUrl ||
                                         t('event.competition.timing.eventDefaults.unset')}
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    {t('event.competition.timing.startlistQualification')}:{' '}
+                                    {configName(
+                                        startListConfigs,
+                                        formValues.eventStartlistConfigQualification,
+                                    )}
+                                </Typography>
+                            </>
+                        )}
+                        {eventSystem !== 'NONE' && (
+                            <>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    {t(
+                                        eventSystem === 'RACECLOCKER'
+                                            ? 'event.competition.timing.startlistRounds'
+                                            : 'event.competition.timing.startlist',
+                                    )}
+                                    : {configName(startListConfigs, formValues.eventStartlistConfigRounds)}
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    {t('event.competition.timing.resultImport')}:{' '}
+                                    {configName(importConfigs, formValues.eventResultImportConfig)}
                                 </Typography>
                             </>
                         )}
@@ -257,7 +309,7 @@ const CompetitionTimingConfig = () => {
                         </Stack>
                     )}
 
-                    {effectiveSystem !== 'NONE' && (
+                    {override && effectiveSystem !== 'NONE' && (
                         <Stack spacing={4}>
                             <Divider />
                             {/* Die Presets sind kein Override: sie hängen an den Spalten dieser

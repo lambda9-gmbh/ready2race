@@ -4,8 +4,7 @@ import java.util.UUID
 
 /**
  * Ein Wettkampf, der die Zeitnahme-Voreinstellung seiner Veranstaltung nicht erbt, sondern eigene
- * Werte gesetzt hat. Nur die drei vererbbaren Felder stehen hier; die Spalten-Presets bleiben ohnehin
- * pro Wettkampf und sind deshalb keine Abweichung.
+ * Werte gesetzt hat. Alle sechs vererbbaren Felder stehen hier.
  *
  * Gedacht für die Veranstaltungs-Ansicht: wer dort die Voreinstellung pflegt, soll sehen, welche
  * Wettkämpfe ihr nicht folgen — sonst ändert man die Adresse für alle und wundert sich am Renntag,
@@ -19,4 +18,7 @@ data class CompetitionTimingDeviationDto(
     val timingSystem: TimingSystem?,
     val timeTrialResultsUrl: String?,
     val heatsResultsUrl: String?,
+    val startlistConfigQualification: UUID?,
+    val startlistConfigRounds: UUID?,
+    val resultImportConfig: UUID?,
 )

@@ -177,6 +177,18 @@ describe('overridesTiming', () => {
     it('lässt sich von Leerzeichen nicht täuschen', () => {
         expect(overridesTiming({...emptyTimingForm, heatsResultsUrl: '   '})).toBe(false)
     })
+
+    it('zählt ein eigenes Dateiformat als Abweichung', () => {
+        // Auch ein eigener Startlisten Export ist ein Override — sonst stünde der Schalter aus,
+        // und das nächste Speichern würde das Format wegwerfen.
+        expect(
+            overridesTiming({
+                ...emptyTimingForm,
+                eventTimingSystem: 'RACECLOCKER',
+                startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            }),
+        ).toBe(true)
+    })
 })
 
 describe('timingConfigWarnings', () => {
@@ -215,6 +227,31 @@ describe('timingConfigWarnings', () => {
         })
 
         expect(warnings).toEqual(['heatsUrl'])
+    })
+
+    it('mahnt einen Startlisten Export nicht an, der von der Veranstaltung kommt', () => {
+        const warnings = timingConfigWarnings({
+            ...emptyTimingForm,
+            eventTimingSystem: 'RACECLOCKER',
+            eventHeatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            eventStartlistConfigRounds: roundsPreset,
+        })
+
+        expect(warnings).toEqual([])
+    })
+
+    it('mahnt bei einer Qualifikation den geerbten Quali-Export nicht an', () => {
+        const warnings = timingConfigWarnings({
+            ...emptyTimingForm,
+            eventTimingSystem: 'RACECLOCKER',
+            eventTimeTrialResultsUrl: 'https://www.raceclocker.com/7ffb822a',
+            eventHeatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            eventStartlistConfigQualification: qualificationPreset,
+            eventStartlistConfigRounds: roundsPreset,
+            hasQualificationRound: true,
+        })
+
+        expect(warnings).toEqual([])
     })
 
     it('mahnt das Startlisten-Preset an, auch bei Webscorer', () => {

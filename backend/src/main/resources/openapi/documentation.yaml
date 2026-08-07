@@ -11991,6 +11991,21 @@ components:
           type: string
           nullable: true
           description: Event-wide default heats results URL; inherited while the competition's own field is null.
+        eventStartlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+          description: Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
+        eventStartlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+          description: Event-wide default start list export for the other rounds; inherited while the competition's own field is null.
+        eventResultImportConfig:
+          type: string
+          format: uuid
+          nullable: true
+          description: Event-wide default race results import; inherited while the competition's own field is null.
 
     EventTimingConfigDto:
       type: object
@@ -12007,6 +12022,18 @@ components:
           nullable: true
         heatsResultsUrl:
           type: string
+          nullable: true
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
           nullable: true
         deviatingCompetitions:
           type: array
@@ -12038,6 +12065,18 @@ components:
         heatsResultsUrl:
           type: string
           nullable: true
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
+          nullable: true
       required:
         - competitionId
         - identifier
@@ -12057,6 +12096,18 @@ components:
           nullable: true
         heatsResultsUrl:
           type: string
+          nullable: true
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
           nullable: true
 
     TimingSystem:

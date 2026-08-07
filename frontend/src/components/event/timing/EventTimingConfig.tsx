@@ -4,11 +4,17 @@ import {Trans, useTranslation} from 'react-i18next'
 import {useState} from 'react'
 import {eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {getEventTimingConfig, updateEventTimingConfig} from '@api/sdk.gen.ts'
+import {
+    getEventTimingConfig,
+    getMatchResultImportConfigs,
+    getStartListConfigs,
+    updateEventTimingConfig,
+} from '@api/sdk.gen.ts'
 import {CompetitionTimingDeviationDto} from '@api/types.gen.ts'
 import InlineLink from '@components/InlineLink.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
+import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {
     emptyEventTimingForm,
@@ -27,6 +33,13 @@ const describeDeviation = (deviation: CompetitionTimingDeviationDto) =>
         deviation.timingSystem ? ('event.timing.deviations.system' as const) : null,
         deviation.timeTrialResultsUrl ? ('event.timing.deviations.timeTrialUrl' as const) : null,
         deviation.heatsResultsUrl ? ('event.timing.deviations.heatsUrl' as const) : null,
+        deviation.startlistConfigQualification
+            ? ('event.timing.deviations.startlistQualification' as const)
+            : null,
+        deviation.startlistConfigRounds
+            ? ('event.timing.deviations.startlistRounds' as const)
+            : null,
+        deviation.resultImportConfig ? ('event.timing.deviations.resultImport' as const) : null,
     ].filter(key => key !== null)
 
 /**
@@ -47,6 +60,30 @@ const EventTimingConfig = () => {
     const [submitting, setSubmitting] = useState(false)
 
     const formContext = useForm<EventTimingForm>({defaultValues: emptyEventTimingForm})
+
+    const {data: startListConfigs, pending: startListConfigsPending} = useFetch(
+        signal => getStartListConfigs({signal}),
+        {
+            mapData: data => data.data.map(dto => ({id: dto.id, label: dto.name})),
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            },
+        },
+    )
+
+    const {data: importConfigs, pending: importConfigsPending} = useFetch(
+        signal => getMatchResultImportConfigs({signal}),
+        {
+            mapData: data => data.data.map(dto => ({id: dto.id, label: dto.name})),
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            },
+        },
+    )
 
     // Die Abweichungen stehen bewusst außerhalb des Formulars: sie werden hier nicht bearbeitet,
     // sondern nur gezeigt. Nach dem Speichern neu geladen, weil ein Wettkampf durch eine geänderte
@@ -123,6 +160,48 @@ const EventTimingConfig = () => {
                                 name={'heatsResultsUrl'}
                                 label={t('event.timing.heatsUrl')}
                             />
+                        </Stack>
+                    )}
+
+                    {/* Die beiden Dateiformate: welche Spalten exportiert und importiert werden.
+                        Auch sie gelten für die ganze Veranstaltung, weil alle Wettkämpfe in dieselben
+                        Rennen im Fremdsystem laufen und dort dieselbe Spaltenzuordnung brauchen. */}
+                    {timingSystem !== 'NONE' && (
+                        <Stack spacing={4}>
+                            {timingSystem === 'RACECLOCKER' && (
+                                <FormInputAutocomplete
+                                    name={'startlistConfigQualification'}
+                                    options={startListConfigs ?? []}
+                                    loading={startListConfigsPending}
+                                    label={t('event.timing.startlistQualification')}
+                                />
+                            )}
+                            <FormInputAutocomplete
+                                name={'startlistConfigRounds'}
+                                options={startListConfigs ?? []}
+                                loading={startListConfigsPending}
+                                label={t(
+                                    timingSystem === 'RACECLOCKER'
+                                        ? 'event.timing.startlistRounds'
+                                        : 'event.timing.startlist',
+                                )}
+                            />
+                            <FormInputAutocomplete
+                                name={'resultImportConfig'}
+                                options={importConfigs ?? []}
+                                loading={importConfigsPending}
+                                label={t('event.timing.resultImport')}
+                            />
+                            <Typography variant={'body2'} color={'text.secondary'}>
+                                <Trans i18nKey={'event.timing.formatsHint.1'} />
+                                <InlineLink
+                                    to={'/config'}
+                                    search={{tab: 'competition-elements'}}
+                                    hash={'startlists'}>
+                                    <Trans i18nKey={'event.timing.formatsHint.2'} />
+                                </InlineLink>
+                                <Trans i18nKey={'event.timing.formatsHint.3'} />
+                            </Typography>
                         </Stack>
                     )}
 

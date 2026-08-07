@@ -1142,19 +1142,19 @@
           "hint": "Aus: der Wettkampf folgt der Veranstaltung und übernimmt jede spätere Änderung dort. An: er bekommt eigene Werte — sinnvoll nur, wenn er ein eigenes Rennen im Zeitnahme-System hat."
         },
         "presets": {
-          "title": "Startlisten und Ergebnis-Import",
-          "hint": "Diese Presets gelten immer nur für diesen Wettkampf — sie hängen an den Spalten seiner Startliste, nicht am Rennen im Zeitnahme-System."
+          "title": "Dateiformate",
+          "hint": "Welche Spalten exportiert und importiert werden. Abweichend nur nötig, wenn dieser Wettkampf in ein anderes Rennen im Zeitnahme-System läuft."
         },
         "raceclockerHint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
         "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
         "heatsUrl": "Ergebnis-Adresse Läufe",
-        "startlistQualification": "Startlisten-Preset Qualifikation",
-        "startlistRounds": "Startlisten-Preset übrige Runden",
-        "startlist": "Startlisten-Preset",
-        "resultImport": "Ergebnis-Import-Preset (xlsx)",
+        "startlistQualification": "Startlisten Export Qualifikation",
+        "startlistRounds": "Startlisten Export übrige Runden",
+        "startlist": "Startlisten Export",
+        "resultImport": "Rennergebnisse Import",
         "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
         "presetsHint": {
-          "1": "Presets werden ",
+          "1": "Startlisten Exports und Rennergebnisse Imports werden ",
           "2": "in der Konfiguration",
           "3": " angelegt und gelten für alle Veranstaltungen."
         },
@@ -1162,8 +1162,8 @@
           "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
           "heatsUrl": "Es fehlt die Ergebnis-Adresse des Läufe-Rennens – ohne sie lassen sich keine Ergebnisse aus RaceClocker holen.",
           "timeTrialUrl": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt die Ergebnis-Adresse des Zeitfahren-Rennens – ohne sie lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen.",
-          "startlistRounds": "Es fehlt das Startlisten-Preset – ohne es lässt sich keine Startliste als CSV exportieren.",
-          "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt das Startlisten-Preset für die Qualifikation – ohne es lässt sich für die Qualifikation keine Startliste exportieren.",
+          "startlistRounds": "Es fehlt der Startlisten Export – ohne ihn lässt sich keine Startliste als CSV exportieren.",
+          "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt der Startlisten Export für die Qualifikation – ohne ihn lässt sich für die Qualifikation keine Startliste exportieren.",
           "link": "Zu den Zeitnahme-Einstellungen"
         },
         "saved": "Zeitnahme-Einstellungen gespeichert",
@@ -1338,6 +1338,15 @@
       "raceclockerHint": "RaceClocker braucht zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunden und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein — sie gelten dann für die ganze Veranstaltung.",
       "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
       "heatsUrl": "Ergebnis-Adresse Läufe",
+      "startlistQualification": "Startlisten Export Qualifikation",
+      "startlistRounds": "Startlisten Export übrige Runden",
+      "startlist": "Startlisten Export",
+      "resultImport": "Rennergebnisse Import",
+      "formatsHint": {
+        "1": "Startlisten Exports und Rennergebnisse Imports werden ",
+        "2": "in der Konfiguration",
+        "3": " angelegt und gelten für alle Veranstaltungen."
+      },
       "saved": "Zeitnahme-Voreinstellung gespeichert",
       "invalid": "Bitte geben Sie Adressen auf raceclocker.com an.",
       "deviations": {
@@ -1345,7 +1354,10 @@
         "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
         "system": "eigenes System",
         "timeTrialUrl": "eigene Zeitfahren-Adresse",
-        "heatsUrl": "eigene Läufe-Adresse"
+        "heatsUrl": "eigene Läufe-Adresse",
+        "startlistQualification": "eigener Startlisten Export Qualifikation",
+        "startlistRounds": "eigener Startlisten Export",
+        "resultImport": "eigener Rennergebnisse Import"
       }
     },
     "info": {

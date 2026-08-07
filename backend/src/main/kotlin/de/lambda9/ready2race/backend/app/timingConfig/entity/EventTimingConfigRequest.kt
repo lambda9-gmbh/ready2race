@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNull
+import java.util.UUID
 
 /**
  * Zeitnahme-Voreinstellung der Veranstaltung. Jedes Feld optional wie beim Wettkampf
@@ -14,6 +15,9 @@ data class EventTimingConfigRequest(
     val timingSystem: TimingSystem?,
     val timeTrialResultsUrl: String?,
     val heatsResultsUrl: String?,
+    val startlistConfigQualification: UUID?,
+    val startlistConfigRounds: UUID?,
+    val resultImportConfig: UUID?,
 ) : Validatable {
 
     override fun validate(): ValidationResult =
@@ -40,6 +44,9 @@ data class EventTimingConfigRequest(
                 timingSystem = TimingSystem.RACECLOCKER,
                 timeTrialResultsUrl = "https://www.raceclocker.com/7ffb822a",
                 heatsResultsUrl = "https://www.raceclocker.com/7c854955",
+                startlistConfigQualification = UUID.randomUUID(),
+                startlistConfigRounds = UUID.randomUUID(),
+                resultImportConfig = UUID.randomUUID(),
             )
     }
 }

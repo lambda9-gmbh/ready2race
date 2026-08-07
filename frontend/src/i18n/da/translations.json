@@ -1142,16 +1142,16 @@
           "hint": "Fra: konkurrencen følger arrangementet og overtager enhver senere ændring der. Til: den får sine egne værdier – kun relevant, hvis den har sit eget løb i tidtagningssystemet."
         },
         "presets": {
-          "title": "Startlister og resultatimport",
-          "hint": "Disse presets gælder altid kun for denne konkurrence – de hænger sammen med kolonnerne i dens startliste, ikke med løbet i tidtagningssystemet."
+          "title": "Filformater",
+          "hint": "Hvilke kolonner der eksporteres og importeres. Kun nødvendigt separat, hvis denne konkurrence kører ind i et andet løb i tidtagningssystemet."
         },
         "raceclockerHint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
         "timeTrialUrl": "Resultatadresse for enkeltstart",
         "heatsUrl": "Resultatadresse for heat",
-        "startlistQualification": "Startlistepreset til kvalifikation",
-        "startlistRounds": "Startlistepreset til øvrige runder",
-        "startlist": "Startlistepreset",
-        "resultImport": "Resultatimportpreset (xlsx)",
+        "startlistQualification": "Startliste-eksport til kvalifikation",
+        "startlistRounds": "Startliste-eksport til øvrige runder",
+        "startlist": "Startliste-eksport",
+        "resultImport": "Løbsresultater-import",
         "importHint": "RaceClocker-skabelonerne eksporterer uden overskriftsrække, fordi RaceClocker ellers importerer den som deltager. Tilknyt derfor kolonnerne efter deres rækkefølge ved import i RaceClocker – især den interne id til \"Extra info\".",
         "presetsHint": {
           "1": "Presets oprettes ",
@@ -1338,6 +1338,15 @@
       "raceclockerHint": "RaceClocker kræver to løb: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunderne og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her – de gælder så for hele arrangementet.",
       "timeTrialUrl": "Resultatadresse for enkeltstart",
       "heatsUrl": "Resultatadresse for heat",
+      "startlistQualification": "Startliste-eksport til kvalifikation",
+      "startlistRounds": "Startliste-eksport til øvrige runder",
+      "startlist": "Startliste-eksport",
+      "resultImport": "Løbsresultater-import",
+      "formatsHint": {
+        "1": "Startliste-eksporter og løbsresultater-importer oprettes ",
+        "2": "i konfigurationen",
+        "3": " og gælder for alle arrangementer."
+      },
       "saved": "Tidtagningsstandard gemt",
       "invalid": "Angiv venligst adresser på raceclocker.com.",
       "deviations": {
@@ -1345,7 +1354,10 @@
         "none": "Ingen konkurrence afviger – alle følger denne standard.",
         "system": "eget system",
         "timeTrialUrl": "egen enkeltstart-adresse",
-        "heatsUrl": "egen heat-adresse"
+        "heatsUrl": "egen heat-adresse",
+        "startlistQualification": "egen startliste-eksport til kvalifikation",
+        "startlistRounds": "egen startliste-eksport",
+        "resultImport": "egen løbsresultater-import"
       }
     },
     "info": {
