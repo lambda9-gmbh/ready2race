@@ -10,4 +10,10 @@ data class EventTimingConfigDto(
     val timingSystem: TimingSystem?,
     val timeTrialResultsUrl: String?,
     val heatsResultsUrl: String?,
+    /**
+     * Die Wettkaempfe, die dieser Voreinstellung nicht folgen. Ohne sie waere die Voreinstellung eine
+     * Einstellung, deren Reichweite man nicht sieht: wer hier eine Adresse aendert, muss wissen,
+     * welche Wettkaempfe davon unberuehrt bleiben.
+     */
+    val deviatingCompetitions: List<CompetitionTimingDeviationDto>,
 )

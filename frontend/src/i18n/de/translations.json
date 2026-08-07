@@ -1129,12 +1129,22 @@
         "system": "Zeitnahme-System",
         "systems": {
           "none": "nicht gesetzt",
-          "inherited": "Vorgabe der Veranstaltung ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
-        "inheritedHint": "Dieser Wettkampf übernimmt die Zeitnahme der Veranstaltung. Die Adressen unten sind nur nötig, wenn er ein eigenes RaceClocker-Rennen hat — sonst leer lassen.",
-        "inheritedUrl": "Vorgabe der Veranstaltung: {{url}}",
+        "eventDefaults": {
+          "title": "Vorgabe der Veranstaltung",
+          "unset": "nicht gesetzt",
+          "link": "Zeitnahme der Veranstaltung bearbeiten"
+        },
+        "override": {
+          "label": "Für diesen Wettkampf abweichend einstellen",
+          "hint": "Aus: der Wettkampf folgt der Veranstaltung und übernimmt jede spätere Änderung dort. An: er bekommt eigene Werte — sinnvoll nur, wenn er ein eigenes Rennen im Zeitnahme-System hat."
+        },
+        "presets": {
+          "title": "Startlisten und Ergebnis-Import",
+          "hint": "Diese Presets gelten immer nur für diesen Wettkampf — sie hängen an den Spalten seiner Startliste, nicht am Rennen im Zeitnahme-System."
+        },
         "raceclockerHint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
         "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
         "heatsUrl": "Ergebnis-Adresse Läufe",
@@ -1329,7 +1339,14 @@
       "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
       "heatsUrl": "Ergebnis-Adresse Läufe",
       "saved": "Zeitnahme-Voreinstellung gespeichert",
-      "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
+      "invalid": "Bitte geben Sie Adressen auf raceclocker.com an.",
+      "deviations": {
+        "title": "Wettkämpfe mit eigener Zeitnahme",
+        "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
+        "system": "eigenes System",
+        "timeTrialUrl": "eigene Zeitfahren-Adresse",
+        "heatsUrl": "eigene Läufe-Adresse"
+      }
     },
     "info": {
       "infoPage": "Info-Anzeige",

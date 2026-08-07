@@ -1129,12 +1129,22 @@
         "system": "Timing system",
         "systems": {
           "none": "not set",
-          "inherited": "Event default ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
-        "inheritedHint": "This competition uses the event's timing setup. The addresses below are only needed if it has a RaceClocker race of its own – otherwise leave them empty.",
-        "inheritedUrl": "Event default: {{url}}",
+        "eventDefaults": {
+          "title": "Event default",
+          "unset": "not set",
+          "link": "Edit the event's timing setup"
+        },
+        "override": {
+          "label": "Set separately for this competition",
+          "hint": "Off: the competition follows the event and picks up every later change there. On: it gets values of its own – only useful if it has a race of its own in the timing system."
+        },
+        "presets": {
+          "title": "Start lists and result import",
+          "hint": "These presets always apply to this competition alone – they depend on the columns of its start list, not on the race in the timing system."
+        },
         "raceclockerHint": "RaceClocker needs two races per competition: one of type \"individual starts (time trial)\" for the qualification round and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here. ready2race determines by itself which one applies to a given heat.",
         "timeTrialUrl": "Results address for time trial",
         "heatsUrl": "Results address for heats",
@@ -1329,7 +1339,14 @@
       "timeTrialUrl": "Results address for time trial",
       "heatsUrl": "Results address for heats",
       "saved": "Timing defaults saved",
-      "invalid": "Please enter addresses on raceclocker.com."
+      "invalid": "Please enter addresses on raceclocker.com.",
+      "deviations": {
+        "title": "Competitions with their own timing",
+        "none": "No competition deviates – all of them follow these defaults.",
+        "system": "own system",
+        "timeTrialUrl": "own time trial address",
+        "heatsUrl": "own heats address"
+      }
     },
     "info": {
       "infoPage": "Info Display",

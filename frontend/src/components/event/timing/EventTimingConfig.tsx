@@ -1,10 +1,12 @@
-import {Alert, Box, Card, Stack, Typography} from '@mui/material'
+import {Alert, Box, Card, Divider, Stack, Typography} from '@mui/material'
 import {FormContainer, useForm, useWatch} from 'react-hook-form-mui'
 import {Trans, useTranslation} from 'react-i18next'
 import {useState} from 'react'
 import {eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getEventTimingConfig, updateEventTimingConfig} from '@api/sdk.gen.ts'
+import {CompetitionTimingDeviationDto} from '@api/types.gen.ts'
+import InlineLink from '@components/InlineLink.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
@@ -14,6 +16,18 @@ import {
     mapDtoToEventTimingForm,
     mapEventTimingFormToRequest,
 } from './eventTimingConfigForm.ts'
+
+/**
+ * Was an einem Wettkampf abweicht — jedes gesetzte Feld einzeln, weil ein Teil-Override („erbt das
+ * System, hat aber ein eigenes Läufe-Rennen") die häufigste und die am leichtesten zu übersehende
+ * Abweichung ist. Ausgeschriebene Schlüssel, damit i18n typgeprüft bleibt.
+ */
+const describeDeviation = (deviation: CompetitionTimingDeviationDto) =>
+    [
+        deviation.timingSystem ? ('event.timing.deviations.system' as const) : null,
+        deviation.timeTrialResultsUrl ? ('event.timing.deviations.timeTrialUrl' as const) : null,
+        deviation.heatsResultsUrl ? ('event.timing.deviations.heatsUrl' as const) : null,
+    ].filter(key => key !== null)
 
 /**
  * Die Zeitnahme-Voreinstellung einer Veranstaltung: ein RaceClocker-Rennen für die Zeitfahren und
@@ -34,15 +48,22 @@ const EventTimingConfig = () => {
 
     const formContext = useForm<EventTimingForm>({defaultValues: emptyEventTimingForm})
 
+    // Die Abweichungen stehen bewusst außerhalb des Formulars: sie werden hier nicht bearbeitet,
+    // sondern nur gezeigt. Nach dem Speichern neu geladen, weil ein Wettkampf durch eine geänderte
+    // Voreinstellung zur Abweichung werden kann, ohne dass ihn jemand angefasst hat.
+    const [deviations, setDeviations] = useState<CompetitionTimingDeviationDto[]>([])
+    const [lastSaved, setLastSaved] = useState(0)
+
     useFetch(signal => getEventTimingConfig({signal, path: {eventId}}), {
         onResponse: ({data, error}) => {
             if (error) {
                 feedback.error(t('common.error.unexpected'))
             } else if (data) {
                 formContext.reset(mapDtoToEventTimingForm(data))
+                setDeviations(data.deviatingCompetitions ?? [])
             }
         },
-        deps: [eventId],
+        deps: [eventId, lastSaved],
     })
 
     const timingSystem = useWatch({control: formContext.control, name: 'timingSystem'})
@@ -67,6 +88,7 @@ const EventTimingConfig = () => {
                         )
                     } else {
                         feedback.success(t('event.timing.saved'))
+                        setLastSaved(Date.now())
                     }
                 }}>
                 <Stack spacing={4}>
@@ -108,6 +130,42 @@ const EventTimingConfig = () => {
                         <SubmitButton submitting={submitting}>
                             <Trans i18nKey={'common.save'} />
                         </SubmitButton>
+                    </Box>
+
+                    {/* Die Reichweite dieser Voreinstellung: welche Wettkämpfe ihr nicht folgen.
+                        Ohne diese Liste ändert man hier eine Adresse und merkt erst am Renntag,
+                        dass drei Wettkämpfe weiterhin ins alte Rennen zeigen. */}
+                    <Divider />
+                    <Box>
+                        <Typography variant={'subtitle2'} gutterBottom>
+                            <Trans i18nKey={'event.timing.deviations.title'} />
+                        </Typography>
+                        {deviations.length === 0 ? (
+                            <Typography variant={'body2'} color={'text.secondary'}>
+                                <Trans i18nKey={'event.timing.deviations.none'} />
+                            </Typography>
+                        ) : (
+                            <Stack spacing={1}>
+                                {deviations.map(deviation => (
+                                    <Box key={deviation.competitionId}>
+                                        <InlineLink
+                                            to={'/event/$eventId/competition/$competitionId'}
+                                            params={{
+                                                eventId,
+                                                competitionId: deviation.competitionId,
+                                            }}
+                                            search={{tab: 'timing'}}>
+                                            {deviation.identifier} {deviation.name}
+                                        </InlineLink>
+                                        <Typography variant={'body2'} color={'text.secondary'}>
+                                            {describeDeviation(deviation)
+                                                .map(key => t(key))
+                                                .join(', ')}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        )}
                     </Box>
                 </Stack>
             </FormContainer>

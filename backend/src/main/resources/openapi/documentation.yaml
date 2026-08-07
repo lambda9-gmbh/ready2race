@@ -12008,6 +12008,40 @@ components:
         heatsResultsUrl:
           type: string
           nullable: true
+        deviatingCompetitions:
+          type: array
+          description: The competitions that do not follow these defaults but set at least one of the three fields themselves.
+          items:
+            $ref: '#/components/schemas/CompetitionTimingDeviationDto'
+
+    CompetitionTimingDeviationDto:
+      type: object
+      description: >
+        A competition that overrides the event-wide timing defaults. Only the inheritable fields are
+        listed; the column presets are per competition anyway and therefore no deviation. A null
+        timingSystem with a URL set is a partial override - the competition inherits the system and
+        has a race of its own.
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
+        timeTrialResultsUrl:
+          type: string
+          nullable: true
+        heatsResultsUrl:
+          type: string
+          nullable: true
+      required:
+        - competitionId
+        - identifier
+        - name
 
     EventTimingConfigRequest:
       type: object

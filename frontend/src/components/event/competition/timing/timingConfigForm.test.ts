@@ -4,6 +4,7 @@ import {
     emptyTimingForm,
     mapDtoToTimingForm,
     mapTimingFormToRequest,
+    overridesTiming,
     timingConfigWarnings,
 } from './timingConfigForm.ts'
 
@@ -151,6 +152,30 @@ describe('effectiveTimingSystem', () => {
                 eventTimingSystem: 'RACECLOCKER',
             }),
         ).toBe('WEBSCORER')
+    })
+})
+
+describe('overridesTiming', () => {
+    it('erkennt einen Wettkampf ohne eigene Werte als „erbt"', () => {
+        expect(
+            overridesTiming({...emptyTimingForm, eventTimingSystem: 'RACECLOCKER'}),
+        ).toBe(false)
+    })
+
+    it('zählt auch eine einzelne eigene Adresse als Abweichung', () => {
+        // Teil-Override: System geerbt, aber ein eigenes Läufe-Rennen. Der Schalter im Tab muss
+        // dafür an sein, sonst würde die Adresse beim nächsten Speichern still verschwinden.
+        expect(
+            overridesTiming({
+                ...emptyTimingForm,
+                eventTimingSystem: 'RACECLOCKER',
+                heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            }),
+        ).toBe(true)
+    })
+
+    it('lässt sich von Leerzeichen nicht täuschen', () => {
+        expect(overridesTiming({...emptyTimingForm, heatsResultsUrl: '   '})).toBe(false)
     })
 })
 

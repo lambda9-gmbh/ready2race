@@ -1129,12 +1129,22 @@
         "system": "Tidtagningssystem",
         "systems": {
           "none": "ikke angivet",
-          "inherited": "Arrangementets standard ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
-        "inheritedHint": "Denne konkurrence bruger arrangementets tidtagning. Adresserne nedenfor er kun nødvendige, hvis den har sit eget RaceClocker-løb – ellers lad dem stå tomme.",
-        "inheritedUrl": "Arrangementets standard: {{url}}",
+        "eventDefaults": {
+          "title": "Arrangementets standard",
+          "unset": "ikke angivet",
+          "link": "Rediger arrangementets tidtagning"
+        },
+        "override": {
+          "label": "Angiv separat for denne konkurrence",
+          "hint": "Fra: konkurrencen følger arrangementet og overtager enhver senere ændring der. Til: den får sine egne værdier – kun relevant, hvis den har sit eget løb i tidtagningssystemet."
+        },
+        "presets": {
+          "title": "Startlister og resultatimport",
+          "hint": "Disse presets gælder altid kun for denne konkurrence – de hænger sammen med kolonnerne i dens startliste, ikke med løbet i tidtagningssystemet."
+        },
         "raceclockerHint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
         "timeTrialUrl": "Resultatadresse for enkeltstart",
         "heatsUrl": "Resultatadresse for heat",
@@ -1329,7 +1339,14 @@
       "timeTrialUrl": "Resultatadresse for enkeltstart",
       "heatsUrl": "Resultatadresse for heat",
       "saved": "Tidtagningsstandard gemt",
-      "invalid": "Angiv venligst adresser på raceclocker.com."
+      "invalid": "Angiv venligst adresser på raceclocker.com.",
+      "deviations": {
+        "title": "Konkurrencer med egen tidtagning",
+        "none": "Ingen konkurrence afviger – alle følger denne standard.",
+        "system": "eget system",
+        "timeTrialUrl": "egen enkeltstart-adresse",
+        "heatsUrl": "egen heat-adresse"
+      }
     },
     "info": {
       "infoPage": "Info-visning",

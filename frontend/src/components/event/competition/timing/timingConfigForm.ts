@@ -51,6 +51,16 @@ export const effectiveTimingSystem = (form: TimingForm): TimingFormSystem =>
     form.timingSystem !== 'NONE' ? form.timingSystem : form.eventTimingSystem
 
 /**
+ * Weicht der Wettkampf von der Veranstaltung ab? Genau dann, wenn er selbst etwas gesetzt hat — auch
+ * eine einzelne eigene Adresse zählt, denn sie zeigt auf ein anderes Rennen als die Voreinstellung.
+ * Der „Überschreiben"-Schalter im Tab steht danach.
+ */
+export const overridesTiming = (form: TimingForm): boolean =>
+    form.timingSystem !== 'NONE' ||
+    form.timeTrialResultsUrl.trim() !== '' ||
+    form.heatsResultsUrl.trim() !== ''
+
+/**
  * Die Preset-Felder kommen als reine UUID aus dem Backend. Das Label füllt die Komponente nach, sobald
  * die Preset-Listen geladen sind — hier steht nur die ID, damit diese Funktion ohne Netz testbar bleibt.
  */

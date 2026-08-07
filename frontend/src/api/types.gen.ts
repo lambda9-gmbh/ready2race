@@ -783,6 +783,19 @@ export type CompetitionTemplateDto = {
     setupTemplate?: CompetitionSetupTemplateOverviewDto
 }
 
+/**
+ * A competition that overrides the event-wide timing defaults. Only the inheritable fields are listed; the column presets are per competition anyway and therefore no deviation. A null timingSystem with a URL set is a partial override - the competition inherits the system and has a race of its own.
+ *
+ */
+export type CompetitionTimingDeviationDto = {
+    competitionId: string
+    identifier: string
+    name: string
+    timingSystem?: TimingSystem | null
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+}
+
 export type ContactInformationDto = {
     id: string
     name: string
@@ -1271,6 +1284,10 @@ export type EventTimingConfigDto = {
     timingSystem?: TimingSystem | null
     timeTrialResultsUrl?: string | null
     heatsResultsUrl?: string | null
+    /**
+     * The competitions that do not follow these defaults but set at least one of the three fields themselves.
+     */
+    deviatingCompetitions?: Array<CompetitionTimingDeviationDto>
 }
 
 /**

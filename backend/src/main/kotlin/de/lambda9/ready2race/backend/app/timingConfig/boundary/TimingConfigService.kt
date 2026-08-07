@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSet
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
+import de.lambda9.ready2race.backend.app.timingConfig.control.TimingConfigRepo
 import de.lambda9.ready2race.backend.app.timingConfig.entity.EventTimingConfigDto
 import de.lambda9.ready2race.backend.app.timingConfig.entity.EventTimingConfigRequest
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingConfigDto
@@ -60,12 +61,15 @@ object TimingConfigService {
         val event = !EventRepo.get(eventId).orDie()
             .onNullFail { EventError.NotFound }
 
+        val deviations = !TimingConfigRepo.getDeviations(eventId).orDie()
+
         KIO.ok(
             ApiResponse.Dto(
                 EventTimingConfigDto(
                     timingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
                     timeTrialResultsUrl = event.raceclockerTtResultsUrl,
                     heatsResultsUrl = event.raceclockerHeatsResultsUrl,
+                    deviatingCompetitions = deviations,
                 )
             )
         )
