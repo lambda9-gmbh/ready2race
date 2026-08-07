@@ -484,6 +484,9 @@ import type {
     ExportGapDocumentTemplateData,
     ExportGapDocumentTemplateError,
     ExportGapDocumentTemplateResponse,
+    GetGapDocumentTemplateFontData,
+    GetGapDocumentTemplateFontError,
+    GetGapDocumentTemplateFontResponse,
     GetGapDocumentTemplateTypesError,
     GetGapDocumentTemplateTypesResponse,
     AssignGapDocumentTemplateData,
@@ -2859,6 +2862,19 @@ export const exportGapDocumentTemplate = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/gapDocumentTemplate/{gapDocumentTemplateId}/export',
+    })
+}
+
+export const getGapDocumentTemplateFont = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetGapDocumentTemplateFontData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetGapDocumentTemplateFontResponse,
+        GetGapDocumentTemplateFontError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}/font',
     })
 }
 

@@ -5300,6 +5300,16 @@ export type ExportGapDocumentTemplateResponse = Blob | File
 
 export type ExportGapDocumentTemplateError = ApiError
 
+export type GetGapDocumentTemplateFontData = {
+    path: {
+        gapDocumentTemplateId: string
+    }
+}
+
+export type GetGapDocumentTemplateFontResponse = Blob | File
+
+export type GetGapDocumentTemplateFontError = ApiError
+
 export type GetGapDocumentTemplateTypesResponse = Array<GapDocumentTypeDto>
 
 export type GetGapDocumentTemplateTypesError = BadRequestError | ApiError | UnprocessableEntityError

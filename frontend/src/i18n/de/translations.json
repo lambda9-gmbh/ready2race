@@ -258,7 +258,8 @@
         "preview": {
           "title": "Urkundenvorlagenvorschau",
           "error": "Vorschau konnte nicht geladen werden.",
-          "show": "Urkunde in der Vorschau anzeigen"
+          "show": "Urkunde in der Vorschau anzeigen",
+          "approximate": "Die Darstellung im Editor ist eine Näherung. Verbindlich ist die Vorschau der gespeicherten Vorlage."
         },
         "error": {
           "invalidFont": "Die Schriftdatei konnte nicht gelesen werden. Bitte eine gültige TTF- oder OTF-Datei hochladen.",

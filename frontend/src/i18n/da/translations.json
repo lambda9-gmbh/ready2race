@@ -258,7 +258,8 @@
         "preview": {
           "title": "Forhåndsvisning af diplomskabeloner",
           "error": "Forhåndsvisningen kunne ikke indlæses.",
-          "show": "Vis diplom i forhåndsvisning"
+          "show": "Vis diplom i forhåndsvisning",
+          "approximate": "Visningen i editoren er en tilnærmelse. Det er forhåndsvisningen af den gemte skabelon, der er gældende."
         },
         "error": {
           "invalidFont": "Skrifttypefilen kunne ikke læses. Upload en gyldig TTF- eller OTF-fil.",

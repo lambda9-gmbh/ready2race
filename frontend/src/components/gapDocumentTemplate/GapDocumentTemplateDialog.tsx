@@ -14,6 +14,7 @@ import EntityDialog from '@components/EntityDialog.tsx'
 import {
     addGapDocumentTemplate,
     downloadGapDocumentTemplateOriginal,
+    getGapDocumentTemplateFont,
     getGapDocumentTemplateTypes,
     updateGapDocumentTemplate,
 } from '@api/sdk.gen.ts'
@@ -134,6 +135,7 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
     const [selectedPlaceholder, setSelectedPlaceholder] = useState<string | null>(null)
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [hasExistingFont, setHasExistingFont] = useState<boolean>(false)
+    const [fontFamily, setFontFamily] = useState<string | undefined>(undefined)
 
     // Die Ablehnungsgründe des Servers ("Schriftdatei nicht lesbar", "Platzhalter nicht auf Seite
     // 1") verschwanden bislang in "Vorlage konnte nicht angelegt werden". Unbekanntes bleibt
@@ -203,6 +205,60 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
             setPdfFile(fields[0].file)
         }
     }, [fields])
+
+    // Lädt die Schrift für die Editor-Vorschau: die gerade ausgewählte Datei, sonst - bei einer
+    // gespeicherten Vorlage - die hinterlegte Schrift vom Server. Ohne Schrift oder bei
+    // fehlgeschlagenem Laden bleibt fontFamily undefined, und der Editor zeichnet mit der
+    // Standardschrift weiter (kein leerer Kasten).
+    useEffect(() => {
+        const source = fontFile
+            ? Promise.resolve(fontFile)
+            : props.entity?.hasFont
+              ? getGapDocumentTemplateFont({path: {gapDocumentTemplateId: props.entity.id}}).then(
+                    r => r.data ?? undefined,
+                )
+              : Promise.resolve(undefined)
+
+        let objectUrl: string | undefined
+        let addedFace: FontFace | undefined
+        let cancelled = false
+
+        source.then(async blob => {
+            if (!blob || cancelled) {
+                setFontFamily(undefined)
+                return
+            }
+            objectUrl = URL.createObjectURL(blob)
+            const family = `gapTemplateFont-${Date.now()}`
+            const face = new FontFace(family, `url(${objectUrl})`)
+            try {
+                await face.load()
+                if (cancelled) {
+                    // Der Dialog schloss oder die Schrift wechselte schon wieder, während
+                    // das Laden lief - nicht mehr in document.fonts eintragen, sonst bliebe
+                    // eine nie mehr genutzte Schrift dauerhaft registriert.
+                    return
+                }
+                document.fonts.add(face)
+                addedFace = face
+                setFontFamily(family)
+            } catch {
+                if (!cancelled) {
+                    setFontFamily(undefined)
+                }
+            }
+        })
+
+        return () => {
+            cancelled = true
+            if (addedFace) {
+                document.fonts.delete(addedFace)
+            }
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl)
+            }
+        }
+    }, [fontFile, props.entity])
 
     const handleTypeChange = (newType: GapDocumentType) => {
         if (newType === documentType) {
@@ -400,7 +456,14 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
                                     onAddPlaceholder={handleAddPlaceholder}
                                     selectedPlaceholder={selectedPlaceholder}
                                     onSelectPlaceholder={setSelectedPlaceholder}
+                                    fontFamily={fontFamily}
                                 />
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{display: 'block', mt: 1}}>
+                                    {t('gap.document.template.preview.approximate')}
+                                </Typography>
                             </Grid2>
                             <Grid2 size={{xs: 12, md: 4}}>
                                 <PlaceholderSidebar

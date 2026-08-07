@@ -201,6 +201,14 @@ fun Route.documentTemplate() {
                     GapDocumentTemplateService.exportTemplate(id)
                 }
             }
+
+            get("/font") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("gapDocumentTemplateId", uuid)
+                    GapDocumentTemplateService.downloadFont(id)
+                }
+            }
         }
     }
 

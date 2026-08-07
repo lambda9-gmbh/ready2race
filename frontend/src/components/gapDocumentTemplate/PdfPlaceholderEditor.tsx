@@ -8,6 +8,7 @@ import {Delete, DragIndicator} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import '@utils/pdfWorker'
 import {clampRect, MIN_EXTENT, nudgeRect} from './placeholderGeometry.ts'
+import {sampleTextFor} from './placeholderSample.ts'
 
 type PlaceholderData = {
     id: string
@@ -33,6 +34,10 @@ type Props = {
     onAddPlaceholder: (type: GapDocumentPlaceholderType, page: number) => void
     selectedPlaceholder: string | null
     onSelectPlaceholder: (id: string | null) => void
+    /** CSS-Familienname der hochgeladenen Schrift, bereits per FontFace geladen. `undefined` lässt
+     * den Browser die Standardschrift verwenden — sowohl ohne Schrift als auch nach fehlgeschlagenem
+     * Laden. */
+    fontFamily?: string
 }
 
 const PdfPlaceholderEditor = (props: Props) => {
@@ -245,6 +250,15 @@ const PdfPlaceholderEditor = (props: Props) => {
             .filter(p => p.page === page)
             .map(placeholder => {
                 const isSelected = props.selectedPlaceholder === placeholder.id
+                // Ohne eigene Größe gilt die Kastenhöhe als Schriftgröße - dieselbe Regel wie
+                // beim serverseitigen Rendern (siehe AdditionalText.kt).
+                const fontSize = placeholder.fontSize ?? placeholder.relHeight * pageDimensions.height
+                const justifyContent =
+                    placeholder.textAlign === 'CENTER'
+                        ? 'center'
+                        : placeholder.textAlign === 'RIGHT'
+                          ? 'flex-end'
+                          : 'flex-start'
                 return (
                     <Box
                         key={placeholder.id}
@@ -260,16 +274,54 @@ const PdfPlaceholderEditor = (props: Props) => {
                                 ? 'rgba(25, 118, 210, 0.1)'
                                 : 'rgba(0, 0, 0, 0.05)',
                             cursor: 'move',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
                             boxSizing: 'border-box',
+                            overflow: 'hidden',
                             '&:hover': {
                                 backgroundColor: 'rgba(25, 118, 210, 0.15)',
                                 borderColor: '#1976d2',
                             },
                         }}>
-                        <Stack direction="row" spacing={0.5} alignItems="center">
+                        {/* Beispieltext, in Ausrichtung/Größe/Schnitt/Schrift des Platzhalters,
+                            vertikal zentriert. Darf den Kasten nie sprengen. */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                inset: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent,
+                                overflow: 'hidden',
+                                px: 0.5,
+                                pointerEvents: 'none',
+                            }}>
+                            <Typography
+                                component="span"
+                                sx={{
+                                    fontSize: `${fontSize}px`,
+                                    fontWeight: placeholder.bold ? 'bold' : 'normal',
+                                    fontStyle: placeholder.italic ? 'italic' : 'normal',
+                                    fontFamily: props.fontFamily,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    userSelect: 'none',
+                                    lineHeight: 1,
+                                }}>
+                                {sampleTextFor(placeholder.type, placeholder.staticText)}
+                            </Typography>
+                        </Box>
+                        <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                            sx={{
+                                position: 'absolute',
+                                top: 2,
+                                left: 2,
+                                backgroundColor: 'background.paper',
+                                opacity: 0.9,
+                                borderRadius: 0.5,
+                                px: 0.5,
+                            }}>
                             <DragIndicator fontSize="small" />
                             <Typography
                                 variant="caption"

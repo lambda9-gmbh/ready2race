@@ -258,7 +258,8 @@
         "preview": {
           "title": "Certificate template preview",
           "error": "Cannot load preview.",
-          "show": "Preview certificate"
+          "show": "Preview certificate",
+          "approximate": "The editor view is an approximation. The preview of the saved template is authoritative."
         },
         "error": {
           "invalidFont": "The font file could not be read. Please upload a valid TTF or OTF file.",

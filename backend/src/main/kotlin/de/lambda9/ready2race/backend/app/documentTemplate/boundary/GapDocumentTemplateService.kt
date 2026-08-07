@@ -253,6 +253,20 @@ object GapDocumentTemplateService {
         KIO.ok(ApiResponse.Created(id))
     }
 
+    /** Die hinterlegte Schrift, damit der Editor die Vorschau in derselben Schrift zeichnen kann. */
+    fun downloadFont(
+        id: UUID,
+    ): App<GapDocumentTemplateError, ApiResponse.File> = KIO.comprehension {
+        val font = !GapDocumentTemplateFontRepo.get(id).orDie().onNullFail { GapDocumentTemplateError.NotFound }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = font.fileName,
+                bytes = font.data,
+            )
+        )
+    }
+
     fun getPreview(
         id: UUID
     ): App<GapDocumentTemplateError, ApiResponse.File> = KIO.comprehension {
