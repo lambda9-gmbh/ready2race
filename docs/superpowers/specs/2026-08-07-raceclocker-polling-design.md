@@ -75,6 +75,11 @@ Ist unter den Kandidaten einer Veranstaltung mindestens ein aktiver Lauf, gilt d
 sonst der langsame. Ist er seit dem letzten Abruf noch nicht verstrichen, wird die Veranstaltung
 in diesem Herzschlag übersprungen.
 
+„Mindestens ein aktiver Lauf" wird **nach** dem Durchgang über die Läufe bestimmt, nicht vor ihm:
+Erst dort wird ein Lauf aktiviert. Zählte der Takt die Momentaufnahme von davor, notierte
+ausgerechnet der Abruf, der den Start entdeckt, noch den langsamen Takt — der frisch gestartete Lauf
+wartete dann eine volle Minute auf seinen ersten Ergebnisabruf.
+
 ### 3. Feed je URL genau einmal holen
 
 Ein Abruf liefert das ganze Rennen — alle Wellen, alle Runden. Der Job holt deshalb pro benötigter
@@ -95,6 +100,11 @@ Zuordnung über `assignFeedRows(rows, teams, waveName)`, unverändert.
 - **Kein Treffer** → kein Fehler. Nur `raceclocker_polled_at` wird gesetzt. Eine Welle, die in
   RaceClocker noch nicht angelegt ist, ist vor dem Start der Normalfall und darf nicht als Störung
   erscheinen.
+- **Treffer, aber noch kein verwertbares Ergebnis** (`RACECLOCKER_NO_RESULTS`) → ebenfalls kein
+  Fehler, aus demselben Grund: Solange in einem Lauf jedes Boot `In race…` zeigt, ist genau das der
+  Zustand. Als Fehler gespeichert leuchtete in jedem Lauf über fast seine ganze Dauer eine orange
+  Warnung — und eine Warnung, die immer leuchtet, bringt dem Büro bei, auch die eine zu übersehen,
+  auf die es ankommt. Geschrieben wird dabei nichts, der Fingerabdruck darf also gemerkt werden.
 - **Lauf ist bevorstehend** → geprüft wird nur, ob der Feed für diese Welle einen echten Start
   zeigt. Echt heißt: `RaceClockerFeedRow.start != null` — der Parser wirft den Platzhalter
   `00:00:00.0` bereits weg, mit dem RaceClocker Boote ohne Start füllt — oder ein verwertbares
@@ -109,6 +119,11 @@ Zuordnung über `assignFeedRows(rows, teams, waveName)`, unverändert.
 Ein Fehler wird je Lauf in `raceclocker_poll_error` geschrieben und bricht den Takt nie ab. Ein Lauf
 mit doppelten Crews in RaceClocker darf die anderen Läufe derselben Veranstaltung nicht mitreißen.
 Ist eine URL nicht erreichbar, bekommen alle Läufe an dieser URL denselben Fehler.
+
+Das gilt auch für **Defekte**, nicht nur für typisierte Fehler: Ein gescheitertes `orDie` (etwa ein
+Lock-Timeout auf einem Lauf, den jemand offen hat) würde sonst aus dem Durchgang herausfliegen und
+jeden Lauf dahinter für immer verhungern lassen. Der Job führt deshalb jeden Lauf einzeln aus und
+legt einen Defekt als `INTERNAL_ERROR` in derselben Spalte ab; der Grund steht im Server-Log.
 
 ## Kein zweiter Code-Pfad
 
@@ -168,12 +183,28 @@ Drei Spalten auf `competition_match`:
 | `raceclocker_auto_paused_at` | gesetzt = die Automatik lässt diesen Lauf in Ruhe |
 
 `updateMatchResult` (Formular) und `updateMatchResultByFile` (Datei-Upload) setzen
-`raceclocker_auto_paused_at`. Der manuelle Pull setzt es **nicht** — er ist derselbe Weg, nur von
-Hand ausgelöst, und darf die Automatik nicht abwürgen.
+`raceclocker_auto_paused_at` — aber nur dort, wo es eine Automatik gibt (eingeschaltete Automatik an
+der Veranstaltung und RaceClocker als effektives System). Sonst sammelte jede Veranstaltung ohne
+Zeitnahmesystem an jedem von Hand eingetragenen Lauf einen Vermerk ein, der sich auf nichts bezieht.
+Der manuelle Pull setzt es **nicht** — er ist derselbe Weg, nur von Hand ausgelöst, und darf die
+Automatik nicht abwürgen.
 
-Durchführungs-Tab und Live-Dashboard zeigen je Lauf „zuletzt abgerufen HH:MM:SS", bei Problemen den
-Grund, und wenn pausiert einen Knopf **Automatik wieder aufnehmen**, der
-`raceclocker_auto_paused_at` zurücksetzt.
+Die Pause wird ein zweites Mal geprüft, in derselben Transaktion wie das Schreiben: Zwischen dem
+Laden der Kandidaten und dem Schreiben liegen bis zu zwei HTTP-Abrufe mit je zehn Sekunden
+Zeitlimit — lang genug für eine Handeingabe, die der Job sonst überschriebe.
+
+Der Durchführungs-Tab zeigt je Lauf „zuletzt abgerufen HH:MM:SS", bei Problemen den Grund, und wenn
+pausiert einen Knopf **Automatik wieder aufnehmen**, der `raceclocker_auto_paused_at` zurücksetzt
+und zugleich den Fingerabdruck im Job vergisst — sonst liefe der nächste Takt in die Abkürzung
+„unverändert, nichts schreiben", und die Freigabe hätte sichtbar nichts getan.
+
+Der Knopf hängt am **effektiven** Zeitnahmesystem, nicht an der eigenen Spalte des Wettkampfs: Erbt
+er RaceClocker von der Veranstaltung — der Normalfall —, verschwände er sonst genau dort, wo die
+Automatik läuft, und ein pausierter Lauf ließe sich nirgends mehr freigeben.
+
+Das Live-Dashboard zeigt nur Fehler und Pause, nicht den Zeitpunkt: `raceclocker_polled_at` steht
+bewusst nicht in seinem DTO. `respondETagged` hasht das serialisierte DTO, und ein Feld, das sich
+alle fünf Sekunden ändert, macht jede 304-Antwort unmöglich.
 
 ## Was der Job bewusst nicht tut
 
@@ -199,3 +230,9 @@ als reine Funktion ohne HTTP und ohne Datenbank:
 - **Fingerabdruck**: gleiche Zeilen ergeben denselben Wert; eine geänderte Zeit, Bahn oder Strafe
   einen anderen; eine Änderung in einer fremden Welle nicht.
 - **Untergrenze der Takte**.
+
+Dazu `RaceClockerPollRepoTest` gegen Postgres (Testcontainers): `getCandidates` ist die einzige
+Stelle des Abrufs, die sich nicht als reine Funktion prüfen lässt — und genau dort ist der eine
+Fehler entstanden, den kein Lesen gefunden hat (ein aliasierter Ausdruck, den jOOQ im WHERE als
+blanken Bezeichner rendert). Jeder Ausschluss der Abfrage steht dort als eigener Fall, dazu die
+Coalesce-Reihenfolge Wettkampf vor Veranstaltung.
