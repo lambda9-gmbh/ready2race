@@ -217,14 +217,22 @@ object EventInfoService {
      * beliebig lange in "nächste Läufe" stehen und verdrängten - der Block ist auf [limit]
      * gedeckelt - die tatsächlich anstehenden Läufe.
      *
-     * Hier fallen außerdem die ECHTEN Läufe abgesagter Slots heraus
+     * Hier werden außerdem die ECHTEN Läufe abgesagter Slots MARKIERT
      * ([EventScheduleLogic.skippedMatchIdOrNull]). Die Lauf-Abfragen selbst
      * (`CompetitionMatchRepo.getUpcomingMatches`/`getUpcomingMatchesForBoard`) kennen den
      * Zeitstrahl nicht; solange die Runde nicht gesetzt ist, fängt die Absage schon
-     * [EventScheduleLogic.pendingSlotOrNull] ab, danach nur noch dieser Filter. Er sitzt bewusst
-     * an dieser Stelle statt als weitere SQL-Bedingung: die Slots sind für die Platzhalter ohnehin
-     * schon gelesen, und beide öffentlichen Ansichten (Kiosk und Athleten-Anzeige) laufen durch
-     * genau diese Funktion - eine Regel, ein Ort.
+     * [EventScheduleLogic.pendingSlotOrNull] ab, danach nur noch diese Stelle. Sie sitzt bewusst
+     * hier statt als weitere SQL-Bedingung: die Slots sind für die Platzhalter ohnehin schon
+     * gelesen, und beide öffentlichen Ansichten (Kiosk und Athleten-Anzeige) laufen durch genau
+     * diese Funktion - eine Regel, ein Ort.
+     *
+     * Bis zum 07.08.2026 wurden diese Läufe an dieser Stelle still HERAUSGEFILTERT. Für eine
+     * Besatzung, die am Steg auf ihren Lauf wartet, ist ein spurlos verschwundener Lauf nicht von
+     * einem Anzeigefehler zu unterscheiden - sie sucht weiter. Deshalb bleiben abgesagte Läufe
+     * jetzt an ihrer geplanten Stelle stehen, tragen `cancelled = true` und verlieren dabei ihre
+     * Mannschaften: auf der Anzeige steht nur noch Wettkampf, Runde, Lauf, die geplante Zeit und
+     * "Findet nicht statt". Abgeräumt werden sie von der Nachfrist, mit der die Lauf-Abfrage
+     * ohnehin schon eingegrenzt hat ([grace]) - eine zusätzliche Regel braucht es dafür nicht.
      */
     private fun mergeWithPendingPlaceholders(
         eventId: UUID,
@@ -245,7 +253,17 @@ object EventInfoService {
                 matchExists = r.get("match_exists", Boolean::class.java) == true,
             )
         }.toSet()
-        val upcomingReal = real.filterNot { it.matchId in skippedMatchIds }
+        // Markieren statt filtern: der abgesagte Lauf bleibt an seiner geplanten Stelle stehen,
+        // aber ohne Mannschaften - wer am Steg steht, soll seinen Lauf finden und daran ablesen,
+        // dass er nicht stattfindet, statt ihn für einen Anzeigefehler zu halten. Die Besatzungen
+        // fallen weg, weil an einem abgesagten Lauf keine Aufstellung mehr hängt.
+        val upcomingReal = real.map { match ->
+            if (match.matchId in skippedMatchIds) {
+                match.copy(cancelled = true, teams = emptyList())
+            } else {
+                match
+            }
+        }
 
         fun List<UpcomingCompetitionMatchInfo>.stillUpcoming() =
             filter { AthleteBoardLogic.isStillUpcoming(it.scheduledStartTime, now, grace) }

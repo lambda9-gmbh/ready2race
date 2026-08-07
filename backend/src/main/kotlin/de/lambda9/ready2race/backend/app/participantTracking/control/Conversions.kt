@@ -18,6 +18,7 @@ fun CompetitionRegistrationTeamRecord.toTeamForScanOverviewDtos() = KIO.ok(
         competitionId = competitionId!!,
         competitionIdentifier = competitionIdentifier!!,
         competitionName = competitionName!!,
+        checkInOutRequired = checkInOutRequired!!,
         clubId = clubId!!,
         clubName = clubName!!,
         teamName = teamName,

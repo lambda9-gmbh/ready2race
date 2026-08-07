@@ -7,6 +7,8 @@ data class TeamForScanOverviewDto(
     val competitionId: UUID,
     val competitionIdentifier: String,
     val competitionName: String,
+    /** Ob dieser Wettkampf eine An-/Abmeldung verlangt - beim Beachsprint zum Beispiel nicht. */
+    val checkInOutRequired: Boolean,
     val clubId: UUID,
     val clubName: String,
     val teamName: String?,

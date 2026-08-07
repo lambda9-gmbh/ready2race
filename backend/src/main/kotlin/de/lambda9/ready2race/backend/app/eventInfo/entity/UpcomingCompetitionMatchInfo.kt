@@ -30,4 +30,10 @@ data class UpcomingCompetitionMatchInfo(
      * auf den Zeitstrahl-Slot selbst, nicht auf einen Lauf oder eine Setup-Zeile.
      */
     val name: String? = null,
+    /**
+     * Der Zeitstrahl-Slot dieses Laufs ist abgesagt. Der Lauf bleibt trotzdem in der Liste -
+     * ein spurlos verschwundener Lauf wäre am Steg nicht von einem Anzeigefehler zu
+     * unterscheiden. [teams] ist dann immer leer.
+     */
+    val cancelled: Boolean = false,
 )

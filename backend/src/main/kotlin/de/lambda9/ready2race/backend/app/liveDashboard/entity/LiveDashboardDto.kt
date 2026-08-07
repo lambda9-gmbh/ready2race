@@ -38,6 +38,8 @@ data class LiveDashboardRequirementStatusDto(
     val checkedAt: LocalDateTime?,
     val note: String?,
     val timeCheck: TimeCheckDto?,
+    /** Fertige Ampel dieser Bedingung - siehe [LiveDashboardLogic.requirementSeverity]. */
+    val severity: EffectiveSeverity,
 )
 
 data class LiveDashboardParticipantDto(
@@ -52,20 +54,6 @@ data class LiveDashboardParticipantDto(
     val substitutedFor: String?,
     val substitutionReason: String?,
     val requirements: List<LiveDashboardRequirementStatusDto>,
-)
-
-/**
- * Verdichtung der Teilnahmebedingungen einer Mannschaft. Die Liste zeigt daraus ein Ampel-Icon;
- * die Bedingungen selbst holt erst der Detail-Dialog. Bei 150 Personen mal drei Bedingungen ist
- * das der Unterschied zwischen einer Antwort von 100 KB und einer von wenigen KB.
- */
-data class LiveDashboardRequirementSummaryDto(
-    val total: Int,
-    val fulfilled: Int,
-    val missingRequired: Int,
-    val missingOptional: Int,
-    /** Prüfungen außerhalb des konfigurierten Zeitfensters. */
-    val timeIssues: Int,
 )
 
 data class LiveDashboardTeamDto(
@@ -84,7 +72,20 @@ data class LiveDashboardTeamDto(
     val deregistered: Boolean,
     val deregisteredReason: String?,
     val invoiceState: LiveDashboardInvoiceState,
-    val requirements: LiveDashboardRequirementSummaryDto,
+    /** Fertige Ampel der Zeile - die Bewertungsregeln liegen im Backend, siehe [LiveDashboardLogic]. */
+    val severity: EffectiveSeverity,
+    /**
+     * Die Rechnung getrennt bewertet: der Detail-Dialog färbt seinen Rechnungs-Chip danach ein.
+     * Aus [severity] ließe sich das nicht zurückrechnen - dort ist sie mit allem anderen verrechnet.
+     */
+    val invoiceSeverity: EffectiveSeverity,
+    /** Ob dieser Wettkampf überhaupt eine An-/Abmeldung verlangt; steuert die Anzeige von [onWaterAt]. */
+    val onWaterRequired: Boolean,
+    /**
+     * "Auf dem Wasser" getrennt bewertet: der Detail-Dialog färbt seinen Chip danach ein.
+     * Aus [severity] ließe sich das nicht zurückrechnen - dort ist sie mit allem anderen verrechnet.
+     */
+    val onWaterSeverity: EffectiveSeverity,
     /** Ob mindestens eine Person für diese Runde umgemeldet wurde. */
     val substituted: Boolean,
     /**

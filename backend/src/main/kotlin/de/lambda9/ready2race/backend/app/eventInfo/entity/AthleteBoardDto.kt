@@ -41,6 +41,13 @@ data class AthleteBoardMatch(
      * auf öffentlichen Anzeigen zeigt.
      */
     val name: String? = null,
+    /**
+     * Der Lauf ist abgesagt ("Findet nicht statt"). Er bleibt trotzdem an seiner geplanten Stelle
+     * im Block `upcoming` stehen: eine Besatzung, die am Steg auf ihren Lauf wartet, kann einen
+     * spurlos verschwundenen Lauf nicht von einem Anzeigefehler unterscheiden. [teams] ist dann
+     * immer leer - an einem abgesagten Lauf hängt keine Aufstellung mehr.
+     */
+    val cancelled: Boolean = false,
 )
 
 data class AthleteBoardTeam(

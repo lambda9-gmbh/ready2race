@@ -1,7 +1,6 @@
 import {
+    EffectiveSeverity,
     LiveDashboardMatchDto,
-    LiveDashboardParticipantDto,
-    LiveDashboardRequirementStatusDto,
     LiveDashboardTeamDto,
     PendingSlotDto,
 } from '@api/types.gen.ts'
@@ -45,43 +44,6 @@ export const matchControls = (
     }
 }
 
-export type Severity = 'ok' | 'warning' | 'error' | 'neutral'
-
-const rank: Record<Severity, number> = {neutral: 0, ok: 1, warning: 2, error: 3}
-
-export const worstSeverity = (severities: Severity[]): Severity =>
-    severities.reduce<Severity>((acc, s) => (rank[s] > rank[acc] ? s : acc), 'neutral')
-
-export const requirementSeverity = (r: LiveDashboardRequirementStatusDto): Severity => {
-    if (!r.checked) {
-        return r.optional ? 'neutral' : 'error'
-    }
-    if (r.timeCheck && (r.timeCheck.status === 'LATE' || r.timeCheck.status === 'TOO_EARLY')) {
-        return 'warning'
-    }
-    return 'ok'
-}
-
-export const participantSeverity = (p: LiveDashboardParticipantDto): Severity =>
-    worstSeverity(p.requirements.map(requirementSeverity))
-
-/**
- * Dieselbe Bewertung wie [requirementSeverity], nur aus den verdichteten Zahlen der Liste: die
- * Bedingungen selbst kommen erst mit dem Detail-Dialog.
- *
- * "Auf dem Wasser" fließt mit in die Ampel ein, obwohl es keine konfigurierbare Bedingung ist:
- * bei aktivem Lauf ([matchActive]) muss das Boot ausgecheckt sein, sonst ist die Zeile ein
- * Fehler. Abgemeldete Boote fahren nicht mehr und sind ausgenommen.
- */
-export const teamSeverity = (team: LiveDashboardTeamDto, matchActive = false): Severity =>
-    worstSeverity([
-        team.requirements.missingRequired > 0 ? 'error' : 'neutral',
-        team.requirements.timeIssues > 0 ? 'warning' : 'neutral',
-        team.requirements.fulfilled > 0 ? 'ok' : 'neutral',
-        team.invoiceState === 'OPEN' ? 'error' : 'neutral',
-        matchActive && !team.deregistered && !team.onWaterAt ? 'error' : 'neutral',
-    ])
-
 /**
  * Ein Boot ist erledigt, sobald Platz, Zeit oder ein Ausscheidungsgrund vorliegt. Abgemeldete
  * Boote sind es ebenfalls — auf ihr Ergebnis wartet niemand mehr.
@@ -93,11 +55,14 @@ export const teamHasResult = (team: LiveDashboardTeamDto): boolean =>
 export const openResultTeams = (match: {teams: LiveDashboardTeamDto[]}): LiveDashboardTeamDto[] =>
     match.teams.filter(team => !teamHasResult(team))
 
-export const severityChipColor: Record<Severity, 'success' | 'warning' | 'error' | 'default'> = {
-    ok: 'success',
-    warning: 'warning',
-    error: 'error',
-    neutral: 'default',
+export const severityChipColor: Record<
+    EffectiveSeverity,
+    'success' | 'warning' | 'error' | 'default'
+> = {
+    OK: 'success',
+    WARNING: 'warning',
+    CRITICAL: 'error',
+    NEUTRAL: 'default',
 }
 
 export const formatMinutes = (totalMinutes: number): string => {

@@ -5,7 +5,14 @@ import java.util.UUID
 
 data class CompetitionMatchWithTeams(
     val competitionSetupMatch: UUID,
+    /** Geplanter Start aus dem Zeitplan. */
     val startTime: LocalDateTime?,
     val currentlyRunning: Boolean,
+    /** Tatsächlicher Start - null, solange niemand gestartet hat. */
+    val startedAt: LocalDateTime?,
+    /** Persistiertes Ende. Gesetzt heißt ausschließlich: jemand hat den Lauf beendet. */
+    val finishedAt: LocalDateTime?,
+    /** Der Zeitstrahl-Slot dieses Laufs ist abgesagt (`event_schedule_slot.skipped_at`). */
+    val skipped: Boolean,
     val teams: List<CompetitionMatchTeamWithRegistration>
 )

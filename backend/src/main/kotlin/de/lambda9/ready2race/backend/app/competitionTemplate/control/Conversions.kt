@@ -29,6 +29,7 @@ fun CompetitionTemplateViewRecord.toDto(): App<Nothing, CompetitionTemplateDto> 
                 identifier = identifier!!,
                 name = name!!,
                 shortName = shortName,
+                checkInOutRequired = checkInOutRequired!!,
                 description = description,
                 competitionCategory = if (categoryId !== null) {
                     CompetitionCategoryDto(

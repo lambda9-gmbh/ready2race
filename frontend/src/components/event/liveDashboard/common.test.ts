@@ -8,23 +8,17 @@ import {
     openResultTeams,
     pendingSlotLabel,
     teamHasResult,
-    teamSeverity,
 } from './common.ts'
-
-const noRequirements = {
-    total: 0,
-    fulfilled: 0,
-    missingRequired: 0,
-    missingOptional: 0,
-    timeIssues: 0,
-}
 
 const team = (overrides: Partial<LiveDashboardTeamDto>): LiveDashboardTeamDto => ({
     teamId: crypto.randomUUID(),
     failed: false,
     deregistered: false,
     invoiceState: 'NONE',
-    requirements: noRequirements,
+    severity: 'NEUTRAL',
+    invoiceSeverity: 'NEUTRAL',
+    onWaterRequired: false,
+    onWaterSeverity: 'NEUTRAL',
     substituted: false,
     ...overrides,
 })
@@ -42,80 +36,6 @@ describe('teamHasResult', () => {
 
     it('erkennt ein offenes Boot', () => {
         expect(teamHasResult(team({}))).toBe(false)
-    })
-})
-
-describe('teamSeverity', () => {
-    it('meldet ein Boot ohne Auscheck-Scan bei aktivem Lauf als Fehler', () => {
-        expect(teamSeverity(team({}), true)).toBe('error')
-        expect(teamSeverity(team({onWaterAt: '2026-08-15T07:48:41'}), true)).not.toBe('error')
-    })
-
-    it('ignoriert den Auscheck-Scan, solange der Lauf nicht aktiv ist', () => {
-        expect(teamSeverity(team({}), false)).toBe('neutral')
-        expect(teamSeverity(team({}))).toBe('neutral')
-    })
-
-    it('verlangt von abgemeldeten Booten keinen Auscheck-Scan', () => {
-        expect(teamSeverity(team({deregistered: true}), true)).toBe('neutral')
-    })
-
-    it('meldet eine fehlende Pflichtbedingung als Fehler', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 3, fulfilled: 2, missingRequired: 1}}),
-        )
-        expect(severity).toBe('error')
-    })
-
-    it('meldet eine offene Rechnung als Fehler', () => {
-        expect(teamSeverity(team({invoiceState: 'OPEN'}))).toBe('error')
-    })
-
-    it('meldet eine Prüfung außerhalb des Zeitfensters als Warnung', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 2, fulfilled: 2, timeIssues: 1}}),
-        )
-        expect(severity).toBe('warning')
-    })
-
-    it('wertet eine fehlende Pflichtbedingung schwerer als eine Zeitabweichung', () => {
-        const severity = teamSeverity(
-            team({
-                requirements: {
-                    ...noRequirements,
-                    total: 3,
-                    fulfilled: 2,
-                    missingRequired: 1,
-                    timeIssues: 1,
-                },
-            }),
-        )
-        expect(severity).toBe('error')
-    })
-
-    it('bleibt neutral, wenn ausschließlich Optionales fehlt', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 1, missingOptional: 1}}),
-        )
-        expect(severity).toBe('neutral')
-    })
-
-    it('lässt eine fehlende optionale Bedingung eine erfüllte nicht abwerten', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 2, fulfilled: 1, missingOptional: 1}}),
-        )
-        expect(severity).toBe('ok')
-    })
-
-    it('meldet vollständig erfüllte Bedingungen als in Ordnung', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 3, fulfilled: 3}}),
-        )
-        expect(severity).toBe('ok')
-    })
-
-    it('bleibt ohne zugewiesene Bedingungen neutral', () => {
-        expect(teamSeverity(team({}))).toBe('neutral')
     })
 })
 
