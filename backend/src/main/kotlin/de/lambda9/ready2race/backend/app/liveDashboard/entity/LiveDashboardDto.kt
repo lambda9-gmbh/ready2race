@@ -115,6 +115,12 @@ data class LiveDashboardMatchDto(
     val currentlyRunning: Boolean,
     val elapsedMinutes: Long?,
     val teams: List<LiveDashboardTeamDto>,
+    /** Wann der automatische Abruf diesen Lauf zuletzt versucht hat - nicht, wann er zuletzt etwas geschrieben hat. */
+    val raceClockerPolledAt: LocalDateTime?,
+    /** Fehlercode des letzten fehlgeschlagenen automatischen Abrufs, null wenn er in Ordnung ist. */
+    val raceClockerPollError: String?,
+    /** Gesetzt, solange der automatische Abruf diesen Lauf in Ruhe lässt, weil von Hand Ergebnisse eingetragen wurden. */
+    val raceClockerAutoPausedAt: LocalDateTime?,
 )
 
 /**

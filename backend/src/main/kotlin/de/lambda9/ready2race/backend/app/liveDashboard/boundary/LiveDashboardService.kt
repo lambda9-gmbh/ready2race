@@ -170,6 +170,9 @@ object LiveDashboardService {
                         currentlyRunning = running,
                         elapsedMinutes = startedAt?.let { Duration.between(it, now).toMinutes().coerceAtLeast(0) },
                         teams = teams,
+                        raceClockerPolledAt = match[COMPETITION_MATCH.RACECLOCKER_POLLED_AT],
+                        raceClockerPollError = match[COMPETITION_MATCH.RACECLOCKER_POLL_ERROR],
+                        raceClockerAutoPausedAt = match[COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT],
                     )
                 )
             }

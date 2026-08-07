@@ -1629,6 +1629,18 @@ export type LiveDashboardMatchDto = {
     currentlyRunning: boolean
     elapsedMinutes?: number | null
     teams: Array<LiveDashboardTeamDto>
+    /**
+     * When the automatic pull last tried this match - not when it last wrote something.
+     */
+    raceClockerPolledAt?: string | null
+    /**
+     * Error code of the last failed automatic pull, null when it is fine.
+     */
+    raceClockerPollError?: string | null
+    /**
+     * Set while the automatic pull leaves this match alone because results were entered by hand.
+     */
+    raceClockerAutoPausedAt?: string | null
 }
 
 /**
