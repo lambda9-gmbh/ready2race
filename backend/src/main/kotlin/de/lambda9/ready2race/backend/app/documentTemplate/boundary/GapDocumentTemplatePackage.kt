@@ -107,14 +107,14 @@ object GapDocumentTemplatePackage {
             ZipInputStream(bytes.inputStream()).use { zip ->
                 var entry = zip.nextEntry
                 while (entry != null) {
+                    val data = zip.readAtMost(MAX_ENTRY_BYTES) ?: return ReadResult.Invalid
                     if (!entry.isDirectory && isSafeEntryName(entry.name)) {
-                        val data = zip.readAtMost(MAX_ENTRY_BYTES) ?: return ReadResult.Invalid
                         entries[entry.name] = data
                     }
                     entry = zip.nextEntry
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return ReadResult.Invalid
         }
 
@@ -122,7 +122,7 @@ object GapDocumentTemplatePackage {
 
         val manifest = try {
             jsonMapper.readValue<Manifest>(manifestBytes)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return ReadResult.Invalid
         }
 
