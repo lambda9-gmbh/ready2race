@@ -9,12 +9,14 @@ import {
     Stack,
     Switch,
     TextField,
+    TextFieldProps,
     Typography,
 } from '@mui/material'
 import {GapDocumentPlaceholderType, TextAlign} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {Add} from '@mui/icons-material'
-import {clampRect, parsePercent} from './placeholderGeometry.ts'
+import {useEffect, useState} from 'react'
+import {clampRect, parsePercent, PlaceholderRect} from './placeholderGeometry.ts'
 
 type PlaceholderData = {
     id: string
@@ -41,9 +43,23 @@ type Props = {
     currentPage: number
 }
 
+type GeometryField = keyof PlaceholderRect
+
+const formatPercent = (value: number) => (value * 100).toFixed(1)
+
 const PlaceholderSidebar = (props: Props) => {
     const {t} = useTranslation()
     const selectedPlaceholder = props.placeholders.find(p => p.id === props.selectedPlaceholder)
+
+    // Solange ein Geometrie-Feld fokussiert ist, zeigt es den rohen Eingabetext statt des
+    // formatierten Werts an — sonst überschreibt jedes Neurendern (z. B. nach jedem Tastendruck)
+    // das, was der Nutzer gerade tippt. Committet wird erst bei Blur oder Enter.
+    const [editingGeometryField, setEditingGeometryField] = useState<GeometryField | null>(null)
+    const [geometryFieldBuffer, setGeometryFieldBuffer] = useState('')
+
+    useEffect(() => {
+        setEditingGeometryField(null)
+    }, [selectedPlaceholder?.id])
 
     const handleAddPlaceholder = (type: GapDocumentPlaceholderType) => {
         props.onAddPlaceholder(type, props.currentPage)
@@ -53,6 +69,38 @@ const PlaceholderSidebar = (props: Props) => {
         props.onPlaceholdersChange(
             props.placeholders.map(p => (p.id === id ? {...p, ...updates} : p)),
         )
+    }
+
+    const getGeometryFieldProps = (
+        field: GeometryField,
+    ): Pick<TextFieldProps, 'value' | 'onFocus' | 'onChange' | 'onBlur' | 'onKeyDown'> => {
+        if (!selectedPlaceholder) {
+            return {value: ''}
+        }
+        const isEditing = editingGeometryField === field
+        return {
+            value: isEditing ? geometryFieldBuffer : formatPercent(selectedPlaceholder[field]),
+            onFocus: () => {
+                setEditingGeometryField(field)
+                setGeometryFieldBuffer(formatPercent(selectedPlaceholder[field]))
+            },
+            onChange: e => setGeometryFieldBuffer(e.target.value),
+            onBlur: () => {
+                const parsed = parsePercent(geometryFieldBuffer)
+                if (parsed !== undefined) {
+                    handlePlaceholderPropertyChange(
+                        selectedPlaceholder.id,
+                        clampRect({...selectedPlaceholder, [field]: parsed}),
+                    )
+                }
+                setEditingGeometryField(null)
+            },
+            onKeyDown: e => {
+                if (e.key === 'Enter') {
+                    e.currentTarget.blur()
+                }
+            },
+        }
     }
 
     return (
@@ -219,66 +267,34 @@ const PlaceholderSidebar = (props: Props) => {
                         <Stack direction="row" spacing={1}>
                             <TextField
                                 label={`${t('gap.document.placeholder.positionX')} (%)`}
-                                type="number"
+                                type="text"
                                 size="small"
-                                value={(selectedPlaceholder.relLeft * 100).toFixed(1)}
-                                onChange={e => {
-                                    const relLeft = parsePercent(e.target.value)
-                                    if (relLeft !== undefined) {
-                                        handlePlaceholderPropertyChange(
-                                            selectedPlaceholder.id,
-                                            clampRect({...selectedPlaceholder, relLeft}),
-                                        )
-                                    }
-                                }}
+                                slotProps={{htmlInput: {inputMode: 'decimal'}}}
+                                {...getGeometryFieldProps('relLeft')}
                             />
                             <TextField
                                 label={`${t('gap.document.placeholder.positionY')} (%)`}
-                                type="number"
+                                type="text"
                                 size="small"
-                                value={(selectedPlaceholder.relTop * 100).toFixed(1)}
-                                onChange={e => {
-                                    const relTop = parsePercent(e.target.value)
-                                    if (relTop !== undefined) {
-                                        handlePlaceholderPropertyChange(
-                                            selectedPlaceholder.id,
-                                            clampRect({...selectedPlaceholder, relTop}),
-                                        )
-                                    }
-                                }}
+                                slotProps={{htmlInput: {inputMode: 'decimal'}}}
+                                {...getGeometryFieldProps('relTop')}
                             />
                         </Stack>
 
                         <Stack direction="row" spacing={1}>
                             <TextField
                                 label={`${t('gap.document.placeholder.width')} (%)`}
-                                type="number"
+                                type="text"
                                 size="small"
-                                value={(selectedPlaceholder.relWidth * 100).toFixed(1)}
-                                onChange={e => {
-                                    const relWidth = parsePercent(e.target.value)
-                                    if (relWidth !== undefined) {
-                                        handlePlaceholderPropertyChange(
-                                            selectedPlaceholder.id,
-                                            clampRect({...selectedPlaceholder, relWidth}),
-                                        )
-                                    }
-                                }}
+                                slotProps={{htmlInput: {inputMode: 'decimal'}}}
+                                {...getGeometryFieldProps('relWidth')}
                             />
                             <TextField
                                 label={`${t('gap.document.placeholder.height')} (%)`}
-                                type="number"
+                                type="text"
                                 size="small"
-                                value={(selectedPlaceholder.relHeight * 100).toFixed(1)}
-                                onChange={e => {
-                                    const relHeight = parsePercent(e.target.value)
-                                    if (relHeight !== undefined) {
-                                        handlePlaceholderPropertyChange(
-                                            selectedPlaceholder.id,
-                                            clampRect({...selectedPlaceholder, relHeight}),
-                                        )
-                                    }
-                                }}
+                                slotProps={{htmlInput: {inputMode: 'decimal'}}}
+                                {...getGeometryFieldProps('relHeight')}
                             />
                         </Stack>
                     </>

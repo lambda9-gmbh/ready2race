@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {clampRect, nudgeRect, parsePercent} from './placeholderGeometry.ts'
+import {clampRect, MIN_EXTENT, nudgeRect, parsePercent} from './placeholderGeometry.ts'
 
 const rect = {relLeft: 0.2, relTop: 0.3, relWidth: 0.5, relHeight: 0.1}
 
@@ -41,6 +41,21 @@ describe('clampRect', () => {
             relWidth: 1,
             relHeight: 1,
         })
+    })
+
+    it('erzwingt eine Mindestbreite und -höhe statt 0', () => {
+        expect(clampRect({relLeft: 0.2, relTop: 0.3, relWidth: 0, relHeight: 0})).toEqual({
+            relLeft: 0.2,
+            relTop: 0.3,
+            relWidth: MIN_EXTENT,
+            relHeight: MIN_EXTENT,
+        })
+    })
+
+    it('erzwingt die Mindestbreite auch bei negativer Eingabe', () => {
+        const clamped = clampRect({relLeft: 0.2, relTop: 0.3, relWidth: -1, relHeight: -1})
+        expect(clamped.relWidth).toBe(MIN_EXTENT)
+        expect(clamped.relHeight).toBe(MIN_EXTENT)
     })
 })
 

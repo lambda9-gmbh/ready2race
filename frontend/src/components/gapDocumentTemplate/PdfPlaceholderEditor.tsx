@@ -7,7 +7,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import {Delete, DragIndicator} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import '@utils/pdfWorker'
-import {clampRect} from './placeholderGeometry.ts'
+import {clampRect, MIN_EXTENT} from './placeholderGeometry.ts'
 
 type PlaceholderData = {
     id: string
@@ -141,13 +141,13 @@ const PdfPlaceholderEditor = (props: Props) => {
                 const edge = resizingPlaceholder.edge
                 if (edge.includes('e')) {
                     newWidth = Math.max(
-                        0.01,
+                        MIN_EXTENT,
                         Math.min(1 - placeholder.relLeft, placeholder.relWidth + relDeltaX),
                     )
                 } else if (edge.includes('w')) {
                     const adjustedDelta = Math.max(
                         -placeholder.relLeft,
-                        Math.min(placeholder.relWidth - 0.01, relDeltaX),
+                        Math.min(placeholder.relWidth - MIN_EXTENT, relDeltaX),
                     )
                     newLeft = placeholder.relLeft + adjustedDelta
                     newWidth = placeholder.relWidth - adjustedDelta
@@ -155,13 +155,13 @@ const PdfPlaceholderEditor = (props: Props) => {
 
                 if (edge.includes('s')) {
                     newHeight = Math.max(
-                        0.01,
+                        MIN_EXTENT,
                         Math.min(1 - placeholder.relTop, placeholder.relHeight + relDeltaY),
                     )
                 } else if (edge.includes('n')) {
                     const adjustedDelta = Math.max(
                         -placeholder.relTop,
-                        Math.min(placeholder.relHeight - 0.01, relDeltaY),
+                        Math.min(placeholder.relHeight - MIN_EXTENT, relDeltaY),
                     )
                     newTop = placeholder.relTop + adjustedDelta
                     newHeight = placeholder.relHeight - adjustedDelta
