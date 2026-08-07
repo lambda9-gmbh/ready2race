@@ -319,7 +319,11 @@ const PdfPlaceholderEditor = (props: Props) => {
                                     userSelect: 'none',
                                     lineHeight: 1,
                                 }}>
-                                {sampleTextFor(placeholder.type, placeholder.staticText)}
+                                {sampleTextFor(
+                                    placeholder.type,
+                                    placeholder.staticText,
+                                    t('gap.document.placeholder.staticText'),
+                                )}
                             </Typography>
                         </Box>
                         <Stack

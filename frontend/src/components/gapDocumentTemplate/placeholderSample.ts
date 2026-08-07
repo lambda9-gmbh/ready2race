@@ -20,16 +20,17 @@ const SAMPLE_VALUES: Record<Exclude<GapDocumentPlaceholderType, 'FREE_TEXT'>, st
     EVENT_LOCATION: 'Flensburg',
 }
 
-const FREE_TEXT_FALLBACK = 'Fester Text'
-
-/** Beispieltext für einen Platzhalter im Editor. Bei `FREE_TEXT` der eingegebene Text, oder ein
- * Hinweis, solange keiner eingegeben wurde. */
+/** Beispieltext für einen Platzhalter im Editor. Bei `FREE_TEXT` der eingegebene Text, oder,
+ * solange keiner eingegeben wurde, `freeTextFallback` — vom Aufrufer übersetzt übergeben, da diese
+ * Stelle als UI-Text auch englische und dänische Nutzer erreicht (siehe
+ * `gap.document.placeholder.staticText`). */
 export const sampleTextFor = (
     type: GapDocumentPlaceholderType,
-    staticText?: string,
+    staticText: string | undefined,
+    freeTextFallback: string,
 ): string => {
     if (type === 'FREE_TEXT') {
-        return staticText || FREE_TEXT_FALLBACK
+        return staticText || freeTextFallback
     }
     return SAMPLE_VALUES[type]
 }
