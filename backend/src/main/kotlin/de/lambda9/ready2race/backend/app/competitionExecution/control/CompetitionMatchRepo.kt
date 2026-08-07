@@ -432,5 +432,40 @@ object CompetitionMatchRepo {
         }
     }
 
+    /**
+     * Die Steg-Scans der Crews dieses Wettkampfs — die Grundlage des Wasser-Chips auf der
+     * Durchführungsseite („Wasser 2/6").
+     *
+     * Bewusst je Wettkampf statt je Veranstaltung: die Durchführungsseite zeigt immer genau einen
+     * Wettkampf, die Scans der übrigen läse dort niemand. Das ist der einzige Unterschied zu
+     * [de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo.getScansByEvent],
+     * dem Pendant des Schiedsrichter-Dashboards — sonst dasselbe Muster: eine flache Abfrage, die
+     * Reduktion auf den letzten Scan je Person macht der Aufrufer, und ob eine Mannschaft draußen
+     * ist, entscheidet weiterhin allein
+     * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamOnWaterAt].
+     *
+     * Abfragelast: ein Index-Zugriff auf `participant_tracking` (Index auf `event`) plus ein
+     * `exists` über die Anmeldungen des Wettkampfs. Kein Join je Lauf und kein N+1 je Mannschaft —
+     * die Zeilenzahl wächst mit den Scans des Wettkampfs, nicht mit der Zahl der Läufe.
+     */
+    fun getScansByCompetition(eventId: UUID, competitionId: UUID) = Jooq.query {
+        select(
+            PARTICIPANT_TRACKING.PARTICIPANT,
+            PARTICIPANT_TRACKING.SCAN_TYPE,
+            PARTICIPANT_TRACKING.SCANNED_AT,
+        )
+            .from(PARTICIPANT_TRACKING)
+            .where(PARTICIPANT_TRACKING.EVENT.eq(eventId))
+            .andExists(
+                selectOne()
+                    .from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
+                    .join(COMPETITION_REGISTRATION)
+                    .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+                    .where(COMPETITION_REGISTRATION.COMPETITION.eq(competitionId))
+                    .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT_TRACKING.PARTICIPANT))
+            )
+            .fetch()
+    }
+
     fun getMatchForEventByEvents(eventIds: List<UUID>) = COMPETITION_MATCH_FOR_EVENT.select{ EVENT_ID.`in`(eventIds) }
 }

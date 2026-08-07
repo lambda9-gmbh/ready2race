@@ -183,6 +183,10 @@ export type AthleteBoardMatch = {
      * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
      */
     name?: string | null
+    /**
+     * the match is cancelled ('does not take place'). It stays at its planned position in the upcoming block anyway - a crew waiting at the pontoon cannot tell a match that vanished without a trace from a display error. teams is then always empty
+     */
+    cancelled: boolean
 }
 
 export type AthleteBoardParticipant = {
@@ -358,6 +362,58 @@ export type CheckedParticipantRequirement = {
     note?: string
 }
 
+/**
+ * What can be configured per competition for a failed check
+ */
+export type CheckSeverity = 'OK' | 'WARNING' | 'CRITICAL'
+
+/**
+ * A competition as the administration needs it - id, name and whether it requires check-in/check-out
+ */
+export type CheckSeverityCompetitionDto = {
+    competitionId: string
+    identifier: string
+    name: string
+    checkInOutRequired: boolean
+}
+
+/**
+ * entries contains ONLY deviations from the default. The UI shows, for every combination of competitions and rows, the matching entry or the default from defaults.
+ */
+export type CheckSeverityConfigDto = {
+    competitions: Array<CheckSeverityCompetitionDto>
+    rows: Array<CheckSeverityRowDto>
+    defaults: Array<CheckSeverityRowDefaultDto>
+    entries: Array<CheckSeverityEntryDto>
+}
+
+export type CheckSeverityEntryDto = {
+    competitionId: string
+    checkType: CheckType
+    requirementId?: string | null
+    severity: CheckSeverity
+}
+
+export type CheckSeverityRowDefaultDto = {
+    checkType: CheckType
+    requirementId?: string | null
+    severity: CheckSeverity
+}
+
+/**
+ * A row of the administration matrix. requirementId is only set for the requirement checks, name carries the requirement's name for them - the UI names the two fixed checks itself.
+ */
+export type CheckSeverityRowDto = {
+    checkType: CheckType
+    requirementId?: string | null
+    name?: string | null
+}
+
+/**
+ * The checks evaluated by the referee dashboard. REQUIREMENT and REQUIREMENT_TIME_WINDOW refer to the same participant requirement and are still configured separately: "not checked at all" and "checked but at the wrong time" are two different situations at the tent.
+ */
+export type CheckType = 'INVOICE_OPEN' | 'NOT_ON_WATER' | 'REQUIREMENT' | 'REQUIREMENT_TIME_WINDOW'
+
 export type ClubDto = {
     id: string
     name: string
@@ -460,12 +516,28 @@ export type CompetitionMatchDto = {
     teams: Array<CompetitionMatchTeamDto>
     weighting: number
     executionOrder: number
+    /**
+     * Planned start from the schedule.
+     */
     startTime?: string
     /**
      * Offset between the starts of consecutive teams, in seconds
      */
     startTimeOffset?: number
     currentlyRunning: boolean
+    /**
+     * Actual start - null while nobody started the match.
+     */
+    startedAt?: string
+    /**
+     * Persisted end. Set means exclusively that somebody finished the match.
+     */
+    finishedAt?: string
+    /**
+     * The schedule slot of this match was cancelled.
+     */
+    skipped: boolean
+    status: MatchStatusDto
 }
 
 export type CompetitionMatchTeamDto = {
@@ -495,6 +567,10 @@ export type CompetitionPropertiesDto = {
     identifier: string
     name: string
     shortName?: string
+    /**
+     * Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all.
+     */
+    checkInOutRequired: boolean
     description?: string
     competitionCategory?: CompetitionCategoryDto
     namedParticipants: Array<NamedParticipantForCompetitionDto>
@@ -508,6 +584,10 @@ export type CompetitionPropertiesRequest = {
     identifier: string
     name: string
     shortName?: string
+    /**
+     * Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all.
+     */
+    checkInOutRequired: boolean
     description?: string
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
@@ -878,6 +958,11 @@ export type Duplicate = {
     value: unknown
     count: number
 }
+
+/**
+ * What is delivered for display; NEUTRAL means there is nothing to say about this check - either it does not apply, or it failed but is explicitly configured as CheckSeverity.OK
+ */
+export type EffectiveSeverity = 'NEUTRAL' | 'OK' | 'WARNING' | 'CRITICAL'
 
 export type EmailLanguage = 'DE' | 'EN' | 'DA'
 
@@ -1278,6 +1363,14 @@ export type EventScheduleSlotDto = {
      * Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot
      */
     matchCurrentlyRunning: boolean
+    /**
+     * Teams of the linked match that are still in the race (without the OUT rows carried over from the previous round) - 0 without a linked match
+     */
+    matchTeamsTotal: number
+    /**
+     * Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own
+     */
+    matchTeamsScored: number
 }
 
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
@@ -1620,17 +1713,7 @@ export type LiveDashboardRequirementStatusDto = {
     checkedAt?: string | null
     note?: string | null
     timeCheck?: TimeCheckDto | null
-}
-
-/**
- * Condensed requirement state per team; the requirements themselves are only in the team detail
- */
-export type LiveDashboardRequirementSummaryDto = {
-    total: number
-    fulfilled: number
-    missingRequired: number
-    missingOptional: number
-    timeIssues: number
+    severity: EffectiveSeverity
 }
 
 export type LiveDashboardTeamDetailDto = {
@@ -1653,7 +1736,22 @@ export type LiveDashboardTeamDto = {
     deregistered: boolean
     deregisteredReason?: string | null
     invoiceState: LiveDashboardInvoiceState
-    requirements: LiveDashboardRequirementSummaryDto
+    /**
+     * Final severity for the row - the evaluation rules live in the backend
+     */
+    severity: EffectiveSeverity
+    /**
+     * The invoice evaluated separately: the detail dialog colors its invoice chip by this; it cannot be recovered from severity, which already combines everything else
+     */
+    invoiceSeverity: EffectiveSeverity
+    /**
+     * Whether this competition requires check-in/check-out at all; controls the display of onWaterAt
+     */
+    onWaterRequired: boolean
+    /**
+     * The on-water check evaluated separately: the detail dialog colors its on-water chip by this; it cannot be recovered from severity, which already combines everything else
+     */
+    onWaterSeverity: EffectiveSeverity
     substituted: boolean
     /**
      * When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known
@@ -1728,6 +1826,28 @@ export type MatchResultTeamInfo = {
 export type MatchResultType = 'DISTANCE'
 
 export type MatchStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
+
+/**
+ * The derived state of a match, read by every surface - one derivation, three callers (execution page, schedule, referee dashboard).
+ *
+ * "Overdue" and "partially scored" are deliberately NOT states of their own but readings of these fields: partially scored is state != RUNNING && 0 < teamsScored < teamsTotal, overdue is state == UPCOMING && startTime + 5 min < now. Elapsed minutes and overdueness are computed in the frontend against the browser clock so the chip keeps counting between two polls.
+ */
+export type MatchStatusDto = {
+    state: LiveDashboardMatchState
+    /**
+     * Actual start - null while nobody started the match.
+     */
+    startedAt?: string
+    teamsTotal: number
+    /**
+     * Scored means: deregistered OR place set OR failed - the same rule the referee dashboard uses.
+     */
+    teamsScored: number
+    /**
+     * null = not collected in this view (schedule, public boards).
+     */
+    teamsOnWater?: number
+}
 
 export type MatchTeamInfo = {
     teamId: string
@@ -2518,6 +2638,10 @@ export type TeamForScanOverviewDto = {
     competitionId: string
     competitionIdentifier: string
     competitionName: string
+    /**
+     * Whether this competition uses check-in/out at all. Scans are recorded per participant and event, so a participant racing in one competition that requires it still checks out - the flag only drives what the app shows.
+     */
+    checkInOutRequired: boolean
     clubId: string
     clubName: string
     teamName?: string
@@ -2675,6 +2799,10 @@ export type UpcomingCompetitionMatchInfo = {
      * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
      */
     name?: string | null
+    /**
+     * the schedule slot of this match was cancelled. The match stays in the list anyway - a match that vanishes without a trace is indistinguishable from a display error for the crew waiting at the pontoon. teams is then always empty
+     */
+    cancelled: boolean
 }
 
 export type UpcomingMatchParticipantInfo = {
@@ -2701,6 +2829,10 @@ export type UpdateAppUserRequest = {
     firstname: string
     lastname: string
     roles: Array<string>
+}
+
+export type UpdateCheckSeverityRequest = {
+    entries: Array<CheckSeverityEntryDto>
 }
 
 export type UpdateCompetitionMatchRequest = {
@@ -6067,6 +6199,27 @@ export type GetLiveDashboardTeamDetailData = {
 export type GetLiveDashboardTeamDetailResponse = LiveDashboardTeamDetailDto
 
 export type GetLiveDashboardTeamDetailError = ApiError
+
+export type GetCheckSeverityConfigData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetCheckSeverityConfigResponse = CheckSeverityConfigDto
+
+export type GetCheckSeverityConfigError = ApiError
+
+export type UpdateCheckSeverityConfigData = {
+    body: UpdateCheckSeverityRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type UpdateCheckSeverityConfigResponse = void
+
+export type UpdateCheckSeverityConfigError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetEventScheduleData = {
     path: {

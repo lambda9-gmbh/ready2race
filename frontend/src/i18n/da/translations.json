@@ -520,6 +520,8 @@
           "error": "Fejl ved check-out af deltager"
         },
         "noTeamsFound": "Ingen hold fundet",
+        "noCheckInOutNeeded": "ingen ind-/udtjekning nødvendig",
+        "noCheckInOutForAnyTeam": "Ingen af disse tilmeldinger bruger ind-/udtjekning.",
         "participantNotFound": "Deltager ikke fundet",
         "errorReason": {
           "alreadyCheckedIn": "Denne person er allerede tjekket ind — der er ikke mere at gøre.",
@@ -564,10 +566,11 @@
     "submissionNeedsVerification": "Indsendte resultater skal verificeres",
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
     "chainProgressionMode": {
-      "label": "Kædetilstand",
-      "SCHIEDSRICHTER": "Dommer — afslut og kæde via dommer-dashboardet",
-      "REGATTABUERO": "Regattakontor — afslut og aktiver udelukkende via tidsplanen",
-      "DEAKTIVIERT": "Deaktiveret — ingen automatisk aktivering"
+      "label": "Afslut løb & aktivér det næste",
+      "SCHIEDSRICHTER": "Dommere afslutter i dashboardet — næste løb starter automatisk",
+      "REGATTABUERO": "Kun arrangørerne afslutter, via tidsplanen — næste løb starter automatisk",
+      "DEAKTIVIERT": "Dommere afslutter i dashboardet — næste løb aktiveres manuelt",
+      "hint": "Arrangørerne kan altid afslutte løb via tidsplanen, uanset denne indstilling."
     },
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
@@ -626,6 +629,7 @@
       "ratingCategoryRequired": "Rangeringskategori påkrævet",
       "registrationCount": "Tilmeldinger",
       "shortName": "Kort navn",
+      "checkInOutRequired": "Kræver ind-/udtjekning på vandet",
       "challenge": {
         "configs": "Challenge-indstillinger",
         "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",
@@ -1455,6 +1459,27 @@
         "secondsUnit": "sek"
       }
     },
+    "match": {
+      "status": {
+        "upcoming": "Kommende",
+        "overdue": "Forsinket · {{minutes}} min",
+        "running": "I gang · {{minutes}} min",
+        "runningPlain": "I gang",
+        "partiallyScored": "Delvist bedømt {{scored}}/{{total}}",
+        "awaitingFinish": "Afventer afslutning",
+        "finished": "Afsluttet",
+        "cancelled": "Aflyst",
+        "unscheduled": "Ikke planlagt",
+        "water": "På vandet {{onWater}}/{{total}}",
+        "doesNotTakePlace": "Gennemføres ikke",
+        "counter": {
+          "running": "{{n}} i gang",
+          "open": "{{n}} åbne",
+          "finished": "{{n}} afsluttet",
+          "cancelled": "{{n}} aflyst"
+        }
+      }
+    },
     "liveDashboard": {
       "sectionTitle": "Dommer-dashboard",
       "pageDescription": "Live-visning for dommere med igangværende og kommende løb, deltagerkrav og fakturastatus.",
@@ -1527,7 +1552,8 @@
         "deregistered": "Afmeldt",
         "failed": "Udgået",
         "failedShort": "DNF",
-        "onWaterAt": "på vandet {{time}}"
+        "onWaterAt": "på vandet {{time}}",
+        "notOnWater": "Ikke på vandet"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",
@@ -1542,6 +1568,28 @@
         "NOT_CHECKED": "Afventer",
         "beforeStart": "{{delta}} før start",
         "afterStart": "{{delta}} efter start"
+      },
+      "checkSeverity": {
+        "manage": "Administrer kontroller",
+        "title": "Kontrollernes alvorsgrad",
+        "description": "Angiver pr. konkurrence, hvor tungt en ikke-opfyldt kontrol vejer.",
+        "setAll": "sæt alle",
+        "uniform": "alle: {{severity}}",
+        "mixed": "blandet",
+        "noCheckInOut": "ingen ind-/udtjekning påkrævet",
+        "noCompetitions": "Denne begivenhed har endnu ingen konkurrencer. Der er derfor intet at indstille.",
+        "check": {
+          "INVOICE_OPEN": "Faktura åben",
+          "NOT_ON_WATER": "Ikke på vandet",
+          "REQUIREMENT_TIME_WINDOW": "Tidsvindue overskredet"
+        },
+        "severity": {
+          "OK": "OK (uden effekt)",
+          "WARNING": "Advarsel",
+          "CRITICAL": "Kritisk"
+        },
+        "saved": "Indstillinger gemt",
+        "saveError": "Indstillingerne kunne ikke gemmes."
       }
     },
     "schedule": {
@@ -1580,7 +1628,7 @@
       "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
       "activateAnyway": "Aktiver alligevel",
       "finish": "Afslut løb",
-      "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Afhængigt af kædetilstanden aktiveres de næste løb.",
+      "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Hvis stævnet skifter automatisk videre, aktiveres de næste løb.",
       "finishAnyway": "Afslut alligevel",
       "refereeModeWarning": "Dommertilstand er aktiv: løb aktiveres og afsluttes normalt af en dommer via dommer-dashboardet. Et indgreb herfra omgår denne vej.",
       "managedHint": "Vedligeholdes via tidsplanen",

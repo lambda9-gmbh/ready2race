@@ -520,6 +520,8 @@
           "error": "Error checking out participant"
         },
         "noTeamsFound": "No teams found",
+        "noCheckInOutNeeded": "no check-in/out needed",
+        "noCheckInOutForAnyTeam": "None of these entries use check-in/out.",
         "participantNotFound": "Participant not found",
         "errorReason": {
           "alreadyCheckedIn": "This person is already checked in — there is nothing left to do.",
@@ -564,10 +566,11 @@
     "submissionNeedsVerification": "Submitted results must be verified",
     "allowParticipantSelfRegistration": "Allow participants to register themselves",
     "chainProgressionMode": {
-      "label": "Chain progression mode",
-      "SCHIEDSRICHTER": "Referee — finish and chain via the referee dashboard",
-      "REGATTABUERO": "Regatta office — finish and activate exclusively via the schedule",
-      "DEAKTIVIERT": "Disabled — no automatic activation"
+      "label": "Finishing races & activating the next one",
+      "SCHIEDSRICHTER": "Referees finish in the dashboard — the next race starts automatically",
+      "REGATTABUERO": "Only the organisers finish, via the schedule — the next race starts automatically",
+      "DEAKTIVIERT": "Referees finish in the dashboard — the next race is activated by hand",
+      "hint": "The organisers can always finish races via the schedule, regardless of this setting."
     },
     "showBreaksOnPublicBoards": "Show breaks on public boards",
     "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
@@ -626,6 +629,7 @@
       "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
+      "checkInOutRequired": "Requires check-in/out on the water",
       "challenge": {
         "configs": "Challenge configs",
         "resultConfirmationImageRequired": "Confirmation image for results required",
@@ -1455,6 +1459,27 @@
         "secondsUnit": "s"
       }
     },
+    "match": {
+      "status": {
+        "upcoming": "Upcoming",
+        "overdue": "Overdue · {{minutes}} min",
+        "running": "Running · {{minutes}} min",
+        "runningPlain": "Running",
+        "partiallyScored": "Partially scored {{scored}}/{{total}}",
+        "awaitingFinish": "Waiting to be finished",
+        "finished": "Finished",
+        "cancelled": "Cancelled",
+        "unscheduled": "Unscheduled",
+        "water": "On water {{onWater}}/{{total}}",
+        "doesNotTakePlace": "Does not take place",
+        "counter": {
+          "running": "{{n}} running",
+          "open": "{{n}} open",
+          "finished": "{{n}} finished",
+          "cancelled": "{{n}} cancelled"
+        }
+      }
+    },
     "liveDashboard": {
       "sectionTitle": "Referee dashboard",
       "pageDescription": "Live view for referees with running and upcoming matches, participant requirements, and invoice status.",
@@ -1527,7 +1552,8 @@
         "deregistered": "Deregistered",
         "failed": "Did not finish",
         "failedShort": "DNF",
-        "onWaterAt": "on water {{time}}"
+        "onWaterAt": "on water {{time}}",
+        "notOnWater": "Not on the water"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",
@@ -1542,6 +1568,28 @@
         "NOT_CHECKED": "Pending",
         "beforeStart": "{{delta}} before start",
         "afterStart": "{{delta}} after start"
+      },
+      "checkSeverity": {
+        "manage": "Manage checks",
+        "title": "Severity of checks",
+        "description": "Sets per competition how much an unmet check weighs.",
+        "setAll": "set all",
+        "uniform": "all: {{severity}}",
+        "mixed": "mixed",
+        "noCheckInOut": "no check-in/out required",
+        "noCompetitions": "This event has no competitions yet, so there is nothing to configure.",
+        "check": {
+          "INVOICE_OPEN": "Invoice open",
+          "NOT_ON_WATER": "Not on the water",
+          "REQUIREMENT_TIME_WINDOW": "Time window violated"
+        },
+        "severity": {
+          "OK": "OK (no effect)",
+          "WARNING": "Warning",
+          "CRITICAL": "Critical"
+        },
+        "saved": "Settings saved",
+        "saveError": "Settings could not be saved."
       }
     },
     "schedule": {
@@ -1580,7 +1628,7 @@
       "activateConfirm": "Activate race \"{{label}}\" at {{time}} now?",
       "activateAnyway": "Activate anyway",
       "finish": "Finish race",
-      "finishConfirm": "Finish race \"{{label}}\" at {{time}} now? Depending on the chain progression mode, this activates the next races.",
+      "finishConfirm": "Finish race \"{{label}}\" at {{time}} now? If the event advances automatically, this activates the next races.",
       "finishAnyway": "Finish anyway",
       "refereeModeWarning": "Referee mode is active: races are normally activated and finished by a referee via the referee dashboard. Acting from here bypasses that path.",
       "managedHint": "Managed via the schedule",

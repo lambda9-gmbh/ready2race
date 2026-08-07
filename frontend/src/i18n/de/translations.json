@@ -520,6 +520,8 @@
           "error": "Fehler beim Auschecken des Teilnehmenden"
         },
         "noTeamsFound": "Keine Teams gefunden",
+        "noCheckInOutNeeded": "keine An-/Abmeldung nötig",
+        "noCheckInOutForAnyTeam": "Für diese Meldungen ist keine An-/Abmeldung vorgesehen.",
         "participantNotFound": "Teilnehmer nicht gefunden",
         "errorReason": {
           "alreadyCheckedIn": "Diese Person ist bereits eingecheckt — es ist nichts weiter zu tun.",
@@ -564,10 +566,11 @@
     "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
     "chainProgressionMode": {
-      "label": "Kettenmodus",
-      "SCHIEDSRICHTER": "Schiedsrichter — Beenden und Kette über das Schiedsrichter-Dashboard",
-      "REGATTABUERO": "Regattabüro — Beenden und Aktivieren exklusiv über den Zeitplan",
-      "DEAKTIVIERT": "Deaktiviert — keine automatische Aktivierung"
+      "label": "Lauf beenden & nächsten aktivieren",
+      "SCHIEDSRICHTER": "Schiedsrichter beenden im Dashboard — nächster Lauf startet automatisch",
+      "REGATTABUERO": "Nur die Organisatoren beenden, über den Zeitplan — nächster Lauf startet automatisch",
+      "DEAKTIVIERT": "Schiedsrichter beenden im Dashboard — nächster Lauf wird von Hand aktiviert",
+      "hint": "Die Organisatoren können Läufe über den Zeitplan in jedem Fall beenden, unabhängig von dieser Einstellung."
     },
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
@@ -626,6 +629,7 @@
       "ratingCategoryRequired": "Wertungskategorie erforderlich",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
+      "checkInOutRequired": "An-/Abmeldung aufs Wasser erforderlich",
       "challenge": {
         "configs": "Challenge Einstellungen",
         "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
@@ -1455,6 +1459,27 @@
         "secondsUnit": "s"
       }
     },
+    "match": {
+      "status": {
+        "upcoming": "Anstehend",
+        "overdue": "Überfällig · {{minutes}} min",
+        "running": "Läuft · {{minutes}} min",
+        "runningPlain": "Läuft",
+        "partiallyScored": "Teilweise gewertet {{scored}}/{{total}}",
+        "awaitingFinish": "Wartet auf Beenden",
+        "finished": "Beendet",
+        "cancelled": "Abgesagt",
+        "unscheduled": "Ungeplant",
+        "water": "Wasser {{onWater}}/{{total}}",
+        "doesNotTakePlace": "Findet nicht statt",
+        "counter": {
+          "running": "{{n}} läuft",
+          "open": "{{n}} offen",
+          "finished": "{{n}} beendet",
+          "cancelled": "{{n}} abgesagt"
+        }
+      }
+    },
     "liveDashboard": {
       "sectionTitle": "Schiedsrichter-Dashboard",
       "pageDescription": "Live-Ansicht für Schiedsrichter mit laufenden und anstehenden Läufen, Teilnahmebedingungen und Rechnungsstatus.",
@@ -1527,7 +1552,8 @@
         "deregistered": "Abgemeldet",
         "failed": "Ausgeschieden",
         "failedShort": "DNF",
-        "onWaterAt": "aufs Wasser {{time}}"
+        "onWaterAt": "aufs Wasser {{time}}",
+        "notOnWater": "Nicht auf dem Wasser"
       },
       "requirement": {
         "checkedAt": "Erfüllt am {{time}}",
@@ -1542,6 +1568,28 @@
         "NOT_CHECKED": "Ausstehend",
         "beforeStart": "{{delta}} vor Start",
         "afterStart": "{{delta}} nach Start"
+      },
+      "checkSeverity": {
+        "manage": "Prüfungen verwalten",
+        "title": "Schweregrad der Prüfungen",
+        "description": "Legt je Wettkampf fest, wie schwer eine nicht erfüllte Prüfung wiegt.",
+        "setAll": "alle setzen",
+        "uniform": "alle: {{severity}}",
+        "mixed": "gemischt",
+        "noCheckInOut": "keine An-/Abmeldung erforderlich",
+        "noCompetitions": "Diese Veranstaltung hat noch keine Wettkämpfe. Es gibt daher nichts einzustellen.",
+        "check": {
+          "INVOICE_OPEN": "Rechnung offen",
+          "NOT_ON_WATER": "Nicht auf dem Wasser",
+          "REQUIREMENT_TIME_WINDOW": "Zeitfenster verletzt"
+        },
+        "severity": {
+          "OK": "OK (ohne Wirkung)",
+          "WARNING": "Warnung",
+          "CRITICAL": "Kritisch"
+        },
+        "saved": "Einstellungen gespeichert",
+        "saveError": "Einstellungen konnten nicht gespeichert werden."
       }
     },
     "schedule": {
@@ -1580,7 +1628,7 @@
       "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",
       "activateAnyway": "Trotzdem aktivieren",
       "finish": "Lauf beenden",
-      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Je nach Kettenmodus werden dabei die nächsten Läufe aktiviert.",
+      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Wenn die Veranstaltung automatisch weiterschaltet, werden dabei die nächsten Läufe aktiviert.",
       "finishAnyway": "Trotzdem beenden",
       "refereeModeWarning": "Der Schiedsrichter-Modus ist aktiv: Läufe werden normalerweise von einem Schiedsrichter über das Schiedsrichter-Dashboard aktiviert und beendet. Ein Eingriff von hier übergeht diesen Weg.",
       "managedHint": "Wird über den Zeitplan gepflegt",

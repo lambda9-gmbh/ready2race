@@ -45,7 +45,7 @@ object CompetitionPropertiesRepo {
                 COMPETITION_TEMPLATE,
                 COMPETITION,
                 NAME,
-                SHORT_NAME
+                SHORT_NAME,
             ).from(this)
                 .where(COMPETITION_CATEGORY.eq(competitionCategory))
                 .fetch()
@@ -54,7 +54,7 @@ object CompetitionPropertiesRepo {
                         competitionTemplateId = it[COMPETITION_TEMPLATE],
                         competitionId = it[COMPETITION],
                         name = it[NAME]!!,
-                        shortName = it[SHORT_NAME]
+                        shortName = it[SHORT_NAME],
                     )
                 }
         }
