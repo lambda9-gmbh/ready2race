@@ -60,6 +60,20 @@ object RaceClockerPollService {
      */
     private val fingerprints = ConcurrentHashMap<UUID, String>()
 
+    /**
+     * Vergisst den zuletzt geschriebenen Stand eines Laufs.
+     *
+     * Nötig beim Freigeben eines pausierten Laufs: Während der Pause hat jemand von Hand
+     * eingetragen, der Fingerabdruck im Speicher beschreibt aber weiterhin den Stand von davor.
+     * Ohne dieses Vergessen liefe der nächste Takt in die Abkürzung "unverändert, nichts
+     * schreiben" - der Bediener drückt "Automatik wieder aufnehmen", die Oberfläche meldet einen
+     * gesunden Abruf, und RaceClocker übernimmt den Lauf trotzdem erst, wenn sich dort
+     * irgendwann eine Zeile ändert. Genau dann käme die Überschreibung unangekündigt.
+     */
+    fun forget(matchId: UUID) {
+        fingerprints.remove(matchId)
+    }
+
     suspend fun pollTick(env: JEnv): App<Nothing, DynamicIntervalJobState> = coroutineScope {
         comprehension(env) {
             val events = !RaceClockerPollRepo.getPollingEvents().orDie()

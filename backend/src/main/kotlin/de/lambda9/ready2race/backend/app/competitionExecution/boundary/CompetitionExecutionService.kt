@@ -28,6 +28,7 @@ import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollService
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
@@ -989,6 +990,14 @@ object CompetitionExecutionService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
+
+        // Der Job merkt sich je Lauf den zuletzt geschriebenen Stand und schreibt nichts, solange
+        // der Feed unverändert ist. Nach einer Handeingabe beschreibt dieser Merkposten nicht mehr,
+        // was in der Datenbank steht - ohne das Vergessen liefe der nächste Takt in die Abkürzung,
+        // die Oberfläche meldete einen gesunden Abruf, und RaceClocker übernähme den Lauf erst
+        // wieder, wenn sich dort irgendwann eine Zeile ändert. Wer "Automatik wieder aufnehmen"
+        // drückt, will genau das Gegenteil: den nächsten Takt voll durchlaufen sehen.
+        RaceClockerPollService.forget(matchId)
 
         noData
     }
