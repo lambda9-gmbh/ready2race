@@ -108,6 +108,56 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
         )
     }
 
+    // Abgesagter Lauf: Er bleibt an seiner geplanten Stelle stehen, statt spurlos zu verschwinden —
+    // für eine Besatzung am Steg ist ein verschwundener Lauf nicht von einem Anzeigefehler zu
+    // unterscheiden. Gezeigt wird nur noch, worum es ging und wann es hätte sein sollen: keine
+    // Mannschaften (der Server liefert sie gar nicht erst mit), kein Countdown auf einen Start, der
+    // nicht kommt. Die Nachfrist im Backend räumt die Karte von selbst wieder ab.
+    if (match.cancelled) {
+        return (
+            <Card variant="outlined" sx={{mb: 1.5, opacity: 0.6}}>
+                <CardContent sx={{p: 'clamp(0.75rem, 1.2vw, 1.5rem)'}}>
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        gap={1}>
+                        <Box sx={{minWidth: 0}}>
+                            <Typography
+                                sx={{
+                                    fontSize: 'clamp(1rem, 1.8vw, 1.6rem)',
+                                    fontWeight: 700,
+                                    textDecoration: 'line-through',
+                                }}
+                                color="text.secondary">
+                                {[match.competitionName, match.roundName, match.matchName]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                            </Typography>
+                            <Typography
+                                sx={{fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)', fontWeight: 600}}
+                                color="text.secondary">
+                                {t('event.match.status.doesNotTakePlace')}
+                            </Typography>
+                        </Box>
+                        {match.startTime && (
+                            <Typography
+                                sx={{
+                                    fontSize: 'clamp(1.1rem, 2.4vw, 2rem)',
+                                    fontWeight: 700,
+                                    lineHeight: 1.1,
+                                    textDecoration: 'line-through',
+                                }}
+                                color="text.secondary">
+                                {formatClockTime(match.startTime)}
+                            </Typography>
+                        )}
+                    </Stack>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <Card variant="outlined" sx={{mb: 1.5}}>
             <CardContent sx={{p: 'clamp(0.75rem, 1.2vw, 1.5rem)'}}>
