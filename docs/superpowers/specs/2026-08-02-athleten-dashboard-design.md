@@ -207,19 +207,21 @@ Bewertung und Umsetzung:
    `serverTime` wird je Antwort frisch gesetzt (`copy(serverTime = now)`), weil sie die
    Bezugsgröße für den Countdown ist; die `startState`-Felder sind höchstens 5 s alt, das trägt
    die Anzeige. Nur per `EventRepo` geprüfte Veranstaltungen landen im Speicher, unbekannte IDs
-   können ihn nicht füllen. Nachweis am Seed: eine Berechnung (9 Queries), fünf Folge-Abrufe
+   können ihn nicht füllen. Nachweis am Seed: eine Berechnung (7 Statements), zehn Folge-Abrufe
    innerhalb der TTL lösten null Datenbank-Statements aus.
 
 2. **N+1-Abfragen** (bewusst nicht umgebaut). `getAthleteBoard` lädt weiterhin je Lauf eine eigene
-   Team-Abfrage — rund 9 Queries je Berechnung bei den Vorgabewerten. Mit dem Zwischenspeicher
-   zahlt die Datenbank das höchstens einmal je 5 s und Veranstaltung; ein Batch-Umbau der drei
-   Team-Abfragen würde davon nur noch ~4 Queries sparen und die Gruppierungslogik kurz vor dem
-   ersten Einsatz anfassen. Verhältnis von Risiko zu Nutzen spricht dagegen.
+   Team-Abfrage — 7 Statements je Berechnung bei den Vorgabewerten. Mit dem Zwischenspeicher
+   zahlt die Datenbank das höchstens einmal je 5 s und Veranstaltung, also rund 1,4 Statements/s
+   je Veranstaltung, unabhängig davon ob 20 oder 500 Telefone dranhängen. Ein Batch-Umbau der drei
+   Team-Abfragen würde davon nur noch ~4 Statements je 5 s sparen und die Gruppierungslogik kurz
+   vor dem ersten Einsatz anfassen. Verhältnis von Risiko zu Nutzen spricht dagegen.
 
 3. **Kein ETag** (bewusst weggelassen). Ein ETag müsste `serverTime` ausklammern, sonst ist jede
    Antwort einzigartig. Bei einem 304 alterte dann aber der mitgelieferte `serverTime`-Stand —
    der Client zeigte „Stand von" fälschlich alt und der Countdown-Bezug verschöbe sich. Die
-   gzip-Antwort liegt ohnehin bei ~1,4 kB; das Sparpotenzial rechtfertigt die Komplexität nicht.
+   gzip-Antwort liegt ohnehin unter 1 kB; bei 200 Telefonen im 15-Sekunden-Takt sind das etwa
+   13 kB/s. Das Sparpotenzial rechtfertigt die Komplexität nicht.
 
 4. **Rate-Limit** (umgesetzt, als Notbremse). `RateLimitName("publicInfo")` über allen
    öffentlichen Info-Endpoints: 500 Anfragen je 5 s und Client-IP. Bewusst weit über jedem
@@ -234,9 +236,32 @@ Bewertung und Umsetzung:
    der die Kiosk-Rotation auf 5 s stellt, beschleunigt damit nicht mehr nebenbei alle Telefone.
    Die Admin-Maske weist beim Typ `ATHLETE_BOARD` unter dem Regler darauf hin.
 
-6. **gzip** (in diesem Branch sichergestellt). Der Compression-Commit aus dem Payload-Worktree
-   ist per Cherry-pick übernommen (`Compress HTTP responses with gzip`), damit die Anzeige nicht
-   von der Merge-Reihenfolge abhängt. Gemessen: 7,8 kB → 1,4 kB am Seed-Szenario.
+6. **gzip** (sichergestellt). Der Compression-Commit aus dem Payload-Worktree wurde per
+   Cherry-pick übernommen (`Compress HTTP responses with gzip`), damit die Anzeige nicht von der
+   Merge-Reihenfolge abhängt. `Compression` steht in `plugins/HTTP.kt` und wird aus
+   `Application.kt` installiert.
+
+## Nachmessung am laufenden System (2026-08-07, `feature/crf-2026`)
+
+Vor dem ersten echten Einsatz wurde nachgemessen, ob die sechs Punkte auf dem Sammelbranch
+tatsächlich greifen — nicht nur im Code stehen. Alles gegen die laufende Anwendung am Seed:
+
+- **gzip aktiv.** `Content-Encoding: gzip` auf der Antwort, Förde-Seed 1849 B → 655 B,
+  DM-Seed 2886 B → 1025 B. Damit ist die Voraussetzung aus Punkt 6 belegt und hängt nicht
+  mehr an der Merge-Reihenfolge.
+- **Zwischenspeicher belegt.** Ein Abruf mit kaltem Cache löst 7 Board-Statements aus, zehn
+  Abrufe innerhalb der TTL null. Sechs Cache-Treffer lieferten sechs verschiedene
+  `serverTime`-Stempel — die Sonderbehandlung aus Punkt 1 funktioniert.
+- **Rate-Limit greift.** Die Antwort trägt `X-RateLimit-Limit: 500`.
+- **Takt-Untergrenze greift end-to-end.** Der Server liefert `refreshIntervalSeconds`,
+  `useAthleteBoardData` übernimmt ihn.
+- `AthleteBoardLogicTest`: 40 Tests, keine Fehler.
+
+Zwei Fallen, falls die Messung zu wiederholen ist: jOOQ nutzt Prepared Statements, die Postgres
+als `execute S_n:` protokolliert und nicht als `statement:` — ein Filter auf `statement:` zählt
+null. Und die Hintergrund-Jobs (E-Mail-Versand, WebDAV-Export) rauschen dauerhaft in
+`pg_stat_database.xact_commit` und in jedes zeitbasierte Logfenster hinein. Verlässlich wird die
+Zählung erst mit Markern im Log (`select 'ZZMARK_…'`) statt mit `docker compose logs --since`.
 
 ## Tests
 
