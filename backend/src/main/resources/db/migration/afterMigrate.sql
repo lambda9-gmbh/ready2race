@@ -822,6 +822,9 @@ create view competition_match_with_teams as
 select cm.competition_setup_match,
        cm.start_time,
        cm.currently_running,
+       cm.raceclocker_polled_at,
+       cm.raceclocker_poll_error,
+       cm.raceclocker_auto_paused_at,
        coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams,
        cmtwr.mixed_team_term                                                as mixed_team_term
 from competition_match cm
