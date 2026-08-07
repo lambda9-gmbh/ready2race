@@ -199,6 +199,14 @@ und xlsx-Import wieder funktionieren — das ist gewollt und muss trotzdem gepr�
 Neu auf dem Sammelbranch. Die Vorlagenpflege nutzt die bestehende Gap-Mechanik: PDF-Export der
 DRV-PowerPoint hochladen, Platzhalter visuell setzen.
 
+G25–G35 kamen mit `de0aac66` dazu: Vorlagen lassen sich als `.r2rtpl.zip` exportieren und
+importieren, und der Editor zeigt Beispieltexte statt leerer Kästen, dazu Zahlenfelder und
+Pfeiltasten für die Platzhalter. Für diesen Block zusätzlich vorbereiten: eine fertig eingerichtete
+Siegerurkunden-Vorlage **mit** hochgeladener Schrift, eine Vorlage im **Querformat**, und eine
+zweite Instanz (lokal neben dem Server), in die ein Paket importiert werden kann. Keiner dieser
+Fälle wurde je in einer laufenden Anwendung gesehen — sie entstanden aus Code-Reviews, nicht aus
+Bedienung.
+
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
 | G1 | Vorlage anlegen | Typ „Siegerurkunde" wählbar, Platzhalter setzbar; angeboten werden nur die für den Typ erlaubten | `4b98dd09` | |
@@ -225,6 +233,17 @@ DRV-PowerPoint hochladen, Platzhalter visuell setzen.
 | G22 | Mehrseitige Teilnahme-Vorlage als Word | Eine Vorlage mit zwei Seiten liefert ein zweiseitiges .docx; Platzhalter von Seite 2 fehlen nicht, und jede Seite behält ihr eigenes Format | `4b98dd09` | |
 | G23 | Vorlage falsch zuweisen | Die Auswahl bietet nur Vorlagen des passenden Typs an; wird trotzdem eine fremde zugewiesen, lehnt der Server sichtbar ab statt stumm leere Urkunden zu erzeugen | `4b98dd09` | |
 | G24 | Kaputte Vorlage | Eine unlesbare oder nullseitige PDF-Vorlage liefert eine verständliche Meldung — keine leere .docx und kein Serverfehler | `4b98dd09` | |
+| G25 | Schrift-Vorschau an gespeicherter Vorlage | Eine **gespeicherte** Vorlage mit hochgeladener Schrift öffnen: die Beispieltexte im Editor stehen in dieser Schrift, nicht in der Standardschrift. Netzwerk-Tab: `GET /gapDocumentTemplate/{id}/font` antwortet 200. Der Fall ist der Kern der Vorschau — er schlug vorher still fehl, weil `.ttf`/`.otf` keinen ratbaren Content-Type haben und die Antwort mit 500 endete, ohne dass die Oberfläche etwas zeigte | `de0aac66` | |
+| G26 | Dateiantwort mit unbekannter Endung | Regression zu G25 an einer **bestehenden** Stelle: ein hochgeladenes Veranstaltungsdokument ohne Dateiendung (oder mit exotischer) herunterladen. Muss ankommen statt 500 — der Fehler saß im gemeinsamen Datei-Responder, nicht im Urkunden-Code | `de0aac66` | |
+| G27 | Vorlage exportieren und wieder importieren | Vorlage mit Schrift exportieren (`.r2rtpl.zip`), Vorlage löschen, Paket importieren, zuweisen. Die Server-Vorschau vorher und nachher muss deckungsgleich sein: gleiche Platzhalter an gleicher Stelle, gleiche Schrift, gleicher Name | `de0aac66` | |
+| G28 | Paket in einer zweiten Instanz | Dasselbe Paket in eine andere Instanz importieren (lokal ↔ Server). Dort eine Urkunde erzeugen und mit dem Original vergleichen. Das ist der eigentliche Zweck des Formats und die einzige Prüfung, die den ganzen Weg abdeckt | `de0aac66` | |
+| G29 | Import abgelehnt, verständlich | Vier Versuche, jeder mit eigener deutscher Meldung statt „Vorlage konnte nicht angelegt werden": eine umbenannte Nicht-ZIP-Datei, ein ZIP ohne `template.json`, ein Paket mit von Hand auf `2` gesetzter `formatVersion`, ein Paket, dessen `template.pdf` kein PDF ist | `de0aac66` | |
+| G30 | Import derselben Datei erneut | Nach einem abgelehnten Import dieselbe Datei nochmals wählen. Bekannte Schwachstelle: das Dateifeld setzt sich nicht zurück, die zweite Auswahl löst womöglich nichts aus. Prüfen und notieren, ob es den Bedienenden trifft | `de0aac66` | |
+| G31 | Nach dem Import | Erwartet ist **nicht**, dass sich der Bearbeiten-Dialog öffnet (bewusste Abweichung vom Entwurf): Erfolgsmeldung, Tabelle neu geladen, neue Vorlage in der Liste | `de0aac66` | |
+| G32 | Schriftgröße im Editor gegen die Vorschau | Einen Platzhalter auf 20 pt setzen, speichern, Server-Vorschau daneben legen: die Textgröße muss übereinstimmen. **Einmal hochkant und einmal quer** prüfen — der Fehler, den das behebt, kehrte zwischen beiden Formaten das Vorzeichen um (zu klein im Hochformat, zu groß im Querformat) | `de0aac66` | |
+| G33 | Koordinaten tippen | In den Feldern X/Y/Breite/Höhe: `44,7` mit Komma eintippen (muss ankommen, nicht zu 447 werden), `0` als Breite (muss auf die Mindestgröße gehen, kein unsichtbarer Kasten), `150` als X (muss auf 100 % begrenzt werden). Der Wert wird beim Verlassen des Feldes übernommen, nicht bei jedem Tastendruck | `de0aac66` | |
+| G34 | Pfeiltasten | Platzhalter anklicken, Pfeiltasten bewegen ihn in kleinen Schritten, mit Shift in großen, und er bleibt auf der Seite. Danach in ein Zahlenfeld der Seitenleiste klicken und dort die Pfeiltasten drücken: der Kasten darf sich **nicht** bewegen | `de0aac66` | |
+| G35 | Schrift entfernen | Bei geöffnetem Editor „Entfernen" drücken: die Beispieltexte wechseln sofort auf die Standardschrift, ohne Speichern. „Rückgängig" holt die Schrift zurück | `de0aac66` | |
 
 ---
 
