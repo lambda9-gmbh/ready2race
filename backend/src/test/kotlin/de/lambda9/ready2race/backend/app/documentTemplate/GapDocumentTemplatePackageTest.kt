@@ -156,9 +156,18 @@ class GapDocumentTemplatePackageTest {
     fun entryOverTheSingleEntryLimitIsRejected() {
         // Ein Eintrag mit lauter Nullen komprimiert auf fast nichts, entpackt aber auf die volle
         // Größe — der Test bleibt trotz der 20+ MB schnell.
+        val validPackage = GapDocumentTemplatePackage.write(content())
+        val manifest = readEntry(validPackage, "template.json")
+        val pdf = readEntry(validPackage, "template.pdf")
         val oversized = ByteArray(GapDocumentTemplatePackage.MAX_ENTRY_BYTES + 1)
 
-        val result = GapDocumentTemplatePackage.read(zipOf("template.pdf" to oversized))
+        val result = GapDocumentTemplatePackage.read(
+            zipOf(
+                "template.json" to manifest,
+                "template.pdf" to pdf,
+                "oversized.bin" to oversized,
+            )
+        )
 
         assertIs<GapDocumentTemplatePackage.ReadResult.Invalid>(result)
     }
@@ -167,13 +176,23 @@ class GapDocumentTemplatePackageTest {
     fun entriesSummingOverTheTotalLimitAreRejected() {
         // Jeder Eintrag für sich bleibt unter MAX_ENTRY_BYTES; erst die Summe reißt die
         // Gesamtgrenze. Ebenfalls Nullen, damit das Archiv klein und der Test schnell bleibt.
+        val validPackage = GapDocumentTemplatePackage.write(content())
+        val manifest = readEntry(validPackage, "template.json")
+        val pdf = readEntry(validPackage, "template.pdf")
+
         val perEntry = GapDocumentTemplatePackage.MAX_ENTRY_BYTES - 1024 * 1024
         val entryCount = (GapDocumentTemplatePackage.MAX_TOTAL_BYTES / perEntry) + 2
         val entries = (0 until entryCount)
             .map { "entry-$it" to ByteArray(perEntry) }
             .toTypedArray()
 
-        val result = GapDocumentTemplatePackage.read(zipOf(*entries))
+        val result = GapDocumentTemplatePackage.read(
+            zipOf(
+                "template.json" to manifest,
+                "template.pdf" to pdf,
+                *entries,
+            )
+        )
 
         assertIs<GapDocumentTemplatePackage.ReadResult.Invalid>(result)
     }
