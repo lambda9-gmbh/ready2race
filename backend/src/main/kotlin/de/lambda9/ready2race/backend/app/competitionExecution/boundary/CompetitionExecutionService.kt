@@ -31,6 +31,7 @@ import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
@@ -875,13 +876,10 @@ object CompetitionExecutionService {
     /**
      * Pulls the results of a single match from RaceClocker's public results feed.
      *
-     * Counterpart to [updateMatchResultByFile]: same destination, but the data is fetched instead of
-     * uploaded. Rows are tied to teams by an identifier that travelled out in the start list and comes
-     * back in RaceClocker's "Extra info" (see [assignFeedRows]) - the bib cannot serve as the key,
-     * since it is only a lane number within a match and repeats across heats.
-     *
-     * Nothing is written until every check has passed, so a rejected pull leaves the match untouched
-     * and can simply be repeated once RaceClocker has been corrected.
+     * Holt den Feed und reicht ihn an [applyRaceClockerRows] weiter. Die Trennung ist der Punkt: Der
+     * automatische Abruf (`RaceClockerPollService`) holt denselben Feed einmal je Rennen für alle
+     * Läufe gemeinsam und ruft dann dieselbe Anwendungslogik auf. Läge sie hier im Endpunkt, gäbe es
+     * zwei Wege, Ergebnisse zu schreiben, und sie würden auseinanderlaufen.
      */
     suspend fun CallComprehensionScope.updateMatchResultFromRaceClocker(
         eventId: UUID,
@@ -904,22 +902,43 @@ object CompetitionExecutionService {
         // The round type only decides which race to look into *first*. Is a round timed as a time trial
         // without being marked as a qualification round (or the other way around), the match is simply
         // found in the other race instead of failing with a misleading error.
-        var rowsByTeam: Map<UUID, List<RaceClockerFeedRow>> = emptyMap()
+        var rows: List<RaceClockerFeedRow> = emptyList()
         for (rawUrl in urls) {
             val url = !RaceClockerFeed.normalizeUrl(rawUrl)
-            val rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
-            rowsByTeam = assignFeedRows(rows, teams, target.waveName)
-            if (rowsByTeam.isNotEmpty()) break
+            rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
+            if (assignFeedRows(rows, teams, target.waveName).isNotEmpty()) break
         }
 
-        if (rowsByTeam.isEmpty()) return KIO.fail(RaceClockerError.MatchNotInFeed(urls))
+        return applyRaceClockerRows(match, matchId, target, rows, userId)
+    }
+
+    /**
+     * Schreibt einen bereits geholten RaceClocker-Feed auf einen Lauf: Zuordnung, Duplikatprüfung,
+     * `started_at`, Bahnen, Zeiten und Plätze.
+     *
+     * Ohne HTTP und ohne `CallComprehensionScope`, damit der Hintergrund-Job sie aufrufen kann. Was
+     * hier fehlschlägt, ist derselbe Fehler wie beim Knopf — der Job schreibt ihn nur in eine Spalte,
+     * statt ihn zu beantworten.
+     */
+    fun applyRaceClockerRows(
+        match: CompetitionMatchWithTeams,
+        matchId: UUID,
+        target: RaceClockerMatchTarget,
+        rows: List<RaceClockerFeedRow>,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val teams = match.teams.filter { !it.deregistered }
+        val rowsByTeam = assignFeedRows(rows, teams, target.waveName)
+
+        if (rowsByTeam.isEmpty()) return@comprehension KIO.fail(RaceClockerError.MatchNotInFeed(target.candidateUrls))
 
         // RaceClocker only ever inserts, it never updates: importing the same start list twice leaves
         // duplicate crews behind. Picking one of them silently would be a coin flip, so we refuse and
         // let the user clean up there.
         val duplicates = rowsByTeam.filterValues { it.size > 1 }
         if (duplicates.isNotEmpty()) {
-            return KIO.fail(
+            return@comprehension KIO.fail(
                 RaceClockerError.DuplicateTeams(target.waveName, duplicates.values.map { it.first().name })
             )
         }
@@ -933,10 +952,10 @@ object CompetitionExecutionService {
         //
         // Übersprungene Zeilen bleiben in der DB unangetastet: eine vom Schiedsrichter von Hand
         // eingetragene Ausscheidung darf ein Nachziehen des Laufs nicht wieder löschen.
-        val withResult = rowsByTeam.mapNotNull { (registrationId, rows) ->
-            rows.single().takeIf { it.hasResult }?.let { registrationId to it }
+        val withResult = rowsByTeam.mapNotNull { (registrationId, matchedRows) ->
+            matchedRows.single().takeIf { it.hasResult }?.let { registrationId to it }
         }
-        if (withResult.isEmpty()) return KIO.fail(RaceClockerError.NoResults(target.waveName))
+        if (withResult.isEmpty()) return@comprehension KIO.fail(RaceClockerError.NoResults(target.waveName))
 
         // Externe Zeitnahme ist Quelle der Wahrheit: die früheste von RaceClocker gemessene
         // Startzeit unter den zugeordneten Booten überschreibt started_at bedingungslos, auch wenn
@@ -957,7 +976,7 @@ object CompetitionExecutionService {
         // Lanes are taken from every assigned row, not just the timed ones: a heat is usually pulled
         // while boats are still on the water, and numbering only the finishers would push the rest
         // out of their lanes.
-        !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, rows) -> rows.single() }, userId)
+        !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, matchedRows) -> matchedRows.single() }, userId)
 
         val parsed = withResult.map { (registrationId, row) ->
             ParsedTeamResult(
@@ -976,7 +995,7 @@ object CompetitionExecutionService {
             )
         }
 
-        return applyParsedTeamResults(match, matchId, parsed, userId)
+        applyParsedTeamResults(match, matchId, parsed, userId)
     }
 
     /**
