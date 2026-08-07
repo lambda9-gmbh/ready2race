@@ -77,6 +77,7 @@ import {
 import {
     mapDtoToTimingForm,
     timingConfigWarnings,
+    effectiveTimingSystem,
 } from '@components/event/competition/timing/timingConfigForm.ts'
 import {
     ExecutionApiError,
@@ -831,7 +832,16 @@ const CompetitionExecution = () => {
                         handleDownloadStartListCSV={matchId =>
                             handleDownloadStartList(matchId, 'CSV')
                         }
-                        timingSystem={timingConfig?.timingSystem}
+                        /* Das effektive System, nicht die eigene Spalte des Wettkampfs: Setzt die
+                           Veranstaltung RaceClocker und erben ihre Wettkämpfe es, ist
+                           `timingConfig.timingSystem` null — der Abruf-Status samt „Automatik wieder
+                           aufnehmen" verschwände dann genau dort, wo die Automatik läuft. Dieselbe
+                           Auflösung wie bei den Warnungen oben. */
+                        timingSystem={
+                            timingConfig
+                                ? effectiveTimingSystem(mapDtoToTimingForm(timingConfig))
+                                : 'NONE'
+                        }
                     />
                 ))}
             </Stack>

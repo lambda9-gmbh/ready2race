@@ -2,7 +2,6 @@ import {
     CompetitionMatchDto,
     CompetitionRoundDto,
     StartListFileType,
-    TimingConfigDto,
 } from '@api/types.gen.ts'
 import {
     Accordion,
@@ -43,6 +42,7 @@ import {roundHasNothingToRace} from '@components/event/competition/excecution/ro
 import {roundSkipErrorText} from '@components/event/schedule/scheduleError.ts'
 import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
 import {raceClockerPollStatus} from './raceClockerPollStatus.ts'
+import {TimingFormSystem} from '@components/event/competition/timing/timingConfigForm.ts'
 
 type Props = {
     round: CompetitionRoundDto
@@ -61,7 +61,13 @@ type Props = {
     resumeRaceClockerAutoPull: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListCSV: (competitionMatchId: string) => Promise<void>
-    timingSystem: TimingConfigDto['timingSystem']
+    /**
+     * Das EFFEKTIVE Zeitnahmesystem des Wettkampfs (`effectiveTimingSystem`), also einschließlich
+     * dessen, was er von der Veranstaltung erbt — nicht seine eigene Spalte. Daran hängt unter
+     * anderem der Knopf „Automatik wieder aufnehmen"; mit dem lokalen Wert verschwände er bei jedem
+     * Wettkampf, der RaceClocker erbt, und der pausierte Lauf ließe sich nirgends mehr freigeben.
+     */
+    timingSystem: TimingFormSystem
 }
 
 const CompetitionExecutionRound = ({
