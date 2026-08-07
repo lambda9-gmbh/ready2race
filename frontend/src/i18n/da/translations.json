@@ -346,7 +346,7 @@
     "create": {
       "option": "Opret “{{name}}”",
       "existingSelected": "Eksisterende klub valgt",
-      "joinRequest": "Anmodning om medlemskab: en administrator af “{{name}}” skal godkende din anmodning, før du kan administrere klubben. Administratoren får ikke automatisk besked – informer dem venligst selv, så de kan acceptere anmodningen.",
+      "joinRequest": "Anmodning om medlemskab: en administrator af “{{name}}” skal godkende din anmodning, før du kan administrere klubben. De eksisterende administratorer får automatisk besked via e-mail om din anmodning.",
       "willCreate": "Ny klub “{{name}}” oprettes"
     },
     "settings": {
@@ -384,7 +384,7 @@
       },
       "pending": {
         "title": "Anmodning om klubadministration",
-        "message": "Anmodningen om at tilslutte sig klubben {{club}} som klubadministration er endnu ikke besvaret. Klubbens administratorer bliver ikke kontaktet automatisk, så kontakt dem venligst direkte."
+        "message": "Anmodningen om at tilslutte sig klubben {{club}} som klubadministration er endnu ikke besvaret. Klubbens eksisterende administratorer er allerede blevet informeret via e-mail."
       }
     },
     "participant": {
@@ -684,6 +684,7 @@
           "required": "Runden skal gennemføres",
           "lockedInfo": "Denne runde er allerede startet og kan ikke længere redigeres. Ændringer er kun mulige for efterfølgende runder.",
           "isQualification": "Kvalifikationsrunde",
+          "isQualificationHint": "Bestemmer desuden, hvilket af de to RaceClocker-løb der først søges efter resultater i: enkeltstartsløbet når markeret, ellers heat-løbet.",
           "finals": {
             "long": {
               "final": {
@@ -874,7 +875,8 @@
           "upload": "Upload resultater",
           "type": {
             "form": "med indtastningsformular",
-            "XLS": "som XLS-fil"
+            "XLS": "som XLS-fil",
+            "RACECLOCKER": "hent fra RaceClocker"
           },
           "error": {
             "WRONG_TEAM_COUNT": "Antallet af hold stemmer ikke - læst: {{actual}}, forventet: {{expected}}",
@@ -922,6 +924,18 @@
           "document": {
             "download": {
               "error": "Der opstod en fejl ved download af resultatdokumentet."
+            }
+          },
+          "raceclocker": {
+            "success": "Resultater hentet fra RaceClocker",
+            "error": {
+              "urlMissing": "Der er ikke angivet nogen RaceClocker-resultat-URL for denne konkurrence.",
+              "urlInvalid": "Den angivne RaceClocker-URL er ugyldig. Der forventes en adresse på raceclocker.com.",
+              "unreachable": "Resultaterne kunne ikke hentes fra RaceClocker. Kontroller URL og forbindelse.",
+              "matchNotInFeed": "Der er ingen poster for dette heat i RaceClocker. Er startlisten importeret der endnu? Stammer den fra en tidligere version af runden, skal den eksporteres igen.",
+              "duplicateTeams": "RaceClocker indeholder dublerede besætninger ({{teams}}). Ryd op der, og hent igen.",
+              "noResults": "Der foreligger endnu ingen tider for dette heat i RaceClocker.",
+              "matchIsBye": "Dette heat er en frirunde: holdet går videre uden at køre, så der er ingen resultater at hente."
             }
           }
         },
@@ -989,6 +1003,18 @@
             "confirmation": "Er du sikker på, at den sidste ombytning skal slettes?",
             "error": "Der opstod en fejl ved sletning af ombytningerne",
             "success": "Ombytninger slettet"
+          }
+        },
+        "raceclocker": {
+          "config": {
+            "open": "RaceClocker-indstillinger",
+            "title": "RaceClocker-indstillinger",
+            "hint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
+            "timeTrialUrl": "Resultatadresse for enkeltstart",
+            "heatsUrl": "Resultatadresse for heat",
+            "importHint": "RaceClocker-skabelonerne eksporterer uden overskriftsrække, fordi RaceClocker ellers importerer den som deltager. Tilknyt derfor kolonnerne efter deres rækkefølge ved import i RaceClocker – især den interne id til \"Extra info\".",
+            "saved": "RaceClocker-indstillinger gemt",
+            "invalid": "Angiv adresser på raceclocker.com."
           }
         }
       },
@@ -1502,6 +1528,7 @@
         "startlists": "Eksports af startlister",
         "tableHint": "Definerer kolonnerne til CSV-eksport af startlister under afvikling af konkurrencer.",
         "name": "Navn",
+        "noHeader": "Eksportér uden overskriftsrække",
         "col": {
           "heading": "Kolonner",
           "participant": {
@@ -1511,7 +1538,8 @@
             "gender": "Køn",
             "role": "Rolle",
             "year": "Fødselsår",
-            "club": "Klub"
+            "club": "Klub",
+            "fullname": "Fornavn og efternavn"
           },
           "club": {
             "heading": "Tilmeldende klub",
@@ -1521,7 +1549,8 @@
             "heading": "Hold",
             "name": "Navn",
             "startNumber": "Startnummer",
-            "registrationId": "Intern Hold-id",
+            "registrationId": "Intern hold-id (på tværs af runder)",
+            "matchId": "Intern heat-id (pr. runde)",
             "ratingCategory": "Rangeringskategori",
             "club": "Klub (samlet)",
             "deregistered": "Afmeldt",
@@ -1541,11 +1570,12 @@
             "identifier": "Identifikator",
             "name": "Navn",
             "shortName": "Kort navn",
+            "appendRatingToShortName": "Tilføj rangeringskategori til det korte navn",
             "category": "Kategori"
           }
         },
         "error": {
-          "tooFewCols": "Angiv venligst mindst et navn for en kolonne."
+          "tooFewCols": "Angiv venligst mindst et navn for en kolonne, herunder en af de to interne id'er."
         }
       }
     }
@@ -1909,7 +1939,9 @@
         "EVENT_REGISTRATION_CONFIRMATION": "Bekræftelse på arrangementstilmelding",
         "EVENT_REGISTRATION_INVOICE": "Faktura for arrangementstilmelding",
         "PARTICIPANT_CHALLENGE_REGISTERED": "Bekræftelse på challenge-tilmelding",
-        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Deltagelsesbevis"
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Deltagelsesbevis",
+        "CLUB_REPRESENTATIVE_APPROVAL_REQUESTED": "Anmodning om administratoradgang",
+        "COMPETITION_REGISTRATION_EDITED": "Tilmelding ændret"
       },
       "requiredPlaceholders": "Påkrævede pladsholdere:",
       "optionalPlaceholders": "Valgfrie pladsholdere:",

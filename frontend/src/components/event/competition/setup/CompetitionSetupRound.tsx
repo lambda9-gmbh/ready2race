@@ -38,6 +38,8 @@ import {
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {useTranslation} from 'react-i18next'
 import Add from '@mui/icons-material/Add'
+import Info from '@mui/icons-material/Info'
+import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 
 type Props = {
     round: {index: number; id: string}
@@ -450,18 +452,33 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                             />
                                         }
                                     />
-                                    <CheckboxElement
-                                        name={`rounds.${round.index}.isQualification`}
-                                        label={
-                                            <FormInputLabel
-                                                label={t(
-                                                    'event.competition.setup.round.isQualification',
-                                                )}
-                                                required={true}
-                                                horizontal
-                                            />
-                                        }
-                                    />
+                                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
+                                        <CheckboxElement
+                                            name={`rounds.${round.index}.isQualification`}
+                                            label={
+                                                <FormInputLabel
+                                                    label={t(
+                                                        'event.competition.setup.round.isQualification',
+                                                    )}
+                                                    required={true}
+                                                    horizontal
+                                                />
+                                            }
+                                        />
+                                        {/* The flag also decides which of the two RaceClocker races a
+                                            result pull looks into first, which is not obvious from a
+                                            tournament tree setting. */}
+                                        <HtmlTooltip
+                                            title={
+                                                <Typography p={1}>
+                                                    {t(
+                                                        'event.competition.setup.round.isQualificationHint',
+                                                    )}
+                                                </Typography>
+                                            }>
+                                            <Info color={'info'} fontSize={'small'} />
+                                        </HtmlTooltip>
+                                    </Stack>
                                 </Stack>
                                 <Controller
                                     name={`rounds.${round.index}.placesOption`}

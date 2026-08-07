@@ -32,6 +32,12 @@ data class CompetitionMatchData(
 
     data class CompetitionMatchTeam(
         val registrationId: UUID,
+        /**
+         * Unique per team *and* round, unlike [registrationId]. Exported as the round-trip key for
+         * tooling that keeps every round of a competition in one race (RaceClocker), where the
+         * registration id alone would be ambiguous.
+         */
+        val matchTeamId: UUID,
         val startNumber: Int,
         val registeringClubName: String,
         val actualClubName: String?,
@@ -115,6 +121,7 @@ data class CompetitionMatchData(
             KIO.ok(
                 CompetitionMatchTeam(
                     registrationId = teamId!!,
+                    matchTeamId = matchTeamId!!,
                     startNumber = startNumber!!,
                     registeringClubName = clubName!!,
                     actualClubName = actualClubName,

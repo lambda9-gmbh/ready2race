@@ -2,7 +2,9 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.updateMatchResultFromRaceClocker
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerConfigRequest
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.EventDocumentService
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
@@ -51,6 +53,29 @@ fun Route.competitionExecution() {
                     val competitionId = !pathParam("competitionId", uuid)
 
                     CompetitionExecutionService.createNewRound(eventId, competitionId, user.id!!)
+                }
+            }
+        }
+        route("/raceclocker-config") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val competitionId = !pathParam("competitionId", uuid)
+
+                    CompetitionExecutionService.getRaceClockerConfig(competitionId)
+                }
+            }
+            put {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val competitionId = !pathParam("competitionId", uuid)
+
+                    val body = !receiveKIO(RaceClockerConfigRequest.example)
+                    CompetitionExecutionService.updateRaceClockerConfig(
+                        competitionId = competitionId,
+                        userId = user.id!!,
+                        request = body,
+                    )
                 }
             }
         }
@@ -167,6 +192,22 @@ fun Route.competitionExecution() {
                         userId = user.id!!
                     )
 
+                }
+            }
+
+            post("/results/from-raceclocker") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    updateMatchResultFromRaceClocker(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                    )
                 }
             }
 

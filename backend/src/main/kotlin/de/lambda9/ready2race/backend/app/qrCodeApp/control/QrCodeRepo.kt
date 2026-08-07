@@ -121,6 +121,7 @@ object QrCodeRepo {
                 .join(COMPETITION).on(COMPETITION.ID.eq(COMPETITION_REGISTRATION.COMPETITION))
                 .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
                 .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(qrCode.participant))
+                .and(COMPETITION.EVENT.eq(qrCode.event))
                 .fetch { it[COMPETITION_PROPERTIES.NAME] }
                 .filterNotNull()
 

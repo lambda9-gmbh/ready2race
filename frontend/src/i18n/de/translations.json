@@ -346,7 +346,7 @@
     "create": {
       "option": "„{{name}}“ neu anlegen",
       "existingSelected": "Bestehender Verein ausgewählt",
-      "joinRequest": "Beitrittsanfrage: Ein Administrator von „{{name}}“ muss Ihre Anfrage bestätigen, bevor Sie den Verein verwalten können. Der Administrator wird nicht automatisch benachrichtigt – bitte informieren Sie ihn selbst, damit er die Anfrage annimmt.",
+      "joinRequest": "Beitrittsanfrage: Ein Administrator von „{{name}}“ muss Ihre Anfrage bestätigen, bevor Sie den Verein verwalten können. Die bestehenden Administratoren werden automatisch per E-Mail über Ihre Anfrage informiert.",
       "willCreate": "Neuer Verein „{{name}}“ wird angelegt"
     },
     "settings": {
@@ -384,7 +384,7 @@
       },
       "pending": {
         "title": "Anfrage zur Vereinsverwaltung",
-        "message": "Die Anfrage, dem Verein {{club}} als Vereinsvertretung beizutreten, ist bisher unbeantwortet. Die Vereinsvertretungen werden nicht automatisch benachrichtigt – bitte wende dich direkt an sie."
+        "message": "Die Anfrage, dem Verein {{club}} als Vereinsvertretung beizutreten, ist bisher unbeantwortet. Die bestehenden Vereinsvertretungen wurden bereits per E-Mail benachrichtigt."
       }
     },
     "participant": {
@@ -684,6 +684,7 @@
           "required": "Runde muss durchgeführt werden",
           "lockedInfo": "Diese Runde wurde bereits gestartet und kann nicht mehr bearbeitet werden. Änderungen sind nur für Folgerunden möglich.",
           "isQualification": "Qualifikationsrunde",
+          "isQualificationHint": "Bestimmt außerdem, in welchem der beiden RaceClocker-Rennen Ergebnisse zuerst gesucht werden: markiert im Zeitfahren-Rennen, sonst im Läufe-Rennen.",
           "finals": {
             "long": {
               "final": {
@@ -874,7 +875,8 @@
           "upload": "Ergebnisse hochladen",
           "type": {
             "form": "mit Eingabeformular",
-            "XLS": "als XLS-Datei"
+            "XLS": "als XLS-Datei",
+            "RACECLOCKER": "von RaceClocker holen"
           },
           "error": {
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
@@ -922,6 +924,18 @@
           "document": {
             "download": {
               "error": "Beim herunterladen des Ergebnisdokuments ist ein Fehler aufgetreten."
+            }
+          },
+          "raceclocker": {
+            "success": "Ergebnisse von RaceClocker übernommen",
+            "error": {
+              "urlMissing": "Für diesen Wettkampf ist keine RaceClocker-Ergebnis-URL hinterlegt.",
+              "urlInvalid": "Die hinterlegte RaceClocker-URL ist ungültig. Erwartet wird eine Adresse auf raceclocker.com.",
+              "unreachable": "Die Ergebnisse konnten nicht von RaceClocker geladen werden. Bitte URL und Verbindung prüfen.",
+              "matchNotInFeed": "Zu diesem Lauf gibt es in RaceClocker keine Einträge. Wurde die Startliste dort schon importiert? Stammt sie aus einer früheren Version der Runde, muss sie neu exportiert werden.",
+              "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden ({{teams}}). Bitte dort bereinigen und erneut holen.",
+              "noResults": "Für diesen Lauf liegen in RaceClocker noch keine Zeiten vor.",
+              "matchIsBye": "Dieser Lauf ist ein Freilos: Das Team kommt ohne Rennen weiter, es gibt keine Ergebnisse zu holen."
             }
           }
         },
@@ -989,6 +1003,18 @@
             "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
             "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
             "success": "Ummeldungen erfolgreich gelöscht"
+          }
+        },
+        "raceclocker": {
+          "config": {
+            "open": "RaceClocker-Einstellungen",
+            "title": "RaceClocker-Einstellungen",
+            "hint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
+            "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
+            "heatsUrl": "Ergebnis-Adresse Läufe",
+            "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
+            "saved": "RaceClocker-Einstellungen gespeichert",
+            "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
           }
         }
       },
@@ -1502,6 +1528,7 @@
         "startlists": "Startlisten Exports",
         "tableHint": "Definieren die Spalten für den CSV-Export von Startlisten bei der Durchführung von Wettkämpfen.",
         "name": "Name",
+        "noHeader": "Ohne Kopfzeile exportieren",
         "col": {
           "heading": "Spalten",
           "participant": {
@@ -1511,7 +1538,8 @@
             "gender": "Geschlecht",
             "role": "Rolle",
             "year": "Geburtsjahr",
-            "club": "Verein"
+            "club": "Verein",
+            "fullname": "Vor- und Nachname"
           },
           "club": {
             "heading": "Meldender Verein",
@@ -1521,7 +1549,8 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Startnummer",
-            "registrationId": "Interne Team-Kennung",
+            "registrationId": "Interne Team-Kennung (rundenübergreifend)",
+            "matchId": "Interne Lauf-Kennung (pro Runde)",
             "ratingCategory": "Wertungskategorie",
             "club": "Verein (zusammengefasst)",
             "deregistered": "Abgemeldet",
@@ -1541,11 +1570,12 @@
             "identifier": "Kennung",
             "name": "Name",
             "shortName": "Kurzname",
+            "appendRatingToShortName": "Wertungskategorie an den Kurznamen anhängen",
             "category": "Kategorie"
           }
         },
         "error": {
-          "tooFewCols": "Geben Sie bitte mindestens für eine Spalte die Bezeichnung an."
+          "tooFewCols": "Geben Sie bitte mindestens für eine Spalte die Bezeichnung an, darunter eine der beiden internen Kennungen."
         }
       }
     }
@@ -1909,7 +1939,9 @@
         "EVENT_REGISTRATION_CONFIRMATION": "Anmeldebestätigung für Veranstaltung",
         "EVENT_REGISTRATION_INVOICE": "Rechnung zur Veranstaltungsanmeldung",
         "PARTICIPANT_CHALLENGE_REGISTERED": "Anmeldebestätigung für Challenge",
-        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Teilnahmezertifikat"
+        "CERTIFICATE_OF_PARTICIPATION_PARTICIPANT": "Teilnahmezertifikat",
+        "CLUB_REPRESENTATIVE_APPROVAL_REQUESTED": "Verwalter-Anfrage für Verein",
+        "COMPETITION_REGISTRATION_EDITED": "Meldung bearbeitet"
       },
       "requiredPlaceholders": "Benötigte Platzhalter:",
       "optionalPlaceholders": "Optionale Platzhalter:",

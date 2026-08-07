@@ -45,6 +45,9 @@ object CompetitionRepo {
 
     fun getById(id: UUID) = COMPETITION_VIEW.selectOne { ID.eq(id) }
 
+    /** The competition row itself, for fields that live outside the (template-shared) properties. */
+    fun getRecordById(id: UUID) = COMPETITION.selectOne { ID.eq(id) }
+
     fun getByIds(ids: List<UUID>) = COMPETITION_VIEW.select { ID.`in`(ids) }
 
     fun isOpenForRegistration(id: UUID, at: LocalDateTime) = Jooq.query {

@@ -483,6 +483,11 @@ object AppUserService {
                 )
             ).orDie()
 
+            !notifyClubRepresentativesAboutPendingApproval(
+                clubId = clubId,
+                requesterFullName = "${registration.firstname} ${registration.lastname}",
+            )
+
             userId
         }
 
@@ -776,5 +781,35 @@ object AppUserService {
         }
 
         noData
+    }
+
+    private fun notifyClubRepresentativesAboutPendingApproval(
+        clubId: UUID,
+        requesterFullName: String,
+    ): App<Nothing, Unit> = KIO.comprehension {
+        val clubName = !ClubRepo.getName(clubId).orDie().onNullDie("Referenced entity must exist.")
+        val representatives = !AppUserRepo.getClubRepresentatives(clubId).orDie()
+
+        !representatives.traverse { representative ->
+            KIO.comprehension {
+                val content = !EmailService.getTemplate(
+                    EmailTemplateKey.CLUB_REPRESENTATIVE_APPROVAL_REQUESTED,
+                    EmailLanguage.valueOf(representative.language),
+                ).map { template ->
+                    template.toContent(
+                        EmailTemplatePlaceholder.RECIPIENT to representative.fullName(),
+                        EmailTemplatePlaceholder.SENDER to requesterFullName,
+                        EmailTemplatePlaceholder.CLUB to clubName,
+                    )
+                }
+
+                EmailService.enqueue(
+                    recipient = representative.email,
+                    content = content,
+                )
+            }
+        }
+
+        unit
     }
 }

@@ -715,13 +715,16 @@ create view event_registration_for_invoice as
 select er.id,
        er.event,
        c.name                                                                               as club_name,
-       au                                                                                   as recipient,
+       coalesce(recipients.recipients, '{}')                                                as recipients,
        coalesce(array_agg(crwf) filter ( where crwf.event_registration is not null ), '{}') as competitions
 from event_registration er
          join club c on er.club = c.id
-         left join app_user au on c.id = au.club
+         left join (select au.club,
+                           array_agg(au) filter ( where au.id is not null ) as recipients
+                    from app_user au
+                    group by au.club) recipients on c.id = recipients.club
          left join competition_registration_with_fees crwf on er.id = crwf.event_registration
-group by er.id, c.id, au.id
+group by er.id, c.id, recipients.recipients
 ;
 
 create view task_with_responsible_users as
@@ -917,6 +920,9 @@ group by ifer.event;
 
 create view startlist_team as
 select cmt.competition_match,
+       -- Eindeutig pro Team UND Runde, anders als team_id. Traegt den RaceClocker-Round-Trip, siehe
+       -- startlist_export_config.col_team_match_id.
+       cmt.id                                                                           as match_team_id,
        cmt.start_number,
        cr.id                                                                            as team_id,
        cr.name                                                                          as team_name,
@@ -938,7 +944,7 @@ from competition_match_team cmt
          left join substitution_view sv on cr.id = sv.competition_registration_id and
                                            csm.competition_setup_round = sv.competition_setup_round_id
 where cmt.out is not true
-group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name, rc.id, csm.id;
+group by cmt.id, cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name, rc.id, csm.id;
 
 create view startlist_view as
 select csm.id,

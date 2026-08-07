@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeUpdateDto
 import de.lambda9.ready2race.backend.calls.requests.authenticate
+import de.lambda9.ready2race.backend.calls.requests.optionalAuthenticate
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.queryParam
@@ -53,10 +54,10 @@ fun Route.qrCodeApp() {
         route("/{qrCodeId}") {
             get {
                 call.respondComprehension {
-                    !authenticate()
+                    val maybeUser = !optionalAuthenticate()
                     val qrCodeId = !pathParam("qrCodeId")
 
-                    QrCodeAppService.loadQrCode(qrCodeId)
+                    QrCodeAppService.loadQrCode(qrCodeId, isAnonymous = maybeUser == null)
                 }
             }
 
