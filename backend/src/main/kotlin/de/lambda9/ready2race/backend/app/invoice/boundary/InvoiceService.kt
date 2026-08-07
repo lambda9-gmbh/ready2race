@@ -261,7 +261,7 @@ object InvoiceService {
             RegistrationInvoiceType.LATE -> registration.competitions!!.filter { it!!.isLate == true }
         }
 
-        val recipient = registration.recipient
+        val recipients = registration.recipients?.filterNotNull() ?: emptyList()
 
         when {
             invoiceCompetitions.all { it!!.appliedFees!!.isEmpty() } -> {
@@ -270,7 +270,7 @@ object InvoiceService {
                 KIO.fail(ProduceInvoiceError.NoPositions)
             }
 
-            recipient == null -> {
+            recipients.isEmpty() -> {
                 job.lastErrorAt = LocalDateTime.now()
                 job.lastError = "missing recipient"
                 job.update()
@@ -292,7 +292,7 @@ object InvoiceService {
                         id = UUID.randomUUID(),
                         invoiceNumber = invoiceNumber,
                         filename = filename,
-                        billedToName = recipient.fullName(),
+                        billedToName = recipients.singleOrNull()?.fullName(),
                         billedToOrganization = registration.clubName,
                         paymentDueBy = when (type) {
                             RegistrationInvoiceType.REGULAR -> event.paymentDueBy
@@ -351,24 +351,28 @@ object InvoiceService {
                         )
                     ).orDie()
 
-                    val content = !EmailService.getTemplate(
-                        EmailTemplateKey.EVENT_REGISTRATION_INVOICE,
-                        EmailLanguage.valueOf(recipient.language)
-                    ).map { mailTemplate ->
-                        mailTemplate.toContent(
-                            EmailTemplatePlaceholder.EVENT to event.name,
-                            EmailTemplatePlaceholder.RECIPIENT to recipient.fullName(),
-                            EmailTemplatePlaceholder.DATE to invoice.paymentDueBy.hr(),
-                        )
-                    }
+                    !recipients.traverse { recipient ->
+                        KIO.comprehension {
+                            val content = !EmailService.getTemplate(
+                                EmailTemplateKey.EVENT_REGISTRATION_INVOICE,
+                                EmailLanguage.valueOf(recipient.language)
+                            ).map { mailTemplate ->
+                                mailTemplate.toContent(
+                                    EmailTemplatePlaceholder.EVENT to event.name,
+                                    EmailTemplatePlaceholder.RECIPIENT to recipient.fullName(),
+                                    EmailTemplatePlaceholder.DATE to invoice.paymentDueBy.hr(),
+                                )
+                            }
 
-                    !EmailService.enqueue(
-                        recipient = recipient.email,
-                        content = content,
-                        attachments = listOf(
-                            EmailAttachment(filename, bytes)
-                        ),
-                    )
+                            EmailService.enqueue(
+                                recipient = recipient.email,
+                                content = content,
+                                attachments = listOf(
+                                    EmailAttachment(filename, bytes)
+                                ),
+                            )
+                        }
+                    }
 
                     job.delete()
 
@@ -437,7 +441,9 @@ object InvoiceService {
                             data.billedToOrga?.let {
                                 text { it }
                             }
-                            text { data.billedToName }
+                            data.billedToName?.let {
+                                text { it }
+                            }
                         }
 
                         cell {
