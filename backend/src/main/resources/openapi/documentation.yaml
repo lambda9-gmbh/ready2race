@@ -13226,11 +13226,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LiveDashboardTeamDto'
-        raceClockerPolledAt:
-          type: string
-          format: date-time
-          nullable: true
-          description: When the automatic pull last tried this match - not when it last wrote something.
         raceClockerPollError:
           type: string
           nullable: true
