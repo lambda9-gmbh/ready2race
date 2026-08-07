@@ -569,6 +569,27 @@ object CompetitionExecutionService {
         unit
     }
 
+    /**
+     * Hält den automatischen RaceClocker-Abruf für diesen Lauf an.
+     *
+     * Wer von Hand einträgt oder eine Datei hochlädt, hat das letzte Wort: Der Job setzt bei jedem
+     * Takt alle Plätze des Laufs zurück und schreibt nur die Boote wieder, die im Feed ein Ergebnis
+     * haben - ein Handeintrag für ein Boot, das RaceClocker nicht kennt, wäre nach spätestens einem
+     * Takt weg. Freigegeben wird der Lauf in der Oberfläche ([resumeRaceClockerAutoPull]).
+     *
+     * Der manuelle Pull pausiert bewusst NICHT: Er ist derselbe Weg wie die Automatik, nur von Hand
+     * ausgelöst, und darf sie nicht abwürgen.
+     */
+    private fun pauseRaceClockerAutoPull(matchId: UUID): App<Nothing, Unit> = KIO.comprehension {
+        !CompetitionMatchRepo.update(matchId) {
+            if (raceclockerAutoPausedAt == null) {
+                raceclockerAutoPausedAt = LocalDateTime.now()
+            }
+        }.orDie()
+
+        unit
+    }
+
     fun updateMatchResult(
         eventId: UUID,
         competitionId: UUID,
@@ -579,6 +600,7 @@ object CompetitionExecutionService {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !checkUpdateMatchResult(competitionId, matchId)
+        !pauseRaceClockerAutoPull(matchId)
 
         !prepareForNewPlaces(matchId)
 
@@ -650,6 +672,7 @@ object CompetitionExecutionService {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val match = !checkUpdateMatchResult(competitionId, matchId)
+        !pauseRaceClockerAutoPull(matchId)
         !prepareForNewPlaces(matchId)
 
         // Das Format gehoert zum Wettkampf (Zeitnahme-Tab), nicht mehr zur einzelnen Anfrage --
@@ -935,6 +958,29 @@ object CompetitionExecutionService {
         }
 
         return applyRaceClockerRows(match, matchId, target, rows, userId)
+    }
+
+    /**
+     * Gibt einen pausierten Lauf wieder für den automatischen Abruf frei. Löscht zugleich den
+     * letzten Fehler - was beim nächsten Takt passiert, ist die Antwort, die jetzt zählt.
+     */
+    fun resumeRaceClockerAutoPull(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+        !checkUpdateMatchResult(competitionId, matchId, byeError = RaceClockerError.MatchIsBye)
+
+        !CompetitionMatchRepo.update(matchId) {
+            raceclockerAutoPausedAt = null
+            raceclockerPollError = null
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
     }
 
     /**

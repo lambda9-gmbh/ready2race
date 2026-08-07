@@ -1716,6 +1716,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/raceclocker/resume:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: resumeRaceClockerAutoPull
+      description: >-
+        Releases a match back to the automatic RaceClocker pull. Entering results by hand or
+        uploading a file pauses the pull for that match, so the office keeps the last word; this
+        undoes that and clears the last poll error.
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/startList:
     parameters:
       - $ref: '#/components/parameters/eventId'
