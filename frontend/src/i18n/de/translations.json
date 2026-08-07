@@ -1049,6 +1049,13 @@
               "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden ({{teams}}). Bitte dort bereinigen und erneut holen.",
               "noResults": "Für diesen Lauf liegen in RaceClocker noch keine Zeiten vor.",
               "matchIsBye": "Dieser Lauf ist ein Freilos: Das Team kommt ohne Rennen weiter, es gibt keine Ergebnisse zu holen."
+            },
+            "poll": {
+              "lastPolled": "Automatisch abgerufen: {{time}}",
+              "error": "Automatischer Abruf klemmt: {{reason}}",
+              "paused": "Automatischer Abruf pausiert — es wurde von Hand eingetragen.",
+              "resume": "Automatik wieder aufnehmen",
+              "resumed": "Der automatische Abruf ist wieder aktiv."
             }
           }
         },

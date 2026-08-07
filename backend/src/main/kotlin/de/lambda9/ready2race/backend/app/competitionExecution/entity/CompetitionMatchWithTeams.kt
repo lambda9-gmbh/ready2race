@@ -7,5 +7,8 @@ data class CompetitionMatchWithTeams(
     val competitionSetupMatch: UUID,
     val startTime: LocalDateTime?,
     val currentlyRunning: Boolean,
+    val raceClockerPolledAt: LocalDateTime?,
+    val raceClockerPollError: String?,
+    val raceClockerAutoPausedAt: LocalDateTime?,
     val teams: List<CompetitionMatchTeamWithRegistration>
 )

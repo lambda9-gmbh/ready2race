@@ -43,7 +43,7 @@ const matchKeys = {
     teamsNotMatching: 'event.competition.execution.error.teamsNotMatching',
 } as const
 
-const raceClockerKeys = {
+export const raceClockerKeys = {
     urlMissing: 'event.competition.execution.results.raceclocker.error.urlMissing',
     urlInvalid: 'event.competition.execution.results.raceclocker.error.urlInvalid',
     unreachable: 'event.competition.execution.results.raceclocker.error.unreachable',

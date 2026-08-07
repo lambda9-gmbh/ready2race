@@ -68,6 +68,9 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String
                     startTime = match.first.startTime,
                     startTimeOffset = match.second.startTimeOffset,
                     currentlyRunning = match.first.currentlyRunning,
+                    raceClockerPolledAt = match.first.raceClockerPolledAt,
+                    raceClockerPollError = match.first.raceClockerPollError,
+                    raceClockerAutoPausedAt = match.first.raceClockerAutoPausedAt,
                 )
             },
         required = required,
@@ -101,6 +104,9 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 competitionSetupMatch = match.competitionSetupMatch!!,
                 startTime = match.startTime,
                 currentlyRunning = match.currentlyRunning ?: false,
+                raceClockerPolledAt = match.raceclockerPolledAt,
+                raceClockerPollError = match.raceclockerPollError,
+                raceClockerAutoPausedAt = match.raceclockerAutoPausedAt,
                 teams = match.teams!!.filterNotNull().map { team ->
                     CompetitionMatchTeamWithRegistration(
                         id = team.id!!,

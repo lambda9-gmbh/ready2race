@@ -1049,6 +1049,13 @@
               "duplicateTeams": "RaceClocker indeholder dublerede besætninger ({{teams}}). Ryd op der, og hent igen.",
               "noResults": "Der foreligger endnu ingen tider for dette heat i RaceClocker.",
               "matchIsBye": "Dette heat er en frirunde: holdet går videre uden at køre, så der er ingen resultater at hente."
+            },
+            "poll": {
+              "lastPolled": "Hentet automatisk: {{time}}",
+              "error": "Den automatiske hentning driller: {{reason}}",
+              "paused": "Automatisk hentning sat på pause — resultater blev indtastet manuelt.",
+              "resume": "Genoptag automatisk hentning",
+              "resumed": "Den automatiske hentning er aktiv igen."
             }
           }
         },

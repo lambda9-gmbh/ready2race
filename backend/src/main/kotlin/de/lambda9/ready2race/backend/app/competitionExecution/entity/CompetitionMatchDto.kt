@@ -12,4 +12,7 @@ data class CompetitionMatchDto(
     val startTime: LocalDateTime?,
     val startTimeOffset: Long?,
     val currentlyRunning: Boolean,
+    val raceClockerPolledAt: LocalDateTime?,
+    val raceClockerPollError: String?,
+    val raceClockerAutoPausedAt: LocalDateTime?,
 )

@@ -3,6 +3,7 @@ import {
     downloadStartList,
     getTimingConfig,
     pullMatchResultsFromRaceClocker,
+    resumeRaceClockerAutoPull,
     getCompetitionExecutionProgress,
     getEventSchedule,
     updateMatchData,
@@ -350,6 +351,21 @@ const CompetitionExecution = () => {
             feedback.error(text === undefined ? t('common.error.unexpected') : t(text.key, text.values))
         } else {
             feedback.success(t('event.competition.execution.results.raceclocker.success'))
+            setReloadData(!reloadData)
+        }
+    }
+
+    const handleResumeRaceClockerAutoPull = async (competitionMatchId: string) => {
+        setSubmitting(true)
+        const {error} = await resumeRaceClockerAutoPull({
+            path: {eventId, competitionId, competitionMatchId},
+        })
+        setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.poll.resumed'))
             setReloadData(!reloadData)
         }
     }
@@ -808,6 +824,7 @@ const CompetitionExecution = () => {
                         smallScreenLayout={smallScreenLayout}
                         setResultImportMatch={setResultImportMatch}
                         pullRaceClockerResults={handlePullRaceClockerResults}
+                        resumeRaceClockerAutoPull={handleResumeRaceClockerAutoPull}
                         handleDownloadStartListPDF={matchId =>
                             handleDownloadStartList(matchId, 'PDF')
                         }

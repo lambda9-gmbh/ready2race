@@ -11495,6 +11495,20 @@ components:
           description: Offset between the starts of consecutive teams, in seconds
         currentlyRunning:
           type: boolean
+        raceClockerPolledAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the automatic pull last tried this match - not when it last wrote something.
+        raceClockerPollError:
+          type: string
+          nullable: true
+          description: Error code of the last failed automatic pull, null when it is fine.
+        raceClockerAutoPausedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Set while the automatic pull leaves this match alone because results were entered by hand.
 
     CompetitionMatchTeamDto:
       type: object

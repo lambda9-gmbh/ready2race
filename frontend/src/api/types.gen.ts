@@ -466,6 +466,18 @@ export type CompetitionMatchDto = {
      */
     startTimeOffset?: number
     currentlyRunning: boolean
+    /**
+     * When the automatic pull last tried this match - not when it last wrote something.
+     */
+    raceClockerPolledAt?: string | null
+    /**
+     * Error code of the last failed automatic pull, null when it is fine.
+     */
+    raceClockerPollError?: string | null
+    /**
+     * Set while the automatic pull leaves this match alone because results were entered by hand.
+     */
+    raceClockerAutoPausedAt?: string | null
 }
 
 export type CompetitionMatchTeamDto = {
@@ -3957,6 +3969,18 @@ export type PullMatchResultsFromRaceClockerData = {
 export type PullMatchResultsFromRaceClockerResponse = void
 
 export type PullMatchResultsFromRaceClockerError = BadRequestError | ApiError
+
+export type ResumeRaceClockerAutoPullData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type ResumeRaceClockerAutoPullResponse = void
+
+export type ResumeRaceClockerAutoPullError = BadRequestError | ApiError
 
 export type DownloadStartListData = {
     path: {

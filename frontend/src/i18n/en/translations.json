@@ -1049,6 +1049,13 @@
               "duplicateTeams": "RaceClocker contains duplicate crews ({{teams}}). Please clean them up there and pull again.",
               "noResults": "There are no times for this heat in RaceClocker yet.",
               "matchIsBye": "This heat is a bye: the team moves on without racing, so there are no results to pull."
+            },
+            "poll": {
+              "lastPolled": "Pulled automatically: {{time}}",
+              "error": "Automatic pull is stuck: {{reason}}",
+              "paused": "Automatic pull paused — results were entered by hand.",
+              "resume": "Resume automatic pull",
+              "resumed": "The automatic pull is active again."
             }
           }
         },
