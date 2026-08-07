@@ -1071,6 +1071,17 @@ object CompetitionExecutionService {
         waveName: String?,
     ): Map<UUID, List<RaceClockerFeedRow>> = RaceClockerAssignmentLogic.assignFeedRows(rows, teams, waveName)
 
+    /**
+     * Welche Feed-Zeilen zu diesem Lauf gehören - flach, ohne Zuordnung zur Mannschaft. Der
+     * automatische Abruf braucht das vor dem Schreiben: um zu erkennen, ob die Welle überhaupt im
+     * Feed steht, ob sie gestartet ist und ob sich seit dem letzten Takt etwas geändert hat.
+     */
+    fun assignedRowsFor(
+        rows: List<RaceClockerFeedRow>,
+        teams: List<CompetitionMatchTeamWithRegistration>,
+        waveName: String?,
+    ): List<RaceClockerFeedRow> = assignFeedRows(rows, teams, waveName).values.flatten()
+
     fun updateMatchRunningState(
         matchId: UUID,
         userId: UUID,
