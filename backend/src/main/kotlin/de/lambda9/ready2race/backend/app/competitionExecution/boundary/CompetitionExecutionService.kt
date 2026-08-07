@@ -876,10 +876,17 @@ object CompetitionExecutionService {
     /**
      * Pulls the results of a single match from RaceClocker's public results feed.
      *
-     * Holt den Feed und reicht ihn an [applyRaceClockerRows] weiter. Die Trennung ist der Punkt: Der
-     * automatische Abruf (`RaceClockerPollService`) holt denselben Feed einmal je Rennen für alle
-     * Läufe gemeinsam und ruft dann dieselbe Anwendungslogik auf. Läge sie hier im Endpunkt, gäbe es
-     * zwei Wege, Ergebnisse zu schreiben, und sie würden auseinanderlaufen.
+     * Counterpart to [updateMatchResultByFile]: same destination, but the data is fetched instead of
+     * uploaded. Rows are tied to teams by an identifier that travelled out in the start list and comes
+     * back in RaceClocker's "Extra info" (see [assignFeedRows]) - the bib cannot serve as the key,
+     * since it is only a lane number within a match and repeats across heats.
+     *
+     * Nothing is written until every check has passed, so a rejected pull leaves the match untouched
+     * and can simply be repeated once RaceClocker has been corrected. Das Schreiben selbst steht in
+     * [applyRaceClockerRows]; hier bleibt nur das Holen. Die Trennung ist der Punkt: Der automatische
+     * Abruf (`RaceClockerPollService`) holt denselben Feed einmal je Rennen für alle Läufe gemeinsam
+     * und ruft dann dieselbe Anwendungslogik auf. Läge sie hier im Endpunkt, gäbe es zwei Wege,
+     * Ergebnisse zu schreiben, und sie würden auseinanderlaufen.
      */
     suspend fun CallComprehensionScope.updateMatchResultFromRaceClocker(
         eventId: UUID,
