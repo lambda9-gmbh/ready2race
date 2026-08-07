@@ -23,8 +23,18 @@ React mit MUI, react-hook-form-mui, vitest.
   pushen, solange Thomas es nicht ausdrücklich sagt.
 - Commit-Nachrichten ohne jede KI-Attribution (kein `Co-Authored-By`, keine Hinweise auf Claude).
 - Vor jedem Maven-Aufruf: `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`.
-- Backend-Tests laufen in `backend/` mit `./mvnw test`, Frontend-Tests in `frontend/` mit
-  `npm run test`.
+- Backend-Tests laufen in `backend/`, Frontend-Tests in `frontend/` mit `npm run test`.
+- **Backend-Testbefehl in diesem Worktree** — der Build migriert bei jedem Lauf eine Datenbank und
+  erzeugt daraus die jOOQ-Klassen. Die gemeinsame Build-DB auf Port 7652 gehört einem anderen
+  Branch; dieser Worktree hat eine eigene auf Port 17670 (Container
+  `urkundenvorlagen-build-db`). Deshalb immer mit Property:
+
+  ```bash
+  JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./mvnw test -Ddatabase.url=jdbc:postgresql://localhost:17670/ready2race-build
+  ```
+
+  Die Befehle in den Aufgaben unten sind der Kürze halber ohne diese Property notiert — sie gehört
+  an jeden von ihnen.
 - Tests sind in diesem Projekt reine Logiktests (`kotlin.test` im Backend, vitest auf `.ts`-Modulen
   im Frontend). Es gibt keine Datenbank- oder Komponententests — Service- und Routen-Code sowie
   `.tsx`-Komponenten bleiben ungetestet, die Logik dahinter nicht.
