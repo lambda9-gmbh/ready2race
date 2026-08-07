@@ -27,6 +27,14 @@ object GapDocumentTemplatePackage {
     /** Obergrenze je entpacktem Eintrag, damit ein kleines Archiv nicht beliebig viel Speicher wird. */
     const val MAX_ENTRY_BYTES = 20 * 1024 * 1024
 
+    /**
+     * Obergrenze über alle entpackten Einträge zusammen. Ohne sie könnte ein Archiv aus vielen
+     * Einträgen, von denen jeder für sich unter [MAX_ENTRY_BYTES] bleibt, trotzdem beliebig viel
+     * Speicher belegen. Das Format hält höchstens ein PDF, eine Schrift und ein kleines Manifest —
+     * 40 MB sind dafür großzügig bemessen.
+     */
+    const val MAX_TOTAL_BYTES = 40 * 1024 * 1024
+
     data class Manifest(
         val formatVersion: Int,
         val name: String,
@@ -102,12 +110,15 @@ object GapDocumentTemplatePackage {
 
     fun read(bytes: ByteArray): ReadResult {
         val entries = mutableMapOf<String, ByteArray>()
+        var totalBytes = 0L
 
         try {
             ZipInputStream(bytes.inputStream()).use { zip ->
                 var entry = zip.nextEntry
                 while (entry != null) {
                     val data = zip.readAtMost(MAX_ENTRY_BYTES) ?: return ReadResult.Invalid
+                    totalBytes += data.size
+                    if (totalBytes > MAX_TOTAL_BYTES) return ReadResult.Invalid
                     if (!entry.isDirectory && isSafeEntryName(entry.name)) {
                         entries[entry.name] = data
                     }

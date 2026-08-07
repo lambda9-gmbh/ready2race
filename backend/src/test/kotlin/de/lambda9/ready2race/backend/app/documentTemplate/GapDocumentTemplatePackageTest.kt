@@ -152,6 +152,32 @@ class GapDocumentTemplatePackageTest {
         assertIs<GapDocumentTemplatePackage.ReadResult.Invalid>(result)
     }
 
+    @Test
+    fun entryOverTheSingleEntryLimitIsRejected() {
+        // Ein Eintrag mit lauter Nullen komprimiert auf fast nichts, entpackt aber auf die volle
+        // Größe — der Test bleibt trotz der 20+ MB schnell.
+        val oversized = ByteArray(GapDocumentTemplatePackage.MAX_ENTRY_BYTES + 1)
+
+        val result = GapDocumentTemplatePackage.read(zipOf("template.pdf" to oversized))
+
+        assertIs<GapDocumentTemplatePackage.ReadResult.Invalid>(result)
+    }
+
+    @Test
+    fun entriesSummingOverTheTotalLimitAreRejected() {
+        // Jeder Eintrag für sich bleibt unter MAX_ENTRY_BYTES; erst die Summe reißt die
+        // Gesamtgrenze. Ebenfalls Nullen, damit das Archiv klein und der Test schnell bleibt.
+        val perEntry = GapDocumentTemplatePackage.MAX_ENTRY_BYTES - 1024 * 1024
+        val entryCount = (GapDocumentTemplatePackage.MAX_TOTAL_BYTES / perEntry) + 2
+        val entries = (0 until entryCount)
+            .map { "entry-$it" to ByteArray(perEntry) }
+            .toTypedArray()
+
+        val result = GapDocumentTemplatePackage.read(zipOf(*entries))
+
+        assertIs<GapDocumentTemplatePackage.ReadResult.Invalid>(result)
+    }
+
     private fun readEntry(zipBytes: ByteArray, name: String): ByteArray {
         java.util.zip.ZipInputStream(zipBytes.inputStream()).use { zip ->
             var entry = zip.nextEntry
