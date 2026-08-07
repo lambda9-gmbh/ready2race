@@ -3,10 +3,12 @@ package de.lambda9.ready2race.backend.app.liveDashboard.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardScope
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.UpdateCheckSeverityRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.queryParam
+import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -68,6 +70,29 @@ fun Route.liveDashboard() {
                 val running = !queryParam("running") { it.toBoolean() }
 
                 LiveDashboardService.setMatchRunning(eventId, matchId, running, user.id!!)
+            }
+        }
+    }
+
+    // Verwaltung der Schweregrade; bewusst nicht Teil des Dashboard-Polls oben, sondern eigene
+    // Ressource, denn hier liest/schreibt die Veranstaltungsverwaltung, nicht der Steg.
+    route("/event/{eventId}/checkSeverity") {
+        get {
+            call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+
+                LiveDashboardService.getCheckSeverityConfig(eventId)
+            }
+        }
+
+        put {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val body = !receiveKIO(UpdateCheckSeverityRequest.example)
+
+                LiveDashboardService.updateCheckSeverityConfig(eventId, body, user.id!!)
             }
         }
     }

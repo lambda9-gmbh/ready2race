@@ -70,6 +70,8 @@ object EventScheduleService {
                     matchStartedAt = r.get("match_started_at", java.time.LocalDateTime::class.java),
                     matchFinishedAt = r.get("match_finished_at", java.time.LocalDateTime::class.java),
                     matchCurrentlyRunning = r[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
+                    matchTeamsTotal = r.get("match_teams_total", Int::class.java) ?: 0,
+                    matchTeamsScored = r.get("match_teams_scored", Int::class.java) ?: 0,
                 )
             }
 
@@ -588,11 +590,11 @@ object EventScheduleService {
         val eventYear = eventDays.minOfOrNull { it.date }?.year ?: LocalDate.now().year
 
         val parsedRows = !XLS.read(fileBytes.inputStream()) {
-            val date = !cell("Datum", CellParser.localDate(eventYear))
-            val time = !cell("Uhrzeit", CellParser.localTime)
-            val competition = !optionalCell("Wettkampf", CellParser.string)
-            val lauf = !cell("Lauf", CellParser.string)
-            val duration = !optionalCell("Dauer", CellParser.int)
+            val date = !cell(ScheduleImportTemplate.COLUMN_DATE, CellParser.localDate(eventYear))
+            val time = !cell(ScheduleImportTemplate.COLUMN_TIME, CellParser.localTime)
+            val competition = !optionalCell(ScheduleImportTemplate.COLUMN_COMPETITION, CellParser.string)
+            val lauf = !cell(ScheduleImportTemplate.COLUMN_MATCH, CellParser.string)
+            val duration = !optionalCell(ScheduleImportTemplate.COLUMN_DURATION, CellParser.int)
             ImportRow(
                 rowNumber = rowNum,
                 startTime = LocalDateTime.of(date, time),
@@ -705,5 +707,27 @@ object EventScheduleService {
         }
 
         KIO.ok(ApiResponse.Dto(ScheduleImportResultDto(rowDtos, applied = true)))
+    }
+
+    /**
+     * Beispieldatei für den Excel-Import - dieselben Spalten, die [importSchedule] liest. Die
+     * Beispielzeilen tragen den ersten Veranstaltungstag als Datum, damit sie im Zeitraum des
+     * Events liegen; ohne Veranstaltungstage fällt das auf das heutige Datum zurück.
+     */
+    fun scheduleImportTemplate(eventId: UUID): App<EventScheduleError, ApiResponse.File> = KIO.comprehension {
+        val eventExists = !EventRepo.exists(eventId).orDie()
+        if (!eventExists) {
+            return@comprehension KIO.fail(EventScheduleError.EventNotFound(eventId))
+        }
+
+        val eventDays = !EventDayRepo.getByEvent(eventId).orDie()
+        val exampleDate = eventDays.minOfOrNull { it.date } ?: LocalDate.now()
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "zeitstrahl-import-beispiel.xlsx",
+                bytes = ScheduleImportTemplate.build(exampleDate),
+            )
+        )
     }
 }

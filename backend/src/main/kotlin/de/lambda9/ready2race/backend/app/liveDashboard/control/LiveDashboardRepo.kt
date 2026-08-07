@@ -77,6 +77,8 @@ object LiveDashboardRepo {
             TIMECODE.BASE_UNIT,
             TIMECODE.MILLISECOND_PRECISION,
             COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.`as`("round_id"),
+            COMPETITION.ID.`as`("competition_id"),
+            COMPETITION_PROPERTIES.CHECK_IN_OUT_REQUIRED,
         )
             .from(COMPETITION_MATCH_TEAM)
             .join(COMPETITION_SETUP_MATCH)

@@ -4,3 +4,6 @@
 deploy*.sh
 /.cursor/
 /CLAUDE.md
+
+# Visual-Companion-Mockups aus dem Brainstorming
+.superpowers/

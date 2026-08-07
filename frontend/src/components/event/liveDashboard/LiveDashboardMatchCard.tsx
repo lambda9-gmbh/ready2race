@@ -1,8 +1,4 @@
 import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import CancelIcon from '@mui/icons-material/Cancel'
-import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
@@ -14,11 +10,10 @@ import {
     matchControls,
     openResultTeams,
     pendingSlotLabel,
-    Severity,
     shortClubName,
-    teamSeverity,
 } from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
+import SeverityIcon from './SeverityIcon.tsx'
 
 type Props = {
     match: LiveDashboardMatchDto
@@ -26,24 +21,6 @@ type Props = {
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
     onSetRunning?: (matchId: string, running: boolean) => Promise<void>
-}
-
-// One glanceable icon per team replaces the detail chips — everything else
-// lives in the team dialog, one tap away.
-// Draußen zählt Kontrast: die dunklen Palette-Varianten bleiben auch bei Sonne
-// lesbar, während die konfigurierten main-Töne verblassen.
-const severityIcon = (severity: Severity) => {
-    const sx = {fontSize: 28, display: 'block'}
-    switch (severity) {
-        case 'ok':
-            return <CheckCircleIcon sx={{...sx, color: 'success.dark'}} />
-        case 'warning':
-            return <WarningAmberIcon sx={{...sx, color: 'warning.dark'}} />
-        case 'error':
-            return <CancelIcon sx={{...sx, color: 'error.dark'}} />
-        case 'neutral':
-            return <RadioButtonUncheckedIcon sx={{...sx, color: 'text.disabled'}} />
-    }
 }
 
 const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Props) => {
@@ -271,7 +248,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                         {clubLine}
                                     </Typography>
                                 )}
-                                {team.onWaterAt && (
+                                {team.onWaterRequired && team.onWaterAt && (
                                     <Typography
                                         variant="caption"
                                         display="block"
@@ -344,8 +321,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                     </Box>
                                 </>
                             )}
-                            {/* "Auf dem Wasser" zählt nur bei aktivem Lauf in die Ampel. */}
-                            {severityIcon(teamSeverity(team, running))}
+                            <SeverityIcon severity={team.severity} />
                         </Box>
                     )
                 })}

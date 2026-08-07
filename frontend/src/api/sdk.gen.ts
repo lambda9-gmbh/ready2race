@@ -653,6 +653,12 @@ import type {
     GetLiveDashboardTeamDetailData,
     GetLiveDashboardTeamDetailError,
     GetLiveDashboardTeamDetailResponse,
+    GetCheckSeverityConfigData,
+    GetCheckSeverityConfigError,
+    GetCheckSeverityConfigResponse,
+    UpdateCheckSeverityConfigData,
+    UpdateCheckSeverityConfigError,
+    UpdateCheckSeverityConfigResponse,
     GetEventScheduleData,
     GetEventScheduleError,
     GetEventScheduleResponse,
@@ -686,6 +692,9 @@ import type {
     ImportEventScheduleData,
     ImportEventScheduleError,
     ImportEventScheduleResponse,
+    DownloadEventScheduleImportTemplateData,
+    DownloadEventScheduleImportTemplateError,
+    DownloadEventScheduleImportTemplateResponse,
     GetInfoViewsData,
     GetInfoViewsError,
     GetInfoViewsResponse,
@@ -3586,6 +3595,38 @@ export const getLiveDashboardTeamDetail = <ThrowOnError extends boolean = false>
 }
 
 /**
+ * The competitions, the configurable checks with their defaults and the deviations set for this event - administration for the referee dashboard's severity configuration.
+ */
+export const getCheckSeverityConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCheckSeverityConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCheckSeverityConfigResponse,
+        GetCheckSeverityConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/checkSeverity',
+    })
+}
+
+/**
+ * Replaces the event's deviations. Entries matching the built-in default are dropped rather than stored, so a later change to the default keeps applying to existing data.
+ */
+export const updateCheckSeverityConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCheckSeverityConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCheckSeverityConfigResponse,
+        UpdateCheckSeverityConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/checkSeverity',
+    })
+}
+
+/**
  * The event's timeline: planned slots plus setup rounds that have no slot yet
  */
 export const getEventSchedule = <ThrowOnError extends boolean = false>(
@@ -3754,6 +3795,22 @@ export const importEventSchedule = <ThrowOnError extends boolean = false>(
             ...options?.headers,
         },
         url: '/event/{eventId}/schedule/import',
+    })
+}
+
+/**
+ * Downloads an example xlsx for the schedule import, using the columns importEventSchedule reads. The example rows are dated to the event's first day.
+ */
+export const downloadEventScheduleImportTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadEventScheduleImportTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadEventScheduleImportTemplateResponse,
+        DownloadEventScheduleImportTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/import/template',
     })
 }
 
