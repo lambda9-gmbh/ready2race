@@ -2,7 +2,6 @@ import {
     Alert,
     AlertTitle,
     Box,
-    Card,
     Divider,
     FormControlLabel,
     Stack,
@@ -136,7 +135,9 @@ const CompetitionTimingConfig = () => {
     }
 
     return (
-        <Card sx={{p: 3, maxWidth: 720}}>
+        // Ohne Karte wie die Nachbar-Tabs (Durchführung, Wettbewerbsablauf): dort steht der Inhalt
+        // blank auf der Seite, eine Karte nur hier sähe nach einem fremden Bildschirm aus.
+        <Box sx={{maxWidth: 720}}>
             <FormContainer
                 formContext={formContext}
                 onSuccess={async (data: TimingForm) => {
@@ -328,7 +329,7 @@ const CompetitionTimingConfig = () => {
                     </Box>
                 </Stack>
             </FormContainer>
-        </Card>
+        </Box>
     )
 }
 

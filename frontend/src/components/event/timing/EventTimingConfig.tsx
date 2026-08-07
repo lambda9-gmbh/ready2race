@@ -1,4 +1,4 @@
-import {Alert, Box, Card, Divider, Stack, Typography} from '@mui/material'
+import {Alert, Box, Divider, Stack, Typography} from '@mui/material'
 import {FormContainer, useForm, useWatch} from 'react-hook-form-mui'
 import {Trans, useTranslation} from 'react-i18next'
 import {useState} from 'react'
@@ -69,7 +69,14 @@ const EventTimingConfig = () => {
     const timingSystem = useWatch({control: formContext.control, name: 'timingSystem'})
 
     return (
-        <Card sx={{p: 3, maxWidth: 720}}>
+        // Kein Card-Rahmen: die Nachbarn im Einstellungen-Tab (Dokumente, Teilnahmebedingungen)
+        // sind blanke Abschnitte mit h2-Überschrift und Hinweistext darunter — siehe EntityTable.
+        // Eine Karte dazwischen sähe aus wie ein Fremdkörper aus einem anderen Bildschirm.
+        <Box id={'timing'}>
+            <Typography variant={'h2'}>{t('event.timing.title')}</Typography>
+            <Box sx={{color: 'text.secondary'}}>
+                <Trans i18nKey={'event.timing.hint'} />
+            </Box>
             <FormContainer
                 formContext={formContext}
                 onSuccess={async (data: EventTimingForm) => {
@@ -91,14 +98,7 @@ const EventTimingConfig = () => {
                         setLastSaved(Date.now())
                     }
                 }}>
-                <Stack spacing={4}>
-                    <Box>
-                        <Typography variant={'h6'}>{t('event.timing.title')}</Typography>
-                        <Typography variant={'body2'} color={'text.secondary'}>
-                            <Trans i18nKey={'event.timing.hint'} />
-                        </Typography>
-                    </Box>
-
+                <Stack spacing={4} sx={{maxWidth: 720, pt: 2}}>
                     <FormInputRadioButtonGroup
                         name={'timingSystem'}
                         label={t('event.timing.system')}
@@ -169,7 +169,7 @@ const EventTimingConfig = () => {
                     </Box>
                 </Stack>
             </FormContainer>
-        </Card>
+        </Box>
     )
 }
 
