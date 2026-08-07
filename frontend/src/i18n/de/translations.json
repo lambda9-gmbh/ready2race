@@ -1444,6 +1444,27 @@
         "secondsUnit": "s"
       }
     },
+    "match": {
+      "status": {
+        "upcoming": "Anstehend",
+        "overdue": "Überfällig · {{minutes}} min",
+        "running": "Läuft · {{minutes}} min",
+        "runningPlain": "Läuft",
+        "partiallyScored": "Teilweise gewertet {{scored}}/{{total}}",
+        "awaitingFinish": "Wartet auf Beenden",
+        "finished": "Beendet",
+        "cancelled": "Abgesagt",
+        "unscheduled": "Ungeplant",
+        "water": "Wasser {{onWater}}/{{total}}",
+        "doesNotTakePlace": "Findet nicht statt",
+        "counter": {
+          "running": "{{n}} läuft",
+          "open": "{{n}} offen",
+          "finished": "{{n}} beendet",
+          "cancelled": "{{n}} abgesagt"
+        }
+      }
+    },
     "liveDashboard": {
       "sectionTitle": "Schiedsrichter-Dashboard",
       "pageDescription": "Live-Ansicht für Schiedsrichter mit laufenden und anstehenden Läufen, Teilnahmebedingungen und Rechnungsstatus.",

@@ -183,6 +183,10 @@ export type AthleteBoardMatch = {
      * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
      */
     name?: string | null
+    /**
+     * the match is cancelled ('does not take place'). It stays at its planned position in the upcoming block anyway - a crew waiting at the pontoon cannot tell a match that vanished without a trace from a display error. teams is then always empty
+     */
+    cancelled: boolean
 }
 
 export type AthleteBoardParticipant = {
@@ -460,12 +464,28 @@ export type CompetitionMatchDto = {
     teams: Array<CompetitionMatchTeamDto>
     weighting: number
     executionOrder: number
+    /**
+     * Planned start from the schedule.
+     */
     startTime?: string
     /**
      * Offset between the starts of consecutive teams, in seconds
      */
     startTimeOffset?: number
     currentlyRunning: boolean
+    /**
+     * Actual start - null while nobody started the match.
+     */
+    startedAt?: string
+    /**
+     * Persisted end. Set means exclusively that somebody finished the match.
+     */
+    finishedAt?: string
+    /**
+     * The schedule slot of this match was cancelled.
+     */
+    skipped: boolean
+    status: MatchStatusDto
 }
 
 export type CompetitionMatchTeamDto = {
@@ -1275,6 +1295,14 @@ export type EventScheduleSlotDto = {
      * Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot
      */
     matchCurrentlyRunning: boolean
+    /**
+     * Teams of the linked match that are still in the race (without the OUT rows carried over from the previous round) - 0 without a linked match
+     */
+    matchTeamsTotal: number
+    /**
+     * Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own
+     */
+    matchTeamsScored: number
 }
 
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
@@ -1725,6 +1753,28 @@ export type MatchResultTeamInfo = {
 export type MatchResultType = 'DISTANCE'
 
 export type MatchStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
+
+/**
+ * The derived state of a match, read by every surface - one derivation, three callers (execution page, schedule, referee dashboard).
+ *
+ * "Overdue" and "partially scored" are deliberately NOT states of their own but readings of these fields: partially scored is state != RUNNING && 0 < teamsScored < teamsTotal, overdue is state == UPCOMING && startTime + 5 min < now. Elapsed minutes and overdueness are computed in the frontend against the browser clock so the chip keeps counting between two polls.
+ */
+export type MatchStatusDto = {
+    state: LiveDashboardMatchState
+    /**
+     * Actual start - null while nobody started the match.
+     */
+    startedAt?: string
+    teamsTotal: number
+    /**
+     * Scored means: deregistered OR place set OR failed - the same rule the referee dashboard uses.
+     */
+    teamsScored: number
+    /**
+     * null = not collected in this view (schedule, public boards).
+     */
+    teamsOnWater?: number
+}
 
 export type MatchTeamInfo = {
     teamId: string
@@ -2672,6 +2722,10 @@ export type UpcomingCompetitionMatchInfo = {
      * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
      */
     name?: string | null
+    /**
+     * the schedule slot of this match was cancelled. The match stays in the list anyway - a match that vanishes without a trace is indistinguishable from a display error for the crew waiting at the pontoon. teams is then always empty
+     */
+    cancelled: boolean
 }
 
 export type UpcomingMatchParticipantInfo = {

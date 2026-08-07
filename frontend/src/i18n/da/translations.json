@@ -1444,6 +1444,27 @@
         "secondsUnit": "sek"
       }
     },
+    "match": {
+      "status": {
+        "upcoming": "Kommende",
+        "overdue": "Forsinket · {{minutes}} min",
+        "running": "I gang · {{minutes}} min",
+        "runningPlain": "I gang",
+        "partiallyScored": "Delvist bedømt {{scored}}/{{total}}",
+        "awaitingFinish": "Afventer afslutning",
+        "finished": "Afsluttet",
+        "cancelled": "Aflyst",
+        "unscheduled": "Ikke planlagt",
+        "water": "På vandet {{onWater}}/{{total}}",
+        "doesNotTakePlace": "Gennemføres ikke",
+        "counter": {
+          "running": "{{n}} i gang",
+          "open": "{{n}} åbne",
+          "finished": "{{n}} afsluttet",
+          "cancelled": "{{n}} aflyst"
+        }
+      }
+    },
     "liveDashboard": {
       "sectionTitle": "Dommer-dashboard",
       "pageDescription": "Live-visning for dommere med igangværende og kommende løb, deltagerkrav og fakturastatus.",
