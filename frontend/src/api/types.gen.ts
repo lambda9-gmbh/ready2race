@@ -6168,6 +6168,16 @@ export type ImportEventScheduleResponse = ScheduleImportResultDto
 
 export type ImportEventScheduleError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type DownloadEventScheduleImportTemplateData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type DownloadEventScheduleImportTemplateResponse = Blob | File
+
+export type DownloadEventScheduleImportTemplateError = BadRequestError | ApiError
+
 export type GetInfoViewsData = {
     path: {
         eventId: string

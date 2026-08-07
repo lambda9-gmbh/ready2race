@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {
     Alert,
@@ -7,6 +7,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    Link,
     Stack,
     Table,
     TableBody,
@@ -20,7 +21,7 @@ import {format} from 'date-fns'
 import BaseDialog from '@components/BaseDialog.tsx'
 import SelectFileButton from '@components/SelectFileButton.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
-import {importEventSchedule} from '@api/sdk.gen.ts'
+import {downloadEventScheduleImportTemplate, importEventSchedule} from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, ImportRowResultDto} from '@api/types.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
 import {hasBlockingImportRows, hasRunningOrFinishedSlots, importRowChipColor} from './common.ts'
@@ -56,6 +57,8 @@ const rowLabel = (row: ImportRowResultDto, t: (key: string, options?: object) =>
 const ScheduleImportDialog = ({eventId, open, onClose, reloadData, slots}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const [file, setFile] = useState<File | null>(null)
     const [rows, setRows] = useState<ImportRowResultDto[] | null>(null)
@@ -96,6 +99,24 @@ const ScheduleImportDialog = ({eventId, open, onClose, reloadData, slots}: Props
     const handleFileSelected = (selected: File) => {
         setFile(selected)
         void runPreview(selected)
+    }
+
+    // Die Beispieldatei kommt aus dem Backend, damit ihre Kopfzeile nicht von der abweichen kann,
+    // die der Import liest - siehe ScheduleImportTemplate.
+    const handleDownloadTemplate = async () => {
+        const {data, error} = await downloadEventScheduleImportTemplate({path: {eventId}})
+        const anchor = downloadRef.current
+
+        if (error || data === undefined || !anchor) {
+            feedback.error(t('event.schedule.importDialog.templateError'))
+            return
+        }
+
+        anchor.href = URL.createObjectURL(data)
+        anchor.download = 'zeitstrahl-import-beispiel.xlsx'
+        anchor.click()
+        anchor.href = ''
+        anchor.download = ''
     }
 
     // Der scharfe Import ist derselbe Request mit dryRun: false - siehe EventScheduleService.
@@ -146,6 +167,15 @@ const ScheduleImportDialog = ({eventId, open, onClose, reloadData, slots}: Props
                             {t('event.schedule.importDialog.choose')}
                         </SelectFileButton>
                         {file && <Typography>{file.name}</Typography>}
+                    </Stack>
+                    <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                        <Typography variant={'body2'} color={'text.secondary'}>
+                            {t('event.schedule.importDialog.templateHint')}
+                        </Typography>
+                        <Button size={'small'} onClick={handleDownloadTemplate}>
+                            {t('event.schedule.importDialog.template')}
+                        </Button>
+                        <Link ref={downloadRef} display={'none'}></Link>
                     </Stack>
                     {previewError && (
                         <Alert severity={'error'}>{t(previewError.key, previewError.values)}</Alert>

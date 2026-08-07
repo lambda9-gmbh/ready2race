@@ -1581,6 +1581,9 @@
       "importDialog": {
         "title": "Excel-Import",
         "choose": "Datei auswählen",
+        "templateHint": "Sie wissen nicht, wie die Datei aufgebaut sein muss?",
+        "template": "Beispieldatei herunterladen",
+        "templateError": "Die Beispieldatei konnte nicht heruntergeladen werden.",
         "replacesAll": "Der Import ersetzt alle vorhandenen Slots.",
         "runningWarning": "Der aktuelle Zeitplan enthält bereits gestartete oder beendete Läufe. Auch diese werden beim Import ersetzt.",
         "row": "Zeile",

@@ -1581,6 +1581,9 @@
       "importDialog": {
         "title": "Excel import",
         "choose": "Choose file",
+        "templateHint": "Not sure how the file needs to be structured?",
+        "template": "Download example file",
+        "templateError": "The example file could not be downloaded.",
         "replacesAll": "The import replaces all existing slots.",
         "runningWarning": "The current schedule already contains started or finished races. These will also be replaced by the import.",
         "row": "Row",
