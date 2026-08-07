@@ -72,13 +72,16 @@ const useNow = (intervalMs = 30_000): Date => {
  */
 const StatusChip = ({chip}: {chip: MatchChip | null}) => {
     const {t} = useTranslation()
+    // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur - dasselbe
+    // Muster wie `stateChipProps` in EventSchedule.tsx.
+    const translate = t as (key: string, values?: Record<string, string | number>) => string
     // null heißt "dieser Chip sagt hier nichts aus" (z.B. der Wasser-Chip ohne erhobene
     // Check-in-Daten) - dann gar nichts zeigen, statt eine leere Hülle.
     if (!chip) return null
     return (
         <Chip
             size={'small'}
-            label={t(chip.labelKey, chip.values)}
+            label={translate(chip.labelKey, chip.values)}
             color={chip.color}
             sx={chip.strikeThrough ? {textDecoration: 'line-through'} : undefined}
         />

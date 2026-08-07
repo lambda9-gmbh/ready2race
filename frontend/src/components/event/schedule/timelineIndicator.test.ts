@@ -26,6 +26,8 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     matchStartedAt: null,
     matchFinishedAt: null,
     matchCurrentlyRunning: false,
+    matchTeamsTotal: 0,
+    matchTeamsScored: 0,
     ...over,
 })
 
