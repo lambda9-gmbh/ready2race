@@ -1055,7 +1055,8 @@
               "error": "Den automatiske hentning driller: {{reason}}",
               "paused": "Automatisk hentning sat på pause — resultater blev indtastet manuelt.",
               "resume": "Genoptag automatisk hentning",
-              "resumed": "Den automatiske hentning er aktiv igen."
+              "resumed": "Den automatiske hentning er aktiv igen.",
+              "duplicateTeams": "RaceClocker har dublerede besætninger. Hentning med knappen viser hvilke."
             }
           }
         },

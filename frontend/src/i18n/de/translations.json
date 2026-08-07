@@ -1055,7 +1055,8 @@
               "error": "Automatischer Abruf klemmt: {{reason}}",
               "paused": "Automatischer Abruf pausiert — es wurde von Hand eingetragen.",
               "resume": "Automatik wieder aufnehmen",
-              "resumed": "Der automatische Abruf ist wieder aktiv."
+              "resumed": "Der automatische Abruf ist wieder aktiv.",
+              "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden. Welche, zeigt der Abruf über den Knopf."
             }
           }
         },

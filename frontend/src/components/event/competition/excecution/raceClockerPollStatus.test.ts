@@ -55,4 +55,16 @@ describe('raceClockerPollStatus', () => {
         expect(status.kind).toBe('error')
         expect(status.errorKey).toBeUndefined()
     })
+
+    it('nutzt für RACECLOCKER_DUPLICATE_TEAMS den Abruf-spezifischen Text, nicht den Knopf-Text', () => {
+        const status = raceClockerPollStatus({
+            raceClockerPolledAt: '2026-08-14T10:03:12',
+            raceClockerPollError: 'RACECLOCKER_DUPLICATE_TEAMS',
+            raceClockerAutoPausedAt: null,
+        })
+
+        expect(status.kind).toBe('error')
+        expect(status.errorKey).toBeDefined()
+        expect(status.errorKey).not.toBe('event.competition.execution.results.raceclocker.error.duplicateTeams')
+    })
 })

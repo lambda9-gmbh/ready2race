@@ -1,4 +1,4 @@
-import {ExecutionErrorKey, raceClockerKeys} from './executionError.ts'
+import {ExecutionErrorKey, raceClockerKeys, raceClockerPollKeys} from './executionError.ts'
 
 export type RaceClockerPollStatus = {
     kind: 'none' | 'ok' | 'error' | 'paused'
@@ -26,8 +26,10 @@ const errorKeyFor = (code: string): ExecutionErrorKey | undefined => {
             return raceClockerKeys.unreachable
         case 'RACECLOCKER_MATCH_NOT_IN_FEED':
             return raceClockerKeys.matchNotInFeed
+        // Der Abruf-Job speichert nur den Code, nicht die Details — die Mannschaftsnamen aus der Fehlermeldung
+        // des Knopfs stehen nicht zur Verfügung. Daher nutzen wir hier einen anderen Text ohne {{teams}}-Platzhalter.
         case 'RACECLOCKER_DUPLICATE_TEAMS':
-            return raceClockerKeys.duplicateTeams
+            return raceClockerPollKeys.duplicateTeams
         case 'RACECLOCKER_NO_RESULTS':
             return raceClockerKeys.noResults
         case 'RACECLOCKER_MATCH_IS_BYE':

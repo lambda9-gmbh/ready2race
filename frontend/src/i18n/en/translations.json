@@ -1055,7 +1055,8 @@
               "error": "Automatic pull is stuck: {{reason}}",
               "paused": "Automatic pull paused — results were entered by hand.",
               "resume": "Resume automatic pull",
-              "resumed": "The automatic pull is active again."
+              "resumed": "The automatic pull is active again.",
+              "duplicateTeams": "RaceClocker has duplicate crews. Pulling with the button shows which ones."
             }
           }
         },
