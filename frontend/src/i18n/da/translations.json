@@ -1129,9 +1129,12 @@
         "system": "Tidtagningssystem",
         "systems": {
           "none": "ikke angivet",
+          "inherited": "Arrangementets standard ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
+        "inheritedHint": "Denne konkurrence bruger arrangementets tidtagning. Adresserne nedenfor er kun nødvendige, hvis den har sit eget RaceClocker-løb – ellers lad dem stå tomme.",
+        "inheritedUrl": "Arrangementets standard: {{url}}",
         "raceclockerHint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
         "timeTrialUrl": "Resultatadresse for enkeltstart",
         "heatsUrl": "Resultatadresse for heat",
@@ -1312,6 +1315,21 @@
       "actions": "Handlinger",
       "organisation": "Organisation",
       "invoices": "Fakturaer"
+    },
+    "timing": {
+      "title": "Tidtagning",
+      "hint": "Gælder for alle konkurrencer i dette arrangement. En enkelt konkurrence kan angive sine egne værdier i sin tidtagningsfane og dermed afvige bevidst.",
+      "system": "Tidtagningssystem",
+      "systems": {
+        "none": "ikke angivet",
+        "raceclocker": "RaceClocker",
+        "webscorer": "Webscorer"
+      },
+      "raceclockerHint": "RaceClocker kræver to løb: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunderne og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her – de gælder så for hele arrangementet.",
+      "timeTrialUrl": "Resultatadresse for enkeltstart",
+      "heatsUrl": "Resultatadresse for heat",
+      "saved": "Tidtagningsstandard gemt",
+      "invalid": "Angiv venligst adresser på raceclocker.com."
     },
     "info": {
       "infoPage": "Info-visning",

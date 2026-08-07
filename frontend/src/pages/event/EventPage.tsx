@@ -72,6 +72,7 @@ import ParticipantTrackingLogTable from '@components/event/participantTracking/P
 import EventRegistrations from '@components/event/competition/registration/EventRegistrations.tsx'
 import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
 import RatingCategoriesForEvent from '@components/ratingCategory/RatingCategoriesForEvent.tsx'
+import EventTimingConfig from '@components/event/timing/EventTimingConfig.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import AwardCertificateDialog from '@components/awardCertificate/AwardCertificateDialog.tsx'
 import WorkspacePremium from '@mui/icons-material/WorkspacePremium'
@@ -488,6 +489,7 @@ const EventPage = () => {
                         <TabPanel index={'settings'} activeTab={activeTab}>
                             <Stack spacing={4}>
                                 <RatingCategoriesForEvent/>
+                                <EventTimingConfig />
                                 <DocumentTable
                                     {...documentAdministrationProps.table}
                                     title={t('event.document.documents')}

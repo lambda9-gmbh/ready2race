@@ -180,6 +180,12 @@ import type {
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
+    GetEventTimingConfigData,
+    GetEventTimingConfigError,
+    GetEventTimingConfigResponse,
+    UpdateEventTimingConfigData,
+    UpdateEventTimingConfigError,
+    UpdateEventTimingConfigResponse,
     GetTimingConfigData,
     GetTimingConfigError,
     GetTimingConfigResponse,
@@ -1521,6 +1527,35 @@ export const updateMatchResults = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results',
+    })
+}
+
+/**
+ * The event-wide timing defaults - inherited by every competition without its own values.
+ */
+export const getEventTimingConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventTimingConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventTimingConfigResponse,
+        GetEventTimingConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/timing-config',
+    })
+}
+
+export const updateEventTimingConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateEventTimingConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateEventTimingConfigResponse,
+        UpdateEventTimingConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/timing-config',
     })
 }
 

@@ -1129,9 +1129,12 @@
         "system": "Timing system",
         "systems": {
           "none": "not set",
+          "inherited": "Event default ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
+        "inheritedHint": "This competition uses the event's timing setup. The addresses below are only needed if it has a RaceClocker race of its own – otherwise leave them empty.",
+        "inheritedUrl": "Event default: {{url}}",
         "raceclockerHint": "RaceClocker needs two races per competition: one of type \"individual starts (time trial)\" for the qualification round and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here. ready2race determines by itself which one applies to a given heat.",
         "timeTrialUrl": "Results address for time trial",
         "heatsUrl": "Results address for heats",
@@ -1312,6 +1315,21 @@
       "actions": "Actions",
       "organisation": "Organisation",
       "invoices": "Invoices"
+    },
+    "timing": {
+      "title": "Timing",
+      "hint": "Applies to every competition of this event. A single competition can enter its own values in its timing tab and deviate deliberately.",
+      "system": "Timing system",
+      "systems": {
+        "none": "not set",
+        "raceclocker": "RaceClocker",
+        "webscorer": "Webscorer"
+      },
+      "raceclockerHint": "RaceClocker needs two races: one of type \"individual starts (time trial)\" for the qualification rounds and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here – they then apply to the whole event.",
+      "timeTrialUrl": "Results address for time trial",
+      "heatsUrl": "Results address for heats",
+      "saved": "Timing defaults saved",
+      "invalid": "Please enter addresses on raceclocker.com."
     },
     "info": {
       "infoPage": "Info Display",

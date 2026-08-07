@@ -48,12 +48,18 @@ object CompetitionMatchRepo {
      * a real countdown in RaceClocker.
      */
     fun getForRaceClockerPull(id: UUID) = Jooq.query {
+        // Wettkampf-Wert vor Veranstaltungs-Voreinstellung (Migration V202608062100): die
+        // RaceClocker-Rennen werden pro Veranstaltung angelegt, einzelne Wettkaempfe koennen mit
+        // eigenen URLs ausscheren.
+        val timeTrialUrl = DSL.coalesce(COMPETITION.RACECLOCKER_TT_RESULTS_URL, EVENT.RACECLOCKER_TT_RESULTS_URL).`as`("time_trial_url")
+        val heatsUrl = DSL.coalesce(COMPETITION.RACECLOCKER_HEATS_RESULTS_URL, EVENT.RACECLOCKER_HEATS_RESULTS_URL).`as`("heats_url")
+
         select(
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
-            COMPETITION.RACECLOCKER_TT_RESULTS_URL,
-            COMPETITION.RACECLOCKER_HEATS_RESULTS_URL,
+            timeTrialUrl,
+            heatsUrl,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -63,14 +69,15 @@ object CompetitionMatchRepo {
             .join(COMPETITION_PROPERTIES)
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne {
                 RaceClockerMatchTarget(
                     waveName = WaveName.format(it[COMPETITION_SETUP_MATCH.NAME], it[COMPETITION_MATCH.START_TIME]),
                     // Not null in the schema; the projection just loses that guarantee.
                     isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
-                    timeTrialUrl = it[COMPETITION.RACECLOCKER_TT_RESULTS_URL],
-                    heatsUrl = it[COMPETITION.RACECLOCKER_HEATS_RESULTS_URL],
+                    timeTrialUrl = it[timeTrialUrl],
+                    heatsUrl = it[heatsUrl],
                 )
             }
     }
@@ -81,9 +88,12 @@ object CompetitionMatchRepo {
      * RaceClocker pro Wettkampf zwei Rennen mit unterschiedlichen Spalten braucht.
      */
     fun getStartListConfigTarget(id: UUID) = Jooq.query {
+        // Wettkampf-Wert vor Veranstaltungs-Voreinstellung, wie in getForRaceClockerPull.
+        val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM).`as`("timing_system")
+
         select(
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
-            COMPETITION.TIMING_SYSTEM,
+            timingSystem,
             COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
             COMPETITION.STARTLIST_CONFIG_ROUNDS,
         )
@@ -95,6 +105,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION_PROPERTIES)
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne {
                 StartListConfigTarget(
@@ -103,7 +114,7 @@ object CompetitionMatchRepo {
                     // Als Text gespeichert, kein jOOQ-Converter in diesem Projekt -- von Hand
                     // konvertiert wie EventRepo.getChainProgressionMode. null ist hier legitim:
                     // es bedeutet "kein Zeitnahmesystem gesetzt".
-                    timingSystem = it[COMPETITION.TIMING_SYSTEM]?.let { s -> TimingSystem.valueOf(s) },
+                    timingSystem = it[timingSystem]?.let { s -> TimingSystem.valueOf(s) },
                     qualificationConfig = it[COMPETITION.STARTLIST_CONFIG_QUALIFICATION],
                     roundsConfig = it[COMPETITION.STARTLIST_CONFIG_ROUNDS],
                 )

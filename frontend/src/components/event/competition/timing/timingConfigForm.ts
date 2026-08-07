@@ -22,6 +22,15 @@ export type TimingForm = {
      * `mapTimingFormToRequest` lässt das Feld aus, es wird nie zurückgeschrieben.
      */
     hasQualificationRound: boolean
+    /**
+     * Ebenfalls nur mitgeführt: die Zeitnahme-Voreinstellung der Veranstaltung. Die RaceClocker-Rennen
+     * werden pro Veranstaltung angelegt, deshalb erben Wettkämpfe System und URLs von dort, solange die
+     * eigenen Felder leer sind. Die Oberfläche zeigt damit an, WAS geerbt würde, und die Warnungen
+     * rechnen auf den effektiven Werten ([effectiveTimingSystem]) statt auf den lokalen.
+     */
+    eventTimingSystem: TimingFormSystem
+    eventTimeTrialResultsUrl: string
+    eventHeatsResultsUrl: string
 }
 
 export const emptyTimingForm: TimingForm = {
@@ -32,7 +41,14 @@ export const emptyTimingForm: TimingForm = {
     startlistConfigRounds: null,
     resultImportConfig: null,
     hasQualificationRound: false,
+    eventTimingSystem: 'NONE',
+    eventTimeTrialResultsUrl: '',
+    eventHeatsResultsUrl: '',
 }
+
+/** Wettkampf-Wert vor Veranstaltungs-Voreinstellung — dieselbe Regel wie das Backend (coalesce). */
+export const effectiveTimingSystem = (form: TimingForm): TimingFormSystem =>
+    form.timingSystem !== 'NONE' ? form.timingSystem : form.eventTimingSystem
 
 /**
  * Die Preset-Felder kommen als reine UUID aus dem Backend. Das Label füllt die Komponente nach, sobald
@@ -50,6 +66,9 @@ export const mapDtoToTimingForm = (dto: TimingConfigDto): TimingForm => ({
         : null,
     resultImportConfig: dto.resultImportConfig ? {id: dto.resultImportConfig, label: ''} : null,
     hasQualificationRound: dto.hasQualificationRound ?? false,
+    eventTimingSystem: dto.eventTimingSystem ?? 'NONE',
+    eventTimeTrialResultsUrl: dto.eventTimeTrialResultsUrl ?? '',
+    eventHeatsResultsUrl: dto.eventHeatsResultsUrl ?? '',
 })
 
 const trimmedOrNull = (value: string): string | null => value.trim() || null
@@ -59,8 +78,11 @@ const trimmedOrNull = (value: string): string | null => value.trim() || null
  * eine unsichtbare URL oder ein unsichtbares Preset wäre eine Einstellung, die niemand mehr findet.
  */
 export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest => {
-    const raceClocker = form.timingSystem === 'RACECLOCKER'
-    const configured = form.timingSystem !== 'NONE'
+    // Effektiv statt lokal: erbt der Wettkampf RaceClocker von der Veranstaltung, sind die
+    // URL-Felder sichtbar und ihre Eingaben sind gezielte Overrides — die dürfen nicht beim
+    // Speichern verschwinden, nur weil das lokale System-Feld auf "NONE" (= erben) steht.
+    const raceClocker = effectiveTimingSystem(form) === 'RACECLOCKER'
+    const configured = effectiveTimingSystem(form) !== 'NONE'
 
     return {
         timingSystem: form.timingSystem === 'NONE' ? null : form.timingSystem,
@@ -93,15 +115,19 @@ export type TimingWarning =
  * und fällt für die Qualifikation darauf zurück (siehe StartListConfigTarget im Backend).
  */
 export const timingConfigWarnings = (form: TimingForm): TimingWarning[] => {
-    if (form.timingSystem === 'NONE') return []
+    // Auf den effektiven Werten gerechnet: was die Veranstaltung vorbelegt, fehlt nicht.
+    const system = effectiveTimingSystem(form)
+    if (system === 'NONE') return []
 
-    const raceClocker = form.timingSystem === 'RACECLOCKER'
+    const raceClocker = system === 'RACECLOCKER'
+    const heatsUrl = form.heatsResultsUrl.trim() || form.eventHeatsResultsUrl.trim()
+    const timeTrialUrl = form.timeTrialResultsUrl.trim() || form.eventTimeTrialResultsUrl.trim()
 
     const warnings: TimingWarning[] = []
-    if (raceClocker && !form.heatsResultsUrl.trim()) {
+    if (raceClocker && !heatsUrl) {
         warnings.push('heatsUrl')
     }
-    if (raceClocker && form.hasQualificationRound && !form.timeTrialResultsUrl.trim()) {
+    if (raceClocker && form.hasQualificationRound && !timeTrialUrl) {
         warnings.push('timeTrialUrl')
     }
     if (!form.startlistConfigRounds) {

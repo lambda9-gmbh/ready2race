@@ -16,12 +16,20 @@ import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import InlineLink from '@components/InlineLink.tsx'
 import {
+    effectiveTimingSystem,
     emptyTimingForm,
     mapDtoToTimingForm,
     mapTimingFormToRequest,
     TimingForm,
     timingConfigWarnings,
 } from './timingConfigForm.ts'
+
+/** Ausgeschrieben statt zusammengesetzt, damit die i18n-Schlüssel typgeprüft bleiben. */
+const systemLabelKeys = {
+    NONE: 'event.competition.timing.systems.none',
+    RACECLOCKER: 'event.competition.timing.systems.raceclocker',
+    WEBSCORER: 'event.competition.timing.systems.webscorer',
+} as const
 
 /**
  * Die Zeitnahme-Einstellungen eines Wettkampfs: mit welchem Fremdsystem er arbeitet, unter welchen
@@ -83,6 +91,14 @@ const CompetitionTimingConfig = () => {
     const formValues = useWatch<TimingForm>({control: formContext.control}) as TimingForm
     const warnings = timingConfigWarnings(formValues)
 
+    // Was tatsächlich gilt: der eigene Wert, sonst die Voreinstellung der Veranstaltung. Die
+    // Abschnitte unten richten sich danach, sonst verschwände bei „erben" die halbe Seite, obwohl
+    // der Wettkampf sehr wohl mit RaceClocker fährt.
+    const effectiveSystem = effectiveTimingSystem(formValues)
+    const inheritsSystem = timingSystem === 'NONE' && formValues.eventTimingSystem !== 'NONE'
+    const inheritedUrl = (url: string) =>
+        url ? {helperText: t('event.competition.timing.inheritedUrl', {url})} : {}
+
     return (
         <Card sx={{p: 3, maxWidth: 720}}>
             <FormContainer
@@ -111,7 +127,18 @@ const CompetitionTimingConfig = () => {
                         label={t('event.competition.timing.system')}
                         row
                         options={[
-                            {id: 'NONE', label: t('event.competition.timing.systems.none')},
+                            {
+                                id: 'NONE',
+                                // „nicht gesetzt" wäre falsch, sobald die Veranstaltung etwas
+                                // vorgibt: dann ist dieselbe Auswahl ein bewusstes „erben".
+                                label: inheritsSystem
+                                    ? t('event.competition.timing.systems.inherited', {
+                                          system: t(
+                                              systemLabelKeys[formValues.eventTimingSystem],
+                                          ),
+                                      })
+                                    : t('event.competition.timing.systems.none'),
+                            },
                             {
                                 id: 'RACECLOCKER',
                                 label: t('event.competition.timing.systems.raceclocker'),
@@ -136,25 +163,32 @@ const CompetitionTimingConfig = () => {
                         </Alert>
                     )}
 
-                    {timingSystem === 'RACECLOCKER' && (
+                    {effectiveSystem === 'RACECLOCKER' && (
                         <Stack spacing={4}>
                             <Alert variant={'outlined'} severity={'info'}>
                                 <Trans i18nKey={'event.competition.timing.raceclockerHint'} />
                             </Alert>
+                            {inheritsSystem && (
+                                <Alert variant={'outlined'} severity={'info'}>
+                                    <Trans i18nKey={'event.competition.timing.inheritedHint'} />
+                                </Alert>
+                            )}
                             <FormInputText
                                 name={'timeTrialResultsUrl'}
                                 label={t('event.competition.timing.timeTrialUrl')}
+                                {...inheritedUrl(formValues.eventTimeTrialResultsUrl)}
                             />
                             <FormInputText
                                 name={'heatsResultsUrl'}
                                 label={t('event.competition.timing.heatsUrl')}
+                                {...inheritedUrl(formValues.eventHeatsResultsUrl)}
                             />
                         </Stack>
                     )}
 
-                    {timingSystem !== 'NONE' && (
+                    {effectiveSystem !== 'NONE' && (
                         <Stack spacing={4}>
-                            {timingSystem === 'RACECLOCKER' && (
+                            {effectiveSystem === 'RACECLOCKER' && (
                                 <FormInputAutocomplete
                                     name={'startlistConfigQualification'}
                                     options={startListConfigs ?? []}
@@ -167,7 +201,7 @@ const CompetitionTimingConfig = () => {
                                 options={startListConfigs ?? []}
                                 loading={startListConfigsPending}
                                 label={t(
-                                    timingSystem === 'RACECLOCKER'
+                                    effectiveSystem === 'RACECLOCKER'
                                         ? 'event.competition.timing.startlistRounds'
                                         : 'event.competition.timing.startlist',
                                 )}
@@ -180,7 +214,7 @@ const CompetitionTimingConfig = () => {
                                 die beiden Ergebnis-Adressen darüber, dieser die Presets darunter.
                                 Nur bei RaceClocker, weil Webscorer weder „Extra info" noch einen
                                 Spaltenmapper kennt — dort zeigte der Hinweis ins Leere. */}
-                            {timingSystem === 'RACECLOCKER' && (
+                            {effectiveSystem === 'RACECLOCKER' && (
                                 <Alert variant={'outlined'} severity={'info'}>
                                     <Trans i18nKey={'event.competition.timing.importHint'} />
                                 </Alert>

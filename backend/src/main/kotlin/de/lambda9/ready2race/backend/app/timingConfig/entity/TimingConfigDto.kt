@@ -18,4 +18,13 @@ data class TimingConfigDto(
      * [de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListConfigTarget]).
      */
     val hasQualificationRound: Boolean,
+    /**
+     * Die Zeitnahme-Voreinstellung der Veranstaltung (Migration V202608062100): RaceClocker-Rennen
+     * werden pro Veranstaltung angelegt, deshalb erben Wettkaempfe System und URLs von dort. Die
+     * Felder oben sind der lokale Override (null = geerbt); diese drei zeigen der Oberflaeche, WAS
+     * geerbt wuerde.
+     */
+    val eventTimingSystem: TimingSystem?,
+    val eventTimeTrialResultsUrl: String?,
+    val eventHeatsResultsUrl: String?,
 )

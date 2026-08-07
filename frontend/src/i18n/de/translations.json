@@ -1129,9 +1129,12 @@
         "system": "Zeitnahme-System",
         "systems": {
           "none": "nicht gesetzt",
+          "inherited": "Vorgabe der Veranstaltung ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
+        "inheritedHint": "Dieser Wettkampf übernimmt die Zeitnahme der Veranstaltung. Die Adressen unten sind nur nötig, wenn er ein eigenes RaceClocker-Rennen hat — sonst leer lassen.",
+        "inheritedUrl": "Vorgabe der Veranstaltung: {{url}}",
         "raceclockerHint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
         "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
         "heatsUrl": "Ergebnis-Adresse Läufe",
@@ -1312,6 +1315,21 @@
       "actions": "Aktionen",
       "organisation": "Organisation",
       "invoices": "Rechnungen"
+    },
+    "timing": {
+      "title": "Zeitnahme",
+      "hint": "Gilt für alle Wettkämpfe dieser Veranstaltung. Ein einzelner Wettkampf kann in seinem Zeitnahme-Tab eigene Werte eintragen und weicht damit gezielt ab.",
+      "system": "Zeitnahme-System",
+      "systems": {
+        "none": "nicht gesetzt",
+        "raceclocker": "RaceClocker",
+        "webscorer": "Webscorer"
+      },
+      "raceclockerHint": "RaceClocker braucht zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunden und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein — sie gelten dann für die ganze Veranstaltung.",
+      "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
+      "heatsUrl": "Ergebnis-Adresse Läufe",
+      "saved": "Zeitnahme-Voreinstellung gespeichert",
+      "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
     },
     "info": {
       "infoPage": "Info-Anzeige",

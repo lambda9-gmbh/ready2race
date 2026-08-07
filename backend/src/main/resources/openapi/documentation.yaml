@@ -1587,6 +1587,52 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/timing-config:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventTimingConfig
+      description: The event-wide timing defaults - inherited by every competition without its own values.
+      responses:
+        200:
+          description: Event timing configuration successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTimingConfigDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateEventTimingConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTimingConfigRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/timing-config:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -11933,6 +11979,51 @@ components:
             with the timing config because both the timing tab and the execution tab already load it,
             and both need to know whether the qualification start list preset and the time trial
             results URL are required at all.
+        eventTimingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
+          description: Event-wide default timing system; the competition inherits it while its own field is null.
+        eventTimeTrialResultsUrl:
+          type: string
+          nullable: true
+          description: Event-wide default time trial results URL; inherited while the competition's own field is null.
+        eventHeatsResultsUrl:
+          type: string
+          nullable: true
+          description: Event-wide default heats results URL; inherited while the competition's own field is null.
+
+    EventTimingConfigDto:
+      type: object
+      description: >
+        Event-wide timing defaults. RaceClocker races are created per event, so the timing system and
+        the two results URLs live here once and every competition without its own values inherits
+        them. Column presets stay per competition - they depend on the concrete start list.
+      properties:
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
+        timeTrialResultsUrl:
+          type: string
+          nullable: true
+        heatsResultsUrl:
+          type: string
+          nullable: true
+
+    EventTimingConfigRequest:
+      type: object
+      description: >
+        Every field is optional, like the per-competition config. The URLs must be https URLs on
+        raceclocker.com.
+      properties:
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
+        timeTrialResultsUrl:
+          type: string
+          nullable: true
+        heatsResultsUrl:
+          type: string
+          nullable: true
 
     TimingSystem:
       type: string

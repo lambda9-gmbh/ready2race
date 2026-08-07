@@ -1263,6 +1263,26 @@ export type EventScheduleSlotDto = {
 
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
 
+/**
+ * Event-wide timing defaults. RaceClocker races are created per event, so the timing system and the two results URLs live here once and every competition without its own values inherits them. Column presets stay per competition - they depend on the concrete start list.
+ *
+ */
+export type EventTimingConfigDto = {
+    timingSystem?: TimingSystem | null
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+}
+
+/**
+ * Every field is optional, like the per-competition config. The URLs must be https URLs on raceclocker.com.
+ *
+ */
+export type EventTimingConfigRequest = {
+    timingSystem?: TimingSystem | null
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+}
+
 export type FeeDto = {
     id: string
     name: string
@@ -2530,6 +2550,18 @@ export type TimingConfigDto = {
      *
      */
     hasQualificationRound?: boolean
+    /**
+     * Event-wide default timing system; the competition inherits it while its own field is null.
+     */
+    eventTimingSystem?: TimingSystem | null
+    /**
+     * Event-wide default time trial results URL; inherited while the competition's own field is null.
+     */
+    eventTimeTrialResultsUrl?: string | null
+    /**
+     * Event-wide default heats results URL; inherited while the competition's own field is null.
+     */
+    eventHeatsResultsUrl?: string | null
 }
 
 /**
@@ -3791,6 +3823,27 @@ export type UpdateMatchResultsData = {
 export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetEventTimingConfigData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventTimingConfigResponse = EventTimingConfigDto
+
+export type GetEventTimingConfigError = BadRequestError | ApiError
+
+export type UpdateEventTimingConfigData = {
+    body: EventTimingConfigRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type UpdateEventTimingConfigResponse = void
+
+export type UpdateEventTimingConfigError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetTimingConfigData = {
     path: {

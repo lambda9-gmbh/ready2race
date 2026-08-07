@@ -5,7 +5,11 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
+import de.lambda9.ready2race.backend.app.timingConfig.entity.EventTimingConfigDto
+import de.lambda9.ready2race.backend.app.timingConfig.entity.EventTimingConfigRequest
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingConfigDto
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingConfigRequest
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
@@ -28,6 +32,9 @@ object TimingConfigService {
 
         val hasQualificationRound = !CompetitionSetupRoundRepo.existsQualificationRound(competitionId).orDie()
 
+        val event = !EventRepo.get(competition.event!!).orDie()
+            .onNullFail { EventError.NotFound }
+
         KIO.ok(
             ApiResponse.Dto(
                 TimingConfigDto(
@@ -38,9 +45,56 @@ object TimingConfigService {
                     startlistConfigRounds = competition.startlistConfigRounds,
                     resultImportConfig = competition.resultImportConfig,
                     hasQualificationRound = hasQualificationRound,
+                    eventTimingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
+                    eventTimeTrialResultsUrl = event.raceclockerTtResultsUrl,
+                    eventHeatsResultsUrl = event.raceclockerHeatsResultsUrl,
                 )
             )
         )
+    }
+
+    fun getEventTimingConfig(
+        eventId: UUID,
+    ): App<ServiceError, ApiResponse.Dto<EventTimingConfigDto>> = KIO.comprehension {
+
+        val event = !EventRepo.get(eventId).orDie()
+            .onNullFail { EventError.NotFound }
+
+        KIO.ok(
+            ApiResponse.Dto(
+                EventTimingConfigDto(
+                    timingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
+                    timeTrialResultsUrl = event.raceclockerTtResultsUrl,
+                    heatsResultsUrl = event.raceclockerHeatsResultsUrl,
+                )
+            )
+        )
+    }
+
+    fun updateEventTimingConfig(
+        eventId: UUID,
+        userId: UUID,
+        request: EventTimingConfigRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        // Dieselbe Normalisierung wie beim Wettkampf (siehe updateTimingConfig).
+        val timeTrialUrl = request.timeTrialResultsUrl?.trim()?.takeIf { it.isNotBlank() }
+            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
+        val heatsUrl = request.heatsResultsUrl?.trim()?.takeIf { it.isNotBlank() }
+            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
+
+        val event = !EventRepo.get(eventId).orDie()
+            .onNullFail { EventError.NotFound }
+
+        !EventRepo.update(event) {
+            timingSystem = request.timingSystem?.name
+            raceclockerTtResultsUrl = timeTrialUrl
+            raceclockerHeatsResultsUrl = heatsUrl
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
     }
 
     fun updateTimingConfig(
