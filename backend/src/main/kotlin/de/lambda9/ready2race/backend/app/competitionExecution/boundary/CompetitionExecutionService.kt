@@ -514,6 +514,24 @@ object CompetitionExecutionService {
 
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
+        checkUpdateMatchResult(setupRounds, matchId, byeError)
+    }
+
+    /**
+     * Dieselbe Prüfung mit bereits geholter Turnierstruktur.
+     *
+     * Für den automatischen Abruf (`RaceClockerPollService`): Er beobachtet mehrere Läufe desselben
+     * Wettkampfs gleichzeitig und holt [CompetitionSetupService.getSetupRoundsWithMatches] - zwei
+     * Abfragen plus den ganzen Baum aus Runden, Läufen und Mannschaften - deshalb einmal je Takt und
+     * Wettkampf statt einmal je Lauf. Die Sperre auf die aktuelle Runde bleibt dabei genau dieselbe
+     * wie beim Knopf; sie darf der Job nicht umgehen.
+     */
+    fun checkUpdateMatchResult(
+        setupRounds: List<CompetitionSetupRoundWithMatches>,
+        matchId: UUID,
+        byeError: ServiceError = CompetitionExecutionError.MatchIsBye,
+    ): App<ServiceError, CompetitionMatchWithTeams> = KIO.comprehension {
+
         !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }
             .find { it.id == matchId } == null) { CompetitionExecutionError.MatchNotFound }
 

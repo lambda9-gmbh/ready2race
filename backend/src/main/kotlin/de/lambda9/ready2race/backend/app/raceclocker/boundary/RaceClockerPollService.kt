@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollLogic.PollMode
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
@@ -21,6 +22,7 @@ import de.lambda9.tailwind.core.extensions.exit.fold
 import de.lambda9.tailwind.core.extensions.exit.getOrNull
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.recoverDefault
+import de.lambda9.tailwind.jooq.transact
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.coroutineScope
 import java.time.LocalDateTime
@@ -116,8 +118,21 @@ object RaceClockerPollService {
         val feeds = watched.flatMap { it.target.candidateUrls }.distinct()
             .associateWith { fetchRows(it) }
 
+        // Dieselbe Sparsamkeit auf der Datenbankseite: `getSetupRoundsWithMatches` sind zwei
+        // Abfragen plus der ganze Baum aus Runden, Läufen und Mannschaften. Acht beobachtete Läufe
+        // desselben Wettkampfs hätten ihn achtmal je Takt gelesen - einmal je Wettkampf reicht, der
+        // Stand kann sich innerhalb eines Taktes nicht ändern.
+        val setupRoundsByCompetition = mutableMapOf<UUID, List<CompetitionSetupRoundWithMatches>>()
+
         watched.forEach { candidate ->
-            val outcome = pollMatch(candidate, feeds, now)
+            val setupRounds = setupRoundsByCompetition.getOrPut(candidate.competitionId) {
+                // Ein Fehler der Turnierstruktur heißt für den Job dasselbe wie "Lauf nicht
+                // gefunden": Er überspringt ihn still. `orDie` wäre hier falsch - ein einzelner
+                // kaputter Wettkampf würde den ganzen Takt als Defekt beenden.
+                !CompetitionSetupService.getSetupRoundsWithMatches(candidate.competitionId)
+                    .recoverDefault { emptyList() }
+            }
+            val outcome = pollMatch(candidate, feeds, setupRounds, now)
             !RaceClockerPollRepo.recordPoll(candidate.matchId, now, outcome).orDie()
         }
     }
@@ -131,24 +146,40 @@ object RaceClockerPollService {
     private fun CoroutineComprehensionScope<Nothing>.pollMatch(
         candidate: RaceClockerPollCandidate,
         feeds: Map<String, FeedResult>,
+        setupRounds: List<CompetitionSetupRoundWithMatches>,
         now: LocalDateTime,
     ): String? {
-        // Dieselbe Reihenfolge wie beim Knopf: Die Runde entscheidet, welches Rennen zuerst
-        // versucht wird, das andere ist der Rückfall.
-        val results = candidate.target.candidateUrls.mapNotNull { feeds[it] }
-        val rows = results.firstNotNullOfOrNull { (it as? FeedResult.Rows)?.rows }
-            ?: return (results.firstOrNull() as? FeedResult.Failed)?.errorCode
-
-        val match = !CompetitionSetupService.getSetupRoundsWithMatches(candidate.competitionId)
-            .map { rounds -> rounds.flatMap { it.matches }.find { it.competitionSetupMatch == candidate.matchId } }
-            // Ein Fehler der Turnierstruktur heißt für den Job dasselbe wie "Lauf nicht gefunden":
-            // Er überspringt ihn still. `orDie` wäre hier falsch - ein einzelner kaputter Wettkampf
-            // würde den ganzen Takt als Defekt beenden.
+        // Dieselbe Sperre wie beim Knopf, und aus demselben Grund: `checkUpdateMatchResult` löst die
+        // aktuelle Runde auf und weist einen Lauf außerhalb davon ab. Ohne das würde der Job einen
+        // ersten Vorlauf, den niemand beendet hat, für immer weiter beschreiben - und damit Plätze
+        // überschreiben, aus denen die Setzung der nächsten Runde längst abgeleitet ist. Scheitert
+        // die Prüfung (gesperrt, Freilos, Struktur leer), überspringt der Job den Lauf still: das
+        // ist kein Abruf-Fehler, den die Oberfläche anzeigen müsste.
+        val match = !CompetitionExecutionService.checkUpdateMatchResult(setupRounds, candidate.matchId)
             .recoverDefault { null }
             ?: return null
 
         val teams = match.teams.filter { !it.deregistered }
-        val assigned = CompetitionExecutionService.assignedRowsFor(rows, teams, candidate.target.waveName)
+
+        // Dieselbe Reihenfolge wie beim Knopf: Die Runde entscheidet, welches Rennen zuerst versucht
+        // wird, das andere ist der Rückfall. Entscheidend ist wie dort, ob die Welle im Feed steht -
+        // nicht bloß, ob die Adresse geantwortet hat. Sonst gewönne bei einer als Zeitfahren
+        // gefahrenen, aber nicht als Qualifikation markierten Runde immer das erste, falsche Rennen,
+        // und der Lauf bliebe die ganze Regatta ohne Ergebnis. Ein weiterer Abruf kostet das nicht:
+        // Beide Adressen liegen bereits geholt in [feeds].
+        val fetched = candidate.target.candidateUrls.mapNotNull { feeds[it] }
+        val answered = fetched.filterIsInstance<FeedResult.Rows>()
+        val (rows, assigned) = answered
+            .firstNotNullOfOrNull { feed ->
+                CompetitionExecutionService.assignedRowsFor(feed.rows, teams, candidate.target.waveName)
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { feed.rows to it }
+            }
+            // Keine Adresse kennt die Welle: Es bleibt beim ersten geholten Rennen, damit der Lauf
+            // unten auf demselben Weg endet wie bisher - kein Treffer, kein Fehler.
+            ?: answered.firstOrNull()?.let { it.rows to emptyList<RaceClockerFeedRow>() }
+            // Gar keine Antwort: Das ist der Fehler, den die Oberfläche zeigen soll.
+            ?: return (fetched.firstOrNull() as? FeedResult.Failed)?.errorCode
 
         // Eine Welle, die in RaceClocker noch nicht angelegt ist, ist vor dem Start der Normalfall
         // und keine Störung.
@@ -175,8 +206,16 @@ object RaceClockerPollService {
         val fingerprint = RaceClockerPollLogic.fingerprint(assigned)
         if (fingerprints[candidate.matchId] == fingerprint) return null
 
+        // `transact()`, weil der Job im Gegensatz zum Endpunkt keine mitgebrachte Transaktion hat:
+        // `respondKIO` legt eine um den ganzen Aufruf, hier läuft jedes `!` für sich. Ohne die
+        // Klammer bliebe ein Lauf halb geschrieben zurück, sobald `applyRaceClockerRows` nach den
+        // ersten Schreibvorgängen scheitert - etwa mit MatchTeamNotFound, wenn die Plätze schon
+        // gelöscht und die Bahnen schon neu gesetzt sind. Und weil die Bahnvergabe die
+        // Startnummern zwischendurch negiert, sähe das Live-Dashboard sonst kurzzeitig einen Lauf
+        // mit lauter negativen Bahnen.
         val errorCode = !CompetitionExecutionService
             .applyRaceClockerRows(match, candidate.matchId, candidate.target, rows, SYSTEM_USER)
+            .transact()
             .map { null as String? }
             .recoverDefault { error -> error.respond().errorCode?.name }
 
