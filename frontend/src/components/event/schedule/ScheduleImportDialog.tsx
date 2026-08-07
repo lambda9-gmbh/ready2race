@@ -46,6 +46,16 @@ const rowLabel = (row: ImportRowResultDto, t: (key: string, options?: object) =>
             return t('event.schedule.importDialog.rowLinked', {target: row.targetLabel ?? ''})
         case 'FREE':
             return t('event.schedule.importDialog.rowFree')
+        case 'COMPETITION_NOT_FOUND':
+            return t('event.schedule.importDialog.rowCompetitionNotFound')
+        // Die vorhandenen Lauf-Namen sind der eigentliche Hinweis - ohne sie muss man im
+        // Wettkampf-Setup nachsehen, um den Tippfehler in der Datei zu finden.
+        case 'MATCH_NOT_FOUND':
+            return row.availableMatches.length > 0
+                ? t('event.schedule.importDialog.rowMatchNotFound', {
+                      available: row.availableMatches.join(', '),
+                  })
+                : t('event.schedule.importDialog.rowMatchNotFoundEmpty')
         case 'AMBIGUOUS':
             return t('event.schedule.importDialog.rowAmbiguous')
         case 'DUPLICATE':

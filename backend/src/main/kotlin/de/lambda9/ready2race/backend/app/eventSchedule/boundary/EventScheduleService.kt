@@ -632,14 +632,15 @@ object EventScheduleService {
         // Listen-Index - POI überspringt beim Iterieren leere Zeilen stillschweigend, mit einer
         // Leerzeile in der Datei würde Index + 2 sonst auf die falsche Excel-Zeile zeigen.
         val matched = parsedRows.map { row ->
-            val (status, setupMatchId) = ScheduleImport.matchRow(row.competition, row.lauf, candidates)
+            val match = ScheduleImport.matchRow(row.competition, row.lauf, candidates)
             ImportRowResult(
                 rowNumber = row.rowNumber,
                 startTime = row.startTime,
                 competitionText = row.competition,
                 laufText = row.lauf,
-                status = status,
-                setupMatchId = setupMatchId,
+                status = match.status,
+                setupMatchId = match.setupMatchId,
+                availableMatches = match.availableMatches,
             ) to row.duration
         }
 
@@ -668,6 +669,7 @@ object EventScheduleService {
                 } else {
                     null
                 },
+                availableMatches = result.availableMatches,
             )
         }
 
