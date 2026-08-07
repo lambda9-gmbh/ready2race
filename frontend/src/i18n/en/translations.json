@@ -508,6 +508,8 @@
           "error": "Error checking out participant"
         },
         "noTeamsFound": "No teams found",
+        "noCheckInOutNeeded": "no check-in/out needed",
+        "noCheckInOutForAnyTeam": "None of these entries use check-in/out.",
         "participantNotFound": "Participant not found",
         "errorReason": {
           "alreadyCheckedIn": "This person is already checked in — there is nothing left to do.",
@@ -615,6 +617,7 @@
       "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
+      "checkInOutRequired": "Requires check-in/out on the water",
       "challenge": {
         "configs": "Challenge configs",
         "resultConfirmationImageRequired": "Confirmation image for results required",
@@ -1537,7 +1540,8 @@
         "deregistered": "Deregistered",
         "failed": "Did not finish",
         "failedShort": "DNF",
-        "onWaterAt": "on water {{time}}"
+        "onWaterAt": "on water {{time}}",
+        "notOnWater": "Not on the water"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",
@@ -1552,6 +1556,28 @@
         "NOT_CHECKED": "Pending",
         "beforeStart": "{{delta}} before start",
         "afterStart": "{{delta}} after start"
+      },
+      "checkSeverity": {
+        "manage": "Manage checks",
+        "title": "Severity of checks",
+        "description": "Sets per competition how much an unmet check weighs.",
+        "setAll": "set all",
+        "uniform": "all: {{severity}}",
+        "mixed": "mixed",
+        "noCheckInOut": "no check-in/out required",
+        "noCompetitions": "This event has no competitions yet, so there is nothing to configure.",
+        "check": {
+          "INVOICE_OPEN": "Invoice open",
+          "NOT_ON_WATER": "Not on the water",
+          "REQUIREMENT_TIME_WINDOW": "Time window violated"
+        },
+        "severity": {
+          "OK": "OK (no effect)",
+          "WARNING": "Warning",
+          "CRITICAL": "Critical"
+        },
+        "saved": "Settings saved",
+        "saveError": "Settings could not be saved."
       }
     },
     "schedule": {

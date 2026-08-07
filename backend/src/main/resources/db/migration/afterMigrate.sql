@@ -208,6 +208,7 @@ select c.id,
        cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix_no_leading_zeros,
        cp.name,
        cp.short_name,
+       cp.check_in_out_required,
        cp.description,
        cp.late_registration_allowed,
        nps.total_count                                                           as total_count,
@@ -245,8 +246,8 @@ from competition c
          left join event_day_has_competition edhc on c.id = edhc.competition
          left join event_day ed on edhc.event_day = ed.id
          left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
-group by c.id, c.event, cp.id, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
-         cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+group by c.id, c.event, cp.id, cp.identifier, cp.name, cp.short_name, cp.check_in_out_required, cp.description,
+         cp.late_registration_allowed, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
          fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at, cp.rating_category_required
 ;
 
@@ -259,6 +260,7 @@ select c.id,
        cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix_no_leading_zeros,
        cp.name,
        cp.short_name,
+       cp.check_in_out_required,
        cp.description,
        cp.late_registration_allowed,
        nps.total_count                                                           as total_count,
@@ -295,8 +297,8 @@ from competition c
          cross join club cb
          left join competition_registration cr on c.id = cr.competition and cb.id = cr.club
          left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
-         cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.check_in_out_required, cp.description,
+         cp.late_registration_allowed, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
          fs.fees, cb.id, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at,
          cp.rating_category_required;
 
@@ -309,6 +311,7 @@ select c.id,
        cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix_no_leading_zeros,
        cp.name,
        cp.short_name,
+       cp.check_in_out_required,
        cp.description,
        cp.late_registration_allowed,
        nps.total_count                                                           as total_count,
@@ -343,8 +346,8 @@ from competition c
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
 where e.published is true
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
-         cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.check_in_out_required, cp.description,
+         cp.late_registration_allowed, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
          fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at, cp.rating_category_required;
 
 create view competition_template_view as
@@ -352,6 +355,7 @@ select ct.id,
        cp.identifier,
        cp.name,
        cp.short_name,
+       cp.check_in_out_required,
        cp.description,
        cp.late_registration_allowed,
        cc.id                                  as category_id,
@@ -1047,20 +1051,21 @@ group by crnp.competition_registration, p.id, p.firstname, p.lastname, p.year, p
 ;
 
 create view competition_registration_team as
-select cr.id          as competition_registration_id,
-       cr.competition as competition_id,
-       cp.identifier  as competition_identifier,
-       cp.name        as competition_name,
-       co.event       as event_id,
-       cl.id          as club_id,
-       cl.name        as club_name,
-       cr.name        as team_name,
+select cr.id                       as competition_registration_id,
+       cr.competition              as competition_id,
+       cp.identifier               as competition_identifier,
+       cp.name                     as competition_name,
+       cp.check_in_out_required    as check_in_out_required,
+       co.event                    as event_id,
+       cl.id                       as club_id,
+       cl.name                     as club_name,
+       cr.name                     as team_name,
        coalesce(array_agg(distinct crtp) filter ( where crtp.competition_registration_id is not null ),
-                '{}') as participants,
+                '{}')              as participants,
        coalesce(array_agg(distinct sv) filter (where sv.id is not null),
-                '{}') as substitutions,
-       cd             as deregistration,
-       rc             as rating_category
+                '{}')              as substitutions,
+       cd                          as deregistration,
+       rc                          as rating_category
 from competition_registration cr
          left join competition_registration_team_participant crtp on cr.id = crtp.competition_registration_id
          left join club cl on cr.club = cl.id
@@ -1069,7 +1074,8 @@ from competition_registration cr
          left join substitution_view sv on cr.id = sv.competition_registration_id
          left join competition_deregistration cd on cr.id = cd.competition_registration
          left join rating_category rc on cr.rating_category = rc.id
-group by cr.id, cr.competition, cp.identifier, cp.name, co.event, cl.id, cl.name, cr.name, cd, rc.id;
+group by cr.id, cr.competition, cp.identifier, cp.name, cp.check_in_out_required, co.event, cl.id, cl.name, cr.name,
+         cd, rc.id;
 
 
 create view participant_qr_assignment_view as

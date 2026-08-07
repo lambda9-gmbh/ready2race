@@ -5913,6 +5913,52 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/checkSeverity:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getCheckSeverityConfig
+      description: "The competitions, the configurable checks with their defaults and the deviations set for this event - administration for the referee dashboard's severity configuration."
+      responses:
+        200:
+          description: Check severity configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckSeverityConfigDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateCheckSeverityConfig
+      description: "Replaces the event's deviations. Entries matching the built-in default are dropped rather than stored, so a later change to the default keeps applying to existing data."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCheckSeverityRequest'
+      responses:
+        204:
+          description: Check severity configuration updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/schedule:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -9182,6 +9228,7 @@ components:
       required:
         - identifier
         - name
+        - checkInOutRequired
         - namedParticipants
         - fees
         - lateRegistrationAllowed
@@ -9194,6 +9241,9 @@ components:
           type: string
         shortName:
           type: string
+        checkInOutRequired:
+          type: boolean
+          description: "Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all."
         description:
           type: string
         competitionCategory:
@@ -9291,6 +9341,7 @@ components:
       required:
         - identifier
         - name
+        - checkInOutRequired
         - namedParticipants
         - fees
         - lateRegistrationAllowed
@@ -9302,6 +9353,9 @@ components:
           type: string
         shortName:
           type: string
+        checkInOutRequired:
+          type: boolean
+          description: "Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all."
         description:
           type: string
         competitionCategory:
@@ -12994,6 +13048,23 @@ components:
         - LATE
         - NOT_CHECKED
 
+    CheckSeverity:
+      type: string
+      description: "What can be configured per competition for a failed check"
+      enum:
+        - OK
+        - WARNING
+        - CRITICAL
+
+    EffectiveSeverity:
+      type: string
+      description: "What is delivered for display; NEUTRAL means there is nothing to say about this check - either it does not apply, or it failed but is explicitly configured as CheckSeverity.OK"
+      enum:
+        - NEUTRAL
+        - OK
+        - WARNING
+        - CRITICAL
+
     TimeCheckDto:
       type: object
       required:
@@ -13013,6 +13084,7 @@ components:
         - name
         - optional
         - checked
+        - severity
       properties:
         requirementId:
           type: string
@@ -13037,6 +13109,8 @@ components:
           nullable: true
           allOf:
             - $ref: '#/components/schemas/TimeCheckDto'
+        severity:
+          $ref: '#/components/schemas/EffectiveSeverity'
 
     LiveDashboardParticipantDto:
       type: object
@@ -13084,7 +13158,10 @@ components:
         - failed
         - deregistered
         - invoiceState
-        - requirements
+        - severity
+        - invoiceSeverity
+        - onWaterRequired
+        - onWaterSeverity
         - substituted
       properties:
         teamId:
@@ -13126,8 +13203,18 @@ components:
           nullable: true
         invoiceState:
           $ref: '#/components/schemas/LiveDashboardInvoiceState'
-        requirements:
-          $ref: '#/components/schemas/LiveDashboardRequirementSummaryDto'
+        severity:
+          $ref: '#/components/schemas/EffectiveSeverity'
+          description: "Final severity for the row - the evaluation rules live in the backend"
+        invoiceSeverity:
+          $ref: '#/components/schemas/EffectiveSeverity'
+          description: "The invoice evaluated separately: the detail dialog colors its invoice chip by this; it cannot be recovered from severity, which already combines everything else"
+        onWaterRequired:
+          type: boolean
+          description: "Whether this competition requires check-in/check-out at all; controls the display of onWaterAt"
+        onWaterSeverity:
+          $ref: '#/components/schemas/EffectiveSeverity'
+          description: "The on-water check evaluated separately: the detail dialog colors its on-water chip by this; it cannot be recovered from severity, which already combines everything else"
         substituted:
           type: boolean
         onWaterAt:
@@ -13135,27 +13222,6 @@ components:
           format: date-time
           nullable: true
           description: "When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known"
-
-    LiveDashboardRequirementSummaryDto:
-      type: object
-      description: "Condensed requirement state per team; the requirements themselves are only in the team detail"
-      required:
-        - total
-        - fulfilled
-        - missingRequired
-        - missingOptional
-        - timeIssues
-      properties:
-        total:
-          type: integer
-        fulfilled:
-          type: integer
-        missingRequired:
-          type: integer
-        missingOptional:
-          type: integer
-        timeIssues:
-          type: integer
 
     LiveDashboardTeamDetailDto:
       type: object
@@ -13266,6 +13332,124 @@ components:
             $ref: '#/components/schemas/PendingSlotDto'
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+
+    CheckType:
+      type: string
+      description: >-
+        The checks evaluated by the referee dashboard. REQUIREMENT and REQUIREMENT_TIME_WINDOW
+        refer to the same participant requirement and are still configured separately: "not
+        checked at all" and "checked but at the wrong time" are two different situations at the
+        tent.
+      enum:
+        - INVOICE_OPEN
+        - NOT_ON_WATER
+        - REQUIREMENT
+        - REQUIREMENT_TIME_WINDOW
+
+    CheckSeverityCompetitionDto:
+      type: object
+      description: "A competition as the administration needs it - id, name and whether it requires check-in/check-out"
+      required:
+        - competitionId
+        - identifier
+        - name
+        - checkInOutRequired
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+        checkInOutRequired:
+          type: boolean
+
+    CheckSeverityRowDto:
+      type: object
+      description: "A row of the administration matrix. requirementId is only set for the requirement checks, name carries the requirement's name for them - the UI names the two fixed checks itself."
+      required:
+        - checkType
+      properties:
+        checkType:
+          $ref: '#/components/schemas/CheckType'
+        requirementId:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          nullable: true
+
+    CheckSeverityRowDefaultDto:
+      type: object
+      required:
+        - checkType
+        - severity
+      properties:
+        checkType:
+          $ref: '#/components/schemas/CheckType'
+        requirementId:
+          type: string
+          format: uuid
+          nullable: true
+        severity:
+          $ref: '#/components/schemas/CheckSeverity'
+
+    CheckSeverityEntryDto:
+      type: object
+      required:
+        - competitionId
+        - checkType
+        - severity
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        checkType:
+          $ref: '#/components/schemas/CheckType'
+        requirementId:
+          type: string
+          format: uuid
+          nullable: true
+        severity:
+          $ref: '#/components/schemas/CheckSeverity'
+
+    CheckSeverityConfigDto:
+      type: object
+      description: "entries contains ONLY deviations from the default. The UI shows, for every combination of competitions and rows, the matching entry or the default from defaults."
+      required:
+        - competitions
+        - rows
+        - defaults
+        - entries
+      properties:
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityCompetitionDto'
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityRowDto'
+        defaults:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityRowDefaultDto'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityEntryDto'
+
+    UpdateCheckSeverityRequest:
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityEntryDto'
 
     EventScheduleSlotState:
       type: string
@@ -14003,6 +14187,7 @@ components:
         - competitionId
         - competitionIdentifier
         - competitionName
+        - checkInOutRequired
         - clubId
         - clubName
         - participants
@@ -14017,6 +14202,9 @@ components:
           type: string
         competitionName:
           type: string
+        checkInOutRequired:
+          type: boolean
+          description: "Whether this competition uses check-in/out at all. Scans are recorded per participant and event, so a participant racing in one competition that requires it still checks out - the flag only drives what the app shows."
         clubId:
           type: string
           format: uuid

@@ -508,6 +508,8 @@
           "error": "Fejl ved check-out af deltager"
         },
         "noTeamsFound": "Ingen hold fundet",
+        "noCheckInOutNeeded": "ingen ind-/udtjekning nødvendig",
+        "noCheckInOutForAnyTeam": "Ingen af disse tilmeldinger bruger ind-/udtjekning.",
         "participantNotFound": "Deltager ikke fundet",
         "errorReason": {
           "alreadyCheckedIn": "Denne person er allerede tjekket ind — der er ikke mere at gøre.",
@@ -615,6 +617,7 @@
       "ratingCategoryRequired": "Rangeringskategori påkrævet",
       "registrationCount": "Tilmeldinger",
       "shortName": "Kort navn",
+      "checkInOutRequired": "Kræver ind-/udtjekning på vandet",
       "challenge": {
         "configs": "Challenge-indstillinger",
         "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",
@@ -1537,7 +1540,8 @@
         "deregistered": "Afmeldt",
         "failed": "Udgået",
         "failedShort": "DNF",
-        "onWaterAt": "på vandet {{time}}"
+        "onWaterAt": "på vandet {{time}}",
+        "notOnWater": "Ikke på vandet"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",
@@ -1552,6 +1556,28 @@
         "NOT_CHECKED": "Afventer",
         "beforeStart": "{{delta}} før start",
         "afterStart": "{{delta}} efter start"
+      },
+      "checkSeverity": {
+        "manage": "Administrer kontroller",
+        "title": "Kontrollernes alvorsgrad",
+        "description": "Angiver pr. konkurrence, hvor tungt en ikke-opfyldt kontrol vejer.",
+        "setAll": "sæt alle",
+        "uniform": "alle: {{severity}}",
+        "mixed": "blandet",
+        "noCheckInOut": "ingen ind-/udtjekning påkrævet",
+        "noCompetitions": "Denne begivenhed har endnu ingen konkurrencer. Der er derfor intet at indstille.",
+        "check": {
+          "INVOICE_OPEN": "Faktura åben",
+          "NOT_ON_WATER": "Ikke på vandet",
+          "REQUIREMENT_TIME_WINDOW": "Tidsvindue overskredet"
+        },
+        "severity": {
+          "OK": "OK (uden effekt)",
+          "WARNING": "Advarsel",
+          "CRITICAL": "Kritisk"
+        },
+        "saved": "Indstillinger gemt",
+        "saveError": "Indstillingerne kunne ikke gemmes."
       }
     },
     "schedule": {

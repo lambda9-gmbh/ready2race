@@ -44,6 +44,8 @@ export const TeamCheckInOut = () => {
         ?.flatMap(team => team.participants)
         .find(participant => participant.participantId === qr.response?.id)
 
+    const anyTeamRequiresCheckInOut = teamsData?.some(team => team.checkInOutRequired) ?? false
+
     const handleCheckInOut = async (checkIn: boolean) => {
         setSubmitting(true)
         if (!selectedParticipant) return
@@ -60,8 +62,8 @@ export const TeamCheckInOut = () => {
 
         setSubmitting(false)
         if (error) {
-            // Vier Gruende teilten sich diese beiden Texte - dabei ist "schon eingecheckt" keine
-            // Stoerung, sondern die Auskunft, dass nichts mehr zu tun ist.
+            // Vier Gründe teilten sich diese beiden Texte - dabei ist "schon eingecheckt" keine
+            // Störung, sondern die Auskunft, dass nichts mehr zu tun ist.
             const reason = participantTrackingErrorKey(error)
             feedback.error(
                 reason !== undefined
@@ -109,6 +111,14 @@ export const TeamCheckInOut = () => {
                                                         {team.competitionIdentifier} |{' '}
                                                         {team.competitionName}
                                                     </Typography>
+                                                    {!team.checkInOutRequired && (
+                                                        <Chip
+                                                            size="small"
+                                                            label={t(
+                                                                'club.participant.tracking.noCheckInOutNeeded',
+                                                            )}
+                                                        />
+                                                    )}
                                                     <Typography>
                                                         {team.clubName +
                                                             (team.teamName
@@ -172,16 +182,24 @@ export const TeamCheckInOut = () => {
                             py: 1,
                         }}
                         bgcolor={'background.default'}>
-                        <LoadingButton
-                            pending={submitting || teamsPending}
-                            variant={'contained'}
-                            onClick={() =>
-                                handleCheckInOut(selectedParticipant.currentStatus !== 'ENTRY')
-                            }>
-                            {selectedParticipant.currentStatus === 'ENTRY'
-                                ? t('club.participant.tracking.checkOutText')
-                                : t('club.participant.tracking.checkInText')}
-                        </LoadingButton>
+                        {anyTeamRequiresCheckInOut ? (
+                            <LoadingButton
+                                pending={submitting || teamsPending}
+                                variant={'contained'}
+                                onClick={() =>
+                                    handleCheckInOut(
+                                        selectedParticipant.currentStatus !== 'ENTRY',
+                                    )
+                                }>
+                                {selectedParticipant.currentStatus === 'ENTRY'
+                                    ? t('club.participant.tracking.checkOutText')
+                                    : t('club.participant.tracking.checkInText')}
+                            </LoadingButton>
+                        ) : (
+                            <Typography variant="body2" color="text.secondary">
+                                {t('club.participant.tracking.noCheckInOutForAnyTeam')}
+                            </Typography>
+                        )}
                     </Box>
                 </Stack>
             )}
