@@ -1541,9 +1541,22 @@ export type ImportRowResultDto = {
     laufText: string
     status: ImportRowStatus
     targetLabel?: string | null
+    /**
+     * Only filled for MATCH_NOT_FOUND: the match names the found competition actually has.
+     */
+    availableMatches: Array<string>
 }
 
-export type ImportRowStatus = 'LINKED' | 'FREE' | 'AMBIGUOUS' | 'DUPLICATE'
+/**
+ * FREE, COMPETITION_NOT_FOUND and MATCH_NOT_FOUND all end up as a free slot; only FREE is intentional, the other two point at a mistake in the file.
+ */
+export type ImportRowStatus =
+    | 'LINKED'
+    | 'FREE'
+    | 'COMPETITION_NOT_FOUND'
+    | 'MATCH_NOT_FOUND'
+    | 'AMBIGUOUS'
+    | 'DUPLICATE'
 
 export type InfoViewConfigurationDto = {
     id: string
