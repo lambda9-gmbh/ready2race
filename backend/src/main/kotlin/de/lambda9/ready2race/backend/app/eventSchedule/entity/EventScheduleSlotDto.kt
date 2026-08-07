@@ -4,6 +4,11 @@ import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import java.time.LocalDateTime
 import java.util.UUID
 
+/**
+ * Ob der Lauf eines Slots abgesagt ist, steht bewusst NICHT als eigenes Feld hier: [state] ist
+ * dann bereits [EventScheduleSlotState.SKIPPED], und zwei Quellen für dieselbe Aussage laufen
+ * früher oder später auseinander.
+ */
 data class EventScheduleSlotDto(
     val id: UUID,
     val startTime: LocalDateTime,
@@ -23,6 +28,17 @@ data class EventScheduleSlotDto(
     /** Ob der verknüpfte Lauf gerade aktiv ist - steuert im Zeitplan-Tab, ob "Lauf aktivieren" oder
      * "Lauf beenden" angeboten wird (C1). Immer false ohne verknüpften Lauf. */
     val matchCurrentlyRunning: Boolean,
+    /**
+     * Mannschaften des verknüpften Laufs, die im Rennen sind (ohne die aus der Vorrunde
+     * mitgeführten OUT-Zeilen) - 0 ohne verknüpften Lauf.
+     */
+    val matchTeamsTotal: Int,
+    /**
+     * Davon bereits gewertet: Platz gesetzt ODER ausgeschieden ODER abgemeldet, dieselbe Regel wie
+     * `LiveDashboardLogic.teamHasResult`. Aus beiden zusammen liest der Zeitplan "Teilweise
+     * gewertet n/m" ab; ein eigener Zustand ist das ausdrücklich nicht.
+     */
+    val matchTeamsScored: Int,
 )
 
 data class UnplannedSetupMatchDto(
