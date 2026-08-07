@@ -1065,6 +1065,14 @@
               "duplicateTeams": "RaceClocker contains duplicate crews ({{teams}}). Please clean them up there and pull again.",
               "noResults": "There are no times for this heat in RaceClocker yet.",
               "matchIsBye": "This heat is a bye: the team moves on without racing, so there are no results to pull."
+            },
+            "poll": {
+              "lastPolled": "Pulled automatically: {{time}}",
+              "error": "Automatic pull is stuck: {{reason}}",
+              "paused": "Automatic pull paused — results were entered by hand.",
+              "resume": "Resume automatic pull",
+              "resumed": "The automatic pull is active again.",
+              "duplicateTeams": "RaceClocker has duplicate crews. Pulling with the button shows which ones."
             }
           }
         },
@@ -1354,6 +1362,14 @@
       "raceclockerHint": "RaceClocker needs two races: one of type \"individual starts (time trial)\" for the qualification rounds and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here – they then apply to the whole event.",
       "timeTrialUrl": "Results address for time trial",
       "heatsUrl": "Results address for heats",
+      "autoPull": {
+        "enabled": "Pull results automatically",
+        "hint": "While a match is running, the server pulls its results at the fast interval. Upcoming matches are watched at the slow interval to detect their start; finished matches are not polled at all.",
+        "intervalActive": "Interval while a match is running (seconds)",
+        "intervalUpcoming": "Interval while a match is upcoming (seconds)",
+        "watchBefore": "Start watching (minutes before the planned start)",
+        "watchAfter": "Stop watching (minutes after the planned start)"
+      },
       "startlistQualification": "Start list export for qualification",
       "startlistRounds": "Start list export for other rounds",
       "startlist": "Start list export",
@@ -1364,7 +1380,7 @@
         "3": " and apply to all events."
       },
       "saved": "Timing defaults saved",
-      "invalid": "Please enter addresses on raceclocker.com.",
+      "invalid": "The input was rejected: addresses must point to raceclocker.com, the intervals must be at least 2 seconds, and the watch windows must not be negative.",
       "deviations": {
         "title": "Competitions with their own timing",
         "none": "No competition deviates – all of them follow these defaults.",

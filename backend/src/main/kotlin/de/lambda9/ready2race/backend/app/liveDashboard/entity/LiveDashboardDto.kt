@@ -116,6 +116,19 @@ data class LiveDashboardMatchDto(
     val currentlyRunning: Boolean,
     val elapsedMinutes: Long?,
     val teams: List<LiveDashboardTeamDto>,
+    /**
+     * Fehlercode des letzten fehlgeschlagenen automatischen Abrufs, null wenn er in Ordnung ist.
+     *
+     * Der Zeitpunkt des letzten Abrufs (`raceclocker_polled_at`) steht hier bewusst NICHT, obwohl
+     * der Durchführungs-Tab ihn zeigt: `respondETagged` bildet den Hash über das serialisierte DTO,
+     * und ein Feld, das sich für jeden beobachteten Lauf alle fünf Sekunden ändert, macht jede
+     * 304-Antwort unmöglich - jedes Schiedsrichter-Telefon lüde das ganze Dashboard neu, solange der
+     * Job läuft. Die Karte zeigt den Zeitpunkt ohnehin nicht an; sie unterscheidet nur „Fehler" und
+     * „pausiert" von „alles in Ordnung".
+     */
+    val raceClockerPollError: String?,
+    /** Gesetzt, solange der automatische Abruf diesen Lauf in Ruhe lässt, weil von Hand Ergebnisse eingetragen wurden. */
+    val raceClockerAutoPausedAt: LocalDateTime?,
 )
 
 /**

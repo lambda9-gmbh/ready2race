@@ -305,6 +305,8 @@ class LiveDashboardLogicTest {
         currentlyRunning = state == LiveDashboardMatchState.RUNNING,
         elapsedMinutes = null,
         teams = emptyList(),
+        raceClockerPollError = null,
+        raceClockerAutoPausedAt = null,
     )
 
     @Test

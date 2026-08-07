@@ -4,6 +4,7 @@ import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
+import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
 import {
     formatMinutes,
     matchControls,
@@ -150,6 +151,22 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         </Box>
                     </Box>
                 </Box>
+                {(() => {
+                    const status = raceClockerPollStatus(match)
+                    if (status.kind === 'none' || status.kind === 'ok') return null
+
+                    return (
+                        <Typography variant={'caption'} color={'warning.main'}>
+                            {status.kind === 'paused'
+                                ? t('event.competition.execution.results.raceclocker.poll.paused')
+                                : t('event.competition.execution.results.raceclocker.poll.error', {
+                                      reason: status.errorKey
+                                          ? t(status.errorKey)
+                                          : t('common.error.unexpected'),
+                                  })}
+                        </Typography>
+                    )
+                })()}
                 <Divider sx={{mt: 1.5}} />
                 {match.teams.map((team, index) => {
                     const substituted = team.substituted

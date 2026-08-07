@@ -195,6 +195,9 @@ import type {
     PullMatchResultsFromRaceClockerData,
     PullMatchResultsFromRaceClockerError,
     PullMatchResultsFromRaceClockerResponse,
+    ResumeRaceClockerAutoPullData,
+    ResumeRaceClockerAutoPullError,
+    ResumeRaceClockerAutoPullResponse,
     DownloadStartListData,
     DownloadStartListError,
     DownloadStartListResponse,
@@ -1619,6 +1622,22 @@ export const pullMatchResultsFromRaceClocker = <ThrowOnError extends boolean = f
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/from-raceclocker',
+    })
+}
+
+/**
+ * Releases a match back to the automatic RaceClocker pull. Entering results by hand or uploading a file pauses the pull for that match, so the office keeps the last word; this undoes that and clears the last poll error.
+ */
+export const resumeRaceClockerAutoPull = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResumeRaceClockerAutoPullData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ResumeRaceClockerAutoPullResponse,
+        ResumeRaceClockerAutoPullError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/raceclocker/resume',
     })
 }
 

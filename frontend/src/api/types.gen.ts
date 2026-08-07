@@ -538,6 +538,18 @@ export type CompetitionMatchDto = {
      */
     skipped: boolean
     status: MatchStatusDto
+    /**
+     * When the automatic pull last tried this match - not when it last wrote something.
+     */
+    raceClockerPolledAt?: string | null
+    /**
+     * Error code of the last failed automatic pull, null when it is fine.
+     */
+    raceClockerPollError?: string | null
+    /**
+     * Set while the automatic pull leaves this match alone because results were entered by hand.
+     */
+    raceClockerAutoPausedAt?: string | null
 }
 
 export type CompetitionMatchTeamDto = {
@@ -1004,6 +1016,7 @@ export type EmailTemplateRequest = {
 }
 
 export type ErrorCode =
+    | 'INTERNAL_ERROR'
     | 'CAPTCHA_WRONG'
     | 'EMAIL_IN_USE'
     | 'CANNOT_ASSIGN_ROLES'
@@ -1387,13 +1400,33 @@ export type EventTimingConfigDto = {
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
     /**
+     * Whether the background job pulls results for this event on its own.
+     */
+    autoPull: boolean
+    /**
+     * Poll interval while at least one match of this event is running. Never goes below 2 seconds.
+     */
+    intervalActiveSeconds: number
+    /**
+     * Poll interval while only upcoming matches are watched. Never goes below 2 seconds.
+     */
+    intervalUpcomingSeconds: number
+    /**
+     * How long before its planned start an upcoming match is watched.
+     */
+    watchBeforeMinutes: number
+    /**
+     * How long after its planned start a match that is not active yet is still watched.
+     */
+    watchAfterMinutes: number
+    /**
      * The competitions that do not follow these defaults but set at least one of the three fields themselves.
      */
     deviatingCompetitions?: Array<CompetitionTimingDeviationDto>
 }
 
 /**
- * Every field is optional, like the per-competition config. The URLs must be https URLs on raceclocker.com.
+ * The RaceClocker fields are optional, like the per-competition config. The URLs must be https URLs on raceclocker.com. The five auto-pull fields are not optional - the database always has a value for them, and null here would ambiguously mean "leave unchanged".
  *
  */
 export type EventTimingConfigRequest = {
@@ -1403,6 +1436,26 @@ export type EventTimingConfigRequest = {
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
+    /**
+     * Whether the background job pulls results for this event on its own.
+     */
+    autoPull: boolean
+    /**
+     * Poll interval while at least one match of this event is running. Never goes below 2 seconds.
+     */
+    intervalActiveSeconds: number
+    /**
+     * Poll interval while only upcoming matches are watched. Never goes below 2 seconds.
+     */
+    intervalUpcomingSeconds: number
+    /**
+     * How long before its planned start an upcoming match is watched.
+     */
+    watchBeforeMinutes: number
+    /**
+     * How long after its planned start a match that is not active yet is still watched.
+     */
+    watchAfterMinutes: number
 }
 
 export type FeeDto = {
@@ -1686,6 +1739,14 @@ export type LiveDashboardMatchDto = {
     currentlyRunning: boolean
     elapsedMinutes?: number | null
     teams: Array<LiveDashboardTeamDto>
+    /**
+     * Error code of the last failed automatic pull, null when it is fine.
+     */
+    raceClockerPollError?: string | null
+    /**
+     * Set while the automatic pull leaves this match alone because results were entered by hand.
+     */
+    raceClockerAutoPausedAt?: string | null
 }
 
 /**
@@ -4065,6 +4126,18 @@ export type PullMatchResultsFromRaceClockerData = {
 export type PullMatchResultsFromRaceClockerResponse = void
 
 export type PullMatchResultsFromRaceClockerError = BadRequestError | ApiError
+
+export type ResumeRaceClockerAutoPullData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type ResumeRaceClockerAutoPullResponse = void
+
+export type ResumeRaceClockerAutoPullError = BadRequestError | ApiError
 
 export type DownloadStartListData = {
     path: {

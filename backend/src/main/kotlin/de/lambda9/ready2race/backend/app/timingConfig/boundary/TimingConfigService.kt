@@ -75,6 +75,14 @@ object TimingConfigService {
                     startlistConfigQualification = event.startlistConfigQualification,
                     startlistConfigRounds = event.startlistConfigRounds,
                     resultImportConfig = event.resultImportConfig,
+                    // Spalten sind in der Datenbank NOT NULL (Migration V202608071600); jOOQ generiert
+                    // Record-Felder dennoch nullable - dasselbe Muster wie bei den übrigen
+                    // Nicht-Null-Spalten des Events (siehe Conversions.kt).
+                    autoPull = event.raceclockerAutoPull!!,
+                    intervalActiveSeconds = event.raceclockerIntervalActiveSeconds!!,
+                    intervalUpcomingSeconds = event.raceclockerIntervalUpcomingSeconds!!,
+                    watchBeforeMinutes = event.raceclockerWatchBeforeMinutes!!,
+                    watchAfterMinutes = event.raceclockerWatchAfterMinutes!!,
                     deviatingCompetitions = deviations,
                 )
             )
@@ -103,6 +111,11 @@ object TimingConfigService {
             startlistConfigQualification = request.startlistConfigQualification
             startlistConfigRounds = request.startlistConfigRounds
             resultImportConfig = request.resultImportConfig
+            raceclockerAutoPull = request.autoPull
+            raceclockerIntervalActiveSeconds = request.intervalActiveSeconds
+            raceclockerIntervalUpcomingSeconds = request.intervalUpcomingSeconds
+            raceclockerWatchBeforeMinutes = request.watchBeforeMinutes
+            raceclockerWatchAfterMinutes = request.watchAfterMinutes
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

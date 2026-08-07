@@ -123,6 +123,9 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                             },
                             teamsOnWater = teamsOnWaterPerMatch[index],
                         ),
+                        raceClockerPolledAt = match.first.raceClockerPolledAt,
+                        raceClockerPollError = match.first.raceClockerPollError,
+                        raceClockerAutoPausedAt = match.first.raceClockerAutoPausedAt,
                     )
                 },
             required = required,
@@ -160,6 +163,9 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 startedAt = match.startedAt,
                 finishedAt = match.finishedAt,
                 skipped = match.skipped ?: false,
+                raceClockerPolledAt = match.raceclockerPolledAt,
+                raceClockerPollError = match.raceclockerPollError,
+                raceClockerAutoPausedAt = match.raceclockerAutoPausedAt,
                 teams = match.teams!!.filterNotNull().map { team ->
                     CompetitionMatchTeamWithRegistration(
                         id = team.id!!,

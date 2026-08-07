@@ -26,4 +26,10 @@ data class CompetitionMatchDto(
      * Teil dieser Änderung.
      */
     val status: MatchStatusDto,
+    /** Wann der automatische RaceClocker-Abruf diesen Lauf zuletzt versucht hat. */
+    val raceClockerPolledAt: LocalDateTime?,
+    /** ErrorCode des letzten fehlgeschlagenen Abrufs, null = in Ordnung. */
+    val raceClockerPollError: String?,
+    /** Gesetzt, solange die Automatik diesen Lauf wegen einer Handeingabe in Ruhe lässt. */
+    val raceClockerAutoPausedAt: LocalDateTime?,
 )

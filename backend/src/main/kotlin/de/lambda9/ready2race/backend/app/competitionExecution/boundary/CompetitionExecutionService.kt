@@ -28,9 +28,12 @@ import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollService
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
+import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
@@ -527,6 +530,24 @@ object CompetitionExecutionService {
 
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
+        checkUpdateMatchResult(setupRounds, matchId, byeError)
+    }
+
+    /**
+     * Dieselbe Prüfung mit bereits geholter Turnierstruktur.
+     *
+     * Für den automatischen Abruf (`RaceClockerPollService`): Er beobachtet mehrere Läufe desselben
+     * Wettkampfs gleichzeitig und holt [CompetitionSetupService.getSetupRoundsWithMatches] - zwei
+     * Abfragen plus den ganzen Baum aus Runden, Läufen und Mannschaften - deshalb einmal je Takt und
+     * Wettkampf statt einmal je Lauf. Die Sperre auf die aktuelle Runde bleibt dabei genau dieselbe
+     * wie beim Knopf; sie darf der Job nicht umgehen.
+     */
+    fun checkUpdateMatchResult(
+        setupRounds: List<CompetitionSetupRoundWithMatches>,
+        matchId: UUID,
+        byeError: ServiceError = CompetitionExecutionError.MatchIsBye,
+    ): App<ServiceError, CompetitionMatchWithTeams> = KIO.comprehension {
+
         !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }
             .find { it.id == matchId } == null) { CompetitionExecutionError.MatchNotFound }
 
@@ -564,6 +585,36 @@ object CompetitionExecutionService {
         unit
     }
 
+    /**
+     * Hält den automatischen RaceClocker-Abruf für diesen Lauf an.
+     *
+     * Wer von Hand einträgt oder eine Datei hochlädt, hat das letzte Wort: Der Job setzt bei jedem
+     * Takt alle Plätze des Laufs zurück und schreibt nur die Boote wieder, die im Feed ein Ergebnis
+     * haben - ein Handeintrag für ein Boot, das RaceClocker nicht kennt, wäre nach spätestens einem
+     * Takt weg. Freigegeben wird der Lauf in der Oberfläche ([resumeRaceClockerAutoPull]).
+     *
+     * Der manuelle Pull pausiert bewusst NICHT: Er ist derselbe Weg wie die Automatik, nur von Hand
+     * ausgelöst, und darf sie nicht abwürgen.
+     *
+     * Pausiert wird nur dort, wo es eine Automatik gibt. Sonst sammelte jede Veranstaltung ohne
+     * RaceClocker - und das sind nach der Migration erst einmal alle - an jedem von Hand
+     * eingetragenen Lauf einen Vermerk ein, den die Oberfläche als „Automatischer Abruf pausiert"
+     * anzeigt und der sich auf nichts bezieht. Die Prüfung steht im Repo des Jobs, damit die
+     * Bedingung an genau einer Stelle formuliert ist.
+     */
+    private fun pauseRaceClockerAutoPull(matchId: UUID): App<Nothing, Unit> = KIO.comprehension {
+        val configured = !RaceClockerPollRepo.isAutoPullConfigured(matchId).orDie()
+        if (!configured) return@comprehension unit
+
+        !CompetitionMatchRepo.update(matchId) {
+            if (raceclockerAutoPausedAt == null) {
+                raceclockerAutoPausedAt = LocalDateTime.now()
+            }
+        }.orDie()
+
+        unit
+    }
+
     fun updateMatchResult(
         eventId: UUID,
         competitionId: UUID,
@@ -574,6 +625,7 @@ object CompetitionExecutionService {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !checkUpdateMatchResult(competitionId, matchId)
+        !pauseRaceClockerAutoPull(matchId)
 
         !prepareForNewPlaces(matchId)
 
@@ -645,6 +697,7 @@ object CompetitionExecutionService {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val match = !checkUpdateMatchResult(competitionId, matchId)
+        !pauseRaceClockerAutoPull(matchId)
         !prepareForNewPlaces(matchId)
 
         // Das Format gehoert zum Wettkampf (Zeitnahme-Tab), nicht mehr zur einzelnen Anfrage --
@@ -895,7 +948,11 @@ object CompetitionExecutionService {
      * since it is only a lane number within a match and repeats across heats.
      *
      * Nothing is written until every check has passed, so a rejected pull leaves the match untouched
-     * and can simply be repeated once RaceClocker has been corrected.
+     * and can simply be repeated once RaceClocker has been corrected. Das Schreiben selbst steht in
+     * [applyRaceClockerRows]; hier bleibt nur das Holen. Die Trennung ist der Punkt: Der automatische
+     * Abruf (`RaceClockerPollService`) holt denselben Feed einmal je Rennen für alle Läufe gemeinsam
+     * und ruft dann dieselbe Anwendungslogik auf. Läge sie hier im Endpunkt, gäbe es zwei Wege,
+     * Ergebnisse zu schreiben, und sie würden auseinanderlaufen.
      */
     suspend fun CallComprehensionScope.updateMatchResultFromRaceClocker(
         eventId: UUID,
@@ -918,22 +975,74 @@ object CompetitionExecutionService {
         // The round type only decides which race to look into *first*. Is a round timed as a time trial
         // without being marked as a qualification round (or the other way around), the match is simply
         // found in the other race instead of failing with a misleading error.
-        var rowsByTeam: Map<UUID, List<RaceClockerFeedRow>> = emptyMap()
+        var rows: List<RaceClockerFeedRow> = emptyList()
         for (rawUrl in urls) {
             val url = !RaceClockerFeed.normalizeUrl(rawUrl)
-            val rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
-            rowsByTeam = assignFeedRows(rows, teams, target.waveName)
-            if (rowsByTeam.isNotEmpty()) break
+            rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
+            if (assignFeedRows(rows, teams, target.waveName).isNotEmpty()) break
         }
 
-        if (rowsByTeam.isEmpty()) return KIO.fail(RaceClockerError.MatchNotInFeed(urls))
+        return applyRaceClockerRows(match, matchId, target, rows, userId)
+    }
+
+    /**
+     * Gibt einen pausierten Lauf wieder für den automatischen Abruf frei. Löscht zugleich den
+     * letzten Fehler - was beim nächsten Takt passiert, ist die Antwort, die jetzt zählt.
+     */
+    fun resumeRaceClockerAutoPull(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+        !checkUpdateMatchResult(competitionId, matchId, byeError = RaceClockerError.MatchIsBye)
+
+        !CompetitionMatchRepo.update(matchId) {
+            raceclockerAutoPausedAt = null
+            raceclockerPollError = null
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        // Der Job merkt sich je Lauf den zuletzt geschriebenen Stand und schreibt nichts, solange
+        // der Feed unverändert ist. Nach einer Handeingabe beschreibt dieser Merkposten nicht mehr,
+        // was in der Datenbank steht - ohne das Vergessen liefe der nächste Takt in die Abkürzung,
+        // die Oberfläche meldete einen gesunden Abruf, und RaceClocker übernähme den Lauf erst
+        // wieder, wenn sich dort irgendwann eine Zeile ändert. Wer "Automatik wieder aufnehmen"
+        // drückt, will genau das Gegenteil: den nächsten Takt voll durchlaufen sehen.
+        RaceClockerPollService.forget(matchId)
+
+        noData
+    }
+
+    /**
+     * Schreibt einen bereits geholten RaceClocker-Feed auf einen Lauf: Zuordnung, Duplikatprüfung,
+     * `started_at`, Bahnen, Zeiten und Plätze.
+     *
+     * Ohne HTTP und ohne `CallComprehensionScope`, damit der Hintergrund-Job sie aufrufen kann. Was
+     * hier fehlschlägt, ist derselbe Fehler wie beim Knopf — der Job schreibt ihn nur in eine Spalte,
+     * statt ihn zu beantworten.
+     */
+    fun applyRaceClockerRows(
+        match: CompetitionMatchWithTeams,
+        matchId: UUID,
+        target: RaceClockerMatchTarget,
+        rows: List<RaceClockerFeedRow>,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val teams = match.teams.filter { !it.deregistered }
+        val rowsByTeam = assignFeedRows(rows, teams, target.waveName)
+
+        if (rowsByTeam.isEmpty()) return@comprehension KIO.fail(RaceClockerError.MatchNotInFeed(target.candidateUrls))
 
         // RaceClocker only ever inserts, it never updates: importing the same start list twice leaves
         // duplicate crews behind. Picking one of them silently would be a coin flip, so we refuse and
         // let the user clean up there.
         val duplicates = rowsByTeam.filterValues { it.size > 1 }
         if (duplicates.isNotEmpty()) {
-            return KIO.fail(
+            return@comprehension KIO.fail(
                 RaceClockerError.DuplicateTeams(target.waveName, duplicates.values.map { it.first().name })
             )
         }
@@ -947,10 +1056,10 @@ object CompetitionExecutionService {
         //
         // Übersprungene Zeilen bleiben in der DB unangetastet: eine vom Schiedsrichter von Hand
         // eingetragene Ausscheidung darf ein Nachziehen des Laufs nicht wieder löschen.
-        val withResult = rowsByTeam.mapNotNull { (registrationId, rows) ->
-            rows.single().takeIf { it.hasResult }?.let { registrationId to it }
+        val withResult = rowsByTeam.mapNotNull { (registrationId, matchedRows) ->
+            matchedRows.single().takeIf { it.hasResult }?.let { registrationId to it }
         }
-        if (withResult.isEmpty()) return KIO.fail(RaceClockerError.NoResults(target.waveName))
+        if (withResult.isEmpty()) return@comprehension KIO.fail(RaceClockerError.NoResults(target.waveName))
 
         // Externe Zeitnahme ist Quelle der Wahrheit: die früheste von RaceClocker gemessene
         // Startzeit unter den zugeordneten Booten überschreibt started_at bedingungslos, auch wenn
@@ -971,7 +1080,7 @@ object CompetitionExecutionService {
         // Lanes are taken from every assigned row, not just the timed ones: a heat is usually pulled
         // while boats are still on the water, and numbering only the finishers would push the rest
         // out of their lanes.
-        !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, rows) -> rows.single() }, userId)
+        !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, matchedRows) -> matchedRows.single() }, userId)
 
         val parsed = withResult.map { (registrationId, row) ->
             ParsedTeamResult(
@@ -990,7 +1099,7 @@ object CompetitionExecutionService {
             )
         }
 
-        return applyParsedTeamResults(match, matchId, parsed, userId)
+        applyParsedTeamResults(match, matchId, parsed, userId)
     }
 
     /**
@@ -1058,6 +1167,17 @@ object CompetitionExecutionService {
         teams: List<CompetitionMatchTeamWithRegistration>,
         waveName: String?,
     ): Map<UUID, List<RaceClockerFeedRow>> = RaceClockerAssignmentLogic.assignFeedRows(rows, teams, waveName)
+
+    /**
+     * Welche Feed-Zeilen zu diesem Lauf gehören - flach, ohne Zuordnung zur Mannschaft. Der
+     * automatische Abruf braucht das vor dem Schreiben: um zu erkennen, ob die Welle überhaupt im
+     * Feed steht, ob sie gestartet ist und ob sich seit dem letzten Takt etwas geändert hat.
+     */
+    fun assignedRowsFor(
+        rows: List<RaceClockerFeedRow>,
+        teams: List<CompetitionMatchTeamWithRegistration>,
+        waveName: String?,
+    ): List<RaceClockerFeedRow> = assignFeedRows(rows, teams, waveName).values.flatten()
 
     fun updateMatchRunningState(
         matchId: UUID,

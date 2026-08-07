@@ -16,6 +16,11 @@ data class EventTimingConfigDto(
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,
+    val autoPull: Boolean,
+    val intervalActiveSeconds: Int,
+    val intervalUpcomingSeconds: Int,
+    val watchBeforeMinutes: Int,
+    val watchAfterMinutes: Int,
     /**
      * Die Wettkaempfe, die dieser Voreinstellung nicht folgen. Ohne sie waere die Voreinstellung eine
      * Einstellung, deren Reichweite man nicht sieht: wer hier eine Adresse aendert, muss wissen,

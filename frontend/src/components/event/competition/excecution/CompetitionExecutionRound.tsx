@@ -2,7 +2,6 @@ import {
     CompetitionMatchDto,
     CompetitionRoundDto,
     StartListFileType,
-    TimingConfigDto,
 } from '@api/types.gen.ts'
 import {
     Accordion,
@@ -43,6 +42,8 @@ import {failedLabel} from '@utils/matchResultStatus.ts'
 import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
 import {roundSkipErrorText} from '@components/event/schedule/scheduleError.ts'
 import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
+import {raceClockerPollStatus} from './raceClockerPollStatus.ts'
+import {TimingFormSystem} from '@components/event/competition/timing/timingConfigForm.ts'
 import {
     MatchChip,
     matchStatusChip,
@@ -98,9 +99,16 @@ type Props = {
     smallScreenLayout: boolean
     setResultImportMatch: Dispatch<SetStateAction<string | null>>
     pullRaceClockerResults: (competitionMatchId: string) => Promise<void>
+    resumeRaceClockerAutoPull: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListCSV: (competitionMatchId: string) => Promise<void>
-    timingSystem: TimingConfigDto['timingSystem']
+    /**
+     * Das EFFEKTIVE Zeitnahmesystem des Wettkampfs (`effectiveTimingSystem`), also einschließlich
+     * dessen, was er von der Veranstaltung erbt — nicht seine eigene Spalte. Daran hängt unter
+     * anderem der Knopf „Automatik wieder aufnehmen"; mit dem lokalen Wert verschwände er bei jedem
+     * Wettkampf, der RaceClocker erbt, und der pausierte Lauf ließe sich nirgends mehr freigeben.
+     */
+    timingSystem: TimingFormSystem
 }
 
 const CompetitionExecutionRound = ({
@@ -111,6 +119,7 @@ const CompetitionExecutionRound = ({
     smallScreenLayout,
     setResultImportMatch,
     pullRaceClockerResults,
+    resumeRaceClockerAutoPull,
     handleDownloadStartListPDF,
     handleDownloadStartListCSV,
     timingSystem,
@@ -456,6 +465,65 @@ const CompetitionExecutionRound = ({
                                             )}
                                         />
                                     )}
+                                    {timingSystem === 'RACECLOCKER' &&
+                                        (() => {
+                                            const status = raceClockerPollStatus(match)
+                                            if (status.kind === 'none') return null
+
+                                            return (
+                                                <Stack spacing={0.5}>
+                                                    <Typography
+                                                        variant={'caption'}
+                                                        color={
+                                                            status.kind === 'ok'
+                                                                ? 'text.secondary'
+                                                                : 'warning.main'
+                                                        }>
+                                                        {status.kind === 'paused'
+                                                            ? t(
+                                                                  'event.competition.execution.results.raceclocker.poll.paused',
+                                                              )
+                                                            : status.kind === 'error'
+                                                              ? t(
+                                                                    'event.competition.execution.results.raceclocker.poll.error',
+                                                                    {
+                                                                        reason: status.errorKey
+                                                                            ? t(status.errorKey)
+                                                                            : t(
+                                                                                  'common.error.unexpected',
+                                                                              ),
+                                                                    },
+                                                                )
+                                                              : t(
+                                                                    'event.competition.execution.results.raceclocker.poll.lastPolled',
+                                                                    {
+                                                                        time: format(
+                                                                            new Date(
+                                                                                match.raceClockerPolledAt!,
+                                                                            ),
+                                                                            'HH:mm:ss',
+                                                                        ),
+                                                                    },
+                                                                )}
+                                                    </Typography>
+                                                    {status.kind === 'paused' && (
+                                                        <LoadingButton
+                                                            size={'small'}
+                                                            variant={'text'}
+                                                            pending={submitting}
+                                                            onClick={() =>
+                                                                resumeRaceClockerAutoPull(
+                                                                    match.id,
+                                                                )
+                                                            }>
+                                                            {t(
+                                                                'event.competition.execution.results.raceclocker.poll.resume',
+                                                            )}
+                                                        </LoadingButton>
+                                                    )}
+                                                </Stack>
+                                            )
+                                        })()}
                                     <LoadingButton
                                         onClick={() =>
                                             props.openEditMatchDialog(roundIndex, matchIndex)

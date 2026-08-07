@@ -1065,6 +1065,14 @@
               "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden ({{teams}}). Bitte dort bereinigen und erneut holen.",
               "noResults": "Für diesen Lauf liegen in RaceClocker noch keine Zeiten vor.",
               "matchIsBye": "Dieser Lauf ist ein Freilos: Das Team kommt ohne Rennen weiter, es gibt keine Ergebnisse zu holen."
+            },
+            "poll": {
+              "lastPolled": "Automatisch abgerufen: {{time}}",
+              "error": "Automatischer Abruf klemmt: {{reason}}",
+              "paused": "Automatischer Abruf pausiert — es wurde von Hand eingetragen.",
+              "resume": "Automatik wieder aufnehmen",
+              "resumed": "Der automatische Abruf ist wieder aktiv.",
+              "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden. Welche, zeigt der Abruf über den Knopf."
             }
           }
         },
@@ -1354,6 +1362,14 @@
       "raceclockerHint": "RaceClocker braucht zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunden und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein — sie gelten dann für die ganze Veranstaltung.",
       "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
       "heatsUrl": "Ergebnis-Adresse Läufe",
+      "autoPull": {
+        "enabled": "Ergebnisse automatisch abrufen",
+        "hint": "Läuft ein Lauf, holt der Server die Ergebnisse im schnellen Takt. Bevorstehende Läufe werden im langsamen Takt beobachtet, um ihren Start zu erkennen; beendete Läufe gar nicht.",
+        "intervalActive": "Takt bei aktivem Lauf (Sekunden)",
+        "intervalUpcoming": "Takt bei bevorstehendem Lauf (Sekunden)",
+        "watchBefore": "Beobachten ab (Minuten vor der geplanten Startzeit)",
+        "watchAfter": "Beobachten bis (Minuten nach der geplanten Startzeit)"
+      },
       "startlistQualification": "Startlisten Export Qualifikation",
       "startlistRounds": "Startlisten Export übrige Runden",
       "startlist": "Startlisten Export",
@@ -1364,7 +1380,7 @@
         "3": " angelegt und gelten für alle Veranstaltungen."
       },
       "saved": "Zeitnahme-Voreinstellung gespeichert",
-      "invalid": "Bitte geben Sie Adressen auf raceclocker.com an.",
+      "invalid": "Die Eingaben wurden abgelehnt: Adressen müssen auf raceclocker.com zeigen, die Takte mindestens 2 Sekunden betragen und die Beobachtungsfenster dürfen nicht negativ sein.",
       "deviations": {
         "title": "Wettkämpfe mit eigener Zeitnahme",
         "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
