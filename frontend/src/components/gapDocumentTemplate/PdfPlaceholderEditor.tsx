@@ -7,7 +7,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import {Delete, DragIndicator} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import '@utils/pdfWorker'
-import {clampRect, MIN_EXTENT} from './placeholderGeometry.ts'
+import {clampRect, MIN_EXTENT, nudgeRect} from './placeholderGeometry.ts'
 
 type PlaceholderData = {
     id: string
@@ -202,6 +202,37 @@ const PdfPlaceholderEditor = (props: Props) => {
         }
     }, [draggedPlaceholder, resizingPlaceholder, handleMouseMove, handleMouseUp])
 
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (!props.selectedPlaceholder) {
+            return
+        }
+        const direction =
+            event.key === 'ArrowLeft'
+                ? 'left'
+                : event.key === 'ArrowRight'
+                  ? 'right'
+                  : event.key === 'ArrowUp'
+                    ? 'up'
+                    : event.key === 'ArrowDown'
+                      ? 'down'
+                      : undefined
+        if (!direction) {
+            return
+        }
+        event.preventDefault()
+        const placeholder = props.placeholders.find(p => p.id === props.selectedPlaceholder)
+        if (!placeholder) {
+            return
+        }
+        props.onPlaceholdersChange(
+            props.placeholders.map(p =>
+                p.id === props.selectedPlaceholder
+                    ? {...p, ...nudgeRect(p, direction, event.shiftKey)}
+                    : p,
+            ),
+        )
+    }
+
     const handleDeletePlaceholder = (id: string) => {
         props.onPlaceholdersChange(props.placeholders.filter(p => p.id !== id))
         if (props.selectedPlaceholder === id) {
@@ -352,7 +383,11 @@ const PdfPlaceholderEditor = (props: Props) => {
     const visiblePages = isSinglePageDocumentType ? Math.min(numPages, 1) : numPages
 
     return (
-        <Box ref={containerRef} sx={{overflow: 'auto', maxHeight: '70vh'}}>
+        <Box
+            ref={containerRef}
+            tabIndex={0}
+            onKeyDown={handleKeyDown}
+            sx={{overflow: 'auto', maxHeight: '70vh'}}>
             {isSinglePageDocumentType && numPages > 1 && (
                 <Typography variant="caption" color="text.secondary" sx={{display: 'block', mb: 1}}>
                     {t('gap.document.template.singlePageNotice')}
