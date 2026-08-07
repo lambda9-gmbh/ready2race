@@ -11,6 +11,8 @@ import de.lambda9.ready2race.backend.app.timecode.control.toTimecode
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.tailwind.core.KIO
+import java.time.LocalDateTime
+import java.util.UUID
 
 private fun List<CompetitionMatchTeamParticipant>.toNamedParticipantsDto() =
     groupBy { it.namedParticipantId }.map { (namedParticipantId, participants) ->
@@ -32,70 +34,102 @@ private fun List<CompetitionMatchTeamParticipant>.toNamedParticipantsDto() =
         )
     }
 
-fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String?) = KIO.ok(
-    CompetitionRoundDto(
-        setupRoundId = setupRoundId,
-        name = setupRoundName,
-        matches = matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
-            .map { match ->
-                CompetitionMatchDto(
-                    id = match.second.id,
-                    name = match.second.name,
-                    teams = match.first.teams.map { team ->
-                        CompetitionMatchTeamDto(
-                            registrationId = team.competitionRegistration,
-                            teamNumber = team.teamNumber!!, // This should not be null because competition_match_teams are not created if the registration teamNumber is missing
-                            clubId = team.clubId,
-                            clubName = team.clubName,
-                            actualClubName = singletonOrFallback(
-                                team.participants.map { it.externalClubName }.toSet(),
-                                mixedTeamTerm
-                            ),
-                            namedParticipants = team.participants.toNamedParticipantsDto(),
-                            name = team.registrationName,
-                            startNumber = team.startNumber,
-                            place = team.place,
-                            timeString = team.timeString,
-                            placesCalculated = team.placesCalculated,
-                            deregistered = team.deregistered,
-                            deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
-                            failed = team.failed,
-                            failedReason = team.failedReason,
-                            penaltySeconds = team.penaltySeconds,
-                            penaltyNote = team.penaltyNote,
-                        )
-                    },
-                    weighting = match.second.weighting,
-                    executionOrder = match.second.executionOrder,
-                    startTime = match.first.startTime,
-                    startTimeOffset = match.second.startTimeOffset,
-                    currentlyRunning = match.first.currentlyRunning,
-                    startedAt = match.first.startedAt,
-                    finishedAt = match.first.finishedAt,
-                    skipped = match.first.skipped,
-                    // Dieselbe Ableitung wie im Schiedsrichter-Dashboard - eine Ableitung, drei
-                    // Aufrufer. teamsOnWater bleibt null: die Check-in-Daten holt die
-                    // Durchführungsseite nicht mit, "nicht erhoben" ist etwas anderes als 0.
-                    status = MatchStatusLogic.matchStatus(
-                        currentlyRunning = match.first.currentlyRunning,
+/**
+ * [lastScanByParticipant] ist der letzte Steg-Scan je Person (aus
+ * [CompetitionMatchRepo.getScansByCompetition]) und speist allein den Wasser-Chip. Eine leere Karte
+ * heißt "keine Scans" - dann bleibt `teamsOnWater` null und der Chip entfällt, statt bei jedem Lauf
+ * dauerhaft "Wasser 0/6" zu behaupten.
+ *
+ * Bekannte Ungenauigkeit: die Crew kommt hier aus der Anmeldung (View
+ * `registered_competition_team_participant`), Ummeldungen der Runde sind darin nicht aufgelöst -
+ * anders als im Schiedsrichter-Dashboard, das sie über `buildParticipants` nachzieht. Der Fehler
+ * geht in die harmlose Richtung: eine ummeldete Crew erscheint eher als "noch nicht draußen", der
+ * Chip bleibt also länger stehen, statt einen Start zu behaupten, den es nicht gibt.
+ */
+fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
+    mixedTeamTerm: String?,
+    lastScanByParticipant: Map<UUID, Pair<String, LocalDateTime>> = emptyMap(),
+) = run {
+    val matchPairs =
+        matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
+
+    // Ein Aufruf für die ganze Runde: nur so lässt sich der Fall "kein Team der Runde hatte je
+    // einen Scan" überhaupt erkennen (Abschnitt 6 der Spec).
+    val teamsOnWaterPerMatch = MatchStatusLogic.teamsOnWaterPerMatch(
+        matchPairs.map { (match, _) ->
+            match.teams.map { team ->
+                team.participants.distinctBy { it.participantId }
+                    .map { lastScanByParticipant[it.participantId] }
+            }
+        }
+    )
+
+    KIO.ok(
+        CompetitionRoundDto(
+            setupRoundId = setupRoundId,
+            name = setupRoundName,
+            matches = matchPairs
+                .mapIndexed { index, match ->
+                    CompetitionMatchDto(
+                        id = match.second.id,
+                        name = match.second.name,
+                        teams = match.first.teams.map { team ->
+                            CompetitionMatchTeamDto(
+                                registrationId = team.competitionRegistration,
+                                teamNumber = team.teamNumber!!, // This should not be null because competition_match_teams are not created if the registration teamNumber is missing
+                                clubId = team.clubId,
+                                clubName = team.clubName,
+                                actualClubName = singletonOrFallback(
+                                    team.participants.map { it.externalClubName }.toSet(),
+                                    mixedTeamTerm
+                                ),
+                                namedParticipants = team.participants.toNamedParticipantsDto(),
+                                name = team.registrationName,
+                                startNumber = team.startNumber,
+                                place = team.place,
+                                timeString = team.timeString,
+                                placesCalculated = team.placesCalculated,
+                                deregistered = team.deregistered,
+                                deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
+                                failed = team.failed,
+                                failedReason = team.failedReason,
+                                penaltySeconds = team.penaltySeconds,
+                                penaltyNote = team.penaltyNote,
+                            )
+                        },
+                        weighting = match.second.weighting,
+                        executionOrder = match.second.executionOrder,
                         startTime = match.first.startTime,
+                        startTimeOffset = match.second.startTimeOffset,
+                        currentlyRunning = match.first.currentlyRunning,
                         startedAt = match.first.startedAt,
                         finishedAt = match.first.finishedAt,
                         skipped = match.first.skipped,
-                        teams = match.first.teams.map { team ->
-                            MatchStatusTeam(
-                                place = team.place,
-                                failed = team.failed,
-                                deregistered = team.deregistered,
-                            )
-                        },
-                    ),
-                )
-            },
-        required = required,
-        substitutions = substitutions
+                        // Dieselbe Ableitung wie im Schiedsrichter-Dashboard - eine Ableitung, drei
+                        // Aufrufer. teamsOnWater führt nur diese Ansicht: Zeitplan und öffentliche
+                        // Anzeigen lassen es null ("nicht erhoben" ist etwas anderes als 0).
+                        status = MatchStatusLogic.matchStatus(
+                            currentlyRunning = match.first.currentlyRunning,
+                            startTime = match.first.startTime,
+                            startedAt = match.first.startedAt,
+                            finishedAt = match.first.finishedAt,
+                            skipped = match.first.skipped,
+                            teams = match.first.teams.map { team ->
+                                MatchStatusTeam(
+                                    place = team.place,
+                                    failed = team.failed,
+                                    deregistered = team.deregistered,
+                                )
+                            },
+                            teamsOnWater = teamsOnWaterPerMatch[index],
+                        ),
+                    )
+                },
+            required = required,
+            substitutions = substitutions
+        )
     )
-)
+}
 
 fun ParticipantRecord.toSubstituteParticipantDto() = SubstitutionParticipantDto(
     id = id,

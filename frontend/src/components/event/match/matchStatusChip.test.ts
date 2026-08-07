@@ -154,9 +154,24 @@ describe('matchStatusChip', () => {
 })
 
 describe('waterChip', () => {
+    /**
+     * Zwei Wege führen hierher: eine Ansicht, die die Check-in-Daten gar nicht holt (Zeitplan,
+     * öffentliche Anzeigen), und eine Veranstaltung ohne Check-in — dort schickt der Server für
+     * jeden Lauf der Runde null statt 0, damit nicht dauerhaft „Wasser 0/6" dasteht. Auf der
+     * Leitung ist beides dasselbe: das Feld fehlt (Jackson schreibt nulls nicht mit).
+     */
     it('entfällt, solange der Wasserstand nicht erhoben wird', () => {
         expect(waterChip(status({state: 'RUNNING'}))).toBeNull()
         expect(waterChip(status({state: 'RUNNING', teamsOnWater: undefined}))).toBeNull()
+    })
+
+    /** Erhoben und niemand draußen ist eine Aussage — die 0 wird gezeigt, nicht verschluckt. */
+    it('zeigt die erhobene Null', () => {
+        expect(waterChip(status({state: 'UPCOMING', teamsOnWater: 0}))).toEqual({
+            labelKey: 'event.match.status.water',
+            values: {onWater: 0, total: 6},
+            color: 'default',
+        })
     })
 
     it('zeigt den Wasserstand, solange nicht alle Crews draußen sind', () => {

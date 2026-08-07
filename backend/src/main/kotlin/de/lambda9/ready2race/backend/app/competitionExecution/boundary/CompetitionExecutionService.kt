@@ -50,6 +50,7 @@ import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_FOR_EVENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_TRACKING
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
@@ -342,9 +343,22 @@ object CompetitionExecutionService {
 
             val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
 
+            // Letzter Steg-Scan je Person dieses Wettkampfs — Grundlage des Wasser-Chips. Dieselbe
+            // Reduktion wie im Schiedsrichter-Dashboard (LiveDashboardService): die Abfrage liefert
+            // alle Scans flach, der letzte je Person zählt. Bleibt die Karte leer, läuft die
+            // Veranstaltung ohne Check-in und der Chip entfällt (teamsOnWater = null).
+            val lastScanByParticipant = !CompetitionMatchRepo.getScansByCompetition(eventId, competitionId).orDie()
+                .map { scans ->
+                    scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }
+                        .mapValues { (_, rows) ->
+                            val last = rows.maxBy { it[PARTICIPANT_TRACKING.SCANNED_AT]!! }
+                            last[PARTICIPANT_TRACKING.SCAN_TYPE]!! to last[PARTICIPANT_TRACKING.SCANNED_AT]!!
+                        }
+                }
+
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
                 round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
-                    .toCompetitionRoundDto(event.mixedTeamTerm)
+                    .toCompetitionRoundDto(event.mixedTeamTerm, lastScanByParticipant)
             }.map {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(

@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.matchStatus.boundary
 
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
+import de.lambda9.ready2race.backend.app.matchStatus.entity.CrewLastScans
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
@@ -61,6 +62,28 @@ object MatchStatusLogic {
             teamsScored = scored,
             teamsOnWater = teamsOnWater,
         )
+    }
+
+    /**
+     * Wie viele Mannschaften je Lauf einer Runde auf dem Wasser sind - null, wenn die Runde dazu
+     * nichts hergibt.
+     *
+     * [roundCrewScans] enthält je Lauf der Runde je Mannschaft die letzten Scans ihrer Crew, in
+     * der Reihenfolge der Läufe. Ob eine einzelne Mannschaft draußen ist, entscheidet unverändert
+     * [LiveDashboardLogic.teamOnWaterAt] (jede bekannte Person zuletzt EXIT) - dieselbe Regel wie
+     * im Schiedsrichter-Dashboard, an genau einem Ort.
+     *
+     * Der Null-Fall ist der wichtigere Teil (Abschnitt 6 der Spec): hatte in der ganzen Runde
+     * KEINE Person je einen Scan, läuft die Veranstaltung ohne Check-in. Dann ist 0 keine Aussage,
+     * sondern eine Lücke - und bei jedem Lauf stünde dauerhaft "Wasser 0/6". Die Runde als Ganzes
+     * entscheidet, nicht der einzelne Lauf: ein Lauf, dessen Crews noch nicht am Steg waren,
+     * gehört zur erhobenen Runde und soll seine ehrliche 0 zeigen.
+     */
+    fun teamsOnWaterPerMatch(roundCrewScans: List<List<CrewLastScans>>): List<Int?> {
+        val anyScan = roundCrewScans.any { match -> match.any { crew -> crew.any { it != null } } }
+        return roundCrewScans.map { match ->
+            if (anyScan) match.count { LiveDashboardLogic.teamOnWaterAt(it) != null } else null
+        }
     }
 
     /**

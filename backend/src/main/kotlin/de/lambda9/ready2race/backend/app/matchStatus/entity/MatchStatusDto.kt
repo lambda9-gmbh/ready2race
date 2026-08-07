@@ -40,6 +40,14 @@ data class MatchStatusDto(
 )
 
 /**
+ * Der letzte Steg-Scan je bekanntem Crew-Mitglied einer Mannschaft: Scan-Art zu Zeitpunkt, oder
+ * null für jede Person, die nie gescannt wurde. Genau die Eingabe, die
+ * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamOnWaterAt]
+ * erwartet - der Alias gibt ihr nur einen Namen, damit die Signaturen hier lesbar bleiben.
+ */
+typealias CrewLastScans = List<Pair<String, LocalDateTime>?>
+
+/**
  * Die drei Angaben je Mannschaft, aus denen sich "gewertet" ergibt - dieselbe Regel wie im
  * Dashboard (siehe `LiveDashboardLogic.teamHasResult`). Bewusst ein eigener, minimaler Typ statt
  * eines der großen Team-DTOs: die Ableitung soll ohne Datenbank und ohne Ansichtskontext prüfbar

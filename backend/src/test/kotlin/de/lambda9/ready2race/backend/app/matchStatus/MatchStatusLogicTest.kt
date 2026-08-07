@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -174,6 +175,64 @@ class MatchStatusLogicTest {
             teamsOnWater = 0,
         )
         assertEquals(0, withWater.teamsOnWater)
+    }
+
+    // --- teamsOnWaterPerMatch ---
+
+    private fun exit(minute: Int) = ParticipantScanType.EXIT.name to start.plusMinutes(minute.toLong())
+    private fun entry(minute: Int) = ParticipantScanType.ENTRY.name to start.plusMinutes(minute.toLong())
+
+    /** Ohne einen einzigen Scan der Runde gibt es keine Grundlage - null, nicht 0. */
+    @Test
+    fun roundWithoutAnyScanReportsNothing() {
+        val round = listOf(
+            listOf(listOf(null, null), listOf(null, null)),
+            listOf(listOf(null, null)),
+        )
+        assertEquals(listOf(null, null), MatchStatusLogic.teamsOnWaterPerMatch(round))
+    }
+
+    /** Ein Lauf ohne Mannschaften bleibt bei 0, sobald die Runde überhaupt erhoben ist. */
+    @Test
+    fun matchWithoutTeamsCountsZeroInATrackedRound() {
+        val round = listOf(
+            listOf(listOf(exit(1), exit(2))),
+            emptyList(),
+        )
+        assertEquals(listOf(1, 0), MatchStatusLogic.teamsOnWaterPerMatch(round))
+    }
+
+    /** Genau die Regel des Dashboards: nur wenn JEDE bekannte Person zuletzt EXIT ist. */
+    @Test
+    fun onlyFullyCheckedOutCrewsCount() {
+        val round = listOf(
+            listOf(
+                // vollständig draußen
+                listOf(exit(1), exit(3)),
+                // eine Person wieder eingecheckt
+                listOf(exit(1), entry(4)),
+                // eine Person nie gescannt
+                listOf(exit(1), null),
+                // keine Crew bekannt - lässt sich nichts belegen
+                emptyList(),
+            )
+        )
+        assertEquals(listOf(1), MatchStatusLogic.teamsOnWaterPerMatch(round))
+    }
+
+    /** Ein einziger Scan irgendwo in der Runde macht die ganze Runde erhoben. */
+    @Test
+    fun oneScanAnywhereMakesTheWholeRoundCounted() {
+        val round = listOf(
+            listOf(listOf(entry(1), null)),
+            listOf(listOf(null, null)),
+        )
+        assertEquals(listOf(0, 0), MatchStatusLogic.teamsOnWaterPerMatch(round))
+    }
+
+    @Test
+    fun emptyRoundStaysEmpty() {
+        assertEquals(emptyList(), MatchStatusLogic.teamsOnWaterPerMatch(emptyList()))
     }
 
     // --- roundCounters ---

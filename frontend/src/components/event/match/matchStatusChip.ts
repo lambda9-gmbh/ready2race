@@ -125,14 +125,14 @@ export const matchStatusChip = (
  * „Auf dem Wasser" ist bewusst kein eigener Zustand — es ist eine Eigenschaft des
  * Vorbereitungsstands, keine Phase des Laufs, und würde als Zustand mit „Läuft" konkurrieren.
  *
- * `teamsOnWater == null` heißt „in dieser Ansicht nicht erhoben" (Zeitplan, öffentliche Anzeigen)
- * und ist etwas anderes als 0 („erhoben, aber niemand draußen"). Solange die Abfrage dafür nicht
- * gestellt wird, ist null der Normalfall und der Chip entfällt vollständig.
+ * `teamsOnWater == null` heißt „nicht erhoben" und ist etwas anderes als 0 („erhoben, aber niemand
+ * draußen"). Der Fall tritt zweifach auf: in Ansichten, die die Check-in-Daten gar nicht holen
+ * (Zeitplan, öffentliche Anzeigen), und bei einer Veranstaltung ohne Check-in — hatte kein Team der
+ * Runde je einen Scan, schickt der Server null statt 0 (Abschnitt 6 der Spec, entschieden in
+ * `MatchStatusLogic.teamsOnWaterPerMatch`), sonst stünde bei jedem Lauf dauerhaft „Wasser 0/6".
  *
  * Er entfällt außerdem, sobald er nichts mehr aussagt: bei einem Lauf ohne Mannschaften, nach
- * Beenden oder Absage, und wenn ohnehin alle Crews draußen sind. Die Regel aus Abschnitt 6 der
- * Spec („keine Anzeige, wenn kein Team der Runde je einen Scan hatte") gehört zur Runde, nicht zum
- * einzelnen Lauf, und wird mit der Abfrage in Schritt 7 nachgezogen.
+ * Beenden oder Absage, und wenn ohnehin alle Crews draußen sind.
  */
 export const waterChip = (status: MatchStatusDto): MatchChip | null => {
     const onWater = status.teamsOnWater
