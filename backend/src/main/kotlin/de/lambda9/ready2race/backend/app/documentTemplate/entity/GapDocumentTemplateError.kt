@@ -8,6 +8,7 @@ import io.ktor.http.HttpStatusCode
 enum class GapDocumentTemplateError : ServiceError {
     NotFound,
     InvalidFont,
+    InvalidPdf,
     PlaceholderPageNotSupported,
     PlaceholderTypeNotSupported,
     TemplateTypeMismatch;
@@ -31,6 +32,13 @@ enum class GapDocumentTemplateError : ServiceError {
                 status = HttpStatusCode.BadRequest,
                 message = "Font file could not be read",
                 errorCode = ErrorCode.DOCUMENT_TEMPLATE_INVALID_FONT,
+            )
+
+        InvalidPdf ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = "Template file could not be read as PDF",
+                errorCode = ErrorCode.DOCUMENT_TEMPLATE_INVALID_PDF,
             )
 
         PlaceholderPageNotSupported ->

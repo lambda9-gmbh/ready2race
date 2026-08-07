@@ -31,6 +31,7 @@ import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.pdf.checkValidFont
+import de.lambda9.ready2race.backend.pdf.checkValidPdf
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -67,6 +68,8 @@ object GapDocumentTemplateService {
         font: File?,
     ): App<GapDocumentTemplateError, ApiResponse.NoData> = KIO.comprehension {
 
+        !KIO.failOn(!checkValidPdf(file.bytes)) { GapDocumentTemplateError.InvalidPdf }
+
         !KIO.failOn(!GapDocumentTemplateLogic.placeholdersFitOnSinglePage(request.type, request.placeholders)) {
             GapDocumentTemplateError.PlaceholderPageNotSupported
         }
@@ -76,6 +79,9 @@ object GapDocumentTemplateService {
         }
 
         if (font != null && font.bytes.isNotEmpty()) {
+            !KIO.failOn(!GapDocumentTemplateLogic.hasValidFontExtension(font.name)) {
+                GapDocumentTemplateError.InvalidFont
+            }
             !KIO.failOn(!checkValidFont(font.bytes)) { GapDocumentTemplateError.InvalidFont }
         }
 
@@ -123,6 +129,9 @@ object GapDocumentTemplateService {
         }
 
         if (font != null && font.bytes.isNotEmpty()) {
+            !KIO.failOn(!GapDocumentTemplateLogic.hasValidFontExtension(font.name)) {
+                GapDocumentTemplateError.InvalidFont
+            }
             !KIO.failOn(!checkValidFont(font.bytes)) { GapDocumentTemplateError.InvalidFont }
         }
 

@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocume
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
-import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateError
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateViewSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
@@ -24,10 +23,6 @@ import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
-
-/** Grobe Vorprüfung des Font-Uploads anhand der Dateiendung, bevor der Inhalt gelesen wird. */
-private fun hasValidFontExtension(fileName: String): Boolean =
-    fileName.substringAfterLast('.', "").lowercase() in setOf("ttf", "otf")
 
 /** Ergebnis von [readGapDocumentTemplateMultipart]: die rohen, noch ungeprüften Teile des Requests. */
 private data class GapDocumentTemplateMultipart(
@@ -115,10 +110,6 @@ fun Route.documentTemplate() {
 
                 val request = !KIO.failOnNull(parsed.request) { RequestError.BodyMissing(GapDocumentTemplateRequest.example) }
                 val file = !KIO.failOnNull(parsed.templateFile) { RequestError.File.Missing }
-                !KIO.failOn(!checkValidPdf(file.bytes)) { RequestError.File.UnsupportedType }
-                if (parsed.fontFile != null && parsed.fontFile.bytes.isNotEmpty()) {
-                    !KIO.failOn(!hasValidFontExtension(parsed.fontFile.name)) { GapDocumentTemplateError.InvalidFont }
-                }
 
                 GapDocumentTemplateService.addTemplate(file, request, parsed.fontFile)
             }
@@ -134,9 +125,6 @@ fun Route.documentTemplate() {
                     val parsed = readGapDocumentTemplateMultipart(multiPartData, acceptTemplateFile = false)
 
                     val payload = !KIO.failOnNull(parsed.request) { RequestError.BodyMissing(GapDocumentTemplateRequest.example) }
-                    if (parsed.fontFile != null && parsed.fontFile.bytes.isNotEmpty()) {
-                        !KIO.failOn(!hasValidFontExtension(parsed.fontFile.name)) { GapDocumentTemplateError.InvalidFont }
-                    }
 
                     GapDocumentTemplateService.updateTemplate(id, payload, parsed.fontFile)
                 }
