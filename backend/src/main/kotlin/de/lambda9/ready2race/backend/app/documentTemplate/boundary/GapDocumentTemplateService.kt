@@ -67,7 +67,14 @@ object GapDocumentTemplateService {
         file: File,
         request: GapDocumentTemplateRequest,
         font: File?,
-    ): App<GapDocumentTemplateError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<GapDocumentTemplateError, ApiResponse.NoData> =
+        createTemplate(file, request, font).map { ApiResponse.NoData }
+
+    private fun createTemplate(
+        file: File,
+        request: GapDocumentTemplateRequest,
+        font: File?,
+    ): App<GapDocumentTemplateError, UUID> = KIO.comprehension {
 
         !KIO.failOn(!checkValidPdf(file.bytes)) { GapDocumentTemplateError.InvalidPdf }
 
@@ -111,7 +118,7 @@ object GapDocumentTemplateService {
             ).orDie()
         }
 
-        noData
+        KIO.ok(id)
 
     }
 
@@ -220,6 +227,30 @@ object GapDocumentTemplateService {
                 bytes = bytes,
             )
         )
+    }
+
+    /**
+     * Legt aus einem Austauschpaket eine neue Vorlage an. Bewusst über [createTemplate], damit der
+     * Import genau dieselben Prüfungen durchläuft wie ein normaler Upload und nicht an ihnen vorbei.
+     */
+    fun importTemplate(
+        pkg: File,
+    ): App<GapDocumentTemplateError, ApiResponse.Created> = KIO.comprehension {
+        val content = when (val result = GapDocumentTemplatePackage.read(pkg.bytes)) {
+            is GapDocumentTemplatePackage.ReadResult.Ok -> result.content
+            GapDocumentTemplatePackage.ReadResult.Invalid ->
+                !KIO.fail(GapDocumentTemplateError.InvalidPackage)
+            GapDocumentTemplatePackage.ReadResult.UnsupportedVersion ->
+                !KIO.fail(GapDocumentTemplateError.UnsupportedPackageVersion)
+        }
+
+        val id = !createTemplate(
+            file = File(content.name, content.pdf),
+            request = content.request,
+            font = content.font,
+        )
+
+        KIO.ok(ApiResponse.Created(id))
     }
 
     fun getPreview(

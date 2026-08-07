@@ -90,6 +90,35 @@ private suspend fun CallComprehensionScope.readGapDocumentTemplateMultipart(
     return GapDocumentTemplateMultipart(templateFile, fontFile, request)
 }
 
+/** Liest genau einen Datei-Teil; mehrere Dateien oder gar keine sind ein Fehler. */
+private suspend fun CallComprehensionScope.readSingleFilePart(
+    multiPartData: MultiPartData,
+): File {
+    var file: File? = null
+
+    var done = false
+    while (!done) {
+        val part = multiPartData.readPart()
+        if (part == null) {
+            done = true
+        } else {
+            if (part is PartData.FileItem) {
+                if (file == null) {
+                    file = File(
+                        part.originalFileName ?: "",
+                        part.provider().toByteArray(),
+                    )
+                } else {
+                    !KIO.fail(RequestError.File.Multiple)
+                }
+            }
+            part.dispose()
+        }
+    }
+
+    return !KIO.failOnNull(file) { RequestError.File.Missing }
+}
+
 fun Route.documentTemplate() {
 
     route("/gapDocumentTemplate") {
@@ -112,6 +141,17 @@ fun Route.documentTemplate() {
                 val file = !KIO.failOnNull(parsed.templateFile) { RequestError.File.Missing }
 
                 GapDocumentTemplateService.addTemplate(file, request, parsed.fontFile)
+            }
+        }
+
+        post("/import") {
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateEventGlobal)
+
+                val multiPartData = call.receiveMultipart()
+                val pkg = readSingleFilePart(multiPartData)
+
+                GapDocumentTemplateService.importTemplate(pkg)
             }
         }
 

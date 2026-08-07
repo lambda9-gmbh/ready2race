@@ -11,7 +11,9 @@ enum class GapDocumentTemplateError : ServiceError {
     InvalidPdf,
     PlaceholderPageNotSupported,
     PlaceholderTypeNotSupported,
-    TemplateTypeMismatch;
+    TemplateTypeMismatch,
+    InvalidPackage,
+    UnsupportedPackageVersion;
 
     override fun respond(): ApiError = when(this) {
         NotFound ->
@@ -53,6 +55,20 @@ enum class GapDocumentTemplateError : ServiceError {
                 status = HttpStatusCode.BadRequest,
                 message = "Placeholder type is not supported for the chosen document type",
                 errorCode = ErrorCode.DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED,
+            )
+
+        InvalidPackage ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = "Template package could not be read",
+                errorCode = ErrorCode.DOCUMENT_TEMPLATE_INVALID_PACKAGE,
+            )
+
+        UnsupportedPackageVersion ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = "Template package has an unsupported format version",
+                errorCode = ErrorCode.DOCUMENT_TEMPLATE_UNSUPPORTED_PACKAGE_VERSION,
             )
     }
 }
