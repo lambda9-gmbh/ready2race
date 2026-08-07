@@ -149,6 +149,116 @@ export type AssignRequirementToNamedParticipantDto = {
     qrCodeRequired: boolean
 }
 
+export type AthleteBoardDto = {
+    eventName: string
+    serverTime: string
+    refreshIntervalSeconds: number
+    showCountdown: boolean
+    running: Array<AthleteBoardMatch>
+    upcoming: Array<AthleteBoardMatch>
+    results: Array<AthleteBoardResult>
+}
+
+export type AthleteBoardMatch = {
+    matchId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    /**
+     * scheduled start
+     */
+    startTime?: string | null
+    /**
+     * real start; only filled in the running block - null there means the match is current but has not started yet
+     */
+    actualStartTime?: string | null
+    startState: AthleteBoardStartState
+    teams: Array<AthleteBoardTeam>
+    /**
+     * true for a placeholder from a waiting timeline slot; teams is then always empty
+     */
+    pendingRound: boolean
+    /**
+     * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
+     */
+    name?: string | null
+}
+
+export type AthleteBoardParticipant = {
+    name: string
+    role?: string | null
+}
+
+export type AthleteBoardResult = {
+    matchId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    /**
+     * scheduled start
+     */
+    startTime?: string | null
+    /**
+     * real start, if stamped - explains a deviation from the schedule
+     */
+    actualStartTime?: string | null
+    teams: Array<AthleteBoardResultTeam>
+}
+
+export type AthleteBoardResultTeam = {
+    place?: number | null
+    lane: number
+    /**
+     * the nth team of this club in the competition - only shown when teamName is missing
+     */
+    teamNumber?: number | null
+    clubName?: string | null
+    teamName?: string | null
+    timeString?: string | null
+    /**
+     * time penalty in seconds; only stated, never applied - timeString already includes it
+     */
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
+    failed: boolean
+    failedReason?: string | null
+    /**
+     * withdrawn for this round - listed but marked, since such a team has neither place nor time
+     */
+    deregistered: boolean
+    deregisteredReason?: string | null
+}
+
+export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
+
+export type AthleteBoardTeam = {
+    lane?: number | null
+    /**
+     * the nth team of this club in the competition - only shown when teamName is missing
+     */
+    teamNumber?: number | null
+    clubName?: string | null
+    teamName?: string | null
+    participants: Array<AthleteBoardParticipant>
+    /**
+     * partial result of a running match; always null in the upcoming block
+     */
+    place?: number | null
+    /**
+     * partial result of a running match; null means no time yet
+     */
+    timeString?: string | null
+    /**
+     * time penalty in seconds; only stated, never applied - timeString already includes it
+     */
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
+    failed: boolean
+    failedReason?: string | null
+}
+
 export type BadRequestError = ApiError & {
     details?: {
         validExample?: unknown
@@ -197,6 +307,11 @@ export type CatererTransactionViewDto = {
     price: string
     createdAt: string
 }
+
+/**
+ * Three modes for the finish/activate chain: SCHIEDSRICHTER keeps finish+chain on the referee dashboard (as before); REGATTABUERO moves both exclusively to the schedule tab (the finish button disappears from the referee dashboard); DEAKTIVIERT lets finish affect only the match itself, without activating the next start time's matches.
+ */
+export type ChainProgressionMode = 'SCHIEDSRICHTER' | 'REGATTABUERO' | 'DEAKTIVIERT'
 
 export type ChallengeCompetitionInfoDto = {
     id: string
@@ -346,6 +461,9 @@ export type CompetitionMatchDto = {
     weighting: number
     executionOrder: number
     startTime?: string
+    /**
+     * Offset between the starts of consecutive teams, in seconds
+     */
     startTimeOffset?: number
     currentlyRunning: boolean
 }
@@ -366,6 +484,11 @@ export type CompetitionMatchTeamDto = {
     deregistrationReason?: string
     failed: boolean
     failedReason?: string
+    /**
+     * Time penalty in seconds; the result time already includes it
+     */
+    penaltySeconds?: number
+    penaltyNote?: string
 }
 
 export type CompetitionPropertiesDto = {
@@ -549,6 +672,9 @@ export type CompetitionSetupMatchDto = {
     name?: string
     participants: Array<number>
     executionOrder: number
+    /**
+     * Offset between the starts of consecutive teams, in seconds
+     */
     startTimeOffset?: number
 }
 
@@ -648,6 +774,7 @@ export type CompetitionTeamPlaceDto = {
     place: number
     deregistered: boolean
     deregistrationReason?: string
+    excluded: boolean
 }
 
 export type CompetitionTemplateDto = {
@@ -690,6 +817,12 @@ export type CreateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    chainProgressionMode?: ChainProgressionMode
+    /**
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
+     */
+    showBreaksOnPublicBoards?: boolean
+    publicResultsVisibility?: PublicResultsVisibility
 }
 
 export type CustomFontDto = {
@@ -801,6 +934,7 @@ export type ErrorCode =
     | 'PLACES_UNCONTINUOUS'
     | 'LIST_DATA_INCOMPLETE'
     | 'RESULT_NOT_FAILED_AND_NO_DATA'
+    | 'PARTICIPANT_IMPORT_UNKNOWN_GENDER_VALUE'
     | 'CLUB_NAME_ALREADY_EXISTS'
     | 'RACECLOCKER_URL_MISSING'
     | 'RACECLOCKER_URL_INVALID'
@@ -810,6 +944,65 @@ export type ErrorCode =
     | 'RACECLOCKER_DUPLICATE_TEAMS'
     | 'RACECLOCKER_NO_RESULTS'
     | 'RACECLOCKER_MATCH_IS_BYE'
+    | 'STARTLIST_CONFIG_NOT_CONFIGURED'
+    | 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
+    | 'SCHEDULE_SHIFT_WITHOUT_CHANGE'
+    | 'SCHEDULE_SHIFT_TARGET_INVALID'
+    | 'SCHEDULE_SHIFT_LEAVES_RACE_DAY'
+    | 'SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR'
+    | 'SCHEDULE_IMPORT_DUPLICATE_ROWS'
+    | 'SCHEDULE_COMPRESSION_IMPOSSIBLE'
+    | 'SCHEDULE_SETUP_MATCH_ALREADY_PLANNED'
+    | 'SCHEDULE_SLOT_MATCH_ALREADY_STARTED'
+    | 'SCHEDULE_SLOT_MATCH_ALREADY_FINISHED'
+    | 'SCHEDULE_SLOT_NOT_SKIPPABLE'
+    | 'SCHEDULE_SLOT_NOT_LINKED'
+    | 'SCHEDULE_ROUND_NOT_MATERIALIZED'
+    | 'SCHEDULE_ROUND_HAS_RUNS_TO_RACE'
+    | 'CERTIFICATE_NO_RESULTS'
+    | 'CERTIFICATE_MISSING_TEMPLATE'
+    | 'CERTIFICATE_UNREADABLE_TEMPLATE'
+    | 'CERTIFICATE_NOT_A_CHALLENGE_EVENT'
+    | 'CERTIFICATE_CHALLENGE_STILL_IN_PROGRESS'
+    | 'AWARD_CERTIFICATE_NO_RESULTS'
+    | 'AWARD_CERTIFICATE_MISSING_TEMPLATE'
+    | 'AWARD_CERTIFICATE_UNREADABLE_TEMPLATE'
+    | 'AWARD_CERTIFICATE_COMPETITION_NOT_IN_EVENT'
+    | 'AWARD_CERTIFICATE_IS_CHALLENGE_EVENT'
+    | 'DOCUMENT_TEMPLATE_INVALID_FONT'
+    | 'DOCUMENT_TEMPLATE_TYPE_MISMATCH'
+    | 'DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED'
+    | 'DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED'
+    | 'SUBSTITUTION_NOT_FOUND'
+    | 'SUBSTITUTION_PARTICIPANT_OUT_NOT_FOUND'
+    | 'SUBSTITUTION_PARTICIPANT_IN_NOT_FOUND'
+    | 'SUBSTITUTION_PARTICIPANT_OUT_NOT_AVAILABLE'
+    | 'SUBSTITUTION_PARTICIPANT_IN_NOT_AVAILABLE'
+    | 'SUBSTITUTION_DEPENDENT_FOUND'
+    | 'SUBSTITUTION_CREATED_IN_PREVIOUS_ROUND'
+    | 'CHALLENGE_NOT_A_CHALLENGE_EVENT'
+    | 'CHALLENGE_ALREADY_STARTED'
+    | 'CHALLENGE_NOT_STARTED_YET'
+    | 'CHALLENGE_CORRUPTED_SETUP'
+    | 'CHALLENGE_RESULT_ALREADY_SUBMITTED'
+    | 'CHALLENGE_NO_RESULT_SUBMITTED'
+    | 'CHALLENGE_SELF_SUBMISSION_NOT_ALLOWED'
+    | 'EXECUTION_TEAMS_NOT_MATCHING'
+    | 'EXECUTION_MATCH_RESULTS_LOCKED'
+    | 'EXECUTION_MATCH_IS_BYE'
+    | 'EXECUTION_PLACES_NOT_CONTINUOUS'
+    | 'EXECUTION_START_TIME_MANAGED_BY_SCHEDULE'
+    | 'LIVE_DASHBOARD_FINISH_RESERVED_FOR_OFFICE'
+    | 'QR_CODE_ALREADY_IN_USE'
+    | 'TRACKING_TEAM_ALREADY_CHECKED_IN'
+    | 'TRACKING_TEAM_NOT_CHECKED_IN'
+    | 'TRACKING_QR_CODE_NOT_FOUND'
+    | 'TRACKING_QR_CODE_NOT_ASSOCIATED_WITH_PARTICIPANT'
+    | 'DEREGISTRATION_ALREADY_EXISTS'
+    | 'DEREGISTRATION_IS_LOCKED'
+    | 'DEREGISTRATION_RESULTS_ALREADY_EXIST'
+    | 'DEREGISTRATION_NOT_IN_CURRENT_ROUND'
+    | 'DEREGISTRATION_REGISTRATION_STILL_OPEN'
 
 export type EventDayDto = {
     id: string
@@ -877,6 +1070,12 @@ export type EventDto = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    chainProgressionMode?: ChainProgressionMode
+    /**
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
+     */
+    showBreaksOnPublicBoards?: boolean
+    publicResultsVisibility?: PublicResultsVisibility
     challengesFinished?: boolean
 }
 
@@ -1035,6 +1234,55 @@ export type EventRegistrationViewDto = {
     eventDocumentsOfficiallyAccepted: boolean
 }
 
+export type EventScheduleDto = {
+    slots: Array<EventScheduleSlotDto>
+    unplannedSetupMatches: Array<UnplannedSetupMatchDto>
+    chainProgressionMode: ChainProgressionMode
+}
+
+export type EventScheduleSlotDto = {
+    id: string
+    startTime: string
+    state: EventScheduleSlotState
+    name?: string | null
+    durationMinutes?: number | null
+    competitionId?: string | null
+    competitionName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    matchId?: string | null
+    setupMatchId?: string | null
+    setupRoundId?: string | null
+    matchStartedAt?: string | null
+    matchFinishedAt?: string | null
+    /**
+     * Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot
+     */
+    matchCurrentlyRunning: boolean
+}
+
+export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
+
+/**
+ * Event-wide timing defaults. RaceClocker races are created per event, so the timing system and the two results URLs live here once and every competition without its own values inherits them. Column presets stay per competition - they depend on the concrete start list.
+ *
+ */
+export type EventTimingConfigDto = {
+    timingSystem?: TimingSystem | null
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+}
+
+/**
+ * Every field is optional, like the per-competition config. The URLs must be https URLs on raceclocker.com.
+ *
+ */
+export type EventTimingConfigRequest = {
+    timingSystem?: TimingSystem | null
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+}
+
 export type FeeDto = {
     id: string
     name: string
@@ -1078,6 +1326,13 @@ export type GapDocumentPlaceholderDto = {
     relWidth: number
     relHeight: number
     textAlign: TextAlign
+    fontSize?: number
+    bold: boolean
+    italic: boolean
+    /**
+     * Fester Text für den Platzhaltertyp FREE_TEXT, z. B. der Name des Unterzeichners.
+     */
+    staticText?: string
 }
 
 export type GapDocumentPlaceholderRequest = {
@@ -1089,6 +1344,13 @@ export type GapDocumentPlaceholderRequest = {
     relWidth: number
     relHeight: number
     textAlign: TextAlign
+    fontSize?: number
+    bold?: boolean
+    italic?: boolean
+    /**
+     * Fester Text für den Platzhaltertyp FREE_TEXT, z. B. der Name des Unterzeichners.
+     */
+    staticText?: string
 }
 
 export type GapDocumentPlaceholderType =
@@ -1097,24 +1359,45 @@ export type GapDocumentPlaceholderType =
     | 'FULL_NAME'
     | 'RESULT'
     | 'EVENT_NAME'
+    | 'PLACE'
+    | 'COMPETITION_NAME'
+    | 'COMPETITION_SHORT_NAME'
+    | 'CLUB_NAME'
+    | 'TEAM_NAME'
+    | 'EVENT_DATE'
+    | 'EVENT_LOCATION'
+    | 'FREE_TEXT'
 
 export type GapDocumentTemplateDto = {
     id: string
     name: string
     type: GapDocumentType
+    /**
+     * Schriftname für die Word-Ausgabe, z. B. "TheSansOffice".
+     */
+    fontName?: string
+    /**
+     * Ob eine Schriftdatei zum Einbetten in die erzeugten PDFs hochgeladen wurde.
+     */
+    hasFont: boolean
     placeholders: Array<GapDocumentPlaceholderDto>
 }
 
 export type GapDocumentTemplateRequest = {
     type: GapDocumentType
+    /**
+     * Schriftname für die Word-Ausgabe, z. B. "TheSansOffice".
+     */
+    fontName?: string
     placeholders: Array<GapDocumentPlaceholderRequest>
 }
 
-export type GapDocumentType = 'CERTIFICATE_OF_PARTICIPATION'
+export type GapDocumentType = 'CERTIFICATE_OF_PARTICIPATION' | 'AWARD_CERTIFICATE'
 
 export type GapDocumentTypeDto = {
     type: GapDocumentType
     assignedTemplate?: AssignedTemplateId
+    allowedPlaceholders: Array<GapDocumentPlaceholderType>
 }
 
 export type Gender = 'M' | 'F' | 'D'
@@ -1125,6 +1408,20 @@ export type GroupedParticipantQrAssignmentDto = {
     competitionName: string
     participants: Array<ParticipantQrAssignmentDto>
 }
+
+/**
+ * A row for the preview UI. targetLabel is only set for LINKED rows ("competitionName – roundName – matchName"), null otherwise.
+ */
+export type ImportRowResultDto = {
+    rowNumber: number
+    startTime: string
+    competitionText?: string | null
+    laufText: string
+    status: ImportRowStatus
+    targetLabel?: string | null
+}
+
+export type ImportRowStatus = 'LINKED' | 'FREE' | 'AMBIGUOUS' | 'DUPLICATE'
 
 export type InfoViewConfigurationDto = {
     id: string
@@ -1152,7 +1449,11 @@ export type InfoViewConfigurationRequest = {
     isActive: boolean
 }
 
-export type InfoViewType = 'UPCOMING_MATCHES' | 'LATEST_MATCH_RESULTS' | 'RUNNING_MATCHES'
+export type InfoViewType =
+    | 'UPCOMING_MATCHES'
+    | 'LATEST_MATCH_RESULTS'
+    | 'RUNNING_MATCHES'
+    | 'ATHLETE_BOARD'
 
 export type Invalid =
     | string
@@ -1218,7 +1519,117 @@ export type LatestMatchResultInfo = {
     matchNumber?: number | null
     updatedAt: string
     startTime?: string
+    /**
+     * real start, if stamped
+     */
+    startedAt?: string | null
     teams: Array<MatchResultTeamInfo>
+}
+
+export type LiveDashboardDto = {
+    matches: Array<LiveDashboardMatchDto>
+    /**
+     * Ascending by start time; included in both scopes (ALL and LIVE) - the list is small
+     */
+    pendingSlots: Array<PendingSlotDto>
+    chainProgressionMode: ChainProgressionMode
+}
+
+export type LiveDashboardInvoiceState = 'PAID' | 'OPEN' | 'NONE'
+
+export type LiveDashboardMatchDto = {
+    matchId: string
+    state: LiveDashboardMatchState
+    competitionId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    executionOrder: number
+    startTime?: string | null
+    startedAt?: string | null
+    currentlyRunning: boolean
+    elapsedMinutes?: number | null
+    teams: Array<LiveDashboardTeamDto>
+}
+
+/**
+ * SKIPPED: the schedule slot of this match was cancelled. Unlike the public boards the referee dashboard marks such a match instead of hiding it - the referee has to see the cancellation to be able to undo it in the schedule.
+ *
+ * AWAITING_FINISH: every boat is scored but nobody finished the match yet. FINISHED means exclusively that competition_match.finished_at is set - a match only ends by an explicit action, because until then a time penalty can still arrive.
+ */
+export type LiveDashboardMatchState =
+    | 'RUNNING'
+    | 'FINISHED'
+    | 'SKIPPED'
+    | 'AWAITING_FINISH'
+    | 'UPCOMING'
+    | 'UNSCHEDULED'
+
+export type LiveDashboardParticipantDto = {
+    participantId: string
+    firstName: string
+    lastName: string
+    namedRole?: string | null
+    year?: number | null
+    gender?: string | null
+    externalClubName?: string | null
+    /**
+     * Name of the participant this one replaced when substituted into the round
+     */
+    substitutedFor?: string | null
+    substitutionReason?: string | null
+    requirements: Array<LiveDashboardRequirementStatusDto>
+}
+
+export type LiveDashboardRequirementStatusDto = {
+    requirementId: string
+    name: string
+    description?: string | null
+    optional: boolean
+    checked: boolean
+    checkedAt?: string | null
+    note?: string | null
+    timeCheck?: TimeCheckDto | null
+}
+
+/**
+ * Condensed requirement state per team; the requirements themselves are only in the team detail
+ */
+export type LiveDashboardRequirementSummaryDto = {
+    total: number
+    fulfilled: number
+    missingRequired: number
+    missingOptional: number
+    timeIssues: number
+}
+
+export type LiveDashboardTeamDetailDto = {
+    teamId: string
+    participants: Array<LiveDashboardParticipantDto>
+}
+
+export type LiveDashboardTeamDto = {
+    teamId: string
+    teamName?: string | null
+    clubName?: string | null
+    actualClubName?: string | null
+    startNumber?: number | null
+    place?: number | null
+    time?: string | null
+    failed: boolean
+    failedReason?: string | null
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
+    deregistered: boolean
+    deregisteredReason?: string | null
+    invoiceState: LiveDashboardInvoiceState
+    requirements: LiveDashboardRequirementSummaryDto
+    substituted: boolean
+    /**
+     * When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known
+     */
+    onWaterAt?: string | null
 }
 
 export type LoginDto = {
@@ -1275,6 +1686,11 @@ export type MatchResultTeamInfo = {
     timeString?: string
     failed: boolean
     failedReason?: string
+    /**
+     * Time penalty in seconds; the result time already includes it
+     */
+    penaltySeconds?: number
+    penaltyNote?: string
     deregistered: boolean
     deregisteredReason?: string
     participants: Array<ParticipantInfo>
@@ -1537,6 +1953,14 @@ export type ParticipantRequirementDto = {
      * Per App prüfbar
      */
     checkInApp: boolean
+    /**
+     * Check must be at most this many minutes before match start
+     */
+    checkEarliestMinutesBefore?: number | null
+    /**
+     * Check must exist at latest this many minutes before match start
+     */
+    checkLatestMinutesBefore?: number | null
 }
 
 export type ParticipantRequirementForEventDto = {
@@ -1560,6 +1984,14 @@ export type ParticipantRequirementUpsertDto = {
      * Per App prüfbar
      */
     checkInApp?: boolean
+    /**
+     * Check must be at most this many minutes before match start
+     */
+    checkEarliestMinutesBefore?: number | null
+    /**
+     * Check must exist at latest this many minutes before match start
+     */
+    checkLatestMinutesBefore?: number | null
 }
 
 export type ParticipantScanType = 'ENTRY' | 'EXIT'
@@ -1610,6 +2042,18 @@ export type PendingClubRepresentativeApprovalDto = {
     createdAt: string
 }
 
+/**
+ * A placeholder in the live dashboard timeline - either a waiting match slot (round not yet materialized) or a FREE slot/program item (e.g. lunch break). Deliberately without team/participant data, since neither kind has any yet. 'name' distinguishes the cases: set for program items, null for match placeholders.
+ */
+export type PendingSlotDto = {
+    slotId: string
+    startTime: string
+    name?: string | null
+    competitionName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+}
+
 export type PossibleSubstitutionParticipantDto = {
     id: string
     firstName: string
@@ -1651,6 +2095,11 @@ export type ProduceInvoicesRequest = {
     type: RegistrationInvoiceType
 }
 
+/**
+ * From which state on a match shows up as a result on the public views (athlete board, kiosk, public results page): FINISHED_ONLY only for finished matches (finished_at set), RESULTS_COMPLETE additionally for matches whose boats are all scored (AWAITING_FINISH). Defaults to FINISHED_ONLY, because until a match is finished a time penalty can still arrive and a published result that changes afterwards cannot be taken back.
+ */
+export type PublicResultsVisibility = 'FINISHED_ONLY' | 'RESULTS_COMPLETE'
+
 export type QrCodeAppuserResponse = {
     firstname: string
     lastname: string
@@ -1689,25 +2138,6 @@ export type QrCodeParticipantUpdate = {
 export type QrCodePublicResponse = {
     eventId: string
     type?: QrCodeDtoType
-}
-
-export type RaceClockerConfigDto = {
-    /**
-     * Public results URL of the individual-start race used for the qualification round.
-     */
-    timeTrialResultsUrl?: string
-    /**
-     * Public results URL of the wave-start race used for all other rounds.
-     */
-    heatsResultsUrl?: string
-}
-
-/**
- * Both URLs are optional. They must be https URLs on raceclocker.com; the host is pinned so the backend cannot be pointed at other services.
- */
-export type RaceClockerConfigRequest = {
-    timeTrialResultsUrl?: string | null
-    heatsResultsUrl?: string | null
 }
 
 export type RatingCategoriesToEventRequest = {
@@ -1757,6 +2187,7 @@ export type Resource =
     | 'ADMINISTRATION'
     | 'WEB_DAV'
     | 'RESULT'
+    | 'LIVE_DASHBOARD'
 
 export type ResultChallengeClubDto = {
     id: string
@@ -1836,6 +2267,10 @@ export type RunningMatchInfo = {
     competitionName: string
     categoryName?: string | null
     startTime?: string | null
+    /**
+     * real start; null means the match is marked as current but has not started yet
+     */
+    startedAt?: string | null
     elapsedMinutes?: number | null
     placeName?: string | null
     roundNumber?: number | null
@@ -1848,15 +2283,57 @@ export type RunningMatchInfo = {
 export type RunningMatchTeamInfo = {
     teamId: string
     teamName?: string | null
+    teamNumber?: number | null
     startNumber?: number | null
     clubName?: string | null
     actualClubName?: string
     currentScore?: number | null
     currentPosition?: number | null
+    /**
+     * partial result of a running match; null means no time yet
+     */
+    timeString?: string | null
+    /**
+     * time penalty in seconds; only stated, never applied - timeString already includes it
+     */
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
+    failed: boolean
+    failedReason?: string | null
     participants: Array<UpcomingMatchParticipantInfo>
 }
 
+export type ScheduleImportResultDto = {
+    rows: Array<ImportRowResultDto>
+    applied: boolean
+}
+
 export type Scope = 'OWN' | 'GLOBAL'
+
+export type ShiftMode = 'PLUS_MINUTES' | 'SET_TIME' | 'COMPRESS_TO_TARGET'
+
+export type ShiftPreviewDto = {
+    entries: Array<ShiftPreviewEntryDto>
+    applied: boolean
+}
+
+export type ShiftPreviewEntryDto = {
+    slotId: string
+    oldStartTime: string
+    newStartTime: string
+}
+
+/**
+ * Field combination depends on mode: PLUS_MINUTES needs only minutes, SET_TIME only newTime, COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two.
+ */
+export type ShiftScheduleRequest = {
+    fromSlotId: string
+    mode: ShiftMode
+    minutes?: number | null
+    newTime?: string | null
+    targetSlotId?: string | null
+    dryRun: boolean
+}
 
 export type SmtpConfigOverrideDto = {
     host: string
@@ -2048,10 +2525,75 @@ export type ThemeConfigDto = {
     customLogo: CustomLogoDto
 }
 
+export type TimeCheckDto = {
+    deltaMinutes?: number | null
+    status: TimeCheckStatus
+}
+
+export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'
+
+export type TimingConfigDto = {
+    timingSystem?: TimingSystem | null
+    /**
+     * Public results URL of the individual-start race used for the qualification round.
+     */
+    timeTrialResultsUrl?: string | null
+    /**
+     * Public results URL of the wave-start race used for all other rounds.
+     */
+    heatsResultsUrl?: string | null
+    startlistConfigQualification?: string | null
+    startlistConfigRounds?: string | null
+    resultImportConfig?: string | null
+    /**
+     * Whether this competition's setup contains a qualification round. Read-only; it comes along with the timing config because both the timing tab and the execution tab already load it, and both need to know whether the qualification start list preset and the time trial results URL are required at all.
+     *
+     */
+    hasQualificationRound?: boolean
+    /**
+     * Event-wide default timing system; the competition inherits it while its own field is null.
+     */
+    eventTimingSystem?: TimingSystem | null
+    /**
+     * Event-wide default time trial results URL; inherited while the competition's own field is null.
+     */
+    eventTimeTrialResultsUrl?: string | null
+    /**
+     * Event-wide default heats results URL; inherited while the competition's own field is null.
+     */
+    eventHeatsResultsUrl?: string | null
+}
+
+/**
+ * Every field is optional - the RaceClocker races only exist shortly before the regatta, so an incomplete configuration must be storable. The URLs must be https URLs on raceclocker.com; the host is pinned so the backend cannot be pointed at other services.
+ *
+ */
+export type TimingConfigRequest = {
+    timingSystem?: TimingSystem | null
+    timeTrialResultsUrl?: string | null
+    heatsResultsUrl?: string | null
+    startlistConfigQualification?: string | null
+    startlistConfigRounds?: string | null
+    resultImportConfig?: string | null
+}
+
+export type TimingSystem = 'RACECLOCKER' | 'WEBSCORER'
+
 export type TooManyRequestsError = ApiError & {
     details: {
         retryAfter: number
     }
+}
+
+/**
+ * A setup round of the event with no schedule slot yet
+ */
+export type UnplannedSetupMatchDto = {
+    setupMatchId: string
+    competitionId: string
+    competitionName: string
+    roundName: string
+    matchName?: string | null
 }
 
 export type UnprocessableEntityError = ApiError & {
@@ -2062,13 +2604,19 @@ export type UnprocessableEntityError = ApiError & {
         | {
               result: Invalid
           }
+        | {
+              maxReductionMinutes: number
+          }
         | unknown
 }
 
 export type UpcomingCompetitionMatchInfo = {
     matchId: string
     matchNumber?: number | null
-    competitionId: string
+    /**
+     * null for a FREE placeholder (break/schedule item, see name) - there is no competition then
+     */
+    competitionId?: string | null
     competitionName: string
     categoryName?: string | null
     scheduledStartTime?: string | null
@@ -2078,6 +2626,14 @@ export type UpcomingCompetitionMatchInfo = {
     matchName?: string | null
     executionOrder: number
     teams: Array<UpcomingMatchTeamInfo>
+    /**
+     * true for a placeholder from a waiting timeline slot (round not yet materialized) - matchId then points at the setup round, not a real match, and teams is always empty
+     */
+    pendingRound: boolean
+    /**
+     * name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards
+     */
+    name?: string | null
 }
 
 export type UpcomingMatchParticipantInfo = {
@@ -2093,6 +2649,7 @@ export type UpcomingMatchParticipantInfo = {
 export type UpcomingMatchTeamInfo = {
     teamId: string
     teamName?: string | null
+    teamNumber?: number | null
     startNumber?: number | null
     clubName?: string | null
     actualClubName?: string
@@ -2129,6 +2686,11 @@ export type UpdateCompetitionMatchTeamResultRequest = {
     timeString?: string
     failed?: boolean
     failedReason?: string
+    /**
+     * Time penalty in seconds; the reported result time already includes it
+     */
+    penaltySeconds?: number
+    penaltyNote?: string
 }
 
 export type UpdateEventRequest = {
@@ -2147,6 +2709,12 @@ export type UpdateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    chainProgressionMode?: ChainProgressionMode
+    /**
+     * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
+     */
+    showBreaksOnPublicBoards?: boolean
+    publicResultsVisibility?: PublicResultsVisibility
 }
 
 export type UpdateGlobalConfigurationsRequest = {
@@ -2168,8 +2736,14 @@ export type UpdateThemeRequest = {
     enableCustomLogo: boolean
 }
 
-export type UploadMatchResultRequest = {
-    config: string
+/**
+ * Exactly one of competitionSetupMatch (round slot) or name (free slot) must be set, never both and never neither
+ */
+export type UpsertScheduleSlotRequest = {
+    startTime: string
+    competitionSetupMatch?: string | null
+    name?: string | null
+    durationMinutes?: number | null
 }
 
 export type VerifyRegistrationRequest = {
@@ -3250,28 +3824,49 @@ export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type GetRaceClockerConfigData = {
+export type GetEventTimingConfigData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventTimingConfigResponse = EventTimingConfigDto
+
+export type GetEventTimingConfigError = BadRequestError | ApiError
+
+export type UpdateEventTimingConfigData = {
+    body: EventTimingConfigRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type UpdateEventTimingConfigResponse = void
+
+export type UpdateEventTimingConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetTimingConfigData = {
     path: {
         competitionId: string
         eventId: string
     }
 }
 
-export type GetRaceClockerConfigResponse = RaceClockerConfigDto
+export type GetTimingConfigResponse = TimingConfigDto
 
-export type GetRaceClockerConfigError = BadRequestError | ApiError
+export type GetTimingConfigError = BadRequestError | ApiError
 
-export type UpdateRaceClockerConfigData = {
-    body: RaceClockerConfigRequest
+export type UpdateTimingConfigData = {
+    body: TimingConfigRequest
     path: {
         competitionId: string
         eventId: string
     }
 }
 
-export type UpdateRaceClockerConfigResponse = void
+export type UpdateTimingConfigResponse = void
 
-export type UpdateRaceClockerConfigError = BadRequestError | ApiError | UnprocessableEntityError
+export type UpdateTimingConfigError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type PullMatchResultsFromRaceClockerData = {
     path: {
@@ -3292,10 +3887,6 @@ export type DownloadStartListData = {
         eventId: string
     }
     query: {
-        /**
-         * This parameter is required with fileType 'CSV', otherwise discarded.
-         */
-        config?: string
         fileType: StartListFileType
     }
 }
@@ -4587,6 +5178,10 @@ export type AddGapDocumentTemplateData = {
     body: {
         request: GapDocumentTemplateRequest
         files: Array<Blob | File>
+        /**
+         * Optionale Schriftdatei (TTF/OTF), die in die erzeugten PDFs eingebettet wird.
+         */
+        font?: Blob | File
     }
 }
 
@@ -4595,7 +5190,13 @@ export type AddGapDocumentTemplateResponse = void
 export type AddGapDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type UpdateGapDocumentTemplateData = {
-    body: GapDocumentTemplateRequest
+    body: {
+        request: GapDocumentTemplateRequest
+        /**
+         * Optionale Schriftdatei (TTF/OTF). Ein leerer Teil löscht eine zuvor gesetzte Schrift, ein fehlender Teil lässt sie unverändert.
+         */
+        font?: Blob | File
+    }
     path: {
         gapDocumentTemplateId: string
     }
@@ -5313,6 +5914,222 @@ export type GetRunningMatchesResponse = Array<RunningMatchInfo>
 
 export type GetRunningMatchesError = ApiError
 
+export type GetAthleteBoardData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetAthleteBoardResponse = AthleteBoardDto
+
+export type GetAthleteBoardError = ApiError
+
+export type FinishLiveDashboardMatchData = {
+    path: {
+        eventId: string
+        matchId: string
+    }
+    query?: {
+        /**
+         * Marks every team without a result as failed with this reason. Deregistered teams are left alone.
+         */
+        openResults?: 'DNS' | 'DNF' | 'DSQ'
+    }
+}
+
+export type FinishLiveDashboardMatchResponse = void
+
+export type FinishLiveDashboardMatchError = ApiError
+
+export type StartLiveDashboardMatchData = {
+    path: {
+        eventId: string
+        matchId: string
+    }
+}
+
+export type StartLiveDashboardMatchResponse = void
+
+export type StartLiveDashboardMatchError = ApiError
+
+export type SetLiveDashboardMatchRunningData = {
+    path: {
+        eventId: string
+        matchId: string
+    }
+    query: {
+        running: boolean
+    }
+}
+
+export type SetLiveDashboardMatchRunningResponse = void
+
+export type SetLiveDashboardMatchRunningError = ApiError
+
+export type GetLiveDashboardData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * LIVE returns the running matches, or the next upcoming one if none is running. Defaults to ALL.
+         */
+        scope?: 'LIVE' | 'ALL'
+    }
+}
+
+export type GetLiveDashboardResponse = LiveDashboardDto
+
+export type GetLiveDashboardError = unknown | ApiError
+
+export type GetLiveDashboardTeamDetailData = {
+    path: {
+        eventId: string
+        matchId: string
+        teamId: string
+    }
+}
+
+export type GetLiveDashboardTeamDetailResponse = LiveDashboardTeamDetailDto
+
+export type GetLiveDashboardTeamDetailError = ApiError
+
+export type GetEventScheduleData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventScheduleResponse = EventScheduleDto
+
+export type GetEventScheduleError = ApiError
+
+export type CreateScheduleSlotData = {
+    body: UpsertScheduleSlotRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type CreateScheduleSlotResponse = string
+
+export type CreateScheduleSlotError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateScheduleSlotData = {
+    body: UpsertScheduleSlotRequest
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type UpdateScheduleSlotResponse = void
+
+export type UpdateScheduleSlotError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type DeleteScheduleSlotResponse = void
+
+export type DeleteScheduleSlotError = ApiError
+
+export type SkipScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type SkipScheduleSlotResponse = void
+
+export type SkipScheduleSlotError = ApiError
+
+export type UnskipScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type UnskipScheduleSlotResponse = void
+
+export type UnskipScheduleSlotError = ApiError
+
+export type FinishScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+    query?: {
+        /**
+         * Marks every team without a result as failed with this reason. Deregistered teams are left alone.
+         */
+        openResults?: 'DNS' | 'DNF' | 'DSQ'
+    }
+}
+
+export type FinishScheduleSlotResponse = void
+
+export type FinishScheduleSlotError = ApiError
+
+export type ActivateScheduleSlotData = {
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type ActivateScheduleSlotResponse = void
+
+export type ActivateScheduleSlotError = ApiError
+
+export type SkipScheduleRoundData = {
+    path: {
+        eventId: string
+        setupRoundId: string
+    }
+}
+
+export type SkipScheduleRoundResponse = void
+
+export type SkipScheduleRoundError = ApiError
+
+export type ShiftEventScheduleData = {
+    body: ShiftScheduleRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type ShiftEventScheduleResponse = ShiftPreviewDto
+
+export type ShiftEventScheduleError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ImportEventScheduleData = {
+    body: {
+        /**
+         * Flat xlsx schedule export
+         */
+        file: Blob | File
+        /**
+         * Defaults to true (preview only) if missing or unparsable
+         */
+        dryRun?: boolean
+    }
+    path: {
+        eventId: string
+    }
+}
+
+export type ImportEventScheduleResponse = ScheduleImportResultDto
+
+export type ImportEventScheduleError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type GetInfoViewsData = {
     path: {
         eventId: string
@@ -5473,7 +6290,6 @@ export type DeleteMatchResultImportConfigError = BadRequestError | ApiError
 
 export type UploadResultFileData = {
     body: {
-        request: UploadMatchResultRequest
         files: Array<Blob | File>
     }
     path: {
@@ -5917,6 +6733,9 @@ export type DownloadCertificateOfParticipationData = {
         eventId: string
         participantId: string
     }
+    query?: {
+        format?: 'pdf' | 'docx'
+    }
 }
 
 export type DownloadCertificateOfParticipationResponse = Blob | File
@@ -5927,8 +6746,62 @@ export type DownloadCertificatesOfParticipationData = {
     path: {
         eventId: string
     }
+    query?: {
+        format?: 'pdf' | 'docx'
+    }
 }
 
 export type DownloadCertificatesOfParticipationResponse = Blob | File
 
 export type DownloadCertificatesOfParticipationError = BadRequestError | ApiError
+
+export type DownloadAwardCertificatesForEventData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        background?: boolean
+        format?: 'pdf' | 'docx'
+        maxPlace?: number
+        mode?: 'PER_ATHLETE' | 'PER_TEAM'
+    }
+}
+
+export type DownloadAwardCertificatesForEventResponse = Blob | File
+
+export type DownloadAwardCertificatesForEventError = BadRequestError | ApiError
+
+export type DownloadAwardCertificatesForCompetitionData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+    query?: {
+        background?: boolean
+        format?: 'pdf' | 'docx'
+        maxPlace?: number
+        mode?: 'PER_ATHLETE' | 'PER_TEAM'
+    }
+}
+
+export type DownloadAwardCertificatesForCompetitionResponse = Blob | File
+
+export type DownloadAwardCertificatesForCompetitionError = BadRequestError | ApiError
+
+export type DownloadAwardCertificateData = {
+    path: {
+        competitionId: string
+        eventId: string
+        registrationId: string
+    }
+    query?: {
+        background?: boolean
+        format?: 'pdf' | 'docx'
+        maxPlace?: number
+        mode?: 'PER_ATHLETE' | 'PER_TEAM'
+    }
+}
+
+export type DownloadAwardCertificateResponse = Blob | File
+
+export type DownloadAwardCertificateError = BadRequestError | ApiError

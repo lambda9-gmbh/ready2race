@@ -13,4 +13,5 @@ data class CompetitionTeamPlaceDto(
     val place: Int,
     val deregistered: Boolean,
     val deregistrationReason: String?,
+    val excluded: Boolean,
 )

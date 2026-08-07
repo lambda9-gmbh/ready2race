@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.updateMatchResultFromRaceClocker
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerConfigRequest
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.EventDocumentService
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
@@ -19,11 +18,6 @@ import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
-
-private enum class StartListFileTypeParam {
-    PDF,
-    CSV
-}
 
 fun Route.competitionExecution() {
     route("/competitionExecution") {
@@ -53,29 +47,6 @@ fun Route.competitionExecution() {
                     val competitionId = !pathParam("competitionId", uuid)
 
                     CompetitionExecutionService.createNewRound(eventId, competitionId, user.id!!)
-                }
-            }
-        }
-        route("/raceclocker-config") {
-            get {
-                call.respondComprehension {
-                    !authenticate(Privilege.ReadEventGlobal)
-                    val competitionId = !pathParam("competitionId", uuid)
-
-                    CompetitionExecutionService.getRaceClockerConfig(competitionId)
-                }
-            }
-            put {
-                call.respondComprehension {
-                    val user = !authenticate(Privilege.UpdateEventGlobal)
-                    val competitionId = !pathParam("competitionId", uuid)
-
-                    val body = !receiveKIO(RaceClockerConfigRequest.example)
-                    CompetitionExecutionService.updateRaceClockerConfig(
-                        competitionId = competitionId,
-                        userId = user.id!!,
-                        request = body,
-                    )
                 }
             }
         }
@@ -146,7 +117,6 @@ fun Route.competitionExecution() {
                     val multiPartData = receiveMultipart()
 
                     var upload: File? = null
-                    var request: UploadMatchResultRequest? = null
 
                     var done = false
                     while (!done) {
@@ -162,13 +132,7 @@ fun Route.competitionExecution() {
                                             part.provider().toByteArray(),
                                         )
                                     } else {
-                                        KIO.fail(RequestError.File.Multiple)
-                                    }
-                                }
-
-                                is PartData.FormItem -> {
-                                    if (part.name == "request") {
-                                        request = jsonMapper.readValue<UploadMatchResultRequest>(part.value)
+                                        !KIO.fail(RequestError.File.Multiple)
                                     }
                                 }
 
@@ -179,7 +143,6 @@ fun Route.competitionExecution() {
                     }
 
                     val file = !KIO.failOnNull(upload) { RequestError.File.Missing }
-                    val req = !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
 
                     !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
 
@@ -188,7 +151,6 @@ fun Route.competitionExecution() {
                         competitionId = competitionId,
                         matchId = competitionMatchId,
                         file = file,
-                        request = req,
                         userId = user.id!!
                     )
 
@@ -216,20 +178,12 @@ fun Route.competitionExecution() {
                     !authenticate(Privilege.ReadEventGlobal)
                     val eventId = !pathParam("eventId", uuid)
                     val competitionMatchId = !pathParam("competitionMatchId", uuid)
-                    val typeParam = !queryParam("fileType", enum<StartListFileTypeParam>())
-
-                    val type = when (typeParam) {
-                        StartListFileTypeParam.PDF -> StartListFileType.PDF
-                        StartListFileTypeParam.CSV -> {
-                            val config = !queryParam("config", uuid)
-                            StartListFileType.CSV(config)
-                        }
-                    }
+                    val fileType = !queryParam("fileType", enum<StartListFileType>())
 
                     CompetitionExecutionService.downloadStartlist(
                         eventId = eventId,
                         matchId = competitionMatchId,
-                        type = type
+                        type = fileType
                     )
                 }
             }
@@ -290,7 +244,7 @@ fun Route.competitionExecution() {
                                                 part.provider().toByteArray(),
                                             )
                                         } else {
-                                            KIO.fail(RequestError.File.Multiple)
+                                            !KIO.fail(RequestError.File.Multiple)
                                         }
                                     }
 
@@ -308,7 +262,7 @@ fun Route.competitionExecution() {
                         }
 
                         val req =
-                            !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
+                            !KIO.failOnNull(request) { RequestError.BodyMissing(CompetitionChallengeResultRequest.example) }
 
                         // TODO: check valid image
                         // !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
@@ -383,7 +337,7 @@ fun Route.competitionExecution() {
                                                 part.provider().toByteArray(),
                                             )
                                         } else {
-                                            KIO.fail(RequestError.File.Multiple)
+                                            !KIO.fail(RequestError.File.Multiple)
                                         }
                                     }
 
@@ -401,7 +355,7 @@ fun Route.competitionExecution() {
                         }
 
                         val req =
-                            !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
+                            !KIO.failOnNull(request) { RequestError.BodyMissing(CompetitionChallengeResultRequest.example) }
 
                         // TODO: check valid image
                         // !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }

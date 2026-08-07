@@ -5,9 +5,11 @@ import {
     CardContent,
     Divider,
     Grid2,
+    IconButton,
     Link,
     ListItemText,
     Stack,
+    Tooltip,
     Typography,
 } from '@mui/material'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -16,8 +18,11 @@ import {competitionRoute, eventRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
 import {getFilename} from '@utils/helpers.ts'
-import {useRef} from 'react'
+import {useRef, useState} from 'react'
 import {useUser} from '@contexts/user/UserContext.ts'
+import {readEventGlobal} from '@authorization/privileges.ts'
+import WorkspacePremium from '@mui/icons-material/WorkspacePremium'
+import AwardCertificateDialog from '@components/awardCertificate/AwardCertificateDialog.tsx'
 
 const CompetitionPlaces = () => {
     const {t} = useTranslation()
@@ -45,6 +50,16 @@ const CompetitionPlaces = () => {
             deps: [eventId, competitionId],
         },
     )
+
+    const [awardCertificateDialogOpen, setAwardCertificateDialogOpen] = useState(false)
+    const [awardCertificateRegistrationId, setAwardCertificateRegistrationId] = useState<
+        string | undefined
+    >(undefined)
+
+    const openAwardCertificateDialog = (registrationId?: string) => {
+        setAwardCertificateRegistrationId(registrationId)
+        setAwardCertificateDialogOpen(true)
+    }
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
     const handleDownloadCompetitionPlacesCSV = async () => {
@@ -78,14 +93,26 @@ const CompetitionPlaces = () => {
             <>
                 <Link ref={downloadRef} display={'none'}></Link>
                 <Stack spacing={2}>
-                    {user.loggedIn && (
-                        <Button
-                            variant="contained"
-                            sx={{alignSelf: 'flex-end', display: 'flex'}}
-                            onClick={() => handleDownloadCompetitionPlacesCSV()}>
-                            {t('common.file.downloadCsv')}
-                        </Button>
-                    )}
+                    <Stack
+                        direction={'row'}
+                        spacing={2}
+                        sx={{alignSelf: 'flex-end', display: 'flex'}}>
+                        {user.checkPrivilege(readEventGlobal) && (
+                            <Button
+                                variant="contained"
+                                startIcon={<WorkspacePremium />}
+                                onClick={() => openAwardCertificateDialog()}>
+                                {t('awardCertificate.download.button')}
+                            </Button>
+                        )}
+                        {user.loggedIn && (
+                            <Button
+                                variant="contained"
+                                onClick={() => handleDownloadCompetitionPlacesCSV()}>
+                                {t('common.file.downloadCsv')}
+                            </Button>
+                        )}
+                    </Stack>
                     {placesData.map(team => (
                         <Card key={team.teamNumber}>
                             <CardContent>
@@ -94,6 +121,7 @@ const CompetitionPlaces = () => {
                                     direction={'row'}
                                     sx={{
                                         justifyContent: 'space-between',
+                                        alignItems: 'center',
                                     }}>
                                     <Typography variant={team.place ? 'h5' : 'body1'}>
                                         {team.place}
@@ -111,6 +139,21 @@ const CompetitionPlaces = () => {
                                                 ` | ${team.teamName}`}
                                         </Typography>
                                     </Box>
+                                    {/* Teams ohne Urkunde (DNF, DSQ, abgemeldet) zeigen das Download-Icon
+                                    nicht - der Download würde sonst nur mit NoResults fehlschlagen. Dieselbe
+                                    Ausschlussregel wie im Urkundengenerator (AwardCertificateService.excluded). */}
+                                    {user.checkPrivilege(readEventGlobal) && !team.excluded && (
+                                        <Tooltip title={t('awardCertificate.download.buttonSingle')}>
+                                            <IconButton
+                                                onClick={() =>
+                                                    openAwardCertificateDialog(
+                                                        team.competitionRegistrationId,
+                                                    )
+                                                }>
+                                                <WorkspacePremium />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
                                 </Stack>
                                 <Divider sx={{my: 1}} />
                                 <Grid2 container>
@@ -161,6 +204,13 @@ const CompetitionPlaces = () => {
                         </Card>
                     ))}
                 </Stack>
+                <AwardCertificateDialog
+                    open={awardCertificateDialogOpen}
+                    onClose={() => setAwardCertificateDialogOpen(false)}
+                    eventId={eventId}
+                    competitionId={competitionId}
+                    registrationId={awardCertificateRegistrationId}
+                />
             </>
         ) : (
             <Typography>{t('event.competition.places.noPlaces')}</Typography>

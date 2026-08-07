@@ -12,7 +12,11 @@ package de.lambda9.ready2race.backend.app.raceclocker.entity
  * [resultsUrl] and falls back to [alternateResultsUrl] when the match cannot be found there.
  */
 data class RaceClockerMatchTarget(
-    /** The match name, exported as the RaceClocker wave name. Only used for pre-match-id start lists. */
+    /**
+     * The match name plus the planned start time (see
+     * [de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName]), exported as the
+     * RaceClocker wave name. Only used for pre-match-id start lists.
+     */
     val waveName: String?,
     val isQualification: Boolean,
     val timeTrialUrl: String?,

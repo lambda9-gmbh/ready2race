@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.app.raceclocker.entity
+package de.lambda9.ready2race.backend.app.timingConfig.entity
 
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.validation.Validatable
@@ -7,11 +7,11 @@ import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNull
 
 /**
- * The two public RaceClocker results URLs of a competition. Both are optional: a competition without a
- * qualification round needs no time trial URL, and until the URLs are filled in the results simply
- * keep arriving via the spreadsheet upload.
+ * Zeitnahme-Voreinstellung der Veranstaltung. Jedes Feld optional wie beim Wettkampf
+ * ([TimingConfigRequest]): die RaceClocker-Rennen entstehen erst kurz vor der Regatta.
  */
-data class RaceClockerConfigRequest(
+data class EventTimingConfigRequest(
+    val timingSystem: TimingSystem?,
     val timeTrialResultsUrl: String?,
     val heatsResultsUrl: String?,
 ) : Validatable {
@@ -24,11 +24,7 @@ data class RaceClockerConfigRequest(
 
     companion object {
 
-        /**
-         * Rejected here rather than only at pull time, so a typo surfaces while editing instead of
-         * mid-regatta. Uses the same normalisation the pull does, which pins the host to RaceClocker but
-         * accepts an input without scheme - that is how a URL looks when copied out of a browser bar.
-         */
+        /** Dieselbe Regel wie [TimingConfigRequest.validateUrl] - Tippfehler sollen beim Bearbeiten auffallen. */
         private fun validateUrl(value: String?, field: String): ValidationResult {
             if (value.isNullOrBlank()) return ValidationResult.Valid
 
@@ -40,7 +36,8 @@ data class RaceClockerConfigRequest(
         }
 
         val example
-            get() = RaceClockerConfigRequest(
+            get() = EventTimingConfigRequest(
+                timingSystem = TimingSystem.RACECLOCKER,
                 timeTrialResultsUrl = "https://www.raceclocker.com/7ffb822a",
                 heatsResultsUrl = "https://www.raceclocker.com/7c854955",
             )

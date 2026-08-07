@@ -23,12 +23,12 @@ import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
 import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipantError
+import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
+import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerConfigDto
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerConfigRequest
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
@@ -82,8 +82,8 @@ import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
+import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.collections.sortedBy
@@ -112,6 +112,9 @@ object CompetitionExecutionService {
             .onTrueFail { CompetitionExecutionChallengeError.NotAChallengeEvent }
 
         var createFollowingRound = true
+        // Zeitstrahl: Setup-Match-Ids aller in diesem Aufruf erzeugten Läufe, über alle
+        // Runden/Iterationen hinweg — Grundlage für den Slot-Write-Through nach der Schleife.
+        val createdSetupMatchIds = mutableListOf<UUID>()
         while (createFollowingRound) {
             val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
@@ -151,6 +154,7 @@ object CompetitionExecutionService {
                         !it.applyCompetitionMatch(userId, null)
                     }
                 !CompetitionMatchRepo.create(matchRecords).orDie()
+                createdSetupMatchIds += matchRecords.map { it.competitionSetupMatch!! }
 
 
                 val seedingList = getSeedingList(nextRoundSetupMatches.map { it.teams }, registrations.size)
@@ -225,6 +229,7 @@ object CompetitionExecutionService {
                         !it.applyCompetitionMatch(userId, null)
                     }
                 !CompetitionMatchRepo.create(matchRecords).orDie()
+                createdSetupMatchIds += matchRecords.map { it.competitionSetupMatch!! }
 
                 val nextRoundSetupParticipants =
                     !CompetitionSetupParticipantRepo.get(nextRoundSetupMatches.map { it.id }).orDie()
@@ -303,6 +308,12 @@ object CompetitionExecutionService {
                 }
             }
         }
+
+        // Zeitstrahl: geplante Slot-Zeiten auf die soeben erzeugten Läufe stempeln …
+        !EventScheduleRepo.stampSlotTimesForSetupMatches(createdSetupMatchIds, userId).orDie()
+        // … und die wartende Kette wieder anstoßen: wenn nichts läuft, aktiviert sich der nächste
+        // fällige Slot jetzt selbst — das ist der zweite Auslöser des wartenden Breakpoints.
+        !ScheduleChainService.resumeIfParked(eventId, userId)
 
         noData
     }
@@ -440,7 +451,12 @@ object CompetitionExecutionService {
         val (expectedTeams, outTeams) = teamRecords.partition { !it.out!! }
 
         if (!setupRound.required && teamRecords.size == 1) {
-            return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
+            return@comprehension KIO.fail(CompetitionExecutionError.MatchIsBye)
+        }
+
+        val slotTime = !EventScheduleRepo.getSlotBySetupMatch(matchId).orDie()
+        if (slotTime != null && request.startTime != slotTime) {
+            return@comprehension KIO.fail(CompetitionExecutionError.StartTimeManagedBySchedule)
         }
 
         !CompetitionMatchRepo.update(matchId) {
@@ -492,7 +508,7 @@ object CompetitionExecutionService {
          * is no result to record. Callers that can say something more useful about that than "locked"
          * pass their own error.
          */
-        byeError: ServiceError = CompetitionExecutionError.MatchResultsLocked,
+        byeError: ServiceError = CompetitionExecutionError.MatchIsBye,
     ): App<ServiceError, CompetitionMatchWithTeams> = KIO.comprehension {
 
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
@@ -512,16 +528,20 @@ object CompetitionExecutionService {
         KIO.ok(match)
     }
 
+    /**
+     * Setzt alle Plätze eines Laufs zurück, damit eine neue Ergebnis-Eingabe nicht auf alten
+     * Werten aufsetzt.
+     *
+     * Rührt `currently_running` NICHT MEHR an (C1): egal ob die Ergebnisse aus der manuellen
+     * Eingabe, einem Datei-Upload oder dem RaceClocker-Pull vollständig sind, der Lauf bleibt
+     * aktiv, bis ein aktives Beenden ihn stempelt (`LiveDashboardService.finishMatch` bzw.
+     * `EventScheduleService.finishSlot`). Vorher deaktivierte diese Funktion einen Lauf mit
+     * vollständigen Ergebnissen still, ohne `finished_at` zu setzen und ohne die Kette zu ziehen -
+     * genau das Loch, das C1 schließt ("Ergebnisse vollständig — wartet auf Beenden").
+     */
     private fun prepareForNewPlaces(
         matchId: UUID,
-        userId: UUID,
     ): App<Nothing, Unit> = KIO.comprehension {
-
-        !CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = false
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie()
 
         !CompetitionMatchTeamRepo.updateManyByMatch(matchId) {
             place = null
@@ -540,7 +560,8 @@ object CompetitionExecutionService {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !checkUpdateMatchResult(competitionId, matchId)
-        !prepareForNewPlaces(matchId, userId)
+
+        !prepareForNewPlaces(matchId)
 
         val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
 
@@ -549,7 +570,9 @@ object CompetitionExecutionService {
             val places = request.teamResults.filter { !it.failed }.mapNotNull { it.place }.sorted()
             places.forEachIndexed { index, place ->
                 val expected = index + 1
-                !KIO.failOn(expected != place) { CompetitionExecutionError.PlacesNotContinuous }
+                !KIO.failOn(expected != place) {
+                    CompetitionExecutionError.PlacesNotContinuous(expected = expected, actual = place)
+                }
             }
         }
 
@@ -583,6 +606,13 @@ object CompetitionExecutionService {
                     this.timecode = timecode
                     this.failed = result.failed
                     this.failedReason = result.failedReason
+                    // Nur ausgewiesen, nie verrechnet: die erfasste Zeit gilt wie eingetragen.
+                    // Achtung für später: sobald eine externe Zeitmessung (RaceClocker) Strafen
+                    // liefert, ist sie die Quelle der Wahrheit und überschreibt diesen Wert - eine
+                    // hier eingetragene Strafe geht dann verloren. Wer beide Wege erlauben will,
+                    // braucht vorher eine Regel, welche Quelle gewinnt.
+                    this.penaltySeconds = result.penaltySeconds
+                    this.penaltyNote = result.penaltyNote
                     updatedBy = userId
                     updatedAt = LocalDateTime.now()
                 }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
@@ -596,15 +626,20 @@ object CompetitionExecutionService {
         competitionId: UUID,
         matchId: UUID,
         file: File,
-        request: UploadMatchResultRequest,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val match = !checkUpdateMatchResult(competitionId, matchId)
-        !prepareForNewPlaces(matchId, userId)
+        !prepareForNewPlaces(matchId)
 
-        val config = !MatchResultImportConfigRepo.get(request.config).orDie()
+        // Das Preset gehoert zum Wettkampf (Zeitnahme-Tab), nicht mehr zur einzelnen Anfrage.
+        val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
+        val configId = !KIO.failOnNull(competition.resultImportConfig) {
+            MatchResultImportConfigError.NotConfigured
+        }
+        val config = !MatchResultImportConfigRepo.get(configId).orDie()
             .onNullFail { MatchResultImportConfigError.NotFound }
 
         val identifierColumn = config.colTeamRegistrationId
@@ -623,7 +658,11 @@ object CompetitionExecutionService {
                 startNumber = !optionalCell(config.colTeamStartNumber, int),
                 place = place,
                 time = timeCell?.takeIf { timeIsValid },
-                noResultReason = timeCell?.takeUnless { timeIsValid }
+                noResultReason = timeCell?.takeUnless { timeIsValid },
+                // Der Tabellen-Upload trägt bewusst keine Zeitstrafen: Strafen kommen aus der
+                // Zeitmessung (RaceClocker) oder werden im Ergebnis-Formular erfasst.
+                penaltySeconds = null,
+                penaltyNote = null,
             )
         }.mapError {
             when (it) {
@@ -785,29 +824,9 @@ object CompetitionExecutionService {
 
         // Write back the (potentially externally changed) start numbers. The stable team identifier is
         // the source of truth for matching, so we adopt whatever start numbers the external timing tooling
-        // assigned. Start numbers are negated first to avoid transient violations of the unique
-        // (competition_match, start_number) index while reassigning. Match teams that are not part of the
-        // imported file (e.g. deregistered/out teams) keep a unique number after the highest imported one.
+        // assigned.
         if (correctedTeams.isNotEmpty() && correctedTeams.all { it.startNumber != null }) {
-            val allMatchTeamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
-            val importedStartNumberByRegistration = correctedTeams.associate { it.registrationId to it.startNumber!! }
-
-            !allMatchTeamRecords.traverse { team ->
-                CompetitionMatchTeamRepo.update(team) {
-                    startNumber = team.startNumber * -1
-                }.orDie()
-            }
-
-            var fallbackStartNumber = importedStartNumberByRegistration.values.maxOrNull() ?: 0
-            !allMatchTeamRecords.sortedBy { it.startNumber }.traverse { team ->
-                val newStartNumber = importedStartNumberByRegistration[team.competitionRegistration]
-                    ?: (++fallbackStartNumber)
-                CompetitionMatchTeamRepo.update(team) {
-                    startNumber = newStartNumber
-                    updatedBy = userId
-                    updatedAt = LocalDateTime.now()
-                }.orDie()
-            }
+            !writeStartNumbers(matchId, correctedTeams.associate { it.registrationId to it.startNumber!! }, userId)
         }
 
         correctedTeams.traverse { result ->
@@ -837,6 +856,9 @@ object CompetitionExecutionService {
                     this.failed = result.noResultReason != null
                     this.failedReason = result.noResultReason
                     this.timecode = timecode
+                    // Nur ausweisen: die Zeit enthält die Strafe bereits, sie wird nicht verrechnet.
+                    this.penaltySeconds = result.penaltySeconds
+                    this.penaltyNote = result.penaltyNote
                     updatedBy = userId
                     updatedAt = LocalDateTime.now()
                 }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
@@ -844,48 +866,6 @@ object CompetitionExecutionService {
         }.noDataResponse()
 
 
-    }
-
-    fun getRaceClockerConfig(
-        competitionId: UUID,
-    ): App<ServiceError, ApiResponse.Dto<RaceClockerConfigDto>> = KIO.comprehension {
-
-        val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
-            .onNullFail { CompetitionError.CompetitionNotFound }
-
-        KIO.ok(
-            ApiResponse.Dto(
-                RaceClockerConfigDto(
-                    timeTrialResultsUrl = competition.raceclockerTtResultsUrl,
-                    heatsResultsUrl = competition.raceclockerHeatsResultsUrl,
-                )
-            )
-        )
-    }
-
-    fun updateRaceClockerConfig(
-        competitionId: UUID,
-        userId: UUID,
-        request: RaceClockerConfigRequest,
-    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
-
-        // Stored normalised (scheme filled in, http lifted to https), so the config dialog shows
-        // afterwards what the pull actually requests. Blank means "not configured" - keeping empty
-        // strings would make the pull fail later with an unhelpful URL error instead of the clear
-        // "no URL configured" one.
-        val timeTrialUrl = request.timeTrialResultsUrl?.trim()?.takeIf { it.isNotBlank() }
-            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
-        val heatsUrl = request.heatsResultsUrl?.trim()?.takeIf { it.isNotBlank() }
-            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
-
-        !CompetitionRepo.update(competitionId) {
-            raceclockerTtResultsUrl = timeTrialUrl
-            raceclockerHeatsResultsUrl = heatsUrl
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie().onNullFail { CompetitionError.CompetitionNotFound }
-
-        noData
     }
 
     /**
@@ -940,23 +920,55 @@ object CompetitionExecutionService {
             )
         }
 
-        // Crews that have not been timed yet are skipped rather than treated as an error, so the pull
-        // can be repeated as the heat progresses.
-        val timed = rowsByTeam.mapNotNull { (registrationId, rows) ->
-            rows.single().takeIf { it.result != null }?.let { registrationId to it }
+        // Crews without a usable result are skipped rather than treated as an error, so the pull can
+        // be repeated as the heat progresses. "Ohne Ergebnis" heißt hier: weder Zeit noch echte
+        // Ausscheidung - RaceClocker schreibt in dieselbe Spalte auch Verlaufszustände (`Not started`,
+        // `In race...`), und ein solcher Text als Ausscheidungsgrund würde ein noch fahrendes Boot als
+        // ausgeschieden markieren (siehe [RaceClockerFeedRow.noResultReason]). Ein bloßes
+        // `result != null` reicht dafür nicht.
+        //
+        // Übersprungene Zeilen bleiben in der DB unangetastet: eine vom Schiedsrichter von Hand
+        // eingetragene Ausscheidung darf ein Nachziehen des Laufs nicht wieder löschen.
+        val withResult = rowsByTeam.mapNotNull { (registrationId, rows) ->
+            rows.single().takeIf { it.hasResult }?.let { registrationId to it }
         }
-        if (timed.isEmpty()) return KIO.fail(RaceClockerError.NoResults(target.waveName))
+        if (withResult.isEmpty()) return KIO.fail(RaceClockerError.NoResults(target.waveName))
 
-        !prepareForNewPlaces(matchId, userId)
+        // Externe Zeitnahme ist Quelle der Wahrheit: die früheste von RaceClocker gemessene
+        // Startzeit unter den zugeordneten Booten überschreibt started_at bedingungslos, auch wenn
+        // dort schon ein manueller Stempel steht (z. B. von LiveDashboardService.markMatchStarted) -
+        // gleiche Regel wie beim Penalty-Überschreiben oben.
+        val earliestStart = RaceClockerFeedRow.earliestStart(rowsByTeam.values.flatten())
+        if (earliestStart != null) {
+            val raceDay = match.startTime?.toLocalDate() ?: LocalDate.now()
+            !CompetitionMatchRepo.update(matchId) {
+                startedAt = raceDay.atTime(earliestStart)
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
 
-        val parsed = timed.map { (registrationId, row) ->
+        !prepareForNewPlaces(matchId)
+
+        // Lanes are taken from every assigned row, not just the timed ones: a heat is usually pulled
+        // while boats are still on the water, and numbering only the finishers would push the rest
+        // out of their lanes.
+        !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, rows) -> rows.single() }, userId)
+
+        val parsed = withResult.map { (registrationId, row) ->
             ParsedTeamResult(
                 registrationId = registrationId,
-                startNumber = row.bib,
-                // The feed carries no rank; places are derived from the times further down.
+                // Lanes were written above from the feed's list positions; leaving this null keeps
+                // [applyParsedTeamResults] from renumbering them off the bib, which stays with a boat
+                // when it is moved and therefore no longer describes where it starts.
+                startNumber = null,
+                // Places are derived from the times further down - RaceClocker's "Rank" is a list
+                // position, not a finishing rank.
                 place = null,
                 time = row.time,
                 noResultReason = row.noResultReason,
+                penaltySeconds = row.penaltySeconds,
+                penaltyNote = row.penaltyNote,
             )
         }
 
@@ -964,40 +976,70 @@ object CompetitionExecutionService {
     }
 
     /**
-     * Assigns feed rows to the teams of a match, keyed by registration id - what [ParsedTeamResult]
-     * expects downstream.
+     * Writes the lanes a match currently has in RaceClocker onto its teams.
      *
-     * The primary key is the competition match team id: unique per team *and* round, so a row can be
-     * assigned without knowing anything about waves. That matters because waves are renamed and merged
-     * in RaceClocker on race day ("AF4 & AF2" for a joint start), which is invisible here.
+     * The timekeeper swaps lanes on site, and everything attached to an entry travels with it when it
+     * is moved - only the list position changes. [RaceClockerFeedRow.lanesByRow] turns those positions
+     * into 1..n, and this writes them to the start numbers.
      *
-     * Start lists exported before that column existed carry only the registration id, which is unique
-     * per team but repeats across the rounds that share one RaceClocker race. Those rows are narrowed
-     * down by the wave name - but only as long as the exported name still occurs in the feed. Once it
-     * was renamed there, matching by registration alone is the better of the two guesses.
+     * Start numbers are negated first to avoid transient violations of the unique
+     * (competition_match, start_number) index while reassigning; teams that the feed does not cover
+     * keep a unique number after the highest imported one.
+     */
+    private fun applyLanesFromFeed(
+        matchId: UUID,
+        rowByRegistration: Map<UUID, RaceClockerFeedRow>,
+        userId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+        val lanes = RaceClockerFeedRow.lanesByRow(rowByRegistration)
+        if (lanes.isEmpty()) return@comprehension KIO.unit
+
+        writeStartNumbers(matchId, lanes, userId)
+    }
+
+    /**
+     * Sets the start numbers of a match from [startNumberByRegistration].
+     *
+     * They are negated first to avoid transient violations of the unique (competition_match,
+     * start_number) index while reassigning. Teams the caller does not cover (e.g. deregistered or
+     * out teams) keep a unique number after the highest given one.
+     */
+    private fun writeStartNumbers(
+        matchId: UUID,
+        startNumberByRegistration: Map<UUID, Int>,
+        userId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+        val allMatchTeamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+
+        !allMatchTeamRecords.traverse { team ->
+            CompetitionMatchTeamRepo.update(team) {
+                startNumber = team.startNumber * -1
+            }.orDie()
+        }
+
+        var fallbackStartNumber = startNumberByRegistration.values.maxOrNull() ?: 0
+        !allMatchTeamRecords.sortedBy { it.startNumber }.traverse { team ->
+            val newStartNumber = startNumberByRegistration[team.competitionRegistration]
+                ?: (++fallbackStartNumber)
+            CompetitionMatchTeamRepo.update(team) {
+                startNumber = newStartNumber
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
+
+        KIO.unit
+    }
+
+    /**
+     * Delegiert an [RaceClockerAssignmentLogic.assignFeedRows] - reine, ohne Datenbank testbare Logik,
+     * extrahiert nach dem Muster von AthleteBoardLogic/EventScheduleLogic.
      */
     private fun assignFeedRows(
         rows: List<RaceClockerFeedRow>,
         teams: List<CompetitionMatchTeamWithRegistration>,
         waveName: String?,
-    ): Map<UUID, List<RaceClockerFeedRow>> {
-
-        val byMatchTeam = teams.associate { team ->
-            team.competitionRegistration to rows.filter { team.id in it.ids }
-        }.filterValues { it.isNotEmpty() }
-
-        if (byMatchTeam.isNotEmpty()) return byMatchTeam
-
-        val candidates = if (waveName != null && rows.any { it.wave == waveName }) {
-            rows.filter { it.wave == waveName }
-        } else {
-            rows
-        }
-
-        return teams.associate { team ->
-            team.competitionRegistration to candidates.filter { team.competitionRegistration in it.ids }
-        }.filterValues { it.isNotEmpty() }
-    }
+    ): Map<UUID, List<RaceClockerFeedRow>> = RaceClockerAssignmentLogic.assignFeedRows(rows, teams, waveName)
 
     fun updateMatchRunningState(
         matchId: UUID,
@@ -1066,7 +1108,7 @@ object CompetitionExecutionService {
         return currentRound to nextRound
     }
 
-    private fun getSeedingList(
+    internal fun getSeedingList(
         currentRoundTeams: List<Int?>,
         maxTeamsNeeded: Int
     ): List<List<Int>> {
@@ -1095,6 +1137,85 @@ object CompetitionExecutionService {
         }
 
         return currentRoundSeedings
+    }
+
+    /**
+     * Liefert die Seeding-Liste, mit der [computeCompetitionPlaces] aus dem Platz im Lauf das
+     * Rundenergebnis ("roundOutcome") macht — oder `null`, wenn die Platzvergabe der Runde ohne
+     * Seeding auskommt.
+     *
+     * Nur ASCENDING und CUSTOM lesen die Liste; EQUAL vergibt allen einen festen Platz. Die
+     * Bedingung an der Aufrufstelle war zuvor mit `!=` und `||` formuliert und damit immer wahr —
+     * die Liste wurde also auch für EQUAL berechnet, dort aber nie ausgewertet. Das Ergebnis
+     * ändert sich durch die Korrektur nicht, es wird nur nicht mehr unnötig gerechnet.
+     *
+     * ### Wie weit muss die Liste reichen?
+     *
+     * Beim Aufbau einer Folgerunde beantwortet [getSeedingList] die Frage "wer kommt weiter": dort
+     * reicht [seedsForNextRound], die Zahl der Plätze in der Folgerunde. Bei der Platzvergabe ist
+     * die Frage eine andere — hier geht es um alle Boote der Runde, gerade um die, die **nicht**
+     * weiterkommen. Die Liste muss deshalb jeden Starter erreichen, also mindestens
+     * [teamsInThisRound] Einträge hergeben.
+     *
+     * Das deckt sich mit dem Setup: die Platztabelle für CUSTOM wird im Frontend über die
+     * Rundenergebnisse `1..thisRoundTeams` aufgespannt (`getNewPlaces` in `common.ts`), abzüglich
+     * derer, die in die Folgerunde einziehen. Ohne Folgerunde ist dort der Platz schlicht das
+     * Rundenergebnis — also die Reihenfolge im Lauf.
+     *
+     * Ein größeres Maximum verschiebt keine bestehende Zuordnung: die Verteilung läuft in fester
+     * Schlangenreihenfolge und bricht nur früher ab. Alle Rundenergebnisse bis
+     * [seedsForNextRound] landen daher an genau derselben Stelle wie bisher, es kommen nur die
+     * Plätze dahinter neu dazu — "hinter allen Aufsteigern, in der Reihenfolge des Laufs".
+     *
+     * ### Was das repariert
+     *
+     * Beide bisherigen IndexOutOfBoundsExceptions beim Zugriff
+     * `seedingList[matchIndex][realPlace - 1]` betrafen Massenfelder (`teams IS NULL`), weil nur
+     * für sie das Maximum überhaupt begrenzend wirkt (siehe [getHighestTeamCount] und die
+     * `null`-Bedingung in [getSeedingList]):
+     * - **Letzte Runde**: keine Folgerunde, [seedsForNextRound] `= 0` — die Liste blieb leer
+     *   (`[[]]`), obwohl im Massenfeld-Finale alle Boote einen Platz brauchen.
+     * - **Qualifikation mit Nicht-Aufsteigern**: Zeitfahren als Massenfeld mit sechs Booten und
+     *   vier Halbfinalplätzen ergab `[[1, 2, 3, 4]]` — die Boote auf Platz 5 und 6 fielen heraus.
+     *
+     * Bei fest gesetzten Bootszahlen ändert sich nichts, dort war die Liste schon immer so lang
+     * wie der Lauf Boote hat. Ein Finale A/B behält damit seine Schlangenverteilung.
+     */
+    internal fun getPlacesSeedingList(
+        placesOption: String,
+        currentRoundTeams: List<Int?>,
+        seedsForNextRound: Int,
+        teamsInThisRound: Int,
+    ): List<List<Int>>? =
+        if (placesOption == CompetitionSetupPlacesOption.ASCENDING.name ||
+            placesOption == CompetitionSetupPlacesOption.CUSTOM.name
+        ) {
+            getSeedingList(
+                currentRoundTeams = currentRoundTeams,
+                maxTeamsNeeded = maxOf(seedsForNextRound, teamsInThisRound),
+            )
+        } else null
+
+    /**
+     * Das Rundenergebnis ("roundOutcome") eines Bootes, das im Lauf [matchIndex] auf [realPlace]
+     * gekommen ist.
+     *
+     * Die Seeding-Liste verteilt die Rundenergebnisse rechnerisch gleichmäßig auf die Läufe. Ist
+     * ein Lauf tatsächlich voller als die Rechnung hergibt — mehrere Massenfelder in einer Runde
+     * teilen sich das Feld, ohne dass im Setup steht, wie —, reicht sie nicht bis zu diesem Platz.
+     * Dann gilt dieselbe Regel wie für die Nicht-Aufsteiger: hinter allen verteilten Ergebnissen,
+     * in der Reihenfolge des Laufs. So bleibt die Platzvergabe auch dann auskunftsfähig, statt den
+     * Abruf der ganzen Veranstaltung (Platzierungen, Urkunden) scheitern zu lassen.
+     */
+    internal fun getRoundOutcome(
+        seedingList: List<List<Int>>,
+        matchIndex: Int,
+        realPlace: Int,
+    ): Int {
+        val seedingsOfMatch = seedingList.getOrNull(matchIndex) ?: emptyList()
+
+        return seedingsOfMatch.getOrNull(realPlace - 1)
+            ?: ((seedingList.flatten().maxOrNull() ?: 0) + realPlace - seedingsOfMatch.size)
     }
 
     private fun getHighestTeamCount(
@@ -1144,13 +1265,15 @@ object CompetitionExecutionService {
                         } else team.place != null || team.deregistered || team.out || team.failed
                     }
 
-                val seedingList =
-                    if (round.placesOption != CompetitionSetupPlacesOption.ASCENDING.name || round.placesOption != CompetitionSetupPlacesOption.CUSTOM.name) { // Only relevant if the placesOption is "ascending" or "custom"
-                        getSeedingList(
-                            currentRoundTeams = round.setupMatches.sortedBy { it.weighting }.map { it.teams },
-                            maxTeamsNeeded = setupRounds.getOrNull(roundIdx + 1)?.setupMatches?.sumOf { it.teams ?: 0 }
-                                ?: 0)
-                    } else null
+                val seedingList = getPlacesSeedingList(
+                    placesOption = round.placesOption,
+                    currentRoundTeams = round.setupMatches.sortedBy { it.weighting }.map { it.teams },
+                    // 0 = keine Folgerunde, also die letzte Runde
+                    seedsForNextRound = setupRounds.getOrNull(roundIdx + 1)?.setupMatches?.sumOf { it.teams ?: 0 }
+                        ?: 0,
+                    // Alle Startenden der Runde, auch abgemeldete/ausgeschiedene — realPlace zählt sie mit
+                    teamsInThisRound = round.matches.sumOf { it.teams.size },
+                )
 
 
                 val teamsToPlaces = nonAdvancingTeamsToMatchIndex.map { (team, matchIndex) ->
@@ -1177,10 +1300,15 @@ object CompetitionExecutionService {
                         }
 
                         CompetitionSetupPlacesOption.ASCENDING.name ->
-                            team to seedingList!![matchIndex][realPlace - 1]
+                            team to getRoundOutcome(seedingList!!, matchIndex, realPlace)
 
-                        else ->
-                            team to round.places.first { it.roundOutcome == seedingList!![matchIndex][realPlace - 1] }.place
+                        else -> {
+                            val roundOutcome = getRoundOutcome(seedingList!!, matchIndex, realPlace)
+                            // Für ein Massenfeld lässt sich im Setup keine Platztabelle pflegen, weil die
+                            // Zahl der Startenden dort erst zur Laufzeit feststeht. Fehlt der Eintrag,
+                            // gilt das Rundenergebnis selbst als Platz — wie bei ASCENDING.
+                            team to (round.places.firstOrNull { it.roundOutcome == roundOutcome }?.place ?: roundOutcome)
+                        }
                     }
                     teamToPlace
                 }
@@ -1330,8 +1458,11 @@ object CompetitionExecutionService {
                 buildPdf(data, pdfTemplate) to "pdf"
             }
 
-            is StartListFileType.CSV -> {
-                val config = !StartListConfigRepo.get(startListType.config).orDie()
+            StartListFileType.CSV -> {
+                val target = !CompetitionMatchRepo.getStartListConfigTarget(matchId).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchNotFound }
+                val configId = !KIO.failOnNull(target.configId) { StartListConfigError.NotConfigured }
+                val config = !StartListConfigRepo.get(configId).orDie()
                     .onNullFail { StartListConfigError.NotFound }
                 buildCsv(data, config) to "csv"
             }
@@ -1690,13 +1821,15 @@ object CompetitionExecutionService {
                 optionalColumn(config.colTeamRatingCategory) { ratingCategory?.name ?: "" }
                 optionalColumn(config.colTeamClub) { actualClubName ?: registeringClubName }
 
-                optionalColumn(config.colMatchName) { data.matchName ?: "" }
+                // Die Wellen-Name-Formatierung (Startzeit + Name) MUSS mit CompetitionMatchRepo.
+                // getForRaceClockerPull übereinstimmen (siehe WaveName) - sonst greift dessen
+                // Fallback-Filter über den Wellen-Namen beim Ergebnis-Pull nicht mehr.
+                optionalColumn(config.colMatchName) { WaveName.format(data.matchName, data.startTime) ?: "" }
                 optionalColumn(config.colMatchStartTime) { idx ->
                     val offsetSeconds = idx * (data.startTimeOffset ?: 0)
-                    // TODO: make this configurable
-                    LocalTime.ofSecondOfDay(offsetSeconds)
-                        //data.startTime.toLocalTime().plusSeconds(offsetSeconds)
-                        .format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                    data.startTime?.plusSeconds(offsetSeconds)
+                        ?.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                        ?: ""
                 }
 
                 optionalColumn(config.colRoundName) { data.roundName }

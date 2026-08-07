@@ -30,9 +30,10 @@ fun Route.certificate() {
             call.respondComprehension {
                 val user = !authenticate(Privilege.ReadClubOwn)
                 val eventId = !pathParam("eventId", uuid)
+                val format = certificateFormat()
                 val club = user.club
                 if (club != null) {
-                    CertificateService.downloadCertificatesOfParticipation(eventId, club)
+                    CertificateService.downloadCertificatesOfParticipation(eventId, club, format)
                 } else {
                     KIO.fail(CertificateError.NoResults) // TODO: better typed error please
                 }
@@ -44,8 +45,9 @@ fun Route.certificate() {
                 val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
                 val eventId = !pathParam("eventId", uuid)
                 val participantId = !pathParam("participantId", uuid)
+                val format = certificateFormat()
 
-                CertificateService.downloadCertificateOfParticipation(eventId, participantId, user, scope)
+                CertificateService.downloadCertificateOfParticipation(eventId, participantId, user, scope, format)
             }
         }
 

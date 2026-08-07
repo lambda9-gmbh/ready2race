@@ -1,0 +1,140 @@
+import {TimingConfigDto, TimingConfigRequest} from '@api/types.gen.ts'
+import {AutocompleteOption} from '@utils/types.ts'
+
+/**
+ * 'NONE' ist der Formular-Stellvertreter für „kein Zeitnahme-System gesetzt“ (Spalte null). Ein
+ * Radio-Button braucht einen Wert; null lässt sich nicht auswählen.
+ */
+export type TimingFormSystem = 'NONE' | 'RACECLOCKER' | 'WEBSCORER'
+
+export type TimingForm = {
+    timingSystem: TimingFormSystem
+    timeTrialResultsUrl: string
+    heatsResultsUrl: string
+    startlistConfigQualification: AutocompleteOption
+    startlistConfigRounds: AutocompleteOption
+    resultImportConfig: AutocompleteOption
+    /**
+     * Kein Eingabefeld, sondern eine mitgeführte Angabe des Servers: hat der Ablauf dieses Wettkampfs
+     * eine Qualifikationsrunde? Sie hängt hier mit drin, weil der Zeitnahme- und der Durchführungs-Tab
+     * die Zeitnahme-Konfiguration ohnehin beide laden — so kommen beide ohne zusätzliche Abfrage an den
+     * Wert, und `timingConfigWarnings` bleibt eine reine Funktion über einem einzigen Objekt.
+     * `mapTimingFormToRequest` lässt das Feld aus, es wird nie zurückgeschrieben.
+     */
+    hasQualificationRound: boolean
+    /**
+     * Ebenfalls nur mitgeführt: die Zeitnahme-Voreinstellung der Veranstaltung. Die RaceClocker-Rennen
+     * werden pro Veranstaltung angelegt, deshalb erben Wettkämpfe System und URLs von dort, solange die
+     * eigenen Felder leer sind. Die Oberfläche zeigt damit an, WAS geerbt würde, und die Warnungen
+     * rechnen auf den effektiven Werten ([effectiveTimingSystem]) statt auf den lokalen.
+     */
+    eventTimingSystem: TimingFormSystem
+    eventTimeTrialResultsUrl: string
+    eventHeatsResultsUrl: string
+}
+
+export const emptyTimingForm: TimingForm = {
+    timingSystem: 'NONE',
+    timeTrialResultsUrl: '',
+    heatsResultsUrl: '',
+    startlistConfigQualification: null,
+    startlistConfigRounds: null,
+    resultImportConfig: null,
+    hasQualificationRound: false,
+    eventTimingSystem: 'NONE',
+    eventTimeTrialResultsUrl: '',
+    eventHeatsResultsUrl: '',
+}
+
+/** Wettkampf-Wert vor Veranstaltungs-Voreinstellung — dieselbe Regel wie das Backend (coalesce). */
+export const effectiveTimingSystem = (form: TimingForm): TimingFormSystem =>
+    form.timingSystem !== 'NONE' ? form.timingSystem : form.eventTimingSystem
+
+/**
+ * Die Preset-Felder kommen als reine UUID aus dem Backend. Das Label füllt die Komponente nach, sobald
+ * die Preset-Listen geladen sind — hier steht nur die ID, damit diese Funktion ohne Netz testbar bleibt.
+ */
+export const mapDtoToTimingForm = (dto: TimingConfigDto): TimingForm => ({
+    timingSystem: dto.timingSystem ?? 'NONE',
+    timeTrialResultsUrl: dto.timeTrialResultsUrl ?? '',
+    heatsResultsUrl: dto.heatsResultsUrl ?? '',
+    startlistConfigQualification: dto.startlistConfigQualification
+        ? {id: dto.startlistConfigQualification, label: ''}
+        : null,
+    startlistConfigRounds: dto.startlistConfigRounds
+        ? {id: dto.startlistConfigRounds, label: ''}
+        : null,
+    resultImportConfig: dto.resultImportConfig ? {id: dto.resultImportConfig, label: ''} : null,
+    hasQualificationRound: dto.hasQualificationRound ?? false,
+    eventTimingSystem: dto.eventTimingSystem ?? 'NONE',
+    eventTimeTrialResultsUrl: dto.eventTimeTrialResultsUrl ?? '',
+    eventHeatsResultsUrl: dto.eventHeatsResultsUrl ?? '',
+})
+
+const trimmedOrNull = (value: string): string | null => value.trim() || null
+
+/**
+ * Felder, die für das gewählte System nicht sichtbar sind, werden bewusst geleert statt durchgereicht:
+ * eine unsichtbare URL oder ein unsichtbares Preset wäre eine Einstellung, die niemand mehr findet.
+ */
+export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest => {
+    // Effektiv statt lokal: erbt der Wettkampf RaceClocker von der Veranstaltung, sind die
+    // URL-Felder sichtbar und ihre Eingaben sind gezielte Overrides — die dürfen nicht beim
+    // Speichern verschwinden, nur weil das lokale System-Feld auf "NONE" (= erben) steht.
+    const raceClocker = effectiveTimingSystem(form) === 'RACECLOCKER'
+    const configured = effectiveTimingSystem(form) !== 'NONE'
+
+    return {
+        timingSystem: form.timingSystem === 'NONE' ? null : form.timingSystem,
+        timeTrialResultsUrl: raceClocker ? trimmedOrNull(form.timeTrialResultsUrl) : null,
+        heatsResultsUrl: raceClocker ? trimmedOrNull(form.heatsResultsUrl) : null,
+        startlistConfigQualification: raceClocker
+            ? (form.startlistConfigQualification?.id ?? null)
+            : null,
+        startlistConfigRounds: configured ? (form.startlistConfigRounds?.id ?? null) : null,
+        resultImportConfig: configured ? (form.resultImportConfig?.id ?? null) : null,
+    }
+}
+
+export type TimingWarning =
+    | 'heatsUrl'
+    | 'timeTrialUrl'
+    | 'startlistRounds'
+    | 'startlistQualification'
+
+/**
+ * Was fehlt, um die Zeitnahme benutzen zu können.
+ *
+ * Die Zeitfahren-URL und das Qualifikations-Preset hängen an [TimingForm.hasQualificationRound]: ein
+ * Wettkampf ohne Qualifikationsrunde braucht beides nie, und eine Warnung, die dort dauerhaft steht,
+ * wird ignoriert. Hat er eine, sind beide genauso Pflicht wie die übrigen Felder — sonst antwortet der
+ * Startlisten-Export mit STARTLIST_CONFIG_NOT_CONFIGURED und der Lauf-Pull findet keine Ergebnisse,
+ * beides erst am Renntag sichtbar.
+ *
+ * Beide gelten nur für RaceClocker: Webscorer kennt die Zweiteilung nicht, füllt nur den Runden-Slot
+ * und fällt für die Qualifikation darauf zurück (siehe StartListConfigTarget im Backend).
+ */
+export const timingConfigWarnings = (form: TimingForm): TimingWarning[] => {
+    // Auf den effektiven Werten gerechnet: was die Veranstaltung vorbelegt, fehlt nicht.
+    const system = effectiveTimingSystem(form)
+    if (system === 'NONE') return []
+
+    const raceClocker = system === 'RACECLOCKER'
+    const heatsUrl = form.heatsResultsUrl.trim() || form.eventHeatsResultsUrl.trim()
+    const timeTrialUrl = form.timeTrialResultsUrl.trim() || form.eventTimeTrialResultsUrl.trim()
+
+    const warnings: TimingWarning[] = []
+    if (raceClocker && !heatsUrl) {
+        warnings.push('heatsUrl')
+    }
+    if (raceClocker && form.hasQualificationRound && !timeTrialUrl) {
+        warnings.push('timeTrialUrl')
+    }
+    if (!form.startlistConfigRounds) {
+        warnings.push('startlistRounds')
+    }
+    if (raceClocker && form.hasQualificationRound && !form.startlistConfigQualification) {
+        warnings.push('startlistQualification')
+    }
+    return warnings
+}

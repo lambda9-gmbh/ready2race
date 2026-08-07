@@ -567,6 +567,9 @@ select e.id,
        e.self_submission,
        e.submission_needs_verification,
        e.participant_self_registration,
+       e.chain_progression_mode,
+       e.show_breaks_on_public_boards,
+       e.public_results_visibility,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        max(cpcc.end_at)                                                                 as challenge_end,
        err.event is not null                                                            as registrations_finalized
@@ -791,6 +794,8 @@ select cmt.id,
        cmt.out,
        cmt.failed,
        cmt.failed_reason,
+       cmt.penalty_seconds,
+       cmt.penalty_note,
        cr.club                                                                 as club_id,
        c.name                                                                  as club_name,
        cr.name                                                                 as registration_name,
@@ -812,7 +817,8 @@ from competition_match_team cmt
          left join event_registration er on cr.event_registration = er.id
          left join event e on er.event = e.id
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.competition_registration, cr.club, c.name,
-         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, e.mixed_team_term
+         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, e.mixed_team_term,
+         cmt.penalty_seconds, cmt.penalty_note
 ;
 
 create view competition_match_with_teams as
@@ -1101,6 +1107,11 @@ FROM caterer_transaction ct
          INNER JOIN app_user caterer ON ct.caterer_id = caterer.id
          INNER JOIN app_user ON ct.app_user_id = app_user.id;
 
+-- Welche Wettbewerbe die öffentliche Ergebnisseite zur Auswahl anbietet. Die Sichtbarkeitsregel
+-- muss dieselbe sein wie in CompetitionMatchRepo.getMatchResults, sonst steht ein Wettbewerb in
+-- der Liste, dessen Ergebnisseite dann leer bleibt: beendet (finished_at) zählt immer, vollständig
+-- gewertet nur, wenn die Veranstaltung public_results_visibility = 'RESULTS_COMPLETE' gesetzt hat
+-- (siehe AthleteBoardLogic.isPublicResult und Migration V202608061200).
 create view competition_having_results as
 select c.id,
        c.event,
@@ -1109,6 +1120,7 @@ select c.id,
        cp.short_name,
        cc.name as category
 from competition c
+         join event e on e.id = c.event
          join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
 where exists(select 1
@@ -1117,16 +1129,18 @@ where exists(select 1
                       join competition_setup_round csr on csm.competition_setup_round = csr.id
                       join competition_setup cs on csr.competition_setup = cs.competition_properties
              where cs.competition_properties = cp.id
-               and not exists (select 1
-                               from competition_match_team cmt
-                               where cmt.competition_match = csm.id
-                                 and cmt.place is null
-                                 and cmt.failed is false
-                                 and cmt.out is false
-                                 and not exists(select 1
-                                                from competition_deregistration cd
-                                                where cd.competition_registration = cmt.competition_registration
-                                                  and cd.competition_setup_round = csr.id)));
+               and (cm.finished_at is not null
+                 or (e.public_results_visibility = 'RESULTS_COMPLETE'
+                     and not exists (select 1
+                                     from competition_match_team cmt
+                                     where cmt.competition_match = csm.id
+                                       and cmt.place is null
+                                       and cmt.failed is false
+                                       and cmt.out is false
+                                       and not exists(select 1
+                                                      from competition_deregistration cd
+                                                      where cd.competition_registration = cmt.competition_registration
+                                                        and cd.competition_setup_round = csr.id)))));
 
 create view competition_match_for_event as
 select cm.competition_setup_match                                                      as match_id,
@@ -1344,19 +1358,25 @@ create view gap_document_template_view as
 select gdt.id,
        gdt.name,
        gdt.type,
-       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
+       gdt.font_name,
+       (f.template is not null)                                            as has_font,
+       coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}')   as placeholders
 from gap_document_template gdt
+         left join gap_document_template_font f on f.template = gdt.id
          left join gap_document_placeholder gdp on gdp.template = gdt.id
-group by gdt.id
+group by gdt.id, f.template
 ;
 
 create view gap_document_template_assignment as
 select u.type,
        td.data,
+       gdt.font_name,
+       f.data                                                            as font_data,
        coalesce(array_agg(gdp) filter ( where gdp.id is not null ), '{}') as placeholders
 from gap_document_template_usage u
          join gap_document_template gdt on gdt.id = u.template
          join gap_document_template_data td on gdt.id = td.template
+         left join gap_document_template_font f on f.template = gdt.id
          left join gap_document_placeholder gdp on gdt.id = gdp.template
-group by u.type, td.data
+group by u.type, td.data, gdt.font_name, f.data
 ;

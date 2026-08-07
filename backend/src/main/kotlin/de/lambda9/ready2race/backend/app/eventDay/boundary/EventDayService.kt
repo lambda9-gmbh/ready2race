@@ -109,10 +109,10 @@ object EventDayService {
     ): App<EventDayError, ApiResponse.NoData> = KIO.comprehension {
 
         val eventDayExists = !EventDayRepo.exists(eventDayId).orDie()
-        if (!eventDayExists) KIO.fail(EventDayError.EventDayNotFound)
+        !KIO.failOn(!eventDayExists) { EventDayError.EventDayNotFound }
 
         val unknownCompetitions = !CompetitionRepo.findUnknown(request.competitions).orDie()
-        if (unknownCompetitions.isNotEmpty()) KIO.fail(EventDayError.CompetitionsNotFound(unknownCompetitions))
+        !KIO.failOn(unknownCompetitions.isNotEmpty()) { EventDayError.CompetitionsNotFound(unknownCompetitions) }
 
         !EventDayHasCompetitionRepo.deleteByEventDay(eventDayId).orDie()
         !EventDayHasCompetitionRepo.create(request.competitions.map {

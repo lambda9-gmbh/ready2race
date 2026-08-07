@@ -16,6 +16,13 @@ sealed interface ParticipantError : ServiceError {
     override fun respond(): ApiError = when (this) {
         ParticipantInUse -> ApiError(status = HttpStatusCode.Forbidden, message = "Participant can not be deleted")
         ParticipantNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Participant not found")
-        is ImportError.UnknownGenderValue -> ApiError(status = HttpStatusCode.UnprocessableEntity, message = "Unknown gender value", errorCode = ErrorCode.PARTICIPANT_IMPORT_UNKNOWN_GENDER_VALUE)
+        // Der beanstandete Wert reist mit: ohne ihn steht in der Oberfläche "unbekannter Wert für
+        // das Geschlecht" und der Nutzer sucht ihn in einer Datei mit hunderten Zeilen selbst.
+        is ImportError.UnknownGenderValue -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Unknown gender value '$value'",
+            details = mapOf("value" to value),
+            errorCode = ErrorCode.PARTICIPANT_IMPORT_UNKNOWN_GENDER_VALUE,
+        )
     }
 }

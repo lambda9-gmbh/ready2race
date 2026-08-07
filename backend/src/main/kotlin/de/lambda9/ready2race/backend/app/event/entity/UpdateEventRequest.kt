@@ -26,6 +26,12 @@ data class UpdateEventRequest(
     val allowSelfSubmission: Boolean,
     val submissionNeedsVerification: Boolean,
     val allowParticipantSelfRegistration: Boolean,
+    /** Steuert, wer Läufe beenden/aktivieren darf und ob die Kette dabei automatisch weiterzieht. */
+    val chainProgressionMode: ChainProgressionMode,
+    /** Zeigt Pausen/Programmpunkte aus dem Zeitplan auch auf Kiosk und Athleten-Anzeige. */
+    val showBreaksOnPublicBoards: Boolean,
+    /** Ab welchem Zustand ein Lauf als Ergebnis auf den öffentlichen Ansichten erscheint. */
+    val publicResultsVisibility: PublicResultsVisibility,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -54,6 +60,9 @@ data class UpdateEventRequest(
                 allowSelfSubmission = false,
                 submissionNeedsVerification = false,
                 allowParticipantSelfRegistration = false,
+                chainProgressionMode = ChainProgressionMode.DEAKTIVIERT,
+                showBreaksOnPublicBoards = false,
+                publicResultsVisibility = PublicResultsVisibility.FINISHED_ONLY,
             )
     }
 }

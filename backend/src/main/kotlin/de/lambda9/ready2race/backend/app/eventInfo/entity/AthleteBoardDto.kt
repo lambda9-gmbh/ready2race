@@ -1,0 +1,106 @@
+package de.lambda9.ready2race.backend.app.eventInfo.entity
+
+import java.time.LocalDateTime
+import java.util.UUID
+
+/**
+ * Antwort der Athleten-Anzeige. Bewusst schlanker als die Info-DTOs daneben:
+ * Jahrgang, Geschlecht, Teilnehmer-IDs und der externe Vereinsname fehlen,
+ * weil sie nicht angezeigt werden und im Mobilfunknetz kosten.
+ */
+data class AthleteBoardDto(
+    val eventName: String,
+    val serverTime: LocalDateTime,
+    val refreshIntervalSeconds: Int,
+    val showCountdown: Boolean,
+    val running: List<AthleteBoardMatch>,
+    val upcoming: List<AthleteBoardMatch>,
+    val results: List<AthleteBoardResult>,
+)
+
+data class AthleteBoardMatch(
+    val matchId: UUID,
+    val competitionName: String,
+    val categoryName: String?,
+    val roundName: String?,
+    val matchName: String?,
+    /** Geplanter Start aus dem Zeitplan. */
+    val startTime: LocalDateTime?,
+    /**
+     * Tatsächlicher Start, nur im Block `running` gefüllt. Null bei einem als aktuell markierten
+     * Lauf heißt: noch nicht gestartet, das Boot liegt am Steg. Im Block `upcoming` immer null.
+     */
+    val actualStartTime: LocalDateTime? = null,
+    val startState: AthleteBoardStartState,
+    val teams: List<AthleteBoardTeam>,
+    /** true für einen Platzhalter aus einem wartenden Zeitstrahl-Slot; teams ist dann immer leer. */
+    val pendingRound: Boolean = false,
+    /**
+     * Name eines FREE-Platzhalters (Programmpunkt wie "Mittagspause") - null für echte Läufe und
+     * für wartende Rund-Platzhalter ([pendingRound]). Nur gesetzt, wenn die Veranstaltung Pausen
+     * auf öffentlichen Anzeigen zeigt.
+     */
+    val name: String? = null,
+)
+
+data class AthleteBoardTeam(
+    /** Startposition im Lauf, aus `competition_match_team.start_number`. */
+    val lane: Int?,
+    /** Die n-te Mannschaft dieses Vereins im Wettkampf - nur gezeigt, wenn [teamName] fehlt. */
+    val teamNumber: Int?,
+    val clubName: String?,
+    val teamName: String?,
+    val participants: List<AthleteBoardParticipant>,
+    /**
+     * Teilergebnis eines laufenden Laufs. Alle vier Felder sind im Block `upcoming` immer leer:
+     * dort ist noch nichts gefahren. Im Block `running` füllen sie sich, sobald die Zeitnahme
+     * einzelne Boote gewertet hat - der Lauf muss dafür nicht beendet sein.
+     */
+    val place: Int? = null,
+    val timeString: String? = null,
+    /** Nur ausgewiesen, nie verrechnet; [timeString] enthält die Strafe bereits. */
+    val penaltySeconds: Int? = null,
+    val penaltyNote: String? = null,
+    val failed: Boolean = false,
+    val failedReason: String? = null,
+)
+
+data class AthleteBoardParticipant(
+    val name: String,
+    val role: String?,
+)
+
+data class AthleteBoardResult(
+    val matchId: UUID,
+    val competitionName: String,
+    val categoryName: String?,
+    val roundName: String?,
+    val matchName: String?,
+    /** Geplanter Start aus dem Zeitplan. */
+    val startTime: LocalDateTime?,
+    /** Tatsächlicher Start, falls gestempelt - erklärt eine Abweichung vom Zeitplan. */
+    val actualStartTime: LocalDateTime?,
+    val teams: List<AthleteBoardResultTeam>,
+)
+
+data class AthleteBoardResultTeam(
+    val place: Int?,
+    val lane: Int,
+    /** Die n-te Mannschaft dieses Vereins im Wettkampf - nur gezeigt, wenn [teamName] fehlt. */
+    val teamNumber: Int?,
+    val clubName: String?,
+    val teamName: String?,
+    val timeString: String?,
+    /** Nur ausgewiesen, nie verrechnet; [timeString] enthält die Strafe bereits. */
+    val penaltySeconds: Int?,
+    val penaltyNote: String?,
+    val failed: Boolean,
+    val failedReason: String?,
+    /**
+     * Abgemeldet für diese Runde. Solche Mannschaften haben weder Platz noch Zeit und werden
+     * deshalb ausdrücklich als abgemeldet gekennzeichnet, statt still zu verschwinden - sonst
+     * sucht die Besatzung im Ergebnis nach einem Boot, das gar nicht gefahren ist.
+     */
+    val deregistered: Boolean,
+    val deregisteredReason: String?,
+)

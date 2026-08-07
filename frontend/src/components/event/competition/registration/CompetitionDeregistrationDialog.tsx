@@ -9,6 +9,7 @@ import {useState} from 'react'
 import {competitionRoute, eventRoute} from '@routes'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {deregistrationErrorKey} from './deregistrationError.ts'
 
 type Props = {
     open: boolean
@@ -53,7 +54,7 @@ const CompetitionDeregistrationDialog = (props: Props) => {
         setSubmitting(false)
 
         if (error) {
-            feedback.error(t('event.competition.registration.deregister.error'))
+            feedback.error(t(deregistrationErrorKey(error)))
         } else {
             feedback.success(t('event.competition.registration.deregister.success'))
             props.onClose()

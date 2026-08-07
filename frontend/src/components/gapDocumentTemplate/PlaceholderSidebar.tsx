@@ -2,10 +2,12 @@ import {
     Box,
     Button,
     Divider,
+    FormControlLabel,
     MenuItem,
     Paper,
     Select,
     Stack,
+    Switch,
     TextField,
     Typography,
 } from '@mui/material'
@@ -23,23 +25,20 @@ type PlaceholderData = {
     relWidth: number
     relHeight: number
     textAlign: TextAlign
+    fontSize?: number
+    bold: boolean
+    italic: boolean
+    staticText?: string
 }
 
 type Props = {
     selectedPlaceholder: string | null
     placeholders: PlaceholderData[]
+    allowedTypes: GapDocumentPlaceholderType[]
     onPlaceholdersChange: (placeholders: PlaceholderData[]) => void
     onAddPlaceholder: (type: GapDocumentPlaceholderType, page: number) => void
     currentPage: number
 }
-
-const PLACEHOLDER_TYPES: GapDocumentPlaceholderType[] = [
-    'FIRST_NAME',
-    'LAST_NAME',
-    'FULL_NAME',
-    'RESULT',
-    'EVENT_NAME',
-]
 
 const PlaceholderSidebar = (props: Props) => {
     const {t} = useTranslation()
@@ -64,7 +63,7 @@ const PlaceholderSidebar = (props: Props) => {
                 </Typography>
 
                 <Stack spacing={1}>
-                    {PLACEHOLDER_TYPES.map(type => (
+                    {props.allowedTypes.map(type => (
                         <Button
                             key={type}
                             variant="outlined"
@@ -136,6 +135,79 @@ const PlaceholderSidebar = (props: Props) => {
                                 </MenuItem>
                             </Select>
                         </Box>
+
+                        <TextField
+                            label={t('gap.document.placeholder.fontSize')}
+                            type="number"
+                            value={selectedPlaceholder.fontSize ?? ''}
+                            onChange={e => {
+                                const rawValue = e.target.value
+                                if (rawValue === '') {
+                                    handlePlaceholderPropertyChange(selectedPlaceholder.id, {
+                                        fontSize: undefined,
+                                    })
+                                    return
+                                }
+                                const parsedValue = Number(rawValue)
+                                if (Number.isNaN(parsedValue)) {
+                                    return
+                                }
+                                handlePlaceholderPropertyChange(selectedPlaceholder.id, {
+                                    fontSize: Math.max(1, parsedValue),
+                                })
+                            }}
+                            fullWidth
+                            size="small"
+                            slotProps={{htmlInput: {min: 1}}}
+                            helperText={t('gap.document.placeholder.fontSizeHelp')}
+                        />
+
+                        <Stack direction="row" spacing={2}>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={selectedPlaceholder.bold}
+                                        onChange={e =>
+                                            handlePlaceholderPropertyChange(
+                                                selectedPlaceholder.id,
+                                                {bold: e.target.checked},
+                                            )
+                                        }
+                                    />
+                                }
+                                label={t('gap.document.placeholder.bold')}
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={selectedPlaceholder.italic}
+                                        onChange={e =>
+                                            handlePlaceholderPropertyChange(
+                                                selectedPlaceholder.id,
+                                                {italic: e.target.checked},
+                                            )
+                                        }
+                                    />
+                                }
+                                label={t('gap.document.placeholder.italic')}
+                            />
+                        </Stack>
+
+                        {selectedPlaceholder.type === 'FREE_TEXT' && (
+                            <TextField
+                                label={t('gap.document.placeholder.staticText')}
+                                value={selectedPlaceholder.staticText || ''}
+                                onChange={e =>
+                                    handlePlaceholderPropertyChange(selectedPlaceholder.id, {
+                                        staticText: e.target.value || undefined,
+                                    })
+                                }
+                                fullWidth
+                                multiline
+                                size="small"
+                                helperText={t('gap.document.placeholder.staticTextHelp')}
+                            />
+                        )}
 
                         <Box>
                             <Typography variant="caption" color="text.secondary">

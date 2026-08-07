@@ -1,17 +1,21 @@
 import {
     createNextCompetitionRound,
     downloadStartList,
+    getTimingConfig,
     pullMatchResultsFromRaceClocker,
     getCompetitionExecutionProgress,
+    getEventSchedule,
     updateMatchData,
     updateMatchResults,
     uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {
+    Alert,
+    AlertTitle,
     Box,
-    Button,
     Checkbox,
     Divider,
+    InputAdornment,
     Link,
     Stack,
     Table,
@@ -20,19 +24,28 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography,
     useMediaQuery,
     useTheme,
 } from '@mui/material'
-import {competitionRoute, eventRoute} from '@routes'
+import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {useTranslation} from 'react-i18next'
-import {BaseSyntheticEvent, Fragment, useRef, useState} from 'react'
+import {Trans, useTranslation} from 'react-i18next'
+import {BaseSyntheticEvent, Fragment, useMemo, useRef, useState} from 'react'
+import {format} from 'date-fns'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {Controller, FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {getFilename, groupBy, shuffle} from '@utils/helpers.ts'
+import {
+    formatFailedReason,
+    MatchResultStatus,
+    matchResultStatus,
+    matchResultStatuses,
+} from '@utils/matchResultStatus.ts'
 import {
     CompetitionExecutionCanNotCreateRoundReason,
     CompetitionMatchDto,
@@ -46,38 +59,51 @@ import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
+import MoreTimeOutlinedIcon from '@mui/icons-material/MoreTimeOutlined'
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
 import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
-import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
-import RaceClockerConfigDialog from '@components/event/competition/excecution/RaceClockerConfigDialog.tsx'
 import FormInputTimecode from '@components/form/input/FormInputTimecode.tsx'
-
-type EditMatchTeam = {
-    registrationId: string
-    startNumber: string
-}
-type EditMatchForm = {
-    selectedMatchDto: CompetitionMatchDto | null
-    startTime: string
-    teams: EditMatchTeam[]
-}
+import {
+    EditMatchForm,
+    emptyEditMatchForm,
+    mapMatchDtoToEditMatchForm,
+} from '@components/event/competition/excecution/editMatchForm.ts'
+import {
+    mapDtoToTimingForm,
+    timingConfigWarnings,
+} from '@components/event/competition/timing/timingConfigForm.ts'
+import {
+    ExecutionApiError,
+    matchErrorText,
+    raceClockerErrorText,
+} from '@components/event/competition/excecution/executionError.ts'
 
 type EnterResultsTeam = {
     registrationId: string
     place: string
     timeString: string
     failed: boolean
+    /** Kürzel und Notiz stehen im Formular getrennt, in der Datenbank zusammen in einem Feld. */
+    failedStatus: MatchResultStatus | ''
     failedReason: string
+    penaltySeconds: string
+    penaltyNote: string
 }
 type EnterResultsForm = {
     selectedMatchDto: CompetitionMatchDto | null
     teamResults: EnterResultsTeam[]
 }
+
+const statusLabelKeys = {
+    DNS: 'event.competition.execution.results.status.DNS',
+    DNF: 'event.competition.execution.results.status.DNF',
+    DSQ: 'event.competition.execution.results.status.DSQ',
+} as const satisfies Record<MatchResultStatus, string>
 
 const CompetitionExecution = () => {
     const {t} = useTranslation()
@@ -94,6 +120,32 @@ const CompetitionExecution = () => {
     const [submitting, setSubmitting] = useState(false)
 
     const [reloadData, setReloadData] = useState(false)
+
+    // Läufe, deren Startzeit über den Zeitplan (Tab Zeitplan) gepflegt wird — für sie bleibt das
+    // Startzeit-Feld hier read-only, damit die Kette (Task 10) nicht durch eine hier eingegebene
+    // abweichende Zeit ausgehebelt wird. Events ohne Zeitstrahl liefern eine leere Slot-Liste,
+    // dann bleibt das Feld wie bisher editierbar.
+    const {data: eventSchedule} = useFetch(
+        signal => getEventSchedule({signal, path: {eventId}}),
+        {deps: [eventId]},
+    )
+    const slotManagedMatchIds = useMemo(
+        () =>
+            new Set(
+                (eventSchedule?.slots ?? [])
+                    .filter(slot => slot.matchId != null)
+                    .map(slot => slot.matchId as string),
+            ),
+        [eventSchedule],
+    )
+
+    const {data: timingConfig} = useFetch(
+        signal => getTimingConfig({signal, path: {eventId, competitionId}}),
+        {deps: [eventId, competitionId]},
+    )
+
+    // Dieselbe Prüfung wie im Zeitnahme-Tab, damit beide Stellen nicht auseinanderlaufen.
+    const timingWarnings = timingConfig ? timingConfigWarnings(mapDtoToTimingForm(timingConfig)) : []
 
     const {data: progressDto, pending: progressDtoPending} = useFetch(
         signal =>
@@ -114,6 +166,20 @@ const CompetitionExecution = () => {
             deps: [eventId, competitionId, reloadData],
         },
     )
+    /**
+     * Warum die Ergebnis- oder Laufdaten-Eingabe abgelehnt wurde. [fallbackKey] ist die bisherige
+     * Sammelmeldung der jeweiligen Maske und greift nur noch für Gründe ohne eigenen Code.
+     */
+    const showMatchError = (
+        error: ExecutionApiError,
+        fallbackKey:
+            | 'event.competition.execution.results.submit.error'
+            | 'event.competition.execution.matchData.submit.error',
+    ) => {
+        const text = matchErrorText(error)
+        feedback.error(text === undefined ? t(fallbackKey) : t(text.key, text.values))
+    }
+
     const sortedRounds = progressDto?.rounds
         .map((r, idx) => ({roundIndex: idx, round: r}))
         .sort((a, b) => b.roundIndex - a.roundIndex)
@@ -168,12 +234,8 @@ const CompetitionExecution = () => {
                 const duplicatePlaces = Array.from(groupBy(validValues, val => val.place))
                     .filter(([val, items]) => items.length > 1 && val !== '')
                     .map(([place]) => place)
-                const partiallyFilledPlaces =
-                    validValues.some(val => val.place === '') &&
-                    validValues.some(val => val.place !== '')
-                const partiallyFilledTimes =
-                    validValues.some(val => val.timeString === '') &&
-                    validValues.some(val => val.timeString !== '')
+                // Teilergebnisse sind erlaubt: Zeilen ohne Platz und ohne Zeit bleiben offen und
+                // werden nicht übertragen. Nur eine komplett leere Eingabe ist sinnlos.
                 const neitherPlaceNorTimeFilled =
                     validValues.length > 0 &&
                     validValues.every(val => val.place === '' && val.timeString === '')
@@ -195,16 +257,6 @@ const CompetitionExecution = () => {
                             t('event.competition.execution.results.validation.duplicates.message'),
                     )
                     return 'duplicates'
-                } else if (partiallyFilledPlaces) {
-                    setTeamResultsError(
-                        t('event.competition.execution.results.validation.missingPlaces'),
-                    )
-                    return 'missingPlaces'
-                } else if (partiallyFilledTimes) {
-                    setTeamResultsError(
-                        t('event.competition.execution.results.validation.missingTimes'),
-                    )
-                    return 'missingTimes'
                 }
 
                 setTeamResultsError(null)
@@ -224,20 +276,21 @@ const CompetitionExecution = () => {
         return teams
             .filter(t => !t.deregistered)
             .sort((a, b) => a.startNumber - b.startNumber)
-            .map(team => ({
-                registrationId: team.registrationId,
-                place: team.place?.toString() ?? '',
-                timeString: team.timeString?.toString() ?? '',
-                failed: team.failed,
-                failedReason: team.failedReason ?? '',
-            }))
+            .map(team => {
+                const {status, note} = matchResultStatus(team.failedReason)
+
+                return {
+                    registrationId: team.registrationId,
+                    place: team.place?.toString() ?? '',
+                    timeString: team.timeString?.toString() ?? '',
+                    failed: team.failed,
+                    failedStatus: status ?? '',
+                    failedReason: note ?? '',
+                    penaltySeconds: team.penaltySeconds?.toString() ?? '',
+                    penaltyNote: team.penaltyNote ?? '',
+                }
+            })
     }
-
-    const [startListMatch, setStartListMatch] = useState<string | null>(null)
-    const showStartListConfigDialog = startListMatch !== null
-    const closeStartListConfigDialog = () => setStartListMatch(null)
-
-    const [showRaceClockerConfig, setShowRaceClockerConfig] = useState(false)
 
     const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
     const showMatchResultImportConfigDialog = resultImportMatch !== null
@@ -246,7 +299,6 @@ const CompetitionExecution = () => {
     const handleDownloadStartList = async (
         competitionMatchId: string,
         fileType: StartListFileType,
-        config?: string,
     ) => {
         const {data, error, response} = await downloadStartList({
             path: {
@@ -256,7 +308,6 @@ const CompetitionExecution = () => {
             },
             query: {
                 fileType,
-                config,
             },
         })
         const anchor = downloadRef.current
@@ -264,6 +315,11 @@ const CompetitionExecution = () => {
         if (error) {
             if (error.status.value === 409) {
                 feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
+            } else if (
+                error.status.value === 400 &&
+                error.errorCode === 'STARTLIST_CONFIG_NOT_CONFIGURED'
+            ) {
+                feedback.error(t('event.competition.execution.startList.error.notConfigured'))
             } else {
                 feedback.error(t('common.error.unexpected'))
             }
@@ -290,54 +346,15 @@ const CompetitionExecution = () => {
         setSubmitting(false)
 
         if (error) {
-            const details = ('details' in error ? error.details : undefined) as
-                | Record<string, unknown>
-                | undefined
-            switch (error.errorCode) {
-                case 'RACECLOCKER_URL_MISSING':
-                    feedback.error(t('event.competition.execution.results.raceclocker.error.urlMissing'))
-                    break
-                case 'RACECLOCKER_URL_INVALID':
-                    feedback.error(t('event.competition.execution.results.raceclocker.error.urlInvalid'))
-                    break
-                case 'RACECLOCKER_UNREACHABLE':
-                case 'RACECLOCKER_MALFORMED_FEED':
-                    feedback.error(t('event.competition.execution.results.raceclocker.error.unreachable'))
-                    break
-                case 'RACECLOCKER_MATCH_NOT_IN_FEED':
-                    feedback.error(
-                        t('event.competition.execution.results.raceclocker.error.matchNotInFeed'),
-                    )
-                    break
-                case 'RACECLOCKER_MATCH_IS_BYE':
-                    feedback.error(
-                        t('event.competition.execution.results.raceclocker.error.matchIsBye'),
-                    )
-                    break
-                case 'RACECLOCKER_DUPLICATE_TEAMS':
-                    feedback.error(
-                        t('event.competition.execution.results.raceclocker.error.duplicateTeams', {
-                            teams: ((details?.teams as string[]) ?? []).join(', '),
-                        }),
-                    )
-                    break
-                case 'RACECLOCKER_NO_RESULTS':
-                    feedback.error(t('event.competition.execution.results.raceclocker.error.noResults'))
-                    break
-                default:
-                    feedback.error(t('common.error.unexpected'))
-            }
+            const text = raceClockerErrorText(error)
+            feedback.error(text === undefined ? t('common.error.unexpected') : t(text.key, text.values))
         } else {
             feedback.success(t('event.competition.execution.results.raceclocker.success'))
             setReloadData(!reloadData)
         }
     }
 
-    const handleUploadMatchResults = async (
-        competitionMatchId: string,
-        file: File,
-        config: string,
-    ) => {
+    const handleUploadMatchResults = async (competitionMatchId: string, file: File) => {
         const {error} = await uploadResultFile({
             path: {
                 eventId,
@@ -345,7 +362,6 @@ const CompetitionExecution = () => {
                 competitionMatchId,
             },
             body: {
-                request: {config},
                 files: [file],
             },
         })
@@ -354,6 +370,8 @@ const CompetitionExecution = () => {
             if (error.status.value === 400) {
                 if (error.errorCode === 'FILE_ERROR') {
                     feedback.error(t('common.error.upload.FILE_ERROR'))
+                } else if (error.errorCode === 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED') {
+                    feedback.error(t('event.competition.execution.results.error.notConfigured'))
                 } else if (error.message === 'Unsupported file type') {
                     // TODO: replace with error code!
                     feedback.error(t('common.error.upload.unsupportedType'))
@@ -491,19 +509,41 @@ const CompetitionExecution = () => {
                     competitionMatchId: formData.selectedMatchDto.id,
                 },
                 body: {
-                    teamResults: formData.teamResults.map(results => ({
-                        registrationId: results.registrationId,
-                        place: results.failed || !results.place ? undefined : Number(results.place),
-                        timeString: results.failed ? undefined : takeIfNotEmpty(results.timeString),
-                        failed: results.failed,
-                        failedReason: results.failed
-                            ? takeIfNotEmpty(results.failedReason)
-                            : undefined,
-                    })),
+                    // Offene Zeilen (kein Platz, keine Zeit, nicht ausgeschieden) bleiben ohne
+                    // Ergebnis: das Backend verlangt je übertragenem Team Platz, Zeit oder Grund.
+                    teamResults: formData.teamResults
+                        .filter(
+                            results =>
+                                results.failed ||
+                                takeIfNotEmpty(results.place) !== undefined ||
+                                takeIfNotEmpty(results.timeString) !== undefined,
+                        )
+                        .map(results => ({
+                            registrationId: results.registrationId,
+                            place:
+                                results.failed || !results.place
+                                    ? undefined
+                                    : Number(results.place),
+                            timeString: results.failed
+                                ? undefined
+                                : takeIfNotEmpty(results.timeString),
+                            failed: results.failed,
+                            failedReason: results.failed
+                                ? (formatFailedReason(
+                                      results.failedStatus || null,
+                                      results.failedReason,
+                                  ) ?? undefined)
+                                : undefined,
+                            penaltySeconds:
+                                takeIfNotEmpty(results.penaltySeconds) !== undefined
+                                    ? Number(results.penaltySeconds)
+                                    : undefined,
+                            penaltyNote: takeIfNotEmpty(results.penaltyNote),
+                        })),
                 },
             })
             if (error) {
-                feedback.error(t('event.competition.execution.results.submit.error'))
+                showMatchError(error, 'event.competition.execution.results.submit.error')
             } else {
                 feedback.success(t('event.competition.execution.results.submit.success'))
             }
@@ -532,11 +572,7 @@ const CompetitionExecution = () => {
 
     // todo: merge following code with code for resultsUpdate
     const editMatchFormContext = useForm<EditMatchForm>({
-        values: {
-            selectedMatchDto: null,
-            startTime: '',
-            teams: [],
-        },
+        defaultValues: emptyEditMatchForm,
     })
 
     const selectedEditMatch = editMatchFormContext.watch('selectedMatchDto')
@@ -573,25 +609,13 @@ const CompetitionExecution = () => {
         },
     })
 
-    const mapTeamDtoToFormTeamData = (teams: CompetitionMatchTeamDto[]): EditMatchTeam[] => {
-        return teams
-            .sort((a, b) => a.startNumber - b.startNumber)
-            .map(team => ({
-                registrationId: team.registrationId,
-                startNumber: team.startNumber?.toString() ?? '',
-            }))
-    }
-
     const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false)
     const openEditMatchDialog = (roundIndex: number, matchIndex: number) => {
         const round = sortedRounds?.[roundIndex]
         const selectedMatch = round ? matchesFiltered(round)[matchIndex] : null
         if (selectedMatch) {
             setEditMatchDialogOpen(true)
-            editMatchFormContext.reset({
-                selectedMatchDto: selectedMatch,
-                teams: mapTeamDtoToFormTeamData(selectedMatch.teams),
-            })
+            editMatchFormContext.reset(mapMatchDtoToEditMatchForm(selectedMatch))
         }
     }
     const closeEditMatchDialog = () => {
@@ -621,7 +645,7 @@ const CompetitionExecution = () => {
                 },
             })
             if (error) {
-                feedback.error(t('event.competition.execution.matchData.submit.error'))
+                showMatchError(error, 'event.competition.execution.matchData.submit.error')
             } else {
                 feedback.success(t('event.competition.execution.matchData.submit.success'))
             }
@@ -637,11 +661,7 @@ const CompetitionExecution = () => {
             ) {
                 const nextMatch =
                     currentRoundMatches[selectedMatchIndex(formData.selectedMatchDto) + 1]
-                editMatchFormContext.reset({
-                    selectedMatchDto: nextMatch,
-                    startTime: nextMatch.startTime ?? '',
-                    teams: mapTeamDtoToFormTeamData(nextMatch.teams),
-                })
+                editMatchFormContext.reset(mapMatchDtoToEditMatchForm(nextMatch))
             }
         } else {
             closeEditMatchDialog()
@@ -721,6 +741,21 @@ const CompetitionExecution = () => {
 
     return progressDto && sortedRounds ? (
         <Box>
+            {timingWarnings.length > 0 && (
+                <Alert variant={'outlined'} severity={'warning'} sx={{my: 2}}>
+                    <AlertTitle>
+                        <Trans i18nKey={'event.competition.timing.incomplete.title'} />
+                    </AlertTitle>
+                    {timingWarnings.map(warning => (
+                        <Typography key={warning}>
+                            {t(`event.competition.timing.incomplete.${warning}`)}
+                        </Typography>
+                    ))}
+                    <InlineLink from={competitionIndexRoute.fullPath} search={{tab: 'timing'}}>
+                        <Trans i18nKey={'event.competition.timing.incomplete.link'} />
+                    </InlineLink>
+                </Alert>
+            )}
             {!allRoundsCreated && (
                 <Box sx={{my: 2, display: 'flex', alignItems: 'center'}}>
                     <LoadingButton
@@ -754,14 +789,6 @@ const CompetitionExecution = () => {
                     )}
                 </Box>
             )}
-            <Box sx={{my: 2}}>
-                <Button
-                    variant={'outlined'}
-                    size={'small'}
-                    onClick={() => setShowRaceClockerConfig(true)}>
-                    {t('event.competition.execution.raceclocker.config.open')}
-                </Button>
-            </Box>
             <Stack spacing={6}>
                 {sortedRounds.map((round, roundIndex) => (
                     <CompetitionExecutionRound
@@ -779,12 +806,15 @@ const CompetitionExecution = () => {
                             handleAccordionExpandedChange({roundIndex, accordionIndex, isExpanded})
                         }
                         smallScreenLayout={smallScreenLayout}
-                        setStartListMatch={setStartListMatch}
                         setResultImportMatch={setResultImportMatch}
                         pullRaceClockerResults={handlePullRaceClockerResults}
                         handleDownloadStartListPDF={matchId =>
                             handleDownloadStartList(matchId, 'PDF')
                         }
+                        handleDownloadStartListCSV={matchId =>
+                            handleDownloadStartList(matchId, 'CSV')
+                        }
+                        timingSystem={timingConfig?.timingSystem}
                     />
                 ))}
             </Stack>
@@ -828,10 +858,10 @@ const CompetitionExecution = () => {
                                                               'event.competition.execution.match.startNumber.startNumber',
                                                           )}
                                                 </TableCell>
-                                                <TableCell width="40%">
+                                                <TableCell width="34%">
                                                     {t('event.competition.execution.match.team')}
                                                 </TableCell>
-                                                <TableCell width="40%">
+                                                <TableCell width="46%">
                                                     {t(
                                                         'event.competition.execution.match.placeAndTime',
                                                     )}
@@ -864,7 +894,7 @@ const CompetitionExecution = () => {
                                                                 <TableCell width="10%">
                                                                     {team.startNumber}
                                                                 </TableCell>
-                                                                <TableCell width="40%">
+                                                                <TableCell width="34%">
                                                                     <Typography>
                                                                         {team.actualClubName ??
                                                                             team.clubName}
@@ -891,7 +921,7 @@ const CompetitionExecution = () => {
                                                                             .join(', ')}
                                                                     </Typography>
                                                                 </TableCell>
-                                                                <TableCell width="40%">
+                                                                <TableCell width="46%">
                                                                     {!failedValue ? (
                                                                         <Box
                                                                             sx={{
@@ -943,15 +973,120 @@ const CompetitionExecution = () => {
                                                                                     placeholder="00:00:00.000"
                                                                                 />
                                                                             </Box>
+                                                                            {/* Wie Platz und Zeit ohne Label: das "– Optional" der
+                                                                                Labels sprengt diese enge Spalte. */}
+                                                                            <Box
+                                                                                display="flex"
+                                                                                gap={1}
+                                                                                alignItems={
+                                                                                    'center'
+                                                                                }>
+                                                                                <MoreTimeOutlinedIcon
+                                                                                    color={'action'}
+                                                                                    titleAccess={t(
+                                                                                        'event.competition.execution.results.penaltySeconds',
+                                                                                    )}
+                                                                                />
+                                                                                <FormInputNumber
+                                                                                    name={`teamResults.${fieldIndex}.penaltySeconds`}
+                                                                                    min={1}
+                                                                                    integer
+                                                                                    size="small"
+                                                                                    placeholder={t(
+                                                                                        'event.competition.execution.results.penaltyShort',
+                                                                                    )}
+                                                                                    slotProps={{
+                                                                                        input: {
+                                                                                            endAdornment: (
+                                                                                                <InputAdornment
+                                                                                                    position={
+                                                                                                        'end'
+                                                                                                    }>
+                                                                                                    {t(
+                                                                                                        'common.form.secondsShort',
+                                                                                                    )}
+                                                                                                </InputAdornment>
+                                                                                            ),
+                                                                                        },
+                                                                                    }}
+                                                                                    sx={{width: 116}}
+                                                                                />
+                                                                                <FormInputText
+                                                                                    name={`teamResults.${fieldIndex}.penaltyNote`}
+                                                                                    size="small"
+                                                                                    placeholder={t(
+                                                                                        'event.competition.execution.results.penaltyNoteShort',
+                                                                                    )}
+                                                                                    sx={{flex: 1}}
+                                                                                />
+                                                                            </Box>
                                                                         </Box>
                                                                     ) : (
-                                                                        <FormInputText
-                                                                            name={`teamResults.${fieldIndex}.failedReason`}
-                                                                            label={t(
-                                                                                'event.competition.execution.results.failedReason',
-                                                                            )}
-                                                                            size="small"
-                                                                        />
+                                                                        <Box
+                                                                            sx={{
+                                                                                display: 'flex',
+                                                                                flexDirection:
+                                                                                    'column',
+                                                                                gap: 2,
+                                                                            }}>
+                                                                            {/* Die Kürzel bleiben in jeder Sprache gleich; was sie
+                                                                                bedeuten, steht im Tooltip. */}
+                                                                            <Controller
+                                                                                name={`teamResults.${fieldIndex}.failedStatus`}
+                                                                                render={({
+                                                                                    field: {
+                                                                                        onChange:
+                                                                                            statusOnChange,
+                                                                                        value: statusValue,
+                                                                                    },
+                                                                                }) => (
+                                                                                    <ToggleButtonGroup
+                                                                                        exclusive
+                                                                                        size="small"
+                                                                                        value={
+                                                                                            statusValue ||
+                                                                                            null
+                                                                                        }
+                                                                                        onChange={(
+                                                                                            _,
+                                                                                            next,
+                                                                                        ) =>
+                                                                                            statusOnChange(
+                                                                                                next ??
+                                                                                                    '',
+                                                                                            )
+                                                                                        }>
+                                                                                        {matchResultStatuses.map(
+                                                                                            status => (
+                                                                                                <ToggleButton
+                                                                                                    key={
+                                                                                                        status
+                                                                                                    }
+                                                                                                    value={
+                                                                                                        status
+                                                                                                    }
+                                                                                                    title={t(
+                                                                                                        statusLabelKeys[
+                                                                                                            status
+                                                                                                        ],
+                                                                                                    )}>
+                                                                                                    {
+                                                                                                        status
+                                                                                                    }
+                                                                                                </ToggleButton>
+                                                                                            ),
+                                                                                        )}
+                                                                                    </ToggleButtonGroup>
+                                                                                )}
+                                                                            />
+                                                                            <FormInputText
+                                                                                name={`teamResults.${fieldIndex}.failedReason`}
+                                                                                label={t(
+                                                                                    'event.competition.execution.results.failedNote',
+                                                                                )}
+                                                                                size="small"
+                                                                            />
+                                                                        </Box>
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell width="10%">
@@ -1006,11 +1141,33 @@ const CompetitionExecution = () => {
                                     currentRoundMatches.length >
                                     selectedMatchIndex(selectedEditMatch) + 1
                                 }>
-                                <FormInputDateTime
-                                    name={'startTime'}
-                                    label={t('event.competition.execution.match.startTime')}
-                                    timeSteps={{minutes: 1}}
-                                />
+                                {slotManagedMatchIds.has(selectedEditMatch.id) ? (
+                                    <Box sx={{mb: 2}}>
+                                        <Typography sx={{fontSize: '1.1rem', mb: 1}}>
+                                            {t('event.competition.execution.match.startTime')}
+                                        </Typography>
+                                        <Typography>
+                                            {selectedEditMatch.startTime
+                                                ? format(
+                                                      new Date(selectedEditMatch.startTime),
+                                                      t('format.datetime'),
+                                                  )
+                                                : '—'}
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            color="textSecondary"
+                                            sx={{mt: 0.5}}>
+                                            {t('event.schedule.managedHint')}
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <FormInputDateTime
+                                        name={'startTime'}
+                                        label={t('event.competition.execution.match.startTime')}
+                                        timeSteps={{minutes: 1}}
+                                    />
+                                )}
                                 <Box sx={{mt: 4}}>
                                     <LoadingButton
                                         pending={submitting}
@@ -1097,23 +1254,10 @@ const CompetitionExecution = () => {
                     </FormContainer>
                 </Box>
             </BaseDialog>
-            <StartListConfigPicker
-                open={showStartListConfigDialog}
-                onClose={closeStartListConfigDialog}
-                onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
-            />
-            <RaceClockerConfigDialog
-                open={showRaceClockerConfig}
-                eventId={eventId}
-                competitionId={competitionId}
-                onClose={() => setShowRaceClockerConfig(false)}
-            />
             <MatchResultUploadDialog
                 open={showMatchResultImportConfigDialog}
                 onClose={closeMatchResultImportConfigDialog}
-                onSuccess={async (config, file) =>
-                    handleUploadMatchResults(resultImportMatch!, file, config)
-                }
+                onSuccess={async file => handleUploadMatchResults(resultImportMatch!, file)}
             />
             <Link ref={downloadRef} display={'none'}></Link>
         </Box>

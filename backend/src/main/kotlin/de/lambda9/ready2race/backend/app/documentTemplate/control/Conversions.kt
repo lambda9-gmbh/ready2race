@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentPlac
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateDto
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapPlaceholder
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateAssignmentRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.GapDocumentPlaceholderRecord
@@ -60,6 +61,7 @@ fun GapDocumentTemplateRequest.toRecord(name: String) =
         id = UUID.randomUUID(),
         name = name,
         type = type.name,
+        fontName = fontName,
     )
 
 fun GapDocumentPlaceholderRecord.toDto() =
@@ -73,6 +75,10 @@ fun GapDocumentPlaceholderRecord.toDto() =
         relWidth = relWidth,
         relHeight = relHeight,
         textAlign = TextAlign.valueOf(textAlign),
+        fontSize = fontSize,
+        bold = bold ?: false,
+        italic = italic ?: false,
+        staticText = staticText,
     )
 
 fun GapDocumentTemplateViewRecord.toDto() =
@@ -80,6 +86,8 @@ fun GapDocumentTemplateViewRecord.toDto() =
         id = id!!,
         name = name!!,
         type = GapDocumentType.valueOf(type!!),
+        fontName = fontName,
+        hasFont = hasFont ?: false,
         placeholders = placeholders!!.map { it!!.toDto() },
     )
 
@@ -95,4 +103,36 @@ fun GapDocumentPlaceholderRequest.toRecord(template: UUID) =
         relWidth = relWidth,
         relHeight = relHeight,
         textAlign = textAlign.name,
+        fontSize = fontSize,
+        bold = bold,
+        italic = italic,
+        staticText = staticText,
     )
+
+fun GapDocumentPlaceholderRecord.toGapPlaceholder() =
+    GapPlaceholder(
+        type = GapDocumentPlaceholderType.valueOf(type),
+        page = page,
+        relLeft = relLeft,
+        relTop = relTop,
+        relWidth = relWidth,
+        relHeight = relHeight,
+        textAlign = TextAlign.valueOf(textAlign),
+        fontSize = fontSize,
+        bold = bold ?: false,
+        italic = italic ?: false,
+        staticText = staticText,
+    )
+
+/**
+ * Platzhalter eines Vorlagen-Datensatzes in die datenbankfreie Form bringen. Unbekannte
+ * Platzhaltertypen werden übersprungen, damit eine Vorlage nach einem Enum-Umbau nicht bricht.
+ */
+fun List<GapDocumentPlaceholderRecord?>.toGapPlaceholders(): List<GapPlaceholder> =
+    mapNotNull { record ->
+        try {
+            record?.toGapPlaceholder()
+        } catch (ex: IllegalArgumentException) {
+            null
+        }
+    }

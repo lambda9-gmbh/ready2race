@@ -16,14 +16,19 @@ data class Text(
     override val padding: Padding,
 ) : Element {
 
-    private val sanitizedContent = content.sanitizeNonPrintable()
-
     private val font = when (fontStyle) {
         FontStyle.NORMAL -> PDType1Font(Standard14Fonts.FontName.HELVETICA)
         FontStyle.BOLD -> PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD)
         FontStyle.ITALIC -> PDType1Font(Standard14Fonts.FontName.HELVETICA_OBLIQUE)
         FontStyle.BOLD_ITALIC -> PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD_OBLIQUE)
     }
+
+    // Erst die unsichtbaren Formatierungszeichen entfernen, dann alles auf das abbilden, was
+    // Helvetica kodieren kann. Der zweite Schritt ist neu und nötig, seit sanitizeNonPrintable die
+    // sichtbaren Zeichen ab U+2010 stehen lässt: Bindestrich U+2010, Non-Breaking Hyphen U+2011
+    // oder ein polnisches ł sind in WinAnsi nicht enthalten und würden getStringWidth/showText mit
+    // einer IllegalArgumentException abbrechen lassen. Kodierbare Zeichen bleiben unverändert.
+    private val sanitizedContent = content.sanitizeNonPrintable().sanitizeForFont(font)
 
     private val width = font.getStringWidth(sanitizedContent) / 1000 * fontSize
     private val height = lineHeight * fontSize * font.fontDescriptor.capHeight / 1000
@@ -161,7 +166,9 @@ data class Text(
 
             c.beginText()
             c.newLineAtOffset(x, y + yOffset)
-            c.showText(line.sanitizeNonPrintable())
+            // line stammt aus computeLines und damit bereits aus sanitizedContent - beide
+            // Schritte sind idempotent, der Aufruf hier ist nur die Absicherung an der Kante.
+            c.showText(line.sanitizeNonPrintable().sanitizeForFont(font))
             c.endText()
         }
 

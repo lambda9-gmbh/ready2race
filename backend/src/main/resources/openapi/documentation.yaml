@@ -1318,6 +1318,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
     delete:
@@ -1585,20 +1587,19 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/competitionExecution/raceclocker-config:
+  /event/{eventId}/timing-config:
     parameters:
       - $ref: '#/components/parameters/eventId'
-      - $ref: '#/components/parameters/competitionId'
     get:
-      operationId: getRaceClockerConfig
-      description: The two public RaceClocker results URLs of this competition.
+      operationId: getEventTimingConfig
+      description: The event-wide timing defaults - inherited by every competition without its own values.
       responses:
         200:
-          description: RaceClocker configuration successfully retrieved
+          description: Event timing configuration successfully retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceClockerConfigDto'
+                $ref: '#/components/schemas/EventTimingConfigDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -1610,13 +1611,60 @@ paths:
         500:
           $ref: '#/components/responses/500'
     put:
-      operationId: updateRaceClockerConfig
+      operationId: updateEventTimingConfig
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceClockerConfigRequest'
+              $ref: '#/components/schemas/EventTimingConfigRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/timing-config:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getTimingConfig
+      description: The timing configuration of this competition - timing system, RaceClocker results URLs and the column presets used for export and import.
+      responses:
+        200:
+          description: Timing configuration successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimingConfigDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateTimingConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimingConfigRequest'
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -1685,13 +1733,6 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/StartListFileType'
-        - name: config
-          description: This parameter is required with fileType 'CSV', otherwise discarded.
-          in: query
-          required: false
-          schema:
-            type: string
-            format: uuid
       operationId: downloadStartList
       responses:
         200:
@@ -4125,6 +4166,10 @@ paths:
                   items:
                     type: string
                     format: binary
+                font:
+                  description: Optionale Schriftdatei (TTF/OTF), die in die erzeugten PDFs eingebettet wird.
+                  type: string
+                  format: binary
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -4153,9 +4198,20 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/GapDocumentTemplateRequest'
+              type: object
+              required:
+                - request
+              properties:
+                request:
+                  $ref: '#/components/schemas/GapDocumentTemplateRequest'
+                font:
+                  description: >-
+                    Optionale Schriftdatei (TTF/OTF). Ein leerer Teil löscht eine zuvor gesetzte
+                    Schrift, ein fehlender Teil lässt sie unverändert.
+                  type: string
+                  format: binary
       responses:
         204:
           description: Successfully updates template
@@ -5690,6 +5746,487 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/info/athlete-board:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getAthleteBoard
+      description: "Public board for athletes at start and finish: running, next and last finished matches in one response"
+      responses:
+        200:
+          description: Athlete board retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AthleteBoardDto'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard/match/{matchId}/finish:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: finishLiveDashboardMatch
+      description: "Marks the match as finished and activates the matches of the next start time. Fails with 409 if the event's chainProgressionMode is REGATTABUERO - there, finishing goes exclusively through the schedule tab (see finishScheduleSlot)."
+      parameters:
+        - name: openResults
+          in: query
+          required: false
+          description: "Marks every team without a result as failed with this reason. Deregistered teams are left alone."
+          schema:
+            type: string
+            enum: [DNS, DNF, DSQ]
+      responses:
+        204:
+          description: Match finished
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard/match/{matchId}/start:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: startLiveDashboardMatch
+      description: "Marks the real start of the match; the scheduled start time is left untouched"
+      responses:
+        204:
+          description: Match marked as started
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard/match/{matchId}/running-state:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: setLiveDashboardMatchRunning
+      parameters:
+        - name: running
+          in: query
+          required: true
+          schema:
+            type: boolean
+      responses:
+        204:
+          description: Running state updated
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getLiveDashboard
+      description: "Polled by the referee dashboard. Send the ETag of the previous answer as If-None-Match to get a 304 without a body while nothing changed."
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          description: "LIVE returns the running matches, or the next upcoming one if none is running. Defaults to ALL."
+          schema:
+            type: string
+            enum: [LIVE, ALL]
+      responses:
+        200:
+          description: Live dashboard data retrieved successfully
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveDashboardDto'
+        304:
+          description: Unchanged since the ETag sent as If-None-Match
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getLiveDashboardTeamDetail
+      description: "Crew and requirement details of one team; deliberately kept out of the polled list"
+      responses:
+        200:
+          description: Team detail retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveDashboardTeamDetailDto'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventSchedule
+      description: "The event's timeline: planned slots plus setup rounds that have no slot yet"
+      responses:
+        200:
+          description: Schedule retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventScheduleDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: createScheduleSlot
+      description: "Creates either a free slot (name set) or a slot linked to a setup round (competitionSetupMatch set) - exactly one of the two"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertScheduleSlotRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateScheduleSlot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertScheduleSlotRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteScheduleSlot
+      description: "The match keeps its last start time (no rollback onto the setup round)"
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/skip:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: skipScheduleSlot
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/unskip:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: unskipScheduleSlot
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/finish:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: finishScheduleSlot
+      description: "Finishes the match of a LINKED slot from the regatta office side. Works in every chainProgressionMode (the office can always intervene) - unlike finishLiveDashboardMatch, which is gated in REGATTABUERO mode."
+      parameters:
+        - name: openResults
+          in: query
+          required: false
+          description: "Marks every team without a result as failed with this reason. Deregistered teams are left alone."
+          schema:
+            type: string
+            enum: [DNS, DNF, DSQ]
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/activate:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: activateScheduleSlot
+      description: "Marks the match of a LINKED slot as currently running from the regatta office side. Works in every chainProgressionMode."
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/round/{setupRoundId}/skip:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: setupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: skipScheduleRound
+      description: "Skips every schedule slot of this setup round belonging to the event - same rules as skipping a single slot (already skipped slots are left as they are, a started match blocks the whole action). Only allowed when the round has nothing left to race: 409 if the round has no materialized matches yet (cancel its slots individually instead), and 409 if any match of the round still has 2 or more racing (non-deregistered, non-out) teams - those must be executed so the next round can be seeded."
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/shift:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: shiftEventSchedule
+      description: "Shifts the timeline of the same race day, starting at fromSlotId. dryRun=true only computes the preview."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftScheduleRequest'
+      responses:
+        200:
+          description: Shift computed (and applied unless dryRun)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftPreviewDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/import:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: importEventSchedule
+      description: >-
+        Imports a flat xlsx schedule export, matching rows to setup rounds by name. dryRun=true
+        (the default if the field is missing or unparsable) only returns the match preview per row;
+        dryRun=false replaces the event's whole timeline with the import on success.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: "Flat xlsx schedule export"
+                dryRun:
+                  type: boolean
+                  description: "Defaults to true (preview only) if missing or unparsable"
+      responses:
+        200:
+          description: Import preview or result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleImportResultDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/info-views:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6022,11 +6559,8 @@ paths:
             schema:
               type: object
               required:
-                - request
                 - files
               properties:
-                request:
-                  $ref: '#/components/schemas/UploadMatchResultRequest'
                 files:
                   type: array
                   items:
@@ -7028,6 +7562,13 @@ paths:
           type: string
     get:
       operationId: downloadCertificateOfParticipation
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
       responses:
         200:
           $ref: '#/components/responses/file'
@@ -7047,6 +7588,13 @@ paths:
       - $ref: '#/components/parameters/eventId'
     get:
       operationId: downloadCertificatesOfParticipation
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
       responses:
         200:
           $ref: '#/components/responses/file'
@@ -7058,6 +7606,146 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/awardCertificates:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: downloadAwardCertificatesForEvent
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
+        - name: maxPlace
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ PER_ATHLETE, PER_TEAM ]
+        - name: background
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/awardCertificates:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: downloadAwardCertificatesForCompetition
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
+        - name: maxPlace
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ PER_ATHLETE, PER_TEAM ]
+        - name: background
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/awardCertificates/{registrationId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: registrationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadAwardCertificate
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ pdf, docx ]
+        - name: maxPlace
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ PER_ATHLETE, PER_TEAM ]
+        - name: background
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
 
@@ -7278,6 +7966,7 @@ components:
         - ADMINISTRATION
         - WEB_DAV
         - RESULT
+        - LIVE_DASHBOARD
 
     Scope:
       type: string
@@ -7326,6 +8015,7 @@ components:
         - PLACES_UNCONTINUOUS
         - LIST_DATA_INCOMPLETE
         - RESULT_NOT_FAILED_AND_NO_DATA
+        - PARTICIPANT_IMPORT_UNKNOWN_GENDER_VALUE
         - CLUB_NAME_ALREADY_EXISTS
         - RACECLOCKER_URL_MISSING
         - RACECLOCKER_URL_INVALID
@@ -7335,6 +8025,65 @@ components:
         - RACECLOCKER_DUPLICATE_TEAMS
         - RACECLOCKER_NO_RESULTS
         - RACECLOCKER_MATCH_IS_BYE
+        - STARTLIST_CONFIG_NOT_CONFIGURED
+        - RESULT_IMPORT_CONFIG_NOT_CONFIGURED
+        - SCHEDULE_SHIFT_WITHOUT_CHANGE
+        - SCHEDULE_SHIFT_TARGET_INVALID
+        - SCHEDULE_SHIFT_LEAVES_RACE_DAY
+        - SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR
+        - SCHEDULE_IMPORT_DUPLICATE_ROWS
+        - SCHEDULE_COMPRESSION_IMPOSSIBLE
+        - SCHEDULE_SETUP_MATCH_ALREADY_PLANNED
+        - SCHEDULE_SLOT_MATCH_ALREADY_STARTED
+        - SCHEDULE_SLOT_MATCH_ALREADY_FINISHED
+        - SCHEDULE_SLOT_NOT_SKIPPABLE
+        - SCHEDULE_SLOT_NOT_LINKED
+        - SCHEDULE_ROUND_NOT_MATERIALIZED
+        - SCHEDULE_ROUND_HAS_RUNS_TO_RACE
+        - CERTIFICATE_NO_RESULTS
+        - CERTIFICATE_MISSING_TEMPLATE
+        - CERTIFICATE_UNREADABLE_TEMPLATE
+        - CERTIFICATE_NOT_A_CHALLENGE_EVENT
+        - CERTIFICATE_CHALLENGE_STILL_IN_PROGRESS
+        - AWARD_CERTIFICATE_NO_RESULTS
+        - AWARD_CERTIFICATE_MISSING_TEMPLATE
+        - AWARD_CERTIFICATE_UNREADABLE_TEMPLATE
+        - AWARD_CERTIFICATE_COMPETITION_NOT_IN_EVENT
+        - AWARD_CERTIFICATE_IS_CHALLENGE_EVENT
+        - DOCUMENT_TEMPLATE_INVALID_FONT
+        - DOCUMENT_TEMPLATE_TYPE_MISMATCH
+        - DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED
+        - DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED
+        - SUBSTITUTION_NOT_FOUND
+        - SUBSTITUTION_PARTICIPANT_OUT_NOT_FOUND
+        - SUBSTITUTION_PARTICIPANT_IN_NOT_FOUND
+        - SUBSTITUTION_PARTICIPANT_OUT_NOT_AVAILABLE
+        - SUBSTITUTION_PARTICIPANT_IN_NOT_AVAILABLE
+        - SUBSTITUTION_DEPENDENT_FOUND
+        - SUBSTITUTION_CREATED_IN_PREVIOUS_ROUND
+        - CHALLENGE_NOT_A_CHALLENGE_EVENT
+        - CHALLENGE_ALREADY_STARTED
+        - CHALLENGE_NOT_STARTED_YET
+        - CHALLENGE_CORRUPTED_SETUP
+        - CHALLENGE_RESULT_ALREADY_SUBMITTED
+        - CHALLENGE_NO_RESULT_SUBMITTED
+        - CHALLENGE_SELF_SUBMISSION_NOT_ALLOWED
+        - EXECUTION_TEAMS_NOT_MATCHING
+        - EXECUTION_MATCH_RESULTS_LOCKED
+        - EXECUTION_MATCH_IS_BYE
+        - EXECUTION_PLACES_NOT_CONTINUOUS
+        - EXECUTION_START_TIME_MANAGED_BY_SCHEDULE
+        - LIVE_DASHBOARD_FINISH_RESERVED_FOR_OFFICE
+        - QR_CODE_ALREADY_IN_USE
+        - TRACKING_TEAM_ALREADY_CHECKED_IN
+        - TRACKING_TEAM_NOT_CHECKED_IN
+        - TRACKING_QR_CODE_NOT_FOUND
+        - TRACKING_QR_CODE_NOT_ASSOCIATED_WITH_PARTICIPANT
+        - DEREGISTRATION_ALREADY_EXISTS
+        - DEREGISTRATION_IS_LOCKED
+        - DEREGISTRATION_RESULTS_ALREADY_EXIST
+        - DEREGISTRATION_NOT_IN_CURRENT_ROUND
+        - DEREGISTRATION_REGISTRATION_STILL_OPEN
 
     Gender:
       type: string
@@ -7392,6 +8141,7 @@ components:
       type: string
       enum:
         - 'CERTIFICATE_OF_PARTICIPATION'
+        - 'AWARD_CERTIFICATE'
 
     GapDocumentPlaceholderType:
       type: string
@@ -7401,6 +8151,14 @@ components:
         - 'FULL_NAME'
         - 'RESULT'
         - 'EVENT_NAME'
+        - 'PLACE'
+        - 'COMPETITION_NAME'
+        - 'COMPETITION_SHORT_NAME'
+        - 'CLUB_NAME'
+        - 'TEAM_NAME'
+        - 'EVENT_DATE'
+        - 'EVENT_LOCATION'
+        - 'FREE_TEXT'
 
     TextAlign:
       type: string
@@ -7465,6 +8223,13 @@ components:
                   properties:
                     result:
                       $ref: '#/components/schemas/Invalid'
+                - type: object
+                  required:
+                    - maxReductionMinutes
+                  properties:
+                    maxReductionMinutes:
+                      type: integer
+                      format: int64
                 - { }
 
     TooManyRequestsError:
@@ -8037,6 +8802,30 @@ components:
 
     # event
 
+    ChainProgressionMode:
+      type: string
+      description: >-
+        Three modes for the finish/activate chain: SCHIEDSRICHTER keeps finish+chain on the referee
+        dashboard (as before); REGATTABUERO moves both exclusively to the schedule tab (the finish
+        button disappears from the referee dashboard); DEAKTIVIERT lets finish affect only the
+        match itself, without activating the next start time's matches.
+      enum:
+        - 'SCHIEDSRICHTER'
+        - 'REGATTABUERO'
+        - 'DEAKTIVIERT'
+
+    PublicResultsVisibility:
+      type: string
+      description: >-
+        From which state on a match shows up as a result on the public views (athlete board, kiosk,
+        public results page): FINISHED_ONLY only for finished matches (finished_at set),
+        RESULTS_COMPLETE additionally for matches whose boats are all scored (AWAITING_FINISH).
+        Defaults to FINISHED_ONLY, because until a match is finished a time penalty can still
+        arrive and a published result that changes afterwards cannot be taken back.
+      enum:
+        - 'FINISHED_ONLY'
+        - 'RESULTS_COMPLETE'
+
     EventDto:
       type: object
       required:
@@ -8101,6 +8890,13 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
+        showBreaksOnPublicBoards:
+          type: boolean
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        publicResultsVisibility:
+          $ref: '#/components/schemas/PublicResultsVisibility'
         challengesFinished:
           type: boolean
 
@@ -8245,6 +9041,13 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
+        showBreaksOnPublicBoards:
+          type: boolean
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        publicResultsVisibility:
+          $ref: '#/components/schemas/PublicResultsVisibility'
 
     UpdateEventRequest:
       type: object
@@ -8291,6 +9094,13 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
+        showBreaksOnPublicBoards:
+          type: boolean
+          description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        publicResultsVisibility:
+          $ref: '#/components/schemas/PublicResultsVisibility'
 
 
     # eventDay
@@ -8852,6 +9662,7 @@ components:
           type: integer
         startTimeOffset:
           type: integer
+          description: Offset between the starts of consecutive teams, in seconds
 
     CompetitionSetupGroupDto:
       type: object
@@ -9239,6 +10050,14 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        checkEarliestMinutesBefore:
+          type: integer
+          nullable: true
+          description: "Check must be at most this many minutes before match start"
+        checkLatestMinutesBefore:
+          type: integer
+          nullable: true
+          description: "Check must exist at latest this many minutes before match start"
 
     CheckedParticipantRequirement:
       type: object
@@ -9308,6 +10127,14 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        checkEarliestMinutesBefore:
+          type: integer
+          nullable: true
+          description: "Check must be at most this many minutes before match start"
+        checkLatestMinutesBefore:
+          type: integer
+          nullable: true
+          description: "Check must exist at latest this many minutes before match start"
 
     ParticipantRequirementCheckForEventConfigDto:
       type: object
@@ -10636,6 +11463,7 @@ components:
           format: date-time
         startTimeOffset:
           type: integer
+          description: Offset between the starts of consecutive teams, in seconds
         currentlyRunning:
           type: boolean
 
@@ -10684,6 +11512,11 @@ components:
         failed:
           type: boolean
         failedReason:
+          type: string
+        penaltySeconds:
+          type: integer
+          description: "Time penalty in seconds; the result time already includes it"
+        penaltyNote:
           type: string
 
     UpdateCompetitionMatchRequest:
@@ -10783,6 +11616,11 @@ components:
           type: boolean
         failedReason:
           type: string
+        penaltySeconds:
+          type: integer
+          description: "Time penalty in seconds; the reported result time already includes it"
+        penaltyNote:
+          type: string
 
     CompetitionTeamPlaceDto:
       type: object
@@ -10794,6 +11632,7 @@ components:
         - namedParticipants
         - place
         - deregistered
+        - excluded
       properties:
         competitionRegistrationId:
           type: string
@@ -10819,6 +11658,8 @@ components:
           type: boolean
         deregistrationReason:
           type: string
+        excluded:
+          type: boolean
 
     CompetitionTeamNamedParticipantDto:
       type: object
@@ -11105,26 +11946,118 @@ components:
 
 
 
-    RaceClockerConfigDto:
+    TimingConfigDto:
       type: object
       properties:
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
         timeTrialResultsUrl:
           type: string
+          nullable: true
           description: Public results URL of the individual-start race used for the qualification round.
         heatsResultsUrl:
           type: string
+          nullable: true
           description: Public results URL of the wave-start race used for all other rounds.
-    RaceClockerConfigRequest:
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
+          nullable: true
+        hasQualificationRound:
+          type: boolean
+          description: >
+            Whether this competition's setup contains a qualification round. Read-only; it comes along
+            with the timing config because both the timing tab and the execution tab already load it,
+            and both need to know whether the qualification start list preset and the time trial
+            results URL are required at all.
+        eventTimingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
+          description: Event-wide default timing system; the competition inherits it while its own field is null.
+        eventTimeTrialResultsUrl:
+          type: string
+          nullable: true
+          description: Event-wide default time trial results URL; inherited while the competition's own field is null.
+        eventHeatsResultsUrl:
+          type: string
+          nullable: true
+          description: Event-wide default heats results URL; inherited while the competition's own field is null.
+
+    EventTimingConfigDto:
       type: object
-      description: >-
-        Both URLs are optional. They must be https URLs on raceclocker.com; the host is pinned so the
-        backend cannot be pointed at other services.
+      description: >
+        Event-wide timing defaults. RaceClocker races are created per event, so the timing system and
+        the two results URLs live here once and every competition without its own values inherits
+        them. Column presets stay per competition - they depend on the concrete start list.
       properties:
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
         timeTrialResultsUrl:
           type: string
           nullable: true
         heatsResultsUrl:
           type: string
+          nullable: true
+
+    EventTimingConfigRequest:
+      type: object
+      description: >
+        Every field is optional, like the per-competition config. The URLs must be https URLs on
+        raceclocker.com.
+      properties:
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
+        timeTrialResultsUrl:
+          type: string
+          nullable: true
+        heatsResultsUrl:
+          type: string
+          nullable: true
+
+    TimingSystem:
+      type: string
+      enum:
+        - RACECLOCKER
+        - WEBSCORER
+
+    TimingConfigRequest:
+      type: object
+      description: >
+        Every field is optional - the RaceClocker races only exist shortly before the regatta, so an
+        incomplete configuration must be storable. The URLs must be https URLs on raceclocker.com; the
+        host is pinned so the backend cannot be pointed at other services.
+      properties:
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
+        timeTrialResultsUrl:
+          type: string
+          nullable: true
+        heatsResultsUrl:
+          type: string
+          nullable: true
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
           nullable: true
     StartListConfigRequest:
       type: object
@@ -11259,6 +12192,7 @@ components:
         - UPCOMING_MATCHES
         - LATEST_MATCH_RESULTS
         - RUNNING_MATCHES
+        - ATHLETE_BOARD
 
     InfoViewConfigurationDto:
       type: object
@@ -11387,10 +12321,10 @@ components:
       type: object
       required:
         - matchId
-        - competitionId
         - competitionName
         - executionOrder
         - teams
+        - pendingRound
       properties:
         matchId:
           type: string
@@ -11401,6 +12335,8 @@ components:
         competitionId:
           type: string
           format: uuid
+          nullable: true
+          description: "null for a FREE placeholder (break/schedule item, see name) - there is no competition then"
         competitionName:
           type: string
         categoryName:
@@ -11428,6 +12364,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpcomingMatchTeamInfo'
+        pendingRound:
+          type: boolean
+          description: "true for a placeholder from a waiting timeline slot (round not yet materialized) - matchId then points at the setup round, not a real match, and teams is always empty"
+        name:
+          type: string
+          nullable: true
+          description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
 
     UpcomingMatchTeamInfo:
       type: object
@@ -11440,6 +12383,9 @@ components:
           format: uuid
         teamName:
           type: string
+          nullable: true
+        teamNumber:
+          type: integer
           nullable: true
         startNumber:
           type: integer
@@ -11516,6 +12462,11 @@ components:
         startTime:
           type: string
           format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start, if stamped"
         teams:
           type: array
           items:
@@ -11551,6 +12502,11 @@ components:
           type: boolean
         failedReason:
           type: string
+        penaltySeconds:
+          type: integer
+          description: "Time penalty in seconds; the result time already includes it"
+        penaltyNote:
+          type: string
         deregistered:
           type: boolean
         deregisteredReason:
@@ -11559,6 +12515,229 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantInfo'
+
+    AthleteBoardStartState:
+      type: string
+      enum:
+        - UNSCHEDULED
+        - COUNTDOWN
+        - SCHEDULED
+        - OVERDUE
+
+    AthleteBoardParticipant:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          nullable: true
+
+    AthleteBoardTeam:
+      type: object
+      required:
+        - participants
+        - failed
+      properties:
+        lane:
+          type: integer
+          nullable: true
+        teamNumber:
+          type: integer
+          nullable: true
+          description: "the nth team of this club in the competition - only shown when teamName is missing"
+        clubName:
+          type: string
+          nullable: true
+        teamName:
+          type: string
+          nullable: true
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardParticipant'
+        place:
+          type: integer
+          nullable: true
+          description: "partial result of a running match; always null in the upcoming block"
+        timeString:
+          type: string
+          nullable: true
+          description: "partial result of a running match; null means no time yet"
+        penaltySeconds:
+          type: integer
+          nullable: true
+          description: "time penalty in seconds; only stated, never applied - timeString already includes it"
+        penaltyNote:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+          nullable: true
+
+    AthleteBoardMatch:
+      type: object
+      required:
+        - matchId
+        - competitionName
+        - startState
+        - teams
+        - pendingRound
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "scheduled start"
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start; only filled in the running block - null there means the match is current but has not started yet"
+        startState:
+          $ref: '#/components/schemas/AthleteBoardStartState'
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardTeam'
+        pendingRound:
+          type: boolean
+          description: "true for a placeholder from a waiting timeline slot; teams is then always empty"
+        name:
+          type: string
+          nullable: true
+          description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
+
+    AthleteBoardResultTeam:
+      type: object
+      required:
+        - lane
+        - failed
+        - deregistered
+      properties:
+        place:
+          type: integer
+          nullable: true
+        lane:
+          type: integer
+        teamNumber:
+          type: integer
+          nullable: true
+          description: "the nth team of this club in the competition - only shown when teamName is missing"
+        clubName:
+          type: string
+          nullable: true
+        teamName:
+          type: string
+          nullable: true
+        timeString:
+          type: string
+          nullable: true
+        penaltySeconds:
+          type: integer
+          nullable: true
+          description: "time penalty in seconds; only stated, never applied - timeString already includes it"
+        penaltyNote:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+          nullable: true
+        deregistered:
+          type: boolean
+          description: "withdrawn for this round - listed but marked, since such a team has neither place nor time"
+        deregisteredReason:
+          type: string
+          nullable: true
+
+    AthleteBoardResult:
+      type: object
+      required:
+        - matchId
+        - competitionName
+        - teams
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "scheduled start"
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start, if stamped - explains a deviation from the schedule"
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardResultTeam'
+
+    AthleteBoardDto:
+      type: object
+      required:
+        - eventName
+        - serverTime
+        - refreshIntervalSeconds
+        - showCountdown
+        - running
+        - upcoming
+        - results
+      properties:
+        eventName:
+          type: string
+        serverTime:
+          type: string
+          format: date-time
+        refreshIntervalSeconds:
+          type: integer
+        showCountdown:
+          type: boolean
+        running:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardMatch'
+        upcoming:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardMatch'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardResult'
 
     RunningMatchInfo:
       type: object
@@ -11587,6 +12766,11 @@ components:
           type: string
           format: date-time
           nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start; null means the match is marked as current but has not started yet"
         elapsedMinutes:
           type: integer
           format: int64
@@ -11610,7 +12794,204 @@ components:
           items:
             $ref: '#/components/schemas/RunningMatchTeamInfo'
 
-    RunningMatchTeamInfo:
+    LiveDashboardMatchState:
+      type: string
+      description: >-
+        SKIPPED: the schedule slot of this match was cancelled. Unlike the public boards the referee
+        dashboard marks such a match instead of hiding it - the referee has to see the cancellation
+        to be able to undo it in the schedule.
+
+
+        AWAITING_FINISH: every boat is scored but nobody finished the match yet. FINISHED means
+        exclusively that competition_match.finished_at is set - a match only ends by an explicit
+        action, because until then a time penalty can still arrive.
+      enum:
+        - RUNNING
+        - FINISHED
+        - SKIPPED
+        - AWAITING_FINISH
+        - UPCOMING
+        - UNSCHEDULED
+
+    LiveDashboardInvoiceState:
+      type: string
+      enum:
+        - PAID
+        - OPEN
+        - NONE
+
+    TimeCheckStatus:
+      type: string
+      enum:
+        - OK
+        - TOO_EARLY
+        - LATE
+        - NOT_CHECKED
+
+    TimeCheckDto:
+      type: object
+      required:
+        - status
+      properties:
+        deltaMinutes:
+          type: integer
+          format: int64
+          nullable: true
+        status:
+          $ref: '#/components/schemas/TimeCheckStatus'
+
+    LiveDashboardRequirementStatusDto:
+      type: object
+      required:
+        - requirementId
+        - name
+        - optional
+        - checked
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        optional:
+          type: boolean
+        checked:
+          type: boolean
+        checkedAt:
+          type: string
+          format: date-time
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        timeCheck:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/TimeCheckDto'
+
+    LiveDashboardParticipantDto:
+      type: object
+      required:
+        - participantId
+        - firstName
+        - lastName
+        - requirements
+      properties:
+        participantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        namedRole:
+          type: string
+          nullable: true
+        year:
+          type: integer
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        externalClubName:
+          type: string
+          nullable: true
+        substitutedFor:
+          type: string
+          nullable: true
+          description: "Name of the participant this one replaced when substituted into the round"
+        substitutionReason:
+          type: string
+          nullable: true
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDashboardRequirementStatusDto'
+
+    LiveDashboardTeamDto:
+      type: object
+      required:
+        - teamId
+        - failed
+        - deregistered
+        - invoiceState
+        - requirements
+        - substituted
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        teamName:
+          type: string
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
+        actualClubName:
+          type: string
+          nullable: true
+        startNumber:
+          type: integer
+          nullable: true
+        place:
+          type: integer
+          nullable: true
+        time:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+          nullable: true
+        penaltySeconds:
+          type: integer
+          nullable: true
+        penaltyNote:
+          type: string
+          nullable: true
+        deregistered:
+          type: boolean
+        deregisteredReason:
+          type: string
+          nullable: true
+        invoiceState:
+          $ref: '#/components/schemas/LiveDashboardInvoiceState'
+        requirements:
+          $ref: '#/components/schemas/LiveDashboardRequirementSummaryDto'
+        substituted:
+          type: boolean
+        onWaterAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known"
+
+    LiveDashboardRequirementSummaryDto:
+      type: object
+      description: "Condensed requirement state per team; the requirements themselves are only in the team detail"
+      required:
+        - total
+        - fulfilled
+        - missingRequired
+        - missingOptional
+        - timeIssues
+      properties:
+        total:
+          type: integer
+        fulfilled:
+          type: integer
+        missingRequired:
+          type: integer
+        missingOptional:
+          type: integer
+        timeIssues:
+          type: integer
+
+    LiveDashboardTeamDetailDto:
       type: object
       required:
         - teamId
@@ -11619,8 +13000,364 @@ components:
         teamId:
           type: string
           format: uuid
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDashboardParticipantDto'
+
+    LiveDashboardMatchDto:
+      type: object
+      required:
+        - matchId
+        - state
+        - competitionId
+        - competitionName
+        - executionOrder
+        - currentlyRunning
+        - teams
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        state:
+          $ref: '#/components/schemas/LiveDashboardMatchState'
+        competitionId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        executionOrder:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        currentlyRunning:
+          type: boolean
+        elapsedMinutes:
+          type: integer
+          format: int64
+          nullable: true
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDashboardTeamDto'
+
+    PendingSlotDto:
+      type: object
+      description: "A placeholder in the live dashboard timeline - either a waiting match slot (round not yet materialized) or a FREE slot/program item (e.g. lunch break). Deliberately without team/participant data, since neither kind has any yet. 'name' distinguishes the cases: set for program items, null for match placeholders."
+      required:
+        - slotId
+        - startTime
+      properties:
+        slotId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        name:
+          type: string
+          nullable: true
+        competitionName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+
+    LiveDashboardDto:
+      type: object
+      required:
+        - matches
+        - pendingSlots
+        - chainProgressionMode
+      properties:
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveDashboardMatchDto'
+        pendingSlots:
+          type: array
+          description: "Ascending by start time; included in both scopes (ALL and LIVE) - the list is small"
+          items:
+            $ref: '#/components/schemas/PendingSlotDto'
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
+
+    EventScheduleSlotState:
+      type: string
+      enum:
+        - FREE
+        - WAITING
+        - LINKED
+        - OBSOLETE
+        - SKIPPED
+
+    EventScheduleSlotDto:
+      type: object
+      required:
+        - id
+        - startTime
+        - state
+        - matchCurrentlyRunning
+      properties:
+        id:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        state:
+          $ref: '#/components/schemas/EventScheduleSlotState'
+        name:
+          type: string
+          nullable: true
+        durationMinutes:
+          type: integer
+          nullable: true
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+        competitionName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        matchId:
+          type: string
+          format: uuid
+          nullable: true
+        setupMatchId:
+          type: string
+          format: uuid
+          nullable: true
+        setupRoundId:
+          type: string
+          format: uuid
+          nullable: true
+        matchStartedAt:
+          type: string
+          format: date-time
+          nullable: true
+        matchFinishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        matchCurrentlyRunning:
+          type: boolean
+          description: "Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot"
+
+    UnplannedSetupMatchDto:
+      type: object
+      description: "A setup round of the event with no schedule slot yet"
+      required:
+        - setupMatchId
+        - competitionId
+        - competitionName
+        - roundName
+      properties:
+        setupMatchId:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        roundName:
+          type: string
+        matchName:
+          type: string
+          nullable: true
+
+    EventScheduleDto:
+      type: object
+      required:
+        - slots
+        - unplannedSetupMatches
+        - chainProgressionMode
+      properties:
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventScheduleSlotDto'
+        unplannedSetupMatches:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnplannedSetupMatchDto'
+        chainProgressionMode:
+          $ref: '#/components/schemas/ChainProgressionMode'
+
+    UpsertScheduleSlotRequest:
+      type: object
+      description: "Exactly one of competitionSetupMatch (round slot) or name (free slot) must be set, never both and never neither"
+      required:
+        - startTime
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        competitionSetupMatch:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        durationMinutes:
+          type: integer
+          nullable: true
+
+    ShiftMode:
+      type: string
+      enum:
+        - PLUS_MINUTES
+        - SET_TIME
+        - COMPRESS_TO_TARGET
+
+    ShiftScheduleRequest:
+      type: object
+      description: >-
+        Field combination depends on mode: PLUS_MINUTES needs only minutes, SET_TIME only newTime,
+        COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two.
+      required:
+        - fromSlotId
+        - mode
+        - dryRun
+      properties:
+        fromSlotId:
+          type: string
+          format: uuid
+        mode:
+          $ref: '#/components/schemas/ShiftMode'
+        minutes:
+          type: integer
+          format: int64
+          nullable: true
+        newTime:
+          type: string
+          format: date-time
+          nullable: true
+        targetSlotId:
+          type: string
+          format: uuid
+          nullable: true
+        dryRun:
+          type: boolean
+
+    ShiftPreviewEntryDto:
+      type: object
+      required:
+        - slotId
+        - oldStartTime
+        - newStartTime
+      properties:
+        slotId:
+          type: string
+          format: uuid
+        oldStartTime:
+          type: string
+          format: date-time
+        newStartTime:
+          type: string
+          format: date-time
+
+    ShiftPreviewDto:
+      type: object
+      required:
+        - entries
+        - applied
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShiftPreviewEntryDto'
+        applied:
+          type: boolean
+
+    ImportRowStatus:
+      type: string
+      enum:
+        - LINKED
+        - FREE
+        - AMBIGUOUS
+        - DUPLICATE
+
+    ImportRowResultDto:
+      type: object
+      description: "A row for the preview UI. targetLabel is only set for LINKED rows (\"competitionName – roundName – matchName\"), null otherwise."
+      required:
+        - rowNumber
+        - startTime
+        - laufText
+        - status
+      properties:
+        rowNumber:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        competitionText:
+          type: string
+          nullable: true
+        laufText:
+          type: string
+        status:
+          $ref: '#/components/schemas/ImportRowStatus'
+        targetLabel:
+          type: string
+          nullable: true
+
+    ScheduleImportResultDto:
+      type: object
+      required:
+        - rows
+        - applied
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportRowResultDto'
+        applied:
+          type: boolean
+
+    RunningMatchTeamInfo:
+      type: object
+      required:
+        - teamId
+        - participants
+        - failed
+      properties:
+        teamId:
+          type: string
+          format: uuid
         teamName:
           type: string
+          nullable: true
+        teamNumber:
+          type: integer
           nullable: true
         startNumber:
           type: integer
@@ -11635,6 +13372,22 @@ components:
           nullable: true
         currentPosition:
           type: integer
+          nullable: true
+        timeString:
+          type: string
+          nullable: true
+          description: "partial result of a running match; null means no time yet"
+        penaltySeconds:
+          type: integer
+          nullable: true
+          description: "time penalty in seconds; only stated, never applied - timeString already includes it"
+        penaltyNote:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
           nullable: true
         participants:
           type: array
@@ -11916,15 +13669,6 @@ components:
           type: string
         colTeamTime:
           type: string
-
-    UploadMatchResultRequest:
-      type: object
-      required:
-        - config
-      properties:
-        config:
-          type: string
-          format: uuid
 
     EventInvoicesInfoDto:
       type: object
@@ -12921,6 +14665,8 @@ components:
         - relWidth
         - relHeight
         - textAlign
+        - bold
+        - italic
       properties:
         id:
           type: string
@@ -12941,6 +14687,15 @@ components:
           type: number
         textAlign:
           $ref: '#/components/schemas/TextAlign'
+        fontSize:
+          type: integer
+        bold:
+          type: boolean
+        italic:
+          type: boolean
+        staticText:
+          description: Fester Text für den Platzhaltertyp FREE_TEXT, z. B. der Name des Unterzeichners.
+          type: string
 
     GapDocumentTemplateDto:
       type: object
@@ -12948,6 +14703,7 @@ components:
         - id
         - name
         - type
+        - hasFont
         - placeholders
       properties:
         id:
@@ -12957,6 +14713,12 @@ components:
           type: string
         type:
           $ref: '#/components/schemas/GapDocumentType'
+        fontName:
+          description: Schriftname für die Word-Ausgabe, z. B. "TheSansOffice".
+          type: string
+        hasFont:
+          description: Ob eine Schriftdatei zum Einbetten in die erzeugten PDFs hochgeladen wurde.
+          type: boolean
         placeholders:
           type: array
           items:
@@ -12966,11 +14728,16 @@ components:
       type: object
       required:
         - type
+        - allowedPlaceholders
       properties:
         type:
           $ref: '#/components/schemas/GapDocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
+        allowedPlaceholders:
+          type: array
+          items:
+            $ref: '#/components/schemas/GapDocumentPlaceholderType'
 
     GapDocumentPlaceholderRequest:
       type: object
@@ -12999,6 +14766,17 @@ components:
           type: number
         textAlign:
           $ref: '#/components/schemas/TextAlign'
+        fontSize:
+          type: integer
+        bold:
+          type: boolean
+          default: false
+        italic:
+          type: boolean
+          default: false
+        staticText:
+          description: Fester Text für den Platzhaltertyp FREE_TEXT, z. B. der Name des Unterzeichners.
+          type: string
 
     GapDocumentTemplateRequest:
       type: object
@@ -13008,6 +14786,9 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/GapDocumentType'
+        fontName:
+          description: Schriftname für die Word-Ausgabe, z. B. "TheSansOffice".
+          type: string
         placeholders:
           type: array
           items:

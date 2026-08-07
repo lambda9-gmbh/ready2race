@@ -24,6 +24,8 @@ const editAction = (formData: ClubForm, entity: ClubDto) => {
     })
 }
 
+const RECOMMENDED_CLUB_NAME_LENGTH = 30
+
 const ClubDialog = (props: BaseEntityDialogProps<ClubDto>) => {
     const {t} = useTranslation()
 
@@ -32,6 +34,10 @@ const ClubDialog = (props: BaseEntityDialogProps<ClubDto>) => {
     }
 
     const formContext = useForm<ClubForm>()
+
+    // Ab dieser Länge kürzen Listen den Vereinsnamen — der Hinweis hilft, das beim
+    // Anlegen zu berücksichtigen, statt es erst in der Anzeige zu merken.
+    const nameValue = formContext.watch('name') ?? ''
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
@@ -45,7 +51,15 @@ const ClubDialog = (props: BaseEntityDialogProps<ClubDto>) => {
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={2}>
-                <FormInputText name={'name'} label={t('entity.name')} required />
+                <FormInputText
+                    name={'name'}
+                    label={t('entity.name')}
+                    required
+                    helperText={t('club.nameLengthHint', {
+                        length: nameValue.length,
+                        max: RECOMMENDED_CLUB_NAME_LENGTH,
+                    })}
+                />
             </Stack>
         </EntityDialog>
     )

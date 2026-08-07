@@ -1,6 +1,7 @@
 [
   {
     "Name": "Henrik Andersen",
+    "Rank": "2",
     "Bib number": "4",
     "Club": "Aabenraa RK",
     "Category": "CM1x",
@@ -31,6 +32,7 @@
   },
   {
     "Name": "Piet Hauschild",
+    "Rank": "1",
     "Bib number": "13",
     "Club": "Wilhelmshavener RV",
     "Category": "CM1x",
@@ -61,6 +63,7 @@
   },
   {
     "Name": "Mats Nielsen",
+    "Rank": "3",
     "Bib number": "7",
     "Club": "Sønderborg Roklub",
     "Category": "CM1x",
@@ -86,11 +89,12 @@
     "Result": "00:02:27.7",
     "Result in seconds": "147.7",
     "Handicap Result in seconds": "",
-    "Penalty": "0",
-    "Penalty note": ""
+    "Penalty": "15",
+    "Penalty note": "Gegner Verhindert"
   },
   {
     "Name": "Nils Boysen",
+    "Rank": "4",
     "Bib number": "10",
     "Club": "Lübecker RG",
     "Category": "CM1x",
@@ -121,6 +125,7 @@
   },
   {
     "Name": "Moritz Korthals",
+    "Rank": "5",
     "Bib number": "3",
     "Club": "Flensburger RC",
     "Category": "CM1x",
@@ -151,6 +156,7 @@
   },
   {
     "Name": "Thore Hansen",
+    "Rank": "6",
     "Bib number": "6",
     "Club": "RC Eckernförde",
     "Category": "CM1x",
@@ -181,6 +187,7 @@
   },
   {
     "Name": "Lasse Jürgensen",
+    "Rank": "7",
     "Bib number": "1",
     "Club": "Ruderklub Flensburg",
     "Category": "CM1x",
@@ -211,6 +218,7 @@
   },
   {
     "Name": "Dennis Gustafsson",
+    "Rank": "8",
     "Bib number": "2",
     "Club": "Malmö RK",
     "Category": "CM1x",

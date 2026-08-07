@@ -7,8 +7,10 @@ import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventForExportDto
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventForExportRecord
+import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
 import de.lambda9.ready2race.backend.app.event.entity.MatchResultType
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventViewRecord
@@ -37,6 +39,9 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 selfSubmission = allowSelfSubmission,
                 submissionNeedsVerification = submissionNeedsVerification,
                 participantSelfRegistration = allowParticipantSelfRegistration,
+                chainProgressionMode = chainProgressionMode.name,
+                showBreaksOnPublicBoards = showBreaksOnPublicBoards,
+                publicResultsVisibility = publicResultsVisibility.name,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -73,6 +78,11 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         allowSelfSubmission = selfSubmission!!,
         submissionNeedsVerification = submissionNeedsVerification!!,
         allowParticipantSelfRegistration = participantSelfRegistration!!,
+        chainProgressionMode = chainProgressionMode?.let { ChainProgressionMode.valueOf(it) }
+            ?: ChainProgressionMode.DEAKTIVIERT,
+        showBreaksOnPublicBoards = showBreaksOnPublicBoards ?: false,
+        publicResultsVisibility = publicResultsVisibility?.let { PublicResultsVisibility.valueOf(it) }
+            ?: PublicResultsVisibility.FINISHED_ONLY,
         challengesFinished = challengeEnd?.let { it < LocalDateTime.now() },
     )
 )

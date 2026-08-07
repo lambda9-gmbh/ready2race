@@ -1,4 +1,9 @@
-import {CompetitionMatchDto, CompetitionRoundDto, StartListFileType} from '@api/types.gen.ts'
+import {
+    CompetitionMatchDto,
+    CompetitionRoundDto,
+    StartListFileType,
+    TimingConfigDto,
+} from '@api/types.gen.ts'
 import {
     Accordion,
     AccordionDetails,
@@ -23,12 +28,20 @@ import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
-import {deleteCurrentCompetitionExecutionRound, updateMatchRunningState} from '@api/sdk.gen.ts'
+import {
+    deleteCurrentCompetitionExecutionRound,
+    skipScheduleRound,
+    updateMatchRunningState,
+} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
 import Checkbox from '@mui/material/Checkbox'
+import {failedLabel} from '@utils/matchResultStatus.ts'
+import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
+import {roundSkipErrorText} from '@components/event/schedule/scheduleError.ts'
+import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
 
 type Props = {
     round: CompetitionRoundDto
@@ -43,13 +56,11 @@ type Props = {
     handleAccordionExpandedChange: (accordionIndex: number, isExpanded: boolean) => void
     smallScreenLayout: boolean
     setResultImportMatch: Dispatch<SetStateAction<string | null>>
-    setStartListMatch: Dispatch<SetStateAction<string | null>>
     pullRaceClockerResults: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
+    handleDownloadStartListCSV: (competitionMatchId: string) => Promise<void>
+    timingSystem: TimingConfigDto['timingSystem']
 }
-
-const MATCH_RESULT_OPTIONS = ['form', 'XLS', 'RACECLOCKER'] as const
-type MatchResultOption = (typeof MATCH_RESULT_OPTIONS)[number]
 
 const CompetitionExecutionRound = ({
     round,
@@ -58,9 +69,10 @@ const CompetitionExecutionRound = ({
     submitting,
     smallScreenLayout,
     setResultImportMatch,
-    setStartListMatch,
     pullRaceClockerResults,
     handleDownloadStartListPDF,
+    handleDownloadStartListCSV,
+    timingSystem,
     ...props
 }: Props) => {
     const {t} = useTranslation()
@@ -93,6 +105,41 @@ const CompetitionExecutionRound = ({
             {
                 content: t('event.competition.execution.deleteRound.confirmation.content'),
                 okText: t('common.delete'),
+            },
+        )
+    }
+
+    // Runde entfällt (Wettkampf → Durchführung, verschoben aus dem Zeitplan): nur anbieten, wenn es
+    // in der Runde nichts zu fahren gibt (siehe roundHasNothingToRace) - sonst müssen die Läufe
+    // ausgetragen werden, damit die nächste Runde sauber ausgelost werden kann. Ruft denselben
+    // Endpunkt wie der frühere Zeitplan-Button (skipScheduleRound); der Server prüft die Regel
+    // ohnehin noch einmal serverseitig (EventScheduleService.setRoundSkipped).
+    const cancelRound = async () => {
+        confirmAction(
+            async () => {
+                props.setSubmitting(true)
+                const {error} = await skipScheduleRound({
+                    path: {
+                        eventId: eventId,
+                        setupRoundId: round.setupRoundId,
+                    },
+                })
+                props.setSubmitting(false)
+                if (error) {
+                    // "Runde noch nicht gesetzt" und "in der Runde ist noch zu fahren" verlangen
+                    // Gegensätzliches; bis zuletzt lasen beide denselben Satz.
+                    const {key, values} = roundSkipErrorText(error)
+                    feedback.error(t(key, values))
+                } else {
+                    feedback.success(t('event.competition.execution.cancelRound.success'))
+                }
+                props.reloadRoundDto()
+            },
+            {
+                content: t('event.competition.execution.cancelRound.confirmation.content', {
+                    round: round.name,
+                }),
+                okText: t('event.competition.execution.cancelRound.confirmation.ok'),
             },
         )
     }
@@ -324,7 +371,7 @@ const CompetitionExecutionRound = ({
                                                         break
                                                 }
                                             }}
-                                            items={MATCH_RESULT_OPTIONS.map(
+                                            items={matchResultOptions(timingSystem).map(
                                                 o =>
                                                     ({
                                                         id: o,
@@ -369,7 +416,7 @@ const CompetitionExecutionRound = ({
                                                     await handleDownloadStartListPDF(match.id)
                                                     break
                                                 case 'CSV':
-                                                    setStartListMatch(match.id)
+                                                    await handleDownloadStartListCSV(match.id)
                                                     break
                                             }
                                         }}
@@ -460,12 +507,12 @@ const CompetitionExecutionRound = ({
                                                                   ? ` (${team.deregistrationReason})`
                                                                   : '')
                                                             : team.failed
-                                                              ? t(
-                                                                    'event.competition.execution.results.failed',
-                                                                ) +
-                                                                (team.failedReason
-                                                                    ? ` (${team.failedReason})`
-                                                                    : '')
+                                                              ? failedLabel(
+                                                                    team.failedReason,
+                                                                    t(
+                                                                        'event.competition.execution.results.failed',
+                                                                    ),
+                                                                )
                                                               : team.place}
                                                     </TableCell>
                                                     <TableCell width="20%">
@@ -480,12 +527,22 @@ const CompetitionExecutionRound = ({
                     ))}
                 </Box>
                 {roundIndex === 0 && (
-                    <LoadingButton
-                        pending={submitting}
-                        onClick={deleteCurrentRound}
-                        variant={'outlined'}>
-                        {t('event.competition.execution.deleteRound.delete')}
-                    </LoadingButton>
+                    <Stack direction={'row'} spacing={2}>
+                        <LoadingButton
+                            pending={submitting}
+                            onClick={deleteCurrentRound}
+                            variant={'outlined'}>
+                            {t('event.competition.execution.deleteRound.delete')}
+                        </LoadingButton>
+                        {roundHasNothingToRace(round.matches) && (
+                            <LoadingButton
+                                pending={submitting}
+                                onClick={cancelRound}
+                                variant={'outlined'}>
+                                {t('event.competition.execution.cancelRound.action')}
+                            </LoadingButton>
+                        )}
+                    </Stack>
                 )}
             </Stack>
         </Fragment>

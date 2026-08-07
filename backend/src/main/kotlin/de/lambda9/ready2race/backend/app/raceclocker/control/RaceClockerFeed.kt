@@ -11,6 +11,10 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import java.time.LocalTime
+import java.time.format.DateTimeFormatterBuilder
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoField
 import java.util.UUID
 
 /**
@@ -77,13 +81,21 @@ object RaceClockerFeed {
      */
     fun feedUrl(url: Url): Url = URLBuilder(url).apply { parameters["json"] = "1" }.build()
 
-    suspend fun fetch(url: Url): IO<RaceClockerError, List<RaceClockerFeedRow>> {
+    /**
+     * [client] is injectable so tests can swap in a [io.ktor.client.engine.mock.MockEngine]-backed
+     * client instead of talking to the real raceclocker.com - the default recreates exactly the CIO
+     * client this function always used, so production behaviour is unchanged.
+     */
+    suspend fun fetch(
+        url: Url,
+        client: HttpClient = HttpClient(CIO) {
+            engine { requestTimeout = TIMEOUT_MS }
+            expectSuccess = false
+        },
+    ): IO<RaceClockerError, List<RaceClockerFeedRow>> {
         val body = try {
-            HttpClient(CIO) {
-                engine { requestTimeout = TIMEOUT_MS }
-                expectSuccess = false
-            }.use { client ->
-                val response = client.get(url)
+            client.use { c ->
+                val response = c.get(url)
                 if (!response.status.isSuccess()) {
                     return KIO.fail(RaceClockerError.Unreachable(url.toString(), "HTTP ${response.status.value}"))
                 }
@@ -117,14 +129,58 @@ object RaceClockerFeed {
         )
     }
 
+    /**
+     * RaceClocker localises this key (`Start` on English accounts, `Startzeit` on German ones), so
+     * the field is looked up by name rather than by a fixed key, compared case-insensitively.
+     */
+    private val startKeys = setOf("start", "startzeit")
+
+    /**
+     * Matches the fixed shape RaceClocker writes times in - `H:mm:ss` with an optional fractional
+     * second (`11:00:00.0`). The fraction is accepted with variable width since it is not needed for
+     * the value we keep ([RaceClockerFeedRow.start] only distinguishes whole seconds).
+     */
+    private val timeOfDayFormat = DateTimeFormatterBuilder()
+        .appendPattern("H:mm:ss")
+        .optionalStart()
+        .appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true)
+        .optionalEnd()
+        .toFormatter()
+
+    /**
+     * Unparsable/missing values are `null`, not an error - this field is auxiliary data.
+     *
+     * RaceClocker liefert 00:00:00.0 als Platzhalter für Boote ohne Start (DNS/DNF/DQ) - Mitternacht
+     * ist bei einer Regatta nie ein echter Start. Ohne diese Sonderbehandlung würde der Platzhalter
+     * als [LocalTime.MIDNIGHT] geparst und über [RaceClockerFeedRow.earliestStart] den echten
+     * `started_at`-Wert eines Laufs überschreiben, sobald ein Boot der Welle keinen Start hat.
+     */
+    private fun parseTimeOfDay(raw: String): LocalTime? =
+        try {
+            LocalTime.parse(raw, timeOfDayFormat).takeUnless { it == LocalTime.MIDNIGHT }
+        } catch (e: DateTimeParseException) {
+            null
+        }
+
+    private fun JsonNode.textForKeys(keys: Set<String>): String? {
+        val key = fieldNames().asSequence().firstOrNull { it.lowercase() in keys } ?: return null
+        return path(key).asText("").trim()
+    }
+
     private fun JsonNode.toRow(): RaceClockerFeedRow {
         val wave = path("Wave").asText("").trim()
         return RaceClockerFeedRow(
             name = path("Name").asText("").trim(),
+            rank = path("Rank").asText("").trim().toIntOrNull(),
             bib = path("Bib number").asText("").trim().toIntOrNull(),
             wave = wave.takeUnless { it.lowercase() in noWaveValues },
             ids = extractIds(),
             result = path("Result").asText("").trim().takeIf { it.isNotBlank() },
+            start = textForKeys(startKeys)?.takeIf { it.isNotBlank() }?.let { parseTimeOfDay(it) },
+            // RaceClocker writes the penalty as whole seconds and keeps the reason in a separate
+            // field. Both are display-only here; the time already contains the penalty.
+            penaltySeconds = path("Penalty").asText("").trim().toIntOrNull()?.takeIf { it > 0 },
+            penaltyNote = path("Penalty note").asText("").trim().takeIf { it.isNotBlank() },
         )
     }
 

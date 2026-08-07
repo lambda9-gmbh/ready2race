@@ -108,6 +108,11 @@ const EventInfoPage = () => {
         const currentView = views[currentViewIndex]
         if (!currentView) return
 
+        // Das Athleten-Board lädt sich selbst im Takt des Servers nach; der Remount über
+        // dataRefreshKey würde seinen "letzter guter Stand bleibt stehen"-Mechanismus
+        // zerstören und im Takt einen Spinner aufblitzen lassen.
+        if (views.length === 1 && currentView.viewType === 'ATHLETE_BOARD') return
+
         const timer = window.setTimeout(() => {
             if (views.length > 1) {
                 // Multiple views: rotate to next view

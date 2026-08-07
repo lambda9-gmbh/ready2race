@@ -28,6 +28,19 @@ object ParticipantTrackingRepo {
         )
     }
 
+    /**
+     * Alle Scans der Veranstaltung (Live-Dashboard: "ist das Boot auf dem Wasser?") - der
+     * Aufrufer reduziert auf den letzten Scan je Person.
+     */
+    fun getScansByEvent(eventId: UUID) = Jooq.query {
+        with(PARTICIPANT_TRACKING) {
+            select(PARTICIPANT, SCAN_TYPE, SCANNED_AT)
+                .from(this)
+                .where(EVENT.eq(eventId))
+                .fetch()
+        }
+    }
+
     fun count(
         search: String?,
         eventId: UUID,

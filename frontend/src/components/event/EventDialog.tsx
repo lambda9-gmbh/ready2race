@@ -7,7 +7,14 @@ import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {useForm} from 'react-hook-form-mui'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {useCallback} from 'react'
-import {CreateEventRequest, EventDto, MatchResultType, UpdateEventRequest} from '@api/types.gen.ts'
+import {
+    ChainProgressionMode,
+    CreateEventRequest,
+    EventDto,
+    MatchResultType,
+    PublicResultsVisibility,
+    UpdateEventRequest,
+} from '@api/types.gen.ts'
 import {addEvent, updateEvent} from '@api/sdk.gen.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import FormInputDate from '@components/form/input/FormInputDate.tsx'
@@ -30,6 +37,9 @@ type EventForm = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
+    chainProgressionMode: ChainProgressionMode
+    showBreaksOnPublicBoards: boolean
+    publicResultsVisibility: PublicResultsVisibility
 }
 
 const addAction = (formData: EventForm) => {
@@ -65,6 +75,9 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         allowSelfSubmission: false,
         submissionNeedsVerification: false,
         allowParticipantSelfRegistration: false,
+        chainProgressionMode: 'DEAKTIVIERT',
+        showBreaksOnPublicBoards: false,
+        publicResultsVisibility: 'FINISHED_ONLY',
     }
 
     const formContext = useForm<EventForm>()
@@ -75,6 +88,15 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
 
     const challengeEventWatch = formContext.watch('challengeEvent')
     const challengeResultTypes = [{id: 'DISTANCE', label: 'Distance (m)'}]
+    const chainProgressionModes: {id: ChainProgressionMode; label: string}[] = [
+        {id: 'SCHIEDSRICHTER', label: t('event.chainProgressionMode.SCHIEDSRICHTER')},
+        {id: 'REGATTABUERO', label: t('event.chainProgressionMode.REGATTABUERO')},
+        {id: 'DEAKTIVIERT', label: t('event.chainProgressionMode.DEAKTIVIERT')},
+    ]
+    const publicResultsVisibilities: {id: PublicResultsVisibility; label: string}[] = [
+        {id: 'FINISHED_ONLY', label: t('event.publicResultsVisibility.FINISHED_ONLY')},
+        {id: 'RESULTS_COMPLETE', label: t('event.publicResultsVisibility.RESULTS_COMPLETE')},
+    ]
 
     return (
         <EntityDialog
@@ -145,6 +167,30 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     name={`allowParticipantSelfRegistration`}
                     label={t('event.allowParticipantSelfRegistration')}
                 />
+                <FormInputSelect
+                    label={t('event.chainProgressionMode.label')}
+                    required={true}
+                    name="chainProgressionMode"
+                    options={chainProgressionModes}
+                    fullWidth
+                />
+                <FormInputCheckbox
+                    name={`showBreaksOnPublicBoards`}
+                    label={t('event.showBreaksOnPublicBoards')}
+                />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.showBreaksOnPublicBoardsHint')}
+                </Typography>
+                <FormInputSelect
+                    label={t('event.publicResultsVisibility.label')}
+                    required={true}
+                    name="publicResultsVisibility"
+                    options={publicResultsVisibilities}
+                    fullWidth
+                />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.publicResultsVisibility.hint')}
+                </Typography>
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate
@@ -174,6 +220,9 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         allowSelfSubmission: formData.allowSelfSubmission,
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
+        chainProgressionMode: formData.chainProgressionMode,
+        showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
+        publicResultsVisibility: formData.publicResultsVisibility,
     }
 }
 
@@ -194,6 +243,9 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         allowSelfSubmission: formData.allowSelfSubmission,
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
+        chainProgressionMode: formData.chainProgressionMode,
+        showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
+        publicResultsVisibility: formData.publicResultsVisibility,
     }
 }
 
@@ -215,6 +267,9 @@ function mapDtoToForm(dto: EventDto): EventForm {
         allowSelfSubmission: dto.allowSelfSubmission,
         submissionNeedsVerification: dto.submissionNeedsVerification,
         allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
+        chainProgressionMode: dto.chainProgressionMode ?? 'DEAKTIVIERT',
+        showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards ?? false,
+        publicResultsVisibility: dto.publicResultsVisibility ?? 'FINISHED_ONLY',
     }
 }
 

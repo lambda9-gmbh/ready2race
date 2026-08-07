@@ -6,6 +6,7 @@ import {useAppSession} from '@contexts/app/AppSessionContext.tsx'
 import {useState} from 'react'
 import Throbber from '@components/Throbber.tsx'
 import LoadingButton from '@components/form/LoadingButton.tsx'
+import {participantTrackingErrorKey} from '@components/event/liveDashboard/liveDashboardError.ts'
 
 export const TeamCheckInOut = () => {
     const {t} = useTranslation()
@@ -59,10 +60,15 @@ export const TeamCheckInOut = () => {
 
         setSubmitting(false)
         if (error) {
+            // Vier Gruende teilten sich diese beiden Texte - dabei ist "schon eingecheckt" keine
+            // Stoerung, sondern die Auskunft, dass nichts mehr zu tun ist.
+            const reason = participantTrackingErrorKey(error)
             feedback.error(
-                checkIn
-                    ? t('club.participant.tracking.checkIn.error')
-                    : t('club.participant.tracking.checkOut.error'),
+                reason !== undefined
+                    ? t(reason)
+                    : checkIn
+                      ? t('club.participant.tracking.checkIn.error')
+                      : t('club.participant.tracking.checkOut.error'),
             )
         } else {
             feedback.success(

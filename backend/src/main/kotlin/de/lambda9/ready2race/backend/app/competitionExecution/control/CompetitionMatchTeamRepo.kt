@@ -56,7 +56,10 @@ object CompetitionMatchTeamRepo {
                 COMPETITION_MATCH_TEAM.PLACE,
                 COMPETITION_MATCH_TEAM.FAILED,
                 COMPETITION_MATCH_TEAM.FAILED_REASON,
+                COMPETITION_MATCH_TEAM.PENALTY_SECONDS,
+                COMPETITION_MATCH_TEAM.PENALTY_NOTE,
                 COMPETITION_REGISTRATION.NAME.`as`("team_name"),
+                COMPETITION_REGISTRATION.TEAM_NUMBER,
                 COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
                 COMPETITION_DEREGISTRATION.REASON.`as`("deregistration_reason"),
                 CLUB.NAME.`as`("club_name"),
@@ -101,6 +104,7 @@ object CompetitionMatchTeamRepo {
                 COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
                 COMPETITION_MATCH_TEAM.START_NUMBER,
                 COMPETITION_REGISTRATION.NAME.`as`("team_name"),
+                COMPETITION_REGISTRATION.TEAM_NUMBER,
                 CLUB.NAME.`as`("club_name"),
                 PARTICIPANT.ID.`as`("participant_id"),
                 PARTICIPANT.FIRSTNAME,
@@ -130,13 +134,21 @@ object CompetitionMatchTeamRepo {
                 .fetch()
         }
 
+    // Zeit, Zeitstrafe und Ausscheidungsgrund sind hier bewusst mit dabei, obwohl der Lauf noch
+    // läuft: eine externe Zeitmessung schreibt Zeiten und Strafen ein, während die letzten Boote
+    // noch auf dem Wasser sind, und die Athleten-Anzeige zeigt sie als Teilergebnis.
     fun getTeamForRunningMatch(matchId: UUID) =
         Jooq.query {
             select(
                 COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
                 COMPETITION_MATCH_TEAM.START_NUMBER,
                 COMPETITION_MATCH_TEAM.PLACE,
+                COMPETITION_MATCH_TEAM.FAILED,
+                COMPETITION_MATCH_TEAM.FAILED_REASON,
+                COMPETITION_MATCH_TEAM.PENALTY_SECONDS,
+                COMPETITION_MATCH_TEAM.PENALTY_NOTE,
                 COMPETITION_REGISTRATION.NAME.`as`("team_name"),
+                COMPETITION_REGISTRATION.TEAM_NUMBER,
                 CLUB.NAME.`as`("club_name"),
                 PARTICIPANT.ID.`as`("participant_id"),
                 PARTICIPANT.FIRSTNAME,
@@ -145,7 +157,10 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT.GENDER,
                 PARTICIPANT.EXTERNAL_CLUB_NAME,
                 NAMED_PARTICIPANT.NAME.`as`("named_role"),
-                EVENT.MIXED_TEAM_TERM
+                EVENT.MIXED_TEAM_TERM,
+                TIMECODE.TIME,
+                TIMECODE.BASE_UNIT,
+                TIMECODE.MILLISECOND_PRECISION
             )
                 .from(COMPETITION_MATCH_TEAM)
                 .join(COMPETITION_REGISTRATION)
@@ -158,6 +173,7 @@ object CompetitionMatchTeamRepo {
                 .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
                 .leftJoin(EVENT_REGISTRATION).on(EVENT_REGISTRATION.ID.eq(COMPETITION_REGISTRATION.EVENT_REGISTRATION))
                 .leftJoin(EVENT).on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID))
+                .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
                 .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
                 .orderBy(
                     COMPETITION_MATCH_TEAM.START_NUMBER.asc().nullsLast(),

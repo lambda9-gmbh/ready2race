@@ -13,4 +13,8 @@ data class GapDocumentPlaceholderDto(
     val relWidth: Double,
     val relHeight: Double,
     val textAlign: TextAlign,
+    val fontSize: Int?,
+    val bold: Boolean,
+    val italic: Boolean,
+    val staticText: String?,
 )

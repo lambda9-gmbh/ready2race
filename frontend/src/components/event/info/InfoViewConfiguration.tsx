@@ -74,6 +74,8 @@ const SortableItem = ({view, onEdit, onDelete, onToggle}: SortableItemProps) => 
                 return t('event.info.viewTypes.latestMatchResults')
             case 'RUNNING_MATCHES':
                 return t('event.info.viewTypes.runningMatches')
+            case 'ATHLETE_BOARD':
+                return t('event.info.viewTypes.athleteBoard')
             default:
                 return type
         }

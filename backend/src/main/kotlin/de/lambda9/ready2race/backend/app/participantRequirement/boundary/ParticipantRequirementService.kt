@@ -264,6 +264,8 @@ object ParticipantRequirementService {
             description = request.description
             optional = request.optional ?: false
             checkInApp = request.checkInApp ?: false
+            checkEarliestMinutesBefore = request.checkEarliestMinutesBefore
+            checkLatestMinutesBefore = request.checkLatestMinutesBefore
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()

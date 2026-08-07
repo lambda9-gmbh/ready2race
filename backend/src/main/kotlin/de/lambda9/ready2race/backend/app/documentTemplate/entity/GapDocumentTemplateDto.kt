@@ -6,5 +6,7 @@ data class GapDocumentTemplateDto(
     val id: UUID,
     val type: GapDocumentType,
     val name: String,
+    val fontName: String?,
+    val hasFont: Boolean,
     val placeholders: List<GapDocumentPlaceholderDto>,
 )

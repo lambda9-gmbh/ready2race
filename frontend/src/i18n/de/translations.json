@@ -61,6 +61,7 @@
         }
       },
       "seconds": "Sekunden",
+      "secondsShort": "s",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
       "requiredCheck": "Zum Fortfahren muss dies akzeptiert werden.",
@@ -162,7 +163,8 @@
   "format": {
     "date": "dd.MM.yyyy",
     "datetime": "dd.MM.yyyy, HH:mm",
-    "time": "HH:mm"
+    "time": "HH:mm",
+    "timeWithSeconds": "HH:mm:ss"
   },
   "document": {
     "template": {
@@ -208,7 +210,10 @@
     "document": {
       "template": {
         "assignments": {
-          "global": "Global zugewiesene Urkundenvorlagen"
+          "global": "Global zugewiesene Urkundenvorlagen",
+          "error": {
+            "typeMismatch": "Diese Vorlage passt nicht zum Urkundentyp und konnte nicht zugewiesen werden."
+          }
         },
         "loading": "Lade...",
         "template": "Urkundenvorlage",
@@ -217,12 +222,30 @@
         "name": "Dateiname",
         "type": "Urkundentyp",
         "types": {
-          "CERTIFICATE_OF_PARTICIPATION": "Teilnahmeurkunde"
+          "CERTIFICATE_OF_PARTICIPATION": "Teilnahmeurkunde",
+          "AWARD_CERTIFICATE": "Siegerurkunde"
         },
+        "typeLockedHelp": "Der Urkundentyp kann bei einer bestehenden Vorlage nicht mehr geändert werden, da die Zuweisung und die platzierten Platzhalter darauf aufbauen.",
+        "typePlaceholdersRemoved_one": "{{count}} Platzhalter wurde entfernt, da er für den neuen Urkundentyp nicht zulässig ist.",
+        "typePlaceholdersRemoved_other": "{{count}} Platzhalter wurden entfernt, da sie für den neuen Urkundentyp nicht zulässig sind.",
+        "singlePageNotice": "Siegerurkunden verwenden nur Seite 1 der PDF-Vorlage. Weitere Seiten werden nicht angezeigt, da dort keine Platzhalter platziert werden können.",
         "file": {
           "choose": "PDF-Vorlage auswählen",
           "change": "PDF-Vorlage ändern",
           "missing": "Bitte wählen Sie ein PDF-Dokument aus."
+        },
+        "font": {
+          "name": "Schriftname",
+          "nameHelp": "Wird in das erzeugte Word-Dokument übernommen.",
+          "upload": "Schriftdatei (TTF/OTF, optional)",
+          "uploadHelp": "Optional – ohne Schriftdatei wird im PDF Helvetica verwendet. Laden Sie selbst eine Schriftdatei hoch, wenn Sie eine bestimmte Schrift benötigen (z. B. eine kommerziell lizenzierte Schrift wie die des DRV), da wir diese nicht mitliefern dürfen.",
+          "choose": "Schriftdatei auswählen",
+          "change": "Schriftdatei ersetzen",
+          "current": "Es ist bereits eine Schriftdatei hinterlegt.",
+          "none": "Es ist keine Schriftdatei hinterlegt.",
+          "remove": "Entfernen",
+          "willBeRemoved": "Die hinterlegte Schriftdatei wird beim Speichern entfernt.",
+          "undoRemove": "Rückgängig"
         },
         "noPdfSelected": "Kein PDF ausgewählt. Bitte laden Sie eine PDF-Vorlage hoch.",
         "page": "Seite {{page}}",
@@ -236,6 +259,12 @@
           "title": "Urkundenvorlagenvorschau",
           "error": "Vorschau konnte nicht geladen werden.",
           "show": "Urkunde in der Vorschau anzeigen"
+        },
+        "error": {
+          "invalidFont": "Die Schriftdatei konnte nicht gelesen werden. Bitte eine gültige TTF- oder OTF-Datei hochladen.",
+          "typeMismatch": "Die Vorlage passt nicht zu dem Dokumenttyp, dem sie zugewiesen werden soll.",
+          "placeholderPageNotSupported": "Siegerurkunden haben genau eine Seite — alle Platzhalter müssen auf Seite 1 liegen.",
+          "placeholderTypeNotSupported": "Dieser Platzhalter ist für den gewählten Dokumenttyp nicht vorgesehen. Bitte einen Platzhalter aus der Liste dieses Typs wählen."
         }
       },
       "placeholder": {
@@ -249,7 +278,14 @@
           "FULL_NAME": "Vollständiger Name",
           "PLACE": "Platzierung",
           "RESULT": "Ergebnis",
-          "EVENT_NAME": "Veranstaltungsname"
+          "EVENT_NAME": "Veranstaltungsname",
+          "COMPETITION_NAME": "Wettbewerbsname",
+          "COMPETITION_SHORT_NAME": "Wettbewerbskurzname",
+          "CLUB_NAME": "Vereinsname",
+          "TEAM_NAME": "Mannschaftsname",
+          "EVENT_DATE": "Veranstaltungsdatum",
+          "EVENT_LOCATION": "Veranstaltungsort",
+          "FREE_TEXT": "Freier Text"
         },
         "name": "Eigene Bezeichnung (optional)",
         "nameHelp": "Eine eigene Bezeichnung, um diesen Platzhalter zu identifizieren",
@@ -261,7 +297,13 @@
         },
         "page": "Seite",
         "position": "Position",
-        "size": "Größe"
+        "size": "Größe",
+        "fontSize": "Schriftgröße (pt)",
+        "fontSizeHelp": "Leer lassen, um die Höhe des Platzhalter-Kastens zu verwenden.",
+        "bold": "Fett",
+        "italic": "Kursiv",
+        "staticText": "Fester Text",
+        "staticTextHelp": "Wird für alle Empfänger unverändert angezeigt, z. B. der Name des Unterzeichners."
       }
     }
   },
@@ -333,6 +375,7 @@
     }
   },
   "club": {
+    "nameLengthHint": "{{length}}/{{max}} Zeichen empfohlen – längere Namen werden in Listen gekürzt",
     "club": "Verein",
     "registrant": "Anmelder",
     "registeredBy": "gemeldet von",
@@ -438,6 +481,7 @@
       "resendAccessToken": "Neuen Zugangstoken versenden",
       "resendAccessTokenSuccess": "Neuer Token versendet.",
       "downloadCOP": "Teilnahmeurkunde herunterladen",
+      "downloadCOPWord": "Teilnahmeurkunde als Word herunterladen",
       "userQrCode": "Benutzer QR-Code",
       "qrCode": "QR-Code",
       "id": "Teilnehmer-ID",
@@ -464,7 +508,26 @@
           "error": "Fehler beim Auschecken des Teilnehmenden"
         },
         "noTeamsFound": "Keine Teams gefunden",
-        "participantNotFound": "Teilnehmer nicht gefunden"
+        "participantNotFound": "Teilnehmer nicht gefunden",
+        "errorReason": {
+          "alreadyCheckedIn": "Diese Person ist bereits eingecheckt — es ist nichts weiter zu tun.",
+          "notCheckedIn": "Diese Person ist gar nicht eingecheckt und kann deshalb nicht ausgecheckt werden.",
+          "qrCodeNotAssociated": "Dieses Bändchen gehört zu keinem Teilnehmer. Bitte es zuerst in der QR-Verwaltung einer Person zuweisen.",
+          "qrCodeNotFound": "Dieses Bändchen ist im System nicht bekannt. Bitte den Code prüfen oder ein anderes Bändchen nehmen."
+        }
+      },
+      "certificate": {
+        "error": {
+          "noResults": "Für diese Person ist in dieser Veranstaltung kein Ergebnis hinterlegt. Eine Teilnahmeurkunde gibt es erst, wenn ein Ergebnis erfasst und — falls erforderlich — bestätigt ist.",
+          "missingTemplate": "Für Teilnahmeurkunden ist keine Vorlage hinterlegt. Bitte unter Konfiguration → Veranstaltungselemente eine Vorlage zuweisen.",
+          "unreadableTemplate": "Die hinterlegte Vorlage für Teilnahmeurkunden lässt sich nicht lesen. Bitte die PDF-Datei prüfen und neu hochladen.",
+          "notAChallengeEvent": "Teilnahmeurkunden gibt es nur bei Challenge-Veranstaltungen.",
+          "challengeStillInProgress": "Die Challenge läuft noch. Teilnahmeurkunden lassen sich erst erzeugen, wenn alle Challenge-Wettkämpfe beendet sind.",
+          "unexpected": "Die Urkunde konnte nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
+        }
+      },
+      "importError": {
+        "unknownGenderValue": "Der Wert „{{value}}“ in der Spalte für das Geschlecht ist unbekannt. Bitte in der Datei einen der zugeordneten Werte eintragen oder die Zuordnung im Import-Assistenten anpassen."
       }
     }
   },
@@ -488,6 +551,20 @@
     "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
     "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
+    "chainProgressionMode": {
+      "label": "Kettenmodus",
+      "SCHIEDSRICHTER": "Schiedsrichter — Beenden und Kette über das Schiedsrichter-Dashboard",
+      "REGATTABUERO": "Regattabüro — Beenden und Aktivieren exklusiv über den Zeitplan",
+      "DEAKTIVIERT": "Deaktiviert — keine automatische Aktivierung"
+    },
+    "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
+    "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
+    "publicResultsVisibility": {
+      "label": "Ergebnisse öffentlich zeigen ab",
+      "FINISHED_ONLY": "Nur beendete Läufe",
+      "RESULTS_COMPLETE": "Auch vollständig gewertete Läufe",
+      "hint": "Gilt für Athleten-Anzeige, Kiosk-Ansicht und die öffentliche Ergebnisseite. Standardmäßig nur beendete Läufe: solange ein Lauf nicht beendet ist, kann noch eine Zeitstrafe kommen, und ein bereits veröffentlichtes Ergebnis lässt sich nicht zurückholen."
+    },
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -653,7 +730,13 @@
         },
         "deregister": {
           "deregister": "Abmelden",
-          "error": "Beim Abmelden ist ein Fehler aufgetreten.",
+          "error": {
+            "unexpected": "Beim Abmelden ist ein Fehler aufgetreten.",
+            "DEREGISTRATION_ALREADY_EXISTS": "Diese Meldung ist bereits abgemeldet.",
+            "DEREGISTRATION_RESULTS_ALREADY_EXIST": "Der Lauf wird bereits gewertet. Die Abmeldung muss direkt im Ergebnis eingetragen werden.",
+            "DEREGISTRATION_NOT_IN_CURRENT_ROUND": "Die Mannschaft ist in der aktuellen Runde nicht dabei - sie ist bereits ausgeschieden oder war nie dabei.",
+            "DEREGISTRATION_REGISTRATION_STILL_OPEN": "Der Meldezeitraum läuft noch. Eine Abmeldung ist erst nach Meldeschluss möglich."
+          },
           "success": "Abmeldung erfolgreich",
           "revertDeregistration": {
             "revertDeregistration": "Abmeldung zurücknehmen",
@@ -808,6 +891,20 @@
           "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
           "success": "Runde erfolgreich gelöscht"
         },
+        "cancelRound": {
+          "action": "Runde entfällt",
+          "confirmation": {
+            "content": "Die Runde „{{round}}“ entfällt komplett? In dieser Runde gibt es keine Läufe zu fahren (alle Boote haben ein Freilos). Die zugehörigen Slots im Zeitplan werden als entfallen markiert und von der Kette ausgelassen.",
+            "ok": "Runde entfällt"
+          },
+          "error": {
+            "notMaterialized": "Die Runde ist noch nicht gesetzt — es gibt noch keine Läufe, die entfallen könnten. Bitte zuerst die Runde setzen, oder die einzelnen Slots im Zeitplan entfallen lassen.",
+            "hasRunsToRace_one": "In dieser Runde steht noch {{count}} Lauf mit mindestens zwei Booten an. Er muss gefahren werden, damit die nächste Runde sauber ausgelost werden kann.",
+            "hasRunsToRace_other": "In dieser Runde stehen noch {{count}} Läufe mit mindestens zwei Booten an. Sie müssen gefahren werden, damit die nächste Runde sauber ausgelost werden kann.",
+            "unexpected": "Beim Entfallenlassen der Runde ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen."
+          },
+          "success": "Runde als entfallen markiert"
+        },
         "teamsWithBye": "Teams mit Freilos",
         "match": {
           "startTime": "Startzeit",
@@ -820,7 +917,7 @@
           "registeredBy": "gemeldet von",
           "place": "Platz",
           "time": "Zeit",
-          "placeAndTime": "Platz/Zeit",
+          "placeAndTime": "Platz/Zeit/Strafe",
           "manageRunning": "Laufende Partien verwalten",
           "running": "Läuft",
           "roundAndMatch": "Runde {{round}}, Partie {{match}}",
@@ -844,6 +941,17 @@
           },
           "failed": "Ausgeschieden",
           "failedReason": "Grund für Ausscheiden",
+          "failedNote": "Notiz zum Ausscheiden",
+          "status": {
+            "DNS": "Nicht gestartet",
+            "DNF": "Nicht beendet",
+            "DSQ": "Disqualifiziert"
+          },
+          "penalty": "Zeitstrafe inkl. {{seconds}} s",
+          "penaltySeconds": "Strafe (s)",
+          "penaltyShort": "Strafe",
+          "penaltyNote": "Grund der Strafe",
+          "penaltyNoteShort": "Grund",
           "validation": {
             "duplicates": {
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",
@@ -851,21 +959,15 @@
               "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
             },
             "noResultsEntered": "Bitte geben Sie mindestens alle Plätze oder alle Zeiten für alle Teams in dieser Partie an.",
-            "missingPlaces": "Bitte geben Sie Plätze für alle Teams in dieser Partie an.",
-            "missingTimes": "Bitte geben Sie Zeiten für alle Teams in dieser Partie an."
+            "partialHint": "Teilergebnisse sind möglich: Zeilen ohne Platz und ohne Zeit bleiben offen und können später ergänzt werden.",
+            "penaltyHint": "Zeitstrafen werden nur vermerkt und nicht auf die Zeit angerechnet — die eingetragene Zeit gilt wie erfasst (inkl. Strafe)."
           },
           "submit": {
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
             "success": "Ergebnis gespeichert"
           },
           "dialog": {
-            "title": "Konfiguration auswählen",
-            "config": "Konfiguration",
-            "alert": {
-              "1": "Konfigurationen können ",
-              "2": "hier",
-              "3": " erstellt und bearbeitet werden."
-            },
+            "title": "Ergebnisdatei hochladen",
             "file": {
               "missing": "Bitte wählen Sie eine Datei aus.",
               "change": ".xls Datei ändern",
@@ -879,6 +981,7 @@
             "RACECLOCKER": "von RaceClocker holen"
           },
           "error": {
+            "notConfigured": "Für diesen Wettkampf ist kein Ergebnis-Import-Preset hinterlegt. Bitte im Tab \"Zeitnahme\" eintragen.",
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
             "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
             "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
@@ -892,7 +995,16 @@
           },
           "challenge": {
             "challengeResults": "Challenge Ergebnis",
-            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+            "error": {
+              "notAChallengeEvent": "Diese Veranstaltung ist keine Challenge-Veranstaltung.",
+              "alreadyStarted": "Die Challenge hat bereits begonnen und lässt sich nicht mehr ändern.",
+              "notStartedYet": "Die Challenge hat noch nicht begonnen. Ergebnisse lassen sich erst ab dem Startzeitpunkt eintragen.",
+              "corruptedSetup": "Das Wettkampf-Setup ist fehlerhaft und verhält sich nicht wie erwartet. Bitte einen Administrator informieren — von hier aus lässt sich das nicht beheben.",
+              "resultAlreadySubmitted": "Für dieses Boot wurde bereits ein Ergebnis eingereicht. Das bestehende Ergebnis muss zuerst gelöscht werden.",
+              "noResultSubmitted": "Für dieses Boot liegt noch kein Ergebnis vor.",
+              "selfSubmissionNotAllowed": "Für diese Veranstaltung dürfen Ergebnisse nicht selbst eingereicht werden. Bitte das Ergebnis dem Regattabüro melden.",
+              "unexpected": "Beim Speichern des Ergebnisses ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen."
+            },
             "success": "Das Ergebnis wurde erfolgreich übermittelt.",
             "confirmTitle": "Bestätigung erforderlich",
             "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
@@ -916,6 +1028,7 @@
             "confirmationImage": "Bestätigungsbild",
             "select": "Bild auswählen",
             "change": "Bild Datei ändern",
+            "preview": "Vorschau des Bestätigungsbilds",
             "error": {
               "empty": "Bitte wählen Sie ein Bild aus",
               "tooMany": "Bitte wählen Sie maximal 1 Bild aus"
@@ -960,21 +1073,13 @@
         },
         "startList": {
           "download": "Startliste herunterladen",
-          "dialog": {
-            "title": "Konfiguration auswählen",
-            "config": "Konfiguration",
-            "alert": {
-              "1": "Konfigurationen können ",
-              "2": "hier",
-              "3": " erstellt und bearbeitet werden."
-            }
-          },
           "type": {
             "PDF": "als PDF",
             "CSV": "als CSV"
           },
           "error": {
-            "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
+            "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt.",
+            "notConfigured": "Für diesen Wettkampf ist kein Startlisten-Preset hinterlegt. Bitte im Tab \"Zeitnahme\" eintragen."
           }
         },
         "substitution": {
@@ -993,30 +1098,66 @@
           "reason": "Begründung",
           "add": {
             "add": "Ummeldungen hinzufügen",
-            "error": {
-              "conflict": "Später erzeugte Ummeldungen hängen von dieser ab. Diese müssten zuerst gelöscht werden.",
-              "unexpected": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten"
-            },
+            "error": "Beim Hinzufügen der Ummeldung ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen.",
             "success": "Ummeldungen erfolgreich hinzugefügt"
           },
           "delete": {
             "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
-            "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
+            "error": "Beim Löschen der Ummeldung ist ein Fehler aufgetreten. Bitte die Ansicht neu laden und es erneut versuchen.",
             "success": "Ummeldungen erfolgreich gelöscht"
+          },
+          "error": {
+            "notFound": "Diese Ummeldung gibt es nicht mehr — vermutlich hat sie jemand anderes bereits gelöscht. Bitte die Ansicht neu laden.",
+            "participantOutNotFound": "Der auszutauschende Teilnehmer wurde nicht gefunden. Bitte die Ansicht neu laden und erneut auswählen.",
+            "participantInNotFound": "Der ausgewählte Ersatz wurde nicht gefunden. Bitte die Ansicht neu laden und erneut auswählen.",
+            "participantOutNotAvailable": "Der auszutauschende Teilnehmer fährt in dieser Runde nicht (mehr) mit. Vermutlich gibt es für ihn bereits eine spätere Ummeldung — bitte die Ansicht neu laden.",
+            "participantInNotAvailable": "Der ausgewählte Ersatz steht für diese Runde nicht zur Verfügung. Bitte die Ansicht neu laden und aus der aktualisierten Liste wählen.",
+            "dependentFound": "Auf dieser Ummeldung bauen spätere Ummeldungen auf. Diese müssen zuerst gelöscht werden, beginnend mit der jüngsten.",
+            "createdInPreviousRound": "Diese Ummeldung stammt aus einer früheren Runde. Zurücknehmen lässt sie sich nur in der Runde, in der sie erstellt wurde."
           }
         },
-        "raceclocker": {
-          "config": {
-            "open": "RaceClocker-Einstellungen",
-            "title": "RaceClocker-Einstellungen",
-            "hint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
-            "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
-            "heatsUrl": "Ergebnis-Adresse Läufe",
-            "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
-            "saved": "RaceClocker-Einstellungen gespeichert",
-            "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
-          }
+        "error": {
+          "matchResultsLocked": "Bearbeiten lassen sich nur die Ergebnisse der aktuellen Runde. Für einen Lauf aus einer früheren Runde muss zuerst die neuere Runde zurückgenommen werden.",
+          "matchIsBye": "Dieser Lauf ist ein Freilos: das Boot zieht ohne zu fahren weiter, es gibt kein Ergebnis einzutragen.",
+          "placesNotContinuous": "Die Plätze müssen lückenlos bei 1 beginnen. Erwartet war Platz {{expected}}, eingetragen ist Platz {{actual}}.",
+          "startTimeManagedBySchedule": "Die Startzeit dieses Laufs wird über den Zeitplan gepflegt und lässt sich hier nicht ändern. Bitte den Slot im Zeitplan-Tab anpassen.",
+          "teamsNotMatching": "Die übertragenen Boote passen nicht zu den Booten dieses Laufs — vermutlich hat sich die Aufstellung zwischenzeitlich geändert (Ummeldung oder Abmeldung). Bitte die Ansicht neu laden und erneut speichern."
         }
+      },
+      "timing": {
+        "tabTitle": "Zeitnahme",
+        "system": "Zeitnahme-System",
+        "systems": {
+          "none": "nicht gesetzt",
+          "inherited": "Vorgabe der Veranstaltung ({{system}})",
+          "raceclocker": "RaceClocker",
+          "webscorer": "Webscorer"
+        },
+        "inheritedHint": "Dieser Wettkampf übernimmt die Zeitnahme der Veranstaltung. Die Adressen unten sind nur nötig, wenn er ein eigenes RaceClocker-Rennen hat — sonst leer lassen.",
+        "inheritedUrl": "Vorgabe der Veranstaltung: {{url}}",
+        "raceclockerHint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
+        "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
+        "heatsUrl": "Ergebnis-Adresse Läufe",
+        "startlistQualification": "Startlisten-Preset Qualifikation",
+        "startlistRounds": "Startlisten-Preset übrige Runden",
+        "startlist": "Startlisten-Preset",
+        "resultImport": "Ergebnis-Import-Preset (xlsx)",
+        "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
+        "presetsHint": {
+          "1": "Presets werden ",
+          "2": "in der Konfiguration",
+          "3": " angelegt und gelten für alle Veranstaltungen."
+        },
+        "incomplete": {
+          "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
+          "heatsUrl": "Es fehlt die Ergebnis-Adresse des Läufe-Rennens – ohne sie lassen sich keine Ergebnisse aus RaceClocker holen.",
+          "timeTrialUrl": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt die Ergebnis-Adresse des Zeitfahren-Rennens – ohne sie lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen.",
+          "startlistRounds": "Es fehlt das Startlisten-Preset – ohne es lässt sich keine Startliste als CSV exportieren.",
+          "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt das Startlisten-Preset für die Qualifikation – ohne es lässt sich für die Qualifikation keine Startliste exportieren.",
+          "link": "Zu den Zeitnahme-Einstellungen"
+        },
+        "saved": "Zeitnahme-Einstellungen gespeichert",
+        "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
       },
       "places": {
         "places": "Platzierungen",
@@ -1056,6 +1197,8 @@
     },
     "action": {
       "downloadCertificates": "Teilnahmeurkunden herunterladen",
+      "downloadCertificatesWord": "Teilnahmeurkunden als Word herunterladen",
+      "downloadAwardCertificates": "Urkunden herunterladen",
       "sendCertificates": "Teilnahmeurkunden versenden",
       "sendCertificatesSucceeded": "Versand von Teilnahmeurkunden beauftragt",
       "registrationsReport": {
@@ -1173,6 +1316,21 @@
       "organisation": "Organisation",
       "invoices": "Rechnungen"
     },
+    "timing": {
+      "title": "Zeitnahme",
+      "hint": "Gilt für alle Wettkämpfe dieser Veranstaltung. Ein einzelner Wettkampf kann in seinem Zeitnahme-Tab eigene Werte eintragen und weicht damit gezielt ab.",
+      "system": "Zeitnahme-System",
+      "systems": {
+        "none": "nicht gesetzt",
+        "raceclocker": "RaceClocker",
+        "webscorer": "Webscorer"
+      },
+      "raceclockerHint": "RaceClocker braucht zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunden und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein — sie gelten dann für die ganze Veranstaltung.",
+      "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
+      "heatsUrl": "Ergebnis-Adresse Läufe",
+      "saved": "Zeitnahme-Voreinstellung gespeichert",
+      "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
+    },
     "info": {
       "infoPage": "Info-Anzeige",
       "sectionTitle": "Öffentliche Informationsanzeige",
@@ -1185,7 +1343,8 @@
       "viewTypes": {
         "upcomingMatches": "Anstehend",
         "latestMatchResults": "Neueste Ergebnisse",
-        "runningMatches": "Aktuell laufend"
+        "runningMatches": "Aktuell laufend",
+        "athleteBoard": "Athleten-Anzeige"
       },
       "configuration": "Ansichtskonfiguration",
       "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
@@ -1221,7 +1380,250 @@
       "result": "Ergebnis",
       "points": "Punkte",
       "matchTeams": "Lauf-Teams",
-      "executionOrder": "Ausführungsreihenfolge: {{order}}"
+      "executionOrder": "Ausführungsreihenfolge: {{order}}",
+      "pendingRound": "Lauf noch nicht gesetzt",
+      "freeSlot": "Programmpunkt",
+      "athleteBoard": {
+        "running": "Aktueller Lauf",
+        "upcoming": "Nächster Lauf",
+        "results": "Letztes Ergebnis",
+        "noRunning": "Zurzeit kein Lauf auf dem Wasser",
+        "noUpcoming": "Kein weiterer Lauf gesetzt",
+        "noResults": "Noch kein Ergebnis",
+        "lane": "Bahn",
+        "expected": "erwartet",
+        "unscheduled": "Zeit offen",
+        "failed": "nicht gewertet",
+        "startedAt": "gestartet {{time}}",
+        "preparing": "in Vorbereitung",
+        "penalty": "inkl. {{seconds}} s Zeitstrafe",
+        "deregistered": "abgemeldet",
+        "teamNumber": "Team {{number}}",
+        "startsIn": "in {{time}}",
+        "asOf": "Stand {{time}}",
+        "stale": "Verbindung unterbrochen",
+        "eventNotFound": "Veranstaltung nicht gefunden",
+        "settingsTitle": "Athleten-Anzeige",
+        "limitRunning": "Anzahl laufender Läufe",
+        "limitUpcoming": "Anzahl nächster Läufe",
+        "limitResults": "Anzahl Ergebnisse",
+        "showCountdown": "Countdown bis zum Start anzeigen",
+        "refreshHint": "Die öffentliche Athleten-Anzeige aktualisiert sich in diesem Takt, aber nie schneller als alle 10 Sekunden.",
+        "loadError": "Daten konnten nicht geladen werden. Bitte Verbindung prüfen.",
+        "minutesUnit": "min",
+        "secondsUnit": "s"
+      }
+    },
+    "liveDashboard": {
+      "sectionTitle": "Schiedsrichter-Dashboard",
+      "pageDescription": "Live-Ansicht für Schiedsrichter mit laufenden und anstehenden Läufen, Teilnahmebedingungen und Rechnungsstatus.",
+      "open": "Schiedsrichter-Dashboard öffnen",
+      "title": "Schiedsrichter-Dashboard",
+      "tabs": {
+        "live": "Live",
+        "matches": "Läufe"
+      },
+      "lastUpdated": "Stand: {{time}}",
+      "staleWarning": "Verbindung gestört — Anzeige ist möglicherweise nicht aktuell.",
+      "loadError": "Daten konnten nicht geladen werden.",
+      "noRunning": "Aktuell läuft kein Rennen.",
+      "nextUp": "Als Nächstes",
+      "unscheduled": "Ohne Startzeit",
+      "noMatches": "Keine Läufe vorhanden.",
+      "noStartTime": "Keine Startzeit geplant",
+      "runningSince": "Läuft seit {{duration}}",
+      "plannedAt": "geplant {{time}}",
+      "startedAtLabel": "gestartet {{time}}",
+      "state": {
+        "RUNNING": "Läuft",
+        "FINISHED": "Beendet",
+        "SKIPPED": "Abgesagt",
+        "AWAITING_FINISH": "Ergebnisse vollständig — wartet auf Beenden",
+        "AWAITING_FINISH_SHORT": "wartet auf Beenden",
+        "UPCOMING": "Anstehend",
+        "UNSCHEDULED": "Ungeplant"
+      },
+      "invoice": {
+        "PAID": "Rechnung bezahlt",
+        "OPEN": "Rechnung offen",
+        "NONE": "Keine Rechnung"
+      },
+      "refresh": {
+        "label": "Aktualisierungsintervall",
+        "tooltip": "Nächste Aktualisierung in {{seconds}} s (alle {{interval}} s)",
+        "everySeconds": "Alle {{seconds}} Sekunden"
+      },
+      "penaltyIncluded": "inkl. {{seconds}} s",
+      "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",
+      "control": {
+        "finish": "Lauf beenden",
+        "finishing": "Wird beendet …",
+        "undo": "Rückgängig",
+        "finished": "Lauf beendet — nächste Läufe aktiviert",
+        "deactivate": "Lauf deaktivieren",
+        "activate": "Lauf aktivieren",
+        "incompleteWarning": "Es fehlen noch Ergebnisse — beenden aktiviert trotzdem die nächsten Läufe.",
+        "openResults": {
+          "title": "Offene Ergebnisse",
+          "question_one": "Ein Boot hat noch kein Ergebnis. Was soll damit geschehen?",
+          "question_other": "{{count}} Boote haben noch kein Ergebnis. Was soll damit geschehen?",
+          "keepOpen": "Offen lassen",
+          "DNS": "Nicht gestartet",
+          "DNF": "Nicht beendet",
+          "DSQ": "Disqualifiziert"
+        },
+        "error": "Der Lauf konnte nicht geändert werden.",
+        "errorReason": {
+          "finishReservedForOffice": "Für diese Veranstaltung beendet das Regattabüro die Läufe über den Zeitplan. Der Lauf bleibt aktiv — bitte dem Regattabüro melden, dass er im Ziel ist."
+        }
+      },
+      "substitution": {
+        "short": "Ummeldung",
+        "for": "Umgemeldet für {{name}}"
+      },
+      "team": {
+        "place": "Platz {{place}}",
+        "deregistered": "Abgemeldet",
+        "failed": "Ausgeschieden",
+        "failedShort": "DNF",
+        "onWaterAt": "aufs Wasser {{time}}"
+      },
+      "requirement": {
+        "checkedAt": "Erfüllt am {{time}}",
+        "notChecked": "Nicht erfüllt",
+        "notCheckedOptional": "Nicht erfüllt (optional)",
+        "note": "Notiz: {{note}}",
+        "none": "Keine Bedingungen zugewiesen"
+      },
+      "timeCheck": {
+        "TOO_EARLY": "Zu früh erfüllt",
+        "LATE": "Spät erfüllt",
+        "NOT_CHECKED": "Ausstehend",
+        "beforeStart": "{{delta}} vor Start",
+        "afterStart": "{{delta}} nach Start"
+      }
+    },
+    "schedule": {
+      "tab": "Zeitplan",
+      "slot": "Slot",
+      "addSlot": "Slot hinzufügen",
+      "slotType": "Art",
+      "freeSlot": "Freier Slot",
+      "matchSlot": "Lauf",
+      "competition": "Wettkampf",
+      "round": "Runde",
+      "match": "Lauf",
+      "startTime": "Startzeit",
+      "status": "Status",
+      "duration": "Dauer (Minuten)",
+      "durationValue": "{{minutes}} min",
+      "state": {
+        "FREE": "Programmpunkt",
+        "WAITING": "Lauf noch nicht gesetzt",
+        "LINKED": "Verknüpft",
+        "OBSOLETE": "Verfallen",
+        "SKIPPED": "Entfällt",
+        "finished": "Beendet"
+      },
+      "skip": "Nur diesen Lauf entfallen lassen",
+      "skipFree": "Programmpunkt entfallen lassen",
+      "skipOk": "Nur diesen Lauf",
+      "skipOkFree": "Entfällt",
+      "unskip": "Entfall aufheben",
+      "skipConfirm_one": "Nur dieser eine Lauf entfällt: „{{label}}“ um {{time}}. Der übrige Lauf der Runde „{{round}}“ bleibt unverändert.",
+      "skipConfirm_other": "Nur dieser eine Lauf entfällt: „{{label}}“ um {{time}}. Die übrigen {{count}} Läufe der Runde „{{round}}“ bleiben unverändert.",
+      "skipConfirmOnly": "Der Lauf „{{label}}“ um {{time}} entfällt und wird von der Kette ausgelassen.",
+      "skipConfirmFree": "Der Programmpunkt „{{label}}“ um {{time}} entfällt.",
+      "unskipConfirm": "Entfall für „{{label}}“ um {{time}} aufheben? Der Slot wird wieder normal berücksichtigt.",
+      "activate": "Lauf aktivieren",
+      "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",
+      "activateAnyway": "Trotzdem aktivieren",
+      "finish": "Lauf beenden",
+      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Je nach Kettenmodus werden dabei die nächsten Läufe aktiviert.",
+      "finishAnyway": "Trotzdem beenden",
+      "refereeModeWarning": "Der Schiedsrichter-Modus ist aktiv: Läufe werden normalerweise von einem Schiedsrichter über das Schiedsrichter-Dashboard aktiviert und beendet. Ein Eingriff von hier übergeht diesen Weg.",
+      "managedHint": "Wird über den Zeitplan gepflegt",
+      "unplanned": "Nicht verplante Läufe",
+      "noUnplanned": "Alle Läufe sind eingeplant.",
+      "noSlots": "Für diese Veranstaltung ist noch kein Zeitplan angelegt.",
+      "plan": "Einplanen",
+      "adjust": "Zeitplan anpassen",
+      "import": "Excel-Import",
+      "importDialog": {
+        "title": "Excel-Import",
+        "choose": "Datei auswählen",
+        "replacesAll": "Der Import ersetzt alle vorhandenen Slots.",
+        "runningWarning": "Der aktuelle Zeitplan enthält bereits gestartete oder beendete Läufe. Auch diese werden beim Import ersetzt.",
+        "row": "Zeile",
+        "time": "Zeit",
+        "text": "Text",
+        "rowLinked": "Verknüpft: {{target}}",
+        "rowFree": "Freier Slot",
+        "rowAmbiguous": "Nicht eindeutig — wird als freier Slot importiert",
+        "rowDuplicate": "Doppelt in der Datei — Import blockiert",
+        "apply": "Importieren",
+        "error": {
+          "duplicateRows_one": "Zeile {{rows}} verweist auf denselben Lauf wie eine andere Zeile. Bitte die doppelte Zeile in der Datei entfernen oder einem anderen Lauf zuordnen und erneut importieren.",
+          "duplicateRows_other": "Die Zeilen {{rows}} verweisen mehrfach auf denselben Lauf. Bitte die doppelten Zeilen in der Datei entfernen oder anderen Läufen zuordnen und erneut importieren.",
+          "unexpected": "Die Datei konnte nicht importiert werden. Bitte Aufbau und Inhalt der Datei prüfen und es erneut versuchen."
+        }
+      },
+      "shift": {
+        "title": "Zeitplan anpassen",
+        "fromSlot": "Start-Slot",
+        "modePlus": "+X Minuten",
+        "modeSetTime": "Startzeit setzen",
+        "modeCompress": "Aufholen bis",
+        "targetSlot": "Ziel-Slot",
+        "minutes": "Minuten",
+        "newTime": "Neue Startzeit",
+        "preview": "Vorschau",
+        "apply": "Anwenden",
+        "old": "Alt",
+        "new": "Neu",
+        "unchanged": "„Anwenden“ ist nur möglich, solange sich das Formular seit der Vorschau nicht geändert hat. Bitte die Vorschau erneut ausführen.",
+        "impossible": "Aufholen nicht möglich — nur {{max}} Minuten Spielraum. Wähle einen späteren Ziel-Slot.",
+        "error": {
+          "withoutChange": "Die Verschiebung beträgt 0 Minuten — am Zeitplan würde sich nichts ändern. Bitte eine Minutenzahl ungleich 0 eintragen oder eine Startzeit wählen, die von der bisherigen abweicht.",
+          "targetNotAfterStart": "Der Ziel-Slot muss am selben Renntag nach dem Start-Slot liegen. Bitte einen späteren Slot aus der Liste wählen.",
+          "negativeDelay": "Beim Aufholen muss der Verzug größer als 0 Minuten sein — aufgeholt wird eine Verspätung. Zum Vorziehen bitte die Methode „+X Minuten“ mit einem negativen Wert verwenden.",
+          "leavesRaceDay": "Die Verschiebung schiebt „{{slot}}“ auf {{time}} und damit über den Renntag hinaus. Bitte weniger weit verschieben; der Zeitplan des Folgetags wird getrennt angepasst.",
+          "leavesRaceDayNoSlot": "Die Verschiebung schiebt einen Slot auf {{time}} und damit über den Renntag hinaus. Bitte weniger weit verschieben; der Zeitplan des Folgetags wird getrennt angepasst.",
+          "leavesRaceDayPlain": "Die Verschiebung schiebt mindestens einen Slot über den Renntag hinaus. Bitte weniger weit verschieben; der Zeitplan des Folgetags wird getrennt angepasst.",
+          "overtakesPredecessor": "So weit vorziehen ist nicht möglich: Der vorherige Slot beginnt um {{earliest}} und würde überholt. Höchstens {{max}} Minuten vorziehen — vor {{earliest}} darf kein verschobener Lauf starten.",
+          "overtakesPredecessorPlain": "So weit vorziehen ist nicht möglich: Der verschobene Block würde den vorherigen Slot überholen. Bitte weniger weit vorziehen.",
+          "unexpected": "Die Verschiebung wurde abgelehnt. Bitte die Angaben im Formular prüfen und die Vorschau erneut ausführen."
+        },
+        "mode": "Methode",
+        "delayMinutes": "Verzug (Minuten)",
+        "help": {
+          "plus": "Alle Slots ab dem gewählten Slot werden um die angegebenen Minuten verschoben (negativ = vorziehen).",
+          "setTime": "Der gewählte Slot bekommt die neue Startzeit; alle folgenden Slots behalten ihre Abstände.",
+          "compress": "Der angegebene Verzug wird bis zum Ziel-Slot aufgeholt: Die Abstände dazwischen werden verkürzt, der Ziel-Slot behält seine ursprüngliche Zeit."
+        }
+      },
+      "allPlanned": "Alle geplanten Läufe sind bereits eingeplant.",
+      "goToExecution": "Zur Durchführung",
+      "indicator": {
+        "now": "Jetzt",
+        "state": {
+          "finished": "Beendet",
+          "running": "Läuft",
+          "awaitingFinish": "Wartet auf Beenden",
+          "linked": "Verknüpft",
+          "waiting": "Lauf noch nicht gesetzt",
+          "free": "Programmpunkt",
+          "skipped": "Übersprungen"
+        }
+      },
+      "error": {
+        "matchAlreadyStarted": "Der Lauf ist bereits unterwegs — er wurde aktiviert oder hat schon einen Ist-Start. Bitte den Lauf zuerst im Schiedsrichter-Dashboard deaktivieren, danach ist die Aktion wieder möglich.",
+        "matchAlreadyFinished": "Der Lauf ist bereits beendet und lässt sich nicht noch einmal aktivieren.",
+        "slotNotSkippable": "Der Slot ist verfallen — den zugehörigen Lauf gibt es im Wettkampf-Setup nicht mehr. Es gibt nichts, was entfallen könnte; der Slot lässt sich stattdessen löschen.",
+        "slotNotLinked": "Für diesen Slot gibt es noch keinen Lauf. Bitte die Runde zuerst unter Wettkampf → Durchführung setzen, danach lässt sich der Lauf aktivieren und beenden.",
+        "setupMatchAlreadyPlanned": "Dieser Lauf ist bereits in einem anderen Slot eingeplant. Bitte den Zeitplan neu laden und einen noch nicht verplanten Lauf wählen.",
+        "unexpected": "Die Aktion konnte nicht ausgeführt werden. Bitte den Zeitplan neu laden und es erneut versuchen."
+      }
     },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",
@@ -1313,6 +1715,8 @@
     "removedGlobal": "Globale Zuordnung entfernt",
     "checkRequirements": "Bedingungen prüfen",
     "checkInApp": "Per App prüfbar",
+    "checkEarliestMinutesBefore": "Frühestens (Minuten vor Start)",
+    "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
     "namedParticipantRequirements": {
       "title": "Named Participant Bedingungen",
       "description": "Verwalten Sie spezifische Bedingungen für Named Participants",
@@ -1692,7 +2096,10 @@
     "confirmSelection": "Auswahl bestätigen",
     "confirm": "Hinzufügen",
     "success": "QR-Code erfolgreich zugewiesen",
-    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben"
+    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben",
+    "errorReason": {
+      "alreadyInUse": "Dieses Bändchen ist bereits jemand anderem zugewiesen. Bitte ein anderes Bändchen nehmen — oder die bestehende Zuweisung zuerst aufheben."
+    }
   },
   "qrCode": {
     "qrCode": "QR-Code",
@@ -2040,5 +2447,39 @@
     "proofRequired": "Nachweis-Dokument erforderlich für diesen Wettbewerb",
     "notFound": "Challenge nicht gefunden",
     "submitResult": "Ergebnis einreichen"
+  },
+  "awardCertificate": {
+    "download": {
+      "button": "Urkunden herunterladen",
+      "buttonSingle": "Urkunde herunterladen",
+      "title": "Urkunden herunterladen",
+      "action": "Herunterladen",
+      "format": {
+        "label": "Format",
+        "pdf": "PDF",
+        "docx": "Word"
+      },
+      "maxPlace": {
+        "label": "Bis Platz"
+      },
+      "mode": {
+        "label": "Gruppierung",
+        "perAthlete": "Pro Athlet",
+        "perTeam": "Pro Boot"
+      },
+      "background": {
+        "label": "Design mitdrucken",
+        "hint": "Nur nötig, wenn nicht auf vorgedrucktes Papier gedruckt wird."
+      },
+      "error": {
+        "missingTemplate": "Für Siegerurkunden ist keine Vorlage hinterlegt.",
+        "missingTemplateLink": "Zur Konfiguration",
+        "unreadableTemplate": "Die hinterlegte Vorlage für Siegerurkunden lässt sich nicht lesen. Bitte die PDF-Datei prüfen und neu hochladen.",
+        "noResults": "Es gibt noch keine Platzierungen, die gedruckt werden können.",
+        "competitionNotInEvent": "Dieser Wettkampf gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.",
+        "isChallengeEvent": "Für eine Challenge-Veranstaltung gibt es keine Siegerurkunden — dort werden keine Läufe gefahren und keine Plätze vergeben. Teilnahmeurkunden lassen sich in der Teilnehmerliste herunterladen.",
+        "unexpected": "Die Urkunden konnten nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
+      }
+    }
   }
 }

@@ -39,7 +39,7 @@ object CompetitionDeregistrationService {
             .onFalseFail { CompetitionRegistrationError.NotFound }
 
         !CompetitionDeregistrationRepo.exists(competitionRegistrationId).orDie().onTrueFail {
-            CompetitionDeregistrationError.NotFound
+            CompetitionDeregistrationError.AlreadyExists
         }
 
         val rounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
@@ -53,8 +53,13 @@ object CompetitionDeregistrationService {
             CompetitionDeregistrationError.NotInCurrentRound
         }
 
-        // Results already exist in current match of this team
-        !KIO.failOn(match?.teams?.any { it.place != null || !it.failed } ?: false) {
+        // The current match of this team is already being scored - any boat with a place or an
+        // elimination fixes the field, so from here on a withdrawal belongs in the results
+        !KIO.failOn(
+            CompetitionDeregistrationLogic.scoringHasStarted(
+                match?.teams.orEmpty().map { CompetitionDeregistrationLogic.teamIsScored(it.place, it.failed) }
+            )
+        ) {
             CompetitionDeregistrationError.ResultsAlreadyExists
         }
 

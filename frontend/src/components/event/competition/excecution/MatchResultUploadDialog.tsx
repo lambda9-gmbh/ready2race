@@ -1,39 +1,24 @@
 import BaseDialog from '@components/BaseDialog.tsx'
-import {
-    Alert,
-    Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Stack,
-    Typography,
-} from '@mui/material'
+import {Button, DialogActions, DialogContent, DialogTitle, Stack, Typography} from '@mui/material'
 import {Trans, useTranslation} from 'react-i18next'
 import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import {useEffect, useState} from 'react'
-import {AutocompleteOption} from '@utils/types.ts'
-import {useFetch} from '@utils/hooks.ts'
-import {getMatchResultImportConfigs} from '@api/sdk.gen.ts'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
-import InlineLink from '@components/InlineLink.tsx'
-import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import SelectFileButton from '@components/SelectFileButton.tsx'
 
 type Props = {
     open: boolean
-    onSuccess: (config: string, file: File) => Promise<void>
+    onSuccess: (file: File) => Promise<void>
     onClose: () => void
 }
 
 type Form = {
-    config: AutocompleteOption
     files: {
         file: File
     }[]
 }
 
 const defaultValues: Form = {
-    config: null,
     files: [],
 }
 
@@ -43,14 +28,6 @@ const MatchResultUploadDialog = ({open, onSuccess, onClose}: Props) => {
     const [submitting, setSubmitting] = useState(false)
 
     const [fileError, setFileError] = useState<string | null>(null)
-
-    const {data, pending} = useFetch(signal => getMatchResultImportConfigs({signal}), {
-        mapData: data =>
-            data.data.map(dto => ({
-                id: dto.id,
-                label: dto.name,
-            })),
-    })
 
     useEffect(() => {
         if (open) {
@@ -87,33 +64,12 @@ const MatchResultUploadDialog = ({open, onSuccess, onClose}: Props) => {
                 formContext={formContext}
                 onSuccess={async (data: Form) => {
                     setSubmitting(true)
-                    await onSuccess(data.config!.id, data.files[0].file)
+                    await onSuccess(data.files[0].file)
                     setSubmitting(false)
                     onClose()
                 }}>
                 <DialogContent>
                     <Stack spacing={4}>
-                        <Alert variant={'outlined'} severity={'info'}>
-                            <Trans i18nKey={'event.competition.execution.results.dialog.alert.1'} />
-                            <InlineLink
-                                to={'/config'}
-                                search={{tab: 'competition-elements'}}
-                                hash={'matchResults'}>
-                                <Trans
-                                    i18nKey={'event.competition.execution.results.dialog.alert.2'}
-                                />
-                            </InlineLink>
-                            <Trans i18nKey={'event.competition.execution.results.dialog.alert.3'} />
-                        </Alert>
-
-                        <FormInputAutocomplete
-                            name={'config'}
-                            options={data ?? []}
-                            label={t('event.competition.execution.results.dialog.config')}
-                            loading={pending}
-                            required
-                        />
-
                         <Stack spacing={2}>
                             <Typography>{filename}</Typography>
                             <SelectFileButton

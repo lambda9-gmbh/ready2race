@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.participant.boundary
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.UploadMatchResultRequest
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantImportRequest
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
@@ -88,7 +87,7 @@ fun Route.participant() {
                                             part.provider().toByteArray(),
                                         )
                                     } else {
-                                        KIO.fail(RequestError.File.Multiple)
+                                        !KIO.fail(RequestError.File.Multiple)
                                     }
                                 }
 

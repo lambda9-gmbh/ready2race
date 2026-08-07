@@ -18,4 +18,7 @@ data class CompetitionMatchTeamDto(
     val deregistrationReason: String?,
     val failed: Boolean,
     val failedReason: String?,
+    /** Zeitstrafe in Sekunden; die Ergebniszeit enthält sie bereits. */
+    val penaltySeconds: Int?,
+    val penaltyNote: String?,
 )

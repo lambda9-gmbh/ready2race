@@ -11,4 +11,8 @@ data class GapDocumentPlaceholderRequest(
     val relWidth: Double,
     val relHeight: Double,
     val textAlign: TextAlign,
+    val fontSize: Int? = null,
+    val bold: Boolean = false,
+    val italic: Boolean = false,
+    val staticText: String? = null,
 )

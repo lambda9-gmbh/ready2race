@@ -21,6 +21,7 @@ import BaseDialog from '@components/BaseDialog.tsx'
 import {useTranslation} from 'react-i18next'
 import {ResultsMatchInfo} from '@components/results/ResultsMatchCard.tsx'
 import {sortByPlaces, compareNullsHigh} from '@utils/helpers.ts'
+import {failedLabel} from '@utils/matchResultStatus.ts'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
 
 type Props<M extends ResultsMatchInfo> = {
@@ -90,19 +91,23 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                             sx={{
                                                 justifyContent: 'space-between',
                                             }}>
-                                            {'failed' in team ? (
+                                            {/* Unterscheidet die Ergebnis-Mannschaft von der
+                                                eines laufenden Laufs. Bewusst an `deregistered`:
+                                                Zeit, Zeitstrafe und `failed` trägt inzwischen
+                                                auch die laufende Mannschaft (Teilergebnisse). */}
+                                            {'deregistered' in team ? (
                                                 <Box>
                                                     <Typography
                                                         variant={team.place ? 'h5' : 'body1'}>
                                                         {team.place
                                                             ? `${team.place}.`
                                                             : team.failed
-                                                              ? t(
-                                                                    'event.competition.execution.results.failed',
-                                                                ) +
-                                                                (team.failedReason
-                                                                    ? ` (${team.failedReason})`
-                                                                    : '')
+                                                              ? failedLabel(
+                                                                    team.failedReason,
+                                                                    t(
+                                                                        'event.competition.execution.results.failed',
+                                                                    ),
+                                                                )
                                                               : team.deregistered
                                                                 ? t(
                                                                       'event.competition.registration.deregister.deregistered',
@@ -112,9 +117,7 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                       : '')
                                                                 : ''}
                                                     </Typography>
-                                                    {'failed' in team &&
-                                                        !team.failed &&
-                                                        team.timeString && (
+                                                    {!team.failed && team.timeString && (
                                                             <Box
                                                                 display="flex"
                                                                 gap={1}
@@ -129,6 +132,19 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                     {team.timeString}
                                                                 </Typography>
                                                             </Box>
+                                                        )}
+                                                    {team.penaltySeconds != null && (
+                                                            <Typography
+                                                                color={'warning.main'}
+                                                                variant={'body2'}>
+                                                                {t(
+                                                                    'event.competition.execution.results.penalty',
+                                                                    {seconds: team.penaltySeconds},
+                                                                )}
+                                                                {team.penaltyNote
+                                                                    ? ` · ${team.penaltyNote}`
+                                                                    : ''}
+                                                            </Typography>
                                                         )}
                                                 </Box>
                                             ) : (

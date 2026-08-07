@@ -167,4 +167,51 @@ class TimecodeTest {
         assertEquals("37:14", timecode.toString(), "timecode string representation is incorrect")
     }
 
+    @Test
+    fun displayPrecisionStaysCoarseWithoutCollisionTest() {
+        // 22:00.0, 22:17.0, 22:34.5 - bei einer Nachkommastelle klar unterscheidbar
+        val times = listOf(1320000L, 1337000L, 1354500L)
+        assertEquals(
+            Timecode.MillisecondPrecision.ONE,
+            Timecode.displayPrecision(times),
+            "distinct times must keep the coarse default precision",
+        )
+    }
+
+    @Test
+    fun displayPrecisionEscalatesOnCollisionTest() {
+        // 22:00.04 und 22:00.09 fallen bei einer Nachkommastelle beide auf "22:00.0"
+        val two = listOf(1320040L, 1320090L)
+        assertEquals(
+            Timecode.MillisecondPrecision.TWO,
+            Timecode.displayPrecision(two),
+            "times colliding at ONE must escalate to TWO",
+        )
+
+        // 22:00.004 und 22:00.009 kollidieren auch bei zwei Nachkommastellen
+        val three = listOf(1320004L, 1320009L)
+        assertEquals(
+            Timecode.MillisecondPrecision.THREE,
+            Timecode.displayPrecision(three),
+            "times colliding at TWO must escalate to THREE",
+        )
+    }
+
+    @Test
+    fun displayPrecisionIgnoresDeadHeatsAndEmptyTest() {
+        // Totes Rennen: identische Zeiten sind kein Kollisionsgrund
+        val deadHeat = listOf(1320000L, 1320000L, 1337000L)
+        assertEquals(
+            Timecode.MillisecondPrecision.ONE,
+            Timecode.displayPrecision(deadHeat),
+            "identical times must not force finer precision",
+        )
+
+        assertEquals(
+            Timecode.MillisecondPrecision.ONE,
+            Timecode.displayPrecision(emptyList()),
+            "no times must fall back to the default precision",
+        )
+    }
+
 }
