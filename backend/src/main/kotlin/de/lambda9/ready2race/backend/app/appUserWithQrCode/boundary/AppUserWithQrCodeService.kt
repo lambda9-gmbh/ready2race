@@ -5,9 +5,9 @@ import de.lambda9.ready2race.backend.app.appUserWithQrCode.control.AppUserWithQr
 import de.lambda9.ready2race.backend.app.appUserWithQrCode.control.toAppUserWithQrCodeDto
 import de.lambda9.ready2race.backend.app.appUserWithQrCode.entity.AppUserWithQrCodeDto
 import de.lambda9.ready2race.backend.app.appUserWithQrCode.entity.AppUserWithQrCodeSort
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
+import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeError
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -35,14 +35,13 @@ object AppUserWithQrCodeService {
 
     fun deleteQrCode(
         qrCodeId: String,
-    ): App<Nothing, ApiResponse.NoData> = KIO.Companion.comprehension {
+    ): App<QrCodeError, ApiResponse.NoData> = KIO.Companion.comprehension {
         val deleted = !QrCodeRepo.delete(qrCodeId).orDie()
+        // Ohne das `!` war der Fehlerfall ein No-Op: das KIO-Objekt wurde nur gebaut und
+        // verworfen, danach gewann das unbedingte ok() darunter. Ein unbekannter Code
+        // meldete so Erfolg. Der Fehlertyp war zudem aus der Competition-Welt kopiert.
+        !KIO.failOn(deleted < 1) { QrCodeError.QrCodeNotFound }
 
-        if (deleted < 1) {
-            KIO.fail(CompetitionError.CompetitionNotFound)
-        } else {
-            noData
-        }
-        KIO.Companion.ok(ApiResponse.NoData)
+        noData
     }
 }

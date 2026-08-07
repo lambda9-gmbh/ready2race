@@ -13753,9 +13753,14 @@ components:
 
     ImportRowStatus:
       type: string
+      description: >-
+        FREE, COMPETITION_NOT_FOUND and MATCH_NOT_FOUND all end up as a free slot; only FREE is
+        intentional, the other two point at a mistake in the file.
       enum:
         - LINKED
         - FREE
+        - COMPETITION_NOT_FOUND
+        - MATCH_NOT_FOUND
         - AMBIGUOUS
         - DUPLICATE
 
@@ -13767,6 +13772,7 @@ components:
         - startTime
         - laufText
         - status
+        - availableMatches
       properties:
         rowNumber:
           type: integer
@@ -13783,6 +13789,11 @@ components:
         targetLabel:
           type: string
           nullable: true
+        availableMatches:
+          type: array
+          description: "Only filled for MATCH_NOT_FOUND: the match names the found competition actually has."
+          items:
+            type: string
 
     ScheduleImportResultDto:
       type: object

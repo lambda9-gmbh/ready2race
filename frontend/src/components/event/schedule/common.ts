@@ -127,6 +127,10 @@ export const importRowChipColor = (status: ImportRowStatus): ChipProps['color'] 
     switch (status) {
         case 'LINKED':
             return 'success'
+        // Nicht gefundene Wettkämpfe/Läufe blockieren den Import nicht, sind aber fast immer ein
+        // Fehler in der Datei - deshalb dieselbe Warnfarbe wie bei einer mehrdeutigen Zeile.
+        case 'COMPETITION_NOT_FOUND':
+        case 'MATCH_NOT_FOUND':
         case 'AMBIGUOUS':
             return 'warning'
         case 'DUPLICATE':

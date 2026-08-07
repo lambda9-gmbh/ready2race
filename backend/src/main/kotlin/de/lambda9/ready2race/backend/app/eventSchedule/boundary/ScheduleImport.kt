@@ -10,25 +10,52 @@ data class ImportCandidate(
     val roundName: String,
 )
 
+/**
+ * Ergebnis des Matchings einer Zeile. [availableMatches] ist nur bei
+ * [ImportRowStatus.MATCH_NOT_FOUND] gefüllt: die Läufe, die es im gefundenen Wettkampf
+ * tatsächlich gibt. Genau die braucht man, um den Tippfehler in der Datei zu finden.
+ */
+data class ImportMatchResult(
+    val status: ImportRowStatus,
+    val setupMatchId: UUID?,
+    val availableMatches: List<String> = emptyList(),
+)
+
 object ScheduleImport {
 
-    /** Reines Matching einer Zeile; Duplikate markiert der Aufrufer über alle Zeilen hinweg. */
+    /**
+     * Reines Matching einer Zeile; Duplikate markiert der Aufrufer über alle Zeilen hinweg.
+     *
+     * Das Matching läuft in zwei Stufen - erst der Wettkampf, dann der Lauf darin -, damit eine
+     * Zeile ohne Treffer sagen kann, woran es lag. Vorher fielen "Wettkampf gibt es nicht" und
+     * "Lauf heißt anders" beide auf FREE, und die Vorschau zeigte für beide nur "Freier Slot".
+     */
     fun matchRow(
         competition: String?,
         lauf: String,
         candidates: List<ImportCandidate>,
-    ): Pair<ImportRowStatus, UUID?> {
+    ): ImportMatchResult {
         val comp = competition?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }
-            ?: return ImportRowStatus.FREE to null
+            ?: return ImportMatchResult(ImportRowStatus.FREE, null)
         val laufNorm = lauf.trim().lowercase()
 
-        val hits = candidates.filter { c ->
-            comp in c.competitionTexts && c.matchName?.trim()?.lowercase() == laufNorm
+        val inCompetition = candidates.filter { comp in it.competitionTexts }
+        if (inCompetition.isEmpty()) {
+            return ImportMatchResult(ImportRowStatus.COMPETITION_NOT_FOUND, null)
         }
+
+        val hits = inCompetition.filter { it.matchName?.trim()?.lowercase() == laufNorm }
         return when {
-            hits.size == 1 -> ImportRowStatus.LINKED to hits.single().setupMatchId
-            hits.isEmpty() -> ImportRowStatus.FREE to null
-            else -> ImportRowStatus.AMBIGUOUS to null
+            hits.size == 1 -> ImportMatchResult(ImportRowStatus.LINKED, hits.single().setupMatchId)
+            hits.isEmpty() -> ImportMatchResult(
+                ImportRowStatus.MATCH_NOT_FOUND,
+                null,
+                // Reihenfolge der Setup-Zeilen beibehalten, Duplikate über mehrere Runden
+                // hinweg (etwa zwei Runden mit "Finale A") nur einmal nennen.
+                inCompetition.mapNotNull { it.matchName?.trim() }.filter { it.isNotEmpty() }.distinct(),
+            )
+
+            else -> ImportMatchResult(ImportRowStatus.AMBIGUOUS, null)
         }
     }
 }
