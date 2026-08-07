@@ -1338,6 +1338,14 @@
       "raceclockerHint": "RaceClocker kræver to løb: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunderne og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her – de gælder så for hele arrangementet.",
       "timeTrialUrl": "Resultatadresse for enkeltstart",
       "heatsUrl": "Resultatadresse for heat",
+      "autoPull": {
+        "enabled": "Hent resultater automatisk",
+        "hint": "Når et heat er i gang, henter serveren resultaterne i det hurtige interval. Kommende heats overvåges i det langsomme interval for at opdage deres start; afsluttede heats hentes ikke.",
+        "intervalActive": "Interval ved igangværende heat (sekunder)",
+        "intervalUpcoming": "Interval ved kommende heat (sekunder)",
+        "watchBefore": "Overvåg fra (minutter før planlagt start)",
+        "watchAfter": "Overvåg til (minutter efter planlagt start)"
+      },
       "startlistQualification": "Startliste-eksport til kvalifikation",
       "startlistRounds": "Startliste-eksport til øvrige runder",
       "startlist": "Startliste-eksport",

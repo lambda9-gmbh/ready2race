@@ -1338,6 +1338,14 @@
       "raceclockerHint": "RaceClocker braucht zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunden und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein — sie gelten dann für die ganze Veranstaltung.",
       "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
       "heatsUrl": "Ergebnis-Adresse Läufe",
+      "autoPull": {
+        "enabled": "Ergebnisse automatisch abrufen",
+        "hint": "Läuft ein Lauf, holt der Server die Ergebnisse im schnellen Takt. Bevorstehende Läufe werden im langsamen Takt beobachtet, um ihren Start zu erkennen; beendete Läufe gar nicht.",
+        "intervalActive": "Takt bei aktivem Lauf (Sekunden)",
+        "intervalUpcoming": "Takt bei bevorstehendem Lauf (Sekunden)",
+        "watchBefore": "Beobachten ab (Minuten vor der geplanten Startzeit)",
+        "watchAfter": "Beobachten bis (Minuten nach der geplanten Startzeit)"
+      },
       "startlistQualification": "Startlisten Export Qualifikation",
       "startlistRounds": "Startlisten Export übrige Runden",
       "startlist": "Startlisten Export",

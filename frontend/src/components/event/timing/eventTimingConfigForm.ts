@@ -16,6 +16,15 @@ export type EventTimingForm = {
     startlistConfigQualification: AutocompleteOption
     startlistConfigRounds: AutocompleteOption
     resultImportConfig: AutocompleteOption
+    /**
+     * Der automatische Abruf. Nur bei RaceClocker sichtbar und speicherbar — Webscorer hat keinen
+     * Ergebnis-Feed, den ein Job abholen könnte.
+     */
+    autoPull: boolean
+    intervalActiveSeconds: number
+    intervalUpcomingSeconds: number
+    watchBeforeMinutes: number
+    watchAfterMinutes: number
 }
 
 export const emptyEventTimingForm: EventTimingForm = {
@@ -25,6 +34,11 @@ export const emptyEventTimingForm: EventTimingForm = {
     startlistConfigQualification: null,
     startlistConfigRounds: null,
     resultImportConfig: null,
+    autoPull: false,
+    intervalActiveSeconds: 5,
+    intervalUpcomingSeconds: 60,
+    watchBeforeMinutes: 15,
+    watchAfterMinutes: 120,
 }
 
 export const mapDtoToEventTimingForm = (dto: EventTimingConfigDto): EventTimingForm => ({
@@ -39,6 +53,11 @@ export const mapDtoToEventTimingForm = (dto: EventTimingConfigDto): EventTimingF
         ? {id: dto.startlistConfigRounds, label: ''}
         : null,
     resultImportConfig: dto.resultImportConfig ? {id: dto.resultImportConfig, label: ''} : null,
+    autoPull: dto.autoPull,
+    intervalActiveSeconds: dto.intervalActiveSeconds,
+    intervalUpcomingSeconds: dto.intervalUpcomingSeconds,
+    watchBeforeMinutes: dto.watchBeforeMinutes,
+    watchAfterMinutes: dto.watchAfterMinutes,
 })
 
 const trimmedOrNull = (value: string): string | null => value.trim() || null
@@ -62,5 +81,12 @@ export const mapEventTimingFormToRequest = (form: EventTimingForm): EventTimingC
             : null,
         startlistConfigRounds: configured ? (form.startlistConfigRounds?.id ?? null) : null,
         resultImportConfig: configured ? (form.resultImportConfig?.id ?? null) : null,
+        // Die Takte werden immer mitgeschickt: Sie haben in der Datenbank eine Vorgabe, und ein
+        // Abschalten des Systems soll die eingestellten Werte nicht verlieren.
+        autoPull: raceClocker && form.autoPull,
+        intervalActiveSeconds: form.intervalActiveSeconds,
+        intervalUpcomingSeconds: form.intervalUpcomingSeconds,
+        watchBeforeMinutes: form.watchBeforeMinutes,
+        watchAfterMinutes: form.watchAfterMinutes,
     }
 }

@@ -7,11 +7,26 @@ import {
 
 describe('mapDtoToEventTimingForm', () => {
     it('setzt ein fehlendes Zeitnahme-System auf NONE', () => {
-        expect(mapDtoToEventTimingForm({}).timingSystem).toBe('NONE')
+        expect(
+            mapDtoToEventTimingForm({
+                autoPull: false,
+                intervalActiveSeconds: 5,
+                intervalUpcomingSeconds: 60,
+                watchBeforeMinutes: 15,
+                watchAfterMinutes: 120,
+            }).timingSystem,
+        ).toBe('NONE')
     })
 
     it('belegt jedes Feld des Formulars, damit reset() keines verwirft', () => {
-        const form = mapDtoToEventTimingForm({timingSystem: 'RACECLOCKER'})
+        const form = mapDtoToEventTimingForm({
+            timingSystem: 'RACECLOCKER',
+            autoPull: false,
+            intervalActiveSeconds: 5,
+            intervalUpcomingSeconds: 60,
+            watchBeforeMinutes: 15,
+            watchAfterMinutes: 120,
+        })
 
         expect(Object.keys(form).sort()).toEqual(Object.keys(emptyEventTimingForm).sort())
     })
@@ -69,5 +84,59 @@ describe('mapEventTimingFormToRequest', () => {
 
         expect(request.timeTrialResultsUrl).toBeNull()
         expect(request.heatsResultsUrl).toBe('https://www.raceclocker.com/7c854955')
+    })
+})
+
+describe('automatischer Abruf', () => {
+    it('übernimmt die Abruf-Einstellungen aus dem Dto', () => {
+        const form = mapDtoToEventTimingForm({
+            timingSystem: 'RACECLOCKER',
+            timeTrialResultsUrl: null,
+            heatsResultsUrl: null,
+            startlistConfigQualification: null,
+            startlistConfigRounds: null,
+            resultImportConfig: null,
+            autoPull: true,
+            intervalActiveSeconds: 3,
+            intervalUpcomingSeconds: 90,
+            watchBeforeMinutes: 20,
+            watchAfterMinutes: 60,
+            deviatingCompetitions: [],
+        })
+
+        expect(form.autoPull).toBe(true)
+        expect(form.intervalActiveSeconds).toBe(3)
+        expect(form.intervalUpcomingSeconds).toBe(90)
+        expect(form.watchBeforeMinutes).toBe(20)
+        expect(form.watchAfterMinutes).toBe(60)
+    })
+
+    it('reicht die Abruf-Einstellungen unverändert an den Request weiter', () => {
+        const request = mapEventTimingFormToRequest({
+            ...emptyEventTimingForm,
+            timingSystem: 'RACECLOCKER',
+            autoPull: true,
+            intervalActiveSeconds: 3,
+            intervalUpcomingSeconds: 90,
+            watchBeforeMinutes: 20,
+            watchAfterMinutes: 60,
+        })
+
+        expect(request.autoPull).toBe(true)
+        expect(request.intervalActiveSeconds).toBe(3)
+        expect(request.intervalUpcomingSeconds).toBe(90)
+    })
+
+    // Ohne RaceClocker gibt es keinen Feed, den man abrufen könnte - der Schalter darf dann nicht
+    // still eingeschaltet gespeichert bleiben, sonst steht in der Datenbank eine Automatik, die
+    // die Oberfläche gar nicht mehr anzeigt.
+    it('schaltet den Abruf ab, wenn das System nicht RaceClocker ist', () => {
+        const request = mapEventTimingFormToRequest({
+            ...emptyEventTimingForm,
+            timingSystem: 'WEBSCORER',
+            autoPull: true,
+        })
+
+        expect(request.autoPull).toBe(false)
     })
 })

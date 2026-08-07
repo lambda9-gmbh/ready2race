@@ -15,6 +15,8 @@ import InlineLink from '@components/InlineLink.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {
     emptyEventTimingForm,
@@ -104,6 +106,7 @@ const EventTimingConfig = () => {
     })
 
     const timingSystem = useWatch({control: formContext.control, name: 'timingSystem'})
+    const autoPull = useWatch({control: formContext.control, name: 'autoPull'})
 
     return (
         // Kein Card-Rahmen: die Nachbarn im Einstellungen-Tab (Dokumente, Teilnahmebedingungen)
@@ -160,6 +163,67 @@ const EventTimingConfig = () => {
                                 name={'heatsResultsUrl'}
                                 label={t('event.timing.heatsUrl')}
                             />
+                            <Divider />
+                            <FormInputSwitch
+                                name={'autoPull'}
+                                label={t('event.timing.autoPull.enabled')}
+                                horizontal
+                            />
+                            <Typography variant={'body2'} color={'text.secondary'}>
+                                <Trans i18nKey={'event.timing.autoPull.hint'} />
+                            </Typography>
+                            {autoPull && (
+                                <Stack spacing={4}>
+                                    <FormInputNumber
+                                        name={'intervalActiveSeconds'}
+                                        label={t('event.timing.autoPull.intervalActive')}
+                                        min={2}
+                                        integer
+                                        transform={{
+                                            output: value =>
+                                                value.target.value !== ''
+                                                    ? Number(value.target.value)
+                                                    : null,
+                                        }}
+                                    />
+                                    <FormInputNumber
+                                        name={'intervalUpcomingSeconds'}
+                                        label={t('event.timing.autoPull.intervalUpcoming')}
+                                        min={2}
+                                        integer
+                                        transform={{
+                                            output: value =>
+                                                value.target.value !== ''
+                                                    ? Number(value.target.value)
+                                                    : null,
+                                        }}
+                                    />
+                                    <FormInputNumber
+                                        name={'watchBeforeMinutes'}
+                                        label={t('event.timing.autoPull.watchBefore')}
+                                        min={0}
+                                        integer
+                                        transform={{
+                                            output: value =>
+                                                value.target.value !== ''
+                                                    ? Number(value.target.value)
+                                                    : null,
+                                        }}
+                                    />
+                                    <FormInputNumber
+                                        name={'watchAfterMinutes'}
+                                        label={t('event.timing.autoPull.watchAfter')}
+                                        min={0}
+                                        integer
+                                        transform={{
+                                            output: value =>
+                                                value.target.value !== ''
+                                                    ? Number(value.target.value)
+                                                    : null,
+                                        }}
+                                    />
+                                </Stack>
+                            )}
                         </Stack>
                     )}
 

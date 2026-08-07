@@ -1291,13 +1291,33 @@ export type EventTimingConfigDto = {
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
     /**
+     * Whether the background job pulls results for this event on its own.
+     */
+    autoPull: boolean
+    /**
+     * Poll interval while at least one match of this event is running. Never goes below 2 seconds.
+     */
+    intervalActiveSeconds: number
+    /**
+     * Poll interval while only upcoming matches are watched. Never goes below 2 seconds.
+     */
+    intervalUpcomingSeconds: number
+    /**
+     * How long before its planned start an upcoming match is watched.
+     */
+    watchBeforeMinutes: number
+    /**
+     * How long after its planned start a match that is not active yet is still watched.
+     */
+    watchAfterMinutes: number
+    /**
      * The competitions that do not follow these defaults but set at least one of the three fields themselves.
      */
     deviatingCompetitions?: Array<CompetitionTimingDeviationDto>
 }
 
 /**
- * Every field is optional, like the per-competition config. The URLs must be https URLs on raceclocker.com.
+ * The RaceClocker fields are optional, like the per-competition config. The URLs must be https URLs on raceclocker.com. The five auto-pull fields are not optional - the database always has a value for them, and null here would ambiguously mean "leave unchanged".
  *
  */
 export type EventTimingConfigRequest = {
@@ -1307,6 +1327,26 @@ export type EventTimingConfigRequest = {
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
+    /**
+     * Whether the background job pulls results for this event on its own.
+     */
+    autoPull: boolean
+    /**
+     * Poll interval while at least one match of this event is running. Never goes below 2 seconds.
+     */
+    intervalActiveSeconds: number
+    /**
+     * Poll interval while only upcoming matches are watched. Never goes below 2 seconds.
+     */
+    intervalUpcomingSeconds: number
+    /**
+     * How long before its planned start an upcoming match is watched.
+     */
+    watchBeforeMinutes: number
+    /**
+     * How long after its planned start a match that is not active yet is still watched.
+     */
+    watchAfterMinutes: number
 }
 
 export type FeeDto = {
