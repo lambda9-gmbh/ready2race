@@ -11,37 +11,29 @@ und in einem Folge-MR an lambda9 gehen soll.
 
 ---
 
-## 0. Vor dem MR zwingend: `origin/main` in den Branch mergen
+## 0. Migrations-Umbenennung: übernommen
 
 Nach dem Merge von #97 hat lambda9 in `27cd66b9` („Update migration version for ocrrect
-order") **alle zehn CRF-Migrationen umbenannt**. Der Branch trägt weiterhin die alten
-Namen. Ein Merge in diesem Zustand brächte jede dieser Migrationen **zweimal** ins Repo —
-einmal unter jedem Namen, mit identischem DDL:
+order") alle zehn CRF-Migrationen umbenannt, etwa
+`V202608031200__event_schedule_slot.sql` → `V202608061205__…`. Der Branch trug bis zum
+Merge-Commit `e657f8a4` noch die alten Namen.
 
-| auf `feature/crf-2026` | auf `origin/main` |
-|---|---|
-| `V202607291400__participant_requirement_check_time_window.sql` | `V202608061201__…` |
-| `V202607301500__match_team_penalty.sql` | `V202608061202__…` |
-| `V202607301700__event_auto_activate_next_match.sql` | `V202608061203__…` |
-| `V202608021200__athlete_board_info_view.sql` | `V202608061204__…` |
-| `V202608031200__event_schedule_slot.sql` | `V202608061205__…` |
-| `V202608041900__event_public_breaks.sql` | `V202608061206__…` |
-| `V202608051000__chain_progression_mode.sql` | `V202608061207__…` |
-| `V202608051200__award_certificate_templates.sql` | `V202608061208__…` |
-| `V202608051500__competition_timing_config.sql` | `V202608061209__…` |
-| `V202608061200__event_public_results_visibility.sql` | `V202608061210__…` |
+Der Merge von `origin/main` hat das aufgelöst: weil der Branch seit dem Abzweig keine dieser
+Dateien angefasst hat, übernimmt der Drei-Wege-Merge durchgängig mains Seite — die zehn
+kommen als reine Umbenennungen ohne Inhaltsänderung an, die alten Namen sind weg. Damit ist
+auch die Doppelbelegung von `V202608061200` aufgelöst: die Sichtbarkeitsregel für öffentliche
+Ergebnisse heißt jetzt `V202608061210`, die Nummer `V202608061200` gehört lambda9s
+Invoice-Hotfix.
 
-Folge auf jeder bestehenden Datenbank: Flyway läuft mit `outOfOrder(true)`
+Der Branch behält seine eigene `V202608071300__event_timing_presets.sql`, die nach allem
+einsortiert, was von main kam.
+
+**Achtung bei bestehenden Datenbanken:** die Umbenennung ist nur für *neue* Datenbanken
+folgenlos. Eine Dev- oder Produktionsdatenbank, auf der die Migrationen noch unter den alten
+Namen verzeichnet sind, sieht die umbenannten als unbekannt, läuft mit `outOfOrder(true)`
 ([Application.kt:49](../backend/src/main/kotlin/de/lambda9/ready2race/backend/Application.kt))
-in die jeweils zweite Fassung hinein und scheitert an bereits existierenden Objekten.
-
-Verschärfend: die Branch-Fassung `V202608061200__event_public_results_visibility.sql` und
-lambda9s Hotfix `V202608061200__invoice_billed_to_name_nullable.sql` beanspruchen **dieselbe
-Versionsnummer** — genau der Konflikt, den die Umbenennung auflösen sollte.
-
-**Zu tun:** `origin/main` in `feature/crf-2026` mergen und dabei die umbenannten Dateien
-übernehmen, die alten löschen. Erst danach ist der Branch wieder MR-fähig. Das ist bisher
-**nicht** geschehen.
+erneut hinein und scheitert an bereits existierenden Objekten. Für lokale Arbeit auf diesem
+Stand eine frische Datenbank nehmen.
 
 ---
 
@@ -141,24 +133,29 @@ aktiviert".
 
 ## 3. Verifikation
 
-- **Frontend: 407 Tests, 0 Failures** (14 Testdateien, vitest), `npm run build` grün.
+Stand: Merge-Commit `e657f8a4`.
+
+- **Frontend: 406 Tests, 0 Failures** (14 Testdateien, vitest), `npm run build` grün.
   Enthält Konsistenztests der Übersetzungsschlüssel und neue Tests für
   `timingConfigForm`/`eventTimingConfigForm` (Vorbelegung beim Einschalten, Vererbung,
   Abweichungserkennung).
+- **Migrationen gegen eine leere Datenbank:** alle **74** versionierten Migrationen in
+  Versionsreihenfolge sauber durchgelaufen, danach `afterMigrate.sql` ebenfalls — Ergebnis
+  107 Tabellen und 72 Views. Damit ist der gemergte Migrationssatz aus Abschnitt 0
+  nachweislich widerspruchsfrei.
 - **Backend:** `ScheduleImportTemplateTest` neu (Kopfzeile deckungsgleich mit dem Parser,
   Beispielzeilen datieren auf den ersten Veranstaltungstag). Der vollständige `./mvnw test`
   ist auf diesem Stand **noch nicht** gelaufen — nachzuholen, bevor der MR gestellt wird.
-- **Migrationen:** eine neue (`V202608071300__event_timing_presets.sql`). Ein Flyway-Lauf
-  gegen eine leere Datenbank steht noch aus und ist erst nach dem Merge aus Abschnitt 0
-  aussagekräftig.
-- **Real-Test:** die Zeitnahme-Vererbung und die Import-Beispieldatei sind noch nicht gegen
-  die laufende Anwendung durchgespielt.
+  Die Backend-Änderungen dieses Merges stammen allerdings sämtlich von main (Invoice-Hotfix);
+  der Branch hat keine davon angefasst.
+- **Real-Test:** die Zeitnahme-Vererbung, die Import-Beispieldatei und die umbenannten
+  Anzeigetexte sind noch nicht gegen die laufende Anwendung durchgespielt.
 
 ---
 
 ## 4. Offene Punkte
 
-- **Abschnitt 0** — der Merge von `origin/main` ist die Voraussetzung für alles Weitere.
+- **`./mvnw test` steht aus** (siehe Abschnitt 3) — vor dem MR nachzuholen.
 - **Sechs dänische Übersetzungsschlüssel fehlen**, alle unter
   `event.schedule.importDialog`: `template`, `templateError`, `templateHint` (aus `cc87ca07`)
   sowie `rowCompetitionNotFound`, `rowMatchNotFound`, `rowMatchNotFoundEmpty` (aus
