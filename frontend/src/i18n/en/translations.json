@@ -1414,6 +1414,27 @@
         "secondsUnit": "s"
       }
     },
+    "match": {
+      "status": {
+        "upcoming": "Upcoming",
+        "overdue": "Overdue · {{minutes}} min",
+        "running": "Running · {{minutes}} min",
+        "runningPlain": "Running",
+        "partiallyScored": "Partially scored {{scored}}/{{total}}",
+        "awaitingFinish": "Waiting to be finished",
+        "finished": "Finished",
+        "cancelled": "Cancelled",
+        "unscheduled": "Unscheduled",
+        "water": "On water {{onWater}}/{{total}}",
+        "doesNotTakePlace": "Does not take place",
+        "counter": {
+          "running": "{{n}} running",
+          "open": "{{n}} open",
+          "finished": "{{n}} finished",
+          "cancelled": "{{n}} cancelled"
+        }
+      }
+    },
     "liveDashboard": {
       "sectionTitle": "Referee dashboard",
       "pageDescription": "Live view for referees with running and upcoming matches, participant requirements, and invoice status.",
