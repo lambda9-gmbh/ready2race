@@ -207,13 +207,13 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
     }, [fields])
 
     // Lädt die Schrift für die Editor-Vorschau: die gerade ausgewählte Datei, sonst - bei einer
-    // gespeicherten Vorlage - die hinterlegte Schrift vom Server. Ohne Schrift oder bei
-    // fehlgeschlagenem Laden bleibt fontFamily undefined, und der Editor zeichnet mit der
-    // Standardschrift weiter (kein leerer Kasten).
+    // gespeicherten Vorlage ohne "Entfernen"-Markierung - die hinterlegte Schrift vom Server.
+    // Ohne Schrift, nach "Entfernen" oder bei fehlgeschlagenem Laden bleibt fontFamily undefined,
+    // und der Editor zeichnet mit der Standardschrift weiter (kein leerer Kasten).
     useEffect(() => {
         const source = fontFile
             ? Promise.resolve(fontFile)
-            : props.entity?.hasFont
+            : props.entity?.hasFont && !removeFont
               ? getGapDocumentTemplateFont({path: {gapDocumentTemplateId: props.entity.id}}).then(
                     r => r.data ?? undefined,
                 )
@@ -224,7 +224,12 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
         let cancelled = false
 
         source.then(async blob => {
-            if (!blob || cancelled) {
+            // Ein bereits abgebrochener Durchlauf darf keinen State mehr schreiben - sonst
+            // könnte er einen inzwischen frisch geladenen Font wieder überschreiben.
+            if (cancelled) {
+                return
+            }
+            if (!blob) {
                 setFontFamily(undefined)
                 return
             }
@@ -258,7 +263,7 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
                 URL.revokeObjectURL(objectUrl)
             }
         }
-    }, [fontFile, props.entity])
+    }, [fontFile, removeFont, props.entity])
 
     const handleTypeChange = (newType: GapDocumentType) => {
         if (newType === documentType) {
