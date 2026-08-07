@@ -55,11 +55,25 @@ object RaceClockerPollRepo {
      * Logik, nicht in SQL.
      */
     fun getCandidates(eventId: UUID) = Jooq.query {
-        val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM).`as`("timing_system")
+        // time_trial_url/heats_url werden aliasiert gebraucht: einmal für die SELECT-Liste (die
+        // fetch{}-Projektion liest unten per `it[timeTrialUrl]`/`it[heatsUrl]` genau diese
+        // Alias-Felder), UND roh (ohne Alias) für die WHERE-Klausel. timing_system wird nirgends
+        // projiziert, braucht also gar keinen Alias. jOOQ rendert einen wiederverwendeten
+        // aliasierten Field-Ausdruck im WHERE nämlich nur als bloßen Alias-Bezeichner
+        // ("timing_system" statt coalesce(...)) - Postgres akzeptiert Output-Aliase im WHERE
+        // grundsätzlich nicht, und bei timing_system wäre der bloße Name zusätzlich mehrdeutig,
+        // weil sowohl competition.timing_system als auch event.timing_system in der Join-Kette
+        // stehen. Deshalb hier bewusst eigene *Filter-Variablen ohne Alias für das WHERE - nicht
+        // wieder mit den SELECT-Feldern zusammenlegen.
+        val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM)
         val timeTrialUrl = DSL.coalesce(COMPETITION.RACECLOCKER_TT_RESULTS_URL, EVENT.RACECLOCKER_TT_RESULTS_URL)
             .`as`("time_trial_url")
+        val timeTrialUrlFilter =
+            DSL.coalesce(COMPETITION.RACECLOCKER_TT_RESULTS_URL, EVENT.RACECLOCKER_TT_RESULTS_URL)
         val heatsUrl = DSL.coalesce(COMPETITION.RACECLOCKER_HEATS_RESULTS_URL, EVENT.RACECLOCKER_HEATS_RESULTS_URL)
             .`as`("heats_url")
+        val heatsUrlFilter =
+            DSL.coalesce(COMPETITION.RACECLOCKER_HEATS_RESULTS_URL, EVENT.RACECLOCKER_HEATS_RESULTS_URL)
 
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
@@ -84,7 +98,7 @@ object RaceClockerPollRepo {
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             .and(COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT.isNull)
             .and(timingSystem.eq(TimingSystem.RACECLOCKER.name))
-            .and(DSL.or(timeTrialUrl.isNotNull, heatsUrl.isNotNull))
+            .and(DSL.or(timeTrialUrlFilter.isNotNull, heatsUrlFilter.isNotNull))
             // Ein abgesagter Slot bleibt abgesagt, auch wenn in RaceClocker jemand die Welle
             // startet. Die volle Zustandsableitung (EventScheduleLogic.deriveSlotState) ist hier
             // nicht nötig: Ihre beiden anderen Eingaben sind an dieser Stelle konstant - der Lauf
