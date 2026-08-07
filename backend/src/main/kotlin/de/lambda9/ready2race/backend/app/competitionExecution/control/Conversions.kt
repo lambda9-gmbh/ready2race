@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.competitionExecution.control
 
 import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
+import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
@@ -68,6 +70,26 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String
                     startTime = match.first.startTime,
                     startTimeOffset = match.second.startTimeOffset,
                     currentlyRunning = match.first.currentlyRunning,
+                    startedAt = match.first.startedAt,
+                    finishedAt = match.first.finishedAt,
+                    skipped = match.first.skipped,
+                    // Dieselbe Ableitung wie im Schiedsrichter-Dashboard - eine Ableitung, drei
+                    // Aufrufer. teamsOnWater bleibt null: die Check-in-Daten holt die
+                    // Durchführungsseite nicht mit, "nicht erhoben" ist etwas anderes als 0.
+                    status = MatchStatusLogic.matchStatus(
+                        currentlyRunning = match.first.currentlyRunning,
+                        startTime = match.first.startTime,
+                        startedAt = match.first.startedAt,
+                        finishedAt = match.first.finishedAt,
+                        skipped = match.first.skipped,
+                        teams = match.first.teams.map { team ->
+                            MatchStatusTeam(
+                                place = team.place,
+                                failed = team.failed,
+                                deregistered = team.deregistered,
+                            )
+                        },
+                    ),
                 )
             },
         required = required,
@@ -101,6 +123,9 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 competitionSetupMatch = match.competitionSetupMatch!!,
                 startTime = match.startTime,
                 currentlyRunning = match.currentlyRunning ?: false,
+                startedAt = match.startedAt,
+                finishedAt = match.finishedAt,
+                skipped = match.skipped ?: false,
                 teams = match.teams!!.filterNotNull().map { team ->
                     CompetitionMatchTeamWithRegistration(
                         id = team.id!!,

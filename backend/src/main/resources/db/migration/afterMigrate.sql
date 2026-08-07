@@ -821,16 +821,26 @@ group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.com
          cmt.penalty_seconds, cmt.penalty_note
 ;
 
+-- started_at/finished_at/skipped kommen mit, damit die Durchführungsseite denselben Lauf-Zustand
+-- ableiten kann wie das Schiedsrichter-Dashboard. Ohne sie sehen dort ein beendeter, ein
+-- abgesagter und ein noch gar nicht angefasster Lauf identisch aus ("nicht aktiv").
+-- skipped ist kein eigenes Feld am Lauf, sondern der Zeitstrahl-Slot, der auf dieselbe Setup-Zeile
+-- zeigt (event_schedule_slot.competition_setup_match ist unique, der Join bleibt 1:1).
 create view competition_match_with_teams as
 select cm.competition_setup_match,
        cm.start_time,
        cm.currently_running,
+       cm.started_at,
+       cm.finished_at,
+       (ess.skipped_at is not null)                                         as skipped,
        coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams,
        cmtwr.mixed_team_term                                                as mixed_team_term
 from competition_match cm
          left join competition_match_team_with_registration cmtwr
                    on cm.competition_setup_match = cmtwr.competition_match
-group by cm.competition_setup_match, cmtwr.mixed_team_term
+         left join event_schedule_slot ess
+                   on ess.competition_setup_match = cm.competition_setup_match
+group by cm.competition_setup_match, ess.skipped_at, cmtwr.mixed_team_term
 ;
 
 create view substitution_view as
