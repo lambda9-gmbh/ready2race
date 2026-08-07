@@ -211,6 +211,15 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
     // Ohne Schrift, nach "Entfernen" oder bei fehlgeschlagenem Laden bleibt fontFamily undefined,
     // und der Editor zeichnet mit der Standardschrift weiter (kein leerer Kasten).
     useEffect(() => {
+        // Der Dialog wird von ConfigurationPage dauerhaft gerendert und schließt nur über
+        // dialogIsOpen=false, ohne dass diese Komponente unmountet. Ohne diese Abhängigkeit
+        // würde das Cleanup unten beim Schließen nie laufen, und die zuletzt geladene Schrift
+        // bliebe unnötig in document.fonts registriert, bis irgendwann erneut geöffnet wird.
+        if (!props.dialogIsOpen) {
+            setFontFamily(undefined)
+            return
+        }
+
         const source = fontFile
             ? Promise.resolve(fontFile)
             : props.entity?.hasFont && !removeFont
@@ -263,7 +272,7 @@ const GapDocumentTemplateDialog = (props: BaseEntityDialogProps<GapDocumentTempl
                 URL.revokeObjectURL(objectUrl)
             }
         }
-    }, [fontFile, removeFont, props.entity])
+    }, [fontFile, removeFont, props.entity, props.dialogIsOpen])
 
     const handleTypeChange = (newType: GapDocumentType) => {
         if (newType === documentType) {
