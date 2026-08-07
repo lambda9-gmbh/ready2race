@@ -153,6 +153,14 @@ fun Route.documentTemplate() {
                     GapDocumentTemplateService.getPreview(id)
                 }
             }
+
+            get("/export") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("gapDocumentTemplateId", uuid)
+                    GapDocumentTemplateService.exportTemplate(id)
+                }
+            }
         }
     }
 

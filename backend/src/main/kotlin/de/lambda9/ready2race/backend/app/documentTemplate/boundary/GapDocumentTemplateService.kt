@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.GapDocumentTem
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toDto
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toGapPlaceholders
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toRecord
+import de.lambda9.ready2race.backend.app.documentTemplate.control.toRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignedTemplateId
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateDto
@@ -182,6 +183,40 @@ object GapDocumentTemplateService {
         KIO.ok(
             ApiResponse.File(
                 name = template.name!!,
+                bytes = bytes,
+            )
+        )
+    }
+
+    /**
+     * Die Vorlage als Austauschpaket: PDF, Platzhalter und Schrift in einer Datei, damit dieselbe
+     * Einrichtung in einer anderen Instanz nicht von Hand nachgebaut werden muss.
+     */
+    fun exportTemplate(
+        id: UUID,
+    ): App<GapDocumentTemplateError, ApiResponse.File> = KIO.comprehension {
+        val pdf = !GapDocumentTemplateDataRepo.getData(id).orDie().onNullFail { GapDocumentTemplateError.NotFound }
+        val template = !GapDocumentTemplateRepo.get(id).orDie().onNullDie("foreign key constraint")
+        val fontRecord = !GapDocumentTemplateFontRepo.get(id).orDie()
+
+        val placeholders = template.placeholders!!.toList().map { it!!.toDto().toRequest() }
+
+        val bytes = GapDocumentTemplatePackage.write(
+            GapDocumentTemplatePackage.Content(
+                name = template.name!!,
+                request = GapDocumentTemplateRequest(
+                    type = GapDocumentType.valueOf(template.type!!),
+                    placeholders = placeholders,
+                    fontName = template.fontName,
+                ),
+                pdf = pdf,
+                font = fontRecord?.let { File(it.fileName, it.data) },
+            )
+        )
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "${template.name!!.substringBeforeLast('.')}.r2rtpl.zip",
                 bytes = bytes,
             )
         )
