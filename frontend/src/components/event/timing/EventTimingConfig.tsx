@@ -173,12 +173,18 @@ const EventTimingConfig = () => {
                                 <Trans i18nKey={'event.timing.autoPull.hint'} />
                             </Typography>
                             {autoPull && (
+                                /* Alle vier sind Pflicht: `transform.output` macht aus einem
+                                   geleerten Feld null, und die vier Spalten sind im Backend nicht
+                                   nullable. Ohne diese Regel schickt ein geleertes Feld ein null
+                                   los, und der Bediener bekommt „Unerwarteter Fehler" zu sehen
+                                   statt eines Hinweises am Feld. */
                                 <Stack spacing={4}>
                                     <FormInputNumber
                                         name={'intervalActiveSeconds'}
                                         label={t('event.timing.autoPull.intervalActive')}
                                         min={2}
                                         integer
+                                        rules={{required: t('common.form.required')}}
                                         transform={{
                                             output: value =>
                                                 value.target.value !== ''
@@ -191,6 +197,7 @@ const EventTimingConfig = () => {
                                         label={t('event.timing.autoPull.intervalUpcoming')}
                                         min={2}
                                         integer
+                                        rules={{required: t('common.form.required')}}
                                         transform={{
                                             output: value =>
                                                 value.target.value !== ''
@@ -203,6 +210,7 @@ const EventTimingConfig = () => {
                                         label={t('event.timing.autoPull.watchBefore')}
                                         min={0}
                                         integer
+                                        rules={{required: t('common.form.required')}}
                                         transform={{
                                             output: value =>
                                                 value.target.value !== ''
@@ -215,6 +223,7 @@ const EventTimingConfig = () => {
                                         label={t('event.timing.autoPull.watchAfter')}
                                         min={0}
                                         integer
+                                        rules={{required: t('common.form.required')}}
                                         transform={{
                                             output: value =>
                                                 value.target.value !== ''

@@ -1364,7 +1364,7 @@
         "3": " and apply to all events."
       },
       "saved": "Timing defaults saved",
-      "invalid": "Please enter addresses on raceclocker.com.",
+      "invalid": "The input was rejected: addresses must point to raceclocker.com, the intervals must be at least 2 seconds, and the watch windows must not be negative.",
       "deviations": {
         "title": "Competitions with their own timing",
         "none": "No competition deviates – all of them follow these defaults.",

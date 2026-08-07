@@ -1364,7 +1364,7 @@
         "3": " og gælder for alle arrangementer."
       },
       "saved": "Tidtagningsstandard gemt",
-      "invalid": "Angiv venligst adresser på raceclocker.com.",
+      "invalid": "Indtastningerne blev afvist: adresser skal pege på raceclocker.com, intervallerne skal være mindst 2 sekunder, og observationsvinduerne må ikke være negative.",
       "deviations": {
         "title": "Konkurrencer med egen tidtagning",
         "none": "Ingen konkurrence afviger – alle følger denne standard.",

@@ -1364,7 +1364,7 @@
         "3": " angelegt und gelten für alle Veranstaltungen."
       },
       "saved": "Zeitnahme-Voreinstellung gespeichert",
-      "invalid": "Bitte geben Sie Adressen auf raceclocker.com an.",
+      "invalid": "Die Eingaben wurden abgelehnt: Adressen müssen auf raceclocker.com zeigen, die Takte mindestens 2 Sekunden betragen und die Beobachtungsfenster dürfen nicht negativ sein.",
       "deviations": {
         "title": "Wettkämpfe mit eigener Zeitnahme",
         "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
