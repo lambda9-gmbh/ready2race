@@ -552,10 +552,11 @@
     "submissionNeedsVerification": "Indsendte resultater skal verificeres",
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
     "chainProgressionMode": {
-      "label": "Kædetilstand",
-      "SCHIEDSRICHTER": "Dommer — afslut og kæde via dommer-dashboardet",
-      "REGATTABUERO": "Regattakontor — afslut og aktiver udelukkende via tidsplanen",
-      "DEAKTIVIERT": "Deaktiveret — ingen automatisk aktivering"
+      "label": "Afslut løb & aktivér det næste",
+      "SCHIEDSRICHTER": "Dommere afslutter i dashboardet — næste løb starter automatisk",
+      "REGATTABUERO": "Kun arrangørerne afslutter, via tidsplanen — næste løb starter automatisk",
+      "DEAKTIVIERT": "Dommere afslutter i dashboardet — næste løb aktiveres manuelt",
+      "hint": "Arrangørerne kan altid afslutte løb via tidsplanen, uanset denne indstilling."
     },
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
@@ -1568,7 +1569,7 @@
       "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
       "activateAnyway": "Aktiver alligevel",
       "finish": "Afslut løb",
-      "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Afhængigt af kædetilstanden aktiveres de næste løb.",
+      "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Hvis stævnet skifter automatisk videre, aktiveres de næste løb.",
       "finishAnyway": "Afslut alligevel",
       "refereeModeWarning": "Dommertilstand er aktiv: løb aktiveres og afsluttes normalt af en dommer via dommer-dashboardet. Et indgreb herfra omgår denne vej.",
       "managedHint": "Vedligeholdes via tidsplanen",

@@ -552,10 +552,11 @@
     "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
     "chainProgressionMode": {
-      "label": "Kettenmodus",
-      "SCHIEDSRICHTER": "Schiedsrichter — Beenden und Kette über das Schiedsrichter-Dashboard",
-      "REGATTABUERO": "Regattabüro — Beenden und Aktivieren exklusiv über den Zeitplan",
-      "DEAKTIVIERT": "Deaktiviert — keine automatische Aktivierung"
+      "label": "Lauf beenden & nächsten aktivieren",
+      "SCHIEDSRICHTER": "Schiedsrichter beenden im Dashboard — nächster Lauf startet automatisch",
+      "REGATTABUERO": "Nur die Organisatoren beenden, über den Zeitplan — nächster Lauf startet automatisch",
+      "DEAKTIVIERT": "Schiedsrichter beenden im Dashboard — nächster Lauf wird von Hand aktiviert",
+      "hint": "Die Organisatoren können Läufe über den Zeitplan in jedem Fall beenden, unabhängig von dieser Einstellung."
     },
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
@@ -1568,7 +1569,7 @@
       "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",
       "activateAnyway": "Trotzdem aktivieren",
       "finish": "Lauf beenden",
-      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Je nach Kettenmodus werden dabei die nächsten Läufe aktiviert.",
+      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Wenn die Veranstaltung automatisch weiterschaltet, werden dabei die nächsten Läufe aktiviert.",
       "finishAnyway": "Trotzdem beenden",
       "refereeModeWarning": "Der Schiedsrichter-Modus ist aktiv: Läufe werden normalerweise von einem Schiedsrichter über das Schiedsrichter-Dashboard aktiviert und beendet. Ein Eingriff von hier übergeht diesen Weg.",
       "managedHint": "Wird über den Zeitplan gepflegt",
