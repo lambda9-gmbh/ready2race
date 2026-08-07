@@ -41,6 +41,39 @@ export const clampRect = (rect: PlaceholderRect): PlaceholderRect => {
     }
 }
 
+/** Größe (Breite/Höhe) in zwei Maßsystemen: einmal wie von der PDF-Seite selbst berichtet
+ * (Punkte), einmal wie tatsächlich im Editor gerendert (CSS-Pixel). react-pdf liefert beide über
+ * `onLoadSuccess`. */
+export type PageSize = {
+    width: number
+    height: number
+}
+
+/**
+ * Schriftgröße eines Platzhalters für die Editor-Vorschau, in gerenderten Pixeln.
+ *
+ * `placeholder.fontSize` steht in PDF-Punkten — so beschriftet ihn die Seitenleiste, und so
+ * rendert ihn der Server. `rendered`/`original` sind dagegen zwei verschiedene Maßsysteme
+ * derselben Seite: `original` sind die von der PDF selbst berichteten Punkte, `rendered` die im
+ * Editor tatsächlich dargestellten Pixel. Ein expliziter Wert muss deshalb erst mit dem Verhältnis
+ * von `rendered` zu `original` skaliert werden, bevor er als CSS-`font-size` taugt.
+ *
+ * Ohne eigene Größe gilt ersatzweise die Kastenhöhe als Schriftgröße (dieselbe Regel wie
+ * serverseitig, siehe AdditionalText.kt) — das ist bereits ein Anteil der gerenderten Seite und
+ * bleibt deshalb unskaliert.
+ */
+export const renderedFontSize = (
+    placeholder: {fontSize?: number; relHeight: number},
+    rendered: PageSize,
+    original: PageSize,
+): number => {
+    if (placeholder.fontSize !== undefined) {
+        const scale = original.height > 0 ? rendered.height / original.height : 1
+        return placeholder.fontSize * scale
+    }
+    return placeholder.relHeight * rendered.height
+}
+
 export const nudgeRect = (
     rect: PlaceholderRect,
     direction: 'left' | 'right' | 'up' | 'down',

@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {clampRect, MIN_EXTENT, nudgeRect, parsePercent} from './placeholderGeometry.ts'
+import {clampRect, MIN_EXTENT, nudgeRect, parsePercent, renderedFontSize} from './placeholderGeometry.ts'
 
 const rect = {relLeft: 0.2, relTop: 0.3, relWidth: 0.5, relHeight: 0.1}
 
@@ -73,5 +73,27 @@ describe('nudgeRect', () => {
     it('bleibt auf der Seite', () => {
         const atEdge = {relLeft: 0, relTop: 0, relWidth: 0.5, relHeight: 0.1}
         expect(nudgeRect(atEdge, 'left', true).relLeft).toBe(0)
+    })
+})
+
+describe('renderedFontSize', () => {
+    it('skaliert eine explizite Schriftgröße mit dem Seitenverhältnis', () => {
+        // Portrait A4 (595 x 842 pt) auf ~700px gerendert: Text müsste sonst ~15% zu klein wirken.
+        const rendered = {width: 495, height: 700}
+        const original = {width: 595, height: 842}
+        const size = renderedFontSize({fontSize: 20, relHeight: 0.04}, rendered, original)
+        expect(size).toBeCloseTo(20 * (700 / 842))
+    })
+
+    it('lässt den Ersatzwert aus der Kastenhöhe unskaliert, da er bereits in Pixeln vorliegt', () => {
+        const rendered = {width: 495, height: 700}
+        const original = {width: 595, height: 842}
+        const size = renderedFontSize({fontSize: undefined, relHeight: 0.04}, rendered, original)
+        expect(size).toBeCloseTo(0.04 * 700)
+    })
+
+    it('ändert bei einem Skalierungsfaktor von 1 nichts', () => {
+        const same = {width: 595, height: 842}
+        expect(renderedFontSize({fontSize: 20, relHeight: 0.04}, same, same)).toBe(20)
     })
 })

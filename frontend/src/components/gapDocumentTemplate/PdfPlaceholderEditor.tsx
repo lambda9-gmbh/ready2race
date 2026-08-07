@@ -7,7 +7,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import {Delete, DragIndicator} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import '@utils/pdfWorker'
-import {clampRect, MIN_EXTENT, nudgeRect} from './placeholderGeometry.ts'
+import {clampRect, MIN_EXTENT, nudgeRect, renderedFontSize} from './placeholderGeometry.ts'
 import {sampleTextFor} from './placeholderSample.ts'
 
 type PlaceholderData = {
@@ -48,6 +48,12 @@ const PdfPlaceholderEditor = (props: Props) => {
         width: 0,
         height: 0,
     })
+    // Die von der PDF selbst berichtete Seitengröße in Punkten, getrennt von pageDimensions
+    // (gerenderte Pixel) — nötig, um Schriftgrößen in Punkten korrekt hochzuskalieren.
+    const [originalPageSize, setOriginalPageSize] = useState<{width: number; height: number}>({
+        width: 0,
+        height: 0,
+    })
     const containerRef = useRef<HTMLDivElement>(null)
     const [draggedPlaceholder, setDraggedPlaceholder] = useState<string | null>(null)
     const [resizingPlaceholder, setResizingPlaceholder] = useState<{
@@ -80,11 +86,20 @@ const PdfPlaceholderEditor = (props: Props) => {
         setNumPages(numPages)
     }
 
-    const onPageLoadSuccess = (page: {width: number; height: number}) => {
+    const onPageLoadSuccess = (page: {
+        width: number
+        height: number
+        originalWidth: number
+        originalHeight: number
+    }) => {
         // Update dimensions based on the actual rendered page
         setPageDimensions({
             width: page.width,
             height: page.height,
+        })
+        setOriginalPageSize({
+            width: page.originalWidth,
+            height: page.originalHeight,
         })
     }
 
@@ -250,9 +265,7 @@ const PdfPlaceholderEditor = (props: Props) => {
             .filter(p => p.page === page)
             .map(placeholder => {
                 const isSelected = props.selectedPlaceholder === placeholder.id
-                // Ohne eigene Größe gilt die Kastenhöhe als Schriftgröße - dieselbe Regel wie
-                // beim serverseitigen Rendern (siehe AdditionalText.kt).
-                const fontSize = placeholder.fontSize ?? placeholder.relHeight * pageDimensions.height
+                const fontSize = renderedFontSize(placeholder, pageDimensions, originalPageSize)
                 const justifyContent =
                     placeholder.textAlign === 'CENTER'
                         ? 'center'
