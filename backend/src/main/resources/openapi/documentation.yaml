@@ -8013,6 +8013,7 @@ components:
     ErrorCode:
       type: string
       enum:
+        - INTERNAL_ERROR
         - CAPTCHA_WRONG
         - EMAIL_IN_USE
         - CANNOT_ASSIGN_ROLES

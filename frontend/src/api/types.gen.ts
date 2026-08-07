@@ -931,6 +931,7 @@ export type EmailTemplateRequest = {
 }
 
 export type ErrorCode =
+    | 'INTERNAL_ERROR'
     | 'CAPTCHA_WRONG'
     | 'EMAIL_IN_USE'
     | 'CANNOT_ASSIGN_ROLES'

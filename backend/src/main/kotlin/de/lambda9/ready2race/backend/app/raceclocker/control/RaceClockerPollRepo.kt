@@ -126,6 +126,23 @@ object RaceClockerPollRepo {
     }
 
     /**
+     * Ob dieser Lauf gerade für die Automatik pausiert ist.
+     *
+     * [getCandidates] filtert das schon einmal, aber am Anfang des Takts. Zwischen dieser Lesung und
+     * dem Schreiben liegen bis zu zwei HTTP-Abrufe mit je zehn Sekunden Zeitlimit - lang genug, dass
+     * ein Schiedsrichter dazwischen von Hand einträgt und damit pausiert. Der Job fragt deshalb ein
+     * zweites Mal, in derselben Transaktion wie das Schreiben, und lässt den Lauf dann in Ruhe.
+     */
+    fun isAutoPaused(matchId: UUID) = Jooq.query {
+        fetchExists(
+            selectOne()
+                .from(COMPETITION_MATCH)
+                .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(matchId))
+                .and(COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT.isNotNull)
+        )
+    }
+
+    /**
      * Ob es für diesen Lauf überhaupt eine Automatik gibt, die man pausieren könnte: eingeschaltete
      * Automatik an der Veranstaltung und RaceClocker als (geerbtes) Zeitnahmesystem.
      *
