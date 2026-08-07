@@ -26,6 +26,7 @@ liegen können, ohne sich zu stören:
 | `fee1` | `seed-freilos.sql` (nicht im Repo) | Freilos-Fälle |
 | `a4f1` | [`2026-08-06-seed-auflagen.sql`](2026-08-06-seed-auflagen.sql) | Auflagen (D6), Ersatzleute (D7), Renngemeinschaften (G6) |
 | `c4a1` | [`2026-08-06-seed-challenge.sql`](2026-08-06-seed-challenge.sql) | Challenge-Event für die Teilnahmeurkunden (G15, G16, G18, G22) |
+| `7e57` | [`2026-08-07-seed-schiedsrichter-testrennen.sql`](2026-08-07-seed-schiedsrichter-testrennen.sql) | Übungsrennen für die Schiedsrichter: Vorlauf setzen → durchführen → Progression ins Finale |
 
 Ein neuer Seed nimmt einen bisher unbenutzten Präfix und trägt sich hier ein.
 
@@ -91,3 +92,36 @@ laufenden Lauf. Der Seed lässt sich also zu jeder Tageszeit einspielen.
 
 Die Vorlage vom Typ `CERTIFICATE_OF_PARTICIPATION` liegt bereits in der Datenbank und wird vom
 Seed nicht angefasst.
+
+## `2026-08-07-seed-schiedsrichter-testrennen.sql` (Präfix `7e57`)
+
+Ein Übungsrennen, an dem die Schiedsrichter ihre Ansicht einmal komplett durchspielen können,
+ohne die echte Regatta anzufassen: eine eigene Veranstaltung „Schiedsrichter-Testrennen“
+(Flensburg, Renntag Do 13.08.2026, `chain_progression_mode = 'SCHIEDSRICHTER'`), vier Vereine mit
+je einem Einer, ein Wettkampf „Testrennen Einer“ (T1) mit zwei Runden:
+
+- **Vorlauf** (`is_qualification`, Massenfeld über alle vier Boote) →
+- **Finale** (zwei Boote; die Plätze 1 und 2 des Vorlaufs rücken über
+  `competition_setup_participant` nach).
+
+**Bewusst ist nichts materialisiert.** Genau das ist die Übung: Der Vorlauf ist ein *nicht
+gesetzter* Lauf. Die Schiedsrichter setzen ihn selbst (der Zeitstrahl-Slot wechselt von `WAITING`
+auf `LINKED`), aktivieren ihn, tragen Ergebnisse ein und beenden ihn — und sehen beim Setzen des
+Finales, dass die ersten beiden Boote dort von selbst stehen. Damit ist die Progression sichtbar,
+statt erklärt werden zu müssen.
+
+Der Zeitstrahl des Renntags trägt drei Einträge:
+
+| Zeit | Eintrag | Zustand |
+| --- | --- | --- |
+| 17:00 (30 min) | Programmpunkt „Einweisung Schiedsrichter“ | `FREE` — ein reiner Programmpunkt ohne Lauf |
+| 17:30 (20 min) | Vorlauf | `WAITING` |
+| 18:00 (15 min) | Finale | `WAITING` |
+
+Die Zeiten stehen fest auf dem 13.08.2026 (Vorabend der Regatta) — ein Versatz-Block wie im
+`a4f1`-Seed ist hier nicht nötig, weil nichts läuft: Der Zustand hängt am Setzen und Aktivieren
+durch die Schiedsrichter, nicht an der Uhrzeit.
+
+**Zeitnahme:** Der Seed setzt bewusst kein Zeitnahme-System. Für einen Durchlauf mit RaceClocker
+gehören die beiden Ergebnis-Adressen in die Voreinstellung der Veranstaltung
+(Veranstaltung → Einstellungen → Zeitnahme) — von dort erbt der Wettkampf sie.
