@@ -12035,11 +12035,32 @@ components:
           type: string
           format: uuid
           nullable: true
+        autoPull:
+          type: boolean
+          description: Whether the background job pulls results for this event on its own.
+        intervalActiveSeconds:
+          type: integer
+          description: Poll interval while at least one match of this event is running. Never goes below 2 seconds.
+        intervalUpcomingSeconds:
+          type: integer
+          description: Poll interval while only upcoming matches are watched. Never goes below 2 seconds.
+        watchBeforeMinutes:
+          type: integer
+          description: How long before its planned start an upcoming match is watched.
+        watchAfterMinutes:
+          type: integer
+          description: How long after its planned start a match that is not active yet is still watched.
         deviatingCompetitions:
           type: array
           description: The competitions that do not follow these defaults but set at least one of the three fields themselves.
           items:
             $ref: '#/components/schemas/CompetitionTimingDeviationDto'
+      required:
+        - autoPull
+        - intervalActiveSeconds
+        - intervalUpcomingSeconds
+        - watchBeforeMinutes
+        - watchAfterMinutes
 
     CompetitionTimingDeviationDto:
       type: object
@@ -12085,8 +12106,9 @@ components:
     EventTimingConfigRequest:
       type: object
       description: >
-        Every field is optional, like the per-competition config. The URLs must be https URLs on
-        raceclocker.com.
+        The RaceClocker fields are optional, like the per-competition config. The URLs must be https
+        URLs on raceclocker.com. The five auto-pull fields are not optional - the database always has
+        a value for them, and null here would ambiguously mean "leave unchanged".
       properties:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
@@ -12109,6 +12131,27 @@ components:
           type: string
           format: uuid
           nullable: true
+        autoPull:
+          type: boolean
+          description: Whether the background job pulls results for this event on its own.
+        intervalActiveSeconds:
+          type: integer
+          description: Poll interval while at least one match of this event is running. Never goes below 2 seconds.
+        intervalUpcomingSeconds:
+          type: integer
+          description: Poll interval while only upcoming matches are watched. Never goes below 2 seconds.
+        watchBeforeMinutes:
+          type: integer
+          description: How long before its planned start an upcoming match is watched.
+        watchAfterMinutes:
+          type: integer
+          description: How long after its planned start a match that is not active yet is still watched.
+      required:
+        - autoPull
+        - intervalActiveSeconds
+        - intervalUpcomingSeconds
+        - watchBeforeMinutes
+        - watchAfterMinutes
 
     TimingSystem:
       type: string
