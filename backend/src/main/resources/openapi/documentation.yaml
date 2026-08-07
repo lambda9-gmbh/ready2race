@@ -11436,6 +11436,40 @@ components:
           items:
             $ref: '#/components/schemas/SubstitutionDto'
 
+    MatchStatusDto:
+      type: object
+      description: >-
+        The derived state of a match, read by every surface - one derivation, three callers
+        (execution page, schedule, referee dashboard).
+
+
+        "Overdue" and "partially scored" are deliberately NOT states of their own but readings of
+        these fields: partially scored is state != RUNNING && 0 < teamsScored < teamsTotal, overdue
+        is state == UPCOMING && startTime + 5 min < now. Elapsed minutes and overdueness are
+        computed in the frontend against the browser clock so the chip keeps counting between two
+        polls.
+      required:
+        - state
+        - teamsTotal
+        - teamsScored
+      properties:
+        state:
+          $ref: '#/components/schemas/LiveDashboardMatchState'
+        startedAt:
+          type: string
+          format: date-time
+          description: Actual start - null while nobody started the match.
+        teamsTotal:
+          type: integer
+        teamsScored:
+          type: integer
+          description: >-
+            Scored means: deregistered OR place set OR failed - the same rule the referee dashboard
+            uses.
+        teamsOnWater:
+          type: integer
+          description: null = not collected in this view (schedule, public boards).
+
     CompetitionMatchDto:
       type: object
       required:
@@ -11444,6 +11478,8 @@ components:
         - weighting
         - executionOrder
         - currentlyRunning
+        - skipped
+        - status
       properties:
         id:
           type: string
@@ -11461,11 +11497,26 @@ components:
         startTime:
           type: string
           format: date-time
+          description: Planned start from the schedule.
         startTimeOffset:
           type: integer
           description: Offset between the starts of consecutive teams, in seconds
         currentlyRunning:
           type: boolean
+        startedAt:
+          type: string
+          format: date-time
+          description: Actual start - null while nobody started the match.
+        finishedAt:
+          type: string
+          format: date-time
+          description: >-
+            Persisted end. Set means exclusively that somebody finished the match.
+        skipped:
+          type: boolean
+          description: The schedule slot of this match was cancelled.
+        status:
+          $ref: '#/components/schemas/MatchStatusDto'
 
     CompetitionMatchTeamDto:
       type: object
@@ -12325,6 +12376,7 @@ components:
         - executionOrder
         - teams
         - pendingRound
+        - cancelled
       properties:
         matchId:
           type: string
@@ -12371,6 +12423,9 @@ components:
           type: string
           nullable: true
           description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
+        cancelled:
+          type: boolean
+          description: "the schedule slot of this match was cancelled. The match stays in the list anyway - a match that vanishes without a trace is indistinguishable from a display error for the crew waiting at the pontoon. teams is then always empty"
 
     UpcomingMatchTeamInfo:
       type: object
@@ -12587,6 +12642,7 @@ components:
         - startState
         - teams
         - pendingRound
+        - cancelled
       properties:
         matchId:
           type: string
@@ -12625,6 +12681,9 @@ components:
           type: string
           nullable: true
           description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
+        cancelled:
+          type: boolean
+          description: "the match is cancelled ('does not take place'). It stays at its planned position in the upcoming block anyway - a crew waiting at the pontoon cannot tell a match that vanished without a trace from a display error. teams is then always empty"
 
     AthleteBoardResultTeam:
       type: object
@@ -13117,6 +13176,8 @@ components:
         - startTime
         - state
         - matchCurrentlyRunning
+        - matchTeamsTotal
+        - matchTeamsScored
       properties:
         id:
           type: string
@@ -13168,6 +13229,12 @@ components:
         matchCurrentlyRunning:
           type: boolean
           description: "Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot"
+        matchTeamsTotal:
+          type: integer
+          description: "Teams of the linked match that are still in the race (without the OUT rows carried over from the previous round) - 0 without a linked match"
+        matchTeamsScored:
+          type: integer
+          description: "Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own"
 
     UnplannedSetupMatchDto:
       type: object
