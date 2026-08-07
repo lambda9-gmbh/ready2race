@@ -14,6 +14,7 @@ import {
 import {GapDocumentPlaceholderType, TextAlign} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {Add} from '@mui/icons-material'
+import {clampRect, parsePercent} from './placeholderGeometry.ts'
 
 type PlaceholderData = {
     id: string
@@ -215,31 +216,71 @@ const PlaceholderSidebar = (props: Props) => {
                             </Typography>
                         </Box>
 
-                        <Box>
-                            <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{display: 'block'}}>
-                                {t('gap.document.placeholder.position')}
-                            </Typography>
-                            <Typography variant="caption">
-                                X: {(selectedPlaceholder.relLeft * 100).toFixed(1)}%, Y:{' '}
-                                {(selectedPlaceholder.relTop * 100).toFixed(1)}%
-                            </Typography>
-                        </Box>
+                        <Stack direction="row" spacing={1}>
+                            <TextField
+                                label={`${t('gap.document.placeholder.positionX')} (%)`}
+                                type="number"
+                                size="small"
+                                value={(selectedPlaceholder.relLeft * 100).toFixed(1)}
+                                onChange={e => {
+                                    const relLeft = parsePercent(e.target.value)
+                                    if (relLeft !== undefined) {
+                                        handlePlaceholderPropertyChange(
+                                            selectedPlaceholder.id,
+                                            clampRect({...selectedPlaceholder, relLeft}),
+                                        )
+                                    }
+                                }}
+                            />
+                            <TextField
+                                label={`${t('gap.document.placeholder.positionY')} (%)`}
+                                type="number"
+                                size="small"
+                                value={(selectedPlaceholder.relTop * 100).toFixed(1)}
+                                onChange={e => {
+                                    const relTop = parsePercent(e.target.value)
+                                    if (relTop !== undefined) {
+                                        handlePlaceholderPropertyChange(
+                                            selectedPlaceholder.id,
+                                            clampRect({...selectedPlaceholder, relTop}),
+                                        )
+                                    }
+                                }}
+                            />
+                        </Stack>
 
-                        <Box>
-                            <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{display: 'block'}}>
-                                {t('gap.document.placeholder.size')}
-                            </Typography>
-                            <Typography variant="caption">
-                                W: {(selectedPlaceholder.relWidth * 100).toFixed(1)}%, H:{' '}
-                                {(selectedPlaceholder.relHeight * 100).toFixed(1)}%
-                            </Typography>
-                        </Box>
+                        <Stack direction="row" spacing={1}>
+                            <TextField
+                                label={`${t('gap.document.placeholder.width')} (%)`}
+                                type="number"
+                                size="small"
+                                value={(selectedPlaceholder.relWidth * 100).toFixed(1)}
+                                onChange={e => {
+                                    const relWidth = parsePercent(e.target.value)
+                                    if (relWidth !== undefined) {
+                                        handlePlaceholderPropertyChange(
+                                            selectedPlaceholder.id,
+                                            clampRect({...selectedPlaceholder, relWidth}),
+                                        )
+                                    }
+                                }}
+                            />
+                            <TextField
+                                label={`${t('gap.document.placeholder.height')} (%)`}
+                                type="number"
+                                size="small"
+                                value={(selectedPlaceholder.relHeight * 100).toFixed(1)}
+                                onChange={e => {
+                                    const relHeight = parsePercent(e.target.value)
+                                    if (relHeight !== undefined) {
+                                        handlePlaceholderPropertyChange(
+                                            selectedPlaceholder.id,
+                                            clampRect({...selectedPlaceholder, relHeight}),
+                                        )
+                                    }
+                                }}
+                            />
+                        </Stack>
                     </>
                 )}
             </Stack>

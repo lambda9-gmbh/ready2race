@@ -7,6 +7,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import {Delete, DragIndicator} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import '@utils/pdfWorker'
+import {clampRect} from './placeholderGeometry.ts'
 
 type PlaceholderData = {
     id: string
@@ -113,14 +114,11 @@ const PdfPlaceholderEditor = (props: Props) => {
                 const relDeltaX = deltaX / pageDimensions.width
                 const relDeltaY = deltaY / pageDimensions.height
 
-                const newLeft = Math.max(
-                    0,
-                    Math.min(1 - placeholder.relWidth, placeholder.relLeft + relDeltaX),
-                )
-                const newTop = Math.max(
-                    0,
-                    Math.min(1 - placeholder.relHeight, placeholder.relTop + relDeltaY),
-                )
+                const {relLeft: newLeft, relTop: newTop} = clampRect({
+                    ...placeholder,
+                    relLeft: placeholder.relLeft + relDeltaX,
+                    relTop: placeholder.relTop + relDeltaY,
+                })
 
                 props.onPlaceholdersChange(
                     props.placeholders.map(p =>
@@ -169,17 +167,16 @@ const PdfPlaceholderEditor = (props: Props) => {
                     newHeight = placeholder.relHeight - adjustedDelta
                 }
 
+                const clamped = clampRect({
+                    relLeft: newLeft,
+                    relTop: newTop,
+                    relWidth: newWidth,
+                    relHeight: newHeight,
+                })
+
                 props.onPlaceholdersChange(
                     props.placeholders.map(p =>
-                        p.id === resizingPlaceholder.id
-                            ? {
-                                  ...p,
-                                  relLeft: newLeft,
-                                  relTop: newTop,
-                                  relWidth: newWidth,
-                                  relHeight: newHeight,
-                              }
-                            : p,
+                        p.id === resizingPlaceholder.id ? {...p, ...clamped} : p,
                     ),
                 )
                 setDragStart({x: e.clientX, y: e.clientY})
