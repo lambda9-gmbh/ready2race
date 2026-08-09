@@ -1715,6 +1715,7 @@
     "removedGlobal": "Global tildeling fjernet",
     "checkRequirements": "Kontrollér betingelser",
     "checkInApp": "Kan kontrolleres i app",
+    "publiclyVisible": "Synlig for deltagere (Min begivenhed)",
     "checkEarliestMinutesBefore": "Tidligst (minutter før start)",
     "checkLatestMinutesBefore": "Senest (minutter før start)",
     "namedParticipantRequirements": {

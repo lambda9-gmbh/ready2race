@@ -1715,6 +1715,7 @@
     "removedGlobal": "Globale Zuordnung entfernt",
     "checkRequirements": "Bedingungen prüfen",
     "checkInApp": "Per App prüfbar",
+    "publiclyVisible": "Für Teilnehmende sichtbar (Mein Event)",
     "checkEarliestMinutesBefore": "Frühestens (Minuten vor Start)",
     "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
     "namedParticipantRequirements": {

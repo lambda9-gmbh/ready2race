@@ -1715,6 +1715,7 @@
     "removedGlobal": "Global assignment removed",
     "checkRequirements": "Check requirements",
     "checkInApp": "Checkable in app",
+    "publiclyVisible": "Visible to participants (My Event)",
     "checkEarliestMinutesBefore": "Earliest (minutes before start)",
     "checkLatestMinutesBefore": "Latest (minutes before start)",
     "namedParticipantRequirements": {
