@@ -56,6 +56,8 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.text.PDFTextStripper
+import org.apache.poi.xwpf.usermodel.XWPFDocument
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.util.UUID
@@ -85,20 +87,25 @@ class ClubChainInDisplaysTest {
     private val mainz = "Mainzer Ruder-Verein 1878 e.V."
     private val flensburg = "Ruderklub Flensburg e.V."
     private val marburg = "Marburger Ruderverein von 1911 e.V."
+    private val nuertingen = "Ruderclub Nürtingen"
+    private val rostock = "Rostocker Ruder-Club von 1885 e.V."
 
     /**
-     * Die Kette, wie sie beide Anzeigen erwarten: drei Vereine in Crew-Reihenfolge. Der vierte
-     * Ruderer fährt für Mainz wie der erste (ein Glied, nicht zwei), und der Steuermann steht in
-     * den Meldedaten mit dem Platzhalter "N.N." statt eines Vereins (fällt still raus).
+     * Fünf Vereine in Crew-Reihenfolge - der schlimmste Fall aus den echten Meldedaten der CRF
+     * 2026, und der, an dem sich der Umbruch der Urkunde entscheidet. Der vierte Ruderer fährt für
+     * Mainz wie der erste (ein Glied, nicht zwei), und der Steuermann steht mit dem Platzhalter
+     * "N.N." statt eines Vereins in den Daten (fällt still raus).
      */
-    private val expectedFull = "$mainz / $marburg / $flensburg"
+    private val expectedClubs = listOf(mainz, marburg, flensburg, nuertingen, rostock)
+    private val expectedFull = expectedClubs.joinToString(" / ")
 
     private data class Seeded(val eventId: UUID, val competitionId: UUID, val registrationId: UUID)
 
     /**
      * Eine Veranstaltung mit einem Wettkampf, einer Runde ("Finale"), einem Lauf und genau einer
-     * gemeldeten Mannschaft aus fünf Personen. Der Lauf läuft und ist gewertet - so erscheint
-     * dieselbe Mannschaft in der Athleten-Anzeige und in der Platzierungsberechnung der Urkunde.
+     * gemeldeten Mannschaft aus sieben Personen aus fünf Vereinen. Der Lauf läuft und ist gewertet -
+     * so erscheint dieselbe Mannschaft in der Athleten-Anzeige und in der Platzierungsberechnung
+     * der Urkunde.
      */
     private fun TestComprehensionScope<JEnv>.seed(): Seeded {
         val eventId = UUID.randomUUID()
@@ -169,6 +176,7 @@ class ClubChainInDisplaysTest {
         val registeringClubId = club(registeringClub)
         val mainzId = club(mainz)
         val flensburgId = club(flensburg)
+        val nuertingenId = club(nuertingen)
 
         !EVENT_REGISTRATION.insert(
             EventRegistrationRecord(
@@ -197,6 +205,8 @@ class ClubChainInDisplaysTest {
         crewMember(registrationId, "3. Ruderer", "Cordes", clubId = flensburgId)
         crewMember(registrationId, "4. Ruderer", "Dohm", clubId = mainzId)
         crewMember(registrationId, "5. Steuermann", "Evers", clubId = registeringClubId, externalClubName = "N.N.")
+        crewMember(registrationId, "6. Ruderer", "Fischer", clubId = nuertingenId)
+        crewMember(registrationId, "7. Ruderer", "Groth", clubId = registeringClubId, externalClubName = rostock)
 
         !COMPETITION_MATCH_TEAM.insert(
             CompetitionMatchTeamRecord(
@@ -282,7 +292,10 @@ class ClubChainInDisplaysTest {
         val team = board.running.single().teams.single()
 
         assertEquals(expectedFull, team.clubsFull)
-        assertEquals("Mainz / Marburger RV / RK Flensburg", team.clubsShort)
+        assertEquals(
+            "Mainz / Marburger RV / RK Flensburg / RC Nürtingen / Rostocker RC",
+            team.clubsShort,
+        )
 
         // Der Kern des Ganzen: der meldende Verein steht nirgends, und "Renngemeinschaft" ist weg.
         assertFalse(team.clubsFull!!.contains("Kieler"), "meldender Verein in der Kette: ${team.clubsFull}")
@@ -318,20 +331,61 @@ class ClubChainInDisplaysTest {
         )
 
         val raw = pdfText(file.bytes)
-        val text = raw.replace(Regex("""\s+"""), " ")
+        assertChainSurvivedTheLineBreak(raw)
+    }
 
-        // Die Kette passt nicht in eine Zeile und wird umgebrochen (siehe GapTextWrap) - deshalb
-        // steht sie hier nicht am Stück. Was zählt: jeder Verein steht vollständig da, keiner ist
-        // am Umbruch zerrissen, und die Reihenfolge im Boot bleibt.
-        listOf(mainz, marburg, flensburg).forEach {
+    /**
+     * Dieselbe Urkunde als DOCX. Der DOCX-Renderer legt jede Zeile in einen eigenen Rahmen; bis der
+     * Umbruch für beide Formate an einer Stelle entstand, brach hier Word nach eigenen Maßen um und
+     * mitten durch Vereinsnamen, während das PDF gar nicht umbrach. Deshalb steht der Fall auch für
+     * dieses Format da - der Vertrag über die Zeilenzahl selbst hängt in
+     * [de.lambda9.ready2race.backend.pdf.GapDocumentGeometryContractTest].
+     */
+    @Test
+    fun theSameCertificateAsDocxCarriesTheSameChain() = testComprehension {
+        val seeded = seed()
+        assignAwardCertificateTemplate()
+
+        val file = !AwardCertificateService.downloadForCompetition(
+            eventId = seeded.eventId,
+            competitionId = seeded.competitionId,
+            options = AwardCertificateOptions(
+                maxPlace = 3,
+                mode = AwardCertificateMode.PER_TEAM,
+                withBackground = false,
+            ),
+            format = AwardCertificateService.Format.DOCX,
+        )
+
+        val document = XWPFDocument(ByteArrayInputStream(file.bytes))
+        val framedLines = document.paragraphs.filter { it.ctp.pPr?.framePr != null }.map { it.text }
+        document.close()
+
+        assertTrue(framedLines.size > 1, "Die Kette hätte umgebrochen werden müssen: $framedLines")
+        assertChainSurvivedTheLineBreak(framedLines.joinToString("\n"))
+    }
+
+    /**
+     * Was von der Kette nach dem Umbruch zu erwarten ist, für beide Formate gleich: jeder Verein
+     * steht vollständig da (keiner ist am Umbruch zerrissen), die Reihenfolge im Boot bleibt, und
+     * gekürzt wird nichts.
+     */
+    private fun assertChainSurvivedTheLineBreak(rendered: String) {
+        val text = rendered.replace(Regex("""\s+"""), " ")
+
+        expectedClubs.forEach {
             assertTrue(text.contains(it), "Verein fehlt oder ist am Umbruch zerrissen: '$it' in: $text")
         }
-        assertTrue(text.indexOf(mainz) < text.indexOf(marburg), text)
-        assertTrue(text.indexOf(marburg) < text.indexOf(flensburg), text)
+        expectedClubs.zipWithNext().forEach { (before, after) ->
+            assertTrue(
+                text.indexOf(before) < text.indexOf(after),
+                "'$before' müsste vor '$after' stehen: $text",
+            )
+        }
 
         assertTrue(
-            raw.trim().lines().size > 1,
-            "Die Kette hätte umgebrochen werden müssen, steht aber auf einer Zeile: $raw",
+            rendered.trim().lines().size > 1,
+            "Die Kette hätte umgebrochen werden müssen, steht aber auf einer Zeile: $rendered",
         )
 
         assertFalse(text.contains("Renngemeinschaft"), text)
