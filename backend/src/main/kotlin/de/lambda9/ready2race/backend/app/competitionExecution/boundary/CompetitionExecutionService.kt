@@ -1430,8 +1430,22 @@ object CompetitionExecutionService {
         competitionId: UUID,
     ): App<ServiceError, List<Pair<CompetitionMatchTeamWithRegistration, Int>>> = KIO.comprehension {
         val setupRoundRecords = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
-        val setupRounds = sortRounds(setupRoundRecords)
 
+        KIO.ok(computeCompetitionPlaces(sortRounds(setupRoundRecords)))
+    }
+
+    /**
+     * Dieselbe Platzvergabe, aber an bereits geladenen Runden — [setupRounds] muss durch
+     * [sortRounds] gegangen sein, die Rechnung liest die Nachbarrunde über den Index.
+     *
+     * Es gibt sie, weil [getSetupRoundsWithMatches][CompetitionSetupService.getSetupRoundsWithMatches]
+     * die teuerste Abfrage des Wettkampfbereichs ist (Runden → Läufe → Teams → Teilnehmer). Wer die
+     * Runden ohnehin braucht — der Siegerehrungsbogen sucht darin den Lauf je Boot —, fuhr sie
+     * sonst ein zweites Mal ein, je Wettkampf.
+     */
+    fun computeCompetitionPlaces(
+        setupRounds: List<CompetitionSetupRoundWithMatches>,
+    ): List<Pair<CompetitionMatchTeamWithRegistration, Int>> {
 
         val roundsWithTeamsToPlaces =
             setupRounds.filterIndexed { roundIdx, round -> // filters out rounds for which there was no following round created yet
@@ -1508,9 +1522,7 @@ object CompetitionExecutionService {
             }
 
 
-        val result = roundsWithTeamsToPlaces.flatten()
-
-        KIO.ok(result)
+        return roundsWithTeamsToPlaces.flatten()
     }
 
     fun getCompetitionPlaces(

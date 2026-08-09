@@ -133,10 +133,14 @@ object AwardCeremonyService {
         KIO.comprehension {
             val competitionId = competition.id!!
 
-            val places = !CompetitionExecutionService.computeCompetitionPlaces(competitionId)
+            // Einmal laden, zweimal gebraucht: die Platzberechnung rechnet daran, und der Lauf je
+            // Boot wird darin gesucht. Diese Abfrage zieht Runden → Läufe → Teams → Teilnehmer und
+            // ist die teuerste des Wettkampfbereichs - bei 40 Rennen wäre der zweite Zug 40
+            // zusätzliche Abfragen, bei jedem Öffnen der Auswahl und bei jedem Download.
             val rounds = CompetitionExecutionService.sortRounds(
                 !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
             )
+            val places = CompetitionExecutionService.computeCompetitionPlaces(rounds)
 
             val candidates = places
                 // Dieselbe Regel wie im Urkundengenerator: abgemeldete, ausgeschiedene und
