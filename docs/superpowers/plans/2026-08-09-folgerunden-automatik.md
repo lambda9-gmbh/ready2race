@@ -1160,29 +1160,48 @@ Erwartet: `aSecondCreationCarriesTheNotice` scheitert mit „Der Vermerk hätte 
 
 - [ ] **Step 5: Vermerk in `createNewRound` setzen**
 
-In `CompetitionExecutionService.createNewRound`: Neben der bestehenden Sammelvariable
-`createdSetupMatchIds` eine zweite anlegen, die je erzeugter Runde festhält, ob sie eine
-Wiederholung war. Direkt nach `!CompetitionMatchRepo.create(matchRecords).orDie()` — an **beiden**
-Stellen (erste Runde ab Zeile 165, Folgerunde ab Zeile 240) — den Vermerk auf die soeben erzeugten
-Läufe schreiben:
+In `CompetitionExecutionService.createNewRound` **an genau einer Stelle** — nicht in beiden
+Zweigen. Die Schleife erzeugt je Durchlauf eine Runde; der Vermerk gehört ans Ende eines
+Durchlaufs, dorthin, wo auch der Namens-Übernahme-Block schon steht (ab Zeile 298). Beide Zweige
+liefern ihm nur ihre Lauf-Ids zu.
+
+Schritt 1 — innerhalb der `while`-Schleife, vor dem `if (currentRound == null)`, eine Variable
+anlegen:
 
 ```kotlin
-                // Die Runde stand schon einmal: Diese Paarungen sind eine Neuberechnung, und die
-                // Orga-Ansichten sollen das sehen. Die Auskunft steht auf der Setup-Runde, weil sie
-                // das Löschen der Runde überleben muss — siehe V202608091500.
-                val now = LocalDateTime.now()
-                if (nextRound.materializedAt != null) {
-                    !CompetitionMatchRepo.markPairingsRecalculated(
-                        matchRecords.map { it.competitionSetupMatch!! },
-                        now,
-                    ).orDie()
-                } else {
-                    !CompetitionSetupRoundRepo.markMaterialized(nextRound.setupRoundId, now).orDie()
-                }
+            // Die Setup-Lauf-Ids der Runde, die dieser Durchlauf erzeugt - Grundlage des Vermerks
+            // unten. `createdSetupMatchIds` sammelt über alle Durchläufe hinweg und taugt dafür nicht.
+            var createdThisRound: List<UUID> = emptyList()
 ```
 
-Für den Zweig „erste Runde" steht `nextRound` bereits als `nextRound!!` zur Verfügung; benutze
-dieselbe Referenz wie die umgebenden Zeilen, damit kein zweiter Nullable-Zugriff entsteht.
+Schritt 2 — in **beiden** Zweigen direkt hinter der jeweils vorhandenen Zeile
+`createdSetupMatchIds += matchRecords.map { it.competitionSetupMatch!! }` (Zeile 166 bzw. 241)
+ergänzen:
+
+```kotlin
+                createdThisRound = matchRecords.map { it.competitionSetupMatch!! }
+```
+
+Schritt 3 — am Ende des Schleifenkörpers, direkt hinter dem `if (nextRound != null && !nextRound.isQualification) { … }`-Block:
+
+```kotlin
+            // Stand die Runde schon einmal, sind diese Paarungen eine Neuberechnung - und die
+            // Orga-Ansichten sollen das sehen. Dass es sie schon einmal gab, weiß nur die
+            // Setup-Runde: Sie überlebt das Löschen der Runde, die Läufe tun es nicht
+            // (siehe V202608091500).
+            if (nextRound != null && createdThisRound.isNotEmpty()) {
+                val markedAt = LocalDateTime.now()
+                if (nextRound.materializedAt != null) {
+                    !CompetitionMatchRepo.markPairingsRecalculated(createdThisRound, markedAt).orDie()
+                } else {
+                    !CompetitionSetupRoundRepo.markMaterialized(nextRound.setupRoundId, markedAt).orDie()
+                }
+            }
+```
+
+`nextRound` ist im Schleifenkörper nullable deklariert und wird in beiden Zweigen mit `!!`
+benutzt — die Prüfung `nextRound != null` oben macht den Zugriff hier ohne weiteres `!!` möglich
+(Kotlin verengt den Typ, weil es eine lokale `val` ist).
 
 - [ ] **Step 6: Test laufen lassen und grün sehen**
 
@@ -1576,20 +1595,49 @@ tatsächlich greift — und schlägt fehl, falls eine der vorherigen Aufgaben ih
             condition = { COMPETITION_SETUP_MATCH.eq(seed.secondRoundSetupMatchId) },
         )
 
+        // Über den echten Schreibweg geprüft, nicht über die interne Prüffunktion: Was zählt, ist
+        // dass die Korrektur nicht durchgeht - nicht, dass eine private Hilfsfunktion nein sagt.
         val firstMatchId = seed.firstRoundMatchIds.first()
+        val teams = (!COMPETITION_MATCH_TEAM.select { COMPETITION_MATCH.eq(firstMatchId) }).sortedBy { it.startNumber }
         assertKIOFails(CompetitionExecutionError.MatchResultsLocked) {
-            CompetitionExecutionService.checkUpdateMatchResult(seed.competitionId, firstMatchId)
+            CompetitionExecutionService.updateMatchResult(
+                eventId = seed.eventId,
+                competitionId = seed.competitionId,
+                matchId = firstMatchId,
+                userId = seed.userId,
+                request = UpdateCompetitionMatchResultRequest(
+                    teamResults = listOf(
+                        UpdateCompetitionMatchTeamResultRequest(
+                            registrationId = teams[0].competitionRegistration!!,
+                            place = 2,
+                            timeString = null,
+                            failed = false,
+                            failedReason = null,
+                            penaltySeconds = null,
+                            penaltyNote = null,
+                        ),
+                        UpdateCompetitionMatchTeamResultRequest(
+                            registrationId = teams[1].competitionRegistration!!,
+                            place = 1,
+                            timeString = null,
+                            failed = false,
+                            failedReason = null,
+                            penaltySeconds = null,
+                            penaltyNote = null,
+                        ),
+                    )
+                ),
+            )
         }
+
+        // Und der Beleg, dass wirklich nichts passiert ist: die Plätze stehen wie vorher.
+        val after = (!COMPETITION_MATCH_TEAM.select { COMPETITION_MATCH.eq(firstMatchId) }).sortedBy { it.startNumber }
+        assertEquals(listOf(1, 2), after.map { it.place })
     }
 ```
 
-`checkUpdateMatchResult(competitionId, matchId)` ist im Bestand `private`. Ändere die Sichtbarkeit
-auf `internal` — die öffentliche Zweitfassung mit bereits geholten Setup-Runden bleibt unberührt —
-und begründe das mit einem kurzen Kommentar an der Funktion:
-
-```kotlin
-    /** `internal`, damit der Test die Sperre unmittelbar prüfen kann statt über einen Schreibpfad. */
-```
+Die Sichtbarkeit von `checkUpdateMatchResult` bleibt unverändert `private` — der Test kommt über
+den öffentlichen Schreibweg an dieselbe Sperre.
 
 Die Felder von `UpdateCompetitionMatchTeamResultRequest` sind gegen den Bestand geprüft
 (`registrationId`, `place`, `timeString`, `failed`, `failedReason`, `penaltySeconds`,
