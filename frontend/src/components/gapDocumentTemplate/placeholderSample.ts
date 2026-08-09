@@ -28,6 +28,19 @@ const SAMPLE_VALUES: Record<Exclude<GapDocumentPlaceholderType, 'FREE_TEXT'>, st
  * solange keiner eingegeben wurde, `freeTextFallback` — vom Aufrufer übersetzt übergeben, da diese
  * Stelle als UI-Text auch englische und dänische Nutzer erreicht (siehe
  * `gap.document.placeholder.staticText`). */
+/** Der Trenner, mit dem das Backend die Vereine eines Bootes verkettet (`GapTextWrap`). */
+export const CHAIN_SEPARATOR = ' / '
+
+/**
+ * Die Glieder einer Vereinskette. Die Vorschau setzt jedes Glied für sich unzerbrechlich und lässt
+ * den Browser nur dazwischen umbrechen — dieselbe Regel, nach der der Renderer umbricht: ein
+ * Vereinsname wird nie zerrissen. Ohne das bräche der Browser an Wortgrenzen und die Vorschau
+ * zeigte einen Umbruch ("Marburger Ruderverein von" / "1911 e.V."), den es auf dem Papier nie gibt.
+ *
+ * Ein Text ohne Trenner ergibt genau ein Glied, bleibt also unverändert.
+ */
+export const chainSegments = (text: string): string[] => text.split(CHAIN_SEPARATOR)
+
 export const sampleTextFor = (
     type: GapDocumentPlaceholderType,
     staticText: string | undefined,
