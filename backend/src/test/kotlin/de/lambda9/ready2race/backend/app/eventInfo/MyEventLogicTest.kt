@@ -24,6 +24,7 @@ class MyEventLogicTest {
         finishedAt: LocalDateTime? = null,
         allTeamsScored: Boolean = false,
         currentlyRunning: Boolean = false,
+        deregistered: Boolean = false,
     ) = MyEventLogic.RawMatch(
         matchId = UUID.randomUUID(),
         competitionName = "Wettkampf",
@@ -45,7 +46,7 @@ class MyEventLogicTest {
         penaltyNote = null,
         failed = false,
         failedReason = null,
-        deregistered = false,
+        deregistered = deregistered,
         deregisteredReason = null,
     )
 
@@ -121,6 +122,22 @@ class MyEventLogicTest {
             showCountdown = true,
         )
         assertEquals(listOf(newer.matchId, older.matchId), split.results.map { it.matchId })
+    }
+
+    @Test
+    fun timelessResultStaysBehindTimedResult() {
+        // Vor dem Start abgemeldet: kein startTime, kein actualStartTime, aber via finishedAt
+        // trotzdem ein Ergebnis. Das darf beim "neuestes zuerst" nicht vor einem Ergebnis mit
+        // echter Zeitangabe stehen.
+        val timeless = raw(finishedAt = now.minusMinutes(10), deregistered = true)
+        val timed = raw(startTime = now.minusHours(1), finishedAt = now.minusHours(1))
+        val split = MyEventLogic.split(
+            entries = listOf(timeless, timed),
+            now = now,
+            visibility = PublicResultsVisibility.FINISHED_ONLY,
+            showCountdown = true,
+        )
+        assertEquals(listOf(timed.matchId, timeless.matchId), split.results.map { it.matchId })
     }
 
     @Test

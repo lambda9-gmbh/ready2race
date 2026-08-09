@@ -740,9 +740,12 @@ object MyEventLogic {
                 .sortedWith(compareBy(nullsLast()) { it.startTime })
                 .map { it.toMatchDto(now, showCountdown) },
             // Neuestes zuerst: nach dem Rennen interessiert das eigene letzte Ergebnis,
-            // nicht das vom Vormittag.
+            // nicht das vom Vormittag. Achtung: compareByDescending vertauscht intern die
+            // Vergleichsrichtung, wodurch sich auch die Nullwert-Platzierung umkehrt — deshalb
+            // steht hier nullsFirst() (nicht nullsLast()), damit ein Eintrag ganz ohne
+            // Zeitangabe (z. B. vor dem Start abgemeldet) am Ende landet statt fälschlich oben.
             results = finished
-                .sortedWith(compareByDescending(nullsLast()) { it.actualStartTime ?: it.startTime })
+                .sortedWith(compareByDescending(nullsFirst()) { it.actualStartTime ?: it.startTime })
                 .map { it.toResultDto() },
         )
     }
