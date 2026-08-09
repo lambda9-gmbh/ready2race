@@ -1515,7 +1515,7 @@
         "noRunning": "Zurzeit kein Lauf in der Arena",
         "noUpcoming": "Kein weiterer Lauf gesetzt",
         "noResults": "Noch kein Ergebnis",
-        "lane": "Bahn",
+        "startNumber": "Nr.",
         "expected": "erwartet",
         "unscheduled": "Zeit offen",
         "failed": "nicht gewertet",

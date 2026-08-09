@@ -60,8 +60,9 @@ data class AthleteBoardMatch(
 )
 
 data class AthleteBoardTeam(
-    /** Startposition im Lauf, aus `competition_match_team.start_number`. */
-    val lane: Int?,
+    /** Startposition im Lauf, aus `competition_match_team.start_number`. Die Anzeige nannte sie
+     *  bis zum 09.08.2026 „Bahn"; eine davon unabhängige Bahnnummer gibt es im Datenmodell nicht. */
+    val startNumber: Int?,
     /** Die n-te Mannschaft dieses Vereins im Wettkampf - nur gezeigt, wenn [teamName] fehlt. */
     val teamNumber: Int?,
     /**
@@ -108,7 +109,7 @@ data class AthleteBoardResult(
 
 data class AthleteBoardResultTeam(
     val place: Int?,
-    val lane: Int,
+    val startNumber: Int,
     /** Die n-te Mannschaft dieses Vereins im Wettkampf - nur gezeigt, wenn [teamName] fehlt. */
     val teamNumber: Int?,
     /** Wie bei [AthleteBoardTeam.clubsShort]: die Vereinskette des Bootes, kurz und lang. */

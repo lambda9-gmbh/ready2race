@@ -228,7 +228,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     <Stack sx={{mt: 1.5}} divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
                         {match.teams.map((team, index) => (
                             <Stack
-                                key={`${match.matchId}-${team.lane ?? index}`}
+                                key={`${match.matchId}-${team.startNumber ?? index}`}
                                 direction="row"
                                 alignItems="center"
                                 gap={1.5}
@@ -241,7 +241,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                         minWidth: '1.8em',
                                         textAlign: 'center',
                                     }}>
-                                    {team.lane ?? '–'}
+                                    {team.startNumber ?? '–'}
                                 </Typography>
                                 <Box sx={{flex: 1, minWidth: 0}}>
                                     <AthleteBoardTeamLabel team={team} />

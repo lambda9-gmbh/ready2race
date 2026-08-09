@@ -13280,9 +13280,10 @@ components:
         - participants
         - failed
       properties:
-        lane:
+        startNumber:
           type: integer
           nullable: true
+          description: "starting position in the match, from competition_match_team.start_number"
         teamNumber:
           type: integer
           nullable: true
@@ -13382,14 +13383,14 @@ components:
     AthleteBoardResultTeam:
       type: object
       required:
-        - lane
+        - startNumber
         - failed
         - deregistered
       properties:
         place:
           type: integer
           nullable: true
-        lane:
+        startNumber:
           type: integer
         teamNumber:
           type: integer

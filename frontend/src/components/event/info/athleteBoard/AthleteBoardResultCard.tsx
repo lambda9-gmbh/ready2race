@@ -17,7 +17,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
         // als Erklärung in der Liste.
         if (a.deregistered !== b.deregistered) return a.deregistered ? 1 : -1
         // Platzierte zuerst, danach die ohne Platz (DNF und Konsorten).
-        if (a.place == null && b.place == null) return a.lane - b.lane
+        if (a.place == null && b.place == null) return a.startNumber - b.startNumber
         if (a.place == null) return 1
         if (b.place == null) return -1
         return a.place - b.place
@@ -76,7 +76,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                 <Stack sx={{mt: 1.5}} divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
                     {teams.map((team, index) => (
                         <Stack
-                            key={`${result.matchId}-${team.lane}-${index}`}
+                            key={`${result.matchId}-${team.startNumber}-${index}`}
                             direction="row"
                             alignItems="center"
                             gap={1.5}
@@ -99,7 +99,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                                 <Typography
                                     sx={{fontSize: 'clamp(0.7rem, 1.1vw, 0.95rem)'}}
                                     color="text.secondary">
-                                    {t('event.info.athleteBoard.lane')} {team.lane}
+                                    {t('event.info.athleteBoard.startNumber')} {team.startNumber}
                                 </Typography>
                             </Box>
                             {/* Ein langer DNF-Grund darf den Vereinsnamen nicht überlagern:

@@ -217,7 +217,7 @@ export type AthleteBoardResult = {
 
 export type AthleteBoardResultTeam = {
     place?: number | null
-    lane: number
+    startNumber: number
     /**
      * the nth team of this club in the competition - only shown when teamName is missing
      */
@@ -249,7 +249,10 @@ export type AthleteBoardResultTeam = {
 export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
 
 export type AthleteBoardTeam = {
-    lane?: number | null
+    /**
+     * starting position in the match, from competition_match_team.start_number
+     */
+    startNumber?: number | null
     /**
      * the nth team of this club in the competition - only shown when teamName is missing
      */

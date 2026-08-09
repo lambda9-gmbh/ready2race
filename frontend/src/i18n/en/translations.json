@@ -1515,7 +1515,7 @@
         "noRunning": "No race in the arena right now",
         "noUpcoming": "No further race scheduled",
         "noResults": "No result yet",
-        "lane": "Lane",
+        "startNumber": "No.",
         "expected": "expected",
         "unscheduled": "Time open",
         "failed": "not classified",

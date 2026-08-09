@@ -1515,7 +1515,7 @@
         "noRunning": "Intet løb i arenaen lige nu",
         "noUpcoming": "Ingen flere løb planlagt",
         "noResults": "Endnu intet resultat",
-        "lane": "Bane",
+        "startNumber": "Nr.",
         "expected": "forventet",
         "unscheduled": "Tid ikke fastsat",
         "failed": "ikke placeret",
