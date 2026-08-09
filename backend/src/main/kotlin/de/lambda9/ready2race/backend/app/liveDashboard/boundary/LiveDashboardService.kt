@@ -4,7 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameLogic
-import de.lambda9.ready2race.backend.app.club.control.ClubShortNameRepo
+import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
@@ -95,8 +95,9 @@ object LiveDashboardService {
             )
 
             // Beides einmal je Abruf, nicht je Mannschaft: der Endpunkt wird im Sekundentakt
-            // gepollt, und eine Veranstaltung hat leicht hundert Mannschaften.
-            val aliases = !ClubShortNameRepo.aliases().orDie()
+            // gepollt, und eine Veranstaltung hat leicht hundert Mannschaften. Die Einstellungen
+            // tragen gepflegte Kurzformen und Kürzungsregeln zusammen - ein Ladeweg, nicht zwei.
+            val clubShortNames = !ClubShortNameSettings.load()
             val wornClubs = !wornClubsByParticipant(teamRecords, substitutionRecords)
 
             val context =
@@ -151,7 +152,7 @@ object LiveDashboardService {
                 // Die Kette entsteht aus der Crew, die wirklich startet - nach den Ummeldungen.
                 // Genau das ist der Fall, der im Betrieb weh tut: kommt die Ersatzperson aus einem
                 // anderen Verein, steht das ab sofort auf der Karte.
-                val clubs = ClubComposition.of(participants.map { it.clubName }, aliases)
+                val clubs = ClubComposition.of(participants.map { it.clubName }, clubShortNames)
 
                 KIO.ok(
                     LiveDashboardTeamDto(
@@ -164,7 +165,7 @@ object LiveDashboardService {
                             participants.map {
                                 LiveDashboardCrewMemberDto(
                                     lastName = it.lastName,
-                                    clubShort = it.clubName?.let { name -> ClubShortNameLogic.shorten(name, aliases) },
+                                    clubShort = it.clubName?.let { name -> ClubShortNameLogic.shorten(name, clubShortNames) },
                                     role = LiveDashboardLogic.roleAbbreviation(it.namedRole),
                                 )
                             }

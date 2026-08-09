@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateMode
 import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateOptions
 import de.lambda9.ready2race.backend.app.club.boundary.ClubNameKey
 import de.lambda9.ready2race.backend.app.club.control.ClubShortNameRepo
+import de.lambda9.ready2race.backend.app.club.entity.ClubNameRuleKind
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.GapDocumentTemplateService
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocumentTemplateRequest
@@ -16,6 +17,7 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventInfoService
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ClubNameRuleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubShortNameRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchTeamRecord
@@ -31,6 +33,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegi
 import de.lambda9.ready2race.backend.database.generated.tables.records.NamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
+import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB_NAME_RULE
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_TEAM
@@ -272,9 +275,38 @@ class ClubChainInDisplaysTest {
         )
     }
 
+    /**
+     * Die Vereinstyp-Kürzel des Rudersports, wie `docs/seeds/seed-club-name-rules-rowing.sql` sie
+     * einer bestehenden Installation nachliefert.
+     *
+     * Sie stehen seit dem 09.08.2026 nicht mehr im Code: eine frisch migrierte Datenbank bringt nur
+     * das Sportartübergreifende mit (Rechtsform, Gründungsjahre, Klammerzusätze). Ohne diesen Seed
+     * zeigte die Athleten-Anzeige hier "Ruderclub Nürtingen" statt "RC Nürtingen" - richtig für
+     * ready2race, falsch für die CRF. Genommen wird [ClubNameRuleFixtures.rowing], damit Seed-Datei
+     * und Erwartung nicht auseinanderlaufen.
+     */
+    private fun TestComprehensionScope<JEnv>.seedRowingAbbreviations() {
+        ClubNameRuleFixtures.rowing
+            .filter { it.kind == ClubNameRuleKind.ABBREVIATION }
+            .forEachIndexed { index, rule ->
+                !CLUB_NAME_RULE.insert(
+                    ClubNameRuleRecord(
+                        id = UUID.randomUUID(),
+                        kind = rule.kind.name,
+                        term = rule.term,
+                        replacement = rule.replacement,
+                        sortOrder = 100 + index * 10,
+                        createdAt = now,
+                        updatedAt = now,
+                    )
+                )
+            }
+    }
+
     @Test
     fun theAthleteBoardShowsTheClubsTheAthletesWearInsteadOfOneMixedTeamTerm() = testComprehension {
         val seeded = seed()
+        seedRowingAbbreviations()
 
         // Eine gepflegte Kurzform, die die Heuristik nicht erraten könnte ("Mainzer RV") - so ist
         // belegt, dass die Anzeige club_short_name wirklich heranzieht.

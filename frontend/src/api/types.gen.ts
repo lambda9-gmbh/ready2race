@@ -442,9 +442,41 @@ export type ClubImportRequest = {
     noHeader: boolean
 }
 
+export type ClubNameRuleDto = {
+    id: string
+    kind: ClubNameRuleKind
+    term?: string | null
+    replacement?: string | null
+    sortOrder: number
+}
+
+export type ClubNameRuleKind = 'ABBREVIATION' | 'REMOVE_TERM' | 'REMOVE_YEARS' | 'REMOVE_BRACKETED'
+
+export type ClubNameRuleOrderRequest = {
+    ruleIds: Array<string>
+}
+
+export type ClubNameRuleRequest = {
+    kind: ClubNameRuleKind
+    term?: string | null
+    replacement?: string | null
+}
+
 export type ClubSearchDto = {
     id: string
     name: string
+}
+
+export type ClubShortNameDto = {
+    nameKey: string
+    names: Array<string>
+    shortName: string
+    maintained: boolean
+}
+
+export type ClubShortNameRequest = {
+    shortName: string
+    sampleName: string
 }
 
 export type ClubUpsertDto = {
@@ -1710,6 +1742,8 @@ export type InviteRequest = {
 export type InvoiceDto = {
     id: string
     invoiceNumber: string
+    billedToOrganization?: string
+    billedToName?: string
     totalAmount: string
     createdAt: string
     paidAt?: string
@@ -4840,6 +4874,78 @@ export type GetPendingClubRepresentativeApprovalsResponse =
     Array<PendingClubRepresentativeApprovalDto>
 
 export type GetPendingClubRepresentativeApprovalsError = BadRequestError | ApiError
+
+export type GetClubShortNamesData = {
+    query?: {
+        eventId?: string
+    }
+}
+
+export type GetClubShortNamesResponse = Array<ClubShortNameDto>
+
+export type GetClubShortNamesError = BadRequestError | ApiError
+
+export type UpdateClubShortNameData = {
+    body: ClubShortNameRequest
+    path: {
+        nameKey: string
+    }
+}
+
+export type UpdateClubShortNameResponse = void
+
+export type UpdateClubShortNameError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteClubShortNameData = {
+    path: {
+        nameKey: string
+    }
+}
+
+export type DeleteClubShortNameResponse = void
+
+export type DeleteClubShortNameError = ApiError
+
+export type GetClubNameRulesResponse = Array<ClubNameRuleDto>
+
+export type GetClubNameRulesError = ApiError
+
+export type AddClubNameRuleData = {
+    body: ClubNameRuleRequest
+}
+
+export type AddClubNameRuleResponse = string
+
+export type AddClubNameRuleError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ReorderClubNameRulesData = {
+    body: ClubNameRuleOrderRequest
+}
+
+export type ReorderClubNameRulesResponse = void
+
+export type ReorderClubNameRulesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateClubNameRuleData = {
+    body: ClubNameRuleRequest
+    path: {
+        ruleId: string
+    }
+}
+
+export type UpdateClubNameRuleResponse = void
+
+export type UpdateClubNameRuleError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteClubNameRuleData = {
+    path: {
+        ruleId: string
+    }
+}
+
+export type DeleteClubNameRuleResponse = void
+
+export type DeleteClubNameRuleError = BadRequestError | ApiError
 
 export type GetRegistrationsForEventData = {
     path: {

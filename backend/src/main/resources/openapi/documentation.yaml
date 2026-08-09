@@ -2954,6 +2954,179 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /clubShortName:
+    get:
+      operationId: getClubShortNames
+      parameters:
+        - in: query
+          name: eventId
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Club short names successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClubShortNameDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /clubShortName/{nameKey}:
+    parameters:
+      - in: path
+        name: nameKey
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: updateClubShortName
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubShortNameRequest'
+      responses:
+        204:
+          description: Club short name successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteClubShortName
+      responses:
+        204:
+          description: Club short name successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
+  /clubNameRule:
+    get:
+      operationId: getClubNameRules
+      responses:
+        200:
+          description: Club name rules successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClubNameRuleDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addClubNameRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubNameRuleRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /clubNameRule/order:
+    put:
+      operationId: reorderClubNameRules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubNameRuleOrderRequest'
+      responses:
+        204:
+          description: Club name rule order successfully written
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /clubNameRule/{ruleId}:
+    parameters:
+      - in: path
+        name: ruleId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateClubNameRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubNameRuleRequest'
+      responses:
+        204:
+          description: Club name rule successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteClubNameRule
+      responses:
+        204:
+          description: Club name rule successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventRegistration:
     parameters:
       - in: path
@@ -10561,6 +10734,90 @@ components:
         name:
           type: string
 
+    ClubShortNameDto:
+      type: object
+      required:
+        - nameKey
+        - names
+        - shortName
+        - maintained
+      properties:
+        nameKey:
+          type: string
+        names:
+          type: array
+          items:
+            type: string
+        shortName:
+          type: string
+        maintained:
+          type: boolean
+
+    ClubShortNameRequest:
+      type: object
+      required:
+        - shortName
+        - sampleName
+      properties:
+        shortName:
+          type: string
+        sampleName:
+          type: string
+
+    ClubNameRuleKind:
+      type: string
+      enum:
+        - ABBREVIATION
+        - REMOVE_TERM
+        - REMOVE_YEARS
+        - REMOVE_BRACKETED
+
+    ClubNameRuleDto:
+      type: object
+      required:
+        - id
+        - kind
+        - sortOrder
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/ClubNameRuleKind'
+        term:
+          type: string
+          nullable: true
+        replacement:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+
+    ClubNameRuleRequest:
+      type: object
+      required:
+        - kind
+      properties:
+        kind:
+          $ref: '#/components/schemas/ClubNameRuleKind'
+        term:
+          type: string
+          nullable: true
+        replacement:
+          type: string
+          nullable: true
+
+    ClubNameRuleOrderRequest:
+      type: object
+      required:
+        - ruleIds
+      properties:
+        ruleIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
     ParticipantDto:
       type: object
       required:
@@ -12208,6 +12465,10 @@ components:
           type: string
           format: uuid
         invoiceNumber:
+          type: string
+        billedToOrganization:
+          type: string
+        billedToName:
           type: string
         totalAmount:
           type: string

@@ -20,7 +20,7 @@ class ClubCompositionTest {
     fun aSingleClubStandsForItself() {
         val composition = ClubComposition.of(
             listOf("Ruderclub Nürtingen", "Ruderclub Nürtingen", "Ruderclub Nürtingen"),
-            emptyMap(),
+            ClubNameRuleFixtures.rowingSettings(),
         )
 
         assertEquals("Ruderclub Nürtingen", composition.full)
@@ -41,7 +41,9 @@ class ClubCompositionTest {
                 "Ruderclub Nürtingen",
                 "Erster Kieler Ruder-Club von 1862 e.V.",
             ),
-            mapOf(ClubNameKey.of("Erster Kieler Ruder-Club von 1862 e.V.") to "1. KRC"),
+            ClubNameRuleFixtures.rowingSettings(
+                mapOf(ClubNameKey.of("Erster Kieler Ruder-Club von 1862 e.V.") to "1. KRC")
+            ),
         )
 
         assertEquals(
@@ -60,7 +62,7 @@ class ClubCompositionTest {
     fun theSameClubAppearsOnlyOnce() {
         val composition = ClubComposition.of(
             listOf("Rostocker Ruderclub", "Ruderclub Nürtingen", "Rostocker Ruderclub"),
-            emptyMap(),
+            ClubNameRuleFixtures.rowingSettings(),
         )
 
         assertEquals("Rostocker Ruderclub / Ruderclub Nürtingen", composition.full)
@@ -75,7 +77,7 @@ class ClubCompositionTest {
     fun twoSpellingsOfTheSameClubCollapse() {
         val composition = ClubComposition.of(
             listOf("Rostocker Ruderclub", "Rostocker Ruder-Club von 1885 e.V."),
-            emptyMap(),
+            ClubNameRuleFixtures.rowingSettings(),
         )
 
         assertEquals("Rostocker Ruderclub", composition.full)
@@ -91,9 +93,11 @@ class ClubCompositionTest {
     fun aMaintainedShortNameMergesWhatTheKeyCannot() {
         val composition = ClubComposition.of(
             listOf("ARV Kiel", "Akademischer Ruderverein Kiel e.V."),
-            mapOf(
-                ClubNameKey.of("ARV Kiel") to "ARV Kiel",
-                ClubNameKey.of("Akademischer Ruderverein Kiel e.V.") to "ARV Kiel",
+            ClubNameRuleFixtures.rowingSettings(
+                mapOf(
+                    ClubNameKey.of("ARV Kiel") to "ARV Kiel",
+                    ClubNameKey.of("Akademischer Ruderverein Kiel e.V.") to "ARV Kiel",
+                )
             ),
         )
 
@@ -109,7 +113,7 @@ class ClubCompositionTest {
     fun peopleWithoutAClubAndPlaceholdersDropOut() {
         val composition = ClubComposition.of(
             listOf(null, "Ruderclub Nürtingen", "   ", "N.N.", "n. n.", "Rostocker Ruderclub"),
-            emptyMap(),
+            ClubNameRuleFixtures.rowingSettings(),
         )
 
         assertEquals("Ruderclub Nürtingen / Rostocker Ruderclub", composition.full)
@@ -160,7 +164,7 @@ class ClubCompositionTest {
      */
     @Test
     fun aCrewWithoutAnyClubYieldsAnEmptyChain() {
-        val composition = ClubComposition.of(listOf(null, "N.N."), emptyMap())
+        val composition = ClubComposition.of(listOf(null, "N.N."), ClubNameRuleFixtures.rowingSettings())
 
         assertEquals("", composition.full)
         assertEquals("", composition.short)

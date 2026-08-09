@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.club
 
 import de.lambda9.ready2race.backend.app.club.boundary.ClubNameKey
-import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameLogic
+import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.club.control.ClubShortNameRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubShortNameRecord
 import de.lambda9.ready2race.testing.testComprehension
@@ -41,8 +41,9 @@ class ClubShortNameRepoTest {
         !ClubShortNameRepo.upsert(record("1. KRC"))
 
         assertEquals(mapOf(key to "1. KRC"), !ClubShortNameRepo.aliases())
-        // Der Zweck der Tabelle: die gepflegte Form schlägt die Heuristik ("Erster Kieler RC").
-        assertEquals("1. KRC", ClubShortNameLogic.shorten(name, !ClubShortNameRepo.aliases()))
+        // Der Zweck der Tabelle: die gepflegte Form schlägt die Heuristik, die aus den Regeln der
+        // Migration allein "Erster Kieler Ruder-Club" machen würde.
+        assertEquals("1. KRC", (!ClubShortNameSettings.load()).shorten(name))
 
         // Dieselbe Zeile ein zweites Mal - die Pflegeseite kennt kein "neu" und "ändern".
         !ClubShortNameRepo.upsert(
@@ -65,6 +66,6 @@ class ClubShortNameRepoTest {
         assertEquals(1, !ClubShortNameRepo.delete(ClubNameKey.of(name)))
 
         assertEquals(emptyMap<String, String>(), !ClubShortNameRepo.aliases())
-        assertEquals("Erster Kieler RC", ClubShortNameLogic.shorten(name, !ClubShortNameRepo.aliases()))
+        assertEquals("Erster Kieler Ruder-Club", (!ClubShortNameSettings.load()).shorten(name))
     }
 }
