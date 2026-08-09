@@ -136,10 +136,15 @@ Cache ist damit nie der begrenzende Faktor. Überlebt er die Sitzung, ist er ohn
 ohne gültige Sitzung ohnehin der Anmeldebildschirm kommt.
 
 Solange ein veralteter Stand angezeigt wird, nennt ein Banner Datum und Uhrzeit des letzten
-echten Abrufs, und die schreibenden Aktionen des Dashboards sind deaktiviert: „Lauf starten",
-„Lauf beenden", das Aktivieren der nächsten Startzeit und „Slot überspringen", jeweils mit
-Tooltip auf den Grund. Ein Schiedsrichter soll sehen, was er zuletzt wusste, aber nichts auf
-veralteter Grundlage auslösen.
+echten Abrufs, und die schreibenden Aktionen des Dashboards sind nicht bedienbar: „Lauf
+starten", „Lauf beenden", das Aktivieren der nächsten Startzeit, das Freigeben des
+RaceClocker-Abrufs und „Slot überspringen". Ein Schiedsrichter soll sehen, was er zuletzt
+wusste, aber nichts auf veralteter Grundlage auslösen.
+
+Umgesetzt wird das über den vorhandenen Mechanismus: Die fünf Handlungen werden der Ansicht
+heute schon nur übergeben, wenn die Nutzerin steuern darf, und die Karten blenden ihre Knöpfe
+daran aus (siehe den Vertrag in `LiveDashboardColumns.tsx`). Bei veraltetem Stand entfallen sie
+auf demselben Weg. Den Grund trägt das Banner, nicht ein Tooltip an jedem einzelnen Knopf.
 
 **Reichweite:** Der Lese-Cache hilft im laufenden Betrieb — Bildschirm aus, App im Hintergrund,
 Funkloch auf dem Weg zum Steg. Nach einem Kaltstart ohne Netz greift er nur, wenn die Sitzung
