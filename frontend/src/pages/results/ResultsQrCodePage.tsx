@@ -5,6 +5,7 @@ import {Box, Button} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {resultsQRCodeRoute, router} from '@routes'
 import Throbber from '@components/Throbber.tsx'
+import {rememberMyEventCode} from '@utils/myEventStorage.ts'
 
 const ResultsQrCodePage = () => {
     const {t} = useTranslation()
@@ -23,7 +24,14 @@ const ResultsQrCodePage = () => {
                     }),
                 )
             } else {
-                navigate({to: '/results/event/$eventId', params: {eventId: response.data.eventId}})
+                // Der Code wandert in den Geraetespeicher und nicht in die Zieladresse:
+                // ein weitergereichter Link soll niemanden in ein fremdes Dashboard lassen.
+                rememberMyEventCode({qrCode: qrCode, eventId: response.data.eventId})
+                navigate({
+                    to: '/results/event/$eventId',
+                    params: {eventId: response.data.eventId},
+                    search: {tab: 'my-event'},
+                })
             }
         },
     })
