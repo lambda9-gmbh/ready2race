@@ -1190,7 +1190,9 @@ object CompetitionExecutionService {
         !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
         !CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = request.currentlyRunning
+            // Nur die Aktivierung; der Ist-Start bleibt unangetastet. Ein erneutes Aktivieren
+            // rückt den Zeitpunkt nicht vor.
+            activatedAt = if (request.currentlyRunning) activatedAt ?: LocalDateTime.now() else null
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

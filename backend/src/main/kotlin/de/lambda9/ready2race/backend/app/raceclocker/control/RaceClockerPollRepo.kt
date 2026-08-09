@@ -78,7 +78,7 @@ object RaceClockerPollRepo {
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
             COMPETITION.ID.`as`("competition_id"),
@@ -114,7 +114,7 @@ object RaceClockerPollRepo {
                     matchId = it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!,
                     competitionId = it["competition_id", UUID::class.java],
                     startTime = it[COMPETITION_MATCH.START_TIME],
-                    currentlyRunning = it[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
+                    currentlyRunning = it[COMPETITION_MATCH.ACTIVATED_AT] != null,
                     target = RaceClockerMatchTarget(
                         waveName = WaveName.format(it[COMPETITION_SETUP_MATCH.NAME], it[COMPETITION_MATCH.START_TIME]),
                         isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,

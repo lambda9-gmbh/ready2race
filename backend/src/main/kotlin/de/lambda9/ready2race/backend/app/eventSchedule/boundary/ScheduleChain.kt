@@ -22,7 +22,7 @@ data class ChainSlot(
     val matchFinished: Boolean,
     val matchOpen: Boolean,
     /**
-     * War der Lauf schon aktiviert (competition_match.currently_running), bevor er beendet wurde?
+     * War der Lauf schon aktiviert (competition_match.activated_at), bevor er beendet wurde?
      * Unterscheidet in [ScheduleChain.decideNext] einen noch laufenden Sibling-Lauf derselben
      * Startzeit (blockiert das Vorrücken) von einem frisch aktivierbaren Lauf derselben Gruppe
      * (Default `false`, unkritisch für alle Aufrufer, die parallele Starts nicht testen).
@@ -156,7 +156,7 @@ object ScheduleChainService {
                     matchId = if (matchExists) r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] else null,
                     matchFinished = r.get("match_finished_at", LocalDateTime::class.java) != null,
                     matchOpen = r.get("match_open", Boolean::class.java) == true,
-                    currentlyRunning = r[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
+                    currentlyRunning = r[COMPETITION_MATCH.ACTIVATED_AT] != null,
                 )
             })
         }
@@ -168,7 +168,11 @@ object ScheduleChainService {
 
     private fun setRunning(matchId: UUID, userId: UUID): App<Nothing, Unit> =
         CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = true
+            // Die Kette ruft an den Start, sie startet nicht: nur activatedAt, und nur beim ersten
+            // Mal - ein erneuter Kettenlauf soll den Zeitpunkt nicht vorrücken.
+            if (activatedAt == null) {
+                activatedAt = LocalDateTime.now()
+            }
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie().map { }

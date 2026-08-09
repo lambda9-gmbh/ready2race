@@ -54,7 +54,7 @@ class MatchStatusLogicTest {
     @Test
     fun runningBeatsEverythingElse() {
         val status = MatchStatusLogic.matchStatus(
-            currentlyRunning = true,
+            activatedAt = start.minusMinutes(5),
             startTime = start,
             startedAt = start.plusMinutes(2),
             finishedAt = null,
@@ -69,7 +69,7 @@ class MatchStatusLogicTest {
     @Test
     fun finishedOnlyMeansFinishedAtIsSet() {
         val status = MatchStatusLogic.matchStatus(
-            currentlyRunning = false,
+            activatedAt = null,
             startTime = start,
             startedAt = start,
             finishedAt = start.plusMinutes(6),
@@ -82,7 +82,7 @@ class MatchStatusLogicTest {
     @Test
     fun fullyScoredButNotFinishedAwaitsFinish() {
         val status = MatchStatusLogic.matchStatus(
-            currentlyRunning = false,
+            activatedAt = null,
             startTime = start,
             startedAt = start,
             finishedAt = null,
@@ -97,7 +97,7 @@ class MatchStatusLogicTest {
     @Test
     fun partiallyScoredStaysUpcoming() {
         val status = MatchStatusLogic.matchStatus(
-            currentlyRunning = false,
+            activatedAt = null,
             startTime = start,
             startedAt = null,
             finishedAt = null,
@@ -113,7 +113,7 @@ class MatchStatusLogicTest {
     @Test
     fun skippedWithoutRunOrFinish() {
         val status = MatchStatusLogic.matchStatus(
-            currentlyRunning = false,
+            activatedAt = null,
             startTime = start,
             startedAt = null,
             finishedAt = null,
@@ -126,7 +126,7 @@ class MatchStatusLogicTest {
     @Test
     fun withoutStartTimeUnscheduled() {
         val status = MatchStatusLogic.matchStatus(
-            currentlyRunning = false,
+            activatedAt = null,
             startTime = null,
             startedAt = null,
             finishedAt = null,
@@ -140,7 +140,7 @@ class MatchStatusLogicTest {
     @Test
     fun matchWithoutTeamsIsNotAwaitingFinish() {
         val status = MatchStatusLogic.matchStatus(
-            currentlyRunning = false,
+            activatedAt = null,
             startTime = start,
             startedAt = null,
             finishedAt = null,
@@ -156,7 +156,7 @@ class MatchStatusLogicTest {
     @Test
     fun teamsOnWaterDefaultsToNotCollected() {
         val status = MatchStatusLogic.matchStatus(
-            currentlyRunning = false,
+            activatedAt = null,
             startTime = start,
             startedAt = null,
             finishedAt = null,
@@ -166,7 +166,7 @@ class MatchStatusLogicTest {
         assertNull(status.teamsOnWater)
 
         val withWater = MatchStatusLogic.matchStatus(
-            currentlyRunning = false,
+            activatedAt = null,
             startTime = start,
             startedAt = null,
             finishedAt = null,
@@ -273,8 +273,22 @@ class MatchStatusLogicTest {
         assertEquals(1, counters.skipped)
         assertEquals(
             counters.total,
-            counters.running + counters.open + counters.finished + counters.skipped
+            counters.preparing + counters.running + counters.open + counters.finished + counters.skipped
         )
+    }
+
+    @Test
+    fun `ein Lauf in Vorbereitung zaehlt weder als laufend noch als offen`() {
+        val counters = MatchStatusLogic.roundCounters(
+            listOf(
+                MatchStatusDto(MatchState.PREPARING, startedAt = null, teamsTotal = 6, teamsScored = 0),
+                MatchStatusDto(MatchState.RUNNING, startedAt = null, teamsTotal = 6, teamsScored = 0),
+            )
+        )
+        assertEquals(1, counters.preparing)
+        assertEquals(1, counters.running)
+        assertEquals(0, counters.open)
+        assertEquals(2, counters.total)
     }
 
     /** Ein Lauf, auf dessen Beenden alles wartet, ist offen - nicht beendet. */

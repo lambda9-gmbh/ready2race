@@ -224,7 +224,7 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
@@ -242,7 +242,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(true))
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNotNull)
             .orderBy(
                 COMPETITION_MATCH.START_TIME.asc(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()
@@ -321,7 +321,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(false))
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNull)
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             .and(
                 // Unverändert aus getMatchResults übernommene Teilbedingungen, hier als exists
@@ -390,7 +390,7 @@ object CompetitionMatchRepo {
                 )
                 .otherwise(DSL.inline(true))
                 .`as`("has_places_set"),
-            cm.CURRENTLY_RUNNING,
+            cm.ACTIVATED_AT,
             cm.START_TIME
         )
             .from(cm)
@@ -402,7 +402,7 @@ object CompetitionMatchRepo {
             .where(c.EVENT.eq(eventId))
 
         if (currentlyRunning != null) {
-            query = query.and(cm.CURRENTLY_RUNNING.eq(currentlyRunning))
+            query = query.and(if (currentlyRunning) cm.ACTIVATED_AT.isNotNull else cm.ACTIVATED_AT.isNull)
         }
 
         if (withoutPlaces == true) {
@@ -426,7 +426,7 @@ object CompetitionMatchRepo {
                 matchNumber = record.value6()!!,
                 matchName = record.value7(),
                 hasPlacesSet = record.value8()!!,
-                currentlyRunning = record.value9()!!,
+                currentlyRunning = record.value9() != null,
                 startTime = record.value10()
             )
         }

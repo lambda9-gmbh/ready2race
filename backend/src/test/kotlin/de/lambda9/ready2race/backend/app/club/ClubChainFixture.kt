@@ -166,7 +166,7 @@ fun TestComprehensionScope<JEnv>.seedClubChain(): SeededClubChain {
             startTime = CHAIN_SEED_TIME,
             createdAt = CHAIN_SEED_TIME,
             updatedAt = CHAIN_SEED_TIME,
-            currentlyRunning = true,
+            activatedAt = CHAIN_SEED_TIME,
         )
     )
 

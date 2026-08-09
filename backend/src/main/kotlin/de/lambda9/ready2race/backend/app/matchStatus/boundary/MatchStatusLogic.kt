@@ -35,7 +35,7 @@ object MatchStatusLogic {
      * ("erhoben, aber niemand draußen") und darf im Frontend nicht zum Wasser-Chip führen.
      */
     fun matchStatus(
-        currentlyRunning: Boolean,
+        activatedAt: LocalDateTime?,
         startTime: LocalDateTime?,
         startedAt: LocalDateTime?,
         finishedAt: LocalDateTime?,
@@ -46,7 +46,8 @@ object MatchStatusLogic {
         val scored = scoredCount(teams)
         return MatchStatusDto(
             state = LiveDashboardLogic.deriveMatchState(
-                currentlyRunning = currentlyRunning,
+                activatedAt = activatedAt,
+                startedAt = startedAt,
                 startTime = startTime,
                 finishedAt = finishedAt,
                 // Dieselbe Eingabe wie im Dashboard: je Mannschaft ein Ja/Nein, ob sie gewertet
@@ -93,6 +94,7 @@ object MatchStatusLogic {
      */
     fun roundCounters(statuses: List<MatchStatusDto>): RoundCountersDto = RoundCountersDto(
         total = statuses.size,
+        preparing = statuses.count { it.state == MatchState.PREPARING },
         running = statuses.count { it.state == MatchState.RUNNING },
         open = statuses.count {
             it.state == MatchState.AWAITING_FINISH ||

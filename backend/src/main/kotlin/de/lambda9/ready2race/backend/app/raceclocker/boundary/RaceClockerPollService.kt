@@ -262,7 +262,9 @@ object RaceClockerPollService {
             if (!RaceClockerPollLogic.startDetected(assigned)) return@comprehension KIO.ok(MatchOutcome())
 
             !CompetitionMatchRepo.update(candidate.matchId) {
-                currentlyRunning = true
+                if (activatedAt == null) {
+                    activatedAt = now
+                }
                 if (startedAt == null) {
                     startedAt = now
                 }

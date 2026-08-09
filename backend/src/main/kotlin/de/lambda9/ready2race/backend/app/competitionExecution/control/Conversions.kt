@@ -101,7 +101,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                         executionOrder = match.second.executionOrder,
                         startTime = match.first.startTime,
                         startTimeOffset = match.second.startTimeOffset,
-                        currentlyRunning = match.first.currentlyRunning,
+                        currentlyRunning = match.first.activatedAt != null,
                         startedAt = match.first.startedAt,
                         finishedAt = match.first.finishedAt,
                         skipped = match.first.skipped,
@@ -109,7 +109,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                         // Aufrufer. teamsOnWater führt nur diese Ansicht: Zeitplan und öffentliche
                         // Anzeigen lassen es null ("nicht erhoben" ist etwas anderes als 0).
                         status = MatchStatusLogic.matchStatus(
-                            currentlyRunning = match.first.currentlyRunning,
+                            activatedAt = match.first.activatedAt,
                             startTime = match.first.startTime,
                             startedAt = match.first.startedAt,
                             finishedAt = match.first.finishedAt,
@@ -159,7 +159,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
             CompetitionMatchWithTeams(
                 competitionSetupMatch = match.competitionSetupMatch!!,
                 startTime = match.startTime,
-                currentlyRunning = match.currentlyRunning ?: false,
+                activatedAt = match.activatedAt,
                 startedAt = match.startedAt,
                 finishedAt = match.finishedAt,
                 skipped = match.skipped ?: false,

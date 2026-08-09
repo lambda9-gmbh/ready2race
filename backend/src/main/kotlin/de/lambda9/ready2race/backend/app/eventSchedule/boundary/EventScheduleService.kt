@@ -71,7 +71,7 @@ object EventScheduleService {
                     setupRoundId = r.get("setup_round_id", UUID::class.java),
                     matchStartedAt = r.get("match_started_at", java.time.LocalDateTime::class.java),
                     matchFinishedAt = r.get("match_finished_at", java.time.LocalDateTime::class.java),
-                    matchCurrentlyRunning = r[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
+                    matchCurrentlyRunning = r[COMPETITION_MATCH.ACTIVATED_AT] != null,
                     matchTeamsTotal = r.get("match_teams_total", Int::class.java) ?: 0,
                     matchTeamsScored = r.get("match_teams_scored", Int::class.java) ?: 0,
                 )
@@ -193,7 +193,7 @@ object EventScheduleService {
      * skip: erlaubt für FREE, WAITING und LINKED, solange der Lauf nicht unterwegs ist; OBSOLETE ist
      * endgültig (SlotNotSkippable), ein Lauf, der schon unterwegs ist, schlägt mit
      * MatchAlreadyStarted fehl. "Unterwegs" heißt seit dem 05.08.2026 nicht mehr nur `started_at`
-     * (Ist-Start aus der Zeitnahme), sondern auch `currently_running` (Aktivierung durch den
+     * (Ist-Start aus der Zeitnahme), sondern auch `activated_at` (Aktivierung durch den
      * Schiedsrichter) - siehe [EventScheduleLogic.matchUnderway]. Vorher ließ sich ein aktivierter
      * Lauf im Fenster vor der ersten Zeitnahme-Meldung absagen und war danach abgesagt UND laufend.
      *
@@ -209,7 +209,7 @@ object EventScheduleService {
      * beantwortet weiterhin nur die alte Frage "läuft im Event gerade etwas anderes".
      *
      * unskip: erlaubt, solange kein Lauf des Slots `started_at` trägt - hier bewusst OHNE
-     * `currently_running`. Eine Zeile aus der Zeit vor der Schutzregel kann abgesagt und laufend
+     * `activated_at`. Eine Zeile aus der Zeit vor der Schutzregel kann abgesagt und laufend
      * zugleich sein, und das Zurücknehmen der Absage ist genau der Weg, sie zu heilen.
      */
     fun setSlotSkipped(
@@ -231,7 +231,7 @@ object EventScheduleService {
         }
         val matchExists = row.get("match_exists", Boolean::class.java) == true
         val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
-        val matchCurrentlyRunning = row[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
+        val matchCurrentlyRunning = row[COMPETITION_MATCH.ACTIVATED_AT] != null
         val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
         val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
 
@@ -340,7 +340,7 @@ object EventScheduleService {
             }
 
             val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
-            if (EventScheduleLogic.matchUnderway(matchStartedAt, row[COMPETITION_MATCH.CURRENTLY_RUNNING] == true)) {
+            if (EventScheduleLogic.matchUnderway(matchStartedAt, row[COMPETITION_MATCH.ACTIVATED_AT] != null)) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
             }
 
@@ -411,7 +411,9 @@ object EventScheduleService {
         }
 
         !CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = true
+            if (activatedAt == null) {
+                activatedAt = LocalDateTime.now()
+            }
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

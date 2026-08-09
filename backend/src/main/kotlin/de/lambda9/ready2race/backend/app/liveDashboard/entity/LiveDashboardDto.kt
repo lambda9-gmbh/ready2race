@@ -5,6 +5,12 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 /**
+ * [PREPARING]: An den Start gerufen, aber noch nicht unterwegs
+ * (`competition_match.activated_at` gesetzt, `started_at` nicht). Bis zum 09.08.2026 hieß dieser
+ * Zustand ebenfalls [RUNNING] - der Klick des Schiedsrichters stellte fest, dass der Lauf
+ * drankommt, die Oberfläche behauptete aber, er fahre. Erst der automatische RaceClocker-Abruf
+ * liefert einen zuverlässigen Sender für den Ist-Start und macht die Trennung belegbar.
+ *
  * [SKIPPED]: Der Zeitstrahl-Slot dieses Laufs ist abgesagt. Anders als auf den öffentlichen
  * Anzeigen wird der Lauf im Schiedsrichter-Dashboard NICHT versteckt, sondern gekennzeichnet -
  * der Schiedsrichter muss die Absage sehen, um sie im Zeitplan zurücknehmen zu können (`/unskip`).
@@ -18,7 +24,7 @@ import java.util.UUID
  * das Signal ans Regattabüro ist, dass der Stand final ist - bis dahin kann noch eine Zeitstrafe
  * kommen.
  */
-enum class LiveDashboardMatchState { RUNNING, FINISHED, SKIPPED, AWAITING_FINISH, UPCOMING, UNSCHEDULED }
+enum class LiveDashboardMatchState { PREPARING, RUNNING, FINISHED, SKIPPED, AWAITING_FINISH, UPCOMING, UNSCHEDULED }
 
 enum class LiveDashboardInvoiceState { PAID, OPEN, NONE }
 

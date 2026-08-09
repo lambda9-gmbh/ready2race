@@ -47,6 +47,8 @@ object LiveDashboardLogic {
     /**
      * Die Reihenfolge der Zweige ist die eigentliche Aussage:
      *
+     * 0. [LiveDashboardMatchState.PREPARING] und [LiveDashboardMatchState.RUNNING] teilen sich den
+     *    ersten Zweig: beides ist ein aktivierter Lauf, nur der Ist-Start unterscheidet sie.
      * 1. [LiveDashboardMatchState.RUNNING] bleibt vorn. Ein aktiver Lauf mit vollständigen
      *    Ergebnissen zeigt weiter "Läuft" und hat den Beenden-Knopf - dort ist nichts kaputt.
      * 2. [LiveDashboardMatchState.FINISHED] heißt ausschließlich `finished_at is not null`, also
@@ -70,13 +72,18 @@ object LiveDashboardLogic {
      * (`ScheduleChain.decideNext` über `ChainSlot.matchFinished`) und kennt diese Aufzählung nicht.
      */
     fun deriveMatchState(
-        currentlyRunning: Boolean,
+        activatedAt: LocalDateTime?,
+        startedAt: LocalDateTime?,
         startTime: LocalDateTime?,
         finishedAt: LocalDateTime?,
         teamResults: List<Boolean>,
         skipped: Boolean = false,
     ): LiveDashboardMatchState = when {
-        currentlyRunning -> LiveDashboardMatchState.RUNNING
+        // Aktiviert, aber ohne Ist-Start: der Lauf ist an den Start gerufen und noch nicht
+        // unterwegs. Die Trennung trägt erst, seit der RaceClocker-Abruf den echten Start meldet -
+        // vorher war "läuft" eine Behauptung, jetzt ist es ein Beleg.
+        activatedAt != null && startedAt == null -> LiveDashboardMatchState.PREPARING
+        activatedAt != null -> LiveDashboardMatchState.RUNNING
         finishedAt != null -> LiveDashboardMatchState.FINISHED
         skipped -> LiveDashboardMatchState.SKIPPED
         teamResults.isNotEmpty() && teamResults.all { it } -> LiveDashboardMatchState.AWAITING_FINISH
@@ -136,6 +143,9 @@ object LiveDashboardLogic {
      * Ohne diesen Zweig bliebe ein vollständig gewerteter, aber nicht beendeter Lauf aus dem
      * Live-Tab verschwunden — genau das Verschwinden, das der neue Zustand beheben soll. Er ist
      * der Lauf, auf dessen Beenden gerade alles wartet.
+     *
+     * [LiveDashboardMatchState.PREPARING] gehört aus demselben Grund dazu: Ein Lauf am Start ist
+     * genau der, den der Schiedsrichter vor sich hat — auf ihm liegt die nächste Handlung.
      */
     fun selectForScope(
         matches: List<LiveDashboardMatchDto>,
@@ -144,7 +154,8 @@ object LiveDashboardLogic {
         LiveDashboardScope.ALL -> matches
         LiveDashboardScope.LIVE -> matches
             .filter {
-                it.state == LiveDashboardMatchState.RUNNING ||
+                it.state == LiveDashboardMatchState.PREPARING ||
+                    it.state == LiveDashboardMatchState.RUNNING ||
                     it.state == LiveDashboardMatchState.AWAITING_FINISH
             }
             .ifEmpty {

@@ -210,7 +210,11 @@ object LiveDashboardService {
                 val startTime = match[COMPETITION_MATCH.START_TIME]
                 val startedAt = match[COMPETITION_MATCH.STARTED_AT]
                 val finishedAt = match[COMPETITION_MATCH.FINISHED_AT]
-                val running = match[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
+                val activatedAt = match[COMPETITION_MATCH.ACTIVATED_AT]
+                // Für die Wasser-Prüfung zählt weiterhin die Aktivierung, nicht der Ist-Start: ein
+                // Boot, das an den Start gerufen ist, gehört raus - unabhängig davon, ob das Rennen
+                // schon unterwegs ist.
+                val running = activatedAt != null
 
                 val matchRows = teamsByMatch[matchId] ?: emptyList()
                 // Anzeige-Präzision pro Lauf: standardmäßig eine Nachkommastelle, feiner nur,
@@ -226,7 +230,8 @@ object LiveDashboardService {
                     LiveDashboardMatchDto(
                         matchId = matchId,
                         state = LiveDashboardLogic.deriveMatchState(
-                            currentlyRunning = running,
+                            activatedAt = activatedAt,
+                            startedAt = startedAt,
                             startTime = startTime,
                             finishedAt = finishedAt,
                             teamResults = teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) },
@@ -525,7 +530,9 @@ object LiveDashboardService {
             if (startedAt == null) {
                 startedAt = LocalDateTime.now()
             }
-            currentlyRunning = true
+            if (activatedAt == null) {
+                activatedAt = LocalDateTime.now()
+            }
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
@@ -872,7 +879,10 @@ object LiveDashboardService {
 
     private fun setRunning(matchId: UUID, running: Boolean, userId: UUID): App<Nothing, Unit> =
         CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = running
+            // Setzt bewusst nur die Aktivierung; der Ist-Start bleibt, wo er ist. Ein erneutes
+            // Aktivieren rückt den Zeitpunkt nicht vor - "seit wann steht der Lauf am Start" soll
+            // nicht bei jedem Klick neu beginnen.
+            activatedAt = if (running) activatedAt ?: LocalDateTime.now() else null
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie().map { }

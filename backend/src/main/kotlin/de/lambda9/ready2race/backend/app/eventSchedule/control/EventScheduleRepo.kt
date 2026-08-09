@@ -92,7 +92,7 @@ object EventScheduleRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.STARTED_AT.`as`("match_started_at"),
             COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             roundMaterialized,
             matchTeamsTotal,
             matchTeamsScored,
@@ -119,9 +119,9 @@ object EventScheduleRepo {
     /**
      * Slots ab (einschließlich) [after] für die Aktivierungskette (Task 9). Gleiche Joins/Aliase wie
      * [getSlots], zusätzlich `match_open` — mindestens eine Mannschaft ohne Ergebnis, wortgleiches
-     * Prädikat zu `LiveDashboardRepo.getActivationCandidates` — und `CURRENTLY_RUNNING`, damit
-     * [ScheduleChain.decideNext] einen noch laufenden Sibling-Lauf derselben Startzeit von einem
-     * frisch aktivierbaren unterscheiden kann.
+     * Prädikat zu `LiveDashboardRepo.getActivationCandidates` — und `ACTIVATED_AT`, damit
+     * [ScheduleChain.decideNext] einen bereits an den Start gerufenen Sibling-Lauf derselben
+     * Startzeit von einem frisch aktivierbaren unterscheiden kann.
      *
      * Bewusst `>=` statt `>`: [after] ist die Startzeit des gerade beendeten Slots selbst, und dessen
      * Gruppe (parallele Starts derselben Startzeit) muss mit in den Walk - sonst würde ein noch
@@ -163,7 +163,7 @@ object EventScheduleRepo {
             EVENT_SCHEDULE_SLOT.asterisk(),
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             roundMaterialized,
             matchOpen,
         )
@@ -203,7 +203,7 @@ object EventScheduleRepo {
                 .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
                 .where(
                     COMPETITION.EVENT.eq(eventId)
-                        .and(COMPETITION_MATCH.CURRENTLY_RUNNING.isTrue)
+                        .and(COMPETITION_MATCH.ACTIVATED_AT.isNotNull)
                 )
         )
     }
@@ -251,7 +251,7 @@ object EventScheduleRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.STARTED_AT.`as`("match_started_at"),
             COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             roundMaterialized,
         )
             .from(EVENT_SCHEDULE_SLOT)

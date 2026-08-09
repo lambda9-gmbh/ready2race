@@ -142,11 +142,55 @@ class LiveDashboardLogicTest {
 
     // --- deriveMatchState ---
 
+    // Vor der Trennung von Aktivierung und Ist-Start stand an dieser Stelle ein einzelnes `true`.
+    // Ein Lauf, der wirklich fährt, trägt jetzt beide Zeitpunkte.
+    private val activated = start.minusMinutes(5)
+    private val reallyStarted = start.plusMinutes(1)
+
+    @Test
+    fun `aktiviert ohne Ist-Start ist PREPARING`() {
+        val state = LiveDashboardLogic.deriveMatchState(
+            activatedAt = LocalDateTime.of(2026, 8, 14, 10, 0),
+            startedAt = null,
+            startTime = LocalDateTime.of(2026, 8, 14, 10, 5),
+            finishedAt = null,
+            teamResults = listOf(false, false),
+            skipped = false,
+        )
+        assertEquals(LiveDashboardMatchState.PREPARING, state)
+    }
+
+    @Test
+    fun `aktiviert mit Ist-Start ist RUNNING`() {
+        val state = LiveDashboardLogic.deriveMatchState(
+            activatedAt = LocalDateTime.of(2026, 8, 14, 10, 0),
+            startedAt = LocalDateTime.of(2026, 8, 14, 10, 6),
+            startTime = LocalDateTime.of(2026, 8, 14, 10, 5),
+            finishedAt = null,
+            teamResults = listOf(false, false),
+            skipped = false,
+        )
+        assertEquals(LiveDashboardMatchState.RUNNING, state)
+    }
+
+    @Test
+    fun `ein beendeter Lauf bleibt FINISHED, auch wenn er noch aktiviert waere`() {
+        val state = LiveDashboardLogic.deriveMatchState(
+            activatedAt = null,
+            startedAt = LocalDateTime.of(2026, 8, 14, 10, 6),
+            startTime = LocalDateTime.of(2026, 8, 14, 10, 5),
+            finishedAt = LocalDateTime.of(2026, 8, 14, 10, 20),
+            teamResults = listOf(true, true),
+            skipped = false,
+        )
+        assertEquals(LiveDashboardMatchState.FINISHED, state)
+    }
+
     @Test
     fun currentlyRunningWinsOverEverything() {
         assertEquals(
             LiveDashboardMatchState.RUNNING,
-            LiveDashboardLogic.deriveMatchState(true, null, null, listOf(true, true))
+            LiveDashboardLogic.deriveMatchState(activated, reallyStarted, null, null, listOf(true, true))
         )
     }
 
@@ -157,7 +201,7 @@ class LiveDashboardLogicTest {
         // statt "Lauf beenden" an.
         assertEquals(
             LiveDashboardMatchState.AWAITING_FINISH,
-            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(true, true))
+            LiveDashboardLogic.deriveMatchState(null, null, start, null, listOf(true, true))
         )
     }
 
@@ -166,7 +210,7 @@ class LiveDashboardLogicTest {
         // RUNNING steht vor AWAITING_FINISH: ein aktiver Lauf hat den Beenden-Knopf ohnehin.
         assertEquals(
             LiveDashboardMatchState.RUNNING,
-            LiveDashboardLogic.deriveMatchState(true, start, null, listOf(true, true))
+            LiveDashboardLogic.deriveMatchState(activated, reallyStarted, start, null, listOf(true, true))
         )
     }
 
@@ -174,7 +218,7 @@ class LiveDashboardLogicTest {
     fun finishedStaysFinishedEvenWithCompleteResults() {
         assertEquals(
             LiveDashboardMatchState.FINISHED,
-            LiveDashboardLogic.deriveMatchState(false, start, start.plusMinutes(9), listOf(true, true))
+            LiveDashboardLogic.deriveMatchState(null, null, start, start.plusMinutes(9), listOf(true, true))
         )
     }
 
@@ -182,7 +226,7 @@ class LiveDashboardLogicTest {
     fun noTeamsIsNeverFinished() {
         assertEquals(
             LiveDashboardMatchState.UPCOMING,
-            LiveDashboardLogic.deriveMatchState(false, start, null, emptyList())
+            LiveDashboardLogic.deriveMatchState(null, null, start, null, emptyList())
         )
     }
 
@@ -190,7 +234,7 @@ class LiveDashboardLogicTest {
     fun missingStartTimeIsUnscheduled() {
         assertEquals(
             LiveDashboardMatchState.UNSCHEDULED,
-            LiveDashboardLogic.deriveMatchState(false, null, null, listOf(false, false))
+            LiveDashboardLogic.deriveMatchState(null, null, null, null, listOf(false, false))
         )
     }
 
@@ -198,7 +242,7 @@ class LiveDashboardLogicTest {
     fun startTimeInPastWithoutPlacesIsStillUpcoming() {
         assertEquals(
             LiveDashboardMatchState.UPCOMING,
-            LiveDashboardLogic.deriveMatchState(false, LocalDateTime.now().minusHours(1), null, listOf(true, false))
+            LiveDashboardLogic.deriveMatchState(null, null, LocalDateTime.now().minusHours(1), null, listOf(true, false))
         )
     }
 
@@ -210,7 +254,8 @@ class LiveDashboardLogicTest {
         assertEquals(
             LiveDashboardMatchState.AWAITING_FINISH,
             LiveDashboardLogic.deriveMatchState(
-                false,
+                null,
+                null,
                 start,
                 null,
                 listOf(
@@ -231,7 +276,8 @@ class LiveDashboardLogicTest {
         assertEquals(
             LiveDashboardMatchState.AWAITING_FINISH,
             LiveDashboardLogic.deriveMatchState(
-                false,
+                null,
+                null,
                 start,
                 null,
                 listOf(
@@ -247,7 +293,7 @@ class LiveDashboardLogicTest {
         // Ohne Ergebnisse beendet: bisher fiel das auf UPCOMING zurück (A4-Loch).
         assertEquals(
             LiveDashboardMatchState.FINISHED,
-            LiveDashboardLogic.deriveMatchState(false, start, start.plusMinutes(9), listOf(false, false)),
+            LiveDashboardLogic.deriveMatchState(null, null, start, start.plusMinutes(9), listOf(false, false)),
         )
     }
 
@@ -256,7 +302,7 @@ class LiveDashboardLogicTest {
         // SKIPPED steht vor AWAITING_FINISH: einen abgesagten Lauf muss niemand mehr beenden.
         assertEquals(
             LiveDashboardMatchState.SKIPPED,
-            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(true, true), skipped = true),
+            LiveDashboardLogic.deriveMatchState(null, null, start, null, listOf(true, true), skipped = true),
         )
     }
 
@@ -266,7 +312,7 @@ class LiveDashboardLogicTest {
         // Schiedsrichter muss die Absage sehen, um sie im Zeitplan zurücknehmen zu können.
         assertEquals(
             LiveDashboardMatchState.SKIPPED,
-            LiveDashboardLogic.deriveMatchState(false, start, null, listOf(false, false), skipped = true),
+            LiveDashboardLogic.deriveMatchState(null, null, start, null, listOf(false, false), skipped = true),
         )
     }
 
@@ -277,7 +323,7 @@ class LiveDashboardLogicTest {
         // und dann darf das Dashboard nicht behaupten, es passiere gerade nichts.
         assertEquals(
             LiveDashboardMatchState.RUNNING,
-            LiveDashboardLogic.deriveMatchState(true, start, null, listOf(false, false), skipped = true),
+            LiveDashboardLogic.deriveMatchState(activated, reallyStarted, start, null, listOf(false, false), skipped = true),
         )
     }
 
@@ -285,7 +331,7 @@ class LiveDashboardLogicTest {
     fun cancelledMatchWithResultsStaysFinished() {
         assertEquals(
             LiveDashboardMatchState.FINISHED,
-            LiveDashboardLogic.deriveMatchState(false, start, start.plusMinutes(9), listOf(true, true), skipped = true),
+            LiveDashboardLogic.deriveMatchState(null, null, start, start.plusMinutes(9), listOf(true, true), skipped = true),
         )
     }
 

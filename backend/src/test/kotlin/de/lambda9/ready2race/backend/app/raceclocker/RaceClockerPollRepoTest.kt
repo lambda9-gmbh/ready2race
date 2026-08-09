@@ -141,7 +141,7 @@ class RaceClockerPollRepoTest {
                 startTime = now,
                 createdAt = now,
                 updatedAt = now,
-                currentlyRunning = currentlyRunning,
+                activatedAt = if (currentlyRunning) now else null,
                 finishedAt = finishedAt,
                 raceclockerAutoPausedAt = autoPausedAt,
             )
