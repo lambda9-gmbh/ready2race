@@ -388,6 +388,28 @@
   },
   "club": {
     "shortName": {
+      "names": "Club names",
+      "rules": {
+        "rules": "Shortening rules",
+        "hint": "Determine how a club name is shortened automatically. They apply to the list below — a maintained entry still beats them.",
+        "removeYears": "Remove founding years",
+        "removeBracketed": "Remove bracketed additions containing a number",
+        "wordPairs": "Word pairs",
+        "wordPairsHint": "A term and its abbreviation, e.g. Ruderverein → RV. Replacement is whole-word and ignores case; spelling variants such as \"Ruder-Verein\" need their own row.",
+        "removedTerms": "Removal list",
+        "removedTermsHint": "Terms that are dropped without replacement, e.g. the legal form.",
+        "term": "Term",
+        "replacement": "Abbreviation",
+        "add": "Add rule",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "orderHint": "The order decides: the longer compound has to come before the shorter one.",
+        "saved": "Rule saved",
+        "removed": "Rule removed",
+        "error": {
+          "rejected": "Please give both a term and an abbreviation — and no term twice."
+        }
+      },
       "shortNames": "Club short names",
       "tableHint": "Determine how a club is written on the referee board and the athlete display. Without an entry the short name is derived automatically.",
       "emptyHint": "Clearing the field means: derive it automatically again. Changes are saved when you leave the field.",

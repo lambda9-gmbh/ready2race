@@ -28,6 +28,7 @@ import Throbber from '@components/Throbber.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateClubGlobal} from '@authorization/privileges.ts'
 import {clubShortNameAction, mergedSpellings, primaryName} from './clubShortNames.ts'
+import ClubNameRulePanel from './ClubNameRulePanel.tsx'
 
 const ALL_EVENTS = 'all'
 
@@ -125,6 +126,20 @@ const ClubShortNamePanel = () => {
     return (
         <Box>
             <Typography variant={'h2'}>{t('club.shortName.shortNames')}</Typography>
+
+            {/* Die Regeln stehen über der Liste, nicht auf einer eigenen Seite: wer eine Regel
+                anfasst, muss unmittelbar darunter sehen, was sie mit den echten Vereinsnamen
+                macht. Deshalb lädt eine Regeländerung die Liste neu. */}
+            <ClubNameRulePanel
+                onRulesChanged={() => {
+                    // Die Felder müssen sich neu vorbelegen, sonst zeigten sie weiter die
+                    // Kurzformen der alten Regel - und die Regel bliebe wirkungslos anzusehen.
+                    setDrafts({})
+                    setLastRequested(Date.now())
+                }}
+            />
+
+            <Typography variant={'h3'}>{t('club.shortName.names')}</Typography>
             <Box sx={{color: theme.palette.text.secondary}}>{t('club.shortName.tableHint')}</Box>
             <Box sx={{color: theme.palette.text.secondary}}>{t('club.shortName.emptyHint')}</Box>
 

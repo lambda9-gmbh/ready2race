@@ -388,6 +388,28 @@
   },
   "club": {
     "shortName": {
+      "names": "Klubnavne",
+      "rules": {
+        "rules": "Forkortelsesregler",
+        "hint": "Bestemmer, hvordan et klubnavn automatisk forkortes. De gælder for listen nedenfor — en vedligeholdt post slår dem stadig.",
+        "removeYears": "Fjern stiftelsesår",
+        "removeBracketed": "Fjern parentestilføjelser med tal",
+        "wordPairs": "Ordpar",
+        "wordPairsHint": "En bestanddel og dens forkortelse, f.eks. Ruderverein → RV. Der erstattes ordnøjagtigt og uden hensyn til store og små bogstaver; stavevarianter som „Ruder-Verein“ kræver deres egen række.",
+        "removedTerms": "Sletteliste",
+        "removedTermsHint": "Bestanddele, der falder bort uden erstatning, f.eks. selskabsformen.",
+        "term": "Bestanddel",
+        "replacement": "Forkortelse",
+        "add": "Tilføj regel",
+        "moveUp": "Op",
+        "moveDown": "Ned",
+        "orderHint": "Rækkefølgen afgør: den længere sammensætning skal stå før den kortere.",
+        "saved": "Regel gemt",
+        "removed": "Regel fjernet",
+        "error": {
+          "rejected": "Angiv både bestanddel og forkortelse — og ingen bestanddel to gange."
+        }
+      },
       "shortNames": "Klubforkortelser",
       "tableHint": "Bestemmer, hvordan en klub skrives på dommertavlen og atletvisningen. Uden en post dannes forkortelsen automatisk.",
       "emptyHint": "At tømme feltet betyder: dan den automatisk igen. Ændringer gemmes, når du forlader feltet.",
