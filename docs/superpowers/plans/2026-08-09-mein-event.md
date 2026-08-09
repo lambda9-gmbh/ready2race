@@ -39,7 +39,8 @@ vitest (Frontend-Tests).
   `!KIO.fail<Problem>(...)` lauten. Ein `KIO.fail(...)` ohne führendes `!` läuft wirkungslos weiter.
 - **Keine Freitext-Notiz nach außen:** `CheckedParticipantRequirement.note` darf in keiner Antwort des
   neuen Endpunkts vorkommen.
-- **Commit-Nachrichten ohne Hinweise auf KI-Werkzeuge**, kein `Co-Authored-By`.
+- **Commit-Nachrichten ohne Hinweise auf KI-Werkzeuge**, kein `Co-Authored-By`. Deutsch mit
+  echten Umlauten — die Umlaut-Regel gilt auch für Commit-Zeilen.
 
 ---
 
@@ -1084,7 +1085,7 @@ Erwartet: BUILD SUCCESS.
 
 ```bash
 git add backend/src
-git commit -m "Mein Event: oeffentlicher Endpunkt fuer das persoenliche Dashboard"
+git commit -m "Mein Event: öffentlicher Endpunkt für das persönliche Dashboard"
 ```
 
 ---
@@ -1250,7 +1251,7 @@ Erwartet: 7 Tests grün.
 
 ```bash
 git add frontend/src/utils/myEventStorage.ts frontend/src/utils/myEventStorage.test.ts
-git commit -m "Mein Event: gescannte Codes auf dem Geraet merken"
+git commit -m "Mein Event: gescannte Codes auf dem Gerät merken"
 ```
 
 ---
@@ -1316,7 +1317,7 @@ Erwartet: kein TypeScript-Fehler.
 
 ```bash
 git add frontend/src/pages/results/ResultsQrCodePage.tsx frontend/src/routes.tsx
-git commit -m "Mein Event: Einstieg ueber den QR-Code merkt sich den Code"
+git commit -m "Mein Event: Einstieg über den QR-Code merkt sich den Code"
 ```
 
 ---
@@ -1397,7 +1398,7 @@ hier nicht.
 
 ```bash
 git add frontend/src/components
-git commit -m "Abruftakt der Athleten-Anzeige fuer weitere Ansichten nutzbar machen"
+git commit -m "Abruftakt der Athleten-Anzeige für weitere Ansichten nutzbar machen"
 ```
 
 ---
@@ -1667,7 +1668,7 @@ Erwartet: kein TypeScript-Fehler, alle Tests grün.
 
 ```bash
 git add frontend/src
-git commit -m "Mein Event: Bloecke des persoenlichen Dashboards"
+git commit -m "Mein Event: Blöcke des persönlichen Dashboards"
 ```
 
 ---
