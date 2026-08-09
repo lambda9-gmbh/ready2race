@@ -84,6 +84,12 @@ export const maxBoats = (cards: BoardCard[]): number =>
 /** Unterhalb dieser Größe wäre der Text aus fünf Metern nicht mehr zu lesen. */
 export const MIN_DENSITY_SCALE = 0.55
 
+/**
+ * Oberhalb dieser Größe würde der Text unförmig, obwohl das Feld klein ist — ein Rennen mit
+ * zwei Booten muss die freie Fläche nutzen dürfen, aber nicht grenzenlos.
+ */
+export const MAX_DENSITY_SCALE = 1.5
+
 /** Bis zu so vielen Booten und so vielen Spalten bleibt die Anzeige in voller Größe. */
 const BOATS_AT_FULL_SIZE = 4
 const COLUMNS_AT_FULL_SIZE = 3
@@ -95,12 +101,21 @@ const COLUMN_STEP = 0.09
  * Der Faktor, mit dem alle Schriftgrößen der Bühne multipliziert werden.
  *
  * Das Layout kann baulich nicht überlaufen — die Bootszeilen teilen sich als `1fr` die Höhe, die
- * da ist. Diese Funktion entscheidet nur, wie groß der Text dabei bleibt, damit ein volles Feld
- * nicht in einem Kartenrahmen erdrückt wird. Bewusst ohne Messung im Browser: ein Bildschirm, der
+ * da ist. Diese Funktion entscheidet, wie groß der Text dabei wird: Der Faktor wirkt in beide
+ * Richtungen. Unterhalb von BOATS_AT_FULL_SIZE Booten bleibt in der Zeile Platz übrig, den ein
+ * kleines Feld beanspruchen darf — der Faktor steigt über 1, bis höchstens MAX_DENSITY_SCALE,
+ * damit ein einzelnes Boot auf einer großen Wand nicht klein bleibt, nur weil die Formel sonst
+ * bei 100 % aufhören würde. Oberhalb von BOATS_AT_FULL_SIZE Booten bzw. COLUMNS_AT_FULL_SIZE
+ * Spalten sinkt er, damit ein volles Feld nicht in seinem Kartenrahmen erdrückt wird, bis
+ * höchstens hinunter zu MIN_DENSITY_SCALE. Bewusst ohne Messung im Browser: ein Bildschirm, der
  * tagelang unbeaufsichtigt läuft, soll bei einer Größenänderung nichts neu entscheiden müssen.
  */
 export const densityScale = (boats: number, columns: number): number => {
-    const forBoats = BOAT_STEP * Math.max(0, boats - BOATS_AT_FULL_SIZE)
+    // Ohne die Untergrenze bei 0 wirkt ein kleines Feld hier auch negativ und hebt den Faktor an
+    // — das ist beabsichtigt (siehe MAX_DENSITY_SCALE oben). Bei den Spalten gibt es diesen Fall
+    // nicht: die Bühne zeigt immer mindestens drei Statusspalten, also bleibt es bei der reinen
+    // Verkleinerung ab COLUMNS_AT_FULL_SIZE.
+    const forBoats = BOAT_STEP * (boats - BOATS_AT_FULL_SIZE)
     const forColumns = COLUMN_STEP * Math.max(0, columns - COLUMNS_AT_FULL_SIZE)
-    return Math.min(1, Math.max(MIN_DENSITY_SCALE, 1 - forBoats - forColumns))
+    return Math.min(MAX_DENSITY_SCALE, Math.max(MIN_DENSITY_SCALE, 1 - forBoats - forColumns))
 }

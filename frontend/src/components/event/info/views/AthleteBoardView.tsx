@@ -5,7 +5,7 @@ import {useServerClock} from '../athleteBoard/useServerClock'
 import AthleteBoardColumnCard from '../athleteBoard/AthleteBoardColumnCard'
 import AthleteBoardMatchCard from '../athleteBoard/AthleteBoardMatchCard'
 import AthleteBoardResultCard from '../athleteBoard/AthleteBoardResultCard'
-import {densityScale, maxBoats, selectBoardCards} from '../athleteBoard/boardLayout'
+import {BoardCardKind, densityScale, maxBoats, selectBoardCards} from '../athleteBoard/boardLayout'
 import {scaled} from '../athleteBoard/common'
 
 interface AthleteBoardViewProps {
@@ -75,14 +75,14 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
     const layout = selectBoardCards(data)
     const scale = densityScale(maxBoats(layout.cards), layout.cards.length)
 
-    const titleFor = (kind: string) =>
+    const titleFor = (kind: BoardCardKind) =>
         kind === 'running'
             ? t('event.info.athleteBoard.running')
             : kind === 'upcoming'
               ? t('event.info.athleteBoard.upcoming')
               : t('event.info.athleteBoard.results')
 
-    const emptyTextFor = (kind: string) =>
+    const emptyTextFor = (kind: BoardCardKind) =>
         kind === 'running'
             ? t('event.info.athleteBoard.noRunning')
             : kind === 'upcoming'
@@ -92,14 +92,15 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
     return (
         <Box
             sx={{
-                height: '100%',
+                // Ab lg gilt das Scroll-Verbot: die Bühne passt sich der Höhe an, statt
+                // überzulaufen. Darunter bleibt die gestapelte, scrollende Darstellung von
+                // früher — dafür braucht die Höhe hier ihr natürliches Maß statt 100 %.
+                height: {xs: 'auto', lg: '100%'},
                 minHeight: 0,
                 display: 'grid',
-                gridTemplateRows: 'auto minmax(0, 1fr)',
+                gridTemplateRows: {xs: 'auto auto', lg: 'auto minmax(0, 1fr)'},
                 rowGap: 'clamp(0.4rem, 0.9vh, 1rem)',
                 p: 'clamp(0.5rem, 1vw, 1.5rem)',
-                // Ab lg gilt das Scroll-Verbot: die Bühne passt sich der Höhe an, statt
-                // überzulaufen. Darunter bleibt die gestapelte Darstellung von früher.
                 overflow: {xs: 'auto', lg: 'hidden'},
                 '--ab-scale': scale,
                 // Höhe der Overlay-Knöpfe (top: 16 + Knopfhöhe) plus Luft
@@ -111,7 +112,7 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
                 alignItems="baseline"
                 gap={2}>
                 <Typography
-                    sx={{fontSize: 'clamp(1rem, 1.8vw, 2rem)', fontWeight: 800}}
+                    sx={{fontSize: 'clamp(1rem, 1.8vw, 3rem)', fontWeight: 800}}
                     noWrap>
                     {data?.eventName ?? ''}
                 </Typography>

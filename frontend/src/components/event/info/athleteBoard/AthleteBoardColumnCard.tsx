@@ -26,17 +26,19 @@ const AthleteBoardColumnCard = ({title, emptyText, children}: AthleteBoardColumn
     <Card
         variant="outlined"
         sx={{
-            height: '100%',
+            // Ab lg gilt das Scroll-Verbot der Bühne, darunter bleibt die Karte in ihrer
+            // natürlichen Höhe und darf wie früher gestapelt scrollen.
+            height: {xs: 'auto', lg: '100%'},
             minHeight: 0,
-            overflow: 'hidden',
+            overflow: {xs: 'visible', lg: 'hidden'},
             display: 'grid',
-            gridTemplateRows: 'auto 1fr',
+            gridTemplateRows: {xs: 'auto auto', lg: 'auto 1fr'},
             rowGap: scaled('0.25rem', '0.4vw', '0.6rem'),
             p: scaled('0.5rem', '0.9vw', '1.25rem'),
         }}>
         <Typography
             sx={{
-                fontSize: scaled('0.75rem', '1vw', '1.3rem'),
+                fontSize: scaled('0.75rem', '1vw', '1.8rem'),
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
@@ -49,12 +51,12 @@ const AthleteBoardColumnCard = ({title, emptyText, children}: AthleteBoardColumn
             sx={{
                 minHeight: 0,
                 display: 'grid',
-                gridTemplateRows: 'auto minmax(0, 1fr)',
+                gridTemplateRows: {xs: 'auto auto', lg: 'auto minmax(0, 1fr)'},
                 rowGap: scaled('0.35rem', '0.6vw', '0.9rem'),
             }}>
             {children ?? (
                 <Typography
-                    sx={{fontSize: scaled('0.85rem', '1.2vw', '1.3rem')}}
+                    sx={{fontSize: scaled('0.85rem', '1.2vw', '1.8rem')}}
                     color="text.secondary">
                     {emptyText}
                 </Typography>

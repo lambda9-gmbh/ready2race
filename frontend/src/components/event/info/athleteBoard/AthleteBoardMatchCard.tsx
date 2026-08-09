@@ -56,13 +56,13 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
         // Ein Programmpunkt (FREE-Platzhalter) startet nicht und wird nicht gestempelt.
         match.name ? null : match.state === 'PREPARING' ? (
             <Typography
-                sx={{fontSize: scaled('0.75rem', '1.3vw', '1rem')}}
+                sx={{fontSize: scaled('0.75rem', '1.3vw', '1.6rem')}}
                 color="text.secondary">
                 {t('event.info.athleteBoard.preparing')}
             </Typography>
         ) : match.actualStartTime ? (
             <Typography
-                sx={{fontSize: scaled('0.75rem', '1.3vw', '1rem')}}
+                sx={{fontSize: scaled('0.75rem', '1.3vw', '1.6rem')}}
                 color="text.secondary">
                 {t('event.info.athleteBoard.startedAt', {
                     time: formatClockTime(match.actualStartTime),
@@ -75,7 +75,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
             return (
                 <Stack alignItems="flex-end">
                     <Typography
-                        sx={{fontSize: scaled('0.8rem', '1.4vw', '1.1rem')}}
+                        sx={{fontSize: scaled('0.8rem', '1.4vw', '1.6rem')}}
                         color="text.secondary">
                         {t('event.info.athleteBoard.unscheduled')}
                     </Typography>
@@ -95,14 +95,14 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
             <Stack alignItems="flex-end">
                 {startsOnAnotherDay && (
                     <Typography
-                        sx={{fontSize: scaled('0.7rem', '1.2vw', '0.95rem')}}
+                        sx={{fontSize: scaled('0.7rem', '1.2vw', '1.6rem')}}
                         color="text.secondary">
                         {formatShortDate(match.startTime)}
                     </Typography>
                 )}
                 <Typography
                     sx={{
-                        fontSize: scaled('1.1rem', '2.4vw', '2rem'),
+                        fontSize: scaled('1.1rem', '2.4vw', '3.2rem'),
                         fontWeight: 700,
                         lineHeight: 1.1,
                     }}>
@@ -112,7 +112,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     renderRunningStart()
                 ) : overdue ? (
                     <Typography
-                        sx={{fontSize: scaled('0.75rem', '1.3vw', '1rem')}}
+                        sx={{fontSize: scaled('0.75rem', '1.3vw', '1.6rem')}}
                         color="text.secondary">
                         {t('event.info.athleteBoard.expected')}
                     </Typography>
@@ -122,7 +122,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     startsInSeconds !== null &&
                     countdownFitsOnScreen && (
                         <Typography
-                            sx={{fontSize: scaled('0.75rem', '1.3vw', '1rem')}}
+                            sx={{fontSize: scaled('0.75rem', '1.3vw', '1.6rem')}}
                             color="text.secondary">
                             {t('event.info.athleteBoard.startsIn', {
                                 time: formatRemaining(startsInSeconds, t),
@@ -136,7 +136,8 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
 
     // Abgesagter Lauf: Er bleibt an seiner geplanten Stelle stehen, statt spurlos zu verschwinden —
     // für eine Besatzung am Steg ist ein verschwundener Lauf nicht von einem Anzeigefehler zu
-    // unterscheiden. Gezeigt wird nur noch, worum es ging und wann es hätte sein sollen.
+    // unterscheiden. Gezeigt wird nur noch, worum es ging und wann es hätte sein sollen; Mannschaften
+    // zeigt diese Karte nicht — der Server liefert sie für einen abgesagten Lauf gar nicht erst mit.
     if (match.cancelled) {
         return (
             <>
@@ -149,7 +150,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     <Box sx={{minWidth: 0}}>
                         <Typography
                             sx={{
-                                fontSize: scaled('1rem', '1.8vw', '1.6rem'),
+                                fontSize: scaled('1rem', '1.8vw', '2.6rem'),
                                 fontWeight: 700,
                                 textDecoration: 'line-through',
                             }}
@@ -159,7 +160,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                 .join(' · ')}
                         </Typography>
                         <Typography
-                            sx={{fontSize: scaled('0.95rem', '1.6vw', '1.4rem'), fontWeight: 600}}
+                            sx={{fontSize: scaled('0.95rem', '1.6vw', '2.6rem'), fontWeight: 600}}
                             color="text.secondary">
                             {t('event.match.status.doesNotTakePlace')}
                         </Typography>
@@ -167,7 +168,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     {match.startTime && (
                         <Typography
                             sx={{
-                                fontSize: scaled('1.1rem', '2.4vw', '2rem'),
+                                fontSize: scaled('1.1rem', '2.4vw', '3.2rem'),
                                 fontWeight: 700,
                                 lineHeight: 1.1,
                                 textDecoration: 'line-through',
@@ -198,7 +199,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                         <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
                             <Chip label={t('event.info.freeSlot')} size="small" variant="outlined" />
                             <Typography
-                                sx={{fontSize: scaled('1rem', '1.8vw', '1.6rem'), fontWeight: 700}}
+                                sx={{fontSize: scaled('1rem', '1.8vw', '2.6rem'), fontWeight: 700}}
                                 color="text.secondary">
                                 {match.name}
                             </Typography>
@@ -206,13 +207,13 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     ) : (
                         <>
                             <Typography
-                                sx={{fontSize: scaled('1rem', '1.8vw', '1.6rem'), fontWeight: 700}}>
+                                sx={{fontSize: scaled('1rem', '1.8vw', '2.6rem'), fontWeight: 700}}>
                                 {match.competitionName}
                             </Typography>
                             <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
                                 {match.roundName && (
                                     <Typography
-                                        sx={{fontSize: scaled('0.75rem', '1.2vw', '1rem')}}
+                                        sx={{fontSize: scaled('0.75rem', '1.2vw', '1.6rem')}}
                                         color="text.secondary">
                                         {match.roundName}
                                     </Typography>
@@ -239,20 +240,25 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                 <Box />
             ) : match.pendingRound ? (
                 <Typography
-                    sx={{fontSize: scaled('0.95rem', '1.6vw', '1.4rem')}}
+                    sx={{fontSize: scaled('0.95rem', '1.6vw', '2.6rem')}}
                     color="text.secondary"
                     fontStyle="italic">
                     {t('event.info.pendingRound')}
                 </Typography>
             ) : (
-                // Die Bootszeilen teilen sich die verbleibende Höhe zu gleichen Teilen. Damit kann
-                // die Karte nicht überlaufen, ganz gleich wie voll das Feld ist — an die Stelle
-                // eines Scrollbalkens tritt die kleinere Schrift aus densityScale().
+                // Ab lg teilen sich die Bootszeilen die verbleibende Höhe zu gleichen Teilen. Damit
+                // kann die Karte nicht überlaufen, ganz gleich wie voll das Feld ist — an die Stelle
+                // eines Scrollbalkens tritt die kleinere Schrift aus densityScale(). Darunter bleibt
+                // die gestapelte Darstellung: die Zeilen behalten ihre natürliche Höhe und die Seite
+                // scrollt, statt Zeilen ineinander zu quetschen.
                 <Box
                     sx={{
                         minHeight: 0,
                         display: 'grid',
-                        gridTemplateRows: `repeat(${boats}, minmax(0, 1fr))`,
+                        gridTemplateRows: {
+                            xs: `repeat(${boats}, auto)`,
+                            lg: `repeat(${boats}, minmax(0, 1fr))`,
+                        },
                     }}>
                     {match.teams.map((team, index) => (
                         <Stack
@@ -263,13 +269,13 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                             sx={{
                                 minWidth: 0,
                                 minHeight: 0,
-                                overflow: 'hidden',
+                                overflow: {xs: 'visible', lg: 'hidden'},
                                 borderTop: index > 0 ? '1px solid' : 'none',
                                 borderColor: 'divider',
                             }}>
                             <Typography
                                 sx={{
-                                    fontSize: scaled('1.4rem', '2.8vw', '2.8rem'),
+                                    fontSize: scaled('1.4rem', '2.8vw', '4.5rem'),
                                     fontWeight: 800,
                                     lineHeight: 1,
                                     minWidth: '1.8em',
@@ -286,7 +292,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                     // hinge die Kartenhöhe an der Länge der Nachnamen.
                                     <Typography
                                         noWrap
-                                        sx={{fontSize: scaled('0.7rem', '1.1vw', '0.95rem')}}
+                                        sx={{fontSize: scaled('0.7rem', '1.1vw', '1.5rem')}}
                                         color="text.secondary">
                                         {team.participants
                                             .map(p => (p.role ? `${p.name} (${p.role})` : p.name))
@@ -302,7 +308,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                 <Stack alignItems="flex-end" sx={{flexShrink: 0, maxWidth: '45%'}}>
                                     <Typography
                                         sx={{
-                                            fontSize: scaled('0.9rem', '1.5vw', '1.3rem'),
+                                            fontSize: scaled('0.9rem', '1.5vw', '2.2rem'),
                                             fontWeight: 600,
                                             textAlign: 'right',
                                         }}

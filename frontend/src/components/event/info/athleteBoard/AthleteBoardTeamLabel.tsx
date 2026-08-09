@@ -30,7 +30,7 @@ const AthleteBoardTeamLabel = ({team, color}: AthleteBoardTeamLabelProps) => {
     return (
         <Typography
             sx={{
-                fontSize: scaled('0.95rem', '1.6vw', '1.4rem'),
+                fontSize: scaled('0.95rem', '1.6vw', '2.6rem'),
                 fontWeight: 600,
                 // Höchstens zwei Zeilen, danach Auslassungspunkte: ein sehr langer
                 // Renngemeinschafts-Name darf die Bootszeile nicht aufblähen.

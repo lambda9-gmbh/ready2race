@@ -1,6 +1,7 @@
 import {describe, expect, test} from 'vitest'
 import {AthleteBoardDto, AthleteBoardMatch, AthleteBoardResult} from '@api/types.gen'
 import {
+    MAX_DENSITY_SCALE,
     MAX_RUNNING_CARDS,
     MIN_DENSITY_SCALE,
     densityScale,
@@ -139,6 +140,12 @@ describe('densityScale', () => {
         expect(densityScale(40, 4)).toBe(MIN_DENSITY_SCALE)
     })
 
+    // Das ist der Grund für MAX_DENSITY_SCALE: ein Rennen mit zwei Booten soll die freie Fläche
+    // der Zeile nutzen dürfen, statt in der für ein volles Feld bemessenen Schrift zu ertrinken.
+    test('kleines Feld in drei Spalten wächst über volle Größe hinaus', () => {
+        expect(densityScale(2, 3)).toBeGreaterThan(1)
+    })
+
     test('monoton fallend in der Bootszahl', () => {
         for (let boats = 1; boats < 20; boats++) {
             expect(densityScale(boats + 1, 3)).toBeLessThanOrEqual(densityScale(boats, 3))
@@ -154,7 +161,7 @@ describe('densityScale', () => {
             for (let columns = 3; columns <= 4; columns++) {
                 const scale = densityScale(boats, columns)
                 expect(scale).toBeGreaterThanOrEqual(MIN_DENSITY_SCALE)
-                expect(scale).toBeLessThanOrEqual(1)
+                expect(scale).toBeLessThanOrEqual(MAX_DENSITY_SCALE)
             }
         }
     })

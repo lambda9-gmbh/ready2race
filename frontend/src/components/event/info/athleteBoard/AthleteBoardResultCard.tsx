@@ -29,13 +29,13 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
         <>
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
                 <Box sx={{minWidth: 0}}>
-                    <Typography sx={{fontSize: scaled('1rem', '1.8vw', '1.6rem'), fontWeight: 700}}>
+                    <Typography sx={{fontSize: scaled('1rem', '1.8vw', '2.6rem'), fontWeight: 700}}>
                         {result.competitionName}
                     </Typography>
                     <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
                         {result.roundName && (
                             <Typography
-                                sx={{fontSize: scaled('0.75rem', '1.2vw', '1rem')}}
+                                sx={{fontSize: scaled('0.75rem', '1.2vw', '1.6rem')}}
                                 color="text.secondary">
                                 {result.roundName}
                             </Typography>
@@ -51,7 +51,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                     <Stack alignItems="flex-end" sx={{flexShrink: 0}}>
                         <Typography
                             sx={{
-                                fontSize: scaled('1.1rem', '2.4vw', '2rem'),
+                                fontSize: scaled('1.1rem', '2.4vw', '3.2rem'),
                                 fontWeight: 700,
                                 lineHeight: 1.1,
                             }}>
@@ -59,7 +59,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                         </Typography>
                         {result.actualStartTime && (
                             <Typography
-                                sx={{fontSize: scaled('0.75rem', '1.3vw', '1rem')}}
+                                sx={{fontSize: scaled('0.75rem', '1.3vw', '1.6rem')}}
                                 color="text.secondary">
                                 {t('event.info.athleteBoard.startedAt', {
                                     time: formatClockTime(result.actualStartTime),
@@ -70,11 +70,16 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                 )}
             </Stack>
 
+            {/* Ab lg teilen sich die Bootszeilen die verbleibende Höhe zu gleichen Teilen, darunter
+                bleibt die gestapelte Darstellung mit natürlicher Zeilenhöhe (siehe AthleteBoardMatchCard). */}
             <Box
                 sx={{
                     minHeight: 0,
                     display: 'grid',
-                    gridTemplateRows: `repeat(${boats}, minmax(0, 1fr))`,
+                    gridTemplateRows: {
+                        xs: `repeat(${boats}, auto)`,
+                        lg: `repeat(${boats}, minmax(0, 1fr))`,
+                    },
                 }}>
                 {teams.map((team, index) => (
                     <Stack
@@ -85,7 +90,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                         sx={{
                             minWidth: 0,
                             minHeight: 0,
-                            overflow: 'hidden',
+                            overflow: {xs: 'visible', lg: 'hidden'},
                             borderTop: index > 0 ? '1px solid' : 'none',
                             borderColor: 'divider',
                         }}>
@@ -94,7 +99,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                             darunter, damit die Zeile dem Boot zuzuordnen bleibt. */}
                         <Typography
                             sx={{
-                                fontSize: scaled('1.4rem', '2.8vw', '2.6rem'),
+                                fontSize: scaled('1.4rem', '2.8vw', '4.5rem'),
                                 fontWeight: 800,
                                 lineHeight: 1,
                                 minWidth: '1.8em',
@@ -110,7 +115,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                             />
                             <Typography
                                 noWrap
-                                sx={{fontSize: scaled('0.7rem', '1.1vw', '0.95rem')}}
+                                sx={{fontSize: scaled('0.7rem', '1.1vw', '1.5rem')}}
                                 color="text.secondary">
                                 {t('event.info.athleteBoard.startNumber')} {team.startNumber}
                             </Typography>
@@ -120,7 +125,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                         <Stack alignItems="flex-end" sx={{flexShrink: 0, maxWidth: '45%'}}>
                             <Typography
                                 sx={{
-                                    fontSize: scaled('0.9rem', '1.5vw', '1.3rem'),
+                                    fontSize: scaled('0.9rem', '1.5vw', '2.2rem'),
                                     fontWeight: 600,
                                     textAlign: 'right',
                                 }}
