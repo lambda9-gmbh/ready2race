@@ -1742,6 +1742,8 @@ export type InviteRequest = {
 export type InvoiceDto = {
     id: string
     invoiceNumber: string
+    billedToOrganization?: string
+    billedToName?: string
     totalAmount: string
     createdAt: string
     paidAt?: string

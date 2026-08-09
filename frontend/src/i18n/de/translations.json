@@ -2180,6 +2180,7 @@
     "download": "Herunterladen",
     "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
     "invoiceNumber": "Rechnungsnummer",
+    "billedTo": "Rechnung an",
     "amount": "Rechnungsbetrag",
     "paid": "Bezahlt",
     "tableHint": {

@@ -2180,6 +2180,7 @@
     "download": "Download",
     "downloadError": "An error occurred trying to download the invoice.",
     "invoiceNumber": "Invoice number",
+    "billedTo": "Billed to",
     "amount": "Amount",
     "paid": "Paid",
     "tableHint": {

@@ -12466,6 +12466,10 @@ components:
           format: uuid
         invoiceNumber:
           type: string
+        billedToOrganization:
+          type: string
+        billedToName:
+          type: string
         totalAmount:
           type: string
           format: decimal

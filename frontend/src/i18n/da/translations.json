@@ -2174,6 +2174,7 @@
     "download": "Download",
     "downloadError": "Der opstod en fejl under forsøget på at downloade fakturaen.",
     "invoiceNumber": "Fakturanummer",
+    "billedTo": "Faktura til",
     "amount": "Fakturabeløb",
     "paid": "Betalt",
     "tableHint": {
