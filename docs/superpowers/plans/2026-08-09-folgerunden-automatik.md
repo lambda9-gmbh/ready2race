@@ -31,7 +31,7 @@ OpenAPI, i18n über i18next.
 - **Views gehören in `afterMigrate.sql`**, nie in eine Migrationsdatei. Dort wird jede View bei
   jedem Lauf gedroppt und neu erzeugt.
 - **Migrationsnamen** folgen `V{yyyyMMddHHmm}__{beschreibung}.sql`. Die höchste vorhandene Nummer
-  ist `V202608091410`. Dieser Plan benutzt `V202608091500`.
+  ist `V202608091410`. Dieser Plan benutzt `V202608091501`.
 - **i18n immer in allen drei Sprachen** pflegen: `frontend/src/i18n/de/translations.json`,
   `.../en/translations.json`, `.../da/translations.json`.
 - **`KIO.fail` ohne `!` ist ein No-Op.** Jeder `KIO.fail`/`onNullFail`-Aufruf in einer
@@ -60,7 +60,7 @@ cd frontend && npm run lint
 
 | Datei | Verantwortung |
 | --- | --- |
-| `backend/src/main/resources/db/migration/V202608091500__auto_create_following_rounds.sql` | Vier Spalten |
+| `backend/src/main/resources/db/migration/V202608091501__auto_create_following_rounds.sql` | Vier Spalten |
 | `backend/src/main/kotlin/.../app/competitionExecution/boundary/AutoRoundProgressionLogic.kt` | Reine Entscheidung: Runde abgeschlossen? Einstellung wirksam? |
 | `backend/src/main/kotlin/.../app/competitionExecution/boundary/AutoRoundProgressionService.kt` | Auslöser, liest Einstellung, ruft `createNewRound` |
 | `backend/src/main/kotlin/.../app/competitionExecution/entity/RoundProgressionConfigDto.kt` | DTO + Request der Wettkampf-Übersteuerung |
@@ -86,7 +86,7 @@ cd frontend && npm run lint
 ## Task 1: Schema, Views und Entitäten
 
 **Files:**
-- Create: `backend/src/main/resources/db/migration/V202608091500__auto_create_following_rounds.sql`
+- Create: `backend/src/main/resources/db/migration/V202608091501__auto_create_following_rounds.sql`
 - Modify: `backend/src/main/resources/db/migration/afterMigrate.sql` (Views
   `competition_match_with_teams` ab Zeile 839 und `competition_setup_round_with_matches` ab Zeile 885)
 - Modify: `backend/src/main/kotlin/de/lambda9/ready2race/backend/app/competitionExecution/entity/CompetitionMatchWithTeams.kt`
@@ -100,7 +100,7 @@ cd frontend && npm run lint
 
 - [ ] **Step 1: Migration schreiben**
 
-Neue Datei `backend/src/main/resources/db/migration/V202608091500__auto_create_following_rounds.sql`:
+Neue Datei `backend/src/main/resources/db/migration/V202608091501__auto_create_following_rounds.sql`:
 
 ```sql
 set search_path to ready2race, pg_catalog, public;
@@ -1188,7 +1188,7 @@ Schritt 3 — am Ende des Schleifenkörpers, direkt hinter dem `if (nextRound !=
             // Stand die Runde schon einmal, sind diese Paarungen eine Neuberechnung - und die
             // Orga-Ansichten sollen das sehen. Dass es sie schon einmal gab, weiß nur die
             // Setup-Runde: Sie überlebt das Löschen der Runde, die Läufe tun es nicht
-            // (siehe V202608091500).
+            // (siehe V202608091501).
             if (nextRound != null && createdThisRound.isNotEmpty()) {
                 val markedAt = LocalDateTime.now()
                 if (nextRound.materializedAt != null) {
