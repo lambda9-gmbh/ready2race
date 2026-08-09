@@ -88,6 +88,28 @@ describe('slotLabel', () => {
             ),
         ).toBe('Mittagspause')
     })
+    it('drops the competition name in short mode', () => {
+        expect(
+            slotLabel(
+                slot('2026-08-17T08:00:00', {
+                    competitionIdentifier: '12',
+                    competitionShortName: 'CM 1x',
+                }),
+                'short',
+            ),
+        ).toBe('Achtelfinale – AF1')
+    })
+    it('keeps the competition name in short mode when there is no tag to replace it', () => {
+        expect(
+            slotLabel(
+                slot('2026-08-17T08:00:00', {
+                    competitionIdentifier: null,
+                    competitionShortName: null,
+                }),
+                'short',
+            ),
+        ).toBe('CM 1x – Achtelfinale – AF1')
+    })
 })
 
 describe('competitionTag', () => {

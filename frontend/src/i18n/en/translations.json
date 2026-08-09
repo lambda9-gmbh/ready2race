@@ -1632,6 +1632,8 @@
     "schedule": {
       "tab": "Schedule",
       "slot": "Slot",
+      "showShortNames": "Show short names",
+      "showFullNames": "Show full names",
       "addSlot": "Add slot",
       "slotType": "Type",
       "freeSlot": "Free slot",

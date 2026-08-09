@@ -24,7 +24,9 @@ import {
     EventRepeat,
     OpenInNew,
     PlayArrow,
+    ShortText,
     Stop,
+    Subject,
 } from '@mui/icons-material'
 import {format} from 'date-fns'
 import {Link} from '@tanstack/react-router'
@@ -69,6 +71,12 @@ const useLocalClock = (intervalMs: number): Date => {
     }, [intervalMs])
     return now
 }
+
+/** Merkt sich, ob die Slot-Spalte am kurzen oder am ausgeschriebenen Wettkampfnamen hängt -
+ * dieselbe Überlegung wie competition_nav_short_names in der Wettkampfliste. */
+const SHORT_LABELS_STORAGE_KEY = 'schedule_short_labels'
+
+const storedShortLabels = (): boolean => localStorage.getItem(SHORT_LABELS_STORAGE_KEY) === 'true'
 
 /** Einheitliche Breite eines Aktions-Platzes (IconButton size=small: 20px Icon + 2×5px Padding). */
 const actionSlotSx = {
@@ -145,6 +153,14 @@ const EventSchedule = () => {
     const [shiftDaySlots, setShiftDaySlots] = useState<EventScheduleSlotDto[]>([])
 
     const [importDialogOpen, setImportDialogOpen] = useState(false)
+
+    const [shortLabels, setShortLabels] = useState(storedShortLabels)
+
+    const toggleShortLabels = () =>
+        setShortLabels(prev => {
+            localStorage.setItem(SHORT_LABELS_STORAGE_KEY, String(!prev))
+            return !prev
+        })
 
     const now = useLocalClock(30_000)
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
@@ -420,7 +436,34 @@ const EventSchedule = () => {
                             <TableHead>
                                 <TableRow>
                                     <TableCell width={'10%'}>{t('event.schedule.startTime')}</TableCell>
-                                    <TableCell width={'40%'}>{t('event.schedule.slot')}</TableCell>
+                                    <TableCell width={'40%'}>
+                                        {/* Der Umschalter sitzt an der Spalte, deren Inhalt er
+                                            ändert. Er steht in jeder Tagestabelle, wirkt aber auf
+                                            alle - wer oben umschaltet, will nicht am nächsten Tag
+                                            wieder den langen Namen lesen. */}
+                                        <Stack
+                                            direction={'row'}
+                                            spacing={0.5}
+                                            alignItems={'center'}>
+                                            <span>{t('event.schedule.slot')}</span>
+                                            <IconButton
+                                                size={'small'}
+                                                onClick={toggleShortLabels}
+                                                color={shortLabels ? 'primary' : 'default'}
+                                                aria-pressed={shortLabels}
+                                                title={t(
+                                                    shortLabels
+                                                        ? 'event.schedule.showFullNames'
+                                                        : 'event.schedule.showShortNames',
+                                                )}>
+                                                {shortLabels ? (
+                                                    <Subject fontSize={'small'} />
+                                                ) : (
+                                                    <ShortText fontSize={'small'} />
+                                                )}
+                                            </IconButton>
+                                        </Stack>
+                                    </TableCell>
                                     <TableCell width={'20%'}>{t('event.schedule.status')}</TableCell>
                                     <TableCell width={'15%'}>{t('event.schedule.duration')}</TableCell>
                                     {canEdit && <TableCell width={'15%'} />}
@@ -471,7 +514,10 @@ const EventSchedule = () => {
                                                                 {competitionTag(slot)}
                                                             </Box>
                                                         )}
-                                                        {slotLabel(slot)}
+                                                        {slotLabel(
+                                                            slot,
+                                                            shortLabels ? 'short' : 'full',
+                                                        )}
                                                     </Box>
                                                     <Box sx={{...actionSlotSx, flexShrink: 0}}>
                                                         {slot.matchId && (
@@ -660,7 +706,11 @@ const EventSchedule = () => {
                                                     {competitionTag(match)}
                                                 </Box>
                                             )}
-                                            {match.competitionName}
+                                            {/* Dieselbe Kürzung wie in der Slot-Spalte: mit
+                                                Kürzel davor sagt der ausgeschriebene Name nichts
+                                                Neues mehr. */}
+                                            {(!shortLabels || !competitionTag(match)) &&
+                                                match.competitionName}
                                         </TableCell>
                                         <TableCell>{match.roundName}</TableCell>
                                         <TableCell>{match.matchName ?? '-'}</TableCell>

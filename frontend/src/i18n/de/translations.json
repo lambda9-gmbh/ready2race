@@ -1632,6 +1632,8 @@
     "schedule": {
       "tab": "Zeitplan",
       "slot": "Slot",
+      "showShortNames": "Kurznamen zeigen",
+      "showFullNames": "Ausgeschriebene Namen zeigen",
       "addSlot": "Slot hinzufügen",
       "slotType": "Art",
       "freeSlot": "Freier Slot",

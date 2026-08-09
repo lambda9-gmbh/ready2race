@@ -18,8 +18,20 @@ export const groupSlotsByDay = (slots: EventScheduleSlotDto[]): DaySection[] => 
     return [...byDay.entries()].map(([date, daySlots]) => ({date, slots: daySlots}))
 }
 
-export const slotLabel = (slot: EventScheduleSlotDto): string =>
-    slot.name ?? [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' – ')
+// Im Zeitplan-Tab lässt sich der Slot-Text kürzen ([mode] = 'short'): der ausgeschriebene
+// Wettkampfname fällt dann weg, weil das vorangestellte Kürzel (siehe [competitionTag]) dieselbe
+// Auskunft schon gibt - übrig bleiben Runde und Lauf. Ohne gepflegtes Kürzel bliebe nur "Finale"
+// ohne Rennen stehen, deshalb bleibt der Name dort. Alles außerhalb der Tabelle (Bestätigungen,
+// Shift-Vorschau) ruft ohne [mode] auf und bekommt unverändert den vollen Text.
+export const slotLabel = (slot: EventScheduleSlotDto, mode: 'full' | 'short' = 'full'): string => {
+    if (slot.name != null) {
+        return slot.name
+    }
+    const dropCompetitionName = mode === 'short' && Boolean(competitionTag(slot))
+    return [dropCompetitionName ? null : slot.competitionName, slot.roundName, slot.matchName]
+        .filter(Boolean)
+        .join(' – ')
+}
 
 // Rennnummer und Kurzname des Wettkampfs, wie sie im Zeitplan vor dem Slot-Namen stehen, z. B.
 // "17 CM 4x+". Beides ist optional: der Kurzname ist ein Pflegefeld, das leer bleiben darf, und

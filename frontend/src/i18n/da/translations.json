@@ -1632,6 +1632,8 @@
     "schedule": {
       "tab": "Tidsplan",
       "slot": "Slot",
+      "showShortNames": "Vis korte navne",
+      "showFullNames": "Vis fulde navne",
       "addSlot": "Tilføj slot",
       "slotType": "Type",
       "freeSlot": "Fri slot",
