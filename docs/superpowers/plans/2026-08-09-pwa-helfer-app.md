@@ -1606,6 +1606,230 @@ git commit -m "Update-Hinweis und Notausstieg für die Helfer-App"
 
 ---
 
+## Nachträge nach dem Review von Task 1
+
+Beide Punkte sind mit dem Auftraggeber abgestimmt (09.08.2026).
+
+### Task 1a: `clearSessionToken` auf die Rolle einschränken
+
+**Files:** Modify `frontend/src/contexts/user/sessionToken.ts`, `sessionToken.test.ts`, `UserProvider.tsx`
+
+**Warum:** `localStorage` ist tab-übergreifend, `sessionStorage` war es nicht. Ein bedingungsloses `clearSessionToken()` löscht beim Abmelden in einem Verwaltungs-Tab auch die Helfer-Sitzung derselben Herkunft — also genau das, was Task 1 herstellen soll.
+
+**Neue Signatur:** `clearSessionToken(isInApp: boolean, stores?: TokenStores): void` — löscht die App-Ablage nur bei `isInApp === true`, die Sitzungsablage immer (sie ist ohnehin tab-lokal).
+
+- [ ] **Step 1: Tests erweitern**
+
+Den vorhandenen Test „löscht beide Ablagen beim Abmelden" ersetzen durch:
+
+```ts
+    it('löscht beim Abmelden in der App beide Ablagen', () => {
+        const s = stores()
+        writeSessionToken('abc', true, 1_000, s)
+        writeSessionToken('def', false, 1_000, s)
+        clearSessionToken(true, s)
+        expect(s.app.size()).toBe(0)
+        expect(s.session.size()).toBe(0)
+    })
+
+    it('lässt die Helfer-Ablage stehen, wenn sich die Verwaltung abmeldet', () => {
+        const s = stores()
+        writeSessionToken('abc', true, 1_000, s)
+        writeSessionToken('def', false, 1_000, s)
+        clearSessionToken(false, s)
+        expect(readSessionToken(true, 1_000, s)).toBe('abc')
+        expect(s.session.size()).toBe(0)
+    })
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `cd frontend && npx vitest run src/contexts/user/sessionToken.test.ts`
+Expected: FAIL — die Signatur nimmt noch keinen ersten Parameter
+
+- [ ] **Step 3: Implementierung anpassen**
+
+```ts
+export const clearSessionToken = (
+    isInApp: boolean,
+    stores: TokenStores = browserStores(),
+): void => {
+    if (isInApp) {
+        stores.app.removeItem(APP_KEY)
+    }
+    stores.session.removeItem(SESSION_KEY)
+}
+```
+
+- [ ] **Step 4: Aufrufstellen nachziehen**
+
+In `UserProvider.tsx` beide Aufrufe von `clearSessionToken()`: im `onResponse` von `checkUserLogin` wird `clearSessionToken(userData.isInApp)`, in `logout` wird `clearSessionToken(isInApp)` — dort ist der Parameter bereits vorhanden.
+
+- [ ] **Step 5: Tests und Build**
+
+Run: `cd frontend && npm test && npm run build`
+Expected: alle Tests grün, Build ohne Fehler
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/contexts/user/sessionToken.ts frontend/src/contexts/user/sessionToken.test.ts frontend/src/contexts/user/UserProvider.tsx
+git commit -m "Abmelden löscht nur die Ablage der beendeten Sitzung"
+```
+
+### Task 9: Kaltstart ohne Netz endet nicht auf der Panikseite
+
+**Files:**
+- Modify: `frontend/src/contexts/user/sessionToken.ts` (+ Test), `frontend/src/contexts/user/UserProvider.tsx`
+
+**Warum:** Beim Start ruft `UserProvider` `checkUserLogin` auf. Ohne Netz wirft der Aufruf, `useFetch` leitet auf `onPanic` (`hooks.ts:87-93`), und die App rendert die `PanicPage` (`UserProvider.tsx:222`) — mit gültigem Token und gefülltem Lese-Cache. Damit fielen die Punkte 2 und 3 der Handprüfliste durch.
+
+**Zusätzliche Schwierigkeit:** Ohne `checkUserLogin` fehlen auch die Privilegien. `LoginDto` ist `{id: string; privileges: Array<PrivilegeDto>; clubId?: string}` — keine Namen, keine Mailadressen. Für Helfer-Sitzungen wird es deshalb zusammen mit dem Token abgelegt.
+
+**Interfaces:**
+- Produces: `writeSessionUser(user: LoginDto, isInApp: boolean, stores?: TokenStores): void`, `readSessionUser(isInApp: boolean, stores?: TokenStores): LoginDto | null`
+
+- [ ] **Step 1: Write the failing test**
+
+An `sessionToken.test.ts` anhängen:
+
+```ts
+    it('legt die Nutzerangaben der Helfer-Sitzung mit ab', () => {
+        const s = stores()
+        const dto = {id: 'u1', privileges: []}
+        writeSessionUser(dto, true, s)
+        expect(readSessionUser(true, s)).toEqual(dto)
+    })
+
+    it('legt für die Verwaltung keine Nutzerangaben ab', () => {
+        const s = stores()
+        writeSessionUser({id: 'u1', privileges: []}, false, s)
+        expect(s.app.size()).toBe(0)
+        expect(readSessionUser(false, s)).toBeNull()
+    })
+
+    it('verwirft kaputte Nutzerangaben, statt zu werfen', () => {
+        const s = stores()
+        s.app.setItem('session.user', '{kein json')
+        expect(readSessionUser(true, s)).toBeNull()
+    })
+
+    it('nimmt die Nutzerangaben beim Abmelden in der App mit', () => {
+        const s = stores()
+        writeSessionUser({id: 'u1', privileges: []}, true, s)
+        clearSessionToken(true, s)
+        expect(readSessionUser(true, s)).toBeNull()
+    })
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `cd frontend && npx vitest run src/contexts/user/sessionToken.test.ts`
+Expected: FAIL — `writeSessionUser` ist nicht exportiert
+
+- [ ] **Step 3: Implementierung ergänzen**
+
+In `sessionToken.ts`, neben `APP_KEY`:
+
+```ts
+const USER_KEY = 'session.user'
+```
+
+und am Dateiende:
+
+```ts
+/**
+ * Die Angaben zur angemeldeten Person - Kennung, Privilegien, Verein. Ohne sie wüsste die App
+ * nach einem Kaltstart ohne Netz zwar, dass jemand angemeldet ist, aber nicht, was er darf.
+ * Keine Namen, keine Mailadressen: LoginDto trägt nur Kennungen.
+ */
+export const writeSessionUser = (
+    user: LoginDto,
+    isInApp: boolean,
+    stores: TokenStores = browserStores(),
+): void => {
+    if (isInApp) {
+        stores.app.setItem(USER_KEY, JSON.stringify(user))
+    }
+}
+
+export const readSessionUser = (
+    isInApp: boolean,
+    stores: TokenStores = browserStores(),
+): LoginDto | null => {
+    if (!isInApp) {
+        return null
+    }
+    const raw = stores.app.getItem(USER_KEY)
+    if (raw === null) {
+        return null
+    }
+    try {
+        const parsed = JSON.parse(raw) as LoginDto
+        if (typeof parsed?.id === 'string' && Array.isArray(parsed?.privileges)) {
+            return parsed
+        }
+    } catch {
+        // faellt unten auf Aufraeumen durch
+    }
+    stores.app.removeItem(USER_KEY)
+    return null
+}
+```
+
+Dazu der Import `import {LoginDto} from '@api/types.gen.ts'` und in `clearSessionToken` im `isInApp`-Zweig zusätzlich `stores.app.removeItem(USER_KEY)`.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `cd frontend && npx vitest run src/contexts/user/sessionToken.test.ts`
+Expected: PASS
+
+- [ ] **Step 5: UserProvider beim Anmelden mitschreiben lassen**
+
+In `setAuth`, direkt nach dem `writeSessionToken`-Aufruf bzw. am Ende der Funktion vor `setUserData`:
+
+```ts
+        writeSessionUser(data, isInApp)
+```
+
+- [ ] **Step 6: Panikpfad für die App abfangen**
+
+Der `onPanic`-Zweig des `checkUserLogin`-Aufrufs unterscheidet künftig, ob eine Helfer-Sitzung fortgesetzt werden kann:
+
+```ts
+        onPanic: error => {
+            // Kaltstart ohne Netz: Der Aufruf wirft, bevor eine Antwort kommt. Mit gueltigem
+            // Token und abgelegten Nutzerangaben laeuft die App aus dem Bestand weiter, statt
+            // die Panikseite zu zeigen - am Steg ist das der Unterschied zwischen brauchbar und
+            // unbrauchbar. Ausserhalb von /app bleibt es beim bisherigen Verhalten.
+            const offlineUser = userData.isInApp ? readSessionUser(true) : null
+            if (offlineUser !== null && userData.token) {
+                setUserData({
+                    userInfo: offlineUser,
+                    token: userData.token,
+                    isInApp: true,
+                    authStatus: 'pending',
+                })
+                return
+            }
+            setError(`${error}`)
+        },
+```
+
+- [ ] **Step 7: Tests und Build**
+
+Run: `cd frontend && npm test && npm run build`
+Expected: alle Tests grün, Build ohne Fehler
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add frontend/src/contexts/user/sessionToken.ts frontend/src/contexts/user/sessionToken.test.ts frontend/src/contexts/user/UserProvider.tsx
+git commit -m "Helfer-App startet ohne Netz aus der abgelegten Sitzung"
+```
+
+**Zur Handprüfliste hinzu:** Nach einem Kaltstart ohne Netz und mit gültiger Sitzung muss die Funktionsauswahl erscheinen — mit denselben Kacheln wie online, weil die Privilegien aus der Ablage kommen.
+
 ## Nach der letzten Aufgabe: Handprüfliste
 
 Die Punkte aus Abschnitt 11 der Spec sind **nicht** durch Tests abgedeckt und gehören vor den 14.08. an ein echtes Gerät. Besonders die Nummern 2, 3, 5 und 8 — Kaltstart im Flugmodus mit und ohne gültige Sitzung, das Wiederkommen nach einer Stunde, und der Nachweis, dass die Verwaltungsoberfläche keinen Service Worker registriert bekommt.
