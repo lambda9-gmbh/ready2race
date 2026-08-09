@@ -1,5 +1,25 @@
 # Siegerehrungsbogen Implementation Plan
 
+> ## ⚠️ ERLEDIGT UND IN TEILEN ÜBERHOLT — nicht mehr als Vorlage benutzen
+>
+> Dieser Plan ist am 09./10.08.2026 vollständig abgearbeitet. Maßgeblich ist ab jetzt
+> **der Code** und das Design-Dokument
+> `docs/superpowers/specs/2026-08-09-siegerehrungsbogen-design.md`, nicht dieser Plan.
+>
+> Zwei Annahmen dieses Plans sind beim Bau **widerlegt** worden und stehen unten trotzdem
+> noch so da. Wer sie übernimmt, baut gegen den geltenden Stand:
+>
+> 1. **„Ein `page { }` ist die Seitengrenze — genau eine pro Bogen, nie mehr."** Falsch.
+>    `Page.render` gibt eine Liste von `PDPage` zurück und legt bei Überlauf still nach.
+> 2. **Die Schriftstufe aus der Personenzahl ableiten** (`AwardCeremonyDensity`,
+>    `densityFor`, `COMPACT_THRESHOLD`). Ersatzlos entfallen. Die Personenzahl sagt nichts
+>    über die Zahl der *gesetzten* Zeilen — Vereinsketten brechen um. Statt zu schätzen,
+>    misst `AwardCeremonyPdf` heute die tatsächliche Seitenzahl und wählt die erste
+>    Schriftstufe, die auf ein Blatt passt; unterhalb eines lesbaren Bodens gibt es eine
+>    Fortsetzungsseite mit wiederholtem Kopf.
+>
+> Begründung und Messwerte stehen im Design, Abschnitt 7.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ein druckbares PDF für die Siegerehrung — eine A4-Seite je Wertungskategorie, mit den Rängen 1–3, Namen, Vereinen, Zeiten und Lauf, mit vorheriger Auswahl der Ehrungen.
@@ -766,7 +786,7 @@ git commit -m "Ränge, Vereine und Zeiten einer Wertungskategorie aufbereiten"
 - Consumes: `AwardCeremonySheet` und die darin hängenden Typen aus Task 1; das PDF-DSL `de.lambda9.ready2race.backend.pdf.document(format, pagePadding) { page { block { text { } table { column(); row { cell { } } } } } }`, `FontStyle`, `Padding`
 - Produces: `AwardCeremonyPdf.render(sheets: List<AwardCeremonySheet>): ByteArray`
 
-**Hinweis zum DSL:** `text(...)` kennt nur `centered`, keine Rechtsbündigkeit. Die Zeit rechts neben der Rangzahl entsteht deshalb über eine zweispaltige `table`. `block(keepTogether = true)` hält einen Rangblock zusammen. Ein `page { }` ist die Seitengrenze — genau eine pro Bogen, nie mehr.
+**Hinweis zum DSL:** `text(...)` kennt nur `centered`, keine Rechtsbündigkeit. Die Zeit rechts neben der Rangzahl entsteht deshalb über eine zweispaltige `table`. `block(keepTogether = true)` hält einen Rangblock zusammen. **Überholt:** der ursprüngliche Satz an dieser Stelle behauptete, ein `page { }` sei die Seitengrenze und ergebe nie mehr als ein Blatt — das ist falsch, siehe Kopf dieses Dokuments.
 
 - [ ] **Step 1: Den Test schreiben**
 

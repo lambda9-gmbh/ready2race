@@ -1,7 +1,10 @@
 # Design: Siegerehrungsbogen (druckbare Unterlage für die Sprecherin)
 
-**Stand:** 2026-08-09
-**Status:** Design abgenommen, Implementierung ausstehend
+**Stand:** 2026-08-10
+**Status:** Umgesetzt und geprüft. Zwei Annahmen des ersten Entwurfs wurden beim Bau
+widerlegt und sind in [Abschnitt 7](#7-seitenlayout) samt Messwerten ersetzt.
+[Abschnitt 11](#11-merge-voraussetzung-dopplung-mit-den-wertungskategorie-abschnitten) ist vor
+dem Merge abzuarbeiten. Der Handtest am Ausdruck steht aus.
 **Branch:** `claude/ready2race-award-ceremony-sheet-210a37`
 
 ---
@@ -324,9 +327,13 @@ Kategorien vermischen sich nicht.
 `GapDocumentTemplateServiceTest`): Auswahl und Sortierung der Ehrungen, Filterung auf einen
 Wettkampf, leere Auswahl = alle, `IsChallengeEvent` und `NoResults`.
 
-## 11. Offen: Dopplung mit den Wertungskategorie-Abschnitten in `crf-2026`
+## 11. Merge-Voraussetzung: Dopplung mit den Wertungskategorie-Abschnitten
 
-**Vor dem Merge zu klären.** Dieser Branch zweigt von einem Stand ab, der die
+> **Das ist keine Nacharbeit, sondern Teil des Merges.** Die Schluss-Review hat den Punkt
+> ausdrücklich hochgestuft: bleibt er offen, ehrt die Sprecherin in einer anderen Reihenfolge,
+> als die Anzeigetafel sie zeigt — und zwei Rechnungen derselben Sache laufen nebeneinander.
+
+Dieser Branch zweigt von einem Stand ab, der die
 Wertungskategorie-Abschnitte noch nicht kennt. In `crf-2026` gibt es sie seit dem 09.08.2026:
 Ergebnisse werden dort bereits je Wertungskategorie getrennt und je Abschnitt ab 1 gezählt —
 öffentliche Anzeige, Schiedsrichter-Dashboard, Athleten-Anzeige, Platzierungsansicht und
