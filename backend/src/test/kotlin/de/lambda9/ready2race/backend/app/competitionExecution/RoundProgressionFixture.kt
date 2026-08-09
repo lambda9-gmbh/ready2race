@@ -201,7 +201,10 @@ fun TestComprehensionScope<JEnv>.seedTwoRoundCompetition(
     !CLUB.insert(
         ClubRecord(
             id = clubId,
-            name = "Testverein",
+            // Mit clubId statt eines festen Namens - der Vereinsname trägt eine Unique-Constraint,
+            // und manche Tests bauen sich innerhalb derselben Transaktion zwei Regatten auf
+            // (siehe theCompetitionOverridesTheEvent), was sonst kollidiert.
+            name = "Testverein $clubId",
             createdAt = ROUND_PROGRESSION_SEED_TIME,
             updatedAt = ROUND_PROGRESSION_SEED_TIME,
         )

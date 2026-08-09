@@ -709,7 +709,7 @@ object CompetitionExecutionService {
                 }
                 .sortedBy { it.second?.millis }
 
-        request.teamResults.traverse { result ->
+        !request.teamResults.traverse { result ->
             KIO.comprehension {
 
                 val record =
@@ -744,7 +744,13 @@ object CompetitionExecutionService {
                 }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
 
             }
-        }.noDataResponse()
+        }
+
+        // Ein Lauf kann beendet sein und erst mit dieser Eingabe vollständig gewertet werden -
+        // dann ist das Ergebnis der letzte fehlende Baustein der Runde.
+        !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
+
+        noData
     }
 
     fun updateMatchResultByFile(
@@ -921,7 +927,13 @@ object CompetitionExecutionService {
             val expected = index + 1
             !KIO.failOn(expected != place) { CompetitionExecutionError.ResultUploadError.Invalid.PlacesUncontinuous(place, expected) }
         }*/
-        applyParsedTeamResults(match, matchId, teams, userId)
+        !applyParsedTeamResults(match, matchId, teams, userId)
+
+        // Ein Lauf kann beendet sein und erst mit dieser Eingabe vollständig gewertet werden -
+        // dann ist das Ergebnis der letzte fehlende Baustein der Runde.
+        !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
+
+        noData
     }
 
     /**
@@ -1159,7 +1171,17 @@ object CompetitionExecutionService {
             )
         }
 
-        applyParsedTeamResults(match, matchId, parsed, userId)
+        !applyParsedTeamResults(match, matchId, parsed, userId)
+
+        // Ein Lauf kann beendet sein und erst mit dieser Eingabe vollständig gewertet werden -
+        // dann ist das Ergebnis der letzte fehlende Baustein der Runde. Weder Event- noch
+        // Wettkampf-Id stehen hier als Parameter zur Verfügung - die Aufrufer sind der
+        // RaceClocker-Job (`RaceClockerPollService`) und der manuelle Pull
+        // (`updateMatchResultFromRaceClocker`), beide kennen nur den Lauf - deshalb die Variante,
+        // die Wettkampf und Veranstaltung selbst nachschlägt.
+        !AutoRoundProgressionService.progressAfterMatch(matchId, userId)
+
+        noData
     }
 
     /**

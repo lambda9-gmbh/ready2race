@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameLogic
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionService
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
@@ -493,6 +494,11 @@ object LiveDashboardService {
                 !activateNext(candidates, userId)
             }
         }
+
+        // Ist die Runde mit diesem Lauf durch, steht die nächste ohne Zutun. Bewusst NACH der
+        // Kette: createNewRound stößt sie selbst noch einmal an, wenn sie an einem wartenden Slot
+        // geparkt war.
+        !AutoRoundProgressionService.progressAfterMatch(eventId, matchId, userId)
 
         KIO.unit
     }

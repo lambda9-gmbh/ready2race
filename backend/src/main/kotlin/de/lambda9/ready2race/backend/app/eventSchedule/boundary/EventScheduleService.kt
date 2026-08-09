@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
@@ -267,6 +268,14 @@ object EventScheduleService {
                 skippedAt = null
                 skippedBy = null
             }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
+        }
+
+        // Ein abgesagter Lauf kann der letzte fehlende der Runde sein. Ein freier Slot oder ein
+        // Programmpunkt trägt keinen Lauf (competition_setup_match ist null) und kann die
+        // Automatik dann auch nicht auslösen.
+        val setupMatchId = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
+        if (setupMatchId != null) {
+            !AutoRoundProgressionService.progressAfterMatch(eventId, setupMatchId, userId)
         }
 
         noData
