@@ -4128,6 +4128,97 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participant/{participantId}/tracking:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getParticipantTrackingHistory
+      responses:
+        200:
+          description: Tracking entries and their change trail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantTrackingHistoryDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addManualParticipantTracking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualTrackingRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participant/{participantId}/tracking/{trackingId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: trackingId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: correctParticipantTracking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualTrackingRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /participantRequirement/{participantRequirementId}:
     parameters:
       - name: participantRequirementId
@@ -8597,6 +8688,9 @@ components:
         - TRACKING_TEAM_NOT_CHECKED_IN
         - TRACKING_QR_CODE_NOT_FOUND
         - TRACKING_QR_CODE_NOT_ASSOCIATED_WITH_PARTICIPANT
+        - TRACKING_ENTRY_NOT_FOUND
+        - TRACKING_SEQUENCE_CONFLICT
+        - TRACKING_TIMESTAMP_COLLISION
         - DEREGISTRATION_ALREADY_EXISTS
         - DEREGISTRATION_IS_LOCKED
         - DEREGISTRATION_RESULTS_ALREADY_EXIST
@@ -13823,6 +13917,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LiveDashboardRequirementStatusDto'
+        trackingStatus:
+          $ref: '#/components/schemas/ParticipantScanType'
+        trackingAt:
+          type: string
+          format: date-time
+          nullable: true
 
     LiveDashboardCrewMemberDto:
       type: object
@@ -15091,6 +15191,8 @@ components:
         - clubId
         - clubName
         - external
+        - source
+        - editCount
       properties:
         id:
           type: string
@@ -15125,8 +15227,120 @@ components:
           format: date-time
         lastScanBy:
           $ref: '#/components/schemas/AppUserNameDto'
+        source:
+          $ref: '#/components/schemas/ParticipantTrackingSource'
+        editCount:
+          type: integer
 
+    ParticipantTrackingSource:
+      type: string
+      enum:
+        - QR
+        - MANUAL
 
+    ParticipantTrackingChangeType:
+      type: string
+      enum:
+        - CREATE
+        - UPDATE
+
+    ManualTrackingRequest:
+      type: object
+      required:
+        - scanType
+        - scannedAt
+        - reason
+      properties:
+        scanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        scannedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+
+    ParticipantTrackingEntryDto:
+      type: object
+      required:
+        - id
+        - scanType
+        - scannedAt
+        - source
+        - editCount
+      properties:
+        id:
+          type: string
+          format: uuid
+        scanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        scannedAt:
+          type: string
+          format: date-time
+        source:
+          $ref: '#/components/schemas/ParticipantTrackingSource'
+        recordedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+        editCount:
+          type: integer
+        lastEditedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastEditedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
+    ParticipantTrackingChangeDto:
+      type: object
+      required:
+        - id
+        - changeType
+        - newScanType
+        - newScannedAt
+        - reason
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        trackingId:
+          type: string
+          format: uuid
+          nullable: true
+        changeType:
+          $ref: '#/components/schemas/ParticipantTrackingChangeType'
+        previousScanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        previousScannedAt:
+          type: string
+          format: date-time
+          nullable: true
+        newScanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        newScannedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
+    ParticipantTrackingHistoryDto:
+      type: object
+      required:
+        - entries
+        - changes
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantTrackingEntryDto'
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantTrackingChangeDto'
 
     ParticipantQrAssignmentDto:
       type: object

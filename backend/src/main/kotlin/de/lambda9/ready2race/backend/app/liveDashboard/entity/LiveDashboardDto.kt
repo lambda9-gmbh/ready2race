@@ -66,6 +66,14 @@ data class LiveDashboardParticipantDto(
     val substitutedFor: String?,
     val substitutionReason: String?,
     val requirements: List<LiveDashboardRequirementStatusDto>,
+    /**
+     * Der letzte Steg-Scan dieser Person: ENTRY heißt "in der Arena", EXIT "zurück am Steg", null
+     * "nie erfasst". Die Mannschafts-Ampel [LiveDashboardTeamDto.inArenaAt] fasst dasselbe für das
+     * ganze Boot zusammen, sagt aber nicht, an wem es liegt - und genau das braucht, wer den
+     * fehlenden Eintrag von Hand nachträgt.
+     */
+    val trackingStatus: String?,
+    val trackingAt: LocalDateTime?,
 )
 
 /**

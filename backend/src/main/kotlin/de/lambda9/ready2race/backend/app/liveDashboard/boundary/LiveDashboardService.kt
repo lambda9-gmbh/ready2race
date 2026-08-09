@@ -418,6 +418,17 @@ object LiveDashboardService {
         )
         val competitionId = teamRecords.first().get("competition_id", UUID::class.java)!!
 
+        // Nur der Detail-Dialog zeigt den Steg-Scan je Person; die Übersichtskarten hängen am
+        // Sekunden-Takt und fassen ihn ohnehin je Boot zusammen.
+        val lastScanByParticipant = !ParticipantTrackingRepo.getScansByEvent(eventId).orDie()
+            .map { scans ->
+                scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }
+                    .mapValues { (_, rows) ->
+                        val last = rows.maxBy { it[PARTICIPANT_TRACKING.SCANNED_AT]!! }
+                        last[PARTICIPANT_TRACKING.SCAN_TYPE]!! to last[PARTICIPANT_TRACKING.SCANNED_AT]!!
+                    }
+            }
+
         val participants = !buildParticipants(
             rows = teamRecords,
             registrationId = teamId,
@@ -428,6 +439,7 @@ object LiveDashboardService {
                 substitutionRecords,
                 severityConfig,
                 !wornClubsByParticipant(teamRecords, substitutionRecords),
+                lastScanByParticipant,
             ),
             competitionId = competitionId,
         )
@@ -750,6 +762,12 @@ object LiveDashboardService {
         val severityConfig: CheckSeverityConfig,
         /** Der getragene Verein je Person, siehe [wornClubsByParticipant]. */
         val wornClubs: Map<UUID, String>,
+        /**
+         * Letzter Steg-Scan je Person (Typ und Zeitpunkt). Leer, wo die Ansicht die Scans nicht
+         * erhebt - die Übersichtskarten fassen sie schon je Boot zusammen und brauchen sie hier
+         * nicht noch einmal je Person.
+         */
+        val lastScans: Map<UUID, Pair<String, LocalDateTime>> = emptyMap(),
     ) {
         /** requirement id -> assigned named participants (null element = global assignment) */
         val requirementAssignments = requirementRecords.groupBy(
@@ -925,6 +943,8 @@ object LiveDashboardService {
                     substitutedFor = replaced?.let { "${it.firstname} ${it.lastname}" },
                     substitutionReason = substitution?.reason,
                     requirements = requirements,
+                    trackingStatus = context.lastScans[p.id]?.first,
+                    trackingAt = context.lastScans[p.id]?.second,
                 )
             }
         )

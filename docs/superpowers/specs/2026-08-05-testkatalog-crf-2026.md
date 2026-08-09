@@ -45,9 +45,9 @@ nicht die Erwartung anpassen.
    `backend/` und `frontend/` sind gitignored und fehlen in frischen Worktrees.
 4. **Migrationen.** Wechselt die Dev-DB zwischen Branches, kann Flyway Lücken melden;
    `-Dflyway.outOfOrder=true` beim Maven-Aufruf lässt die fehlenden Migrationen nachlaufen.
-5. **Daten.** Für **K** zusätzlich: mindestens zwei Wertungskategorien, einem Lauf mit Booten aus
+5. **Daten.** Für **L** zusätzlich: mindestens zwei Wertungskategorien, einem Lauf mit Booten aus
    beiden, einem Boot ganz ohne Kategorie, einem Gleichstand und einem Wettkampf ohne jede
-   Kategorie (Regressionsfall K5).
+   Kategorie (Regressionsfall L5).
    Veranstaltung mit Zeitplan, mindestens einem Wettkampf mit ≥ 4 Booten, davon eines
    abgemeldet, und einem Wettkampf mit gepflegten RaceClocker-URLs. Für den Bahn-Ablauf (C8) einen
    Lauf mit 6 Booten, davon eines ohne Zeit und eines gar nicht in RaceClocker. Für G eine
@@ -376,7 +376,40 @@ Postgres geprüft, aber nichts davon wurde je gerendert.
 
 ---
 
-## K — Ergebnisse nach Wertungskategorien
+## K — Manueller Check-in/-out je Athlet:in
+
+Am 09.08. gebaut. Der QR-Scan am Steg bleibt der reguläre Weg; für den Fall, dass ein Boot ohne
+Scan abgelegt hat und die Crew trotzdem auf dem Wasser ist, können Admin und Schiedsrichter
+Einträge von Hand ergänzen und bestehende berichtigen. Jede Änderung verlangt eine Begründung und
+hinterlässt Vorher-/Nachher-Stand samt Urheber in `participant_tracking_change`. Entwurf:
+`docs/superpowers/specs/2026-08-09-manueller-checkin-checkout-design.md`. Migration
+`V202608091600`.
+
+**Kein Agent hat die laufende Anwendung gesehen.** Backend-Suite (632) und Frontend (584) sind
+grün, ein HTTP-Test belegt die Rechteprüfung auf allen drei Endpunkten — gerendert wurde nichts
+davon je. Der wunde Punkt ist **K13**: ob ein von Hand nachgetragener Eintrag im
+Schiedsrichter-Dashboard dieselbe Wirkung hat wie ein Scan, ist nirgends geprüft.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| K1 | Rechte | Aktion und Dialog erscheinen **nur** für Admin und Schiedsrichter (`UPDATE LIVE_DASHBOARD` oder `UPDATE EVENT`). Mit einem Vereinsvertreter-Konto anmelden: weder Zeilenaktion noch Stift, und der direkte Aufruf von `GET /event/{eventId}/participant/{participantId}/tracking` liefert 403 — dort stehen Begründungen im Klartext | `f54cb98d` | |
+| K2 | Der Anlassfall | Ein Boot hat ohne Scan abgelegt. Für eine Person Check-in **und** Check-out von Hand nachtragen, Uhrzeiten frei setzen. Beide Einträge stehen danach im Verlauf und tragen den Chip „manuell" | `f54cb98d` | |
+| K3 | QR-Eintrag berichtigen | Eine Person regulär per QR einchecken, dann im Dialog die Uhrzeit korrigieren. Der Chip wechselt auf **„per QR, berichtigt"** — nicht auf „manuell": dass der Eintrag vom Scanner kam, wird durch die Korrektur nicht unwahr | `f54cb98d` | |
+| K4 | Begründung ist Pflicht | Speichern ohne Begründung ist nicht möglich (Knopf bleibt gesperrt). Gegenprobe über die API mit leerem Grund: 422, nicht 500. Die Datenbank hält zusätzlich dagegen (`check (length(btrim(reason)) > 0)`) | `f54cb98d` | |
+| K5 | Freie Zeitwahl | Ein Zeitpunkt Stunden in der Vergangenheit wird angenommen — das ist der Normalfall, nicht der Sonderfall. Auch ein Zeitpunkt in der Zukunft ist zugelassen; bewusst keine Sperre | `f54cb98d` | |
+| K6 | Widersprüchliche Reihenfolge | Ein Check-out ohne vorherigen Check-in, oder ein Eintrag, der eine spätere Zeile umdreht: die Meldung muss **auf Deutsch erklären, was zu tun ist** („An- und Abmeldungen müssen sich abwechseln und mit einer Anmeldung beginnen"), nicht nach Speicherfehler klingen | `f54cb98d` | |
+| K7 | Gleiche Sekunde | Zwei Einträge derselben Person auf exakt denselben Zeitpunkt werden abgelehnt. Sonst wäre nicht bestimmt, ob die Person am Ende auf dem Wasser ist | `f54cb98d` | |
+| K8 | Änderungsverlauf lesbar | Unten im Dialog steht je Änderung: Zeitpunkt, Name der Person, Vorher → Nachher und die Begründung. Nach zwei Korrekturen desselben Eintrags stehen **beide** da — die zweite überschreibt die erste nicht | `f54cb98d` | |
+| K9 | Schiedsrichter-Ansicht | Im Detail-Dialog einer Mannschaft trägt jede Person einen eigenen Steg-Chip („Drin 9:35" / „Draußen" / „kein Steg-Scan") und daneben den Stift. Bis hierher zeigte der Dialog gar nicht, an wem ein fehlender Scan hängt | `f54cb98d` | |
+| K10 | Protokoll-Spalte | Event-Seite, Tab Teilnehmende, Tabelle „Status Protokoll": die Spalte „Erfassung" unterscheidet die drei Fälle. Über die Zeilenaktion öffnet sich derselbe Dialog | `f54cb98d` | |
+| K11 | QR-App unverändert | **Regression.** Ein regulärer Scan in der QR-App muss weiterhin funktionieren und „per QR" erzeugen. Die alten Meldungen („ist bereits eingecheckt") dürfen sich nicht geändert haben | `f54cb98d` | |
+| K12 | Nichts nach außen | Öffentliche Anzeige und Athleten-Ansicht zeigen weder Bearbeitung noch Begründungen. Auch die Tabelle, die ein Vereinsvertreter über `/participantTracking` erreichen kann, nennt **keine Namen** von Bearbeitern und keinen Grund — nur Herkunft und Anzahl der Korrekturen | `f54cb98d` | |
+| K13 | Wirkung aufs Dashboard | **Der eigentliche Zweck, und der einzige Punkt ohne jeden Beleg.** Für die letzte fehlende Person eines Bootes den Check-in nachtragen: beim nächsten Poll muss die Mannschaft im Schiedsrichter-Dashboard „abgelegt um …" zeigen und der Arena-Chip grün werden — genau so, als wäre gescannt worden. Wenn irgendwo etwas klemmt, dann hier | `f54cb98d` | |
+| K14 | Bestand aus der Zeit davor | Eine Regatta mit alten Scans öffnen: die Einträge tragen alle „per QR", niemand ist als manuell markiert. Die Migration setzt den Bestand auf `QR` — schlägt das fehl, sieht die ganze Historie nach Handarbeit aus | `f54cb98d` | |
+
+---
+
+## L — Ergebnisse nach Wertungskategorien
 
 Am 09.08. gebaut. Bis dahin zeigte jede Ergebnisliste **eine** gemeinsame Rangliste; wer in der
 Breitensportwertung Erster war, fand sich dort als Sechster wieder und musste selbst
@@ -391,31 +424,31 @@ Abschnitte je Kategorie und zählen in jedem Abschnitt ab 1. Entwurf:
 **Voraussetzung für diesen Block:** eine Veranstaltung mit **mindestens zwei** zugeordneten
 Wertungskategorien, einem Lauf, in dem Boote **beider** Kategorien starten, **einem Boot ganz ohne
 Kategorie**, einem Gleichstand (zwei Boote mit demselben Platz) und einem abgemeldeten Boot.
-Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfall K5.
+Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfall L5.
 
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
-| K1 | Reihenfolge pflegen | Veranstaltung → Einstellungen → Wertungskategorien: Hoch/Runter verschiebt eine Kategorie. Nach dem Neuladen steht sie noch dort. Die Reihenfolge hängt an der **Veranstaltung**, nicht an der Kategorie — bei einer zweiten Regatta darf sie anders sein | `9fbe99ed` | |
-| K2 | Abschnitte folgen der Reihenfolge | Öffentliche Ergebnisanzeige, Lauf öffnen: die Abschnitte stehen in genau der unter K1 gesetzten Folge — nicht alphabetisch. Zum Prüfen die Reihenfolge unter K1 absichtlich **gegen** das Alphabet stellen | `9fbe99ed` | |
-| K3 | Zählung ab 1 je Abschnitt | Jeder Abschnitt beginnt bei 1. Ein Boot, das im Lauf Sechster ist, aber Erster seiner Kategorie, trägt die 1 | `9fbe99ed` | |
-| K4 | Ohne Wertungskategorie | Das Boot ohne Kategorie steht in einem eigenen Abschnitt „Ohne Wertungskategorie" — **immer am Ende**, auch wenn eine echte Kategorie weiter hinten einsortiert ist | `9fbe99ed` | |
-| K5 | Wettkampf ohne Kategorien unverändert | **Die zentrale Zusage.** Ein Wettkampf, in dem kein Boot eine Kategorie trägt, sieht aus wie vorher: eine durchgehende Liste, **keine** Überschrift „Ohne Wertungskategorie". Vorher/Nachher am selben Lauf vergleichen | `9fbe99ed` | |
-| K6 | Gleichstand | Zwei Boote mit demselben Platz in derselben Kategorie: beide tragen dieselbe Zahl, das nächste Boot lässt die Lücke (1, 1, 3 — kein Zweiter) | `9fbe99ed` | |
-| K7 | Abgemeldet, DNF, DSQ | Solche Boote bekommen **keinen** Kategorieplatz und stehen am Ende **ihres eigenen** Abschnitts — sie verschwinden nicht. Eine Besatzung, die ihr Boot im Ergebnis nicht findet, hält das für einen Anzeigefehler | `9fbe99ed` | |
-| K8 | Athleten-Anzeige gleicht der öffentlichen | `/board/{eventId}`: derselbe Lauf zeigt dieselben Abschnitte in derselben Folge und **dieselben Zahlen** wie die öffentliche Seite. Nebeneinander auf zwei Schirmen vergleichen | `9fbe99ed` | |
-| K9 | Schiedsrichter: laufender Lauf bleibt Bahnliste | Solange kein Boot gewertet ist, zeigt die Karte **keine** Überschriften und sortiert nach Bahn. Am Steg wird sie gegen das Wasser gelesen — bewusste Abweichung von den anderen Ansichten | `9fbe99ed` | |
-| K10 | Schiedsrichter: gewerteter Lauf | Sobald das erste Boot gewertet ist, erscheinen die Abschnitte, und die Zahl im Kreis ist der **Kategorie**platz — dieselbe Zahl wie öffentlich | `9fbe99ed` | |
-| K11 | Platzierungsansicht | Wettkampf → Durchführung → Platzierungen: Abschnitte mit Überschrift, Kategorieplatz, ungewertete Boote mit „-" | `9fbe99ed` | |
-| K12 | Ergebnis-PDF | Veranstaltungsergebnisse herunterladen: je Wettkampf eine Überschrift pro Kategorie, darunter die Kategorieplätze. Ein Wettkampf ohne Kategorien behält seine bisherige Form | `9fbe99ed` | |
-| K13 | Urkunde ohne die neue Option | **Regressionsfall.** Schalter „Wertungskategorie drucken" aus (Vorgabe): die Urkunde ist Zeichen für Zeichen die von vorher. Eine vor dem Update erzeugte danebenlegen | `9fbe99ed` | |
-| K14 | Option an, Vorlage ohne Platzhalter | **Die wahrscheinlichste Enttäuschung.** Schalter an, aber die Vorlage trägt keinen `RATING_CATEGORY`-Platzhalter: es ändert sich **nichts**. Das ist so gebaut und keine Störung — wer die Zeile will, muss sie einmal in der Vorlage setzen | `9fbe99ed` | |
-| K15 | Option an, Platzhalter gesetzt | Im Vorlagen-Editor einen `RATING_CATEGORY`-Platzhalter setzen, Urkunde mit Schalter erzeugen: die Kategorie steht als klar erkennbare eigene Zeile, PDF **und** DOCX | `9fbe99ed` | |
-| K16 | Urkundenplatz bleibt wettkampfweit | **Ausdrückliche Entscheidung, kein Fehler.** Ein Boot, das in seiner Kategorie Erster, im Wettkampf aber Dritter ist, trägt auf der Urkunde „3. Platz" — auch bei eingeschalteter Option. Begründung: eine Urkunde hängt jahrelang neben älteren, auf denen „3. Platz" den Platz im Rennen meinte | `9fbe99ed` | |
-| K17 | Platzgrenze der Urkunden | „Bis Platz 3" greift weiterhin auf den **wettkampfweiten** Platz. Es gibt also nicht je Kategorie drei Urkunden — beim Test bewusst gegenprüfen, ob das für die CRF so gewollt ist | `9fbe99ed` | |
-| K18 | Vorlagen-Editor | Der neue Platzhaltertyp ist in der Auswahl, heißt auf Deutsch „Wertungskategorie", und die Vorschau zeigt den Beispieltext „Meisterschaften" an der gesetzten Stelle | `9fbe99ed` | |
-| K19 | Neue Kategorie hängt hinten an | Einer Veranstaltung eine weitere Kategorie zuordnen: sie steht in Konfiguration und Ergebnisliste **am Ende**, nicht dazwischen | `9fbe99ed` | |
-| K20 | Kategorie ohne Boote | Eine zugeordnete Kategorie, in der niemand gemeldet ist, erzeugt in **keiner** Ergebnisliste einen leeren Abschnitt | `9fbe99ed` | |
-| K21 | Altdaten nach der Migration | Eine Veranstaltung, die vor dem Update Kategorien hatte: die Reihenfolge ist nach dem Update die bisher gezeigte alphabetische. Die Migration allein darf keine Anzeige verändert haben | `9fbe99ed` | |
+| L1 | Reihenfolge pflegen | Veranstaltung → Einstellungen → Wertungskategorien: Hoch/Runter verschiebt eine Kategorie. Nach dem Neuladen steht sie noch dort. Die Reihenfolge hängt an der **Veranstaltung**, nicht an der Kategorie — bei einer zweiten Regatta darf sie anders sein | `9fbe99ed` | |
+| L2 | Abschnitte folgen der Reihenfolge | Öffentliche Ergebnisanzeige, Lauf öffnen: die Abschnitte stehen in genau der unter L1 gesetzten Folge — nicht alphabetisch. Zum Prüfen die Reihenfolge unter L1 absichtlich **gegen** das Alphabet stellen | `9fbe99ed` | |
+| L3 | Zählung ab 1 je Abschnitt | Jeder Abschnitt beginnt bei 1. Ein Boot, das im Lauf Sechster ist, aber Erster seiner Kategorie, trägt die 1 | `9fbe99ed` | |
+| L4 | Ohne Wertungskategorie | Das Boot ohne Kategorie steht in einem eigenen Abschnitt „Ohne Wertungskategorie" — **immer am Ende**, auch wenn eine echte Kategorie weiter hinten einsortiert ist | `9fbe99ed` | |
+| L5 | Wettkampf ohne Kategorien unverändert | **Die zentrale Zusage.** Ein Wettkampf, in dem kein Boot eine Kategorie trägt, sieht aus wie vorher: eine durchgehende Liste, **keine** Überschrift „Ohne Wertungskategorie". Vorher/Nachher am selben Lauf vergleichen | `9fbe99ed` | |
+| L6 | Gleichstand | Zwei Boote mit demselben Platz in derselben Kategorie: beide tragen dieselbe Zahl, das nächste Boot lässt die Lücke (1, 1, 3 — kein Zweiter) | `9fbe99ed` | |
+| L7 | Abgemeldet, DNF, DSQ | Solche Boote bekommen **keinen** Kategorieplatz und stehen am Ende **ihres eigenen** Abschnitts — sie verschwinden nicht. Eine Besatzung, die ihr Boot im Ergebnis nicht findet, hält das für einen Anzeigefehler | `9fbe99ed` | |
+| L8 | Athleten-Anzeige gleicht der öffentlichen | `/board/{eventId}`: derselbe Lauf zeigt dieselben Abschnitte in derselben Folge und **dieselben Zahlen** wie die öffentliche Seite. Nebeneinander auf zwei Schirmen vergleichen | `9fbe99ed` | |
+| L9 | Schiedsrichter: laufender Lauf bleibt Bahnliste | Solange kein Boot gewertet ist, zeigt die Karte **keine** Überschriften und sortiert nach Bahn. Am Steg wird sie gegen das Wasser gelesen — bewusste Abweichung von den anderen Ansichten | `9fbe99ed` | |
+| L10 | Schiedsrichter: gewerteter Lauf | Sobald das erste Boot gewertet ist, erscheinen die Abschnitte, und die Zahl im Kreis ist der **Kategorie**platz — dieselbe Zahl wie öffentlich | `9fbe99ed` | |
+| L11 | Platzierungsansicht | Wettkampf → Durchführung → Platzierungen: Abschnitte mit Überschrift, Kategorieplatz, ungewertete Boote mit „-" | `9fbe99ed` | |
+| L12 | Ergebnis-PDF | Veranstaltungsergebnisse herunterladen: je Wettkampf eine Überschrift pro Kategorie, darunter die Kategorieplätze. Ein Wettkampf ohne Kategorien behält seine bisherige Form | `9fbe99ed` | |
+| L13 | Urkunde ohne die neue Option | **Regressionsfall.** Schalter „Wertungskategorie drucken" aus (Vorgabe): die Urkunde ist Zeichen für Zeichen die von vorher. Eine vor dem Update erzeugte danebenlegen | `9fbe99ed` | |
+| L14 | Option an, Vorlage ohne Platzhalter | **Die wahrscheinlichste Enttäuschung.** Schalter an, aber die Vorlage trägt keinen `RATING_CATEGORY`-Platzhalter: es ändert sich **nichts**. Das ist so gebaut und keine Störung — wer die Zeile will, muss sie einmal in der Vorlage setzen | `9fbe99ed` | |
+| L15 | Option an, Platzhalter gesetzt | Im Vorlagen-Editor einen `RATING_CATEGORY`-Platzhalter setzen, Urkunde mit Schalter erzeugen: die Kategorie steht als klar erkennbare eigene Zeile, PDF **und** DOCX | `9fbe99ed` | |
+| L16 | Urkundenplatz bleibt wettkampfweit | **Ausdrückliche Entscheidung, kein Fehler.** Ein Boot, das in seiner Kategorie Erster, im Wettkampf aber Dritter ist, trägt auf der Urkunde „3. Platz" — auch bei eingeschalteter Option. Begründung: eine Urkunde hängt jahrelang neben älteren, auf denen „3. Platz" den Platz im Rennen meinte | `9fbe99ed` | |
+| L17 | Platzgrenze der Urkunden | „Bis Platz 3" greift weiterhin auf den **wettkampfweiten** Platz. Es gibt also nicht je Kategorie drei Urkunden — beim Test bewusst gegenprüfen, ob das für die CRF so gewollt ist | `9fbe99ed` | |
+| L18 | Vorlagen-Editor | Der neue Platzhaltertyp ist in der Auswahl, heißt auf Deutsch „Wertungskategorie", und die Vorschau zeigt den Beispieltext „Meisterschaften" an der gesetzten Stelle | `9fbe99ed` | |
+| L19 | Neue Kategorie hängt hinten an | Einer Veranstaltung eine weitere Kategorie zuordnen: sie steht in Konfiguration und Ergebnisliste **am Ende**, nicht dazwischen | `9fbe99ed` | |
+| L20 | Kategorie ohne Boote | Eine zugeordnete Kategorie, in der niemand gemeldet ist, erzeugt in **keiner** Ergebnisliste einen leeren Abschnitt | `9fbe99ed` | |
+| L21 | Altdaten nach der Migration | Eine Veranstaltung, die vor dem Update Kategorien hatte: die Reihenfolge ist nach dem Update die bisher gezeigte alphabetische. Die Migration allein darf keine Anzeige verändert haben | `9fbe99ed` | |
 
 ---
 
@@ -504,17 +537,25 @@ bleibende Nummer erwartet, siehe den offenen Punkt „Bootsnummer" unten.
   langsam oder weg, steht in jedem Lauf ein Fehler. Wird sie ausgelassen, bleibt es beim Klicken pro
   Lauf. Vorschlag: am Testtag mit eingeschalteter Automatik fahren und die Rückfallregel („Schalter
   aus, weiter wie bisher") einmal geübt haben, damit sie am 14.08. niemand suchen muss.
-- **Platzgrenze der Urkunden bei Kategoriewertung (K17).** Der gedruckte Platz und die Grenze
+- **Platzgrenze der Urkunden bei Kategoriewertung (L17).** Der gedruckte Platz und die Grenze
   „bis Platz 3" bleiben beide wettkampfweit — bewusst so entschieden. Für eine Regatta, in der die
   Kategorien getrennte Wertungen *sind*, kann das falsch wirken: die Breitensportwertung bekommt
   dann womöglich gar keine Urkunde, weil ihre besten Boote im Gesamtfeld hinter Platz 3 liegen. Vor
   der Regatta entscheiden, sonst fehlen am Tag Urkunden.
-- **Laufender Lauf ohne Abschnitte (K9).** Die Schiedsrichter-Karte und der Live-Tab der
+- **Laufender Lauf ohne Abschnitte (L9).** Die Schiedsrichter-Karte und der Live-Tab der
   öffentlichen Seite gruppieren erst, wenn gewertet wird. Falls die Schiedsrichter die Trennung
   schon während des Laufs erwarten, ist das eine Änderung — am Testtag ansehen und entscheiden.
 - **Wer pflegt den Prüfungsschweregrad? (I8).** Ohne optimistisches Sperren überschreiben zwei
   gleichzeitige Bearbeiter sich kommentarlos. Entweder es wird gesperrt oder es gilt organisatorisch:
   einer pflegt.
+- **Wer darf von Hand ein-/auschecken? (K1).** Die Funktion hängt an `UPDATE LIVE_DASHBOARD` **oder**
+  `UPDATE EVENT` — bewusst an vorhandenen Rechten, damit in der laufenden Veranstaltung nichts
+  nachkonfiguriert werden muss. Damit kann sie aber jeder, der das Dashboard bedient. Am Testtag
+  gegenprüfen, ob das der gewünschte Kreis ist; wenn nicht, braucht es doch ein eigenes Privileg —
+  und dann muss es der Schiedsrichter-Rolle **vor** dem 14.08. zugewiesen werden.
+- **Löschen fehlt bewusst (K).** Ein falscher Eintrag wird korrigiert, nicht getilgt. Wenn am
+  Testtag ein Fall auftaucht, in dem ein Eintrag ersatzlos weg muss (etwa eine komplett falsche
+  Person), gibt es dafür heute keinen Weg außer SQL — vor der Regatta entscheiden, ob das reicht.
 
 ## Nicht in diesem Katalog
 

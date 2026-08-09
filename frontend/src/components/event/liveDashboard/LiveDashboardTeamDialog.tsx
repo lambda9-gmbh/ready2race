@@ -16,11 +16,16 @@ import {
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
+import EditIcon from '@mui/icons-material/Edit'
+import {useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardRequirementStatusDto, LiveDashboardTeamDto} from '@api/types.gen.ts'
 import {getLiveDashboardTeamDetail} from '@api/sdk.gen.ts'
 import {useFetch} from '@utils/hooks.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {updateEventGlobal, updateLiveDashboardGlobal} from '@authorization/privileges.ts'
+import ParticipantTrackingDialog from '@components/event/participantTracking/ParticipantTrackingDialog.tsx'
 import {formatMinutes, severityChipColor} from './common.ts'
 import SeverityIcon from './SeverityIcon.tsx'
 
@@ -54,8 +59,14 @@ const TeamDialog = ({
     onClose: () => void
 }) => {
     const {t} = useTranslation()
+    const user = useUser()
+    // Dieselben zwei Rechte wie im Backend (siehe participantForEvent.kt): der manuelle Nachtrag
+    // steht Schiedsrichtern und Admins offen.
+    const mayEditTracking =
+        user.checkPrivilege(updateLiveDashboardGlobal) || user.checkPrivilege(updateEventGlobal)
+    const [tracked, setTracked] = useState<{id: string; name: string} | null>(null)
 
-    const {data: detail, pending} = useFetch(
+    const {data: detail, pending, reload} = useFetch(
         signal =>
             getLiveDashboardTeamDetail({
                 signal,
@@ -97,6 +108,17 @@ const TeamDialog = ({
     }
 
     return (
+        <>
+        {tracked !== null && (
+            <ParticipantTrackingDialog
+                open
+                onClose={() => setTracked(null)}
+                eventId={eventId}
+                participantId={tracked.id}
+                participantName={tracked.name}
+                onChanged={reload}
+            />
+        )}
         <Dialog open onClose={onClose} fullWidth maxWidth="sm">
             {/*
                 Startnummer und Mannschaftsname, nie die Kette: die stand hier in vollen Namen und
@@ -197,15 +219,54 @@ const TeamDialog = ({
                     )}
                     {detail?.participants.map(p => (
                         <Box key={p.participantId}>
-                            <Typography variant="subtitle1">
-                                {p.firstName} {p.lastName}
-                                {p.namedRole && (
-                                    <Typography component="span" variant="body2" color="text.secondary">
-                                        {' '}
-                                        ({p.namedRole})
-                                    </Typography>
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                flexWrap="wrap"
+                                useFlexGap>
+                                <Typography variant="subtitle1">
+                                    {p.firstName} {p.lastName}
+                                    {p.namedRole && (
+                                        <Typography component="span" variant="body2" color="text.secondary">
+                                            {' '}
+                                            ({p.namedRole})
+                                        </Typography>
+                                    )}
+                                </Typography>
+                                {/*
+                                    Der Steg-Scan dieser Person. Der Chip oben sagt nur, ob das
+                                    ganze Boot draußen ist - an wem es hängt, steht erst hier, und
+                                    genau das braucht, wer den fehlenden Eintrag nachträgt.
+                                */}
+                                <Chip
+                                    size="small"
+                                    color={p.trackingStatus === 'ENTRY' ? 'success' : 'default'}
+                                    label={
+                                        p.trackingStatus == null
+                                            ? t('club.participant.tracking.manual.notTracked')
+                                            : t(
+                                                  `club.participant.tracking.${p.trackingStatus === 'ENTRY' ? 'in' : 'out'}`,
+                                              ) +
+                                              (p.trackingAt
+                                                  ? ` ${format(new Date(p.trackingAt), t('format.time'))}`
+                                                  : '')
+                                    }
+                                />
+                                {mayEditTracking && (
+                                    <IconButton
+                                        size="small"
+                                        aria-label={t('club.participant.tracking.manual.open')}
+                                        onClick={() =>
+                                            setTracked({
+                                                id: p.participantId,
+                                                name: `${p.firstName} ${p.lastName}`,
+                                            })
+                                        }>
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
                                 )}
-                            </Typography>
+                            </Stack>
                             {/*
                                 Der Verein JEDER Person, nicht der der Meldung: bei einem
                                 vereinsgemischten Boot ist genau das die Angabe, die der
@@ -273,6 +334,7 @@ const TeamDialog = ({
                 </Stack>
             </DialogContent>
         </Dialog>
+        </>
     )
 }
 

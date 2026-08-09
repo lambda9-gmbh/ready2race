@@ -577,7 +577,30 @@
           "alreadyCheckedIn": "Denne person er allerede tjekket ind — der er ikke mere at gøre.",
           "notCheckedIn": "Denne person er slet ikke tjekket ind og kan derfor ikke tjekkes ud.",
           "qrCodeNotAssociated": "Dette armbånd hører ikke til nogen deltager. Tildel det først til en person i QR-administrationen.",
-          "qrCodeNotFound": "Dette armbånd kendes ikke i systemet. Kontrollér koden, eller tag et andet armbånd."
+          "qrCodeNotFound": "Dette armbånd kendes ikke i systemet. Kontrollér koden, eller tag et andet armbånd.",
+          "entryNotFound": "Denne post findes ikke længere. Genindlæs forløbet.",
+          "sequenceConflict": "Med dette tidspunkt ville forløbet modsige sig selv: check-ind og check-ud skal skiftes og begynde med et check-ind.",
+          "timestampCollision": "Der findes allerede en post for denne person på præcis dette tidspunkt. Vælg et andet minut."
+        },
+        "manual": {
+          "title": "Check-ind/-ud for {{name}}",
+          "hint": "Normalt scannes QR-koden ved broen. Poster, der oprettes eller rettes manuelt her, er den dokumenterede undtagelse: de gemmes med begrundelse, tidligere status og ophavsmand og markeres som manuelle overalt.",
+          "entries": "Forløb",
+          "noEntries": "Der er endnu ikke registreret noget for denne person.",
+          "add": "Tilføj post manuelt",
+          "correct": "Ret post",
+          "reason": "Begrundelse",
+          "reasonHint": "Hvorfor indtastes dette manuelt? Teksten bliver permanent i loggen.",
+          "trail": "Ændringshistorik",
+          "changeCreated": "Oprettet manuelt: {{entry}}",
+          "sourceQr": "via QR",
+          "sourceQrCorrected": "via QR, rettet",
+          "sourceManual": "manuel",
+          "source": "Registrering",
+          "saved": "Post gemt",
+          "saveError": "Posten kunne ikke gemmes.",
+          "open": "Rediger check-ind/-ud",
+          "notTracked": "ingen scanning"
         }
       },
       "certificate": {

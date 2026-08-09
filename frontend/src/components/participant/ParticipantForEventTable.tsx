@@ -20,6 +20,7 @@ import {
     Download,
     Edit,
     Email,
+    History,
     Info,
     VerifiedUser,
     WorkspacePremium,
@@ -40,6 +41,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {
     readRegistrationGlobal,
     updateEventGlobal,
+    updateLiveDashboardGlobal,
     updateRegistrationGlobal,
 } from '@authorization/privileges.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
@@ -48,6 +50,7 @@ import {QrCodeEditDialog} from '@components/participant/QrCodeEditDialog.tsx'
 import QrCodeIcon from '@mui/icons-material/QrCode'
 import {getFilename} from '@utils/helpers.ts'
 import {participationCertificateErrorKey} from '@components/certificate/certificateError.ts'
+import ParticipantTrackingDialog from '@components/event/participantTracking/ParticipantTrackingDialog.tsx'
 
 // TODO: validate/sanitize basepath (also in routes.tsx)
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
@@ -77,6 +80,13 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [editQrParticipant, setEditQrParticipant] = useState<ParticipantForEventDto | null>(null)
+    // Der Ausnahmeweg neben dem Scanner - siehe ParticipantTrackingDialog. Dieselben zwei Rechte
+    // wie im Backend (participantForEvent.kt): Admin und Schiedsrichter, auch ohne Meldungsrecht.
+    const [trackingParticipant, setTrackingParticipant] = useState<ParticipantForEventDto | null>(
+        null,
+    )
+    const mayEditTracking =
+        user.checkPrivilege(updateLiveDashboardGlobal) || user.checkPrivilege(updateEventGlobal)
 
     const eventId = eventData.id
 
@@ -484,10 +494,22 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
     }
 
     const customEntityActions = (entity: ParticipantForEventDto) => {
+        const trackingAction = mayEditTracking
+            ? [
+                <GridActionsCellItem
+                    icon={<History/>}
+                    label={t('club.participant.tracking.manual.open')}
+                    onClick={() => setTrackingParticipant(entity)}
+                    showInMenu
+                />,
+            ]
+            : []
+
         if (!canUpdateRegistration) {
-            return []
+            return trackingAction
         }
         return [
+            ...trackingAction,
             <GridActionsCellItem
                 icon={<Edit/>}
                 label={t('club.participant.qrCodeEdit')}
@@ -550,6 +572,16 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 onClose={participantRequirementCheckForEventConfigProps.dialog.closeDialog}
                 onSuccess={props.reloadData}
             />
+            {trackingParticipant !== null && (
+                <ParticipantTrackingDialog
+                    open
+                    onClose={() => setTrackingParticipant(null)}
+                    eventId={eventId}
+                    participantId={trackingParticipant.id}
+                    participantName={`${trackingParticipant.firstname} ${trackingParticipant.lastname}`}
+                    onChanged={props.reloadData}
+                />
+            )}
             <OpenRequirementExportDialog
                 open={openRequirementExportOpen}
                 onClose={() => setOpenRequirementExportOpen(false)}
