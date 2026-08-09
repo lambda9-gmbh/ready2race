@@ -15,11 +15,11 @@ import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {
     getMatchResultImportConfigs,
+    getRaceClockerRaces,
     getStartListConfigs,
     getTimingConfig,
     updateTimingConfig,
 } from '@api/sdk.gen.ts'
-import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
@@ -73,6 +73,21 @@ const CompetitionTimingConfig = () => {
                     feedback.error(t('common.error.unexpected'))
                 }
             },
+        },
+    )
+
+    // Die Rennen der Veranstaltung: Der Wettkampf wählt daraus aus und zeigt zugleich an, WAS er
+    // erben würde — beides braucht die Namen, die nur diese Liste kennt.
+    const {data: raceOptions, pending: racesPending} = useFetch(
+        signal => getRaceClockerRaces({signal, path: {eventId}}),
+        {
+            mapData: data => data.map(dto => ({id: dto.id, label: dto.name})),
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            },
+            deps: [eventId],
         },
     )
 
@@ -139,8 +154,11 @@ const CompetitionTimingConfig = () => {
                 'timingSystem',
                 eventSystem !== 'NONE' ? eventSystem : 'RACECLOCKER',
             )
-            formContext.setValue('timeTrialResultsUrl', formValues.eventTimeTrialResultsUrl)
-            formContext.setValue('heatsResultsUrl', formValues.eventHeatsResultsUrl)
+            formContext.setValue(
+                'raceQualification',
+                configOption(raceOptions, formValues.eventRaceQualification),
+            )
+            formContext.setValue('raceRounds', configOption(raceOptions, formValues.eventRaceRounds))
             formContext.setValue(
                 'startlistConfigQualification',
                 configOption(startListConfigs, formValues.eventStartlistConfigQualification),
@@ -155,8 +173,8 @@ const CompetitionTimingConfig = () => {
             )
         } else {
             formContext.setValue('timingSystem', 'NONE')
-            formContext.setValue('timeTrialResultsUrl', '')
-            formContext.setValue('heatsResultsUrl', '')
+            formContext.setValue('raceQualification', null)
+            formContext.setValue('raceRounds', null)
             formContext.setValue('startlistConfigQualification', null)
             formContext.setValue('startlistConfigRounds', null)
             formContext.setValue('resultImportConfig', null)
@@ -202,14 +220,12 @@ const CompetitionTimingConfig = () => {
                         {eventSystem === 'RACECLOCKER' && (
                             <>
                                 <Typography variant={'body2'} color={'text.secondary'}>
-                                    {t('event.competition.timing.timeTrialUrl')}:{' '}
-                                    {formValues.eventTimeTrialResultsUrl ||
-                                        t('event.competition.timing.eventDefaults.unset')}
+                                    {t('event.competition.timing.raceQualification')}:{' '}
+                                    {configName(raceOptions, formValues.eventRaceQualification)}
                                 </Typography>
                                 <Typography variant={'body2'} color={'text.secondary'}>
-                                    {t('event.competition.timing.heatsUrl')}:{' '}
-                                    {formValues.eventHeatsResultsUrl ||
-                                        t('event.competition.timing.eventDefaults.unset')}
+                                    {t('event.competition.timing.raceRounds')}:{' '}
+                                    {configName(raceOptions, formValues.eventRaceRounds)}
                                 </Typography>
                                 <Typography variant={'body2'} color={'text.secondary'}>
                                     {t('event.competition.timing.startlistQualification')}:{' '}
@@ -298,13 +314,17 @@ const CompetitionTimingConfig = () => {
                             <Alert variant={'outlined'} severity={'info'}>
                                 <Trans i18nKey={'event.competition.timing.raceclockerHint'} />
                             </Alert>
-                            <FormInputText
-                                name={'timeTrialResultsUrl'}
-                                label={t('event.competition.timing.timeTrialUrl')}
+                            <FormInputAutocomplete
+                                name={'raceQualification'}
+                                options={raceOptions ?? []}
+                                loading={racesPending}
+                                label={t('event.competition.timing.raceQualification')}
                             />
-                            <FormInputText
-                                name={'heatsResultsUrl'}
-                                label={t('event.competition.timing.heatsUrl')}
+                            <FormInputAutocomplete
+                                name={'raceRounds'}
+                                options={raceOptions ?? []}
+                                loading={racesPending}
+                                label={t('event.competition.timing.raceRounds')}
                             />
                         </Stack>
                     )}

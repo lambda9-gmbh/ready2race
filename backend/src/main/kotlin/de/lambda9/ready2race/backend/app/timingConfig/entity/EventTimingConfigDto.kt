@@ -11,8 +11,8 @@ import java.util.UUID
  */
 data class EventTimingConfigDto(
     val timingSystem: TimingSystem?,
-    val timeTrialResultsUrl: String?,
-    val heatsResultsUrl: String?,
+    val raceQualification: UUID?,
+    val raceRounds: UUID?,
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,

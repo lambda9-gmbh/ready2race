@@ -12644,14 +12644,16 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        timeTrialResultsUrl:
+        raceQualification:
           type: string
+          format: uuid
           nullable: true
-          description: Public results URL of the individual-start race used for the qualification round.
-        heatsResultsUrl:
+          description: The selected RaceClocker race for qualification rounds.
+        raceRounds:
           type: string
+          format: uuid
           nullable: true
-          description: Public results URL of the wave-start race used for all other rounds.
+          description: The selected RaceClocker race for all other rounds.
         startlistConfigQualification:
           type: string
           format: uuid
@@ -12675,14 +12677,16 @@ components:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
           description: Event-wide default timing system; the competition inherits it while its own field is null.
-        eventTimeTrialResultsUrl:
+        eventRaceQualification:
           type: string
+          format: uuid
           nullable: true
-          description: Event-wide default time trial results URL; inherited while the competition's own field is null.
-        eventHeatsResultsUrl:
+          description: Event-wide default race for qualification rounds; inherited while the competition's own field is null.
+        eventRaceRounds:
           type: string
+          format: uuid
           nullable: true
-          description: Event-wide default heats results URL; inherited while the competition's own field is null.
+          description: Event-wide default race for all other rounds; inherited while the competition's own field is null.
         eventStartlistConfigQualification:
           type: string
           format: uuid
@@ -12702,19 +12706,23 @@ components:
     EventTimingConfigDto:
       type: object
       description: >
-        Event-wide timing defaults. RaceClocker races are created per event, so the timing system and
-        the two results URLs live here once and every competition without its own values inherits
+        Event-wide timing defaults. RaceClocker races belong to the event, so the timing system and the
+        two race selections live here once and every competition without its own values inherits
         them. Column presets stay per competition - they depend on the concrete start list.
       properties:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        timeTrialResultsUrl:
+        raceQualification:
           type: string
+          format: uuid
           nullable: true
-        heatsResultsUrl:
+          description: The selected RaceClocker race for qualification rounds.
+        raceRounds:
           type: string
+          format: uuid
           nullable: true
+          description: The selected RaceClocker race for all other rounds.
         startlistConfigQualification:
           type: string
           format: uuid
@@ -12772,12 +12780,14 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        timeTrialResultsUrl:
+        raceQualificationName:
           type: string
           nullable: true
-        heatsResultsUrl:
+          description: Name of the deviating race for qualification rounds - a name, not an id, because this list is read rather than processed.
+        raceRoundsName:
           type: string
           nullable: true
+          description: Name of the deviating race for all other rounds.
         startlistConfigQualification:
           type: string
           format: uuid
@@ -12832,18 +12842,22 @@ components:
       type: object
       description: >
         The RaceClocker fields are optional, like the per-competition config. The URLs must be https
-        URLs on raceclocker.com. The five auto-pull fields are not optional - the database always has
-        a value for them, and null here would ambiguously mean "leave unchanged".
+        Both race ids must belong to this event. The five auto-pull fields are not optional - the
+        database always has a value for them, and null here would ambiguously mean "leave unchanged".
       properties:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        timeTrialResultsUrl:
+        raceQualification:
           type: string
+          format: uuid
           nullable: true
-        heatsResultsUrl:
+          description: The selected RaceClocker race for qualification rounds.
+        raceRounds:
           type: string
+          format: uuid
           nullable: true
+          description: The selected RaceClocker race for all other rounds.
         startlistConfigQualification:
           type: string
           format: uuid
@@ -12888,18 +12902,22 @@ components:
       type: object
       description: >
         Every field is optional - the RaceClocker races only exist shortly before the regatta, so an
-        incomplete configuration must be storable. The URLs must be https URLs on raceclocker.com; the
-        host is pinned so the backend cannot be pointed at other services.
+        incomplete configuration must be storable. Both race ids must belong to this competition's
+        event; the service rejects a race from another event.
       properties:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        timeTrialResultsUrl:
+        raceQualification:
           type: string
+          format: uuid
           nullable: true
-        heatsResultsUrl:
+          description: The selected RaceClocker race for qualification rounds.
+        raceRounds:
           type: string
+          format: uuid
           nullable: true
+          description: The selected RaceClocker race for all other rounds.
         startlistConfigQualification:
           type: string
           format: uuid

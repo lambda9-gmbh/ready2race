@@ -4,8 +4,8 @@ import java.util.UUID
 
 data class TimingConfigDto(
     val timingSystem: TimingSystem?,
-    val timeTrialResultsUrl: String?,
-    val heatsResultsUrl: String?,
+    val raceQualification: UUID?,
+    val raceRounds: UUID?,
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,
@@ -25,8 +25,8 @@ data class TimingConfigDto(
      * geerbt); diese hier zeigen der Oberflaeche, WAS geerbt wuerde.
      */
     val eventTimingSystem: TimingSystem?,
-    val eventTimeTrialResultsUrl: String?,
-    val eventHeatsResultsUrl: String?,
+    val eventRaceQualification: UUID?,
+    val eventRaceRounds: UUID?,
     val eventStartlistConfigQualification: UUID?,
     val eventStartlistConfigRounds: UUID?,
     val eventResultImportConfig: UUID?,

@@ -391,9 +391,9 @@
   },
   "club": {
     "tabs": {
-        "clubs": "Clubs",
-        "shortNames": "Short names",
-        "settings": "Settings"
+      "clubs": "Clubs",
+      "shortNames": "Short names",
+      "settings": "Settings"
     },
     "shortName": {
       "names": "Club names",
@@ -1224,9 +1224,7 @@
           "title": "File formats",
           "hint": "Which columns are exported and imported. Only needed separately if this competition runs into a different race in the timing system."
         },
-        "raceclockerHint": "RaceClocker needs two races per competition: one of type \"individual starts (time trial)\" for the qualification round and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here. ready2race determines by itself which one applies to a given heat.",
-        "timeTrialUrl": "Results address for time trial",
-        "heatsUrl": "Results address for heats",
+        "raceclockerHint": "RaceClocker races belong to the event, not to a single competition. Create each race once here — for example “Time trials”, “Long course” and “Short course” — and select below which one applies to qualification rounds and which to all other rounds. Competitions inherit that selection and can deviate deliberately.",
         "startlistQualification": "Start list export for qualification",
         "startlistRounds": "Start list export for other rounds",
         "startlist": "Start list export",
@@ -1239,14 +1237,16 @@
         },
         "incomplete": {
           "title": "This timing setup is not ready for use yet",
-          "heatsUrl": "The results address for the heats race is missing – without it, results cannot be pulled from RaceClocker.",
-          "timeTrialUrl": "This competition has a qualification round, but the results address for the time trial race is missing – without it, no results can be pulled from RaceClocker for the qualification.",
           "startlistRounds": "The start list export is missing – without it, no start list can be exported as CSV.",
           "startlistQualification": "This competition has a qualification round, but the start list export for the qualification is missing – without it, no start list can be exported for the qualification.",
-          "link": "Go to the timing settings"
+          "link": "Go to the timing settings",
+          "raceRounds": "No race is selected for the heats – without one, results cannot be pulled from RaceClocker.",
+          "raceQualification": "This competition has a qualification round, but no time trial race is selected – without one, no results can be pulled from RaceClocker for the qualification."
         },
         "saved": "Timing settings saved",
-        "invalid": "Please enter addresses on raceclocker.com."
+        "invalid": "Please enter addresses on raceclocker.com.",
+        "raceQualification": "Race for qualification rounds",
+        "raceRounds": "Race for all other rounds"
       },
       "places": {
         "places": "Places",
@@ -1423,9 +1423,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker needs two races: one of type \"individual starts (time trial)\" for the qualification rounds and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here – they then apply to the whole event.",
-      "timeTrialUrl": "Results address for time trial",
-      "heatsUrl": "Results address for heats",
+      "raceclockerHint": "RaceClocker races belong to the event, not to a single competition. Create each race once here — for example “Time trials”, “Long course” and “Short course” — and select below which one applies to qualification rounds and which to all other rounds. Competitions inherit that selection and can deviate deliberately.",
       "autoPull": {
         "enabled": "Pull results automatically",
         "hint": "While a match is running, the server pulls its results at the fast interval. Upcoming matches are watched at the slow interval to detect their start; finished matches are not polled at all.",
@@ -1449,11 +1447,34 @@
         "title": "Competitions with their own timing",
         "none": "No competition deviates – all of them follow these defaults.",
         "system": "own system",
-        "timeTrialUrl": "own time trial address",
-        "heatsUrl": "own heats address",
         "startlistQualification": "own start list export for qualification",
         "startlistRounds": "own start list export",
-        "resultImport": "own race results import"
+        "resultImport": "own race results import",
+        "raceQualification": "own qualification race: {{name}}",
+        "raceRounds": "own race: {{name}}"
+      },
+      "raceQualification": "Race for qualification rounds",
+      "raceRounds": "Race for all other rounds",
+      "races": {
+        "title": "RaceClocker races",
+        "hint": "Each race carries its results URL exactly once. The automatic pull only fetches the races currently being run.",
+        "add": "Add race",
+        "edit": "Edit race",
+        "name": "Name",
+        "url": "Results URL",
+        "startMode": "Start type",
+        "startModes": {
+          "INDIVIDUAL": "Individual starts (time trial)",
+          "WAVE": "Wave starts"
+        },
+        "capturesLaps": "Records lap times",
+        "none": "No race created yet.",
+        "deleteConfirm": "Delete “{{name}}”? Competitions pointing at it will fall back to the event default.",
+        "nameTaken": "A race with this name already exists.",
+        "urlTaken": "A race with this results URL already exists.",
+        "invalidUrl": "The URL must be on raceclocker.com.",
+        "saved": "Race saved.",
+        "deleted": "Race deleted."
       }
     },
     "info": {

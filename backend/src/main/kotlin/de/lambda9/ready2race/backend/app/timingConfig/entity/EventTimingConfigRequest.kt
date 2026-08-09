@@ -1,11 +1,8 @@
 package de.lambda9.ready2race.backend.app.timingConfig.entity
 
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollLogic
-import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
-import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
-import de.lambda9.tailwind.core.extensions.exit.getOrNull
 import java.util.UUID
 
 /**
@@ -14,8 +11,9 @@ import java.util.UUID
  */
 data class EventTimingConfigRequest(
     val timingSystem: TimingSystem?,
-    val timeTrialResultsUrl: String?,
-    val heatsResultsUrl: String?,
+    /** Das voreingestellte RaceClocker-Rennen je Rundenart; Wettkämpfe erben es, solange sie nichts eigenes anwählen. */
+    val raceQualification: UUID?,
+    val raceRounds: UUID?,
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,
@@ -34,8 +32,6 @@ data class EventTimingConfigRequest(
 
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
-            validateUrl(timeTrialResultsUrl, "timeTrialResultsUrl"),
-            validateUrl(heatsResultsUrl, "heatsResultsUrl"),
             validateInterval(intervalActiveSeconds, "intervalActiveSeconds"),
             validateInterval(intervalUpcomingSeconds, "intervalUpcomingSeconds"),
             validateMinutes(watchBeforeMinutes, "watchBeforeMinutes"),
@@ -43,17 +39,6 @@ data class EventTimingConfigRequest(
         )
 
     companion object {
-
-        /** Dieselbe Regel wie [TimingConfigRequest.validateUrl] - Tippfehler sollen beim Bearbeiten auffallen. */
-        private fun validateUrl(value: String?, field: String): ValidationResult {
-            if (value.isNullOrBlank()) return ValidationResult.Valid
-
-            return if (RaceClockerFeed.normalizeUrl(value).unsafeRunSync().getOrNull() == null) {
-                ValidationResult.Invalid.Message { "$field must be a URL on raceclocker.com" }
-            } else {
-                ValidationResult.Valid
-            }
-        }
 
         /**
          * Dieselbe Grenze, die der Job ohnehin erzwingt - hier nur, damit sie beim Speichern
@@ -77,8 +62,8 @@ data class EventTimingConfigRequest(
         val example
             get() = EventTimingConfigRequest(
                 timingSystem = TimingSystem.RACECLOCKER,
-                timeTrialResultsUrl = "https://www.raceclocker.com/7ffb822a",
-                heatsResultsUrl = "https://www.raceclocker.com/7c854955",
+                raceQualification = UUID.randomUUID(),
+                raceRounds = UUID.randomUUID(),
                 startlistConfigQualification = UUID.randomUUID(),
                 startlistConfigRounds = UUID.randomUUID(),
                 resultImportConfig = UUID.randomUUID(),

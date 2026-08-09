@@ -391,9 +391,9 @@
   },
   "club": {
     "tabs": {
-        "clubs": "Vereine",
-        "shortNames": "Kurzformen",
-        "settings": "Einstellungen"
+      "clubs": "Vereine",
+      "shortNames": "Kurzformen",
+      "settings": "Einstellungen"
     },
     "shortName": {
       "names": "Vereinsnamen",
@@ -1224,9 +1224,7 @@
           "title": "Dateiformate",
           "hint": "Welche Spalten exportiert und importiert werden. Abweichend nur nötig, wenn dieser Wettkampf in ein anderes Rennen im Zeitnahme-System läuft."
         },
-        "raceclockerHint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
-        "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
-        "heatsUrl": "Ergebnis-Adresse Läufe",
+        "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und wählen Sie darunter aus, welches für Qualifikationsrunden und welches für alle übrigen Runden gilt. Wettkämpfe erben diese Anwahl und können gezielt abweichen.",
         "startlistQualification": "Startlisten Export Qualifikation",
         "startlistRounds": "Startlisten Export übrige Runden",
         "startlist": "Startlisten Export",
@@ -1239,14 +1237,16 @@
         },
         "incomplete": {
           "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
-          "heatsUrl": "Es fehlt die Ergebnis-Adresse des Läufe-Rennens – ohne sie lassen sich keine Ergebnisse aus RaceClocker holen.",
-          "timeTrialUrl": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt die Ergebnis-Adresse des Zeitfahren-Rennens – ohne sie lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen.",
           "startlistRounds": "Es fehlt der Startlisten Export – ohne ihn lässt sich keine Startliste als CSV exportieren.",
           "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt der Startlisten Export für die Qualifikation – ohne ihn lässt sich für die Qualifikation keine Startliste exportieren.",
-          "link": "Zu den Zeitnahme-Einstellungen"
+          "link": "Zu den Zeitnahme-Einstellungen",
+          "raceRounds": "Es ist kein Rennen für die Läufe angewählt – ohne eines lassen sich keine Ergebnisse aus RaceClocker holen.",
+          "raceQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es ist kein Zeitfahren-Rennen angewählt – ohne eines lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen."
         },
         "saved": "Zeitnahme-Einstellungen gespeichert",
-        "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
+        "invalid": "Bitte geben Sie Adressen auf raceclocker.com an.",
+        "raceQualification": "Rennen für Qualifikationsrunden",
+        "raceRounds": "Rennen für alle übrigen Runden"
       },
       "places": {
         "places": "Platzierungen",
@@ -1423,9 +1423,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker braucht zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunden und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein — sie gelten dann für die ganze Veranstaltung.",
-      "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
-      "heatsUrl": "Ergebnis-Adresse Läufe",
+      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und wählen Sie darunter aus, welches für Qualifikationsrunden und welches für alle übrigen Runden gilt. Wettkämpfe erben diese Anwahl und können gezielt abweichen.",
       "autoPull": {
         "enabled": "Ergebnisse automatisch abrufen",
         "hint": "Läuft ein Lauf, holt der Server die Ergebnisse im schnellen Takt. Bevorstehende Läufe werden im langsamen Takt beobachtet, um ihren Start zu erkennen; beendete Läufe gar nicht.",
@@ -1449,11 +1447,34 @@
         "title": "Wettkämpfe mit eigener Zeitnahme",
         "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
         "system": "eigenes System",
-        "timeTrialUrl": "eigene Zeitfahren-Adresse",
-        "heatsUrl": "eigene Läufe-Adresse",
         "startlistQualification": "eigener Startlisten Export Qualifikation",
         "startlistRounds": "eigener Startlisten Export",
-        "resultImport": "eigener Rennergebnisse Import"
+        "resultImport": "eigener Rennergebnisse Import",
+        "raceQualification": "eigenes Quali-Rennen: {{name}}",
+        "raceRounds": "eigenes Rennen: {{name}}"
+      },
+      "raceQualification": "Rennen für Qualifikationsrunden",
+      "raceRounds": "Rennen für alle übrigen Runden",
+      "races": {
+        "title": "RaceClocker-Rennen",
+        "hint": "Jedes Rennen trägt seine Ergebnis-Adresse genau einmal. Der automatische Abruf holt je Takt nur die Rennen, die gerade gefahren werden.",
+        "add": "Rennen hinzufügen",
+        "edit": "Rennen bearbeiten",
+        "name": "Name",
+        "url": "Ergebnis-Adresse",
+        "startMode": "Startart",
+        "startModes": {
+          "INDIVIDUAL": "Einzelstarts (Zeitfahren)",
+          "WAVE": "Start in mehreren Läufen"
+        },
+        "capturesLaps": "Erfasst Rundenzeiten",
+        "none": "Noch kein Rennen angelegt.",
+        "deleteConfirm": "„{{name}}“ löschen? Wettkämpfe, die darauf zeigen, erben danach wieder die Voreinstellung.",
+        "nameTaken": "Es gibt schon ein Rennen mit diesem Namen.",
+        "urlTaken": "Es gibt schon ein Rennen mit dieser Adresse.",
+        "invalidUrl": "Die Adresse muss auf raceclocker.com liegen.",
+        "saved": "Rennen gespeichert.",
+        "deleted": "Rennen gelöscht."
       }
     },
     "info": {

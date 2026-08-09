@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.timingConfig.entity.CompetitionTimingDe
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
+import de.lambda9.ready2race.backend.database.generated.tables.references.RACECLOCKER_RACE
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import java.util.UUID
@@ -19,25 +20,33 @@ object TimingConfigRepo {
      * gehören zu keiner Veranstaltung.
      */
     fun getDeviations(eventId: UUID) = Jooq.query {
+        // Zwei Aliase derselben Tabelle, damit beide Anwahlen ihren Namen mitbringen. Ohne den
+        // Namen könnte diese Liste nur „hat ein eigenes Rennen" sagen -- und genau das half beim
+        // Suchen nie weiter.
+        val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
+        val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")
+
         select(
             COMPETITION.ID,
             COMPETITION_PROPERTIES.IDENTIFIER,
             COMPETITION_PROPERTIES.NAME,
             COMPETITION.TIMING_SYSTEM,
-            COMPETITION.RACECLOCKER_TT_RESULTS_URL,
-            COMPETITION.RACECLOCKER_HEATS_RESULTS_URL,
+            qualiRace.NAME,
+            roundsRace.NAME,
             COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
             COMPETITION.STARTLIST_CONFIG_ROUNDS,
             COMPETITION.RESULT_IMPORT_CONFIG,
         )
             .from(COMPETITION)
             .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .leftJoin(qualiRace).on(qualiRace.ID.eq(COMPETITION.RACECLOCKER_RACE_QUALIFICATION))
+            .leftJoin(roundsRace).on(roundsRace.ID.eq(COMPETITION.RACECLOCKER_RACE_ROUNDS))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(
                 DSL.or(
                     COMPETITION.TIMING_SYSTEM.isNotNull,
-                    COMPETITION.RACECLOCKER_TT_RESULTS_URL.isNotNull,
-                    COMPETITION.RACECLOCKER_HEATS_RESULTS_URL.isNotNull,
+                    COMPETITION.RACECLOCKER_RACE_QUALIFICATION.isNotNull,
+                    COMPETITION.RACECLOCKER_RACE_ROUNDS.isNotNull,
                     COMPETITION.STARTLIST_CONFIG_QUALIFICATION.isNotNull,
                     COMPETITION.STARTLIST_CONFIG_ROUNDS.isNotNull,
                     COMPETITION.RESULT_IMPORT_CONFIG.isNotNull,
@@ -51,8 +60,8 @@ object TimingConfigRepo {
                     identifier = it[COMPETITION_PROPERTIES.IDENTIFIER]!!,
                     name = it[COMPETITION_PROPERTIES.NAME]!!,
                     timingSystem = it[COMPETITION.TIMING_SYSTEM]?.let { s -> TimingSystem.valueOf(s) },
-                    timeTrialResultsUrl = it[COMPETITION.RACECLOCKER_TT_RESULTS_URL],
-                    heatsResultsUrl = it[COMPETITION.RACECLOCKER_HEATS_RESULTS_URL],
+                    raceQualificationName = it[qualiRace.NAME],
+                    raceRoundsName = it[roundsRace.NAME],
                     startlistConfigQualification = it[COMPETITION.STARTLIST_CONFIG_QUALIFICATION],
                     startlistConfigRounds = it[COMPETITION.STARTLIST_CONFIG_ROUNDS],
                     resultImportConfig = it[COMPETITION.RESULT_IMPORT_CONFIG],

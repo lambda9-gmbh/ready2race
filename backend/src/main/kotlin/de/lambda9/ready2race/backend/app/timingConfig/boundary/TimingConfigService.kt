@@ -7,7 +7,8 @@ import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
-import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
+import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerRaceRepo
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceError
 import de.lambda9.ready2race.backend.app.timingConfig.control.TimingConfigRepo
 import de.lambda9.ready2race.backend.app.timingConfig.entity.EventTimingConfigDto
 import de.lambda9.ready2race.backend.app.timingConfig.entity.EventTimingConfigRequest
@@ -40,15 +41,15 @@ object TimingConfigService {
             ApiResponse.Dto(
                 TimingConfigDto(
                     timingSystem = competition.timingSystem?.let { TimingSystem.valueOf(it) },
-                    timeTrialResultsUrl = competition.raceclockerTtResultsUrl,
-                    heatsResultsUrl = competition.raceclockerHeatsResultsUrl,
+                    raceQualification = competition.raceclockerRaceQualification,
+                    raceRounds = competition.raceclockerRaceRounds,
                     startlistConfigQualification = competition.startlistConfigQualification,
                     startlistConfigRounds = competition.startlistConfigRounds,
                     resultImportConfig = competition.resultImportConfig,
                     hasQualificationRound = hasQualificationRound,
                     eventTimingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
-                    eventTimeTrialResultsUrl = event.raceclockerTtResultsUrl,
-                    eventHeatsResultsUrl = event.raceclockerHeatsResultsUrl,
+                    eventRaceQualification = event.raceclockerRaceQualification,
+                    eventRaceRounds = event.raceclockerRaceRounds,
                     eventStartlistConfigQualification = event.startlistConfigQualification,
                     eventStartlistConfigRounds = event.startlistConfigRounds,
                     eventResultImportConfig = event.resultImportConfig,
@@ -70,8 +71,8 @@ object TimingConfigService {
             ApiResponse.Dto(
                 EventTimingConfigDto(
                     timingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
-                    timeTrialResultsUrl = event.raceclockerTtResultsUrl,
-                    heatsResultsUrl = event.raceclockerHeatsResultsUrl,
+                    raceQualification = event.raceclockerRaceQualification,
+                    raceRounds = event.raceclockerRaceRounds,
                     startlistConfigQualification = event.startlistConfigQualification,
                     startlistConfigRounds = event.startlistConfigRounds,
                     resultImportConfig = event.resultImportConfig,
@@ -95,19 +96,15 @@ object TimingConfigService {
         request: EventTimingConfigRequest,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        // Dieselbe Normalisierung wie beim Wettkampf (siehe updateTimingConfig).
-        val timeTrialUrl = request.timeTrialResultsUrl?.trim()?.takeIf { it.isNotBlank() }
-            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
-        val heatsUrl = request.heatsResultsUrl?.trim()?.takeIf { it.isNotBlank() }
-            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
-
         val event = !EventRepo.get(eventId).orDie()
             .onNullFail { EventError.NotFound }
 
+        !ensureRacesBelongToEvent(eventId, request.raceQualification, request.raceRounds)
+
         !EventRepo.update(event) {
             timingSystem = request.timingSystem?.name
-            raceclockerTtResultsUrl = timeTrialUrl
-            raceclockerHeatsResultsUrl = heatsUrl
+            raceclockerRaceQualification = request.raceQualification
+            raceclockerRaceRounds = request.raceRounds
             startlistConfigQualification = request.startlistConfigQualification
             startlistConfigRounds = request.startlistConfigRounds
             resultImportConfig = request.resultImportConfig
@@ -129,19 +126,18 @@ object TimingConfigService {
         request: TimingConfigRequest,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        // Normalisiert gespeichert (Schema ergaenzt, http auf https gehoben), damit der Tab hinterher
-        // zeigt, was das Abholen tatsaechlich anfragt. Leer heisst "nicht konfiguriert" -- Leerstrings
-        // wuerden das Abholen spaeter mit einem unbrauchbaren URL-Fehler scheitern lassen statt mit dem
-        // klaren "keine URL hinterlegt".
-        val timeTrialUrl = request.timeTrialResultsUrl?.trim()?.takeIf { it.isNotBlank() }
-            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
-        val heatsUrl = request.heatsResultsUrl?.trim()?.takeIf { it.isNotBlank() }
-            ?.let { (!RaceClockerFeed.normalizeUrl(it)).toString() }
+        val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
+
+        // Ein Rennen gehört einer Veranstaltung. Der Fremdschlüssel allein hindert niemanden daran,
+        // das Rennen einer FREMDEN Veranstaltung anzuwählen -- dann liefe dieser Wettkampf gegen ein
+        // Rennen, das mit seiner Regatta nichts zu tun hat.
+        !ensureRacesBelongToEvent(competition.event!!, request.raceQualification, request.raceRounds)
 
         !CompetitionRepo.update(competitionId) {
             timingSystem = request.timingSystem?.name
-            raceclockerTtResultsUrl = timeTrialUrl
-            raceclockerHeatsResultsUrl = heatsUrl
+            raceclockerRaceQualification = request.raceQualification
+            raceclockerRaceRounds = request.raceRounds
             startlistConfigQualification = request.startlistConfigQualification
             startlistConfigRounds = request.startlistConfigRounds
             resultImportConfig = request.resultImportConfig
@@ -150,5 +146,22 @@ object TimingConfigService {
         }.orDie().onNullFail { CompetitionError.CompetitionNotFound }
 
         noData
+    }
+
+    /**
+     * Beide angewählten Rennen müssen zu dieser Veranstaltung gehören.
+     *
+     * Die Datenbank erzwingt das nicht: Dafür bräuchte es einen zusammengesetzten Fremdschlüssel
+     * über (event, id), der den übrigen Tabellen dieses Projekts fremd wäre. Also fragt der Service.
+     */
+    private fun ensureRacesBelongToEvent(
+        eventId: UUID,
+        vararg raceIds: UUID?,
+    ): App<ServiceError, Unit> = KIO.comprehension {
+        raceIds.filterNotNull().forEach { raceId ->
+            val belongs = !RaceClockerRaceRepo.belongsToEvent(raceId, eventId).orDie()
+            if (!belongs) return@comprehension KIO.fail(RaceClockerRaceError.NotFound)
+        }
+        KIO.ok(Unit)
     }
 }

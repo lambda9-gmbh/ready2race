@@ -8,7 +8,7 @@ import java.util.UUID
  *
  * Gedacht für die Veranstaltungs-Ansicht: wer dort die Voreinstellung pflegt, soll sehen, welche
  * Wettkämpfe ihr nicht folgen — sonst ändert man die Adresse für alle und wundert sich am Renntag,
- * warum drei Wettkämpfe weiterhin ins alte Rennen zeigen. Ein leeres [timingSystem] mit gesetzter URL
+ * warum drei Wettkämpfe weiterhin ins alte Rennen zeigen. Ein leeres [timingSystem] mit eigener Rennen-Anwahl
  * ist ein Teil-Override und genauso gemeint: der Wettkampf erbt das System und hat ein eigenes Rennen.
  */
 data class CompetitionTimingDeviationDto(
@@ -16,8 +16,12 @@ data class CompetitionTimingDeviationDto(
     val identifier: String,
     val name: String,
     val timingSystem: TimingSystem?,
-    val timeTrialResultsUrl: String?,
-    val heatsResultsUrl: String?,
+    /**
+     * Der NAME des abweichenden Rennens, nicht seine Kennung: Diese Liste wird gelesen, nicht
+     * weiterverarbeitet, und „Eigenes Rennen: Langstrecke" sagt einem Menschen etwas, eine UUID nicht.
+     */
+    val raceQualificationName: String?,
+    val raceRoundsName: String?,
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,
