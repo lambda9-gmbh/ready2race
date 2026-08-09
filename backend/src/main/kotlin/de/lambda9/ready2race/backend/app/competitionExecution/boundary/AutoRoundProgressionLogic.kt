@@ -26,15 +26,17 @@ object AutoRoundProgressionLogic {
         competitionOverride ?: eventDefault
 
     /**
-     * Ob ein einzelner Lauf erledigt ist.
+     * Ob ein einzelner Lauf abgehakt ist.
      *
-     * Ein Freilos ([bye]) wird nie gefahren und bekommt nie ein `finished_at` — es hält die Runde
-     * trotzdem nicht auf. Ein abgesagter Lauf ist ebenfalls erledigt. Sonst zählt ausschließlich
-     * der Beenden-Stempel: Vollständige Ergebnisse allein reichen nicht, weil bis zum
-     * Beenden-Klick noch eine Zeitstrafe kommen kann (Entscheidung C1).
+     * Drei Wege dorthin: Ein Freilos ([bye]) wird nie gefahren und bekommt nie ein `finished_at`.
+     * Ein abgesagter Lauf ist ebenfalls erledigt. Beides ohne Ergebnis — eine Platzprüfung wäre
+     * dort sinnlos und würde die Runde nie durchlassen. Sonst zählt der Beenden-Stempel UND
+     * lückenlose Plätze: Vollständige Ergebnisse allein reichen nicht, weil bis zum Beenden-Klick
+     * noch eine Zeitstrafe kommen kann (Entscheidung C1).
      */
-    private fun matchIsDone(match: CompetitionMatchWithTeams, roundRequired: Boolean): Boolean =
-        bye(match, roundRequired) || match.skipped || match.finishedAt != null
+    private fun matchIsSettled(match: CompetitionMatchWithTeams, roundRequired: Boolean): Boolean =
+        bye(match, roundRequired) || match.skipped ||
+            (match.finishedAt != null && placesAreSet(match))
 
     /**
      * Ein Freilos: ein einziges Boot in einer nicht erforderlichen Runde. In einer erforderlichen
@@ -64,7 +66,5 @@ object AutoRoundProgressionLogic {
      */
     fun roundIsComplete(round: CompetitionSetupRoundWithMatches): Boolean =
         round.matches.isNotEmpty() &&
-            round.matches.all { match ->
-                (bye(match, round.required) || match.skipped) || (match.finishedAt != null && placesAreSet(match))
-            }
+            round.matches.all { matchIsSettled(it, round.required) }
 }
