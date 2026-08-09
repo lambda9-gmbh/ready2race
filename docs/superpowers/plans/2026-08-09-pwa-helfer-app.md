@@ -1072,16 +1072,20 @@ import {describeStale} from '@components/event/liveDashboard/staleState.ts'
 
 ```ts
     const cacheUserId = user.loggedIn ? user.id : ''
+    // Einmal lesen, dreifach verwenden: Der Startwert aller drei Zustände kommt aus demselben
+    // Eintrag, und der useState-Initialisierer läuft nur beim ersten Rendern.
+    const [cachedStart] = useState(() =>
+        readCachedRead<LiveDashboardDto>('dashboard', cacheUserId, eventId),
+    )
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(
-        () => readCachedRead<LiveDashboardDto>('dashboard', cacheUserId, eventId)?.payload ?? null,
+        cachedStart?.payload ?? null,
     )
-    const [lastUpdated, setLastUpdated] = useState<Date | null>(() => {
-        const cached = readCachedRead<LiveDashboardDto>('dashboard', cacheUserId, eventId)
-        return cached ? new Date(cached.fetchedAt) : null
-    })
-    const [stale, setStale] = useState(
-        () => readCachedRead<LiveDashboardDto>('dashboard', cacheUserId, eventId) !== null,
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(
+        cachedStart ? new Date(cachedStart.fetchedAt) : null,
     )
+    // Ein Stand aus dem Cache gilt bis zum ersten erfolgreichen Abruf als veraltet - sonst
+    // stünden die Aktionen auf Daten von vorhin offen.
+    const [stale, setStale] = useState(cachedStart !== null)
 ```
 
   Die bisherigen drei `useState`-Zeilen für `dashboard`, `lastUpdated` und `stale` entfallen dafür.
