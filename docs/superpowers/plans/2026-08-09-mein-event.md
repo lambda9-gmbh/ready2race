@@ -856,10 +856,12 @@ package de.lambda9.ready2race.backend.app.eventInfo
 
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.MyEventService
 import de.lambda9.ready2race.backend.app.eventInfo.entity.EventInfoProblem
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.testing.testComprehension
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -901,17 +903,26 @@ class MyEventServiceIT {
         val dto = response.dto
         val allMatchIds = (dto.running + dto.upcoming).map { it.matchId } + dto.results.map { it.matchId }
         assertTrue(allMatchIds.contains(fixture.ownMatchId))
-        assertTrue(!allMatchIds.contains(fixture.foreignMatchId))
+        assertFalse(allMatchIds.contains(fixture.foreignMatchId))
     }
 
     @Test
-    fun onlyPubliclyVisibleRequirementsAreReturnedAndNeverTheNote() = testComprehension {
+    fun onlyPubliclyVisibleRequirementsAreReturned() = testComprehension {
         val fixture = !MyEventFixture.create()
         val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
         val names = response.dto.requirements.map { it.name }
         assertEquals(listOf(fixture.publicRequirementName), names)
-        // MyEventRequirementDto hat kein Notizfeld; dieser Test hält fest, dass das so bleibt.
-        assertTrue(response.dto.requirements.none { it.toString().contains(fixture.internalNote) })
+    }
+
+    @Test
+    fun internalNoteNeverLeavesTheServer() = testComprehension {
+        // Gegen die ausgelieferte JSON-Darstellung geprüft, nicht gegen die Datenklasse:
+        // ein später ergänztes Feld oder eine eingebettete Struktur würde die Notiz sonst
+        // unbemerkt nach außen tragen. Der Test muss scheitern, sobald sie irgendwo auftaucht.
+        val fixture = !MyEventFixture.create()
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
+        val json = ObjectMapper().findAndRegisterModules().writeValueAsString(response.dto)
+        assertFalse(json.contains(fixture.internalNote))
     }
 
     @Test
