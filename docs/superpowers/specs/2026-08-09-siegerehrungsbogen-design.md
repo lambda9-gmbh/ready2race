@@ -32,6 +32,10 @@ Ein zusammenhängendes PDF. **Eine DIN-A4-Seite entspricht genau einer Wertungsk
 Siegerehrung**, mit den Rängen 1, 2 und 3 gemeinsam auf dem Blatt. Die Nutzer:innen wählen
 vorher aus, welche Ehrungen ins PDF sollen.
 
+Einzige Ausnahme, beim Bau entschieden: passt eine Ehrung auch in der kleinsten noch
+vorlesbaren Schrift nicht auf ein Blatt, bekommt sie eine Fortsetzungsseite mit wiederholtem
+Kopf — siehe [Der Boden der Stufenleiter](#der-boden-der-stufenleiter).
+
 Ausdrücklich **kein** Athletenzertifikat: der Bogen trägt kein Vorlagen-Design, keine
 Unterschriftszeile, keine Urkundensprache. Er ist ein Ablauf- und Informationsbogen.
 
@@ -230,13 +234,34 @@ Sprecherin bekäme ein Blatt ohne Veranstaltung, Rennnummer und Wertung.
 
 Stattdessen wird **gemessen statt geschätzt**. `AwardCeremonyPdf` kennt eine geordnete Folge von
 Schriftstufen, von großzügig nach eng. Je Bogen wird probeweise gesetzt und `numberOfPages`
-geprüft; genommen wird die erste Stufe, die genau eine Seite ergibt, sonst die engste. Erst
-danach entsteht das eigentliche Dokument mit allen Bögen in ihrer jeweiligen Stufe. Die
-Rangzahl bleibt in allen Stufen gleich groß — sie muss vom Pult aus lesbar bleiben.
+geprüft; genommen wird die erste Stufe, die genau eine Seite ergibt. Erst danach entsteht das
+eigentliche Dokument mit allen Bögen in ihrer jeweiligen Stufe. Die Rangzahl bleibt in allen
+Stufen gleich groß — sie muss vom Pult aus lesbar bleiben.
 
 Der Preis sind zwei Durchgänge über dieselbe Layoutfunktion. Bei einer Handvoll Blättern je
 Ehrung ist das nicht messbar, und es ist die einzige Art, die Zusicherung tatsächlich zu geben
 statt sie zu behaupten.
+
+### Der Boden der Stufenleiter
+
+Die Leiter endet bei einer Größe, die man noch vorlesen kann (**8,5 pt** für Namenszeilen). Ein
+erster Bau schrumpfte bis 7 pt weiter und erreichte diese Stufe mit ganz gewöhnlichen Daten —
+drei Achter einer Renngemeinschaft genügen. Das ist Kleingedrucktes und widerspricht dem Zweck
+des Blattes.
+
+**Passt eine Ehrung auch auf der untersten Stufe nicht auf ein Blatt, bekommt sie mehrere
+Seiten.** Jede davon trägt den **vollständigen Kopf**, jede ab der zweiten zusätzlich den
+Vermerk „Fortsetzung". Der Umbruch läuft ausschließlich **zwischen** Rangblöcken, nie mitten
+durch eine Mannschaft, und die Aufteilung wird ebenso gemessen wie die Stufe.
+
+Das weicht bewusst von „genau eine Seite je Kategorie" ab und ist so entschieden worden. Der
+Grund: die Alternativen sind schlechter. Weiterschrumpfen ergibt ein unlesbares Blatt; hart
+abbrechen lässt das Regattabüro kurz vor der Ehrung ohne Ausdruck stehen. Eine zweite Seite mit
+wiederholtem Kopf ist für die Sprecherin in jedem Fall benutzbar — anders als die kopflose
+Folgeseite, die der Renderer vorher still erzeugte.
+
+Erreicht wird der Fall selten: ein geteilter Rang mit vier Achtern, jede Mannschaft eine
+Renngemeinschaft. Der Normalfall bleibt eine Seite ohne jeden Vermerk.
 
 ## 8. Aufbau im Code
 
