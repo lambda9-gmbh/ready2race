@@ -180,8 +180,15 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
  * Ein anstehendes Boot hat noch kein Ergebnis - die Quellabfrage
  * (`CompetitionMatchTeamRepo.getTeamsForUpcomingMatch`) fragt Platz und Zeit gar nicht erst ab.
  * Die Ergebnisfelder bleiben deshalb leer, statt aus einer zweiten Abfrage gefüllt zu werden:
- * genau daran hängt, dass die Live-Liste keine Ergebnisse veröffentlichen kann, die
- * `PublicResultsVisibility` zurückhalten soll.
+ * genau daran hängt, dass der ANSTEHENDE Zweig der Live-Liste keine Ergebnisse veröffentlichen
+ * kann, die `PublicResultsVisibility` zurückhalten soll.
+ *
+ * Das gilt ausdrücklich NICHT für den aktivierten Zweig ([RunningMatchInfo.toLiveMatchInfo]
+ * unten): der reicht die Teilergebnisse eines laufenden Laufs unverändert durch - genau wie der
+ * vorbestehende Endpoint `/running-matches`, den dieser Tab schon vor dem 09.08.2026 abrief. Das
+ * ist gewollt und keine Aufweichung: ein Boot, das die Zeitnahme schon während des Laufs wertet,
+ * durfte diesen Tab schon immer erreichen - Live-Zwischenzeiten sind kein zurückgehaltenes
+ * Endergebnis.
  */
 fun UpcomingMatchTeamInfo.toRunningMatchTeamInfo() = RunningMatchTeamInfo(
     teamId = teamId,

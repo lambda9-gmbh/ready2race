@@ -119,8 +119,19 @@ Und `CompetitionMatchTeamRepo.getTeamsForUpcomingMatch` liefert weder Platz noch
 
 Ein Lauf, den `PublicResultsVisibility` zurückhalten soll, kann in diesem Zweig damit gar nicht
 erst entstehen. Der Schutz hängt nicht an einer zusätzlichen Bedingung, die jemand vergessen
-könnte, sondern an der Auswahl selbst. Ein Test in `LiveMatchesLogicTest` nagelt fest, dass ein
-Lauf im Zustand `FINISHED` oder `AWAITING_FINISH` nicht in die Liste gerät.
+könnte, sondern an der Auswahl selbst — SQL plus das ergebnisfeldlose `UpcomingMatchTeamInfo`.
+
+Der Filter in `LiveMatchesLogic.merge` (Zustände `FINISHED`/`AWAITING_FINISH` ausschließen, siehe
+1.5) ist **kein zusätzlicher Riegel** dagegen, auch wenn er das auf den ersten Blick nahelegt.
+Beide Umwandlungen nach `LiveMatchInfo` setzen `finishedAt` fest auf `null`, und der anstehende
+Zweig übergibt jedes Boot als ungewertet — `FINISHED` und `AWAITING_FINISH` können mit den
+heutigen Umwandlungen also gar nicht erst bei ihm ankommen. Fiele die SQL-Bedingung
+`finished_at is not null` weg, käme ein beendeter Lauf als `UPCOMING` durch, und der Filter ließe
+ihn anstandslos passieren. Er bleibt trotzdem im Code: er ist eine billige, richtige Zusicherung
+über den Inhalt der Liste, nur eben kein Schutzmechanismus. Ein Test in `LiveMatchesLogicTest`
+nagelt fest, dass der Filter tut, was er kann (Läufe in diesen Zuständen herausfiltern); ein
+zweiter Test in `LiveMatchConversionsTest` nagelt fest, was den tatsächlichen Schutz trägt: dass
+die beiden Umwandlungen diese Zustände strukturell nie erzeugen.
 
 `getLatestMatchResults` mit seiner `visibility`-Bedingung bleibt unverändert die einzige Quelle
 für veröffentlichte Ergebnisse.
@@ -176,8 +187,11 @@ Bewegung auf getestetem Code.
 
 `results.liveMatches` heißt heute „Laufende Partien" und „Momentan finden keine Partien statt."
 Beides wird mit den anstehenden Läufen falsch, und „Partie" ist im Rudern das falsche Wort.
-Neu (de): `title` „Läuft und steht an", `noMatches` „Zurzeit ist kein Lauf angesetzt.",
-`stale` „Stand von {{time}}". en und da ziehen mit.
+Neu (de): `noMatches` „Zurzeit ist kein Lauf angesetzt.", `stale` „Stand von {{time}}". en und da
+ziehen mit.
+
+Kein eigener `title`-Schlüssel: die Komponente rendert keine Überschrift über der Liste, genau wie
+ihr Nachbar-Tab `MatchResults.tsx` keine hat - beide Tabs sollen gleich aussehen.
 
 Die Statuslabels selbst kommen aus dem vorhandenen Zweig `event.match.status.*` — kein zweiter
 Satz Wörter für dieselben Zustände.

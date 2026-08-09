@@ -19,11 +19,22 @@ object LiveMatchesLogic {
      * entscheidet allein `Event.publicResultsVisibility` über `/latest-match-results` - bis zum
      * Beenden kann noch eine Zeitstrafe kommen.
      *
-     * Die beiden Abfragen hinter [merge] können solche Läufe per SQL gar nicht liefern
-     * (`CompetitionMatchRepo.getUpcomingMatchesForBoard` schließt `finished_at is not null` und
-     * „kein Boot mehr ohne Ergebnis" aus). Dieser Filter ist deshalb kein Arbeitsschritt, sondern
-     * ein Riegel: Ändert jemand eine der Abfragen, fällt die Freigaberegel nicht still um,
-     * sondern der Lauf verschwindet aus der Live-Liste.
+     * Dieser Filter ist eine ZUSICHERUNG über den Inhalt der Liste - „hier steht kein Ergebnis" -
+     * und KEIN Riegel gegen künftige Änderungen an den Abfragen: [MatchState.FINISHED] und
+     * [MatchState.AWAITING_FINISH] können mit den heutigen Umwandlungen (`toLiveMatchInfo` für
+     * beide Zweige, in `eventInfo/control/Conversions.kt`) gar nicht erst entstehen, weil beide
+     * `finishedAt` fest auf `null` setzen und der anstehende Zweig jedes Boot als ungewertet
+     * übergibt (`MatchStatusTeam(place = null, failed = false, deregistered = false)`) - der
+     * Filter sieht diese Zustände also nie und kann folglich auch nichts abfangen, sollte die
+     * SQL-Auswahl sie eines Tages doch liefern.
+     *
+     * Der tatsächliche Schutz sitzt vor dieser Funktion: in der SQL-Bedingung
+     * `finished_at is not null` / „kein Boot mehr ohne Ergebnis" in
+     * `CompetitionMatchRepo.getUpcomingMatchesForBoard` und im ergebnisfeldlosen
+     * `UpcomingMatchTeamInfo`, das Platz und Zeit gar nicht erst führt. Fiele dort die
+     * `finished_at`-Bedingung weg, käme ein beendeter Lauf als `UPCOMING` durch - dieser Filter
+     * ließe ihn dann anstandslos passieren. Behalten wird er trotzdem: er ist billig und die
+     * Zusicherung stimmt, solange die Quellen halten, was sie versprechen.
      */
     private val notLive = setOf(MatchState.FINISHED, MatchState.AWAITING_FINISH)
 
