@@ -530,6 +530,23 @@ object EventInfoService {
             .map { (registrationId, groupedRecords) ->
                 val first = groupedRecords.first()
                 val clubs = clubComposition(groupedRecords, clubShortNames)
+                // Die beiden `!!` unten sind belegt, nicht gehofft: `competition_registration` und
+                // `start_number` sind in `competition_match_team` beide NOT NULL (Migration
+                // V202507040930, seither nie gelockert - das spätere "optional import start number"
+                // betrifft `match_result_import_config`, eine andere Tabelle). jOOQ führt die
+                // Nichtnullbarkeit in den erzeugten Feldern mit (`SQLDataType.…nullable(false)`);
+                // dass der Kotlin-Typ trotzdem `Int?` lautet, ist eine Eigenheit des Generators,
+                // keine Aussage über die Daten.
+                //
+                // Entscheidend ist, woher die Spalten kommen: `getTeamsForMatchResult` hat
+                // COMPETITION_MATCH_TEAM als führende Tabelle, alle Left-Joins hängen an *anderen*
+                // Tabellen. Eine fehlende Abmeldung, Crew oder Zeit leert deren Spalten, nie die
+                // der führenden. Gruppiert wird erst hier im Speicher, nicht in SQL - es gibt also
+                // auch keine Aggregat-Zeile ohne Ursprungsdatensatz.
+                //
+                // Das ist kein Formalismus: ein Wurf an dieser Stelle reißt den öffentlichen
+                // Endpunkt der Athleten-Anzeige mit, und der Steg sieht dann einen Netzausfall
+                // statt eines Datenfehlers.
                 MatchResultTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
