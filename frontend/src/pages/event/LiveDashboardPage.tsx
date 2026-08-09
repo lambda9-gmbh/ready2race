@@ -27,7 +27,6 @@ import {useFetch, useFeedback} from '@utils/hooks.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
-import {eventLiveDashboardRoute} from '@routes'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
 import {
@@ -80,13 +79,16 @@ const useCrewRequested = (): boolean => {
     return requested
 }
 
-const LiveDashboardPage = () => {
+export type LiveDashboardPageProps = {
+    eventId: string
+}
+
+const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const {confirmAction} = useConfirmation()
     const user = useUser()
     const theme = useTheme()
-    const {eventId} = eventLiveDashboardRoute.useParams()
     const mayControl = user.checkPrivilege(updateLiveDashboardGlobal)
     const now = useLocalClock(30_000)
     // Ab hier ist Platz für beide Ansichten nebeneinander, der Umschalter entfällt. Derselbe Bruch,

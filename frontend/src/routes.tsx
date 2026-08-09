@@ -316,7 +316,10 @@ export const eventInfoRoute = createRoute({
 export const eventLiveDashboardRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'liveDashboard',
-    component: () => <LiveDashboardPage />,
+    component: function EventLiveDashboard() {
+        const {eventId} = eventLiveDashboardRoute.useParams()
+        return <LiveDashboardPage eventId={eventId} />
+    },
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, readLiveDashboardGlobal)
     },
