@@ -13712,7 +13712,11 @@ components:
         competitionIdentifier:
           type: string
           nullable: true
-          description: "The competition's short identifier (Kürzel) - shown in front of the slot label in the schedule tab"
+          description: "The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab"
+        competitionShortName:
+          type: string
+          nullable: true
+          description: "The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab"
         roundName:
           type: string
           nullable: true
@@ -13769,7 +13773,11 @@ components:
         competitionIdentifier:
           type: string
           nullable: true
-          description: "The competition's short identifier (Kürzel)"
+          description: "The competition's race number (Rennnummer)"
+        competitionShortName:
+          type: string
+          nullable: true
+          description: "The competition's short name (Kurzname)"
         roundName:
           type: string
         matchName:

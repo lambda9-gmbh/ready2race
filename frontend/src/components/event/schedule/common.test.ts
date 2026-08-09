@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest'
 import {
     buildShiftPreviewRows,
+    competitionTag,
     defaultFromSlotId,
     extractMaxReductionMinutes,
     groupSlotsByDay,
@@ -86,6 +87,20 @@ describe('slotLabel', () => {
                 }),
             ),
         ).toBe('Mittagspause')
+    })
+})
+
+describe('competitionTag', () => {
+    it('joins race number and short name', () => {
+        expect(
+            competitionTag({competitionIdentifier: '17', competitionShortName: 'CM 4x+'}),
+        ).toBe('17 CM 4x+')
+    })
+    it('falls back to the race number when no short name is maintained', () => {
+        expect(competitionTag({competitionIdentifier: '17', competitionShortName: null})).toBe('17')
+    })
+    it('is empty for a slot without a competition', () => {
+        expect(competitionTag({competitionIdentifier: null, competitionShortName: null})).toBe('')
     })
 })
 

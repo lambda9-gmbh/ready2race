@@ -1366,9 +1366,13 @@ export type EventScheduleSlotDto = {
     competitionId?: string | null
     competitionName?: string | null
     /**
-     * The competition's short identifier (Kürzel) - shown in front of the slot label in the schedule tab
+     * The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab
      */
     competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab
+     */
+    competitionShortName?: string | null
     roundName?: string | null
     matchName?: string | null
     matchId?: string | null
@@ -2839,9 +2843,13 @@ export type UnplannedSetupMatchDto = {
     competitionId: string
     competitionName: string
     /**
-     * The competition's short identifier (Kürzel)
+     * The competition's race number (Rennnummer)
      */
     competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname)
+     */
+    competitionShortName?: string | null
     roundName: string
     matchName?: string | null
 }

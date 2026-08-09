@@ -626,7 +626,9 @@
       "competitions": "Competitions",
       "navigation": {
         "backToEvent": "Back to the event",
-        "filter": "Filter"
+        "filter": "Filter",
+        "showShortNames": "Show short names",
+        "showLongNames": "Show long names"
       },
       "noCompetitionsAvailable": "No competitions available",
       "identifier": "Identifier",

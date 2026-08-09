@@ -626,7 +626,9 @@
       "competitions": "Konkurrencer",
       "navigation": {
         "backToEvent": "Tilbage til arrangementet",
-        "filter": "Filtrér"
+        "filter": "Filtrér",
+        "showShortNames": "Vis korte navne",
+        "showLongNames": "Vis lange navne"
       },
       "noCompetitionsAvailable": "Ingen konkurrencer tilgængelige",
       "identifier": "Identifikator",

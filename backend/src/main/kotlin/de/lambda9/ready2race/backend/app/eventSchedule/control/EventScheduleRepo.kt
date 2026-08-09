@@ -85,6 +85,7 @@ object EventScheduleRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_PROPERTIES.NAME.`as`("competition_name"),
             COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
+            COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.`as`("setup_round_id"),
@@ -269,6 +270,7 @@ object EventScheduleRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_PROPERTIES.NAME.`as`("competition_name"),
             COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
+            COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
         )

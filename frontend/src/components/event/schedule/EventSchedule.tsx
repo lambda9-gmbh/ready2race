@@ -43,7 +43,14 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
-import {groupSlotsByDay, isCancellable, isEditable, slotLabel, slotsInRound} from './common.ts'
+import {
+    competitionTag,
+    groupSlotsByDay,
+    isCancellable,
+    isEditable,
+    slotLabel,
+    slotsInRound,
+} from './common.ts'
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import {matchStatusChip, slotMatchStatus} from '@components/event/match/matchStatusChip.ts'
@@ -454,14 +461,14 @@ const EventSchedule = () => {
                                                     alignItems={'center'}
                                                     justifyContent={'space-between'}>
                                                     <Box component={'span'}>
-                                                        {slot.competitionIdentifier && (
+                                                        {competitionTag(slot) && (
                                                             <Box
                                                                 component={'span'}
                                                                 sx={{
                                                                     color: 'text.secondary',
                                                                     mr: 1,
                                                                 }}>
-                                                                {slot.competitionIdentifier}
+                                                                {competitionTag(slot)}
                                                             </Box>
                                                         )}
                                                         {slotLabel(slot)}
@@ -646,11 +653,11 @@ const EventSchedule = () => {
                                 {unplannedSetupMatches.map(match => (
                                     <TableRow key={match.setupMatchId}>
                                         <TableCell>
-                                            {match.competitionIdentifier && (
+                                            {competitionTag(match) && (
                                                 <Box
                                                     component={'span'}
                                                     sx={{color: 'text.secondary', mr: 1}}>
-                                                    {match.competitionIdentifier}
+                                                    {competitionTag(match)}
                                                 </Box>
                                             )}
                                             {match.competitionName}

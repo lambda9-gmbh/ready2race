@@ -626,7 +626,9 @@
       "competitions": "Wettkämpfe",
       "navigation": {
         "backToEvent": "Zurück zur Veranstaltung",
-        "filter": "Filtern"
+        "filter": "Filtern",
+        "showShortNames": "Kurznamen zeigen",
+        "showLongNames": "Lange Namen zeigen"
       },
       "noCompetitionsAvailable": "Keine Wettkämpfe verfügbar",
       "identifier": "Kennung",

@@ -24,6 +24,8 @@ import {
     Close,
     FormatListBulleted,
     Search,
+    ShortText,
+    Subject,
 } from '@mui/icons-material'
 import {Link} from '@tanstack/react-router'
 import {useTranslation} from 'react-i18next'
@@ -38,6 +40,13 @@ const NAV_COLLAPSED_STORAGE_KEY = 'competition_nav_collapsed'
 
 const storedNavCollapsed = (): boolean =>
     localStorage.getItem(NAV_COLLAPSED_STORAGE_KEY) === 'true'
+
+/** Ebenso gemerkt: ob die Liste die Rennen mit Kurznamen ("CM 4x+") statt mit ihrem langen Namen
+ * führt. Wer die Kürzel liest, liest sie den ganzen Regattatag über. */
+const NAV_SHORT_NAMES_STORAGE_KEY = 'competition_nav_short_names'
+
+const storedNavShortNames = (): boolean =>
+    localStorage.getItem(NAV_SHORT_NAMES_STORAGE_KEY) === 'true'
 
 const LIST_WIDTH = 240
 /** Abstand der mitlaufenden Leiste zum Fensterrand, in Pixeln. */
@@ -67,8 +76,15 @@ const CompetitionNavigation = ({
     const isNarrow = useMediaQuery(theme.breakpoints.down('lg'))
 
     const [collapsed, setCollapsed] = useState(storedNavCollapsed)
+    const [shortNames, setShortNames] = useState(storedNavShortNames)
     const [drawerOpen, setDrawerOpen] = useState(false)
     const [filter, setFilter] = useState('')
+
+    const toggleShortNames = () =>
+        setShortNames(prev => {
+            localStorage.setItem(NAV_SHORT_NAMES_STORAGE_KEY, String(!prev))
+            return !prev
+        })
 
     const listRef = useRef<HTMLUListElement | null>(null)
 
@@ -195,14 +211,36 @@ const CompetitionNavigation = ({
                         : `${visible.length}/${competitions.length}`}
                     )
                 </Typography>
-                {isNarrow && (
+                <Stack direction={'row'} spacing={0.5} sx={{alignItems: 'center', flex: 'none'}}>
+                    {/* Am Regattatag sucht man das Rennen am Kurznamen ("CM 4x+"), nicht am
+                        ausgeschriebenen Namen - der ist in der schmalen Leiste ohnehin
+                        abgeschnitten. Wer ihn braucht, schaltet zurück oder fährt den Eintrag an,
+                        dessen Titel weiterhin den vollen Namen trägt. */}
                     <IconButton
                         size={'small'}
-                        onClick={() => setDrawerOpen(false)}
-                        aria-label={t('common.close')}>
-                        <Close fontSize={'small'} />
+                        onClick={toggleShortNames}
+                        color={shortNames ? 'primary' : 'default'}
+                        aria-pressed={shortNames}
+                        title={t(
+                            shortNames
+                                ? 'event.competition.navigation.showLongNames'
+                                : 'event.competition.navigation.showShortNames',
+                        )}>
+                        {shortNames ? (
+                            <Subject fontSize={'small'} />
+                        ) : (
+                            <ShortText fontSize={'small'} />
+                        )}
                     </IconButton>
-                )}
+                    {isNarrow && (
+                        <IconButton
+                            size={'small'}
+                            onClick={() => setDrawerOpen(false)}
+                            aria-label={t('common.close')}>
+                            <Close fontSize={'small'} />
+                        </IconButton>
+                    )}
+                </Stack>
             </Stack>
             <Box sx={{px: 1.5, pb: 1.5}}>
                 <TextField
@@ -245,7 +283,13 @@ const CompetitionNavigation = ({
                                     }}>
                                     <ListItemText
                                         primary={c.properties.identifier}
-                                        secondary={c.properties.name}
+                                        // Ohne gepflegten Kurznamen bleibt der lange stehen -
+                                        // besser ein zu langer Name als eine namenlose Zeile.
+                                        secondary={
+                                            shortNames
+                                                ? (c.properties.shortName ?? c.properties.name)
+                                                : c.properties.name
+                                        }
                                         slotProps={{
                                             primary: {
                                                 fontWeight: isActive ? 'bold' : 'medium',
