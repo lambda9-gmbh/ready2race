@@ -2277,7 +2277,8 @@
         "qrManagement": "QR-kodeadministration",
         "competitionCheck": "Konkurrence-check",
         "eventRequirement": "Kontrollér betingelser",
-        "caterer": "Forplejning"
+        "caterer": "Forplejning",
+        "liveDashboard": "Dommerpanel"
       },
       "switchEvent": "Skift arrangement"
     },

@@ -2283,7 +2283,8 @@
         "qrManagement": "QR-Code Verwaltung",
         "competitionCheck": "Wettkampf-Check",
         "eventRequirement": "Bedingungen prüfen",
-        "caterer": "Verpflegung"
+        "caterer": "Verpflegung",
+        "liveDashboard": "Schiedsrichter-Dashboard"
       },
       "switchEvent": "Event wechseln"
     },

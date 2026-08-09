@@ -9,40 +9,26 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material'
-import {AppFunction, useAppSession} from '@contexts/app/AppSessionContext.tsx'
+import {useAppSession} from '@contexts/app/AppSessionContext.tsx'
 import {useEffect} from 'react'
 import {useTranslation} from 'react-i18next'
 import QrCodeIcon from '@mui/icons-material/QrCode'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import AssignmentIcon from '@mui/icons-material/Assignment'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
+import SportsScoreIcon from '@mui/icons-material/SportsScore'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {getUserAppRights} from '@components/qrApp/common.ts'
+import {AppEntry, appEntries} from '@components/qrApp/common.ts'
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import LogoutIcon from "@mui/icons-material/Logout";
 
-const APP_FUNCTIONS = [
-    {
-        fn: 'APP_QR_MANAGEMENT' as AppFunction,
-        labelKey: 'app.functionSelect.functions.qrManagement' as const,
-        icon: QrCodeIcon,
-    },
-    {
-        fn: 'APP_COMPETITION_CHECK' as AppFunction,
-        labelKey: 'app.functionSelect.functions.competitionCheck' as const,
-        icon: CheckCircleIcon,
-    },
-    {
-        fn: 'APP_EVENT_REQUIREMENT' as AppFunction,
-        labelKey: 'app.functionSelect.functions.eventRequirement' as const,
-        icon: AssignmentIcon,
-    },
-    {
-        fn: 'APP_CATERER' as AppFunction,
-        labelKey: 'app.functionSelect.functions.caterer' as const,
-        icon: RestaurantIcon,
-    },
-] as const
+const ENTRY_ICONS: Record<string, typeof QrCodeIcon> = {
+    APP_QR_MANAGEMENT: QrCodeIcon,
+    APP_COMPETITION_CHECK: CheckCircleIcon,
+    APP_EVENT_REQUIREMENT: AssignmentIcon,
+    APP_CATERER: RestaurantIcon,
+    LIVE_DASHBOARD: SportsScoreIcon,
+}
 
 const AppFunctionSelectPage = () => {
     const {t} = useTranslation()
@@ -51,17 +37,17 @@ const AppFunctionSelectPage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const user = useUser()
 
-    const availableAppFunctions = getUserAppRights(user)
+    const entries = appEntries(user)
 
     useEffect(() => {
-        if (availableAppFunctions.length === 0 && user.loggedIn) {
-            navigateTo("APP_Forbidden")
+        if (entries.length === 0 && user.loggedIn) {
+            navigateTo('APP_Forbidden')
         }
-    }, [setAppFunction, availableAppFunctions])
+    }, [entries.length, user.loggedIn, navigateTo])
 
-    const handleSelect = (fn: AppFunction) => {
-        setAppFunction(fn)
-        navigateTo("APP_Scanner")
+    const handleSelect = (entry: AppEntry) => {
+        setAppFunction(entry.appFunction)
+        navigateTo(entry.target)
     }
 
     return (
@@ -86,11 +72,11 @@ const AppFunctionSelectPage = () => {
                 gap={{xs: 2, sm: 3}}
                 width="100%"
                 maxWidth="800px">
-                {APP_FUNCTIONS.filter(f => availableAppFunctions.includes(f.fn)).map(f => {
-                    const Icon = f.icon
+                {entries.map(entry => {
+                    const Icon = ENTRY_ICONS[entry.key]
                     return (
                         <Card
-                            key={f.fn}
+                            key={entry.key}
                             sx={{
                                 height: {xs: '180px', sm: '200px'},
                                 display: 'flex',
@@ -105,7 +91,7 @@ const AppFunctionSelectPage = () => {
                                 },
                             }}>
                             <CardActionArea
-                                onClick={() => handleSelect(f.fn)}
+                                onClick={() => handleSelect(entry)}
                                 sx={{
                                     height: '100%',
                                     display: 'flex',
@@ -127,7 +113,7 @@ const AppFunctionSelectPage = () => {
                                         sx={{
                                             fontWeight: isMobile ? 600 : 400,
                                         }}>
-                                        {t(f.labelKey)}
+                                        {t(entry.labelKey)}
                                     </Typography>
                                 </CardContent>
                             </CardActionArea>

@@ -1,7 +1,8 @@
-import {AppFunction} from '@contexts/app/AppSessionContext.tsx'
+import {AppFunction, AppView} from '@contexts/app/AppSessionContext.tsx'
 import {PrivilegeDto} from '@api/types.gen.ts'
 import {User} from '@contexts/user/UserContext.ts'
 import {
+    readLiveDashboardGlobal,
     updateAppCatererGlobal,
     updateAppCompetitionCheckGlobal,
     updateAppEventRequirementGlobal,
@@ -37,4 +38,56 @@ export const getAppRights = (privileges: PrivilegeDto[]): AppFunction[] => {
                     ? 'APP_EVENT_REQUIREMENT'
                     : 'APP_CATERER',
         )
+}
+
+/**
+ * Ein Eintrag der Funktionsauswahl. Scanner-Funktionen tragen ihre `AppFunction`; das
+ * Dashboard ist keine Scanner-Funktion und trägt deshalb `null` - der Scanner darf nichts
+ * bekommen, womit er nichts anfangen kann.
+ */
+/**
+ * Die Beschriftungen sind bewusst als Literale getippt und nicht als `string`: `t()` nimmt nur
+ * bekannte Schlüssel entgegen, ein loser `string` scheitert an dessen Typprüfung.
+ */
+export type AppEntryLabelKey =
+    | 'app.functionSelect.functions.qrManagement'
+    | 'app.functionSelect.functions.competitionCheck'
+    | 'app.functionSelect.functions.eventRequirement'
+    | 'app.functionSelect.functions.caterer'
+    | 'app.functionSelect.functions.liveDashboard'
+
+export type AppEntry = {
+    key: string
+    labelKey: AppEntryLabelKey
+    target: AppView
+    appFunction: AppFunction
+}
+
+const scannerLabels: Record<Exclude<AppFunction, null>, AppEntryLabelKey> = {
+    APP_QR_MANAGEMENT: 'app.functionSelect.functions.qrManagement',
+    APP_COMPETITION_CHECK: 'app.functionSelect.functions.competitionCheck',
+    APP_EVENT_REQUIREMENT: 'app.functionSelect.functions.eventRequirement',
+    APP_CATERER: 'app.functionSelect.functions.caterer',
+}
+
+export const appEntries = (user: User): AppEntry[] => {
+    const entries: AppEntry[] = getUserAppRights(user)
+        .filter((fn): fn is Exclude<AppFunction, null> => fn !== null)
+        .map(fn => ({
+            key: fn,
+            labelKey: scannerLabels[fn],
+            target: 'APP_Scanner' as AppView,
+            appFunction: fn,
+        }))
+
+    if (user.checkPrivilege(readLiveDashboardGlobal)) {
+        entries.push({
+            key: 'LIVE_DASHBOARD',
+            labelKey: 'app.functionSelect.functions.liveDashboard',
+            target: 'APP_Dashboard',
+            appFunction: null,
+        })
+    }
+
+    return entries
 }
