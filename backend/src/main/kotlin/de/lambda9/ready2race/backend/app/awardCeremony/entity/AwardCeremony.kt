@@ -49,7 +49,14 @@ data class AwardCeremonyChoiceDto(
     val competitionShortName: String?,
     val competitionName: String,
     val ratingCategoryName: String?,
-    val placedTeams: Int,
+    /**
+     * Die Zahl der Boote, die auf dem Blatt stehen: Ränge bis drei, Gleichstände eingeschlossen.
+     *
+     * Bewusst nicht die Zahl aller platzierten Boote der Wertung. Die Zahl steht in der Auswahl
+     * neben der Ehrung und beantwortet dort die Frage „was bekomme ich, wenn ich das ankreuze" -
+     * „8 Boote" neben einem Blatt mit drei Booten wäre genau die falsche Antwort.
+     */
+    val awardedTeams: Int,
 )
 
 data class AwardCeremonyKeyRequest(

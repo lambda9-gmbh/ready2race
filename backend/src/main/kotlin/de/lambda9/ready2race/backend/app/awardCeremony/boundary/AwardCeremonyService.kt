@@ -180,7 +180,9 @@ object AwardCeremonyService {
                             competitionShortName = competition.shortName,
                             competitionName = competition.name!!,
                             ratingCategoryName = category,
-                            placedTeams = group.size,
+                            // Nicht die Größe der Gruppe: gedruckt wird nur bis Rang drei, und die
+                            // Auswahl soll die Zahl der Blöcke nennen, die daraus wirklich entstehen.
+                            awardedTeams = AwardCeremonyLogic.rank(group).size,
                         ),
                         candidates = group,
                     )
