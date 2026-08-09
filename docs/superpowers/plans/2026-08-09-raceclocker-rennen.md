@@ -13,7 +13,11 @@
 ## Global Constraints
 
 - **Arbeitsverzeichnis:** `/Users/thomas/Developer/privat/ready2race/.claude/worktrees/urkunden-vorlagen-speicherort-350ad0`, Branch `claude/raceclocker-polling-optimization-d69666`.
-- **`JAVA_HOME` fehlt in dieser Shell.** Vor jedem Maven-Aufruf setzen: `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`. Scheitert das, die installierten Versionen mit `/usr/libexec/java_home -V` zeigen und die höchste ≥ 21 nehmen.
+- **`JAVA_HOME` fehlt in dieser Shell, und `/usr/libexec/java_home` findet nichts** — das JDK kommt aus Homebrew und ist nicht nach `/Library/Java/JavaVirtualMachines` verlinkt. Vor jedem Maven-Aufruf exakt so setzen (verifiziert am 2026-08-09, Maven 3.9.6 / OpenJDK 21.0.11):
+  ```bash
+  export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+  ```
+  `/usr/libexec/java_home -v 21` schlägt hier mit „Unable to locate a Java Runtime" fehl — nicht darauf ausweichen.
 - **Datenbanken müssen laufen**, sonst schlägt jede Generierung fehl: `cd backend && docker compose up -d`. Port 7652 ist die Build-Datenbank (jOOQ/Flyway), 7653 die Entwicklungsdatenbank.
 - **jOOQ-Klassen sind nicht eingecheckt.** Sie entstehen unter `backend/target/generated-sources/jooq` in der Maven-Phase `generate-sources`, nachdem Flyway die Build-Datenbank migriert hat. Nach jeder Migrationsänderung: `./mvnw generate-sources`.
 - **Migrationsnummer:** `V202608091600`. Höchste im Zweig ist `V202608091410`; `V202608091500` ist auf einem parallelen Zweig vergeben. Vor dem Commit von Task 1 mit `ls backend/src/main/resources/db/migration | tail -5` erneut prüfen.
@@ -246,7 +250,7 @@ alter table competition
 - [ ] **Step 3: Datenbanken starten und migrieren**
 
 ```bash
-cd backend && docker compose up -d && export JAVA_HOME=$(/usr/libexec/java_home -v 21) && ./mvnw -q generate-sources
+cd backend && docker compose up -d && export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && ./mvnw -q generate-sources
 ```
 
 Erwartet: Durchlauf ohne Fehler. Bei `Migration checksum mismatch` oder Resten früherer Versuche die Build-Datenbank zurücksetzen: `./mvnw flyway:clean && ./mvnw -q generate-sources`.
@@ -475,7 +479,7 @@ Falls `testComprehension` eine andere Signatur hat, `RaceClockerPollRepoTest.kt`
 - [ ] **Step 3: Test laufen lassen, Fehlschlag bestätigen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test -Dtest=RaceClockerRaceRepoTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerRaceRepoTest
 ```
 
 Erwartet: Übersetzungsfehler „Unresolved reference: RaceClockerRaceRepo".
@@ -551,7 +555,7 @@ object RaceClockerRaceRepo {
 - [ ] **Step 5: Test laufen lassen, Erfolg bestätigen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test -Dtest=RaceClockerRaceRepoTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerRaceRepoTest
 ```
 
 Erwartet: 4 Tests, alle grün.
@@ -988,7 +992,7 @@ Im `components.schemas`-Block neben `CompetitionTimingDeviationDto` (etwa Zeile 
 - [ ] **Step 7: Übersetzen und SDK erzeugen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q compile
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q compile
 ```
 
 Erwartet: Übersetzung ohne Fehler.
@@ -1110,7 +1114,7 @@ class RaceClockerMatchTargetTest {
 - [ ] **Step 2: Test laufen lassen, Fehlschlag bestätigen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test -Dtest=RaceClockerMatchTargetTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerMatchTargetTest
 ```
 
 Erwartet: Übersetzungsfehler „No value passed for parameter 'timeTrialUrl'" oder „Unresolved reference: qualificationRace".
@@ -1294,7 +1298,7 @@ Dieselbe Umstellung in `CompetitionMatchRepo.kt:54-82`: zwei `RACECLOCKER_RACE`-
 - [ ] **Step 7: Alles übersetzen und die Tests laufen lassen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test
 ```
 
 Erwartet: Alle Tests grün. `RaceClockerPollRepoTest` schlägt hier fehl, weil sein `seed` noch die alten Spalten setzt — das ist der nächste Schritt.
@@ -1322,7 +1326,7 @@ In `RaceClockerPollRepoTest.kt`:
 - [ ] **Step 9: Tests laufen lassen, Erfolg bestätigen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test
 ```
 
 Erwartet: alle grün.
@@ -1446,7 +1450,7 @@ class RaceClockerFetchPlanTest {
 - [ ] **Step 2: Test laufen lassen, Fehlschlag bestätigen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test -Dtest=RaceClockerFetchPlanTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerFetchPlanTest
 ```
 
 Erwartet: „Unresolved reference: RaceClockerFeedAssignment".
@@ -1492,7 +1496,7 @@ object RaceClockerFeedAssignment {
 - [ ] **Step 4: Test laufen lassen, Erfolg bestätigen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test -Dtest=RaceClockerFetchPlanTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerFetchPlanTest
 ```
 
 Erwartet: 6 Tests, alle grün.
@@ -1790,7 +1794,7 @@ Innerhalb von `RaceClockerPollService`, neben dem bestehenden `FeedResult`:
 - [ ] **Step 4: Übersetzen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q compile
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q compile
 ```
 
 Erwartet: keine Fehler.
@@ -1798,7 +1802,7 @@ Erwartet: keine Fehler.
 - [ ] **Step 5: Alle Tests laufen lassen**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test
 ```
 
 Erwartet: alle grün.
@@ -2001,7 +2005,7 @@ Erwartet: alles grün.
 - [ ] **Step 6: Backend-Tests**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw -q test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test
 ```
 
 Erwartet: alles grün.
@@ -2027,7 +2031,7 @@ git commit -m "Wettkämpfe wählen ihr Rennen beim Namen an"
 - [ ] **Step 1: Vollständigen Lauf gegen eine frische Datenbank**
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 21) && cd backend && ./mvnw flyway:clean && ./mvnw -q verify
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw flyway:clean && ./mvnw -q verify
 ```
 
 Erwartet: Migrationen und alle Tests grün.
