@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream
 import kotlin.math.abs
 import kotlin.math.roundToLong
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -50,22 +51,26 @@ class GapDocumentGeometryContractTest {
         fontSize = fontSize,
     )
 
-    /** ty-Komponente (Baseline) der ersten Tm-Textmatrix auf Seite 1 - das ist Zeile 0. */
-    private fun firstLineBaseline(doc: PDDocument): Float {
+    /** ty-Komponenten (Baselines) aller Tm-Textmatrizen auf Seite 1 - eine je gesetzter Zeile. */
+    private fun lineBaselines(doc: PDDocument): List<Float> {
+        val baselines = mutableListOf<Float>()
         val tokens = PDFStreamParser(doc.getPage(0)).parse()
         var pending = mutableListOf<Any>()
         for (token in tokens) {
             if (token is Operator) {
                 if (token.name == "Tm") {
-                    return (pending[5] as COSNumber).floatValue()
+                    baselines.add((pending[5] as COSNumber).floatValue())
                 }
                 pending = mutableListOf()
             } else {
                 pending.add(token)
             }
         }
-        error("Kein Tm-Operator gefunden")
+        return baselines
     }
+
+    private fun firstLineBaseline(doc: PDDocument): Float =
+        lineBaselines(doc).firstOrNull() ?: error("Kein Tm-Operator gefunden")
 
     /**
      * Top-down-Position der Blockoberkante in Twips, aus der tatsächlich gerenderten PDF-Seite
@@ -98,6 +103,7 @@ class GapDocumentGeometryContractTest {
         val document = gapDocumentsDocx(
             templatePageSizes = listOf(DocxPageSize(PDRectangle.A4.width, PDRectangle.A4.height)),
             fontName = null,
+            font = null,
             certificates = listOf(listOf(addition)),
         )
         val frame = document.paragraphs.first { it.ctp.pPr?.framePr != null }.ctp.pPr.framePr
@@ -128,5 +134,50 @@ class GapDocumentGeometryContractTest {
     @Test
     fun placeholderWithoutExplicitFontSizeLandsOnTheSameSpotInBothFormats() {
         assertSamePosition(addition("1. Platz", fontSize = null))
+    }
+
+    /** Die Vereinskette eines vereinsgemischten Bootes, wie sie seit dem 09.08.2026 im Feld steht. */
+    private val fiveClubs =
+        "Mainzer Ruder-Verein 1878 e.V. / Marburger Ruderverein von 1911 e.V. / " +
+            "Ruderklub Flensburg e.V. / Ruderclub Nürtingen / Erster Kieler Ruder-Club von 1862 e.V."
+
+    /**
+     * Der zweite Teil des Vertrags, seit die Kette umgebrochen wird: **wie viele** Zeilen entstehen.
+     *
+     * Vorher brach nur Word um - innerhalb seines Rahmens und nach eigenen Maßen -, der PDF-Renderer
+     * gar nicht; dieselbe Urkunde hatte je nach Format eine andere Zeilenzahl und damit eine andere
+     * Höhe. Seit beide Formate durch dieselbe Zerlegung laufen, muss die Zahl übereinstimmen, und
+     * dieser Test ist die Stelle, die es merkt, wenn ein Renderer sie wieder selbst in die Hand nimmt.
+     */
+    @Test
+    fun aWrappedChainProducesTheSameLinesInBothFormats() {
+        val addition = addition(fiveClubs, fontSize = 18f)
+
+        val pdf = gapDocuments(
+            template = blankA4Template(),
+            font = null,
+            withBackground = false,
+            pages = listOf(listOf(addition)),
+        )
+        val pdfLines = lineBaselines(pdf).size
+        pdf.close()
+
+        val docx = gapDocumentsDocx(
+            templatePageSizes = listOf(DocxPageSize(PDRectangle.A4.width, PDRectangle.A4.height)),
+            fontName = null,
+            font = null,
+            certificates = listOf(listOf(addition)),
+        )
+        val docxLines = docx.paragraphs.count { it.ctp.pPr?.framePr != null }
+        docx.close()
+
+        assertTrue(pdfLines > 1, "Die Kette hätte umgebrochen werden müssen, blieb aber einzeilig")
+        assertEquals(pdfLines, docxLines, "PDF setzt $pdfLines Zeilen, DOCX $docxLines")
+    }
+
+    /** Auch die umgebrochene Kette muss in beiden Formaten an derselben Stelle beginnen. */
+    @Test
+    fun aWrappedChainStartsAtTheSameSpotInBothFormats() {
+        assertSamePosition(addition(fiveClubs, fontSize = 18f))
     }
 }

@@ -317,8 +317,23 @@ class ClubChainInDisplaysTest {
             format = AwardCertificateService.Format.PDF,
         )
 
-        val text = pdfText(file.bytes).replace(Regex("""\s+"""), " ")
-        assertTrue(text.contains(expectedFull), "Kette fehlt auf der Urkunde: $text")
+        val raw = pdfText(file.bytes)
+        val text = raw.replace(Regex("""\s+"""), " ")
+
+        // Die Kette passt nicht in eine Zeile und wird umgebrochen (siehe GapTextWrap) - deshalb
+        // steht sie hier nicht am Stück. Was zählt: jeder Verein steht vollständig da, keiner ist
+        // am Umbruch zerrissen, und die Reihenfolge im Boot bleibt.
+        listOf(mainz, marburg, flensburg).forEach {
+            assertTrue(text.contains(it), "Verein fehlt oder ist am Umbruch zerrissen: '$it' in: $text")
+        }
+        assertTrue(text.indexOf(mainz) < text.indexOf(marburg), text)
+        assertTrue(text.indexOf(marburg) < text.indexOf(flensburg), text)
+
+        assertTrue(
+            raw.trim().lines().size > 1,
+            "Die Kette hätte umgebrochen werden müssen, steht aber auf einer Zeile: $raw",
+        )
+
         assertFalse(text.contains("Renngemeinschaft"), text)
         assertFalse(text.contains("Mainzer RV"), "gekürzt statt voll ausgeschrieben: $text")
         assertFalse(text.contains("Kieler"), "meldender Verein auf der Urkunde: $text")

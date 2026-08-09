@@ -244,6 +244,9 @@ object AwardCertificateService {
                 gapDocumentsDocx(
                     templatePageSizes = listOf(DocxPageSize(width, height)),
                     fontName = template.fontName,
+                    // Dieselbe Schriftdatei wie im PDF-Zweig darüber - sie wird hier nur gemessen,
+                    // damit der Umbruch in beiden Formaten an denselben Stellen sitzt.
+                    font = template.fontData,
                     certificates = pages,
                 ).toByteArray()
             }
