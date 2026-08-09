@@ -142,7 +142,14 @@ const UserProvider = ({children}: PropsWithChildren) => {
             // Token und abgelegten Nutzerangaben läuft die App aus dem Bestand weiter, statt
             // die Panikseite zu zeigen - am Steg ist das der Unterschied zwischen brauchbar und
             // unbrauchbar. Außerhalb von /app bleibt es beim bisherigen Verhalten.
-            const offlineUser = userData.isInApp ? readSessionUser(true) : null
+            //
+            // Nur bei einem TypeError: So und nicht anders meldet fetch einen Fehlschlag auf
+            // der Netzebene. Ein Server, der mit Status 200 etwas Kaputtes liefert, wirft einen
+            // SyntaxError, und ein Serverfehler kommt gar nicht hier an, sondern als Antwort mit
+            // Fehlerstatus. Beides soll weiterhin die Panikseite zeigen - sonst verdeckt der
+            // Bestand aus dem Gerät einen echten Defekt.
+            const offlineError = error instanceof TypeError
+            const offlineUser = offlineError && userData.isInApp ? readSessionUser(true) : null
             if (offlineUser !== null && userData.token) {
                 setUserData({
                     userInfo: offlineUser,
