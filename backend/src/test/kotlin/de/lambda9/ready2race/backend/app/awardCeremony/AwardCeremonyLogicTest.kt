@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.awardCeremony
 import de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonyLogic
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyCandidate
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyCandidateParticipant
-import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyDensity
 import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -341,13 +340,7 @@ class AwardCeremonyLogicTest {
     }
 
     @Test
-    fun aCrowdedPageMovesDownOneStep() {
-        assertEquals(AwardCeremonyDensity.NORMAL, AwardCeremonyLogic.densityFor(18))
-        assertEquals(AwardCeremonyDensity.COMPACT, AwardCeremonyLogic.densityFor(19))
-    }
-
-    @Test
-    fun theSheetCarriesHeadingsRanksAndDensity() {
+    fun theSheetCarriesHeadingsAndRanks() {
         val sheet = AwardCeremonyLogic.sheet(
             eventName = "Küstenregatta Kiel",
             eventDate = "15.–16. August 2026",
@@ -361,7 +354,6 @@ class AwardCeremonyLogicTest {
 
         assertEquals("Masters A", sheet.ratingCategoryName)
         assertEquals(listOf(1, 2), sheet.ranks.map { it.rank })
-        assertEquals(AwardCeremonyDensity.NORMAL, sheet.density)
         assertNull(sheet.ceremonyTime)
     }
 }

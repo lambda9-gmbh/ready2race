@@ -13,13 +13,6 @@ object AwardCeremonyLogic {
     /** Geehrt wird bis Rang drei - die Zahl der Medaillensätze, nicht die Zahl der Boote. */
     const val MAX_RANK = 3
 
-    /**
-     * Ab wie vielen Personenzeilen die Seite eine Schriftstufe zurückgeht. Drei Vierer mit
-     * Steuermann sind 15 Zeilen und passen bequem; drei Achter mit Steuermann sind 27 und
-     * passen nicht.
-     */
-    const val COMPACT_THRESHOLD = 18
-
     // Ohne Wochentag: dessen Abkürzung hängt an der CLDR-Fassung des JDK ("Sa" vs. "Sa.") und
     // machte den Test von der Java-Version abhängig. Der Tag steht ohnehin im Datum.
     private val raceTimeFormat = DateTimeFormatter.ofPattern("dd.MM., HH:mm", Locale.GERMANY)
@@ -152,9 +145,6 @@ object AwardCeremonyLogic {
             at?.format(raceTimeFormat),
         ).takeIf { it.isNotEmpty() }?.joinToString(" · ")
 
-    fun densityFor(personRows: Int): AwardCeremonyDensity =
-        if (personRows > COMPACT_THRESHOLD) AwardCeremonyDensity.COMPACT else AwardCeremonyDensity.NORMAL
-
     fun sheet(
         eventName: String,
         eventDate: String,
@@ -164,10 +154,8 @@ object AwardCeremonyLogic {
         competitionName: String,
         ratingCategoryName: String?,
         candidates: List<AwardCeremonyCandidate>,
-    ): AwardCeremonySheet {
-        val ranks = rank(candidates)
-
-        return AwardCeremonySheet(
+    ): AwardCeremonySheet =
+        AwardCeremonySheet(
             eventName = eventName,
             eventDate = eventDate,
             eventLocation = eventLocation,
@@ -177,8 +165,6 @@ object AwardCeremonyLogic {
             ratingCategoryName = ratingCategoryName,
             // Siehe AwardCeremonySheet.ceremonyTime: der Zeitplan gibt den Termin (noch) nicht her.
             ceremonyTime = null,
-            ranks = ranks,
-            density = densityFor(ranks.sumOf { it.team.athletes.size }),
+            ranks = rank(candidates),
         )
-    }
 }

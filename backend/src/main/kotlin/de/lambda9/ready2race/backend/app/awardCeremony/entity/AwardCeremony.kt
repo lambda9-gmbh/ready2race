@@ -81,16 +81,9 @@ data class AwardCeremonySelectionRequest(
 }
 
 /**
- * Schriftgrößenstufe einer Seite. Drei Achter mit Steuermann ergeben 27 Personenzeilen und
- * sprengen A4; über AwardCeremonyLogic.COMPACT_THRESHOLD Zeilen (die Schwelle selbst bleibt noch
- * normal) rückt die Seite eine Stufe zusammen, statt unkontrolliert umzubrechen.
+ * Genau eine A4-Seite. Wie eng sie gesetzt wird, steht bewusst nicht hier: das misst
+ * AwardCeremonyPdf am fertig gesetzten Blatt, weil der Zeilenumbruch an den Textlängen hängt.
  */
-enum class AwardCeremonyDensity {
-    NORMAL,
-    COMPACT,
-}
-
-/** Genau eine A4-Seite. */
 data class AwardCeremonySheet(
     val eventName: String,
     val eventDate: String,
@@ -106,7 +99,6 @@ data class AwardCeremonySheet(
      */
     val ceremonyTime: LocalDateTime?,
     val ranks: List<AwardCeremonyRank>,
-    val density: AwardCeremonyDensity,
 )
 
 data class AwardCeremonyRank(
