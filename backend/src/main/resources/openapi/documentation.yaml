@@ -780,11 +780,11 @@ paths:
     get:
       operationId: getEventMatches
       parameters:
-        - name: currentlyRunning
+        - name: activated
           in: query
           schema:
             type: boolean
-          description: Filter matches by running status
+          description: "Filter matches by whether they have been called to the start (activated_at is set)"
         - name: withoutPlaces
           in: query
           schema:
@@ -1521,7 +1521,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/running-state:
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/activation:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/competitionId'
@@ -1532,13 +1532,13 @@ paths:
           type: string
           format: uuid
     put:
-      operationId: updateMatchRunningState
+      operationId: updateMatchActivation
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateCompetitionMatchRunningStateRequest'
+              $ref: '#/components/schemas/UpdateCompetitionMatchActivationRequest'
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -6159,7 +6159,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  /event/{eventId}/liveDashboard/match/{matchId}/running-state:
+  /event/{eventId}/liveDashboard/match/{matchId}/activation:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - name: matchId
@@ -6169,16 +6169,17 @@ paths:
           type: string
           format: uuid
     put:
-      operationId: setLiveDashboardMatchRunning
+      operationId: setLiveDashboardMatchActivated
+      description: "Calls the match to the start (activated=true) or takes that back. Deactivating also clears the real start and pauses the automatic RaceClocker pull."
       parameters:
-        - name: running
+        - name: activated
           in: query
           required: true
           schema:
             type: boolean
       responses:
         204:
-          description: Running state updated
+          description: Activation updated
         401:
           $ref: '#/components/responses/401'
         404:
@@ -9592,7 +9593,7 @@ components:
           type: string
         checkInOutRequired:
           type: boolean
-          description: "Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all."
+          description: "Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'in the arena' at all."
         description:
           type: string
         competitionCategory:
@@ -9704,7 +9705,7 @@ components:
           type: string
         checkInOutRequired:
           type: boolean
-          description: "Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all."
+          description: "Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'in the arena' at all."
         description:
           type: string
         competitionCategory:
@@ -11984,7 +11985,7 @@ components:
           description: >-
             Scored means: deregistered OR place set OR failed - the same rule the referee dashboard
             uses.
-        teamsOnWater:
+        teamsInArena:
           type: integer
           description: null = not collected in this view (schedule, public boards).
 
@@ -11995,7 +11996,6 @@ components:
         - teams
         - weighting
         - executionOrder
-        - currentlyRunning
         - skipped
         - status
       properties:
@@ -12019,8 +12019,11 @@ components:
         startTimeOffset:
           type: integer
           description: Offset between the starts of consecutive teams, in seconds
-        currentlyRunning:
-          type: boolean
+        activatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the match was called to the start - null while nobody activated it.
         startedAt:
           type: string
           format: date-time
@@ -12115,12 +12118,15 @@ components:
           items:
             $ref: '#/components/schemas/UpdateCompetitionMatchTeamRequest'
 
-    UpdateCompetitionMatchRunningStateRequest:
+    UpdateCompetitionMatchActivationRequest:
       type: object
+      description: >-
+        Calls a match to the start (activated = true) or takes that back. The click states that the
+        match is up next, not that it is racing - that is decided by the real start (started_at).
       required:
-        - currentlyRunning
+        - activated
       properties:
-        currentlyRunning:
+        activated:
           type: boolean
 
     MatchForRunningStatusDto:
@@ -12133,7 +12139,6 @@ components:
         - roundName
         - matchNumber
         - hasPlacesSet
-        - currentlyRunning
       properties:
         id:
           type: string
@@ -12154,8 +12159,11 @@ components:
           nullable: true
         hasPlacesSet:
           type: boolean
-        currentlyRunning:
-          type: boolean
+        activatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the match was called to the start - null while nobody activated it.
         startTime:
           type: string
           format: date-time
@@ -13320,6 +13328,7 @@ components:
       required:
         - matchId
         - competitionName
+        - state
         - startState
         - teams
         - pendingRound
@@ -13348,7 +13357,11 @@ components:
           type: string
           format: date-time
           nullable: true
-          description: "real start; only filled in the running block - null there means the match is current but has not started yet"
+          description: "real start; only filled in the running block - it carries the clock time for 'started 14:32', while whether the match is at the pontoon or racing is told by state"
+        state:
+          allOf:
+            - $ref: '#/components/schemas/LiveDashboardMatchState'
+          description: "the shared match state, derived by LiveDashboardLogic.deriveMatchState - the same derivation the referee dashboard, the schedule and the execution page read"
         startState:
           $ref: '#/components/schemas/AthleteBoardStartState'
         teams:
@@ -13550,7 +13563,12 @@ components:
         AWAITING_FINISH: every boat is scored but nobody finished the match yet. FINISHED means
         exclusively that competition_match.finished_at is set - a match only ends by an explicit
         action, because until then a time penalty can still arrive.
+
+
+        PREPARING: the match has been called to the start (activated_at is set) but has no real
+        start yet - the boats are still at the pontoon. RUNNING means activated AND started.
       enum:
+        - PREPARING
         - RUNNING
         - FINISHED
         - SKIPPED
@@ -13704,8 +13722,8 @@ components:
         - invoiceState
         - severity
         - invoiceSeverity
-        - onWaterRequired
-        - onWaterSeverity
+        - inArenaRequired
+        - inArenaSeverity
         - substituted
       properties:
         teamId:
@@ -13763,19 +13781,19 @@ components:
         invoiceSeverity:
           $ref: '#/components/schemas/EffectiveSeverity'
           description: "The invoice evaluated separately: the detail dialog colors its invoice chip by this; it cannot be recovered from severity, which already combines everything else"
-        onWaterRequired:
+        inArenaRequired:
           type: boolean
-          description: "Whether this competition requires check-in/check-out at all; controls the display of onWaterAt"
-        onWaterSeverity:
+          description: "Whether this competition requires check-in/check-out at all; controls the display of inArenaAt"
+        inArenaSeverity:
           $ref: '#/components/schemas/EffectiveSeverity'
-          description: "The on-water check evaluated separately: the detail dialog colors its on-water chip by this; it cannot be recovered from severity, which already combines everything else"
+          description: "The in-arena check evaluated separately: the detail dialog colors its arena chip by this; it cannot be recovered from severity, which already combines everything else"
         substituted:
           type: boolean
-        onWaterAt:
+        inArenaAt:
           type: string
           format: date-time
           nullable: true
-          description: "When the boat went on the water (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known"
+          description: "When the boat entered the arena (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known"
 
     LiveDashboardTeamDetailDto:
       type: object
@@ -13799,14 +13817,18 @@ components:
         - competitionId
         - competitionName
         - executionOrder
-        - currentlyRunning
         - teams
       properties:
         matchId:
           type: string
           format: uuid
         state:
-          $ref: '#/components/schemas/LiveDashboardMatchState'
+          allOf:
+            - $ref: '#/components/schemas/LiveDashboardMatchState'
+          description: >-
+            The derived match state - the card's only statement about where the match stands. A
+            separate running flag stood next to it until 2026-08-09; since "at the start" and
+            "under way" are two states, a second field would only be a second truth.
         competitionId:
           type: string
           format: uuid
@@ -13839,8 +13861,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        currentlyRunning:
-          type: boolean
         elapsedMinutes:
           type: integer
           format: int64
@@ -13921,7 +13941,7 @@ components:
         tent.
       enum:
         - INVOICE_OPEN
-        - NOT_ON_WATER
+        - NOT_IN_ARENA
         - REQUIREMENT
         - REQUIREMENT_TIME_WINDOW
 
@@ -14045,7 +14065,6 @@ components:
         - id
         - startTime
         - state
-        - matchCurrentlyRunning
         - matchTeamsTotal
         - matchTeamsScored
       properties:
@@ -14104,9 +14123,11 @@ components:
           type: string
           format: date-time
           nullable: true
-        matchCurrentlyRunning:
-          type: boolean
-          description: "Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot"
+        matchActivatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "When the linked match was called to the start - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot, and together with matchStartedAt whether the slot reads 'preparing' or 'running'. Null without a linked match."
         matchTeamsTotal:
           type: integer
           description: "Teams of the linked match that are still in the race (without the OUT rows carried over from the previous round) - 0 without a linked match"

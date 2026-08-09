@@ -78,16 +78,22 @@ object EventScheduleLogic {
      * Ist der Lauf eines Slots schon unterwegs und damit der Absage entzogen? Zwei Quellen, eine
      * Antwort:
      * - [startedAt] ist der IST-Start. Er kommt aus der Zeitnahme und ist der harte Beleg.
-     * - [currentlyRunning] ist die Aktivierung durch den Schiedsrichter. Sie geht dem Ist-Start
-     *   voraus: zwischen "Boote gehen an den Start" und "RaceClocker meldet den Start" liegt ein
-     *   Zeitfenster, in dem `started_at` noch leer ist, der Lauf aber längst passiert.
+     * - [activated] ist die Aktivierung durch den Schiedsrichter (`activated_at`). Sie geht dem
+     *   Ist-Start voraus: zwischen "Boote gehen an den Start" und "RaceClocker meldet den Start"
+     *   liegt ein Zeitfenster, in dem `started_at` noch leer ist, der Lauf aber längst passiert.
      *
      * Nur auf [startedAt] zu schauen, öffnete genau dieses Fenster für eine Absage - der Lauf war
      * danach abgesagt UND laufend zugleich, und Anzeige wie Dashboard zeigten ihn unverändert. Aus
      * Sicht des Schiedsrichters ist ein aktivierter Lauf gestartet, also zählt beides.
+     *
+     * Diese Regel bleibt bewusst an der Aktivierung, obwohl der Anzeigezustand seit dem
+     * 09.08.2026 zwischen "in Vorbereitung" und "läuft" unterscheidet: Der Absage-Schutz greift
+     * früher als die Anzeige, und genau das ist sein Zweck. Nur der Parametername ist mitgezogen
+     * worden, damit im Backend nirgends mehr von "laufend" die Rede ist, wo Aktivierung gemeint
+     * ist.
      */
-    fun matchUnderway(startedAt: LocalDateTime?, currentlyRunning: Boolean): Boolean =
-        startedAt != null || currentlyRunning
+    fun matchUnderway(startedAt: LocalDateTime?, activated: Boolean): Boolean =
+        startedAt != null || activated
 
     /**
      * Baut aus einer rohen Zeitstrahl-Zeile einen WAITING-Platzhalter, oder liefert null - für

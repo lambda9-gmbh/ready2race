@@ -5,6 +5,12 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 /**
+ * [PREPARING]: An den Start gerufen, aber noch nicht unterwegs
+ * (`competition_match.activated_at` gesetzt, `started_at` nicht). Bis zum 09.08.2026 hieß dieser
+ * Zustand ebenfalls [RUNNING] - der Klick des Schiedsrichters stellte fest, dass der Lauf
+ * drankommt, die Oberfläche behauptete aber, er fahre. Erst der automatische RaceClocker-Abruf
+ * liefert einen zuverlässigen Sender für den Ist-Start und macht die Trennung belegbar.
+ *
  * [SKIPPED]: Der Zeitstrahl-Slot dieses Laufs ist abgesagt. Anders als auf den öffentlichen
  * Anzeigen wird der Lauf im Schiedsrichter-Dashboard NICHT versteckt, sondern gekennzeichnet -
  * der Schiedsrichter muss die Absage sehen, um sie im Zeitplan zurücknehmen zu können (`/unskip`).
@@ -18,7 +24,7 @@ import java.util.UUID
  * das Signal ans Regattabüro ist, dass der Stand final ist - bis dahin kann noch eine Zeitstrafe
  * kommen.
  */
-enum class LiveDashboardMatchState { RUNNING, FINISHED, SKIPPED, AWAITING_FINISH, UPCOMING, UNSCHEDULED }
+enum class LiveDashboardMatchState { PREPARING, RUNNING, FINISHED, SKIPPED, AWAITING_FINISH, UPCOMING, UNSCHEDULED }
 
 enum class LiveDashboardInvoiceState { PAID, OPEN, NONE }
 
@@ -67,7 +73,7 @@ data class LiveDashboardParticipantDto(
  * der Detail-Dialog lädt einzeln nach.
  */
 data class LiveDashboardCrewMemberDto(
-    /** Der Vorname fehlt bewusst: auf dem Wasser ruft niemand ihn, und die Zeile bleibt kurz. */
+    /** Der Vorname fehlt bewusst: in der Arena ruft niemand ihn, und die Zeile bleibt kurz. */
     val lastName: String,
     /** Kurzform des Vereins, den diese Person trägt - dieselbe Regel wie in der Kette. */
     val clubShort: String?,
@@ -111,21 +117,21 @@ data class LiveDashboardTeamDto(
      * Aus [severity] ließe sich das nicht zurückrechnen - dort ist sie mit allem anderen verrechnet.
      */
     val invoiceSeverity: EffectiveSeverity,
-    /** Ob dieser Wettkampf überhaupt eine An-/Abmeldung verlangt; steuert die Anzeige von [onWaterAt]. */
-    val onWaterRequired: Boolean,
+    /** Ob dieser Wettkampf überhaupt eine An-/Abmeldung verlangt; steuert die Anzeige von [inArenaAt]. */
+    val inArenaRequired: Boolean,
     /**
-     * "Auf dem Wasser" getrennt bewertet: der Detail-Dialog färbt seinen Chip danach ein.
+     * "In der Arena" getrennt bewertet: der Detail-Dialog färbt seinen Chip danach ein.
      * Aus [severity] ließe sich das nicht zurückrechnen - dort ist sie mit allem anderen verrechnet.
      */
-    val onWaterSeverity: EffectiveSeverity,
+    val inArenaSeverity: EffectiveSeverity,
     /** Ob mindestens eine Person für diese Runde umgemeldet wurde. */
     val substituted: Boolean,
     /**
-     * Wann das Boot aufs Wasser gegangen ist (spätester Eincheck-Scan, wenn die gesamte Crew
+     * Wann das Boot in die Arena gegangen ist (spätester Eincheck-Scan, wenn die gesamte Crew
      * zuletzt eingecheckt ist) - null, solange mindestens eine Person nicht eingecheckt ist
-     * oder keine Crew bekannt ist. Siehe [LiveDashboardLogic.teamOnWaterAt].
+     * oder keine Crew bekannt ist. Siehe [LiveDashboardLogic.teamInArenaAt].
      */
-    val onWaterAt: LocalDateTime?,
+    val inArenaAt: LocalDateTime?,
 )
 
 /** Was der Detail-Dialog zusätzlich braucht; wird einzeln je Mannschaft geladen. */
@@ -136,6 +142,12 @@ data class LiveDashboardTeamDetailDto(
 
 data class LiveDashboardMatchDto(
     val matchId: UUID,
+    /**
+     * Der abgeleitete Lauf-Zustand — die einzige Aussage der Karte darüber, wo der Lauf steht.
+     * Ein eigenes Aktiv-Flag stand hier bis zum 09.08.2026 daneben; seit „am Start" und
+     * „unterwegs" zwei Zustände sind ([LiveDashboardMatchState.PREPARING] und
+     * [LiveDashboardMatchState.RUNNING]), wäre ein zweites Feld nur eine zweite Wahrheit.
+     */
     val state: LiveDashboardMatchState,
     val competitionId: UUID,
     val competitionName: String,
@@ -149,7 +161,6 @@ data class LiveDashboardMatchDto(
     val executionOrder: Int,
     val startTime: LocalDateTime?,
     val startedAt: LocalDateTime?,
-    val currentlyRunning: Boolean,
     val elapsedMinutes: Long?,
     val teams: List<LiveDashboardTeamDto>,
     /**

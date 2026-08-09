@@ -7,7 +7,8 @@ data class CompetitionMatchWithTeams(
     val competitionSetupMatch: UUID,
     /** Geplanter Start aus dem Zeitplan. */
     val startTime: LocalDateTime?,
-    val currentlyRunning: Boolean,
+    /** Wann der Lauf an den Start gerufen wurde - null, solange ihn niemand aktiviert hat. */
+    val activatedAt: LocalDateTime?,
     /** Tatsächlicher Start - null, solange niemand gestartet hat. */
     val startedAt: LocalDateTime?,
     /** Persistiertes Ende. Gesetzt heißt ausschließlich: jemand hat den Lauf beendet. */

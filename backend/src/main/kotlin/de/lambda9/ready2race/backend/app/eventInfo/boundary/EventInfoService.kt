@@ -398,6 +398,7 @@ object EventInfoService {
                 competitionName = match.get("competition_name", String::class.java) ?: "",
                 categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
                 startTime = startTime,
+                activatedAt = match[COMPETITION_MATCH.ACTIVATED_AT],
                 startedAt = startedAt,
                 elapsedMinutes = elapsedMinutes,
                 placeName = null,

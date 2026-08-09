@@ -21,8 +21,8 @@ import kotlin.test.Test
 /**
  * Die Reihenfolge am Steg: erst anmelden, dann abmelden - und nichts dazwischen erfinden.
  *
- * Seit ENTRY "auf dem Wasser" bedeutet, ist das keine Formalie mehr: ein EXIT ohne vorheriges ENTRY
- * wäre eine Rückkehr von einem Wasser, auf dem die Person nie war. Die Prüfung verglich vorher
+ * Seit ENTRY "in der Arena" bedeutet, ist das keine Formalie mehr: ein EXIT ohne vorheriges ENTRY
+ * wäre eine Rückkehr aus einer Arena, in der die Person nie war. Die Prüfung verglich vorher
  * gegen EXIT und ließ deshalb genau diesen Fall durch - eine nie gescannte Person hat
  * `currentStatus == null` und fiel durch beide Zweige hindurch.
  */
@@ -72,8 +72,8 @@ class CheckInOutOrderTest {
     }
 
     /**
-     * Der Fall, der vorher durchlief: Diese Person hat nie einen Scan, kann also nicht vom Wasser
-     * zurückkommen.
+     * Der Fall, der vorher durchlief: Diese Person hat nie einen Scan, kann also nicht aus der
+     * Arena zurückkommen.
      */
     @Test
     fun checkingOutWithoutAnyScanIsRejected() = testComprehension {

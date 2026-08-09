@@ -36,13 +36,13 @@ data class MatchStatusDto(
     val teamsTotal: Int,
     val teamsScored: Int,
     /** null = in dieser Ansicht nicht erhoben (Zeitplan, öffentliche Anzeigen). */
-    val teamsOnWater: Int? = null,
+    val teamsInArena: Int? = null,
 )
 
 /**
  * Der letzte Steg-Scan je bekanntem Crew-Mitglied einer Mannschaft: Scan-Art zu Zeitpunkt, oder
  * null für jede Person, die nie gescannt wurde. Genau die Eingabe, die
- * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamOnWaterAt]
+ * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamInArenaAt]
  * erwartet - der Alias gibt ihr nur einen Namen, damit die Signaturen hier lesbar bleiben.
  */
 typealias CrewLastScans = List<Pair<String, LocalDateTime>?>
@@ -65,9 +65,15 @@ data class MatchStatusTeam(
  * [open] ist alles, was noch eine Handlung verlangt: anstehend, ungeplant und - der wichtigste
  * Fall - vollständig gewertet, aber nicht beendet ([MatchState.AWAITING_FINISH]). Ein solcher Lauf
  * darf nicht unter "beendet" verschwinden, denn auf seinen Beenden-Klick wartet die Kette.
+ *
+ * Jeder Lauf zählt weiterhin in genau einen Topf; [preparing] nimmt seine Läufe [running] weg und
+ * nicht [open]. Ein Lauf am Start ist keine offene Handlung des Regattabüros, sondern der Lauf, der
+ * gerade dran ist - deshalb steht er neben "läuft" und nicht darunter.
  */
 data class RoundCountersDto(
     val total: Int,
+    /** Am Start gerufen, aber noch nicht unterwegs — zählt weder als „läuft" noch als „offen". */
+    val preparing: Int,
     val running: Int,
     val open: Int,
     val finished: Int,

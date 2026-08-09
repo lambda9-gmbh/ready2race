@@ -22,7 +22,7 @@ object LiveDashboardRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_MATCH.FINISHED_AT,
             // raceclocker_polled_at fehlt hier bewusst: Es ändert sich für jeden beobachteten Lauf
             // alle fünf Sekunden und würde den ETag des Dashboards bei jedem Abruf umwerfen.
@@ -202,8 +202,9 @@ object LiveDashboardRepo {
     }
 
     /**
-     * Läufe, die als nächste anstehen: geplant, noch nicht laufend und noch ohne vollständiges
-     * Ergebnis. Sortiert nach Startzeit, damit der Aufrufer die früheste Startzeit greifen kann.
+     * Läufe, die als nächste anstehen: geplant, noch nicht an den Start gerufen und noch ohne
+     * vollständiges Ergebnis. Sortiert nach Startzeit, damit der Aufrufer die früheste Startzeit
+     * greifen kann.
      */
     fun getActivationCandidates(eventId: UUID) = Jooq.query {
         select(
@@ -220,7 +221,7 @@ object LiveDashboardRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.START_TIME.isNotNull)
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.isFalse)
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNull)
             // Ein beendeter Lauf ist nie wieder Kandidat.
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             // mindestens eine Mannschaft ohne Ergebnis: der Lauf steht noch aus. Abgemeldete

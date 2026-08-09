@@ -70,14 +70,16 @@ fun Route.liveDashboard() {
             }
         }
 
-        put("/match/{matchId}/running-state") {
+        // Ruft den Lauf an den Start oder nimmt das zurück — nicht zu verwechseln mit `/start`
+        // darüber, das den Ist-Start festhält.
+        put("/match/{matchId}/activation") {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateLiveDashboardGlobal)
                 val eventId = !pathParam("eventId", uuid)
                 val matchId = !pathParam("matchId", uuid)
-                val running = !queryParam("running") { it.toBoolean() }
+                val activated = !queryParam("activated") { it.toBoolean() }
 
-                LiveDashboardService.setMatchRunning(eventId, matchId, running, user.id!!)
+                LiveDashboardService.setMatchActivated(eventId, matchId, activated, user.id!!)
             }
         }
     }

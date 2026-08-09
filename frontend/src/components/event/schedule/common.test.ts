@@ -32,7 +32,7 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     setupRoundId: crypto.randomUUID(),
     matchStartedAt: null,
     matchFinishedAt: null,
-    matchCurrentlyRunning: false,
+    matchActivatedAt: null,
     matchTeamsTotal: 0,
     matchTeamsScored: 0,
     ...over,
@@ -171,7 +171,7 @@ describe('isCancellable', () => {
         // matchStartedAt noch leer - der Server lehnt die Absage trotzdem ab.
         expect(
             isCancellable(
-                slot('2026-08-17T08:00:00', {state: 'LINKED', matchCurrentlyRunning: true}),
+                slot('2026-08-17T08:00:00', {state: 'LINKED', matchActivatedAt: '2026-08-17T07:55:00'}),
             ),
         ).toBe(false)
     })

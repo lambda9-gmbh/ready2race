@@ -47,9 +47,9 @@ object ParticipantTrackingService {
             }
         // Ausgecheckt wird nur, wer eingecheckt ist. Der Vergleich läuft bewusst gegen ENTRY und
         // nicht gegen EXIT: sonst käme eine nie gescannte Person (currentStatus == null) durch und
-        // das Protokoll bekäme eine Abmeldung ohne zugehörige Anmeldung - eine Rückkehr vom Wasser,
-        // auf dem die Person nie war. Seit ENTRY "auf dem Wasser" bedeutet, ist das die Regel, die
-        // das Log für sich lesbar hält.
+        // das Protokoll bekäme eine Abmeldung ohne zugehörige Anmeldung - eine Rückkehr aus der
+        // Arena, in der die Person nie war. Seit ENTRY "in der Arena" bedeutet, ist das die
+        // Regel, die das Log für sich lesbar hält.
         !KIO.failOn(currentStatus == ParticipantScanType.ENTRY.name && checkIn) { ParticipantTrackingError.TeamAlreadyCheckedIn }
         !KIO.failOn(currentStatus != ParticipantScanType.ENTRY.name && !checkIn) { ParticipantTrackingError.TeamNotCheckedIn }
 

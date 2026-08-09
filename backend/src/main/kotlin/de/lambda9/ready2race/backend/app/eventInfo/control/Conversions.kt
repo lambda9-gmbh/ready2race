@@ -15,6 +15,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchTeamInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchParticipantInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchTeamInfo
+import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
 import de.lambda9.ready2race.backend.database.generated.tables.records.InfoViewConfigurationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.INFO_VIEW_CONFIGURATION
 import org.jooq.JSONB
@@ -98,6 +99,20 @@ fun RunningMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCountdown: Bool
         matchName = matchName,
         startTime = startTime,
         actualStartTime = startedAt,
+        // Dieselbe Ableitung wie im Schiedsrichter-Dashboard, statt einer zweiten hier: die
+        // Karte las bis zum 09.08.2026 nur "actualStartTime gesetzt?" und war damit die einzige
+        // Oberfläche mit eigener Wahrheit. finishedAt und skipped sind hier immer aus dem Spiel -
+        // dieser Block führt ausschließlich aktivierte Läufe, und Beenden nimmt die Aktivierung
+        // zurück.
+        state = LiveDashboardLogic.deriveMatchState(
+            activatedAt = activatedAt,
+            startedAt = startedAt,
+            startTime = startTime,
+            finishedAt = null,
+            teamResults = teams.map {
+                LiveDashboardLogic.teamHasResult(it.currentPosition, it.failed, deregistered = false)
+            },
+        ),
         startState = AthleteBoardLogic.startState(startTime, now, showCountdown),
         teams = teams.map { it.toAthleteBoardTeam() },
     )
@@ -110,6 +125,17 @@ fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCou
         roundName = roundName,
         matchName = matchName,
         startTime = scheduledStartTime,
+        // Der Block führt ausschließlich nicht aktivierte Läufe; die Ableitung entscheidet damit
+        // nur noch zwischen abgesagt, ungeplant und anstehend. Sie steht trotzdem hier und nicht
+        // als eigenes `if`, damit die Anzeige dieselbe Aufzählung liest wie alle anderen.
+        state = LiveDashboardLogic.deriveMatchState(
+            activatedAt = null,
+            startedAt = null,
+            startTime = scheduledStartTime,
+            finishedAt = null,
+            teamResults = emptyList(),
+            skipped = cancelled,
+        ),
         startState = AthleteBoardLogic.startState(scheduledStartTime, now, showCountdown),
         teams = teams.map { it.toAthleteBoardTeam() },
         pendingRound = pendingRound,

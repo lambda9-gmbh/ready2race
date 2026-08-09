@@ -174,9 +174,9 @@ import type {
     UpdateMatchDataData,
     UpdateMatchDataError,
     UpdateMatchDataResponse,
-    UpdateMatchRunningStateData,
-    UpdateMatchRunningStateError,
-    UpdateMatchRunningStateResponse,
+    UpdateMatchActivationData,
+    UpdateMatchActivationError,
+    UpdateMatchActivationResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -682,9 +682,9 @@ import type {
     StartLiveDashboardMatchData,
     StartLiveDashboardMatchError,
     StartLiveDashboardMatchResponse,
-    SetLiveDashboardMatchRunningData,
-    SetLiveDashboardMatchRunningError,
-    SetLiveDashboardMatchRunningResponse,
+    SetLiveDashboardMatchActivatedData,
+    SetLiveDashboardMatchActivatedError,
+    SetLiveDashboardMatchActivatedResponse,
     GetLiveDashboardData,
     GetLiveDashboardError,
     GetLiveDashboardResponse,
@@ -1554,16 +1554,16 @@ export const updateMatchData = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const updateMatchRunningState = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateMatchRunningStateData, ThrowOnError>,
+export const updateMatchActivation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchActivationData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
-        UpdateMatchRunningStateResponse,
-        UpdateMatchRunningStateError,
+        UpdateMatchActivationResponse,
+        UpdateMatchActivationError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/running-state',
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/activation',
     })
 }
 
@@ -3764,16 +3764,19 @@ export const startLiveDashboardMatch = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const setLiveDashboardMatchRunning = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<SetLiveDashboardMatchRunningData, ThrowOnError>,
+/**
+ * Calls the match to the start (activated=true) or takes that back. Deactivating also clears the real start and pauses the automatic RaceClocker pull.
+ */
+export const setLiveDashboardMatchActivated = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetLiveDashboardMatchActivatedData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
-        SetLiveDashboardMatchRunningResponse,
-        SetLiveDashboardMatchRunningError,
+        SetLiveDashboardMatchActivatedResponse,
+        SetLiveDashboardMatchActivatedError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/liveDashboard/match/{matchId}/running-state',
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/activation',
     })
 }
 

@@ -31,7 +31,7 @@ import {Dispatch, Fragment, SetStateAction, SyntheticEvent, useEffect, useState}
 import {
     deleteCurrentCompetitionExecutionRound,
     skipScheduleRound,
-    updateMatchRunningState,
+    updateMatchActivation,
 } from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
@@ -46,9 +46,9 @@ import {raceClockerPollStatus} from './raceClockerPollStatus.ts'
 import {TimingFormSystem} from '@components/event/competition/timing/timingConfigForm.ts'
 import {
     MatchChip,
+    arenaChip,
     matchStatusChip,
     roundCounterChips,
-    waterChip,
 } from '@components/event/match/matchStatusChip.ts'
 
 /**
@@ -75,7 +75,7 @@ const StatusChip = ({chip}: {chip: MatchChip | null}) => {
     // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur - dasselbe
     // Muster wie `stateChipProps` in EventSchedule.tsx.
     const translate = t as (key: string, values?: Record<string, string | number>) => string
-    // null heißt "dieser Chip sagt hier nichts aus" (z.B. der Wasser-Chip ohne erhobene
+    // null heißt "dieser Chip sagt hier nichts aus" (z.B. der Arena-Chip ohne erhobene
     // Check-in-Daten) - dann gar nichts zeigen, statt eine leere Hülle.
     if (!chip) return null
     return (
@@ -207,7 +207,12 @@ const CompetitionExecutionRound = ({
             props.handleAccordionExpandedChange(accordionIndex, isExpanded)
         }
 
-    const handleToggleRunningState = async (match: CompetitionMatchDto) => {
+    /**
+     * Ruft den Lauf an den Start oder nimmt das zurück. Der Haken sagt „Am Start", nicht „Läuft":
+     * er setzt `activated_at`, der Ist-Start kommt aus der Zeitnahme oder aus dem „Läuft"-Knopf im
+     * Schiedsrichter-Dashboard.
+     */
+    const handleToggleActivation = async (match: CompetitionMatchDto) => {
         // Check if match has no places set
         const hasPlacesSet = match.teams.some(
             team => team.place !== null && team.place !== undefined,
@@ -218,14 +223,14 @@ const CompetitionExecutionRound = ({
         }
 
         props.setSubmitting(true)
-        const {error} = await updateMatchRunningState({
+        const {error} = await updateMatchActivation({
             path: {
                 eventId: eventId,
                 competitionId: competitionId,
                 competitionMatchId: match.id,
             },
             body: {
-                currentlyRunning: !match.currentlyRunning,
+                activated: match.activatedAt == null,
             },
         })
         props.setSubmitting(false)
@@ -352,7 +357,7 @@ const CompetitionExecutionRound = ({
                                 [theme.breakpoints.up('md')]: {
                                     minWidth: 400,
                                 },
-                                ...(match.currentlyRunning && {
+                                ...(match.activatedAt != null && {
                                     borderColor: 'primary.main',
                                     borderWidth: 2,
                                     borderStyle: 'solid',
@@ -394,13 +399,13 @@ const CompetitionExecutionRound = ({
                                         <FormControlLabel
                                             control={
                                                 <Checkbox
-                                                    checked={match.currentlyRunning}
-                                                    onChange={() => handleToggleRunningState(match)}
+                                                    checked={match.activatedAt != null}
+                                                    onChange={() => handleToggleActivation(match)}
                                                     disabled={submitting}
                                                 />
                                             }
                                             label={t(
-                                                'event.competition.execution.match.currentlyRunning',
+                                                'event.competition.execution.match.activated',
                                             )}
                                         />
                                     )}
@@ -422,7 +427,7 @@ const CompetitionExecutionRound = ({
                                                 now,
                                             )}
                                         />
-                                        <StatusChip chip={waterChip(match.status)} />
+                                        <StatusChip chip={arenaChip(match.status)} />
                                     </Stack>
                                     {roundIndex === 0 && (
                                         <SelectionMenu

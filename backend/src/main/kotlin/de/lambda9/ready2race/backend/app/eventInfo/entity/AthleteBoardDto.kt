@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -27,10 +28,18 @@ data class AthleteBoardMatch(
     /** Geplanter Start aus dem Zeitplan. */
     val startTime: LocalDateTime?,
     /**
-     * Tatsächlicher Start, nur im Block `running` gefüllt. Null bei einem als aktuell markierten
-     * Lauf heißt: noch nicht gestartet, das Boot liegt am Steg. Im Block `upcoming` immer null.
+     * Tatsächlicher Start, nur im Block `running` gefüllt. Er trägt die Uhrzeit für „gestartet
+     * 14:32"; ob der Lauf am Steg steht oder fährt, sagt dagegen [state]. Im Block `upcoming`
+     * immer null.
      */
     val actualStartTime: LocalDateTime? = null,
+    /**
+     * Der Lauf-Zustand aus [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.deriveMatchState]
+     * — dieselbe Ableitung wie im Schiedsrichter-Dashboard, im Zeitplan und auf der
+     * Durchführungsseite. Die Anzeige leitete „in Vorbereitung" bis zum 09.08.2026 selbst aus
+     * [actualStartTime] ab; damit war sie die einzige Oberfläche mit einer zweiten Ableitung.
+     */
+    val state: MatchState,
     val startState: AthleteBoardStartState,
     val teams: List<AthleteBoardTeam>,
     /** true für einen Platzhalter aus einem wartenden Zeitstrahl-Slot; teams ist dann immer leer. */

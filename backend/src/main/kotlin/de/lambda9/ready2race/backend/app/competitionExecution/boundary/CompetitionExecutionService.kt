@@ -98,12 +98,17 @@ object CompetitionExecutionService {
     /** Separates competition short name and rating category where both share one export column. */
     private const val RATING_SEPARATOR = "·"
 
+    /**
+     * Die Läufe der Veranstaltung, wahlweise gefiltert nach [activated]: true liefert die an den
+     * Start gerufenen, false die übrigen. Ob ein aufgerufener Lauf auch schon unterwegs ist, sagt
+     * dieser Filter bewusst nicht - dafür gibt es den abgeleiteten Zustand.
+     */
     fun getMatchesByEvent(
         eventId: UUID,
-        currentlyRunning: Boolean? = null,
+        activated: Boolean? = null,
         withoutPlaces: Boolean? = null
     ): App<ServiceError, ApiResponse.ListDto<MatchForRunningStatusDto>> = KIO.comprehension {
-        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces).orDie()
+        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, activated, withoutPlaces).orDie()
         KIO.ok(ApiResponse.ListDto(matches))
     }
 
@@ -346,10 +351,10 @@ object CompetitionExecutionService {
 
             val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
 
-            // Letzter Steg-Scan je Person dieses Wettkampfs — Grundlage des Wasser-Chips. Dieselbe
+            // Letzter Steg-Scan je Person dieses Wettkampfs — Grundlage des Arena-Chips. Dieselbe
             // Reduktion wie im Schiedsrichter-Dashboard (LiveDashboardService): die Abfrage liefert
             // alle Scans flach, der letzte je Person zählt. Bleibt die Karte leer, läuft die
-            // Veranstaltung ohne Check-in und der Chip entfällt (teamsOnWater = null).
+            // Veranstaltung ohne Check-in und der Chip entfällt (teamsInArena = null).
             val lastScanByParticipant = !CompetitionMatchRepo.getScansByCompetition(eventId, competitionId).orDie()
                 .map { scans ->
                     scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }
@@ -567,7 +572,7 @@ object CompetitionExecutionService {
      * Setzt alle Plätze eines Laufs zurück, damit eine neue Ergebnis-Eingabe nicht auf alten
      * Werten aufsetzt.
      *
-     * Rührt `currently_running` NICHT MEHR an (C1): egal ob die Ergebnisse aus der manuellen
+     * Rührt `activated_at` NICHT MEHR an (C1): egal ob die Ergebnisse aus der manuellen
      * Eingabe, einem Datei-Upload oder dem RaceClocker-Pull vollständig sind, der Lauf bleibt
      * aktiv, bis ein aktives Beenden ihn stempelt (`LiveDashboardService.finishMatch` bzw.
      * `EventScheduleService.finishSlot`). Vorher deaktivierte diese Funktion einen Lauf mit
@@ -1179,25 +1184,73 @@ object CompetitionExecutionService {
         waveName: String?,
     ): List<RaceClockerFeedRow> = assignFeedRows(rows, teams, waveName).values.flatten()
 
-    fun updateMatchRunningState(
+    fun updateMatchActivation(
         matchId: UUID,
         userId: UUID,
-        request: UpdateCompetitionMatchRunningStateRequest,
+        request: UpdateCompetitionMatchActivationRequest,
         eventId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
-        !CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = request.currentlyRunning
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie()
+        !setMatchActivation(matchId, request.activated, userId)
 
         noData
     }
 
+    /**
+     * Ruft einen Lauf an den Start oder nimmt das zurück — die eine Stelle für beide Wege dorthin
+     * (Durchführungs-Tab über [updateMatchActivation], Schiedsrichter-Dashboard über
+     * `LiveDashboardService.setMatchActivated`, dazu die Legacy-Aktivierung nach dem Beenden).
+     *
+     * Aktivieren setzt ausschließlich `activated_at`: Der Klick stellt fest, dass der Lauf
+     * drankommt, nicht dass er fährt. Der Ist-Start kommt aus der Zeitnahme oder aus
+     * `LiveDashboardService.markMatchStarted`. Ein erneutes Aktivieren rückt den Zeitpunkt nicht
+     * vor — "seit wann steht der Lauf am Start" soll nicht bei jedem Klick neu beginnen.
+     *
+     * Deaktivieren nimmt beides zurück und pausiert zugleich den automatischen RaceClocker-Abruf.
+     * Ohne die Pause wäre die Rücknahme wirkungslos: Der Lauf steht im Beobachtungsfenster, der Job
+     * findet die Startzeit im Feed und aktiviert ihn im nächsten Takt wieder — spätestens nach 60
+     * Sekunden. Freigegeben wird er über denselben Weg wie ein von Hand eingetragener Lauf
+     * ([resumeRaceClockerAutoPull]).
+     *
+     * Die Funktion steht hier und nicht im Live-Dashboard, weil dieser Service ohnehin die
+     * Schreibpfade auf `competition_match` hält (Ergebnisse, Pause, Freigabe) und
+     * [pauseRaceClockerAutoPull] samt seiner Bedingung schon hier liegt; das Dashboard importiert
+     * ihn längst. Die Alternative — die Logik im Dashboard und von hier aus aufrufen — hätte die
+     * Abhängigkeit nur umgedreht und die Pause von ihrer Bedingung getrennt.
+     *
+     * Beenden geht bewusst NICHT über diesen Weg: Dort fällt zwar auch die Aktivierung, aber der
+     * Ist-Start bleibt stehen (er ist eine Tatsache) und pausiert werden darf nichts.
+     */
+    fun setMatchActivation(matchId: UUID, activated: Boolean, userId: UUID): App<Nothing, Unit> =
+        KIO.comprehension {
+            val now = LocalDateTime.now()
+            !CompetitionMatchRepo.update(matchId) {
+                if (activated) {
+                    if (activatedAt == null) {
+                        activatedAt = now
+                    }
+                } else {
+                    activatedAt = null
+                    startedAt = null
+                }
+                updatedBy = userId
+                updatedAt = now
+            }.orDie()
+
+            if (!activated) {
+                !pauseRaceClockerAutoPull(matchId)
+
+                // Ohne das Vergessen des Merkpostens überspränge der nächste Takt die Änderung: Der
+                // Job hält je Lauf den zuletzt geschriebenen Stand, und der beschreibt nach der
+                // Rücknahme nicht mehr, was in der Datenbank steht.
+                RaceClockerPollService.forget(matchId)
+            }
+
+            unit
+        }
 
     fun deleteCurrentRound(
         competitionId: UUID,

@@ -235,7 +235,7 @@ const DragDropMatchLists = ({
                 <Box flex={1}>
                     <Typography variant="h6" gutterBottom>
                         <PlayCircle sx={{verticalAlign: 'middle', mr: 1}} />
-                        {t('event.competition.execution.match.currentlyRunning')}
+                        {t('event.competition.execution.match.activated')}
                     </Typography>
                     <TextField
                         fullWidth

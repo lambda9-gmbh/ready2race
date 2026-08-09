@@ -682,7 +682,7 @@
       "ratingCategoryRequired": "Wertungskategorie erforderlich",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
-      "checkInOutRequired": "An-/Abmeldung aufs Wasser erforderlich",
+      "checkInOutRequired": "An-/Abmeldung in die Arena erforderlich",
       "challenge": {
         "configs": "Challenge Einstellungen",
         "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
@@ -990,7 +990,7 @@
           "manageRunning": "Laufende Partien verwalten",
           "running": "Läuft",
           "roundAndMatch": "Runde {{round}}, Partie {{match}}",
-          "currentlyRunning": "Aktuell laufend",
+          "activated": "Am Start",
           "availableMatches": "Verfügbare Partien",
           "noRunningMatches": "Keine Partien laufen gerade",
           "noAvailableMatches": "Keine Partien zum Starten verfügbar"
@@ -1510,7 +1510,7 @@
         "running": "Aktueller Lauf",
         "upcoming": "Nächster Lauf",
         "results": "Letztes Ergebnis",
-        "noRunning": "Zurzeit kein Lauf auf dem Wasser",
+        "noRunning": "Zurzeit kein Lauf in der Arena",
         "noUpcoming": "Kein weiterer Lauf gesetzt",
         "noResults": "Noch kein Ergebnis",
         "lane": "Bahn",
@@ -1542,6 +1542,7 @@
       "status": {
         "upcoming": "Anstehend",
         "overdue": "Überfällig · {{minutes}} min",
+        "preparing": "In Vorbereitung",
         "running": "Läuft · {{minutes}} min",
         "runningPlain": "Läuft",
         "partiallyScored": "Teilweise gewertet {{scored}}/{{total}}",
@@ -1549,9 +1550,10 @@
         "finished": "Beendet",
         "cancelled": "Abgesagt",
         "unscheduled": "Ungeplant",
-        "water": "Wasser {{onWater}}/{{total}}",
+        "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Findet nicht statt",
         "counter": {
+          "preparing": "{{n}} in Vorbereitung",
           "running": "{{n}} läuft",
           "open": "{{n}} offen",
           "finished": "{{n}} beendet",
@@ -1576,18 +1578,8 @@
       "unscheduled": "Ohne Startzeit",
       "noMatches": "Keine Läufe vorhanden.",
       "noStartTime": "Keine Startzeit geplant",
-      "runningSince": "Läuft seit {{duration}}",
       "plannedAt": "geplant {{time}}",
       "startedAtLabel": "gestartet {{time}}",
-      "state": {
-        "RUNNING": "Läuft",
-        "FINISHED": "Beendet",
-        "SKIPPED": "Abgesagt",
-        "AWAITING_FINISH": "Ergebnisse vollständig — wartet auf Beenden",
-        "AWAITING_FINISH_SHORT": "wartet auf Beenden",
-        "UPCOMING": "Anstehend",
-        "UNSCHEDULED": "Ungeplant"
-      },
       "invoice": {
         "PAID": "Rechnung bezahlt",
         "OPEN": "Rechnung offen",
@@ -1605,6 +1597,8 @@
         "finishing": "Wird beendet …",
         "undo": "Rückgängig",
         "finished": "Lauf beendet — nächste Läufe aktiviert",
+        "markStarted": "Läuft",
+        "markStartedAutoHint": "RaceClocker meldet den Start automatisch, sobald er ihn sieht.",
         "deactivate": "Lauf deaktivieren",
         "activate": "Lauf aktivieren",
         "incompleteWarning": "Es fehlen noch Ergebnisse — beenden aktiviert trotzdem die nächsten Läufe.",
@@ -1631,8 +1625,8 @@
         "deregistered": "Abgemeldet",
         "failed": "Ausgeschieden",
         "failedShort": "DNF",
-        "onWaterAt": "aufs Wasser {{time}}",
-        "notOnWater": "Nicht auf dem Wasser",
+        "inArenaAt": "in die Arena {{time}}",
+        "notInArena": "Nicht in der Arena",
         "clubs": "Vereine",
         "crew": "Mannschaft"
       },
@@ -1661,7 +1655,7 @@
         "noCompetitions": "Diese Veranstaltung hat noch keine Wettkämpfe. Es gibt daher nichts einzustellen.",
         "check": {
           "INVOICE_OPEN": "Rechnung offen",
-          "NOT_ON_WATER": "Nicht auf dem Wasser",
+          "NOT_IN_ARENA": "Nicht in der Arena",
           "REQUIREMENT_TIME_WINDOW": "Zeitfenster verletzt"
         },
         "severity": {
@@ -1786,6 +1780,7 @@
         "now": "Jetzt",
         "state": {
           "finished": "Beendet",
+          "preparing": "In Vorbereitung",
           "running": "Läuft",
           "awaitingFinish": "Wartet auf Beenden",
           "linked": "Verknüpft",

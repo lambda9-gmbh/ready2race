@@ -682,7 +682,7 @@
       "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
-      "checkInOutRequired": "Requires check-in/out on the water",
+      "checkInOutRequired": "Requires check-in/out for the arena",
       "challenge": {
         "configs": "Challenge configs",
         "resultConfirmationImageRequired": "Confirmation image for results required",
@@ -990,7 +990,7 @@
           "manageRunning": "Manage Running Matches",
           "running": "Running",
           "roundAndMatch": "Round {{round}}, Match {{match}}",
-          "currentlyRunning": "Currently Running",
+          "activated": "At the start",
           "availableMatches": "Available Matches",
           "noRunningMatches": "No matches are currently running",
           "noAvailableMatches": "No matches available to start"
@@ -1510,7 +1510,7 @@
         "running": "Current race",
         "upcoming": "Next race",
         "results": "Last result",
-        "noRunning": "No race on the water right now",
+        "noRunning": "No race in the arena right now",
         "noUpcoming": "No further race scheduled",
         "noResults": "No result yet",
         "lane": "Lane",
@@ -1542,6 +1542,7 @@
       "status": {
         "upcoming": "Upcoming",
         "overdue": "Overdue · {{minutes}} min",
+        "preparing": "Preparing",
         "running": "Running · {{minutes}} min",
         "runningPlain": "Running",
         "partiallyScored": "Partially scored {{scored}}/{{total}}",
@@ -1549,9 +1550,10 @@
         "finished": "Finished",
         "cancelled": "Cancelled",
         "unscheduled": "Unscheduled",
-        "water": "On water {{onWater}}/{{total}}",
+        "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Does not take place",
         "counter": {
+          "preparing": "{{n}} preparing",
           "running": "{{n}} running",
           "open": "{{n}} open",
           "finished": "{{n}} finished",
@@ -1576,18 +1578,8 @@
       "unscheduled": "Without start time",
       "noMatches": "No matches available.",
       "noStartTime": "No start time scheduled",
-      "runningSince": "Running for {{duration}}",
       "plannedAt": "planned {{time}}",
       "startedAtLabel": "started {{time}}",
-      "state": {
-        "RUNNING": "Running",
-        "FINISHED": "Finished",
-        "SKIPPED": "Cancelled",
-        "AWAITING_FINISH": "Results complete — waiting to finish",
-        "AWAITING_FINISH_SHORT": "waiting to finish",
-        "UPCOMING": "Upcoming",
-        "UNSCHEDULED": "Unscheduled"
-      },
       "invoice": {
         "PAID": "Invoice paid",
         "OPEN": "Invoice open",
@@ -1605,6 +1597,8 @@
         "finishing": "Finishing …",
         "undo": "Undo",
         "finished": "Race finished — next races activated",
+        "markStarted": "Running",
+        "markStartedAutoHint": "RaceClocker reports the start by itself as soon as it sees it.",
         "deactivate": "Deactivate race",
         "activate": "Activate race",
         "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
@@ -1631,8 +1625,8 @@
         "deregistered": "Deregistered",
         "failed": "Did not finish",
         "failedShort": "DNF",
-        "onWaterAt": "on water {{time}}",
-        "notOnWater": "Not on the water",
+        "inArenaAt": "in arena {{time}}",
+        "notInArena": "Not in the arena",
         "clubs": "Clubs",
         "crew": "Crew"
       },
@@ -1661,7 +1655,7 @@
         "noCompetitions": "This event has no competitions yet, so there is nothing to configure.",
         "check": {
           "INVOICE_OPEN": "Invoice open",
-          "NOT_ON_WATER": "Not on the water",
+          "NOT_IN_ARENA": "Not in the arena",
           "REQUIREMENT_TIME_WINDOW": "Time window violated"
         },
         "severity": {
@@ -1786,6 +1780,7 @@
         "now": "Now",
         "state": {
           "finished": "Finished",
+          "preparing": "Preparing",
           "running": "Running",
           "awaitingFinish": "Waiting to finish",
           "linked": "Linked",

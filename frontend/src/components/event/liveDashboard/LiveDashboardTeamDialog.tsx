@@ -135,8 +135,8 @@ const TeamDialog = ({
                         useFlexGap>
                         {/*
                             Die Team-Ampel hält Grün den Teilnahmebedingungen vor: Rechnung und
-                            Wasser können sie nur verschlechtern, nie bestätigen (siehe
-                            `LiveDashboardLogic.invoiceSeverity`/`onWaterSeverity`), deshalb liefert
+                            Arena können sie nur verschlechtern, nie bestätigen (siehe
+                            `LiveDashboardLogic.invoiceSeverity`/`inArenaSeverity`), deshalb liefert
                             das Backend hier `NEUTRAL` statt `OK`. Dieses Schild sagt aber nichts
                             über die Mannschaft insgesamt, sondern genau eine Tatsache ("bezahlt" /
                             "abgelegt um ...") - und die darf grün sein, wenn sie zutrifft. Nur wenn
@@ -151,23 +151,23 @@ const TeamDialog = ({
                                     : severityChipColor[team.invoiceSeverity]
                             }
                         />
-                        {team.onWaterRequired && (
+                        {team.inArenaRequired && (
                             <Chip
                                 size="small"
                                 color={
-                                    team.onWaterAt
+                                    team.inArenaAt
                                         ? 'success'
-                                        : severityChipColor[team.onWaterSeverity]
+                                        : severityChipColor[team.inArenaSeverity]
                                 }
                                 label={
-                                    team.onWaterAt
-                                        ? t('event.liveDashboard.team.onWaterAt', {
+                                    team.inArenaAt
+                                        ? t('event.liveDashboard.team.inArenaAt', {
                                               time: format(
-                                                  new Date(team.onWaterAt),
+                                                  new Date(team.inArenaAt),
                                                   t('format.time'),
                                               ),
                                           })
-                                        : t('event.liveDashboard.team.notOnWater')
+                                        : t('event.liveDashboard.team.notInArena')
                                 }
                             />
                         )}

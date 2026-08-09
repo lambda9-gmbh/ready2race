@@ -682,7 +682,7 @@
       "ratingCategoryRequired": "Rangeringskategori påkrævet",
       "registrationCount": "Tilmeldinger",
       "shortName": "Kort navn",
-      "checkInOutRequired": "Kræver ind-/udtjekning på vandet",
+      "checkInOutRequired": "Kræver ind-/udtjekning i arenaen",
       "challenge": {
         "configs": "Challenge-indstillinger",
         "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",
@@ -990,7 +990,7 @@
           "manageRunning": "Administrer igangværende kampe",
           "running": "Kører",
           "roundAndMatch": "Runde {{round}}, kamp {{match}}",
-          "currentlyRunning": "Kører lige nu",
+          "activated": "Ved start",
           "availableMatches": "Tilgængelige kampe",
           "noRunningMatches": "Ingen kampe kører i øjeblikket",
           "noAvailableMatches": "Ingen kampe klar til start"
@@ -1510,7 +1510,7 @@
         "running": "Aktuelt løb",
         "upcoming": "Næste løb",
         "results": "Seneste resultat",
-        "noRunning": "Intet løb på vandet lige nu",
+        "noRunning": "Intet løb i arenaen lige nu",
         "noUpcoming": "Ingen flere løb planlagt",
         "noResults": "Endnu intet resultat",
         "lane": "Bane",
@@ -1542,6 +1542,7 @@
       "status": {
         "upcoming": "Kommende",
         "overdue": "Forsinket · {{minutes}} min",
+        "preparing": "Forbereder",
         "running": "I gang · {{minutes}} min",
         "runningPlain": "I gang",
         "partiallyScored": "Delvist bedømt {{scored}}/{{total}}",
@@ -1549,9 +1550,10 @@
         "finished": "Afsluttet",
         "cancelled": "Aflyst",
         "unscheduled": "Ikke planlagt",
-        "water": "På vandet {{onWater}}/{{total}}",
+        "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Gennemføres ikke",
         "counter": {
+          "preparing": "{{n}} forbereder",
           "running": "{{n}} i gang",
           "open": "{{n}} åbne",
           "finished": "{{n}} afsluttet",
@@ -1576,18 +1578,8 @@
       "unscheduled": "Uden starttid",
       "noMatches": "Ingen løb tilgængelige.",
       "noStartTime": "Ingen starttid planlagt",
-      "runningSince": "I gang i {{duration}}",
       "plannedAt": "planlagt {{time}}",
       "startedAtLabel": "startet {{time}}",
-      "state": {
-        "RUNNING": "I gang",
-        "FINISHED": "Afsluttet",
-        "SKIPPED": "Aflyst",
-        "AWAITING_FINISH": "Resultater komplette — venter på afslutning",
-        "AWAITING_FINISH_SHORT": "venter på afslutning",
-        "UPCOMING": "Kommende",
-        "UNSCHEDULED": "Ikke planlagt"
-      },
       "invoice": {
         "PAID": "Faktura betalt",
         "OPEN": "Faktura åben",
@@ -1605,6 +1597,8 @@
         "finishing": "Afsluttes …",
         "undo": "Fortryd",
         "finished": "Løbet er afsluttet — næste løb aktiveret",
+        "markStarted": "I gang",
+        "markStartedAutoHint": "RaceClocker melder selv starten, så snart den ser den.",
         "deactivate": "Deaktiver løb",
         "activate": "Aktiver løb",
         "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
@@ -1631,8 +1625,8 @@
         "deregistered": "Afmeldt",
         "failed": "Udgået",
         "failedShort": "DNF",
-        "onWaterAt": "på vandet {{time}}",
-        "notOnWater": "Ikke på vandet",
+        "inArenaAt": "i arenaen {{time}}",
+        "notInArena": "Ikke i arenaen",
         "clubs": "Klubber",
         "crew": "Besætning"
       },
@@ -1661,7 +1655,7 @@
         "noCompetitions": "Denne begivenhed har endnu ingen konkurrencer. Der er derfor intet at indstille.",
         "check": {
           "INVOICE_OPEN": "Faktura åben",
-          "NOT_ON_WATER": "Ikke på vandet",
+          "NOT_IN_ARENA": "Ikke i arenaen",
           "REQUIREMENT_TIME_WINDOW": "Tidsvindue overskredet"
         },
         "severity": {
@@ -1780,6 +1774,7 @@
         "now": "Nu",
         "state": {
           "finished": "Afsluttet",
+          "preparing": "Forbereder",
           "running": "Kører",
           "awaitingFinish": "Venter på afslutning",
           "linked": "Tilknyttet",

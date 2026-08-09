@@ -29,7 +29,7 @@ object ParticipantTrackingRepo {
     }
 
     /**
-     * Alle Scans der Veranstaltung (Live-Dashboard: "ist das Boot auf dem Wasser?") - der
+     * Alle Scans der Veranstaltung (Live-Dashboard: "ist das Boot in der Arena?") - der
      * Aufrufer reduziert auf den letzten Scan je Person.
      */
     fun getScansByEvent(eventId: UUID) = Jooq.query {

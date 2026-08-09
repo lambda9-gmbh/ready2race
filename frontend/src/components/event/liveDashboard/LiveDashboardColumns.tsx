@@ -6,15 +6,22 @@ import LiveDashboardMatchCard, {LiveDashboardPendingSlotCard} from './LiveDashbo
 import {dashboardEntryDomId, LiveDashboardTimelineEntry} from './common.ts'
 
 /**
- * Die Handlungen, die beide Spalten an ihre Karten durchreichen. `onFinish`/`onSetRunning`/`onSkip`
- * sind nur gesetzt, wenn die Nutzerin den Ablauf steuern darf — die Karten blenden ihre Knöpfe
- * daran aus.
+ * Die Handlungen, die beide Spalten an ihre Karten durchreichen.
+ * `onFinish`/`onSetActivated`/`onMarkStarted`/`onResumeAutoPull`/`onSkipSlot` sind nur gesetzt,
+ * wenn die Nutzerin den Ablauf steuern darf — die Karten blenden ihre Knöpfe daran aus.
  */
 export type LiveDashboardActions = {
     onTeamClick: (matchId: string, teamId: string) => void
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
-    onSetRunning?: (matchId: string, running: boolean) => Promise<void>
+    /** Ruft den Lauf an den Start oder nimmt das zurück — der Ist-Start hängt nicht daran. */
+    onSetActivated?: (matchId: string, activated: boolean) => Promise<void>
+    /** „Läuft": stellt fest, dass das Rennen unterwegs ist. */
+    onMarkStarted?: (matchId: string) => Promise<void>
+    /** Gibt den beim Deaktivieren pausierten RaceClocker-Abruf wieder frei. */
+    onResumeAutoPull?: (matchId: string, competitionId: string) => Promise<void>
     onSkipSlot?: (slotId: string, label: string, time: string) => void
+    /** Ob die Veranstaltung den automatischen RaceClocker-Abruf eingeschaltet hat. */
+    raceClockerAutoPull?: boolean
 }
 
 /**
@@ -39,7 +46,10 @@ const TimelineEntryCard = ({
                 match={entry.match}
                 onTeamClick={actions.onTeamClick}
                 onFinish={actions.onFinish}
-                onSetRunning={actions.onSetRunning}
+                onSetActivated={actions.onSetActivated}
+                onMarkStarted={actions.onMarkStarted}
+                onResumeAutoPull={actions.onResumeAutoPull}
+                raceClockerAutoPull={actions.raceClockerAutoPull}
                 shortLabels={shortLabels}
             />
         </Box>

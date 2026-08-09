@@ -5,7 +5,7 @@ import {
     matchStatusChip,
     roundCounterChips,
     slotMatchStatus,
-    waterChip,
+    arenaChip,
 } from './matchStatusChip.ts'
 
 const NOW = new Date('2026-08-15T10:00:00')
@@ -46,6 +46,22 @@ describe('matchStatusChip', () => {
             values: {minutes: 8},
             color: 'error',
         })
+    })
+
+    it('zeigt einen Lauf am Start als „In Vorbereitung“', () => {
+        const chip = matchStatusChip(status({state: 'PREPARING'}), minutesAgo(20), NOW)
+        expect(chip).toEqual({labelKey: 'event.match.status.preparing', color: 'info'})
+    })
+
+    /**
+     * „Überfällig" misst den Verzug gegen den Plan — bei einem Lauf, der am Start steht, ist der
+     * Plan bereits eingeholt: der Schiedsrichter hat ihn aufgerufen. Der Zweig muss deshalb vor der
+     * Verzugsrechnung greifen, sonst blinkte ausgerechnet der Lauf rot, um den sich gerade jemand
+     * kümmert.
+     */
+    it('macht aus einem Lauf am Start keinen überfälligen', () => {
+        const chip = matchStatusChip(status({state: 'PREPARING'}), minutesAgo(60), NOW)
+        expect(chip.labelKey).not.toBe('event.match.status.overdue')
     })
 
     it('zeigt einen aktiven Lauf mit seiner Laufzeit', () => {
@@ -153,47 +169,56 @@ describe('matchStatusChip', () => {
     })
 })
 
-describe('waterChip', () => {
+describe('arenaChip', () => {
     /**
      * Zwei Wege führen hierher: eine Ansicht, die die Check-in-Daten gar nicht holt (Zeitplan,
      * öffentliche Anzeigen), und eine Veranstaltung ohne Check-in — dort schickt der Server für
-     * jeden Lauf der Runde null statt 0, damit nicht dauerhaft „Wasser 0/6" dasteht. Auf der
+     * jeden Lauf der Runde null statt 0, damit nicht dauerhaft „Arena 0/6" dasteht. Auf der
      * Leitung ist beides dasselbe: das Feld fehlt (Jackson schreibt nulls nicht mit).
      */
-    it('entfällt, solange der Wasserstand nicht erhoben wird', () => {
-        expect(waterChip(status({state: 'RUNNING'}))).toBeNull()
-        expect(waterChip(status({state: 'RUNNING', teamsOnWater: undefined}))).toBeNull()
+    it('entfällt, solange der Stand nicht erhoben wird', () => {
+        expect(arenaChip(status({state: 'RUNNING'}))).toBeNull()
+        expect(arenaChip(status({state: 'RUNNING', teamsInArena: undefined}))).toBeNull()
     })
 
     /** Erhoben und niemand draußen ist eine Aussage — die 0 wird gezeigt, nicht verschluckt. */
     it('zeigt die erhobene Null', () => {
-        expect(waterChip(status({state: 'UPCOMING', teamsOnWater: 0}))).toEqual({
-            labelKey: 'event.match.status.water',
-            values: {onWater: 0, total: 6},
+        expect(arenaChip(status({state: 'UPCOMING', teamsInArena: 0}))).toEqual({
+            labelKey: 'event.match.status.inArena',
+            values: {inArena: 0, total: 6},
             color: 'default',
         })
     })
 
-    it('zeigt den Wasserstand, solange nicht alle Crews draußen sind', () => {
-        expect(waterChip(status({state: 'UPCOMING', teamsOnWater: 4}))).toEqual({
-            labelKey: 'event.match.status.water',
-            values: {onWater: 4, total: 6},
+    it('zeigt den Stand, solange nicht alle Crews draußen sind', () => {
+        expect(arenaChip(status({state: 'UPCOMING', teamsInArena: 4}))).toEqual({
+            labelKey: 'event.match.status.inArena',
+            values: {inArena: 4, total: 6},
             color: 'default',
         })
     })
 
     it('entfällt, sobald alle Crews draußen sind', () => {
-        expect(waterChip(status({state: 'RUNNING', teamsOnWater: 6}))).toBeNull()
+        expect(arenaChip(status({state: 'RUNNING', teamsInArena: 6}))).toBeNull()
+    })
+
+    /** Beim Lauf am Start ist die Frage, wer schon draußen ist, am dringendsten. */
+    it('steht auch bei einem Lauf in Vorbereitung', () => {
+        expect(arenaChip(status({state: 'PREPARING', teamsInArena: 2}))).toEqual({
+            labelKey: 'event.match.status.inArena',
+            values: {inArena: 2, total: 6},
+            color: 'default',
+        })
     })
 
     it('entfällt bei einem Lauf ohne Mannschaften', () => {
-        expect(waterChip(status({state: 'UPCOMING', teamsTotal: 0, teamsOnWater: 0}))).toBeNull()
+        expect(arenaChip(status({state: 'UPCOMING', teamsTotal: 0, teamsInArena: 0}))).toBeNull()
     })
 
     it('entfällt bei beendeten und abgesagten Läufen', () => {
-        expect(waterChip(status({state: 'FINISHED', teamsOnWater: 0}))).toBeNull()
-        expect(waterChip(status({state: 'SKIPPED', teamsOnWater: 0}))).toBeNull()
-        expect(waterChip(status({state: 'AWAITING_FINISH', teamsOnWater: 0}))).toBeNull()
+        expect(arenaChip(status({state: 'FINISHED', teamsInArena: 0}))).toBeNull()
+        expect(arenaChip(status({state: 'SKIPPED', teamsInArena: 0}))).toBeNull()
+        expect(arenaChip(status({state: 'AWAITING_FINISH', teamsInArena: 0}))).toBeNull()
     })
 })
 
@@ -212,6 +237,18 @@ describe('roundCounterChips', () => {
             {labelKey: 'event.match.status.counter.open', values: {n: 1}, color: 'default'},
             {labelKey: 'event.match.status.counter.finished', values: {n: 3}, color: 'success'},
             {labelKey: 'event.match.status.counter.cancelled', values: {n: 1}, color: 'default'},
+        ])
+    })
+
+    /**
+     * Eigener Topf, und zwar vor „läuft": ein Lauf am Start ist weder unterwegs noch bloß offen.
+     * Dieselbe Aufteilung wie `MatchStatusLogic.roundCounters` im Backend.
+     */
+    it('zählt vorbereitete Läufe in einen eigenen Topf', () => {
+        const chips = roundCounterChips([status({state: 'PREPARING'}), status({state: 'RUNNING'})])
+        expect(chips).toEqual([
+            {labelKey: 'event.match.status.counter.preparing', values: {n: 1}, color: 'info'},
+            {labelKey: 'event.match.status.counter.running', values: {n: 1}, color: 'primary'},
         ])
     })
 
@@ -236,7 +273,7 @@ const slot = (overrides: Partial<EventScheduleSlotDto>): EventScheduleSlotDto =>
     id: 'slot-1',
     startTime: minutesAgo(10),
     state: 'LINKED',
-    matchCurrentlyRunning: false,
+    matchActivatedAt: null,
     matchTeamsTotal: 6,
     matchTeamsScored: 0,
     matchId: 'match-1',
@@ -251,10 +288,17 @@ describe('slotMatchStatus', () => {
 
     it('liest den aktiven Lauf als RUNNING, auch wenn der Slot abgesagt ist', () => {
         const status = slotMatchStatus(
-            slot({state: 'SKIPPED', matchCurrentlyRunning: true, matchStartedAt: minutesAgo(3)}),
+            slot({state: 'SKIPPED', matchActivatedAt: minutesAgo(4), matchStartedAt: minutesAgo(3)}),
         )
         expect(status?.state).toBe('RUNNING')
         expect(status?.startedAt).toBe(minutesAgo(3))
+    })
+
+    it('leitet PREPARING aus einem aktivierten, nicht gestarteten Slot ab', () => {
+        const status = slotMatchStatus(
+            slot({matchActivatedAt: minutesAgo(5), matchStartedAt: null}),
+        )
+        expect(status?.state).toBe('PREPARING')
     })
 
     it('liest einen beendeten Lauf als FINISHED', () => {
