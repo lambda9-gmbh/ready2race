@@ -40,10 +40,11 @@ class RaceClockerMatchTargetTest {
     }
 
     @Test
-    fun `jede andere Runde beginnt beim Laeufe-Rennen`() {
+    fun `jede andere Runde beginnt beim Läufe-Rennen`() {
         val t = target(isQualification = false)
         assertEquals(shortCourse.resultsUrl, t.resultsUrl)
         assertEquals(timeTrials.resultsUrl, t.alternateResultsUrl)
+        assertEquals(listOf(shortCourse.resultsUrl, timeTrials.resultsUrl), t.candidateUrls)
         assertEquals(listOf("Kurzstrecke", "Timetrials"), t.candidateRaceNames)
     }
 
@@ -54,7 +55,7 @@ class RaceClockerMatchTargetTest {
      * einer Regatta ohne Zeitfahren, und er darf nicht zu „nichts zu holen" führen.
      */
     @Test
-    fun `ohne Quali-Anwahl wird das Laeufe-Rennen zum Rueckfall`() {
+    fun `ohne Quali-Anwahl wird das Läufe-Rennen zum Rückfall`() {
         val t = target(isQualification = true, qualificationRace = null)
         assertNull(t.resultsUrl)
         assertEquals(shortCourse.resultsUrl, t.alternateResultsUrl)
@@ -71,7 +72,7 @@ class RaceClockerMatchTargetTest {
     }
 
     @Test
-    fun `dasselbe Rennen fuer beides wird nur einmal geholt`() {
+    fun `dasselbe Rennen für beides wird nur einmal geholt`() {
         val t = target(isQualification = true, qualificationRace = shortCourse, roundsRace = shortCourse)
         assertEquals(listOf(shortCourse.resultsUrl), t.candidateUrls)
         assertEquals(listOf("Kurzstrecke"), t.candidateRaceNames)
@@ -83,7 +84,7 @@ class RaceClockerMatchTargetTest {
      * die Adresse und nicht über die Kennung, weil geholt wird, was die Adresse hergibt.
      */
     @Test
-    fun `gleiche Adresse unter anderem Namen zaehlt als dasselbe Rennen`() {
+    fun `gleiche Adresse unter anderem Namen zählt als dasselbe Rennen`() {
         val twin = RaceClockerRaceRef(UUID.randomUUID(), "Kurzstrecke B", shortCourse.resultsUrl)
         val t = target(isQualification = false, qualificationRace = twin, roundsRace = shortCourse)
         assertEquals(listOf(shortCourse.resultsUrl), t.candidateUrls)

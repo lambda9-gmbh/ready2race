@@ -79,7 +79,7 @@ class RaceClockerRaceRepoTest {
     }
 
     @Test
-    fun `nextPosition zaehlt hinter dem letzten Rennen weiter`() = testComprehension {
+    fun `nextPosition zählt hinter dem letzten Rennen weiter`() = testComprehension {
         val eventId = seedEvent()
         assertEquals(1, !RaceClockerRaceRepo.nextPosition(eventId))
 

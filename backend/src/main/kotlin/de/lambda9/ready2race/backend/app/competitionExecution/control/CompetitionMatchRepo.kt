@@ -50,7 +50,7 @@ object CompetitionMatchRepo {
      */
     fun getForRaceClockerPull(id: UUID) = Jooq.query {
         // Wettkampf-Anwahl vor Veranstaltungs-Voreinstellung (Migration V202608091600): die
-        // RaceClocker-Rennen gehoeren der Veranstaltung, einzelne Wettkaempfe koennen mit einer
+        // RaceClocker-Rennen gehören der Veranstaltung, einzelne Wettkämpfe können mit einer
         // eigenen Anwahl ausscheren. Zwei Aliase, weil dieselbe Tabelle zweimal gebraucht wird.
         val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
         val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")

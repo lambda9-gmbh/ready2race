@@ -28,7 +28,7 @@ class RaceClockerFetchPlanTest {
     ) = RaceClockerMatchTarget("Lauf 1", isQualification, qualificationRace, roundsRace)
 
     @Test
-    fun `Runde 1 holt nur die angewaehlten Rennen`() {
+    fun `Runde 1 holt nur die angewählten Rennen`() {
         val targets = listOf(target(), target(), target(roundsRace = longCourse))
 
         assertEquals(
@@ -46,7 +46,7 @@ class RaceClockerFetchPlanTest {
     }
 
     @Test
-    fun `Laeufe ohne Anwahl tragen nichts bei`() {
+    fun `Läufe ohne Anwahl tragen nichts bei`() {
         val targets = listOf(target(qualificationRace = null, roundsRace = null))
 
         assertEquals(emptyList(), RaceClockerFeedAssignment.primaryUrls(targets))
@@ -68,7 +68,7 @@ class RaceClockerFetchPlanTest {
     }
 
     @Test
-    fun `Runde 2 holt nur den Rueckfall der nicht gefundenen Laeufe`() {
+    fun `Runde 2 holt nur den Rückfall der nicht gefundenen Läufe`() {
         val unresolved = listOf(target())
 
         assertEquals(
@@ -91,7 +91,7 @@ class RaceClockerFetchPlanTest {
     }
 
     @Test
-    fun `ein Lauf ohne Rueckfall loest keine zweite Runde aus`() {
+    fun `ein Lauf ohne Rückfall löst keine zweite Runde aus`() {
         val unresolved = listOf(target(qualificationRace = null))
 
         assertEquals(

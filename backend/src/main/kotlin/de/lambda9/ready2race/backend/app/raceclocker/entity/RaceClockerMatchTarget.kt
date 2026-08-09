@@ -43,5 +43,5 @@ data class RaceClockerMatchTarget(
      * Rennen Kurzstrecke nicht gefunden" ist am Renntag brauchbar, eine nackte URL nicht.
      */
     val candidateRaceNames: List<String>
-        get() = listOfNotNull(race, alternateRace?.takeIf { it.resultsUrl != resultsUrl }).map { it.name }
+        get() = listOfNotNull(race, alternateRace?.takeIf { alternateResultsUrl != null }).map { it.name }
 }

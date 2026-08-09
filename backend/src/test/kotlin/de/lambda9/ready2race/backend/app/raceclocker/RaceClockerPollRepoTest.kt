@@ -87,7 +87,6 @@ class RaceClockerPollRepoTest {
         competitionTimeTrialUrl: String? = null,
         eventHeatsResultsUrl: String? = eventHeatsUrl,
         eventTimeTrialResultsUrl: String? = eventTimeTrialUrl,
-        deleteRacesAfterSeeding: Boolean = false,
         isQualification: Boolean = false,
         activated: Boolean = true,
         startedAt: LocalDateTime? = null,
@@ -113,7 +112,7 @@ class RaceClockerPollRepoTest {
             )
         )
 
-        // Die Rennen gehoeren der Veranstaltung; Veranstaltung und Wettkampf zeigen nur darauf.
+        // Die Rennen gehören der Veranstaltung; Veranstaltung und Wettkampf zeigen nur darauf.
         val eventTtRaceId = eventTimeTrialResultsUrl?.let {
             insertRace(eventId, "Zeitfahren", it, RaceClockerStartMode.INDIVIDUAL, 1)
         }
@@ -285,7 +284,7 @@ class RaceClockerPollRepoTest {
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
     }
 
-    /** Ohne eine einzige Adresse gibt es kein Rennen, das man abfragen könnte. */
+    /** Ohne ein angewähltes Rennen gibt es nichts, das man abfragen könnte. */
     @Test
     fun aMatchWithoutAnySelectedRaceIsExcluded() = testComprehension {
         val (eventId, _) = seed(eventHeatsResultsUrl = null, eventTimeTrialResultsUrl = null)
@@ -326,7 +325,7 @@ class RaceClockerPollRepoTest {
         val candidate = (!RaceClockerPollRepo.getCandidates(eventId)).single()
 
         assertEquals(ownHeats, candidate.target.roundsRace?.resultsUrl)
-        // Das andere Rennen hat der Wettkampf nicht angewaehlt - es erbt weiter.
+        // Das andere Rennen hat der Wettkampf nicht angewählt - es erbt weiter.
         assertEquals(eventTimeTrialUrl, candidate.target.qualificationRace?.resultsUrl)
         // Und für eine Runde, die keine Qualifikation ist, ist die Läufe-Adresse die erste Wahl.
         assertEquals(listOf(ownHeats, eventTimeTrialUrl), candidate.target.candidateUrls)
@@ -352,8 +351,8 @@ class RaceClockerPollRepoTest {
     }
 
     /**
-     * Ein geloeschtes Rennen entwertet die Anwahl (`on delete set null`), statt das Loeschen zu
-     * blockieren. Der Lauf faellt danach still aus der Kandidatenmenge - der Job ueberspringt ihn,
+     * Ein gelöschtes Rennen entwertet die Anwahl (`on delete set null`), statt das Löschen zu
+     * blockieren. Der Lauf fällt danach still aus der Kandidatenmenge - der Job überspringt ihn,
      * statt am fehlenden Rennen zu scheitern.
      */
     @Test

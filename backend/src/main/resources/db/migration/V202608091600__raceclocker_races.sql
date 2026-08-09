@@ -30,6 +30,10 @@ create table raceclocker_race
     updated_at    timestamp not null,
     updated_by    uuid references app_user on delete set null,
     constraint chk_raceclocker_race_start_mode check (start_mode in ('INDIVIDUAL', 'WAVE')),
+    -- Eine leere Adresse hat keinen Zweck: Sie würde nicht als „nicht konfiguriert" gelesen,
+    -- sondern abgerufen -- und scheiterte dann mit einem unbrauchbaren URL-Fehler. Der Backfill
+    -- unten filtert sie deshalb schon heraus; diese Bedingung hält sie dauerhaft fern.
+    constraint chk_raceclocker_race_url_not_blank check (btrim(results_url) <> ''),
     -- Zwei Rennen gleichen Namens wären in einem Auswahlfeld nicht unterscheidbar, und genau am
     -- Renntag ist das der Fehler, der weh tut.
     constraint uq_raceclocker_race_event_name unique (event, name),
@@ -64,11 +68,11 @@ with sources as (
            true                          as event_level,
            null::text                    as label
     from event e
-    where e.raceclocker_tt_results_url is not null
+    where nullif(trim(e.raceclocker_tt_results_url), '') is not null
     union all
     select e.id, e.raceclocker_heats_results_url, 'WAVE', true, null::text
     from event e
-    where e.raceclocker_heats_results_url is not null
+    where nullif(trim(e.raceclocker_heats_results_url), '') is not null
     union all
     -- LEFT join, nicht inner: `competition_properties.competition` trägt weder Eindeutigkeit
     -- noch eine Pflicht. Ein Wettkampf ohne Eigenschaftszeile fiele bei einem inneren Join aus
@@ -80,13 +84,13 @@ with sources as (
            coalesce(cp.short_name, cp.identifier)
     from competition c
              left join competition_properties cp on cp.competition = c.id
-    where c.raceclocker_tt_results_url is not null
+    where nullif(trim(c.raceclocker_tt_results_url), '') is not null
     union all
     select c.event, c.raceclocker_heats_results_url, 'WAVE', false,
            coalesce(cp.short_name, cp.identifier)
     from competition c
              left join competition_properties cp on cp.competition = c.id
-    where c.raceclocker_heats_results_url is not null
+    where nullif(trim(c.raceclocker_heats_results_url), '') is not null
 ),
 deduped as (
     select event_id,
