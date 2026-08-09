@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfiguration
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
+import de.lambda9.ready2race.backend.app.eventInfo.control.toLiveMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
@@ -411,6 +412,50 @@ object EventInfoService {
         }
 
         KIO.ok(ApiResponse.ListDto(result))
+    }
+
+    /**
+     * Der Tab „Live" der öffentlichen Ergebnisanzeige: was gerade läuft UND was als nächstes
+     * dran ist, jeder Lauf mit seinem Zustand.
+     *
+     * Zwei bereits erprobte Quellen, keine dritte Abfrage:
+     * - [getRunningMatches] liefert die aktivierten Läufe (PREPARING, RUNNING) samt
+     *   Teilergebnissen - unverändert das, was dieser Tab schon immer zeigte.
+     * - [getUpcomingMatchesForBoard] liefert die anstehenden (UPCOMING, UNSCHEDULED) und bringt
+     *   die 30-Minuten-Nachfrist, die Absage-Markierung, die wartenden Runden und die Einstellung
+     *   `showBreaksOnPublicBoards` unverändert mit. Eine Regel, ein Ort.
+     *
+     * Warum ein eigener Endpoint und kein Schalter an `/running-matches`: der bedient auch den
+     * Block `running` der Athleten-Anzeige. Anstehende Läufe dort hineinzumischen zerstörte die
+     * Blocktrennung, auf der ihre ganze Darstellung aufbaut.
+     *
+     * Die Ergebnisfreigabe bleibt unberührt, und zwar ohne zusätzliche Prüfung: die zweite
+     * Abfrage schließt beendete und vollständig gewertete Läufe per SQL aus und liefert
+     * Mannschaften ohne Platz und ohne Zeit. Ein Lauf, den `PublicResultsVisibility` zurückhalten
+     * soll, kann hier gar nicht entstehen (Riegel und Begründung in [LiveMatchesLogic.merge]).
+     *
+     * Beide Quellen bekommen [limit] einzeln; gedeckelt wird erst nach dem Zusammenführen.
+     */
+    fun getLiveMatches(
+        eventId: UUID,
+        limit: Int,
+    ): App<Nothing, ApiResponse.ListDto<LiveMatchInfo>> = KIO.comprehension {
+        // Einmal je Abruf, nicht je Mannschaft - beide Blöcke lösen zusammen leicht hundert
+        // Vereinsnamen auf, und dieser Endpoint läuft im Viertelminutentakt.
+        val clubShortNames = !clubShortNames()
+
+        val activated = !getRunningMatches(eventId, limit, clubShortNames)
+        val upcoming = !getUpcomingMatchesForBoard(eventId, limit, clubShortNames)
+
+        KIO.ok(
+            ApiResponse.ListDto(
+                LiveMatchesLogic.merge(
+                    activated = activated.data.map { it.toLiveMatchInfo() },
+                    upcoming = upcoming.data.map { it.toLiveMatchInfo() },
+                    limit = limit,
+                )
+            )
+        )
     }
 
     fun getAthleteBoard(eventId: UUID): App<EventInfoProblem, ApiResponse.Dto<AthleteBoardDto>> =

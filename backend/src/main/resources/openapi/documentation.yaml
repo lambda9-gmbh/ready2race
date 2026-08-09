@@ -6085,6 +6085,39 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/info/live-matches:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getLiveMatches
+      description: >-
+        The "live" tab of the public results page: activated matches (PREPARING, RUNNING) together
+        with the upcoming ones, each carrying its derived state. Finished matches and matches whose
+        boats are all scored are deliberately absent - those are results and are governed by
+        Event.publicResultsVisibility through /latest-match-results.
+      parameters:
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        200:
+          description: Live matches retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LiveMatchInfo'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/info/athlete-board:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -13496,6 +13529,65 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardResult'
+
+    LiveMatchInfo:
+      type: object
+      description: >-
+        A match in the "live" tab of the public results page - either activated or upcoming. The
+        state is carried by `status` alone; there is deliberately no `activatedAt` or `finishedAt`
+        next to it, so the display cannot derive a second truth of its own.
+      required:
+        - matchId
+        - competitionName
+        - status
+        - executionOrder
+        - teams
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Null for a programme placeholder (FREE slot), which belongs to no competition.
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/MatchStatusDto'
+        executionOrder:
+          type: integer
+        cancelled:
+          type: boolean
+          default: false
+          description: >-
+            The match does not take place. It stays in the list on purpose - a match that vanishes
+            without a trace is indistinguishable from a display error. `teams` is empty then.
+        pendingRound:
+          type: boolean
+          default: false
+          description: Placeholder for a round that has not been created yet; `teams` is empty then.
+        name:
+          type: string
+          nullable: true
+          description: Name of a programme item (FREE slot such as "lunch break"), null for real matches.
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunningMatchTeamInfo'
 
     RunningMatchInfo:
       type: object
