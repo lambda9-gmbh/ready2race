@@ -12,6 +12,9 @@ data class EventScheduleSlotDto(
     val durationMinutes: Int?,
     val competitionId: UUID?,
     val competitionName: String?,
+    /** Das Kürzel des Wettkampfs (competition_properties.identifier) - im Zeitplan-Tab dem
+     * Slot-Namen vorangestellt. Null für freie Slots ohne Wettkampf. */
+    val competitionIdentifier: String?,
     val roundName: String?,
     val matchName: String?,
     val matchId: UUID?,
@@ -29,6 +32,7 @@ data class UnplannedSetupMatchDto(
     val setupMatchId: UUID,
     val competitionId: UUID,
     val competitionName: String,
+    val competitionIdentifier: String?,
     val roundName: String,
     val matchName: String?,
 )

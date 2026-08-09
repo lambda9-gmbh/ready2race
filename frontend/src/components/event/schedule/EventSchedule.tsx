@@ -422,35 +422,60 @@ const EventSchedule = () => {
                                                 {format(new Date(slot.startTime), t('format.time'))}
                                             </TableCell>
                                             <TableCell>
+                                                {/* Der Sprung zur Durchführung sitzt immer am rechten
+                                                    Rand der Spalte - und zwar auf einem festen Platz,
+                                                    der auch dann bleibt, wenn eine Zeile keinen Lauf
+                                                    hat. Sonst wandert das Symbol mit der Textlänge
+                                                    jeder Zeile mit. */}
                                                 <Stack
                                                     direction={'row'}
-                                                    spacing={0.5}
-                                                    alignItems={'center'}>
-                                                    <span>{slotLabel(slot)}</span>
-                                                    {slot.matchId && (
-                                                        <Tooltip
-                                                            title={t('event.schedule.goToExecution')}>
-                                                            <Link
-                                                                to={
-                                                                    '/event/$eventId/competition/$competitionId'
-                                                                }
-                                                                params={{
-                                                                    eventId,
-                                                                    competitionId: slot.competitionId!,
-                                                                }}
-                                                                search={{tab: 'execution'}}
-                                                                style={{
-                                                                    display: 'inline-flex',
-                                                                    color: 'inherit',
+                                                    spacing={1}
+                                                    alignItems={'center'}
+                                                    justifyContent={'space-between'}>
+                                                    <Box component={'span'}>
+                                                        {slot.competitionIdentifier && (
+                                                            <Box
+                                                                component={'span'}
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    mr: 1,
                                                                 }}>
-                                                                <IconButton
-                                                                    size={'small'}
-                                                                    component={'span'}>
-                                                                    <OpenInNew fontSize={'small'} />
-                                                                </IconButton>
-                                                            </Link>
-                                                        </Tooltip>
-                                                    )}
+                                                                {slot.competitionIdentifier}
+                                                            </Box>
+                                                        )}
+                                                        {slotLabel(slot)}
+                                                    </Box>
+                                                    <Box sx={{...actionSlotSx, flexShrink: 0}}>
+                                                        {slot.matchId && (
+                                                            <Tooltip
+                                                                title={t(
+                                                                    'event.schedule.goToExecution',
+                                                                )}>
+                                                                <Link
+                                                                    to={
+                                                                        '/event/$eventId/competition/$competitionId'
+                                                                    }
+                                                                    params={{
+                                                                        eventId,
+                                                                        competitionId:
+                                                                            slot.competitionId!,
+                                                                    }}
+                                                                    search={{tab: 'execution'}}
+                                                                    style={{
+                                                                        display: 'inline-flex',
+                                                                        color: 'inherit',
+                                                                    }}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        component={'span'}>
+                                                                        <OpenInNew
+                                                                            fontSize={'small'}
+                                                                        />
+                                                                    </IconButton>
+                                                                </Link>
+                                                            </Tooltip>
+                                                        )}
+                                                    </Box>
                                                 </Stack>
                                             </TableCell>
                                             <TableCell>
@@ -599,7 +624,16 @@ const EventSchedule = () => {
                             <TableBody>
                                 {unplannedSetupMatches.map(match => (
                                     <TableRow key={match.setupMatchId}>
-                                        <TableCell>{match.competitionName}</TableCell>
+                                        <TableCell>
+                                            {match.competitionIdentifier && (
+                                                <Box
+                                                    component={'span'}
+                                                    sx={{color: 'text.secondary', mr: 1}}>
+                                                    {match.competitionIdentifier}
+                                                </Box>
+                                            )}
+                                            {match.competitionName}
+                                        </TableCell>
                                         <TableCell>{match.roundName}</TableCell>
                                         <TableCell>{match.matchName ?? '-'}</TableCell>
                                         {canEdit && (

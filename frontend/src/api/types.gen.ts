@@ -1248,6 +1248,10 @@ export type EventScheduleSlotDto = {
     durationMinutes?: number | null
     competitionId?: string | null
     competitionName?: string | null
+    /**
+     * The competition's short identifier (Kürzel) - shown in front of the slot label in the schedule tab
+     */
+    competitionIdentifier?: string | null
     roundName?: string | null
     matchName?: string | null
     matchId?: string | null
@@ -2592,6 +2596,10 @@ export type UnplannedSetupMatchDto = {
     setupMatchId: string
     competitionId: string
     competitionName: string
+    /**
+     * The competition's short identifier (Kürzel)
+     */
+    competitionIdentifier?: string | null
     roundName: string
     matchName?: string | null
 }

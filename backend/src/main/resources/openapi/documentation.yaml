@@ -13139,6 +13139,10 @@ components:
         competitionName:
           type: string
           nullable: true
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's short identifier (Kürzel) - shown in front of the slot label in the schedule tab"
         roundName:
           type: string
           nullable: true
@@ -13186,6 +13190,10 @@ components:
           format: uuid
         competitionName:
           type: string
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's short identifier (Kürzel)"
         roundName:
           type: string
         matchName:
