@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
-import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.tailwind.core.KIO
@@ -78,12 +77,11 @@ object AutoRoundProgressionService {
             }
 
             // Wettkämpfe einer Challenge-Veranstaltung kennen keine Runden; createNewRound
-            // verweigert dort ohnehin. checkIsChallengeEvent liefert EventError, kein Throwable -
-            // orDie() verlangt Throwable, deshalb hier auf eine RuntimeException abgebildet: Eine
-            // fehlende Veranstaltung ist an dieser Stelle ein Programmfehler, kein Betriebsfall.
-            val isChallenge = !EventService.checkIsChallengeEvent(eventId)
-                .mapError { RuntimeException("Veranstaltung $eventId nicht gefunden: $it") }
-                .orDie()
+            // verweigert dort ohnehin. EventRepo.isChallengeEvent liefert - anders als
+            // EventService.checkIsChallengeEvent - keinen Fehlerkanal, sondern schlicht `null`, wenn
+            // es die Veranstaltung nicht (mehr) gibt. Das behandelt diese Automatik wie jeden anderen
+            // Abbruchgrund hier: still. Ein Defekt darf den Aufrufer nie mitreißen.
+            val isChallenge = !EventRepo.isChallengeEvent(eventId).orDie() ?: false
             if (isChallenge) {
                 return@comprehension KIO.unit
             }

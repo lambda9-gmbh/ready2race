@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.competitionExecution
 
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionService
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
+import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
@@ -132,6 +133,40 @@ class AutoRoundProgressionServiceTest {
 
         val matches = !COMPETITION_MATCH.select { COMPETITION_SETUP_MATCH.eq(seed.secondRoundSetupMatchId) }
         assertEquals(0, matches.size)
+    }
+
+    /**
+     * Die acht Tests oben rufen alle direkt [AutoRoundProgressionService.progressIfRoundComplete]
+     * auf - keiner davon geht über eine der fünf Stellen, an denen die Automatik tatsächlich
+     * eingebaut ist. Ein vertauschter oder vergessener Aufruf an einer dieser Stellen würde von
+     * keinem der acht Tests bemerkt. Dieser Test belegt stattdessen den Hauptweg von außen: Ein
+     * Schiedsrichter beendet im Dashboard den letzten offenen Lauf der ersten Runde, und die
+     * Folgerunde steht, ohne dass der Test die Automatik selbst anfasst.
+     *
+     * Von den übrigen vier Einbaustellen deckt `updateMatchResult` der Korrekturtest weiter unten
+     * ab. `setSlotSkipped`, `updateMatchResultByFile` und `applyRaceClockerRows` bleiben bewusst
+     * ohne eigenen Verdrahtungstest - das ist eine bekannte Lücke, kein Versehen.
+     */
+    @Test
+    fun finishingTheLastMatchFromTheRefereeDashboardBringsTheNextRound() = testComprehension {
+        val seed = seedTwoRoundCompetition(eventAutoCreate = true)
+        finishFirstRound(seed, at = LocalDateTime.of(2026, 8, 14, 10, 30))
+        // Nur den zweiten Lauf wieder öffnen - der erste bleibt gewertet, damit das
+        // Schiedsrichter-Dashboard gleich den letzten fehlenden Lauf beendet.
+        !COMPETITION_MATCH.update(
+            f = { finishedAt = null },
+            condition = { COMPETITION_SETUP_MATCH.eq(seed.firstRoundMatchIds.last()) },
+        )
+
+        val beforeFinish = !COMPETITION_MATCH.select { COMPETITION_SETUP_MATCH.eq(seed.secondRoundSetupMatchId) }
+        assertEquals(0, beforeFinish.size, "Vor dem letzten Lauf darf es noch kein Finale geben")
+
+        !LiveDashboardService.finishMatch(seed.eventId, seed.firstRoundMatchIds.last(), seed.userId)
+
+        val finalMatch = !COMPETITION_MATCH.selectOne { COMPETITION_SETUP_MATCH.eq(seed.secondRoundSetupMatchId) }
+        assertNotNull(finalMatch, "Das Finale hätte über das Dashboard-Beenden gesetzt werden müssen")
+        assertNull(finalMatch.activatedAt)
+        assertNull(finalMatch.startedAt)
     }
 
     /** Der Wettkampf schlägt die Veranstaltung — in beide Richtungen. */

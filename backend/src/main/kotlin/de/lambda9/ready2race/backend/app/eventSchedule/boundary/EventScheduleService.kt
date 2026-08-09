@@ -259,6 +259,14 @@ object EventScheduleService {
             // Überspringen kann genau den Slot betreffen, an dem die Kette wartet — danach prüfen,
             // ob sie weiterlaufen kann.
             !ScheduleChainService.resumeIfParked(eventId, userId)
+
+            // Ein abgesagter Lauf kann der letzte fehlende der Runde sein. Ein freier Slot oder ein
+            // Programmpunkt trägt keinen Lauf (competition_setup_match ist null) und kann die
+            // Automatik dann auch nicht auslösen.
+            val setupMatchId = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
+            if (setupMatchId != null) {
+                !AutoRoundProgressionService.progressAfterMatch(eventId, setupMatchId, userId)
+            }
         } else {
             if (matchStartedAt != null) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
@@ -268,14 +276,6 @@ object EventScheduleService {
                 skippedAt = null
                 skippedBy = null
             }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
-        }
-
-        // Ein abgesagter Lauf kann der letzte fehlende der Runde sein. Ein freier Slot oder ein
-        // Programmpunkt trägt keinen Lauf (competition_setup_match ist null) und kann die
-        // Automatik dann auch nicht auslösen.
-        val setupMatchId = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
-        if (setupMatchId != null) {
-            !AutoRoundProgressionService.progressAfterMatch(eventId, setupMatchId, userId)
         }
 
         noData
