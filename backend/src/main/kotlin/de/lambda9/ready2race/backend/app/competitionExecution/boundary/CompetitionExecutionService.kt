@@ -1061,10 +1061,27 @@ object CompetitionExecutionService {
         //
         // Übersprungene Zeilen bleiben in der DB unangetastet: eine vom Schiedsrichter von Hand
         // eingetragene Ausscheidung darf ein Nachziehen des Laufs nicht wieder löschen.
+        // Lanes are taken from every assigned row, not just the timed ones: a heat is usually pulled
+        // while boats are still on the water, and numbering only the finishers would push the rest
+        // out of their lanes.
+        //
+        // Sie stehen deshalb VOR dem Ergebnis-Riegel darunter. Eine Bahn hängt an der Startliste,
+        // nicht an einer Zeit: Sobald in RaceClocker umsortiert wird, gilt die neue Reihenfolge -
+        // und genau davor, wenn der Lauf am Start steht und noch keine Zeile ein Ergebnis trägt,
+        // will der Schiedsrichter sie auf dem Board sehen. Stand die Vergabe hinter dem Riegel,
+        // kam ein Bahnentausch nie an, solange kein Boot durchs Ziel war (beobachtet am 09.08.2026
+        // an der CRF-Testregatta: der Abruf meldete still "keine Ergebnisse" und ließ die Bahnen
+        // stehen).
+        !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, matchedRows) -> matchedRows.single() }, userId)
+
         val withResult = rowsByTeam.mapNotNull { (registrationId, matchedRows) ->
             matchedRows.single().takeIf { it.hasResult }?.let { registrationId to it }
         }
-        if (withResult.isEmpty()) return@comprehension KIO.fail(RaceClockerError.NoResults(target.waveName))
+        // Noch kein Ergebnis im Feed ist der Normalfall eines Laufs am Start und kein Fehler mehr:
+        // Die Bahnen oben SIND das Ergebnis dieses Abrufs. Ein `KIO.fail` würde sie hier wieder
+        // verwerfen - der Hintergrund-Job umschließt diese Funktion mit `transact()`, und der
+        // Endpunkt hängt in der Transaktion von `respondComprehension`.
+        if (withResult.isEmpty()) return@comprehension noData
 
         // Externe Zeitnahme ist Quelle der Wahrheit: die früheste von RaceClocker gemessene
         // Startzeit unter den zugeordneten Booten überschreibt started_at bedingungslos, auch wenn
@@ -1081,11 +1098,6 @@ object CompetitionExecutionService {
         }
 
         !prepareForNewPlaces(matchId)
-
-        // Lanes are taken from every assigned row, not just the timed ones: a heat is usually pulled
-        // while boats are still on the water, and numbering only the finishers would push the rest
-        // out of their lanes.
-        !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, matchedRows) -> matchedRows.single() }, userId)
 
         val parsed = withResult.map { (registrationId, row) ->
             ParsedTeamResult(

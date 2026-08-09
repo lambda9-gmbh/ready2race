@@ -352,9 +352,12 @@ object RaceClockerPollService {
      * keine trägt ein verwertbares Ergebnis. Das ist der Zustand fast jedes Laufs über fast seine
      * ganze Dauer. Als Fehlercode gespeichert stünde in Durchführungs-Tab und Live-Dashboard bei
      * jedem laufenden Lauf eine orange Warnung - und eine Warnung, die immer leuchtet, bringt dem
-     * Büro bei, auch die eine zu übersehen, auf die es ankommt. Geschrieben wurde dabei nichts
-     * (die Prüfung steht in `applyRaceClockerRows` vor allen Schreibvorgängen), der Fingerabdruck
-     * darf also gemerkt werden und erspart den erfolglosen Versuch im nächsten Takt.
+     * Büro bei, auch die eine zu übersehen, auf die es ankommt.
+     *
+     * Seit die Bahnvergabe vor dem Ergebnis-Riegel steht, endet dieser Fall in
+     * `applyRaceClockerRows` allerdings mit Erfolg statt mit einem Fehler - die übernommenen Bahnen
+     * sollen die Transaktion überleben. Der Zweig hier greift deshalb nicht mehr; er bleibt stehen,
+     * damit ein wieder eingeführter NoResults-Pfad nicht unbemerkt zur roten Warnung wird.
      *
      * Alles andere wandert als Code in die Spalte. Fehler außerhalb von [RaceClockerError] haben im
      * Frontend keine eigene Übersetzung und erscheinen dort als "Unerwarteter Fehler" - deshalb
