@@ -121,6 +121,44 @@ class ClubCompositionTest {
     }
 
     /**
+     * Die Regel, aus der jede Kette gebaut wird. Sie steht hier und nicht in den Abfragen, weil
+     * jede Anzeige sie sonst einzeln richtig treffen müsste - und weil in den Abfragen der
+     * *meldende* Verein danebensteht und sich anbietet.
+     */
+    @Test
+    fun aGuestRowerWearsTheirFreeTextClub() {
+        assertEquals(
+            "Marburger Ruderverein von 1911 e.V.",
+            ClubComposition.clubWorn(
+                external = true,
+                externalClubName = "Marburger Ruderverein von 1911 e.V.",
+                ownClubName = "Erster Kieler Ruder-Club von 1862 e.V.",
+            ),
+        )
+    }
+
+    /**
+     * Bei einem Mitglied zählt der eigene Verein - auch wenn an der Person noch ein alter
+     * Freitext hängt, und ausdrücklich nie der Verein, der die Mannschaft gemeldet hat.
+     */
+    @Test
+    fun aMemberWearsTheirOwnClub() {
+        assertEquals(
+            "Ruderclub Nürtingen",
+            ClubComposition.clubWorn(
+                external = false,
+                externalClubName = "irgendwas Altes",
+                ownClubName = "Ruderclub Nürtingen",
+            ),
+        )
+        // `external` ist in der Datenbank nullable; ohne Kennzeichen gilt "Mitglied".
+        assertEquals(
+            "Ruderclub Nürtingen",
+            ClubComposition.clubWorn(external = null, externalClubName = null, ownClubName = "Ruderclub Nürtingen"),
+        )
+    }
+
+    /**
      * Ein Boot, dessen Crew noch gar nicht steht, liefert eine leere Zeile - was die Anzeige damit
      * macht, entscheidet die Anzeige, nicht dieser Baustein.
      */

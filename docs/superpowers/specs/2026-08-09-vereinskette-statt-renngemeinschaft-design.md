@@ -2,7 +2,7 @@
 
 **Datum:** 09.08.2026
 **Branch:** `feature/crf-2026`
-**Belegte Migrationsnummer:** `V202608091200`
+**Belegte Migrationsnummern:** `V202608091200`, `V202608091300`
 
 ## Problem
 
@@ -83,6 +83,10 @@ gängige Vereinstypen werden abgekürzt (`Ruderclub` → `RC`, `Rudergesellschaf
 zieht **nach Kotlin um**, weil Board, Athleten-Anzeige und Pflegeseite jetzt dieselbe Regel
 brauchen; die TS-Fassung samt ihrem Test entfällt.
 
+Die Regeln selbst sind **konfigurierbar** und stehen nicht mehr im Code — siehe
+„Kürzungsregeln" weiter unten. `Ruderclub → RC` ist Sportart-Wissen, und ready2race ist keine
+Rudersoftware.
+
 ### Verein je Athlet
 
 ```
@@ -151,15 +155,71 @@ Weiterreichung in `eventInfo/control/Conversions.kt`.
 `AwardCertificateService.kt:135` setzt statt `singletonOrFallback(...)` die **volle** Kette ein,
 mit ` / ` verbunden, ohne jede Kürzung.
 
-**Offener Vorbehalt:** bei fünf Vereinen sind das rund 130 Zeichen in einem Feld, das bisher einen
-Vereinsnamen erwartet hat. Die Vorlagen haben feste Textkästen. Ob das Feld umbricht oder
-überläuft, wird **nicht** blind eingebaut, sondern im Urkunden-Editor nachgesehen und als
-Handtest im Testkatalog geführt.
+**Nachgemessen am 09.08.** (PDFBox, Helvetica, A4 = 595,3 pt breit): echte CRF-Namen ergeben nicht
+130, sondern **158 Zeichen**. Eine fünfgliedrige Kette ist bei 14 pt **1012 pt** breit — das
+1,7-fache der Seite, bei 18 pt das 2,2-fache. Der PDF-Pfad bricht nicht um, kürzt nicht und
+verkleinert nicht; bei zentrierter Ausrichtung läuft der Text über **beide** Ränder hinaus. Der
+DOCX-Pfad bricht dagegen um, weil Word das selbst tut — die beiden Formate liefen auseinander. Und
+der Vorlagen-Editor zeigte `whiteSpace: nowrap; overflow: hidden`: eine saubere Zeile an der
+Kastenkante, während der Druck über die Seite lief.
+
+**Entscheidung: Umbruch an den Vereinsgrenzen, nicht an Wortgrenzen.** Ein Vereinsname wird nie
+zerrissen; umgebrochen wird an den ` / `-Trennern. Die Zerlegung passiert **vor** dem Rendern an
+einer Stelle, die beide Renderer teilen — so viele vollständige Vereinsnamen je Zeile, wie in den
+Kasten passen, gemessen mit den Schriftmaßen der PDF-Seite. Der DOCX-Pfad bekommt dieselben fertigen
+Zeilen und muss im Normalfall gar nicht mehr umbrechen; damit stimmen beide Formate wieder überein.
+
+Rückfallebene: passt ein einzelner Vereinsname allein nicht in die Breite — Kandidat aus den echten
+Daten ist `Ruder-Club Allemannia von 1866 e.V. - Leuphana Universität Lüneburg` —, wird für diese
+eine Zeile an Wortgrenzen weitergebrochen.
+
+Die Editor-Vorschau muss den Umbruch zeigen. Eine Vorschau, die den Überlauf verschweigt, ist
+schlimmer als keine.
+
+## Kürzungsregeln
+
+*Nachtrag vom 09.08.2026: die Heuristik gehört konfiguriert, nicht einkompiliert.*
+
+Migration `V202608091300__club_name_rules.sql`, Tabelle `club_name_rule`:
+
+| Spalte | |
+|---|---|
+| `id` | uuid, PK |
+| `kind` | `ABBREVIATION` \| `REMOVE_TERM` \| `REMOVE_YEARS` \| `REMOVE_BRACKETED` |
+| `term` | text, null bei den beiden strukturellen Arten |
+| `replacement` | text, nur bei `ABBREVIATION` |
+| `sort_order` | int — die Reihenfolge entscheidet, `Ruderverein` vor `Verein` |
+| Audit-Spalten | wie überall |
+
+**Keine regulären Ausdrücke in der Oberfläche.** Gepflegt werden Wortpaare
+(`Bestandteil → Kürzel`, wortgenau, Groß-/Kleinschreibung egal) und eine Streichliste literaler
+Bestandteile. Ein Tippfehler in einem Muster könnte sonst die Anzeige aller Vereine zerlegen, ein
+unglücklich verschachteltes Muster den Server hängen — und die Seite bedient jemand, der eine
+Regatta organisiert, kein Backend.
+
+Die beiden strukturellen Regeln lassen sich nicht als Wort ausdrücken und sind deshalb **Schalter**
+statt Listeneinträge: „Gründungsjahre entfernen" (`von 1889`, `v. 1899`, nachgestellte Jahreszahl)
+und „Klammerzusätze mit Zahl entfernen" (`(1879/83)`). Technisch sind es Zeilen der Arten
+`REMOVE_YEARS` / `REMOVE_BRACKETED` ohne `term` — vorhanden heißt aktiv. Damit braucht es keine
+zusätzliche Einstellungstabelle.
+
+**Ausgeliefert wird nur das Sportartübergreifende**: die Rechtsformen (`e.V.`, `e. V.`, `eV`) als
+`REMOVE_TERM` und beide Schalter. Die elf Vereinstyp-Kürzel (`Ruderclub → RC`,
+`Rudergesellschaft → RG`, `Segelverein → SV`, …) kommen als Seed-Datei unter `docs/seeds/` für
+bestehende Installationen — für die CRF 2026 sieht damit alles aus wie heute, ohne dass Rudern im
+Produktkern steht.
+
+**Die Regeln wirken ausschließlich auf die angezeigte Kurzform, nie auf `ClubNameKey`.** Der Key
+ist Primärschlüssel der gepflegten Kurzformen; würde eine Regeländerung ihn verschieben, verlören
+alle gepflegten Einträge still ihre Zuordnung. Seine Normalisierung bleibt deshalb fest
+einkompiliert — sie beantwortet „ist das derselbe Verein", nicht „wie schreibe ich ihn kurz".
 
 ## Pflegeseite
 
 Ort: Stammdaten → **Vereinskurzformen**, global (Vereinsnamen hängen nicht an einer
-Veranstaltung).
+Veranstaltung). Zwei Abschnitte auf einer Seite: oben die Kürzungsregeln, darunter die Liste der
+Vereinsnamen — die sich sofort mitverändert, wenn oben eine Regel angefasst wird. Zwei getrennte
+Orte für dieselbe Sache wären schlechter, weil die Wirkung einer Regel sonst unsichtbar bliebe.
 
 Rechte: Lesen mit `ReadClubGlobal`, Ändern mit `UpdateClubGlobal` — **kein neues Privileg**. Neue
 Privilegien landen erfahrungsgemäß nur an der Admin-Rolle und fehlen allen anderen still

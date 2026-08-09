@@ -151,7 +151,10 @@
       "step3": {
         "title": "Værdimappinger",
         "info": "Konfigurer, hvordan værdier i din CSV skal fortolkes.",
-        "valueMappings": "Værdimappinger"
+        "valueMappings": "Værdimappinger",
+        "valueWithCount": "{{value}} ({{count}} rækker)",
+        "selectedCount": "{{selected}} af {{total}} værdier valgt",
+        "nothingSelected": "Intet valgt — alle rækker tæller"
       },
       "error": {
         "noConfig": "Konfigurationen er ufuldstændig",
@@ -661,6 +664,12 @@
     "competition": {
       "competition": "Konkurrence",
       "competitions": "Konkurrencer",
+      "navigation": {
+        "backToEvent": "Tilbage til arrangementet",
+        "filter": "Filtrér",
+        "showShortNames": "Vis korte navne",
+        "showLongNames": "Vis lange navne"
+      },
       "noCompetitionsAvailable": "Ingen konkurrencer tilgængelige",
       "identifier": "Identifikator",
       "name": "Navn",
@@ -1252,7 +1261,7 @@
       "yearsColName": "Kolonne med årgang",
       "clubColName": "Kolonne med klubnavn",
       "requirementColName": "Kolonne med deltagelsesbetingelse",
-      "requirementIsValidValue": "Gyldig værdi for deltagelsesbetingelse",
+      "requirementIsValidValues": "Gyldige værdier for deltagelsesbetingelse",
       "participantsOpen": "Åben",
       "participantsApproved": "Kontrolleret",
       "tableHint": {
@@ -1267,6 +1276,15 @@
         "content": "Skal godkendelsen af den kontrollerede deltagelsesbetingelse virkelig annulleres?",
         "ok": "Ja",
         "cancel": "Nej"
+      },
+      "openExportAction": "Eksportér manglende betingelser",
+      "openExport": {
+        "title": "Eksportér manglende betingelser",
+        "description": "Opretter et regneark over alle tilmeldte, der stadig mangler en betingelse, sorteret efter klub, så de berørte klubber kan kontaktes. Deltagere uden manglende betingelser er ikke med.",
+        "requirement": "Betingelse",
+        "allRequirements": "Alle aktive betingelser",
+        "submit": "Eksportér",
+        "error": "Eksporten kunne ikke oprettes."
       }
     },
     "action": {
@@ -1610,7 +1628,9 @@
         "failed": "Udgået",
         "failedShort": "DNF",
         "onWaterAt": "på vandet {{time}}",
-        "notOnWater": "Ikke på vandet"
+        "notOnWater": "Ikke på vandet",
+        "clubs": "Klubber",
+        "crew": "Besætning"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",
@@ -1652,6 +1672,8 @@
     "schedule": {
       "tab": "Tidsplan",
       "slot": "Slot",
+      "showShortNames": "Vis korte navne",
+      "showFullNames": "Vis fulde navne",
       "addSlot": "Tilføj slot",
       "slotType": "Type",
       "freeSlot": "Fri slot",

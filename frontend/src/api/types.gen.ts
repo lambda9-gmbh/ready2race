@@ -218,7 +218,14 @@ export type AthleteBoardResultTeam = {
      * the nth team of this club in the competition - only shown when teamName is missing
      */
     teamNumber?: number | null
-    clubName?: string | null
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form; falls back to the registering club when no crew is recorded
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     teamName?: string | null
     timeString?: string | null
     /**
@@ -243,7 +250,14 @@ export type AthleteBoardTeam = {
      * the nth team of this club in the competition - only shown when teamName is missing
      */
     teamNumber?: number | null
-    clubName?: string | null
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form; falls back to the registering club when no crew is recorded
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     teamName?: string | null
     participants: Array<AthleteBoardParticipant>
     /**
@@ -1397,6 +1411,14 @@ export type EventScheduleSlotDto = {
     durationMinutes?: number | null
     competitionId?: string | null
     competitionName?: string | null
+    /**
+     * The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab
+     */
+    competitionShortName?: string | null
     roundName?: string | null
     matchName?: string | null
     matchId?: string | null
@@ -1746,6 +1768,18 @@ export type LatestMatchResultInfo = {
     teams: Array<MatchResultTeamInfo>
 }
 
+export type LiveDashboardCrewMemberDto = {
+    lastName: string
+    /**
+     * Short form of the club this person wears - the same rule as the chain in clubsShort
+     */
+    clubShort?: string | null
+    /**
+     * Abbreviated role, e.g. Ste. for Steuerleute
+     */
+    role?: string | null
+}
+
 export type LiveDashboardDto = {
     matches: Array<LiveDashboardMatchDto>
     /**
@@ -1762,6 +1796,14 @@ export type LiveDashboardMatchDto = {
     state: LiveDashboardMatchState
     competitionId: string
     competitionName: string
+    /**
+     * The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname, e.g. 'CM 4x+')
+     */
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -1801,7 +1843,10 @@ export type LiveDashboardParticipantDto = {
     namedRole?: string | null
     year?: number | null
     gender?: string | null
-    externalClubName?: string | null
+    /**
+     * The club this person wears - the free text of a guest rower, otherwise the name of their own club. Not the registering club, which is the same for the whole team
+     */
+    clubName?: string | null
     /**
      * Name of the participant this one replaced when substituted into the round
      */
@@ -1830,8 +1875,22 @@ export type LiveDashboardTeamDetailDto = {
 export type LiveDashboardTeamDto = {
     teamId: string
     teamName?: string | null
+    /**
+     * The registering club. Kept because it carries the invoice; no display uses it any more
+     */
     clubName?: string | null
-    actualClubName?: string | null
+    /**
+     * The clubs of the crew in boat order, short forms, joined by ' / '
+     */
+    clubsShort: string
+    /**
+     * The same chain in full club names
+     */
+    clubsFull: string
+    /**
+     * The crew in short form; only filled when the request asked for it with crew=true
+     */
+    crew?: Array<LiveDashboardCrewMemberDto> | null
     startNumber?: number | null
     place?: number | null
     time?: string | null
@@ -1860,7 +1919,7 @@ export type LiveDashboardTeamDto = {
     onWaterSeverity: EffectiveSeverity
     substituted: boolean
     /**
-     * When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known
+     * When the boat went on the water (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known
      */
     onWaterAt?: string | null
 }
@@ -1914,7 +1973,14 @@ export type MatchResultTeamInfo = {
     teamName?: string | null
     teamNumber?: number | null
     clubName?: string | null
-    actualClubName?: string
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     place?: number
     timeString?: string
     failed: boolean
@@ -2190,7 +2256,10 @@ export type ParticipantRequirementCheckForEventConfigDto = {
     clubColName?: string
     noHeader: boolean
     requirementColName?: string
-    requirementIsValidValue?: string
+    /**
+     * Values of the requirement column that count as fulfilled. Several are allowed - the DRV list carries both "ja" and "erweitert". Empty or absent means every row counts, which is also what an unmapped requirement column does.
+     */
+    requirementIsValidValues?: Array<string>
 }
 
 export type ParticipantRequirementCheckForEventUpsertDto = {
@@ -2305,6 +2374,14 @@ export type PendingSlotDto = {
     startTime: string
     name?: string | null
     competitionName?: string | null
+    /**
+     * The competition's race number (Rennnummer) - null for program items
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname) - null for program items
+     */
+    competitionShortName?: string | null
     roundName?: string | null
     matchName?: string | null
 }
@@ -2541,7 +2618,14 @@ export type RunningMatchTeamInfo = {
     teamNumber?: number | null
     startNumber?: number | null
     clubName?: string | null
-    actualClubName?: string
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     currentScore?: number | null
     currentPosition?: number | null
     /**
@@ -2863,6 +2947,14 @@ export type UnplannedSetupMatchDto = {
     setupMatchId: string
     competitionId: string
     competitionName: string
+    /**
+     * The competition's race number (Rennnummer)
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname)
+     */
+    competitionShortName?: string | null
     roundName: string
     matchName?: string | null
 }
@@ -2927,7 +3019,14 @@ export type UpcomingMatchTeamInfo = {
     teamNumber?: number | null
     startNumber?: number | null
     clubName?: string | null
-    actualClubName?: string
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     participants: Array<UpcomingMatchParticipantInfo>
 }
 
@@ -5216,6 +5315,22 @@ export type GetActiveParticipantRequirementsForEventError =
     | ApiError
     | UnprocessableEntityError
 
+export type ExportOpenParticipantRequirementsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Limits the export to a single requirement.
+         */
+        requirementId?: string
+    }
+}
+
+export type ExportOpenParticipantRequirementsResponse = Blob | File
+
+export type ExportOpenParticipantRequirementsError = BadRequestError | ApiError
+
 export type ActivateParticipantRequirementForEventData = {
     path: {
         eventId: string
@@ -6367,6 +6482,10 @@ export type GetLiveDashboardData = {
         eventId: string
     }
     query?: {
+        /**
+         * Fills crew per team - last name, short club form and role. Only set from a window wide enough to show it; the payload of a phone stays unchanged. Defaults to false.
+         */
+        crew?: boolean
         /**
          * LIVE returns the running matches, or the next upcoming one if none is running. Defaults to ALL.
          */

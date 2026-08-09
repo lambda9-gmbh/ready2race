@@ -90,17 +90,19 @@ object LiveDashboardLogic {
      */
     /**
      * Wann ist die Mannschaft aufs Wasser gegangen? Ein Boot gilt als "auf dem Wasser", wenn
-     * JEDE bekannte Person der Crew zuletzt ausgecheckt ist (letzter Scan = EXIT am Steg) -
-     * dann zählt der späteste dieser Scans als Ablegezeit. Fehlt auch nur ein Scan oder ist
-     * jemand wieder eingecheckt, ist das Boot nicht (mehr) vollständig draußen -> null.
-     * Ohne bekannte Crew lässt sich nichts belegen -> ebenfalls null; die Anzeige behandelt
-     * null bei aktivem Lauf als Fehler, denn genau dann muss das Boot draußen sein.
+     * JEDE bekannte Person der Crew zuletzt eingecheckt ist (letzter Scan = ENTRY am Steg) -
+     * dann zählt der späteste dieser Scans als Ablegezeit. Das Einchecken IST die Anmeldung
+     * aufs Wasser; das Auschecken (EXIT) meldet die zurückgekehrte Crew wieder ab. Fehlt auch
+     * nur ein Scan oder ist jemand schon wieder ausgecheckt, ist das Boot nicht (mehr)
+     * vollständig draußen -> null. Ohne bekannte Crew lässt sich nichts belegen -> ebenfalls
+     * null; die Anzeige behandelt null bei aktivem Lauf als Fehler, denn genau dann muss das
+     * Boot draußen sein.
      *
      * [lastScans] enthält je Crew-Mitglied den letzten Scan (scanType zu Zeitpunkt) oder null,
      * wenn die Person nie gescannt wurde.
      */
     fun teamOnWaterAt(lastScans: List<Pair<String, LocalDateTime>?>): LocalDateTime? =
-        if (lastScans.isNotEmpty() && lastScans.all { it?.first == ParticipantScanType.EXIT.name }) {
+        if (lastScans.isNotEmpty() && lastScans.all { it?.first == ParticipantScanType.ENTRY.name }) {
             lastScans.maxOf { it!!.second }
         } else {
             null
@@ -108,6 +110,21 @@ object LiveDashboardLogic {
 
     fun teamHasResult(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
         deregistered || place != null || failed
+
+    /**
+     * Die Rolle, wie sie in der Crew-Zeile der breiten Karte hinter dem Namen steht. Fünf Personen
+     * mit "Nachname · Vereinskurzform (Rolle)" sprengen die Zeile, sobald die Rolle ausgeschrieben
+     * ist - und die Rolle ist von allen drei Angaben die, die am wenigsten unterscheidet.
+     *
+     * Gekürzt wird stumpf auf drei Buchstaben mit Punkt ("Steuerleute" -> "Ste.",
+     * "Senior:in" -> "Sen."), NICHT auf Anfangsbuchstaben: die echten Rollennamen der CRF beginnen
+     * beide mit "S" und wären danach nicht mehr auseinanderzuhalten. Kurze Rollen ("Cox", "Bug")
+     * bleiben, wie sie sind - ein Punkt hinter einem Wort, das nicht kürzer wird, wäre eine Lüge.
+     */
+    fun roleAbbreviation(role: String?): String? {
+        val trimmed = role?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return if (trimmed.length <= 4) trimmed else trimmed.take(3) + "."
+    }
 
     /**
      * Was eine Abfrage im gewünschten Umfang zurückgibt: alles, oder die Läufe, die jetzt eine

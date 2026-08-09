@@ -151,7 +151,10 @@
       "step3": {
         "title": "Wertzuordnungen",
         "info": "Konfigurieren Sie, wie Werte in Ihrer CSV interpretiert werden sollen.",
-        "valueMappings": "Wertzuordnungen"
+        "valueMappings": "Wertzuordnungen",
+        "valueWithCount": "{{value}} ({{count}} Zeilen)",
+        "selectedCount": "{{selected}} von {{total}} Werten ausgewählt",
+        "nothingSelected": "Nichts ausgewählt — es zählen alle Zeilen"
       },
       "error": {
         "noConfig": "Konfiguration ist unvollständig",
@@ -661,6 +664,12 @@
     "competition": {
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
+      "navigation": {
+        "backToEvent": "Zurück zur Veranstaltung",
+        "filter": "Filtern",
+        "showShortNames": "Kurznamen zeigen",
+        "showLongNames": "Lange Namen zeigen"
+      },
       "noCompetitionsAvailable": "Keine Wettkämpfe verfügbar",
       "identifier": "Kennung",
       "name": "Name",
@@ -1252,7 +1261,7 @@
       "yearsColName": "Spalte mit Jahrgang",
       "clubColName": "Spalte mit Vereinsnamen",
       "requirementColName": "Spalte mit Teilnahmebedingung",
-      "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
+      "requirementIsValidValues": "Gültige Werte für Teilnahmebedingung",
       "participantsOpen": "Offen",
       "participantsApproved": "Überprüft",
       "tableHint": {
@@ -1267,6 +1276,15 @@
         "content": "Soll die Bestätigung der überprüften Teilnahmebedingung wirklich storniert werden?",
         "ok": "Ja",
         "cancel": "Nein"
+      },
+      "openExportAction": "Offene Bedingungen exportieren",
+      "openExport": {
+        "title": "Offene Bedingungen exportieren",
+        "description": "Erzeugt eine Excel-Datei mit allen Gemeldeten, denen noch Bedingungen fehlen — nach Verein sortiert, damit sich die betroffenen Vereine anschreiben lassen. Wer nichts offen hat, steht nicht darin.",
+        "requirement": "Bedingung",
+        "allRequirements": "Alle aktiven Bedingungen",
+        "submit": "Exportieren",
+        "error": "Der Export konnte nicht erstellt werden."
       }
     },
     "action": {
@@ -1610,7 +1628,9 @@
         "failed": "Ausgeschieden",
         "failedShort": "DNF",
         "onWaterAt": "aufs Wasser {{time}}",
-        "notOnWater": "Nicht auf dem Wasser"
+        "notOnWater": "Nicht auf dem Wasser",
+        "clubs": "Vereine",
+        "crew": "Mannschaft"
       },
       "requirement": {
         "checkedAt": "Erfüllt am {{time}}",
@@ -1652,6 +1672,8 @@
     "schedule": {
       "tab": "Zeitplan",
       "slot": "Slot",
+      "showShortNames": "Kurznamen zeigen",
+      "showFullNames": "Ausgeschriebene Namen zeigen",
       "addSlot": "Slot hinzufügen",
       "slotType": "Art",
       "freeSlot": "Freier Slot",

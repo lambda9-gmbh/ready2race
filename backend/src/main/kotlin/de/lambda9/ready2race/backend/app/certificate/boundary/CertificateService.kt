@@ -116,6 +116,10 @@ object CertificateService {
                 gapDocumentsDocx(
                     templatePageSizes = templatePageSizes,
                     fontName = fontName,
+                    // Bewusst null, und damit Helvetica-Maße: der PDF-Zweig der Teilnahmeurkunde
+                    // (`document(template, additions)`) bettet ebenfalls keine Vorlagenschrift ein.
+                    // Beide Formate messen so mit derselben Schrift und brechen gleich um.
+                    font = null,
                     certificates = listOf(additions),
                 ).toByteArray()
             )
