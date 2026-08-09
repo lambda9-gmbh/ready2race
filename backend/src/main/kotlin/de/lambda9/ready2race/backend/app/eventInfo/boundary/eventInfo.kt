@@ -60,6 +60,18 @@ fun Route.eventInfo() {
                     EventInfoService.getAthleteBoard(eventId)
                 }
             }
+
+            // Persönliches Dashboard, erreichbar über den QR-Code am Teilnehmerband.
+            // Öffentlich wie die Anzeigen darüber; welche Felder ein anonymer Aufruf sieht,
+            // entscheidet ausschließlich MyEventService.
+            get("/my-event/{qrCode}") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+                    val qrCode = !pathParam("qrCode")
+
+                    MyEventService.getMyEvent(eventId, qrCode)
+                }
+            }
         }
     }
 
