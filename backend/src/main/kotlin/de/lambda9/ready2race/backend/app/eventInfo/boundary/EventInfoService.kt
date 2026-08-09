@@ -46,6 +46,18 @@ object EventInfoService {
 
     private val athleteBoardCache = ConcurrentHashMap<UUID, CachedBoard>()
 
+    // Zwischenspeicher der Live-Liste je Veranstaltung UND [limit]. Derselbe Grund wie beim
+    // Athleten-Board: der Endpoint ist öffentlich, verlangt keine Anmeldung und wird vom
+    // Frontend im 15-Sekunden-Takt abgerufen (usePolledFetch in ResultsLiveMatches.tsx) - bei
+    // 200 Telefonen am Ufer sonst mehrere hundert Abrufe je Sekunde, jeder davon mit
+    // clubShortNames(), zwei Lauf-Abfragen, je EINER Mannschaftsabfrage PRO LAUF sowie
+    // getShowBreaksOnPublicBoards und EventScheduleRepo.getSlots. Der Schlüssel trägt [limit]
+    // mit, weil verschiedene Aufrufer (künftig oder heute schon mit abweichender Seitengröße)
+    // sonst den falsch bemessenen Stand eines anderen bekämen.
+    private data class CachedLiveMatches(val builtAt: LocalDateTime, val dto: ApiResponse.ListDto<LiveMatchInfo>)
+
+    private val liveMatchesCache = ConcurrentHashMap<Pair<UUID, Int>, CachedLiveMatches>()
+
     // Info View Configuration Methods
 
     fun getInfoViews(
@@ -432,7 +444,10 @@ object EventInfoService {
      * Die Ergebnisfreigabe bleibt unberührt, und zwar ohne zusätzliche Prüfung: die zweite
      * Abfrage schließt beendete und vollständig gewertete Läufe per SQL aus und liefert
      * Mannschaften ohne Platz und ohne Zeit. Ein Lauf, den `PublicResultsVisibility` zurückhalten
-     * soll, kann hier gar nicht entstehen (Riegel und Begründung in [LiveMatchesLogic.merge]).
+     * soll, kann hier gar nicht entstehen - der Schutz sitzt in dieser SQL-Auswahl
+     * (`CompetitionMatchRepo.getUpcomingMatchesForBoard`) und im ergebnisfeldlosen
+     * `UpcomingMatchTeamInfo`. Der Filter in [LiveMatchesLogic.merge] ist nur noch eine
+     * Zusicherung über das Ergebnis, kein zusätzlicher Riegel (siehe dortiges KDoc).
      *
      * Beide Quellen bekommen [limit] einzeln; gedeckelt wird erst nach dem Zusammenführen.
      */
@@ -440,22 +455,38 @@ object EventInfoService {
         eventId: UUID,
         limit: Int,
     ): App<Nothing, ApiResponse.ListDto<LiveMatchInfo>> = KIO.comprehension {
-        // Einmal je Abruf, nicht je Mannschaft - beide Blöcke lösen zusammen leicht hundert
-        // Vereinsnamen auf, und dieser Endpoint läuft im Viertelminutentakt.
-        val clubShortNames = !clubShortNames()
+        val now = LocalDateTime.now()
+        val key = eventId to limit
 
-        val activated = !getRunningMatches(eventId, limit, clubShortNames)
-        val upcoming = !getUpcomingMatchesForBoard(eventId, limit, clubShortNames)
+        // Anders als beim Athleten-Board gibt es hier kein je Antwort frisches Feld wie
+        // serverTime - der zwischengespeicherte Stand kann unverändert zurückgehen.
+        val cached = liveMatchesCache[key]
+            ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
 
-        KIO.ok(
-            ApiResponse.ListDto(
+        if (cached != null) {
+            KIO.ok(cached.dto)
+        } else {
+            // Einmal je Aufbau, nicht je Mannschaft - beide Blöcke lösen zusammen leicht hundert
+            // Vereinsnamen auf, und dieser Endpoint läuft im Viertelminutentakt.
+            val clubShortNames = !clubShortNames()
+
+            val activated = !getRunningMatches(eventId, limit, clubShortNames)
+            val upcoming = !getUpcomingMatchesForBoard(eventId, limit, clubShortNames)
+
+            val dto = ApiResponse.ListDto(
                 LiveMatchesLogic.merge(
                     activated = activated.data.map { it.toLiveMatchInfo() },
                     upcoming = upcoming.data.map { it.toLiveMatchInfo() },
                     limit = limit,
                 )
             )
-        )
+
+            // Laufen mehrere Abrufe gleichzeitig in dieses Fenster, rechnen sie doppelt und der
+            // letzte gewinnt - bei Millisekunden Rechenzeit je Eintrag kein Grund für ein Lock.
+            liveMatchesCache[key] = CachedLiveMatches(now, dto)
+
+            KIO.ok(dto)
+        }
     }
 
     fun getAthleteBoard(eventId: UUID): App<EventInfoProblem, ApiResponse.Dto<AthleteBoardDto>> =
