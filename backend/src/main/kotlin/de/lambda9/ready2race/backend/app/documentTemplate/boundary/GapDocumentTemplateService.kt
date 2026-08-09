@@ -306,6 +306,7 @@ object GapDocumentTemplateService {
         // gedruckte Urkunde nicht hält - der Kasten hat feste Maße und der Renderer bricht nicht um.
         clubName = "Ruderklub Flensburg / Rostocker Ruderclub / Ruderclub Nürtingen",
         teamName = "Flensburg I",
+        ratingCategory = "Meisterschaften",
         eventDate = "16.–17. August 2026",
         eventLocation = "Flensburg",
     )

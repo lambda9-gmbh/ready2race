@@ -217,6 +217,14 @@ export type AthleteBoardResult = {
 
 export type AthleteBoardResultTeam = {
     place?: number | null
+    /**
+     * the rating category of this boat; null when it has none
+     */
+    ratingCategory?: RatingCategoryRefDto | null
+    /**
+     * the place within the rating category, counted from 1
+     */
+    categoryPlace?: number | null
     lane: number
     /**
      * the nth team of this club in the competition - only shown when teamName is missing
@@ -917,7 +925,18 @@ export type CompetitionTeamPlaceDto = {
     clubName: string
     actualClubName?: string
     namedParticipants: Array<CompetitionTeamNamedParticipantDto>
+    /**
+     * the competition-wide place from the round logic; still the one printed on the certificate
+     */
     place: number
+    /**
+     * the rating category of this team; null when it has none
+     */
+    ratingCategory?: RatingCategoryRefDto | null
+    /**
+     * the place within the rating category, counted from 1; null for excluded teams
+     */
+    categoryPlace?: number | null
     deregistered: boolean
     deregistrationReason?: string
     excluded: boolean
@@ -1601,6 +1620,7 @@ export type GapDocumentPlaceholderType =
     | 'COMPETITION_SHORT_NAME'
     | 'CLUB_NAME'
     | 'TEAM_NAME'
+    | 'RATING_CATEGORY'
     | 'EVENT_DATE'
     | 'EVENT_LOCATION'
     | 'FREE_TEXT'
@@ -1908,6 +1928,14 @@ export type LiveDashboardTeamDto = {
     crew?: Array<LiveDashboardCrewMemberDto> | null
     startNumber?: number | null
     place?: number | null
+    /**
+     * the rating category of this team; null when it has none
+     */
+    ratingCategory?: RatingCategoryRefDto | null
+    /**
+     * the place within the rating category, counted from 1
+     */
+    categoryPlace?: number | null
     time?: string | null
     failed: boolean
     failedReason?: string | null
@@ -2000,6 +2028,14 @@ export type MatchResultTeamInfo = {
      */
     clubsFull?: string | null
     place?: number
+    /**
+     * the rating category of this boat; null when it has none
+     */
+    ratingCategory?: RatingCategoryRefDto | null
+    /**
+     * the place within the rating category, counted from 1 - this is the number the result list shows
+     */
+    categoryPlace?: number | null
     timeString?: string
     failed: boolean
     failedReason?: string
@@ -2500,6 +2536,22 @@ export type RatingCategoryDto = {
     description?: string
 }
 
+export type RatingCategoryOrderRequest = {
+    /**
+     * Die vollständige Reihenfolge der Wertungskategorien von vorne nach hinten. Nicht genannte, aber zugeordnete Kategorien rutschen dahinter.
+     */
+    ratingCategories: Array<string>
+}
+
+/**
+ * Die Wertungskategorie eines Bootes in einer Ergebnisliste - zum Gruppieren, Anzeigen und Sortieren der Abschnitte.
+ */
+export type RatingCategoryRefDto = {
+    id: string
+    name: string
+    sortOrder: number
+}
+
 export type RatingCategoryRequest = {
     name: string
     description?: string
@@ -2509,6 +2561,10 @@ export type RatingCategoryToEventDto = {
     ratingCategory: RatingCategoryDto
     yearFrom?: number
     yearTo?: number
+    /**
+     * Stelle dieser Kategorie in den Ergebnisabschnitten der Veranstaltung, aufsteigend ab 0.
+     */
+    sortOrder: number
 }
 
 export type RatingCategoryToEventRequest = {
@@ -6100,6 +6156,20 @@ export type GetRatingCategoriesForEventResponse = Array<RatingCategoryToEventDto
 
 export type GetRatingCategoriesForEventError = BadRequestError | ApiError
 
+export type UpdateRatingCategoryOrderForEventData = {
+    body: RatingCategoryOrderRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type UpdateRatingCategoryOrderForEventResponse = void
+
+export type UpdateRatingCategoryOrderForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
 export type RemoveRatingCategoryFromEventData = {
     path: {
         eventId: string
@@ -7341,6 +7411,10 @@ export type DownloadAwardCertificatesForEventData = {
         format?: 'pdf' | 'docx'
         maxPlace?: number
         mode?: 'PER_ATHLETE' | 'PER_TEAM'
+        /**
+         * Print the rating category on the certificate. Off by default; the template needs a RATING_CATEGORY placeholder for it to show. The printed place stays the competition-wide one either way.
+         */
+        ratingCategory?: boolean
     }
 }
 
@@ -7358,6 +7432,10 @@ export type DownloadAwardCertificatesForCompetitionData = {
         format?: 'pdf' | 'docx'
         maxPlace?: number
         mode?: 'PER_ATHLETE' | 'PER_TEAM'
+        /**
+         * Print the rating category on the certificate. Off by default; the template needs a RATING_CATEGORY placeholder for it to show. The printed place stays the competition-wide one either way.
+         */
+        ratingCategory?: boolean
     }
 }
 
@@ -7376,6 +7454,10 @@ export type DownloadAwardCertificateData = {
         format?: 'pdf' | 'docx'
         maxPlace?: number
         mode?: 'PER_ATHLETE' | 'PER_TEAM'
+        /**
+         * Print the rating category on the certificate. Off by default; the template needs a RATING_CATEGORY placeholder for it to show. The printed place stays the competition-wide one either way.
+         */
+        ratingCategory?: boolean
     }
 }
 

@@ -20,6 +20,7 @@ const SAMPLE_VALUES: Record<Exclude<GapDocumentPlaceholderType, 'FREE_TEXT'>, st
     // noch enden und muss die Vorschau (Server-PDF) heranziehen, um das Ausmaß zu sehen.
     CLUB_NAME: 'Ruderklub Flensburg / Rostocker Ruderclub / Ruderclub Nürtingen',
     TEAM_NAME: 'Flensburg I',
+    RATING_CATEGORY: 'Meisterschaften',
     EVENT_DATE: '16.–17. August 2026',
     EVENT_LOCATION: 'Flensburg',
 }

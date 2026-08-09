@@ -20,6 +20,9 @@ import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecu
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionCheckSeverityRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
@@ -174,6 +177,22 @@ object LiveDashboardService {
                         },
                         startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                         place = first[COMPETITION_MATCH_TEAM.PLACE],
+                        ratingCategory = first.get(CompetitionMatchTeamRepo.RATING_CATEGORY_ID, UUID::class.java)
+                            ?.let { categoryId ->
+                                RatingCategoryRef(
+                                    id = categoryId,
+                                    name = first.get(
+                                        CompetitionMatchTeamRepo.RATING_CATEGORY_NAME,
+                                        String::class.java
+                                    ) ?: "",
+                                    sortOrder = first.get(
+                                        CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER,
+                                        Int::class.java
+                                    ) ?: 0,
+                                )
+                            },
+                        // Erst wenn das ganze Feld des Laufs steht, siehe buildMatchDto.
+                        categoryPlace = null,
                         time = first[TIMECODE.TIME]?.let {
                             Timecode(
                                 millis = it,
@@ -224,7 +243,11 @@ object LiveDashboardService {
                     .groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION]!! }
                     .toList()
                     .traverse { (registrationId, rows) -> buildTeamDto(registrationId, rows, startTime, timePrecision, running) }
-                    .map { list -> list.sortedWith(compareBy(nullsLast()) { it.startNumber }) }
+                    // Die Karte bleibt nach Bahn sortiert - am Steg wird sie gegen das Wasser
+                    // gelesen, nicht gegen die Ergebnisliste. Nur der Kategorieplatz kommt hinzu,
+                    // damit das Ergebnis eines beendeten Laufs dieselbe Zahl zeigt wie die
+                    // oeffentliche Ansicht.
+                    .map { list -> withCategoryPlaces(list).sortedWith(compareBy(nullsLast()) { it.startNumber }) }
 
                 KIO.ok(
                     LiveDashboardMatchDto(
@@ -285,6 +308,21 @@ object LiveDashboardService {
      * [slotRecords] kommt von außen, weil dieselben Zeilen im Aufrufer bereits für die Absagen an
      * echten Läufen gebraucht werden.
      */
+    /**
+     * Setzt je Mannschaft den Platz innerhalb ihrer Wertungskategorie. Gerechnet wird in
+     * [RatingCategoryRanking] - derselben Stelle, aus der die öffentliche Ergebnisseite und die
+     * Athleten-Anzeige ihre Zahlen beziehen. Die Reihenfolge der Liste bleibt Sache des Aufrufers.
+     */
+    private fun withCategoryPlaces(teams: List<LiveDashboardTeamDto>): List<LiveDashboardTeamDto> =
+        RatingCategoryRanking.groupAndRank(
+            items = teams,
+            category = { it.ratingCategory },
+            place = { it.place },
+            tieBreak = { it.startNumber ?: Int.MAX_VALUE },
+        ).flatMap { section ->
+            section.entries.map { it.item.copy(categoryPlace = it.categoryPlace) }
+        }
+
     private fun getPendingSlots(slotRecords: List<Record>, matchIds: Set<UUID>): List<PendingSlotDto> {
         // Die Rohzeile bleibt neben dem Platzhalter stehen: Rennnummer und Kurzname braucht nur das
         // Dashboard, und PendingScheduleSlotInfo teilt sich die Athleten-Anzeige, die ohne sie

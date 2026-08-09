@@ -296,7 +296,8 @@
           "TEAM_NAME": "Mannschaftsname",
           "EVENT_DATE": "Veranstaltungsdatum",
           "EVENT_LOCATION": "Veranstaltungsort",
-          "FREE_TEXT": "Freier Text"
+          "FREE_TEXT": "Freier Text",
+          "RATING_CATEGORY": "Wertungskategorie"
         },
         "name": "Eigene Bezeichnung (optional)",
         "nameHelp": "Eine eigene Bezeichnung, um diesen Platzhalter zu identifizieren",
@@ -391,9 +392,9 @@
   },
   "club": {
     "tabs": {
-        "clubs": "Vereine",
-        "shortNames": "Kurzformen",
-        "settings": "Einstellungen"
+      "clubs": "Vereine",
+      "shortNames": "Kurzformen",
+      "settings": "Einstellungen"
     },
     "shortName": {
       "names": "Vereinsnamen",
@@ -1822,6 +1823,12 @@
         "title": "Wertungskategorie zuweisen",
         "success": "Wertungskategorie erfolgreich hinzugefügt",
         "error": "Beim Hinzufügen der Wertungskategorie zu diesem Event ist ein Fehler aufgetreten"
+      },
+      "withoutCategory": "Ohne Wertungskategorie",
+      "order": {
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "hint": "Die Reihenfolge bestimmt, in welcher Folge die Abschnitte in Ergebnislisten erscheinen."
       }
     }
   },
@@ -2655,6 +2662,10 @@
         "competitionNotInEvent": "Dieser Wettkampf gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.",
         "isChallengeEvent": "Für eine Challenge-Veranstaltung gibt es keine Siegerurkunden — dort werden keine Läufe gefahren und keine Plätze vergeben. Teilnahmeurkunden lassen sich in der Teilnehmerliste herunterladen.",
         "unexpected": "Die Urkunden konnten nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
+      },
+      "ratingCategory": {
+        "label": "Wertungskategorie drucken",
+        "hint": "Nur sichtbar, wenn die Vorlage einen Platzhalter für die Wertungskategorie enthält. Die gedruckte Platzierung bleibt die des Wettkampfs."
       }
     }
   }

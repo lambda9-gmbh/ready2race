@@ -157,6 +157,8 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
     teams = teams.map {
         AthleteBoardResultTeam(
             place = it.place,
+            ratingCategory = it.ratingCategory,
+            categoryPlace = it.categoryPlace,
             lane = it.startNumber,
             teamNumber = it.teamNumber,
             clubsShort = clubsOrRegistering(it.clubsShort, it.clubName),

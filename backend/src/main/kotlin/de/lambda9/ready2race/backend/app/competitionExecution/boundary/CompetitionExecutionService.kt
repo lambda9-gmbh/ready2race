@@ -37,6 +37,8 @@ import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarg
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RankedCategory
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
@@ -1513,6 +1515,39 @@ object CompetitionExecutionService {
         KIO.ok(result)
     }
 
+    /**
+     * Ein platziertes Boot mit beiden Plätzen nebeneinander: [place] wettkampfweit aus der
+     * Rundenlogik, [categoryPlace] innerhalb seiner Wertungskategorie.
+     */
+    data class PlaceInCategory(
+        val team: CompetitionMatchTeamWithRegistration,
+        val place: Int,
+        val categoryPlace: Int?,
+    )
+
+    /**
+     * Gliedert die Platzierungen eines Wettkampfs in Abschnitte je Wertungskategorie und zählt in
+     * jedem Abschnitt neu ab 1. [computeCompetitionPlaces] selbst bleibt unberührt und liefert
+     * weiter die wettkampfweite Platzierung — daran hängen die Urkunden.
+     *
+     * Abgemeldete, ausgeschiedene und disqualifizierte Boote gelten hier als ungewertet: sie haben
+     * zwar einen rechnerischen Platz, aber keinen, der in einer Ergebnisliste etwas zu suchen hat.
+     * Sie behalten ihren Abschnitt und stehen dort am Ende.
+     */
+    fun placesByRatingCategory(
+        places: List<Pair<CompetitionMatchTeamWithRegistration, Int>>,
+    ): List<RankedCategory<PlaceInCategory>> =
+        RatingCategoryRanking.groupAndRank(
+            items = places.map { (team, place) -> PlaceInCategory(team, place, null) },
+            category = { it.team.ratingCategory },
+            place = { if (it.team.deregistered || it.team.out || it.team.failed) null else it.place },
+            tieBreak = { it.team.startNumber },
+        ).map { section ->
+            section.copy(
+                entries = section.entries.map { it.copy(item = it.item.copy(categoryPlace = it.categoryPlace)) }
+            )
+        }
+
     fun getCompetitionPlaces(
         eventId: UUID,
         competitionId: UUID,
@@ -1523,9 +1558,11 @@ object CompetitionExecutionService {
 
         computeCompetitionPlaces(competitionId)
             .andThen { places ->
-                places
-                    .sortedBy { it.second }
-                    .traverse { it.first.toCompetitionTeamPlaceDto(it.second) }
+                // In Abschnittsreihenfolge, innerhalb des Abschnitts nach Kategorieplatz - die
+                // Anzeige gruppiert die flache Liste danach wieder auf.
+                placesByRatingCategory(places)
+                    .flatMap { it.entries.map { entry -> entry.item } }
+                    .traverse { it.team.toCompetitionTeamPlaceDto(it.place, it.categoryPlace) }
             }.map {
                 ApiResponse.ListDto(
                     it

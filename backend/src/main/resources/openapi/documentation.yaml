@@ -5288,6 +5288,33 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/ratingCategories/order:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    put:
+      operationId: updateRatingCategoryOrderForEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCategoryOrderRequest'
+      responses:
+        204:
+          description: Order successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/ratingCategories/{ratingCategoryId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -8051,6 +8078,15 @@ paths:
           required: false
           schema:
             type: boolean
+        - name: ratingCategory
+          in: query
+          required: false
+          description: >-
+            Print the rating category on the certificate. Off by default; the template needs a
+            RATING_CATEGORY placeholder for it to show. The printed place stays the
+            competition-wide one either way.
+          schema:
+            type: boolean
       responses:
         200:
           $ref: '#/components/responses/file'
@@ -8094,6 +8130,15 @@ paths:
         - name: background
           in: query
           required: false
+          schema:
+            type: boolean
+        - name: ratingCategory
+          in: query
+          required: false
+          description: >-
+            Print the rating category on the certificate. Off by default; the template needs a
+            RATING_CATEGORY placeholder for it to show. The printed place stays the
+            competition-wide one either way.
           schema:
             type: boolean
       responses:
@@ -8145,6 +8190,15 @@ paths:
         - name: background
           in: query
           required: false
+          schema:
+            type: boolean
+        - name: ratingCategory
+          in: query
+          required: false
+          description: >-
+            Print the rating category on the certificate. Off by default; the template needs a
+            RATING_CATEGORY placeholder for it to show. The printed place stays the
+            competition-wide one either way.
           schema:
             type: boolean
       responses:
@@ -8574,6 +8628,7 @@ components:
         - 'COMPETITION_SHORT_NAME'
         - 'CLUB_NAME'
         - 'TEAM_NAME'
+        - 'RATING_CATEGORY'
         - 'EVENT_DATE'
         - 'EVENT_LOCATION'
         - 'FREE_TEXT'
@@ -12245,6 +12300,16 @@ components:
             $ref: '#/components/schemas/CompetitionTeamNamedParticipantDto'
         place:
           type: integer
+          description: "the competition-wide place from the round logic; still the one printed on the certificate"
+        ratingCategory:
+          allOf:
+            - $ref: '#/components/schemas/RatingCategoryRefDto'
+          nullable: true
+          description: "the rating category of this team; null when it has none"
+        categoryPlace:
+          type: integer
+          nullable: true
+          description: "the place within the rating category, counted from 1; null for excluded teams"
         deregistered:
           type: boolean
         deregistrationReason:
@@ -13235,6 +13300,15 @@ components:
           description: "the same chain with the full club names"
         place:
           type: integer
+        ratingCategory:
+          allOf:
+            - $ref: '#/components/schemas/RatingCategoryRefDto'
+          nullable: true
+          description: "the rating category of this boat; null when it has none"
+        categoryPlace:
+          type: integer
+          nullable: true
+          description: "the place within the rating category, counted from 1 - this is the number the result list shows"
         timeString:
           type: string
         failed:
@@ -13389,6 +13463,15 @@ components:
         place:
           type: integer
           nullable: true
+        ratingCategory:
+          allOf:
+            - $ref: '#/components/schemas/RatingCategoryRefDto'
+          nullable: true
+          description: "the rating category of this boat; null when it has none"
+        categoryPlace:
+          type: integer
+          nullable: true
+          description: "the place within the rating category, counted from 1"
         lane:
           type: integer
         teamNumber:
@@ -13754,6 +13837,15 @@ components:
         place:
           type: integer
           nullable: true
+        ratingCategory:
+          allOf:
+            - $ref: '#/components/schemas/RatingCategoryRefDto'
+          nullable: true
+          description: "the rating category of this team; null when it has none"
+        categoryPlace:
+          type: integer
+          nullable: true
+          description: "the place within the rating category, counted from 1"
         time:
           type: string
           nullable: true
@@ -14448,12 +14540,49 @@ components:
       type: object
       required:
         - ratingCategory
+        - sortOrder
       properties:
         ratingCategory:
           $ref: '#/components/schemas/RatingCategoryDto'
         yearFrom:
           type: integer
         yearTo:
+          type: integer
+        sortOrder:
+          type: integer
+          description: >-
+            Stelle dieser Kategorie in den Ergebnisabschnitten der Veranstaltung, aufsteigend ab 0.
+
+    RatingCategoryOrderRequest:
+      type: object
+      required:
+        - ratingCategories
+      properties:
+        ratingCategories:
+          type: array
+          description: >-
+            Die vollständige Reihenfolge der Wertungskategorien von vorne nach hinten. Nicht
+            genannte, aber zugeordnete Kategorien rutschen dahinter.
+          items:
+            type: string
+            format: uuid
+
+    RatingCategoryRefDto:
+      type: object
+      description: >-
+        Die Wertungskategorie eines Bootes in einer Ergebnisliste - zum Gruppieren, Anzeigen und
+        Sortieren der Abschnitte.
+      required:
+        - id
+        - name
+        - sortOrder
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sortOrder:
           type: integer
 
     ResultChallengeClubDto:

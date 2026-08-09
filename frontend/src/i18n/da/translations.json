@@ -296,7 +296,8 @@
           "TEAM_NAME": "Holdnavn",
           "EVENT_DATE": "Arrangementdato",
           "EVENT_LOCATION": "Arrangementsted",
-          "FREE_TEXT": "Fri tekst"
+          "FREE_TEXT": "Fri tekst",
+          "RATING_CATEGORY": "Rangeringskategori"
         },
         "name": "Egen betegnelse (valgfrit)",
         "nameHelp": "En egen betegnelse til at identificere denne pladsholder",
@@ -391,9 +392,9 @@
   },
   "club": {
     "tabs": {
-        "clubs": "Klubber",
-        "shortNames": "Korte navne",
-        "settings": "Indstillinger"
+      "clubs": "Klubber",
+      "shortNames": "Korte navne",
+      "settings": "Indstillinger"
     },
     "shortName": {
       "names": "Klubnavne",
@@ -1816,6 +1817,12 @@
         "title": "Tildel rangeringskategori",
         "success": "Rangeringskategori tilføjet",
         "error": "Der opstod en fejl ved tilføjelse af rangeringskategorien til dette arrangement"
+      },
+      "withoutCategory": "Uden rangeringskategori",
+      "order": {
+        "moveUp": "Flyt op",
+        "moveDown": "Flyt ned",
+        "hint": "Rækkefølgen bestemmer, i hvilken orden afsnittene vises i resultatlister."
       }
     }
   },
@@ -2649,6 +2656,10 @@
         "competitionNotInEvent": "Denne konkurrence hører ikke til dette stævne. Genindlæs siden.",
         "isChallengeEvent": "Et challenge-stævne har ingen sejrsdiplomer — der afvikles ingen løb, og der gives ingen placeringer. Deltagerdiplomer kan hentes fra deltagerlisten.",
         "unexpected": "Diplomerne kunne ikke oprettes. Genindlæs siden, og prøv igen."
+      },
+      "ratingCategory": {
+        "label": "Udskriv rangeringskategori",
+        "hint": "Kun synlig, hvis skabelonen indeholder en pladsholder til rangeringskategorien. Den trykte placering forbliver konkurrencens."
       }
     }
   }

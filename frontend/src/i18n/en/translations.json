@@ -296,7 +296,8 @@
           "TEAM_NAME": "Team Name",
           "EVENT_DATE": "Event Date",
           "EVENT_LOCATION": "Event Location",
-          "FREE_TEXT": "Free Text"
+          "FREE_TEXT": "Free Text",
+          "RATING_CATEGORY": "Rating category"
         },
         "name": "Custom Label (optional)",
         "nameHelp": "A custom name to help you identify this placeholder",
@@ -391,9 +392,9 @@
   },
   "club": {
     "tabs": {
-        "clubs": "Clubs",
-        "shortNames": "Short names",
-        "settings": "Settings"
+      "clubs": "Clubs",
+      "shortNames": "Short names",
+      "settings": "Settings"
     },
     "shortName": {
       "names": "Club names",
@@ -1822,6 +1823,12 @@
         "title": "Assign rating category",
         "success": "Rating category successfully added",
         "error": "An error has occurred when adding the rating category to the event"
+      },
+      "withoutCategory": "Without rating category",
+      "order": {
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "hint": "The order determines in which sequence the sections appear in result lists."
       }
     }
   },
@@ -2655,6 +2662,10 @@
         "competitionNotInEvent": "This competition does not belong to this event. Please reload the page.",
         "isChallengeEvent": "A challenge event has no award certificates — there are no runs and no placements. Certificates of participation can be downloaded from the participant list.",
         "unexpected": "The certificates could not be created. Please reload the page and try again."
+      },
+      "ratingCategory": {
+        "label": "Print rating category",
+        "hint": "Only visible if the template contains a placeholder for the rating category. The printed place stays the competition-wide one."
       }
     }
   }

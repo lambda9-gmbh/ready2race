@@ -813,7 +813,12 @@ select cmt.id,
        coalesce(array_agg(rctp) filter (where rctp.team_id is not null), '{}') as participants,
        (cd.competition_registration is not null)                               as deregistered,
        cd.reason                                                               as deregistration_reason,
+       rc.id                                                                   as rating_category_id,
        rc.name                                                                 as rating_category_name,
+       -- Die Reihenfolge der Ergebnisabschnitte haengt an der Zuordnung zur Veranstaltung. Fehlt
+       -- sie, gilt 0: die Kategorie bekommt ihren Abschnitt vorne und wird alphabetisch
+       -- einsortiert, statt die ganze Zeile fallen zu lassen.
+       coalesce(erc.sort_order, 0)                                             as rating_category_sort_order,
        e.mixed_team_term                                                       as mixed_team_term
 from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id
@@ -826,8 +831,9 @@ from competition_match_team cmt
          left join timecode tc on cmt.timecode = tc.id
          left join event_registration er on cr.event_registration = er.id
          left join event e on er.event = e.id
+         left join event_rating_category erc on erc.event = er.event and erc.rating_category = rc.id
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.competition_registration, cr.club, c.name,
-         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, e.mixed_team_term,
+         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, erc.sort_order, e.mixed_team_term,
          cmt.penalty_seconds, cmt.penalty_note
 ;
 
@@ -1361,7 +1367,8 @@ select erc.event,
        rc.name        as rating_category_name,
        rc.description as rating_category_description,
        erc.year_restriction_from,
-       erc.year_restriction_to
+       erc.year_restriction_to,
+       erc.sort_order
 from event_rating_category erc
          join rating_category rc on rc.id = erc.rating_category
 ;

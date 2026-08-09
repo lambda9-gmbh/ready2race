@@ -589,6 +589,9 @@ import type {
     GetRatingCategoriesForEventData,
     GetRatingCategoriesForEventError,
     GetRatingCategoriesForEventResponse,
+    UpdateRatingCategoryOrderForEventData,
+    UpdateRatingCategoryOrderForEventError,
+    UpdateRatingCategoryOrderForEventResponse,
     RemoveRatingCategoryFromEventData,
     RemoveRatingCategoryFromEventError,
     RemoveRatingCategoryFromEventResponse,
@@ -3363,6 +3366,19 @@ export const getRatingCategoriesForEvent = <ThrowOnError extends boolean = false
     >({
         ...options,
         url: '/event/{eventId}/ratingCategories',
+    })
+}
+
+export const updateRatingCategoryOrderForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRatingCategoryOrderForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRatingCategoryOrderForEventResponse,
+        UpdateRatingCategoryOrderForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/ratingCategories/order',
     })
 }
 
