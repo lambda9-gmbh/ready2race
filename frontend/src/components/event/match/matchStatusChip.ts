@@ -68,6 +68,15 @@ export const matchStatusChip = (
     startTime: string | null | undefined,
     now: Date,
 ): MatchChip => {
+    // Vor RUNNING: ein Lauf am Start ist an den Start gerufen und noch nicht unterwegs. Die
+    // Reihenfolge folgt der von `LiveDashboardLogic.deriveMatchState` im Backend, wo derselbe
+    // Zweig oben steht — hier hängt zusätzlich daran, dass „Überfällig" weiter unten nicht mehr
+    // greift: der Verzug gegen den Plan sagt nichts mehr aus, sobald jemand den Lauf aufgerufen
+    // hat.
+    if (status.state === 'PREPARING') {
+        return {labelKey: 'event.match.status.preparing', color: 'info'}
+    }
+
     if (status.state === 'RUNNING') {
         // Ohne Startstempel gibt es keine Laufzeit — der Lauf ist als aktiv gesetzt, aber niemand
         // hat einen Start gedrückt. Dann lieber „Läuft" ohne Zahl als eine erfundene.
@@ -120,29 +129,36 @@ export const matchStatusChip = (
 }
 
 /**
- * Der zweite, leise Chip: wie viele Crews des Laufs schon abgelegt haben.
+ * Der zweite, leise Chip: wie viele Crews des Laufs schon in der Arena sind.
  *
- * „Auf dem Wasser" ist bewusst kein eigener Zustand — es ist eine Eigenschaft des
+ * „In der Arena" ist bewusst kein eigener Zustand — es ist eine Eigenschaft des
  * Vorbereitungsstands, keine Phase des Laufs, und würde als Zustand mit „Läuft" konkurrieren.
+ * Gerade deshalb steht er auch bei „In Vorbereitung": dort ist die Frage, wer schon draußen ist,
+ * am dringendsten.
  *
- * `teamsOnWater == null` heißt „nicht erhoben" und ist etwas anderes als 0 („erhoben, aber niemand
+ * `teamsInArena == null` heißt „nicht erhoben" und ist etwas anderes als 0 („erhoben, aber niemand
  * draußen"). Der Fall tritt zweifach auf: in Ansichten, die die Check-in-Daten gar nicht holen
  * (Zeitplan, öffentliche Anzeigen), und bei einer Veranstaltung ohne Check-in — hatte kein Team der
  * Runde je einen Scan, schickt der Server null statt 0 (Abschnitt 6 der Spec, entschieden in
- * `MatchStatusLogic.teamsOnWaterPerMatch`), sonst stünde bei jedem Lauf dauerhaft „Wasser 0/6".
+ * `MatchStatusLogic.teamsInArenaPerMatch`), sonst stünde bei jedem Lauf dauerhaft „Arena 0/6".
  *
  * Er entfällt außerdem, sobald er nichts mehr aussagt: bei einem Lauf ohne Mannschaften, nach
  * Beenden oder Absage, und wenn ohnehin alle Crews draußen sind.
  */
-export const waterChip = (status: MatchStatusDto): MatchChip | null => {
-    const onWater = status.teamsOnWater
-    if (onWater == null) return null
+export const arenaChip = (status: MatchStatusDto): MatchChip | null => {
+    const inArena = status.teamsInArena
+    if (inArena == null) return null
     if (status.teamsTotal === 0) return null
-    if (status.state !== 'UPCOMING' && status.state !== 'RUNNING') return null
-    if (onWater >= status.teamsTotal) return null
+    if (
+        status.state !== 'UPCOMING' &&
+        status.state !== 'PREPARING' &&
+        status.state !== 'RUNNING'
+    )
+        return null
+    if (inArena >= status.teamsTotal) return null
     return {
-        labelKey: 'event.match.status.water',
-        values: {onWater, total: status.teamsTotal},
+        labelKey: 'event.match.status.inArena',
+        values: {inArena, total: status.teamsTotal},
         color: 'default',
     }
 }
@@ -165,6 +181,11 @@ export const roundCounterChips = (statuses: MatchStatusDto[], minMatches = 2): M
         statuses.filter(predicate).length
 
     const buckets: {n: number; labelKey: string; color: ChipColor}[] = [
+        {
+            n: count(s => s.state === 'PREPARING'),
+            labelKey: 'event.match.status.counter.preparing',
+            color: 'info',
+        },
         {
             n: count(s => s.state === 'RUNNING'),
             labelKey: 'event.match.status.counter.running',
@@ -202,9 +223,10 @@ export const roundCounterChips = (statuses: MatchStatusDto[], minMatches = 2): M
  *
  * Der Zeitplan bekommt kein fertiges [MatchStatusDto] vom Server — er liefert eine Zeile je Slot,
  * nicht je Lauf. Die Zweig-Reihenfolge ist deshalb hier noch einmal nachgebildet, und zwar exakt
- * die von `LiveDashboardLogic.deriveMatchState`: aktiv schlägt beendet schlägt abgesagt schlägt
- * „alle gewertet". Ohne verknüpften Lauf gibt es nichts abzuleiten — dann bleibt der Slot bei
- * seinem eigenen Chip.
+ * die von `LiveDashboardLogic.deriveMatchState`: aktiviert schlägt beendet schlägt abgesagt schlägt
+ * „alle gewertet", und innerhalb der Aktivierung entscheidet der Ist-Start zwischen „In
+ * Vorbereitung" und „Läuft". Ohne verknüpften Lauf gibt es nichts abzuleiten — dann bleibt der Slot
+ * bei seinem eigenen Chip.
  *
  * UNSCHEDULED kann hier nicht entstehen: ein Slot hat immer eine Startzeit, sonst stünde er nicht
  * im Zeitplan.
@@ -212,8 +234,10 @@ export const roundCounterChips = (statuses: MatchStatusDto[], minMatches = 2): M
 export const slotMatchStatus = (slot: EventScheduleSlotDto): MatchStatusDto | null => {
     if (!slot.matchId) return null
 
-    const state = slot.matchCurrentlyRunning
-        ? 'RUNNING'
+    const state = slot.matchActivatedAt
+        ? slot.matchStartedAt
+            ? 'RUNNING'
+            : 'PREPARING'
         : slot.matchFinishedAt
           ? 'FINISHED'
           : slot.state === 'SKIPPED'

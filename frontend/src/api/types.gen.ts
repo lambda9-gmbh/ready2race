@@ -170,9 +170,13 @@ export type AthleteBoardMatch = {
      */
     startTime?: string | null
     /**
-     * real start; only filled in the running block - null there means the match is current but has not started yet
+     * real start; only filled in the running block - it carries the clock time for 'started 14:32', while whether the match is at the pontoon or racing is told by state
      */
     actualStartTime?: string | null
+    /**
+     * the shared match state, derived by LiveDashboardLogic.deriveMatchState - the same derivation the referee dashboard, the schedule and the execution page read
+     */
+    state: LiveDashboardMatchState
     startState: AthleteBoardStartState
     teams: Array<AthleteBoardTeam>
     /**
@@ -426,7 +430,7 @@ export type CheckSeverityRowDto = {
 /**
  * The checks evaluated by the referee dashboard. REQUIREMENT and REQUIREMENT_TIME_WINDOW refer to the same participant requirement and are still configured separately: "not checked at all" and "checked but at the wrong time" are two different situations at the tent.
  */
-export type CheckType = 'INVOICE_OPEN' | 'NOT_ON_WATER' | 'REQUIREMENT' | 'REQUIREMENT_TIME_WINDOW'
+export type CheckType = 'INVOICE_OPEN' | 'NOT_IN_ARENA' | 'REQUIREMENT' | 'REQUIREMENT_TIME_WINDOW'
 
 export type ClubDto = {
     id: string
@@ -570,7 +574,10 @@ export type CompetitionMatchDto = {
      * Offset between the starts of consecutive teams, in seconds
      */
     startTimeOffset?: number
-    currentlyRunning: boolean
+    /**
+     * When the match was called to the start - null while nobody activated it.
+     */
+    activatedAt?: string | null
     /**
      * Actual start - null while nobody started the match.
      */
@@ -626,7 +633,7 @@ export type CompetitionPropertiesDto = {
     name: string
     shortName?: string
     /**
-     * Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all.
+     * Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'in the arena' at all.
      */
     checkInOutRequired: boolean
     description?: string
@@ -643,7 +650,7 @@ export type CompetitionPropertiesRequest = {
     name: string
     shortName?: string
     /**
-     * Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all.
+     * Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'in the arena' at all.
      */
     checkInOutRequired: boolean
     description?: string
@@ -1427,9 +1434,9 @@ export type EventScheduleSlotDto = {
     matchStartedAt?: string | null
     matchFinishedAt?: string | null
     /**
-     * Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot
+     * When the linked match was called to the start - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot, and together with matchStartedAt whether the slot reads 'preparing' or 'running'. Null without a linked match.
      */
-    matchCurrentlyRunning: boolean
+    matchActivatedAt?: string | null
     /**
      * Teams of the linked match that are still in the race (without the OUT rows carried over from the previous round) - 0 without a linked match
      */
@@ -1795,6 +1802,9 @@ export type LiveDashboardInvoiceState = 'PAID' | 'OPEN' | 'NONE'
 
 export type LiveDashboardMatchDto = {
     matchId: string
+    /**
+     * The derived match state - the card's only statement about where the match stands. A separate running flag stood next to it until 2026-08-09; since "at the start" and "under way" are two states, a second field would only be a second truth.
+     */
     state: LiveDashboardMatchState
     competitionId: string
     competitionName: string
@@ -1812,7 +1822,6 @@ export type LiveDashboardMatchDto = {
     executionOrder: number
     startTime?: string | null
     startedAt?: string | null
-    currentlyRunning: boolean
     elapsedMinutes?: number | null
     teams: Array<LiveDashboardTeamDto>
     /**
@@ -1829,8 +1838,11 @@ export type LiveDashboardMatchDto = {
  * SKIPPED: the schedule slot of this match was cancelled. Unlike the public boards the referee dashboard marks such a match instead of hiding it - the referee has to see the cancellation to be able to undo it in the schedule.
  *
  * AWAITING_FINISH: every boat is scored but nobody finished the match yet. FINISHED means exclusively that competition_match.finished_at is set - a match only ends by an explicit action, because until then a time penalty can still arrive.
+ *
+ * PREPARING: the match has been called to the start (activated_at is set) but has no real start yet - the boats are still at the pontoon. RUNNING means activated AND started.
  */
 export type LiveDashboardMatchState =
+    | 'PREPARING'
     | 'RUNNING'
     | 'FINISHED'
     | 'SKIPPED'
@@ -1912,18 +1924,18 @@ export type LiveDashboardTeamDto = {
      */
     invoiceSeverity: EffectiveSeverity
     /**
-     * Whether this competition requires check-in/check-out at all; controls the display of onWaterAt
+     * Whether this competition requires check-in/check-out at all; controls the display of inArenaAt
      */
-    onWaterRequired: boolean
+    inArenaRequired: boolean
     /**
-     * The on-water check evaluated separately: the detail dialog colors its on-water chip by this; it cannot be recovered from severity, which already combines everything else
+     * The in-arena check evaluated separately: the detail dialog colors its arena chip by this; it cannot be recovered from severity, which already combines everything else
      */
-    onWaterSeverity: EffectiveSeverity
+    inArenaSeverity: EffectiveSeverity
     substituted: boolean
     /**
-     * When the boat went on the water (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known
+     * When the boat entered the arena (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known
      */
-    onWaterAt?: string | null
+    inArenaAt?: string | null
 }
 
 export type LoginDto = {
@@ -1946,7 +1958,10 @@ export type MatchForRunningStatusDto = {
     matchNumber: number
     matchName?: string | null
     hasPlacesSet: boolean
-    currentlyRunning: boolean
+    /**
+     * When the match was called to the start - null while nobody activated it.
+     */
+    activatedAt?: string | null
     startTime?: string
 }
 
@@ -2020,7 +2035,7 @@ export type MatchStatusDto = {
     /**
      * null = not collected in this view (schedule, public boards).
      */
-    teamsOnWater?: number
+    teamsInArena?: number
 }
 
 export type MatchTeamInfo = {
@@ -3042,6 +3057,13 @@ export type UpdateCheckSeverityRequest = {
     entries: Array<CheckSeverityEntryDto>
 }
 
+/**
+ * Calls a match to the start (activated = true) or takes that back. The click states that the match is up next, not that it is racing - that is decided by the real start (started_at).
+ */
+export type UpdateCompetitionMatchActivationRequest = {
+    activated: boolean
+}
+
 export type UpdateCompetitionMatchRequest = {
     startTime?: string
     teams: Array<UpdateCompetitionMatchTeamRequest>
@@ -3049,10 +3071,6 @@ export type UpdateCompetitionMatchRequest = {
 
 export type UpdateCompetitionMatchResultRequest = {
     teamResults: Array<UpdateCompetitionMatchTeamResultRequest>
-}
-
-export type UpdateCompetitionMatchRunningStateRequest = {
-    currentlyRunning: boolean
 }
 
 export type UpdateCompetitionMatchTeamRequest = {
@@ -3734,9 +3752,9 @@ export type GetEventMatchesData = {
     }
     query?: {
         /**
-         * Filter matches by running status
+         * Filter matches by whether they have been called to the start (activated_at is set)
          */
-        currentlyRunning?: boolean
+        activated?: boolean
         /**
          * Filter matches where teams have no places set
          */
@@ -4178,8 +4196,8 @@ export type UpdateMatchDataResponse = void
 
 export type UpdateMatchDataError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type UpdateMatchRunningStateData = {
-    body: UpdateCompetitionMatchRunningStateRequest
+export type UpdateMatchActivationData = {
+    body: UpdateCompetitionMatchActivationRequest
     path: {
         competitionId: string
         competitionMatchId: string
@@ -4187,9 +4205,9 @@ export type UpdateMatchRunningStateData = {
     }
 }
 
-export type UpdateMatchRunningStateResponse = void
+export type UpdateMatchActivationResponse = void
 
-export type UpdateMatchRunningStateError = BadRequestError | ApiError | UnprocessableEntityError
+export type UpdateMatchActivationError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type UpdateMatchResultsData = {
     body: UpdateCompetitionMatchResultRequest
@@ -6465,19 +6483,19 @@ export type StartLiveDashboardMatchResponse = void
 
 export type StartLiveDashboardMatchError = ApiError
 
-export type SetLiveDashboardMatchRunningData = {
+export type SetLiveDashboardMatchActivatedData = {
     path: {
         eventId: string
         matchId: string
     }
     query: {
-        running: boolean
+        activated: boolean
     }
 }
 
-export type SetLiveDashboardMatchRunningResponse = void
+export type SetLiveDashboardMatchActivatedResponse = void
 
-export type SetLiveDashboardMatchRunningError = ApiError
+export type SetLiveDashboardMatchActivatedError = ApiError
 
 export type GetLiveDashboardData = {
     path: {

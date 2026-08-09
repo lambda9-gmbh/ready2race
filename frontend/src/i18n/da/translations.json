@@ -678,7 +678,7 @@
       "ratingCategoryRequired": "Rangeringskategori påkrævet",
       "registrationCount": "Tilmeldinger",
       "shortName": "Kort navn",
-      "checkInOutRequired": "Kræver ind-/udtjekning på vandet",
+      "checkInOutRequired": "Kræver ind-/udtjekning i arenaen",
       "challenge": {
         "configs": "Challenge-indstillinger",
         "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",
@@ -1506,7 +1506,7 @@
         "running": "Aktuelt løb",
         "upcoming": "Næste løb",
         "results": "Seneste resultat",
-        "noRunning": "Intet løb på vandet lige nu",
+        "noRunning": "Intet løb i arenaen lige nu",
         "noUpcoming": "Ingen flere løb planlagt",
         "noResults": "Endnu intet resultat",
         "lane": "Bane",
@@ -1538,6 +1538,7 @@
       "status": {
         "upcoming": "Kommende",
         "overdue": "Forsinket · {{minutes}} min",
+        "preparing": "Forbereder",
         "running": "I gang · {{minutes}} min",
         "runningPlain": "I gang",
         "partiallyScored": "Delvist bedømt {{scored}}/{{total}}",
@@ -1545,9 +1546,10 @@
         "finished": "Afsluttet",
         "cancelled": "Aflyst",
         "unscheduled": "Ikke planlagt",
-        "water": "På vandet {{onWater}}/{{total}}",
+        "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Gennemføres ikke",
         "counter": {
+          "preparing": "{{n}} forbereder",
           "running": "{{n}} i gang",
           "open": "{{n}} åbne",
           "finished": "{{n}} afsluttet",
@@ -1627,8 +1629,8 @@
         "deregistered": "Afmeldt",
         "failed": "Udgået",
         "failedShort": "DNF",
-        "onWaterAt": "på vandet {{time}}",
-        "notOnWater": "Ikke på vandet",
+        "inArenaAt": "i arenaen {{time}}",
+        "notInArena": "Ikke i arenaen",
         "clubs": "Klubber",
         "crew": "Besætning"
       },
@@ -1657,7 +1659,7 @@
         "noCompetitions": "Denne begivenhed har endnu ingen konkurrencer. Der er derfor intet at indstille.",
         "check": {
           "INVOICE_OPEN": "Faktura åben",
-          "NOT_ON_WATER": "Ikke på vandet",
+          "NOT_IN_ARENA": "Ikke i arenaen",
           "REQUIREMENT_TIME_WINDOW": "Tidsvindue overskredet"
         },
         "severity": {

@@ -678,7 +678,7 @@
       "ratingCategoryRequired": "Wertungskategorie erforderlich",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
-      "checkInOutRequired": "An-/Abmeldung aufs Wasser erforderlich",
+      "checkInOutRequired": "An-/Abmeldung in die Arena erforderlich",
       "challenge": {
         "configs": "Challenge Einstellungen",
         "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
@@ -1506,7 +1506,7 @@
         "running": "Aktueller Lauf",
         "upcoming": "Nächster Lauf",
         "results": "Letztes Ergebnis",
-        "noRunning": "Zurzeit kein Lauf auf dem Wasser",
+        "noRunning": "Zurzeit kein Lauf in der Arena",
         "noUpcoming": "Kein weiterer Lauf gesetzt",
         "noResults": "Noch kein Ergebnis",
         "lane": "Bahn",
@@ -1538,6 +1538,7 @@
       "status": {
         "upcoming": "Anstehend",
         "overdue": "Überfällig · {{minutes}} min",
+        "preparing": "In Vorbereitung",
         "running": "Läuft · {{minutes}} min",
         "runningPlain": "Läuft",
         "partiallyScored": "Teilweise gewertet {{scored}}/{{total}}",
@@ -1545,9 +1546,10 @@
         "finished": "Beendet",
         "cancelled": "Abgesagt",
         "unscheduled": "Ungeplant",
-        "water": "Wasser {{onWater}}/{{total}}",
+        "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Findet nicht statt",
         "counter": {
+          "preparing": "{{n}} in Vorbereitung",
           "running": "{{n}} läuft",
           "open": "{{n}} offen",
           "finished": "{{n}} beendet",
@@ -1627,8 +1629,8 @@
         "deregistered": "Abgemeldet",
         "failed": "Ausgeschieden",
         "failedShort": "DNF",
-        "onWaterAt": "aufs Wasser {{time}}",
-        "notOnWater": "Nicht auf dem Wasser",
+        "inArenaAt": "in die Arena {{time}}",
+        "notInArena": "Nicht in der Arena",
         "clubs": "Vereine",
         "crew": "Mannschaft"
       },
@@ -1657,7 +1659,7 @@
         "noCompetitions": "Diese Veranstaltung hat noch keine Wettkämpfe. Es gibt daher nichts einzustellen.",
         "check": {
           "INVOICE_OPEN": "Rechnung offen",
-          "NOT_ON_WATER": "Nicht auf dem Wasser",
+          "NOT_IN_ARENA": "Nicht in der Arena",
           "REQUIREMENT_TIME_WINDOW": "Zeitfenster verletzt"
         },
         "severity": {
