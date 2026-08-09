@@ -10037,6 +10037,7 @@ components:
         - name
         - optional
         - checkInApp
+        - publiclyVisible
       properties:
         id:
           type: string
@@ -10050,6 +10051,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im öffentlichen Dashboard \"Mein Event\" sichtbar"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true
@@ -10078,6 +10082,7 @@ components:
         - optional
         - active
         - checkInApp
+        - publiclyVisible
       properties:
         id:
           type: string
@@ -10093,6 +10098,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im öffentlichen Dashboard \"Mein Event\" sichtbar"
         requirements:
           type: array
           items:
@@ -10127,6 +10135,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im öffentlichen Dashboard \"Mein Event\" sichtbar"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true

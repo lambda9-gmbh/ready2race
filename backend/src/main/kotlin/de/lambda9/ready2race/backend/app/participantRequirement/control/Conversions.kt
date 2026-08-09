@@ -10,7 +10,9 @@ import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
 
-fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): App<Nothing, ParticipantRequirementRecord> =
+// Env-unabhängig (KIO<Any?, ...> statt App<Nothing, ...>): reine Abbildung ohne DB-Zugriff,
+// dadurch per unsafeRunSync ohne echten Jooq-Kontext testbar.
+fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): KIO<Any?, Nothing, ParticipantRequirementRecord> =
     KIO.ok(
         LocalDateTime.now().let { now ->
             ParticipantRequirementRecord(
@@ -19,6 +21,7 @@ fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): App<Nothing, Partici
                 description = description,
                 optional = optional ?: false,
                 checkInApp = checkInApp ?: false,
+                publiclyVisible = publiclyVisible ?: false,
                 checkEarliestMinutesBefore = checkEarliestMinutesBefore,
                 checkLatestMinutesBefore = checkLatestMinutesBefore,
                 createdAt = now,
@@ -29,13 +32,17 @@ fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): App<Nothing, Partici
         }
     )
 
-fun ParticipantRequirementRecord.toDto(): App<Nothing, ParticipantRequirementDto> = KIO.ok(
+// Env-unabhängig aus demselben Grund wie toRecord oben.
+fun ParticipantRequirementRecord.toDto(): KIO<Any?, Nothing, ParticipantRequirementDto> = KIO.ok(
     ParticipantRequirementDto(
         id = id,
         name = name,
         description = description,
         optional = optional,
         checkInApp = checkInApp ?: false,
+        // jOOQ generiert die Spalte trotz NOT-NULL-Constraint als Boolean?, wie auch bei
+        // checkInApp; ?: false wahrt hier nur den Kotlin-Typ, ändert nichts am DB-Wert.
+        publiclyVisible = publiclyVisible ?: false,
         checkEarliestMinutesBefore = checkEarliestMinutesBefore,
         checkLatestMinutesBefore = checkLatestMinutesBefore,
     )
@@ -49,6 +56,7 @@ fun ParticipantRequirementForEventRecord.toDto(): App<Nothing, ParticipantRequir
         optional = optional!!,
         active = active!!,
         checkInApp = checkInApp!!,
+        publiclyVisible = publiclyVisible ?: false,
         requirements = requirements?.filterNotNull()?.map { it.toNamedParticipantRequirementDto() } ?: emptyList(),
     )
 )
@@ -61,6 +69,7 @@ fun ParticipantRequirementForEventRecord.toRequirementDto() =
         description = description,
         optional = optional!!,
         checkInApp = checkInApp ?: false,
+        publiclyVisible = publiclyVisible ?: false,
         checkEarliestMinutesBefore = checkEarliestMinutesBefore,
         checkLatestMinutesBefore = checkLatestMinutesBefore,
     )
