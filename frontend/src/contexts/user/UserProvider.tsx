@@ -8,7 +8,14 @@ import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
 import i18next from 'i18next'
 import {Language} from '@i18n/config.ts'
 import PanicPage from '../../pages/PanicPage.tsx'
-import {clearSessionToken, readSessionToken, touchSessionToken, writeSessionToken} from './sessionToken.ts'
+import {
+    clearSessionToken,
+    readSessionToken,
+    readSessionUser,
+    touchSessionToken,
+    writeSessionToken,
+    writeSessionUser,
+} from './sessionToken.ts'
 import {clearCachedReads} from '@pwa/readCache.ts'
 
 type Session = {
@@ -131,6 +138,20 @@ const UserProvider = ({children}: PropsWithChildren) => {
             }
         },
         onPanic: error => {
+            // Kaltstart ohne Netz: Der Aufruf wirft, bevor eine Antwort kommt. Mit gültigem
+            // Token und abgelegten Nutzerangaben läuft die App aus dem Bestand weiter, statt
+            // die Panikseite zu zeigen - am Steg ist das der Unterschied zwischen brauchbar und
+            // unbrauchbar. Außerhalb von /app bleibt es beim bisherigen Verhalten.
+            const offlineUser = userData.isInApp ? readSessionUser(true) : null
+            if (offlineUser !== null && userData.token) {
+                setUserData({
+                    userInfo: offlineUser,
+                    token: userData.token,
+                    isInApp: true,
+                    authStatus: 'pending',
+                })
+                return
+            }
             setError(`${error}`)
         },
     })
@@ -149,6 +170,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         if (!token) {
             throw Error('Missing session token on login')
         }
+        writeSessionUser(data, isInApp)
         setUserData({
             userInfo: data,
             token,

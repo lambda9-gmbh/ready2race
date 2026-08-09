@@ -14,6 +14,8 @@
  * noch `sessionStorage` existiert.
  */
 
+import {LoginDto} from '@api/types.gen.ts'
+
 export type WebStorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
 export type TokenStores = {
@@ -23,6 +25,7 @@ export type TokenStores = {
 
 const APP_KEY = 'session.app'
 const SESSION_KEY = 'session'
+const USER_KEY = 'session.user'
 
 export const SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000
 
@@ -102,6 +105,45 @@ export const clearSessionToken = (
 ): void => {
     if (isInApp) {
         stores.app.removeItem(APP_KEY)
+        stores.app.removeItem(USER_KEY)
     }
     stores.session.removeItem(SESSION_KEY)
+}
+
+/**
+ * Die Angaben zur angemeldeten Person - Kennung, Privilegien, Verein. Ohne sie wüsste die App
+ * nach einem Kaltstart ohne Netz zwar, dass jemand angemeldet ist, aber nicht, was er darf.
+ * Keine Namen, keine Mailadressen: LoginDto trägt nur Kennungen.
+ */
+export const writeSessionUser = (
+    user: LoginDto,
+    isInApp: boolean,
+    stores: TokenStores = browserStores(),
+): void => {
+    if (isInApp) {
+        stores.app.setItem(USER_KEY, JSON.stringify(user))
+    }
+}
+
+export const readSessionUser = (
+    isInApp: boolean,
+    stores: TokenStores = browserStores(),
+): LoginDto | null => {
+    if (!isInApp) {
+        return null
+    }
+    const raw = stores.app.getItem(USER_KEY)
+    if (raw === null) {
+        return null
+    }
+    try {
+        const parsed = JSON.parse(raw) as LoginDto
+        if (typeof parsed?.id === 'string' && Array.isArray(parsed?.privileges)) {
+            return parsed
+        }
+    } catch {
+        // fällt unten auf Aufräumen durch
+    }
+    stores.app.removeItem(USER_KEY)
+    return null
 }

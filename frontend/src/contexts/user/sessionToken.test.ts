@@ -2,10 +2,12 @@ import {describe, expect, it} from 'vitest'
 import {
     clearSessionToken,
     readSessionToken,
+    readSessionUser,
     SESSION_MAX_AGE_MS,
     touchSessionToken,
     TokenStores,
     writeSessionToken,
+    writeSessionUser,
 } from './sessionToken.ts'
 
 const fakeStore = () => {
@@ -87,5 +89,32 @@ describe('sessionToken', () => {
         const s = stores()
         s.session.setItem('session', 'alt')
         expect(readSessionToken(true, 1_000, s)).toBe('alt')
+    })
+
+    it('legt die Nutzerangaben der Helfer-Sitzung mit ab', () => {
+        const s = stores()
+        const dto = {id: 'u1', privileges: []}
+        writeSessionUser(dto, true, s)
+        expect(readSessionUser(true, s)).toEqual(dto)
+    })
+
+    it('legt für die Verwaltung keine Nutzerangaben ab', () => {
+        const s = stores()
+        writeSessionUser({id: 'u1', privileges: []}, false, s)
+        expect(s.app.size()).toBe(0)
+        expect(readSessionUser(false, s)).toBeNull()
+    })
+
+    it('verwirft kaputte Nutzerangaben, statt zu werfen', () => {
+        const s = stores()
+        s.app.setItem('session.user', '{kein json')
+        expect(readSessionUser(true, s)).toBeNull()
+    })
+
+    it('nimmt die Nutzerangaben beim Abmelden in der App mit', () => {
+        const s = stores()
+        writeSessionUser({id: 'u1', privileges: []}, true, s)
+        clearSessionToken(true, s)
+        expect(readSessionUser(true, s)).toBeNull()
     })
 })
