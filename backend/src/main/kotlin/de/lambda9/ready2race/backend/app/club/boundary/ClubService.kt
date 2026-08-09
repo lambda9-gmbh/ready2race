@@ -61,6 +61,8 @@ object ClubService {
         val record = !request.toRecord(userId)
         val clubId = !ClubRepo.create(record).orDie()
 
+        !ClubShortNameService.applyForName(request.name, request.shortName, userId)
+
         KIO.ok(ApiResponse.Created(clubId))
     }
 
@@ -91,14 +93,25 @@ object ClubService {
         request: ClubUpsertDto,
         userId: UUID,
         clubId: UUID,
-    ): App<ClubError, ApiResponse.NoData> =
-        ClubRepo.update(clubId) {
+    ): App<ClubError, ApiResponse.NoData> = KIO.comprehension {
+
+        val before = !ClubRepo.getClub(clubId).orDie().onNullFail { ClubError.ClubNotFound }
+
+        !ClubRepo.update(clubId) {
             name = request.name
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie()
-            .onNullFail { ClubError.ClubNotFound }
-            .map { ApiResponse.NoData }
+        }.orDie().onNullFail { ClubError.ClubNotFound }
+
+        // Erst nach dem Schreiben: ob die alte Schreibweise noch irgendwo vorkommt, entscheidet
+        // sich auch an dem Datensatz, der gerade umbenannt wurde.
+        !ClubShortNameService.followRename(before.name, request.name, userId)
+
+        // Zuletzt, damit die Eingabe aus dem Dialog die mitgewanderte Kurzform schlägt.
+        !ClubShortNameService.applyForName(request.name, request.shortName, userId)
+
+        noData
+    }
 
     fun deleteClub(
         id: UUID,

@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.club.entity.ClubShortNameRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
+import de.lambda9.ready2race.backend.calls.requests.queryParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -23,6 +24,19 @@ fun Route.clubShortName() {
                 !authenticate(Privilege.ReadClubGlobal)
                 val eventId = !optionalQueryParam("eventId", uuid)
                 ClubShortNameService.list(eventId)
+            }
+        }
+
+        // Für den Bearbeiten-Dialog eines Vereins: er kennt nur den Namen, nicht den Schlüssel -
+        // den zu bilden ist Serverwissen ([ClubNameKey]), genau wie die automatische Kurzform.
+        // Der Name steht in der Abfrage statt im Pfad, weil er Leerzeichen und Punkte enthält.
+        route("/forName") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadClubGlobal)
+                    val name = !queryParam("name")
+                    ClubShortNameService.forName(name)
+                }
             }
         }
 

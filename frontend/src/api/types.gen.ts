@@ -481,6 +481,7 @@ export type ClubShortNameRequest = {
 
 export type ClubUpsertDto = {
     name: string
+    shortName?: string | null
 }
 
 export type CompetitionCategoryDto = {
@@ -4884,6 +4885,16 @@ export type GetClubShortNamesData = {
 export type GetClubShortNamesResponse = Array<ClubShortNameDto>
 
 export type GetClubShortNamesError = BadRequestError | ApiError
+
+export type GetClubShortNameForNameData = {
+    query: {
+        name: string
+    }
+}
+
+export type GetClubShortNameForNameResponse = ClubShortNameDto
+
+export type GetClubShortNameForNameError = BadRequestError | ApiError
 
 export type UpdateClubShortNameData = {
     body: ClubShortNameRequest

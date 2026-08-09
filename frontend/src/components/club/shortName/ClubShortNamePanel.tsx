@@ -166,7 +166,10 @@ const ClubShortNamePanel = () => {
                 <Throbber />
             ) : rows && rows.length > 0 ? (
                 <TableContainer component={Paper}>
-                    <Table size={'small'}>
+                    {/* Am Telefon drückt die Tabelle das Eingabefeld sonst auf gut 80 px zusammen -
+                        die Kurzform ist darin nicht mehr zu lesen. Mit einer Mindestbreite rollt
+                        stattdessen die Tabelle in ihrem Kasten, die Seite selbst bleibt ruhig. */}
+                    <Table size={'small'} sx={{minWidth: 520}}>
                         <TableHead>
                             <TableRow>
                                 <TableCell>{t('club.shortName.name')}</TableCell>

@@ -1,6 +1,11 @@
 import {describe, expect, it} from 'vitest'
 import {ClubShortNameDto} from '@api/types.gen.ts'
-import {clubShortNameAction, mergedSpellings, primaryName} from './clubShortNames.ts'
+import {
+    clubShortNameAction,
+    clubShortNameForRequest,
+    mergedSpellings,
+    primaryName,
+} from './clubShortNames.ts'
 
 const row = (overrides: Partial<ClubShortNameDto>): ClubShortNameDto => ({
     nameKey: 'rostockerruderclub',
@@ -35,6 +40,31 @@ describe('clubShortNameAction', () => {
 
     it('löscht nichts, wenn die Zeile ohnehin aus der Heuristik kommt', () => {
         expect(clubShortNameAction(row({}), '')).toBe('none')
+    })
+})
+
+describe('clubShortNameForRequest', () => {
+    it('schickt nichts mit, solange das vorbelegte Feld unangetastet ist', () => {
+        // Sonst würde jedes Speichern eines Vereins die Automatik festschreiben.
+        expect(clubShortNameForRequest(row({}), 'Rostocker RC', true)).toBeUndefined()
+    })
+
+    it('schickt den geänderten Wert mit', () => {
+        expect(clubShortNameForRequest(row({}), 'RRC', true)).toBe('RRC')
+    })
+
+    it('schickt eine leere Zeichenkette, wenn ein gepflegter Eintrag geleert wurde', () => {
+        expect(clubShortNameForRequest(row({shortName: 'RRC', maintained: true}), '', true)).toBe('')
+    })
+
+    it('schickt nichts mit, wenn das Feld gesperrt ist', () => {
+        // Wer die Kurzform nicht ändern darf, darf sie auch beim Umbenennen nicht verschieben.
+        expect(clubShortNameForRequest(row({}), 'RRC', false)).toBeUndefined()
+    })
+
+    it('schickt beim Anlegen nur mit, was jemand hineingeschrieben hat', () => {
+        expect(clubShortNameForRequest(null, '', true)).toBeUndefined()
+        expect(clubShortNameForRequest(null, ' RRC ', true)).toBe('RRC')
     })
 })
 

@@ -363,6 +363,7 @@
       "users": "Users",
       "config": "Configurations",
       "clubs": "Clubs",
+      "clubShortNames": "Club short names",
       "myClub": "My Club",
       "invoices": "Invoices",
       "administration": "Administration"
@@ -414,6 +415,9 @@
         }
       },
       "shortNames": "Club short names",
+      "toPage": "Maintain club short names",
+      "toClubs": "Back to the club overview",
+      "dialogHint": "How the club is written on the referee board and the athlete display. Prefilled with the automatically derived short name; clearing it means: derive it automatically again.",
       "tableHint": "Determine how a club is written on the referee board and the athlete display. Without an entry the short name is derived automatically.",
       "emptyHint": "Clearing the field means: derive it automatically again. Changes are saved when you leave the field.",
       "name": "Club name",

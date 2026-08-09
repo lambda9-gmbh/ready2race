@@ -17,6 +17,7 @@ import {
     updateEventGlobal,
     updateUserGlobal,
     readLiveDashboardGlobal,
+    readClubGlobal,
 } from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
@@ -35,6 +36,7 @@ import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordP
 import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
 import ClubsPage from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
+import ClubShortNamesPage from './pages/club/ClubShortNamesPage.tsx'
 import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx'
 import AcceptInvitationPage from './pages/user/AcceptInvitationPage.tsx'
@@ -379,6 +381,18 @@ export const clubsIndexRoute = createRoute({
     },
 })
 
+// Eigene Seite neben der Vereinsübersicht, nicht unter ihr: die Kurzform hängt am Vereins*namen*,
+// und die meisten vorkommenden Namen gehören zu keinem Verein aus der Übersicht. Lesen wie die
+// Übersicht mit `ReadClubGlobal` — kein eigenes Privileg.
+export const clubShortNamesRoute = createRoute({
+    getParentRoute: () => mainLayoutRoute,
+    path: 'clubShortName',
+    component: () => <ClubShortNamesPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readClubGlobal)
+    },
+})
+
 export const administrationRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
     path: 'administration',
@@ -528,6 +542,7 @@ const routeTree = rootRoute.addChildren([
         registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
         resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
         clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
+        clubShortNamesRoute,
         invoicesRoute,
     ]),
     appRoute.addChildren([

@@ -27,6 +27,45 @@ export const clubShortNameAction = (row: ClubShortNameDto, draft: string): ClubS
     return 'save'
 }
 
+/**
+ * Was der Bearbeiten-Dialog eines Vereins als `shortName` mitschickt.
+ *
+ * Der Dialog schreibt in dieselbe Ablage wie die Liste, hat aber nur ein Feld statt einer Zeile
+ * je Schreibweise - deshalb übersetzt diese Funktion die Entscheidung aus
+ * [clubShortNameAction] in die drei Zustände des Feldes am Verein:
+ *
+ * - `undefined` - nicht mitschicken, die Ablage bleibt, wie sie ist
+ * - `''` - Eintrag löschen, danach greift wieder die Automatik
+ * - Wert - Kurzform pflegen
+ *
+ * [resolved] ist `null`, solange die aufgelöste Kurzform noch nicht geladen ist (und beim Anlegen
+ * eines Vereins, zu dem es noch keine gibt). Dann gibt es nichts zu vergleichen: geschrieben wird
+ * nur, was jemand hineingeschrieben hat.
+ */
+export const clubShortNameForRequest = (
+    resolved: ClubShortNameDto | null,
+    draft: string,
+    mayUpdate: boolean,
+): string | undefined => {
+    // Ein gesperrtes Feld darf auch dann nichts auslösen, wenn der Verein umbenannt wird.
+    if (!mayUpdate) {
+        return undefined
+    }
+
+    if (resolved === null) {
+        return draft.trim() === '' ? undefined : draft.trim()
+    }
+
+    switch (clubShortNameAction(resolved, draft)) {
+        case 'none':
+            return undefined
+        case 'delete':
+            return ''
+        case 'save':
+            return draft.trim()
+    }
+}
+
 /** Die Schreibweise, die die Zeile anführt. Das Backend stellt die kürzeste nach vorn. */
 export const primaryName = (row: ClubShortNameDto): string => row.names[0] ?? row.nameKey
 

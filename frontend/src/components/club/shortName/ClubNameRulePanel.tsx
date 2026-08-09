@@ -289,7 +289,9 @@ const ClubNameRulePanel = ({onRulesChanged}: Props) => {
                     {t('club.shortName.rules.wordPairsHint')}
                 </Box>
                 <TableContainer component={Paper}>
-                    <Table size={'small'}>
+                    {/* Wie bei den Vereinsnamen: lieber die Tabelle rollen lassen als die
+                        Eingabefelder am Telefon auf wenige Zeichen zusammenzudrücken. */}
+                    <Table size={'small'} sx={{minWidth: 480}}>
                         <TableHead>
                             <TableRow>
                                 <TableCell>{t('club.shortName.rules.term')}</TableCell>
@@ -358,7 +360,7 @@ const ClubNameRulePanel = ({onRulesChanged}: Props) => {
                     {t('club.shortName.rules.removedTermsHint')}
                 </Box>
                 <TableContainer component={Paper}>
-                    <Table size={'small'}>
+                    <Table size={'small'} sx={{minWidth: 360}}>
                         <TableHead>
                             <TableRow>
                                 <TableCell>{t('club.shortName.rules.term')}</TableCell>

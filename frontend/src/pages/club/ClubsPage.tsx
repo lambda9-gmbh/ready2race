@@ -1,5 +1,6 @@
 import {ClubDto, getCreateClubOnRegistrationAllowed, updateGlobalConfigurations} from '../../api'
-import {Box, Card, CardContent, CardHeader, Stack} from '@mui/material'
+import {Box, Card, CardContent, CardHeader, Stack, Typography} from '@mui/material'
+import {Link} from '@tanstack/react-router'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
 import ClubTable from '@components/club/ClubTable.tsx'
@@ -10,7 +11,6 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {useState} from 'react'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {readClubGlobal, updateAdministrationConfigGlobal} from '@authorization/privileges.ts'
-import ClubShortNamePanel from '@components/club/shortName/ClubShortNamePanel.tsx'
 
 type GlobalConfigForm = {
     allowClubCreationOnRegistration: boolean
@@ -86,11 +86,15 @@ const ClubsPage = () => {
             )}
             <ClubTable {...administrationProps.table} title={t('club.clubs')} />
             <ClubDialog {...administrationProps.dialog} />
-            {/* Die Kurzformen hängen an Vereins*namen*, nicht an Vereins-Datensätzen, und stehen
-                deshalb neben der Vereinsliste statt in ihr. */}
+            {/* Die Kurzformen hängen an Vereins*namen*, nicht an Vereins-Datensätzen, und haben
+                deshalb eine eigene Seite statt eines Abschnitts unter dieser Liste: die meisten
+                Namen dort gehören zu gar keinem Verein aus dieser Tabelle. Der Verweis steht
+                hier, weil man sie zuerst beim Verein sucht. */}
             {user.checkPrivilege(readClubGlobal) && (
-                <Box sx={{mt: 4}}>
-                    <ClubShortNamePanel />
+                <Box sx={{mt: 3}}>
+                    <Link to={'/clubShortName'}>
+                        <Typography color={'primary'}>{t('club.shortName.toPage')}</Typography>
+                    </Link>
                 </Box>
             )}
         </Box>

@@ -336,6 +336,9 @@ import type {
     GetClubShortNamesData,
     GetClubShortNamesError,
     GetClubShortNamesResponse,
+    GetClubShortNameForNameData,
+    GetClubShortNameForNameError,
+    GetClubShortNameForNameResponse,
     UpdateClubShortNameData,
     UpdateClubShortNameError,
     UpdateClubShortNameResponse,
@@ -2246,6 +2249,19 @@ export const getClubShortNames = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/clubShortName',
+    })
+}
+
+export const getClubShortNameForName = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubShortNameForNameData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubShortNameForNameResponse,
+        GetClubShortNameForNameError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubShortName/forName',
     })
 }
 

@@ -12,6 +12,7 @@ import {
     PhoneAndroid,
     Receipt,
     Settings,
+    ShortText,
     Work,
     Workspaces,
 } from '@mui/icons-material'
@@ -114,6 +115,12 @@ const SidebarContent = ({...props}: Props) => {
                 icon={<Workspaces />}
                 privilege={readClubGlobal}
                 to={'/club'}
+            />
+            <SidebarItem
+                text={t('navigation.titles.clubShortNames')}
+                icon={<ShortText />}
+                privilege={readClubGlobal}
+                to={'/clubShortName'}
             />
             <SidebarItem text={t('navigation.titles.events')} icon={<Event />} to={'/event'} />
             <SidebarItem
