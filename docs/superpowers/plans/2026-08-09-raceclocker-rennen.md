@@ -42,7 +42,8 @@
 
 | Datei | Verantwortung |
 |---|---|
-| `backend/src/main/resources/db/migration/V202608091600__raceclocker_races.sql` | Tabelle, Anwahl-Spalten, Backfill, Abbau der alten Spalten |
+| `backend/src/main/resources/db/migration/V202608091600__raceclocker_races.sql` | Tabelle, Anwahl-Spalten, Backfill (Ausbau) |
+| `backend/src/main/resources/db/migration/V202608091700__drop_raceclocker_urls.sql` | Abbau der vier alten Adress-Spalten (Task 10) |
 | `.../app/raceclocker/entity/RaceClockerRace.kt` | `RaceClockerRaceDto`, `RaceClockerRaceRequest`, `RaceClockerStartMode`, `RaceClockerRaceRef` |
 | `.../app/raceclocker/entity/RaceClockerRaceError.kt` | Fehler der Rennen-Verwaltung |
 | `.../app/raceclocker/control/RaceClockerRaceRepo.kt` | Lesen/Schreiben der Rennen |
@@ -71,7 +72,7 @@
 
 **Interfaces:**
 - Consumes: nichts
-- Produces: Tabelle `raceclocker_race` (Spalten `id, event, name, results_url, start_mode, captures_laps, position, created_at, created_by, updated_at, updated_by`); Spalten `raceclocker_race_qualification` und `raceclocker_race_rounds` auf `event` und `competition`. Nach `generate-sources` existieren `RACECLOCKER_RACE` und `RaceclockerRaceRecord` im Paket `de.lambda9.ready2race.backend.database.generated.tables.*`. Die vier alten Adress-Spalten existieren **nicht mehr** — nachfolgende Tasks dürfen sie nicht referenzieren.
+- Produces: Tabelle `raceclocker_race` (Spalten `id, event, name, results_url, start_mode, captures_laps, position, created_at, created_by, updated_at, updated_by`); Spalten `raceclocker_race_qualification` und `raceclocker_race_rounds` auf `event` und `competition`. Nach `generate-sources` existieren `RACECLOCKER_RACE` und `RaceclockerRaceRecord` im Paket `de.lambda9.ready2race.backend.database.generated.tables.*`. Die vier alten Adress-Spalten existieren **weiterhin**, damit der Zweig übersetzbar bleibt; Task 10 entfernt sie, sobald kein Code sie mehr liest. Neue Tasks dürfen sie nicht mehr *benutzen*.
 
 - [ ] **Step 1: Migrationsnummer prüfen**
 
@@ -247,14 +248,14 @@ from raceclocker_race r
 where r.event = c.event
   and r.results_url = c.raceclocker_heats_results_url;
 
--- Erst jetzt: Die alten Spalten haben ihre Schuldigkeit getan.
-alter table event
-    drop column raceclocker_tt_results_url,
-    drop column raceclocker_heats_results_url;
-
-alter table competition
-    drop column raceclocker_tt_results_url,
-    drop column raceclocker_heats_results_url;
+-- Die vier alten Spalten bleiben hier absichtlich stehen; sie fallen erst in
+-- V202608091700 (Task 10), wenn kein Code sie mehr liest.
+--
+-- Der Grund ist nicht Vorsicht, sondern Übersetzbarkeit: Kotlin übersetzt alle Hauptquellen als
+-- eine Einheit, und jOOQ erzeugt seine Klassen aus genau diesem Schema. Fielen die Spalten schon
+-- hier, verlöre der Zweig ab diesem Commit seine Übersetzbarkeit -- bis zum letzten Umbau der
+-- Aufrufstellen liefe kein einziger Test mehr, auch keiner, der mit der Sache nichts zu tun hat.
+-- Getrennt bleibt jeder Zwischenstand lauffähig und prüfbar.
 ```
 
 - [ ] **Step 3: Datenbanken starten und migrieren**
@@ -269,10 +270,16 @@ Erwartet: Durchlauf ohne Fehler. Bei `Migration checksum mismatch` oder Resten f
 
 ```bash
 grep -rn "RACECLOCKER_RACE\b" backend/target/generated-sources/jooq/de/lambda9/ready2race/backend/database/generated/tables/references/Tables.kt | head -3
-grep -rn "raceclockerTtResultsUrl" backend/target/generated-sources/jooq | head -3
+grep -c "RACECLOCKER_RACE_QUALIFICATION" backend/target/generated-sources/jooq/de/lambda9/ready2race/backend/database/generated/tables/Event.kt
 ```
 
-Erwartet: Der erste Befehl findet `RACECLOCKER_RACE`. Der zweite findet **nichts** — die alten Spalten sind weg.
+Erwartet: Der erste Befehl findet `RACECLOCKER_RACE`, der zweite eine Zahl > 0. Die **alten** Spalten sind an dieser Stelle noch da und sollen es sein (Task 10 räumt sie ab) — der Zweig muss nach diesem Commit weiterhin übersetzen:
+
+```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q compile
+```
+
+Erwartet: keine Fehler.
 
 - [ ] **Step 5: Backfill an einem Beispiel prüfen**
 
@@ -2088,6 +2095,69 @@ In `docs/superpowers/specs/2026-08-05-testkatalog-crf-2026.md` fünf Fälle erg�
 ```bash
 git add docs/superpowers/specs/2026-08-05-testkatalog-crf-2026.md
 git commit -m "Handtests für die Rennen-Anwahl aufnehmen"
+```
+
+---
+
+## Task 10: Die alten Adress-Spalten abbauen
+
+**Files:**
+- Create: `backend/src/main/resources/db/migration/V202608091700__drop_raceclocker_urls.sql`
+
+**Interfaces:**
+- Consumes: Tasks 1–8. Voraussetzung ist, dass **kein** Kotlin- und kein SQL-Code die vier Spalten mehr liest.
+- Produces: `event` und `competition` ohne `raceclocker_tt_results_url` / `raceclocker_heats_results_url`.
+
+Der Gegenschritt zu Task 1. Getrennt, weil Kotlin alle Hauptquellen als eine Einheit übersetzt und jOOQ seine Klassen aus dem migrierten Schema erzeugt: Ein Löschen schon in Task 1 hätte den Zweig ab dort unübersetzbar gemacht, und keine Task dazwischen hätte ihre Tests laufen lassen können.
+
+- [ ] **Step 1: Prüfen, dass niemand die Spalten mehr liest**
+
+```bash
+grep -rn "raceclockerTtResultsUrl\|raceclockerHeatsResultsUrl\|RACECLOCKER_TT_RESULTS_URL\|RACECLOCKER_HEATS_RESULTS_URL\|raceclocker_tt_results_url\|raceclocker_heats_results_url" backend/src frontend/src --include="*.kt" --include="*.ts" --include="*.tsx" --include="*.sql" --include="*.yaml" | grep -v "db/migration/V202608091600"
+```
+
+Erwartet: **keine Treffer**. Jeder Treffer außerhalb der Migration V202608091600 ist eine Aufrufstelle, die eine frühere Task übersehen hat — die gehört dort behoben, nicht hier umgangen.
+
+- [ ] **Step 2: Migration schreiben**
+
+Datei `backend/src/main/resources/db/migration/V202608091700__drop_raceclocker_urls.sql`:
+
+```sql
+set search_path to ready2race, pg_catalog, public;
+
+-- Der Abbau zu V202608091600: Die vier Adress-Spalten, die von den benannten Rennen abgelöst
+-- wurden, verschwinden.
+--
+-- Bewusst eine eigene Migration und nicht der Schluss der vorigen. Kotlin übersetzt alle
+-- Hauptquellen als eine Einheit, und jOOQ erzeugt seine Klassen aus dem migrierten Schema: Wären
+-- die Spalten schon beim Anlegen der Rennen gefallen, hätte der Zweig von da an bis zum letzten
+-- umgestellten Aufrufer nicht mehr übersetzt -- kein Test wäre lauffähig gewesen, auch keiner, der
+-- mit der Zeitnahme nichts zu tun hat. Getrennt bleibt jeder Zwischenstand prüfbar.
+--
+-- Der Backfill in V202608091600 hat die Anwahl-Spalten bereits gefüllt; hier geht keine Zuordnung
+-- verloren, nur die abgelöste Schreibweise.
+alter table event
+    drop column raceclocker_tt_results_url,
+    drop column raceclocker_heats_results_url;
+
+alter table competition
+    drop column raceclocker_tt_results_url,
+    drop column raceclocker_heats_results_url;
+```
+
+- [ ] **Step 3: Neu erzeugen und alles übersetzen**
+
+```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build flyway:clean && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test
+```
+
+Erwartet: Migrationen laufen durch, alles übersetzt, alle Tests grün. Ein Übersetzungsfehler hier heißt, dass Step 1 eine Aufrufstelle übersehen hat.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add backend/src/main/resources/db/migration/V202608091700__drop_raceclocker_urls.sql
+git commit -m "Die abgelösten Adress-Spalten entfernen"
 ```
 
 ---

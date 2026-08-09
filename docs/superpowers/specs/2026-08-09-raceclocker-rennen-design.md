@@ -87,7 +87,9 @@ Gelesen wird wie heute `coalesce(competition.…, event.…)`: Die Veranstaltung
 
 ### 3.3 Was wegfällt
 
-`raceclocker_tt_results_url` und `raceclocker_heats_results_url` — je auf `event` und `competition`, also vier Spalten. Erst nach dem Backfill in §4 gelöscht, in derselben Migration.
+`raceclocker_tt_results_url` und `raceclocker_heats_results_url` — je auf `event` und `competition`, also vier Spalten.
+
+**In zwei Migrationen, nicht in einer** (Ausbau/Abbau). Die erste legt Tabelle, Anwahl und Backfill an und lässt die alten Spalten stehen; eine zweite entfernt sie, sobald kein Code sie mehr liest. Der Grund ist zwingend und wurde bei der Umsetzung entdeckt: Kotlin übersetzt alle Hauptquellen als eine Einheit, und jOOQ erzeugt seine Klassen aus dem migrierten Schema. Fielen die Spalten schon in der ersten Migration, wäre der Zweig von da an bis zur letzten umgestellten Aufrufstelle nicht mehr übersetzbar — keine Zwischenstufe ließe sich testen, auch nicht in Bereichen, die mit der Zeitnahme nichts zu tun haben. Getrennt bleibt jeder Stand prüfbar, und die Umstellung ließe sich sogar in zwei unabhängigen Schritten ausrollen.
 
 ---
 

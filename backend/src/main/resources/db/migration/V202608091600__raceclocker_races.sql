@@ -159,11 +159,12 @@ from raceclocker_race r
 where r.event = c.event
   and r.results_url = c.raceclocker_heats_results_url;
 
--- Erst jetzt: Die alten Spalten haben ihre Schuldigkeit getan.
-alter table event
-    drop column raceclocker_tt_results_url,
-    drop column raceclocker_heats_results_url;
-
-alter table competition
-    drop column raceclocker_tt_results_url,
-    drop column raceclocker_heats_results_url;
+-- Die vier alten Spalten bleiben hier absichtlich stehen; sie fallen erst in
+-- V202608091700, wenn kein Code sie mehr liest.
+--
+-- Der Grund ist nicht Vorsicht, sondern Übersetzbarkeit: Kotlin übersetzt alle Hauptquellen als
+-- eine Einheit, und jOOQ erzeugt seine Klassen aus genau diesem Schema. Fielen die Spalten schon
+-- hier, verlöre der Zweig ab diesem Commit seine Übersetzbarkeit -- bis zum letzten Umbau der
+-- Aufrufstellen liefe kein einziger Test mehr, auch keiner, der mit der Sache nichts zu tun hat.
+-- Getrennt bleibt jeder Zwischenstand lauffähig und prüfbar, und die Umstellung lässt sich in zwei
+-- unabhängigen Schritten ausrollen statt in einem.
