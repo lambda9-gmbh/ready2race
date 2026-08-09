@@ -2381,8 +2381,6 @@ export type ParticipantTrackingDto = {
     lastScanBy?: AppUserNameDto
     source: ParticipantTrackingSource
     editCount: number
-    lastEditedAt?: string | null
-    lastEditedBy?: AppUserNameDto
 }
 
 export type ParticipantTrackingEntryDto = {
@@ -5608,7 +5606,10 @@ export type AddManualParticipantTrackingData = {
 
 export type AddManualParticipantTrackingResponse = string
 
-export type AddManualParticipantTrackingError = BadRequestError | ApiError
+export type AddManualParticipantTrackingError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
 
 export type CorrectParticipantTrackingData = {
     body: ManualTrackingRequest
@@ -5621,7 +5622,7 @@ export type CorrectParticipantTrackingData = {
 
 export type CorrectParticipantTrackingResponse = unknown
 
-export type CorrectParticipantTrackingError = BadRequestError | ApiError
+export type CorrectParticipantTrackingError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type UpdateParticipantRequirementData = {
     body: ParticipantRequirementUpsertDto

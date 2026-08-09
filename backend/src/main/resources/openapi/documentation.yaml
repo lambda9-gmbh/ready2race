@@ -15041,12 +15041,6 @@ components:
           $ref: '#/components/schemas/ParticipantTrackingSource'
         editCount:
           type: integer
-        lastEditedAt:
-          type: string
-          format: date-time
-          nullable: true
-        lastEditedBy:
-          $ref: '#/components/schemas/AppUserNameDto'
 
     ParticipantTrackingSource:
       type: string

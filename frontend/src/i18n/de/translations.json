@@ -576,7 +576,30 @@
           "alreadyCheckedIn": "Diese Person ist bereits eingecheckt — es ist nichts weiter zu tun.",
           "notCheckedIn": "Diese Person ist gar nicht eingecheckt und kann deshalb nicht ausgecheckt werden.",
           "qrCodeNotAssociated": "Dieses Bändchen gehört zu keinem Teilnehmer. Bitte es zuerst in der QR-Verwaltung einer Person zuweisen.",
-          "qrCodeNotFound": "Dieses Bändchen ist im System nicht bekannt. Bitte den Code prüfen oder ein anderes Bändchen nehmen."
+          "qrCodeNotFound": "Dieses Bändchen ist im System nicht bekannt. Bitte den Code prüfen oder ein anderes Bändchen nehmen.",
+          "entryNotFound": "Diesen Eintrag gibt es nicht (mehr). Bitte den Verlauf neu laden.",
+          "sequenceConflict": "Mit diesem Zeitpunkt widerspräche sich der Verlauf: An- und Abmeldungen müssen sich abwechseln und mit einer Anmeldung beginnen.",
+          "timestampCollision": "Für diese Person gibt es bereits einen Eintrag auf genau diesen Zeitpunkt. Bitte eine Minute abweichen."
+        },
+        "manual": {
+          "title": "Check-in/-out von {{name}}",
+          "hint": "Regulär wird am Steg der QR-Code gescannt. Einträge, die hier von Hand entstehen oder berichtigt werden, sind ausdrücklich der dokumentierte Ausnahmeweg: sie werden mit Begründung, Vorher-Stand und Urheber festgehalten und in allen Ansichten als manuell gekennzeichnet.",
+          "entries": "Verlauf",
+          "noEntries": "Für diese Person ist bisher nichts erfasst.",
+          "add": "Eintrag von Hand ergänzen",
+          "correct": "Eintrag berichtigen",
+          "reason": "Begründung",
+          "reasonHint": "Warum wird von Hand eingetragen? Der Text bleibt dauerhaft im Protokoll.",
+          "trail": "Änderungsverlauf",
+          "changeCreated": "Von Hand angelegt: {{entry}}",
+          "sourceQr": "per QR",
+          "sourceQrCorrected": "per QR, berichtigt",
+          "sourceManual": "manuell",
+          "source": "Erfassung",
+          "saved": "Eintrag gespeichert",
+          "saveError": "Der Eintrag konnte nicht gespeichert werden.",
+          "open": "Check-in/-out bearbeiten",
+          "notTracked": "kein Steg-Scan"
         }
       },
       "certificate": {

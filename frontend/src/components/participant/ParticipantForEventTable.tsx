@@ -20,6 +20,7 @@ import {
     Download,
     Edit,
     Email,
+    History,
     Info,
     VerifiedUser,
     WorkspacePremium,
@@ -30,16 +31,15 @@ import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import ParticipantRequirementApproveManuallyForEventDialog, {
     ParticipantRequirementApproveManuallyForEventForm,
 } from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
-import ParticipantRequirementCheckForEventUploadFileDialog
-    from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
-import OpenRequirementExportDialog
-    from '@components/event/participantRequirement/OpenRequirementExportDialog.tsx'
+import ParticipantRequirementCheckForEventUploadFileDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
+import OpenRequirementExportDialog from '@components/event/participantRequirement/OpenRequirementExportDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Box, Link, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {
     readRegistrationGlobal,
     updateEventGlobal,
+    updateLiveDashboardGlobal,
     updateRegistrationGlobal,
 } from '@authorization/privileges.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
@@ -48,6 +48,7 @@ import {QrCodeEditDialog} from '@components/participant/QrCodeEditDialog.tsx'
 import QrCodeIcon from '@mui/icons-material/QrCode'
 import {getFilename} from '@utils/helpers.ts'
 import {participationCertificateErrorKey} from '@components/certificate/certificateError.ts'
+import ParticipantTrackingDialog from '@components/event/participantTracking/ParticipantTrackingDialog.tsx'
 
 // TODO: validate/sanitize basepath (also in routes.tsx)
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
@@ -56,7 +57,7 @@ const initialPagination: GridPaginationModel = {
     page: 0,
     pageSize: 10,
 }
-const pageSizeOptions: (number | { value: number; label: string })[] = [10]
+const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 type Props = BaseEntityTableProps<ParticipantForEventDto> & {
@@ -77,6 +78,12 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [editQrParticipant, setEditQrParticipant] = useState<ParticipantForEventDto | null>(null)
+    // Der Ausnahmeweg neben dem Scanner - siehe ParticipantTrackingDialog.
+    const [trackingParticipant, setTrackingParticipant] = useState<ParticipantForEventDto | null>(
+        null,
+    )
+    const mayEditTracking =
+        user.checkPrivilege(updateLiveDashboardGlobal) || user.checkPrivilege(updateEventGlobal)
 
     const eventId = eventData.id
 
@@ -138,187 +145,206 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 headerName: t('club.participant.externalClub'),
                 minWidth: 150,
                 flex: 1,
-                renderCell: ({row}: { row: ParticipantForEventDto }) => (
+                renderCell: ({row}: {row: ParticipantForEventDto}) => (
                     <Typography>{row.externalClubName ?? '-'}</Typography>
                 ),
             },
             ...(canReadRegistration
                 ? ([
-                    {
-                        field: 'participantRequirementsChecked',
-                        headerName: t('event.participantRequirement.approved'),
-                        maxWidth: 200,
-                        minWidth: 120,
-                        flex: 1,
-                        sortable: false,
-                        renderCell: ({row}) => {
-                            const globalRequirements = requirementsData?.data || []
+                      {
+                          field: 'participantRequirementsChecked',
+                          headerName: t('event.participantRequirement.approved'),
+                          maxWidth: 200,
+                          minWidth: 120,
+                          flex: 1,
+                          sortable: false,
+                          renderCell: ({row}) => {
+                              const globalRequirements = requirementsData?.data || []
 
-                            // Find all named participants for this specific row
-                            const rowNamedParticipants =
-                                namedParticipantsForEvent?.filter(np =>
-                                    row.namedParticipantIds?.includes(np.id),
-                                ) || []
+                              // Find all named participants for this specific row
+                              const rowNamedParticipants =
+                                  namedParticipantsForEvent?.filter(np =>
+                                      row.namedParticipantIds?.includes(np.id),
+                                  ) || []
 
-                            // Get requirements specific to this participant's named participants
-                            const namedParticipantRequirements = rowNamedParticipants.flatMap(np =>
-                                (np.requirements || []).map(req => ({...req, participantName: np.name})),
-                            )
+                              // Get requirements specific to this participant's named participants
+                              const namedParticipantRequirements = rowNamedParticipants.flatMap(
+                                  np =>
+                                      (np.requirements || []).map(req => ({
+                                          ...req,
+                                          participantName: np.name,
+                                      })),
+                              )
 
-                            // Get all named participant requirement IDs across all named participants
-                            const allNamedRequirementIds = new Set(
-                                namedParticipantsForEvent?.flatMap(
-                                    np => np.requirements?.map(r => r.requirementId) || [],
-                                ) || [],
-                            )
+                              // Get all named participant requirement IDs across all named participants
+                              const allNamedRequirementIds = new Set(
+                                  namedParticipantsForEvent?.flatMap(
+                                      np => np.requirements?.map(r => r.requirementId) || [],
+                                  ) || [],
+                              )
 
-                            // Create a map to deduplicate requirements and track their assignment type
-                            const requirementMap = new Map()
+                              // Create a map to deduplicate requirements and track their assignment type
+                              const requirementMap = new Map()
 
-                            // Add global requirements ONLY if they are not assigned to any named participant
-                            globalRequirements.forEach(r => {
-                                if (!allNamedRequirementIds.has(r.id)) {
-                                    requirementMap.set(r.id, {
-                                        id: r.id,
-                                        name: r.name,
-                                        assignmentType: 'global',
-                                        qrCodeRequired: false,
-                                        checked:
-                                            row.participantRequirementsChecked?.some(c => c.id === r.id) ??
-                                            false,
-                                        note: row.participantRequirementsChecked?.find(c => c.id === r.id)
-                                            ?.note,
-                                    })
-                                }
-                            })
+                              // Add global requirements ONLY if they are not assigned to any named participant
+                              globalRequirements.forEach(r => {
+                                  if (!allNamedRequirementIds.has(r.id)) {
+                                      requirementMap.set(r.id, {
+                                          id: r.id,
+                                          name: r.name,
+                                          assignmentType: 'global',
+                                          qrCodeRequired: false,
+                                          checked:
+                                              row.participantRequirementsChecked?.some(
+                                                  c => c.id === r.id,
+                                              ) ?? false,
+                                          note: row.participantRequirementsChecked?.find(
+                                              c => c.id === r.id,
+                                          )?.note,
+                                      })
+                                  }
+                              })
 
-                            // Add named participant requirements for this specific participant
-                            namedParticipantRequirements.forEach(req => {
-                                requirementMap.set(req.requirementId, {
-                                    id: req.requirementId,
-                                    name: req.requirementName,
-                                    assignmentType: 'named',
-                                    participantName: req.participantName || 'Unknown',
-                                    qrCodeRequired: req.qrCodeRequired,
-                                    checked:
-                                        row.participantRequirementsChecked?.some(
-                                            c => c.id === req.requirementId,
-                                        ) ?? false,
-                                    note: row.participantRequirementsChecked?.find(
-                                        c => c.id === req.requirementId,
-                                    )?.note,
-                                })
-                            })
+                              // Add named participant requirements for this specific participant
+                              namedParticipantRequirements.forEach(req => {
+                                  requirementMap.set(req.requirementId, {
+                                      id: req.requirementId,
+                                      name: req.requirementName,
+                                      assignmentType: 'named',
+                                      participantName: req.participantName || 'Unknown',
+                                      qrCodeRequired: req.qrCodeRequired,
+                                      checked:
+                                          row.participantRequirementsChecked?.some(
+                                              c => c.id === req.requirementId,
+                                          ) ?? false,
+                                      note: row.participantRequirementsChecked?.find(
+                                          c => c.id === req.requirementId,
+                                      )?.note,
+                                  })
+                              })
 
-                            const deduplicatedRequirements = Array.from(requirementMap.values())
+                              const deduplicatedRequirements = Array.from(requirementMap.values())
 
-                            if (deduplicatedRequirements.length === 0) {
-                                return ' - '
-                            }
+                              if (deduplicatedRequirements.length === 0) {
+                                  return ' - '
+                              }
 
-                            if (isMobile) {
-                                return (
-                                    <Stack spacing={0.5} sx={{width: 1}}>
-                                        {!isMobile && (
-                                            <Typography variant="caption" color="text.secondary">
-                                                ({row.participantRequirementsChecked?.length ?? 0}/
-                                                {deduplicatedRequirements.length})
-                                            </Typography>
-                                        )}
-                                        <Stack spacing={0.5} sx={{pl: 0.5}}>
-                                            {deduplicatedRequirements.map(req => (
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={0.5}
-                                                    alignItems="center"
-                                                    key={req.id}>
-                                                    {req.checked ? (
-                                                        <CheckCircle color="success" sx={{fontSize: 16}}/>
-                                                    ) : (
-                                                        <Cancel color="error" sx={{fontSize: 16}}/>
-                                                    )}
-                                                    <Typography variant="caption">
-                                                        {req.name} (
-                                                        {req.assignmentType === 'global'
-                                                            ? t('participantRequirement.global')
-                                                            : req.participantName}
-                                                        ){req.qrCodeRequired && ' (QR)'}
-                                                        {req.note && ` [ ${req.note} ]`}
-                                                    </Typography>
-                                                </Stack>
-                                            ))}
-                                        </Stack>
-                                    </Stack>
-                                )
-                            }
+                              if (isMobile) {
+                                  return (
+                                      <Stack spacing={0.5} sx={{width: 1}}>
+                                          {!isMobile && (
+                                              <Typography variant="caption" color="text.secondary">
+                                                  ({row.participantRequirementsChecked?.length ?? 0}
+                                                  /{deduplicatedRequirements.length})
+                                              </Typography>
+                                          )}
+                                          <Stack spacing={0.5} sx={{pl: 0.5}}>
+                                              {deduplicatedRequirements.map(req => (
+                                                  <Stack
+                                                      direction="row"
+                                                      spacing={0.5}
+                                                      alignItems="center"
+                                                      key={req.id}>
+                                                      {req.checked ? (
+                                                          <CheckCircle
+                                                              color="success"
+                                                              sx={{fontSize: 16}}
+                                                          />
+                                                      ) : (
+                                                          <Cancel
+                                                              color="error"
+                                                              sx={{fontSize: 16}}
+                                                          />
+                                                      )}
+                                                      <Typography variant="caption">
+                                                          {req.name} (
+                                                          {req.assignmentType === 'global'
+                                                              ? t('participantRequirement.global')
+                                                              : req.participantName}
+                                                          ){req.qrCodeRequired && ' (QR)'}
+                                                          {req.note && ` [ ${req.note} ]`}
+                                                      </Typography>
+                                                  </Stack>
+                                              ))}
+                                          </Stack>
+                                      </Stack>
+                                  )
+                              }
 
-                            return (
-                                <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                                    <Typography>
-                                        {row.participantRequirementsChecked?.filter(req =>
-                                            deduplicatedRequirements.some(ddReq => req.id === ddReq.id),
-                                        ).length ?? 0}
-                                        /{deduplicatedRequirements.length}{' '}
-                                    </Typography>
-                                    <HtmlTooltip
-                                        placement={'right'}
-                                        title={
-                                            <Stack spacing={1} p={1}>
-                                                {deduplicatedRequirements.map(req => (
-                                                    <Stack direction={'row'} spacing={1} key={req.id}>
-                                                        {req.checked ? (
-                                                            <CheckCircle color={'success'}/>
-                                                        ) : (
-                                                            <Cancel color={'error'}/>
-                                                        )}
-                                                        <Typography>
-                                                            {req.name} (
-                                                            {req.assignmentType === 'global'
-                                                                ? t('participantRequirement.global')
-                                                                : req.participantName}
-                                                            ){req.qrCodeRequired && ' (QR)'}
-                                                            {req.note && ` [ ${req.note} ]`}
-                                                        </Typography>
-                                                    </Stack>
-                                                ))}
-                                            </Stack>
-                                        }>
-                                        <Info color={'info'} fontSize={'small'}/>
-                                    </HtmlTooltip>
-                                </Stack>
-                            )
-                        },
-                    },
-                    {
-                        field: 'qrCodeId',
-                        headerName: t('qrCode.qrCode'),
-                        minWidth: 100,
-                        sortable: false,
-                        renderCell: ({row}) => {
-                            if (!row.qrCodeId) {
-                                return <>-</>
-                            }
+                              return (
+                                  <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                                      <Typography>
+                                          {row.participantRequirementsChecked?.filter(req =>
+                                              deduplicatedRequirements.some(
+                                                  ddReq => req.id === ddReq.id,
+                                              ),
+                                          ).length ?? 0}
+                                          /{deduplicatedRequirements.length}{' '}
+                                      </Typography>
+                                      <HtmlTooltip
+                                          placement={'right'}
+                                          title={
+                                              <Stack spacing={1} p={1}>
+                                                  {deduplicatedRequirements.map(req => (
+                                                      <Stack
+                                                          direction={'row'}
+                                                          spacing={1}
+                                                          key={req.id}>
+                                                          {req.checked ? (
+                                                              <CheckCircle color={'success'} />
+                                                          ) : (
+                                                              <Cancel color={'error'} />
+                                                          )}
+                                                          <Typography>
+                                                              {req.name} (
+                                                              {req.assignmentType === 'global'
+                                                                  ? t(
+                                                                        'participantRequirement.global',
+                                                                    )
+                                                                  : req.participantName}
+                                                              ){req.qrCodeRequired && ' (QR)'}
+                                                              {req.note && ` [ ${req.note} ]`}
+                                                          </Typography>
+                                                      </Stack>
+                                                  ))}
+                                              </Stack>
+                                          }>
+                                          <Info color={'info'} fontSize={'small'} />
+                                      </HtmlTooltip>
+                                  </Stack>
+                              )
+                          },
+                      },
+                      {
+                          field: 'qrCodeId',
+                          headerName: t('qrCode.qrCode'),
+                          minWidth: 100,
+                          sortable: false,
+                          renderCell: ({row}) => {
+                              if (!row.qrCodeId) {
+                                  return <>-</>
+                              }
 
-                            if (isMobile) {
-                                return <Typography variant="body2">{row.qrCodeId}</Typography>
-                            }
+                              if (isMobile) {
+                                  return <Typography variant="body2">{row.qrCodeId}</Typography>
+                              }
 
-                            return (
-                                <HtmlTooltip
-                                    title={
-                                        <Box sx={{p: 1}}>
-                                            <Typography fontWeight={'bold'} gutterBottom>
-                                                {t('qrCode.value')}:
-                                            </Typography>
-                                            <Typography>{row.qrCodeId}</Typography>
-                                        </Box>
-                                    }>
-                                    <QrCodeIcon/>
-                                </HtmlTooltip>
-                            )
-                        },
-                    },
-                ] as GridColDef<ParticipantForEventDto>[])
+                              return (
+                                  <HtmlTooltip
+                                      title={
+                                          <Box sx={{p: 1}}>
+                                              <Typography fontWeight={'bold'} gutterBottom>
+                                                  {t('qrCode.value')}:
+                                              </Typography>
+                                              <Typography>{row.qrCodeId}</Typography>
+                                          </Box>
+                                      }>
+                                      <QrCodeIcon />
+                                  </HtmlTooltip>
+                              )
+                          },
+                      },
+                  ] as GridColDef<ParticipantForEventDto>[])
                 : []),
         ],
         [requirementsData?.data, namedParticipantsForEvent, t, isMobile, canReadRegistration],
@@ -408,8 +434,7 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
         setEditDialogOpen(false)
         setEditQrParticipant(null)
     }
-    const handleEditQrOpen = () => {
-    }
+    const handleEditQrOpen = () => {}
     const handleEditQrReload = () => {
         setEditDialogOpen(false)
         setEditQrParticipant(null)
@@ -484,49 +509,63 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
     }
 
     const customEntityActions = (entity: ParticipantForEventDto) => {
+        // Dieselben zwei Rechte wie im Backend (siehe participantForEvent.kt): der manuelle
+        // Nachtrag steht Admin und Schiedsrichtern offen, auch wenn sie keine Meldungen pflegen.
+        const trackingAction = mayEditTracking
+            ? [
+                  <GridActionsCellItem
+                      icon={<History />}
+                      label={t('club.participant.tracking.manual.open')}
+                      onClick={() => setTrackingParticipant(entity)}
+                      showInMenu
+                  />,
+              ]
+            : []
+
         if (!canUpdateRegistration) {
-            return []
+            return trackingAction
         }
         return [
+            ...trackingAction,
             <GridActionsCellItem
-                icon={<Edit/>}
+                icon={<Edit />}
                 label={t('club.participant.qrCodeEdit')}
                 onClick={() => handleEditQr(entity)}
                 showInMenu
             />,
             <GridActionsCellItem
-                icon={<Delete/>}
+                icon={<Delete />}
                 label={t('club.participant.qrCodeDelete')}
                 onClick={() => handleDeleteQr(entity)}
                 showInMenu
             />,
             ...(eventData.challengeEvent && eventData.allowSelfSubmission && entity.email
                 ? [
-                    <GridActionsCellItem
-                        icon={<Email/>}
-                        label={t('club.participant.resendAccessToken')}
-                        onClick={() => handleResendAccessToken(entity)}
-                        showInMenu
-                    />,
-                ]
+                      <GridActionsCellItem
+                          icon={<Email />}
+                          label={t('club.participant.resendAccessToken')}
+                          onClick={() => handleResendAccessToken(entity)}
+                          showInMenu
+                      />,
+                  ]
                 : []),
             ...(eventData.challengeEvent &&
             eventData.challengesFinished &&
             entity.hasChallengeResults
                 ? [
-                    <GridActionsCellItem
-                        icon={<WorkspacePremium/>}
-                        label={t('club.participant.downloadCOP')}
-                        onClick={() => handleCOPDownload(entity, 'pdf')}
-                        showInMenu
-                    />,
-                    <GridActionsCellItem
-                        icon={<WorkspacePremium/>}
-                        label={t('club.participant.downloadCOPWord')}
-                        onClick={() => handleCOPDownload(entity, 'docx')}
-                        showInMenu
-                    />,
-                ]
+                      <GridActionsCellItem
+                          icon={<WorkspacePremium />}
+                          label={t('club.participant.downloadCOP')}
+                          onClick={() => handleCOPDownload(entity, 'pdf')}
+                          showInMenu
+                      />,
+                      <GridActionsCellItem
+                          icon={<WorkspacePremium />}
+                          label={t('club.participant.downloadCOPWord')}
+                          onClick={() => handleCOPDownload(entity, 'docx')}
+                          showInMenu
+                      />,
+                  ]
                 : []),
         ]
     }
@@ -550,6 +589,16 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 onClose={participantRequirementCheckForEventConfigProps.dialog.closeDialog}
                 onSuccess={props.reloadData}
             />
+            {trackingParticipant !== null && (
+                <ParticipantTrackingDialog
+                    open
+                    onClose={() => setTrackingParticipant(null)}
+                    eventId={eventId}
+                    participantId={trackingParticipant.id}
+                    participantName={`${trackingParticipant.firstname} ${trackingParticipant.lastname}`}
+                    onChanged={props.reloadData}
+                />
+            )}
             <OpenRequirementExportDialog
                 open={openRequirementExportOpen}
                 onClose={() => setOpenRequirementExportOpen(false)}
@@ -562,7 +611,7 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                     user.checkPrivilege(updateEventGlobal) && (
                         <SplitButton
                             main={{
-                                icon: <VerifiedUser/>,
+                                icon: <VerifiedUser />,
                                 label: t('event.participantRequirement.checkUpload'),
                                 onClick: () =>
                                     participantRequirementCheckForEventConfigProps.table.openDialog(

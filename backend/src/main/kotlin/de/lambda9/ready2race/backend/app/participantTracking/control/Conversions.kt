@@ -149,7 +149,5 @@ fun ParticipantTrackingViewRecord.toDto(): App<Nothing, ParticipantTrackingDto> 
         lastScanBy = appUserName(scannedById, scannedByFirstname, scannedByLastname),
         source = ParticipantTrackingSource.valueOf(source!!),
         editCount = (editCount ?: 0L).toInt(),
-        lastEditedAt = lastEditedAt,
-        lastEditedBy = appUserName(lastEditedById, lastEditedByFirstname, lastEditedByLastname),
     )
 )
