@@ -37,12 +37,6 @@ data class AwardCeremonyCandidateParticipant(
     val ownClubName: String?,
 )
 
-/** Die Einheit einer Seite. `null` als Kategorie ist ein gültiger Wert, kein „unbekannt". */
-data class AwardCeremonyKey(
-    val competitionId: UUID,
-    val ratingCategoryName: String?,
-)
-
 data class AwardCeremonyChoiceDto(
     val competitionId: UUID,
     val competitionIdentifier: String,
@@ -59,6 +53,7 @@ data class AwardCeremonyChoiceDto(
     val awardedTeams: Int,
 )
 
+/** Die Einheit einer Seite. `null` als Kategorie ist ein gültiger Wert, kein „unbekannt". */
 data class AwardCeremonyKeyRequest(
     val competitionId: UUID,
     val ratingCategoryName: String?,
