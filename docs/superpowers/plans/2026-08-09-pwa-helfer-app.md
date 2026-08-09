@@ -849,14 +849,25 @@ import {readLiveDashboardGlobal} from '@authorization/privileges.ts'
  * Dashboard ist keine Scanner-Funktion und trägt deshalb `null` - der Scanner darf nichts
  * bekommen, womit er nichts anfangen kann.
  */
+/**
+ * Die Beschriftungen sind bewusst als Literale getippt und nicht als `string`: `t()` nimmt nur
+ * bekannte Schlüssel entgegen, ein loser `string` scheitert an dessen Typprüfung.
+ */
+export type AppEntryLabelKey =
+    | 'app.functionSelect.functions.qrManagement'
+    | 'app.functionSelect.functions.competitionCheck'
+    | 'app.functionSelect.functions.eventRequirement'
+    | 'app.functionSelect.functions.caterer'
+    | 'app.functionSelect.functions.liveDashboard'
+
 export type AppEntry = {
     key: string
-    labelKey: string
+    labelKey: AppEntryLabelKey
     target: AppView
     appFunction: AppFunction
 }
 
-const scannerLabels: Record<Exclude<AppFunction, null>, string> = {
+const scannerLabels: Record<Exclude<AppFunction, null>, AppEntryLabelKey> = {
     APP_QR_MANAGEMENT: 'app.functionSelect.functions.qrManagement',
     APP_COMPETITION_CHECK: 'app.functionSelect.functions.competitionCheck',
     APP_EVENT_REQUIREMENT: 'app.functionSelect.functions.eventRequirement',
