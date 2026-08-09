@@ -363,7 +363,6 @@
       "users": "Benutzer",
       "config": "Konfigurationen",
       "clubs": "Vereine",
-      "clubShortNames": "Vereinskurzformen",
       "myClub": "Mein Verein",
       "invoices": "Rechnungen",
       "administration": "Administration"
@@ -391,6 +390,11 @@
     }
   },
   "club": {
+    "tabs": {
+        "clubs": "Vereine",
+        "shortNames": "Kurzformen",
+        "settings": "Einstellungen"
+    },
     "shortName": {
       "names": "Vereinsnamen",
       "rules": {
@@ -415,8 +419,6 @@
         }
       },
       "shortNames": "Vereinskurzformen",
-      "toPage": "Vereinskurzformen pflegen",
-      "toClubs": "Zurück zur Vereinsübersicht",
       "dialogHint": "Wie der Verein auf dem Schiedsrichter-Board und der Athleten-Anzeige geschrieben wird. Vorbelegt mit der automatisch gebildeten Kurzform; leeren heißt: wieder automatisch bilden.",
       "tableHint": "Bestimmen, wie ein Verein auf dem Schiedsrichter-Board und der Athleten-Anzeige geschrieben wird. Ohne Eintrag wird die Kurzform automatisch gebildet.",
       "emptyHint": "Feld leeren heißt: wieder automatisch bilden. Änderungen werden beim Verlassen des Feldes gespeichert.",

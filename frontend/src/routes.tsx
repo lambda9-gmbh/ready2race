@@ -34,9 +34,8 @@ import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
 import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
-import ClubsPage from './pages/club/ClubsPage.tsx'
+import ClubsPage, {ClubTab} from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
-import ClubShortNamesPage from './pages/club/ClubShortNamesPage.tsx'
 import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx'
 import AcceptInvitationPage from './pages/user/AcceptInvitationPage.tsx'
@@ -379,19 +378,9 @@ export const clubsIndexRoute = createRoute({
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
+    validateSearch: validateTabSearch<ClubTab>,
 })
 
-// Eigene Seite neben der Vereinsübersicht, nicht unter ihr: die Kurzform hängt am Vereins*namen*,
-// und die meisten vorkommenden Namen gehören zu keinem Verein aus der Übersicht. Lesen wie die
-// Übersicht mit `ReadClubGlobal` — kein eigenes Privileg.
-export const clubShortNamesRoute = createRoute({
-    getParentRoute: () => mainLayoutRoute,
-    path: 'clubShortName',
-    component: () => <ClubShortNamesPage />,
-    beforeLoad: ({context, location}) => {
-        checkAuth(context, location, readClubGlobal)
-    },
-})
 
 export const administrationRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
@@ -542,7 +531,6 @@ const routeTree = rootRoute.addChildren([
         registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
         resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
         clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
-        clubShortNamesRoute,
         invoicesRoute,
     ]),
     appRoute.addChildren([

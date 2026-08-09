@@ -363,7 +363,6 @@
       "users": "Brugere",
       "config": "Konfigurationer",
       "clubs": "Klubber",
-      "clubShortNames": "Klubforkortelser",
       "myClub": "Min klub",
       "invoices": "Fakturaer",
       "administration": "Administration"
@@ -391,6 +390,11 @@
     }
   },
   "club": {
+    "tabs": {
+        "clubs": "Klubber",
+        "shortNames": "Korte navne",
+        "settings": "Indstillinger"
+    },
     "shortName": {
       "names": "Klubnavne",
       "rules": {
@@ -415,8 +419,6 @@
         }
       },
       "shortNames": "Klubforkortelser",
-      "toPage": "Vedligehold klubforkortelser",
-      "toClubs": "Tilbage til kluboversigten",
       "dialogHint": "Hvordan klubben skrives på dommertavlen og atletvisningen. Udfyldt på forhånd med den automatisk dannede forkortelse; at tømme feltet betyder: dan den automatisk igen.",
       "tableHint": "Bestemmer, hvordan en klub skrives på dommertavlen og atletvisningen. Uden en post dannes forkortelsen automatisk.",
       "emptyHint": "At tømme feltet betyder: dan den automatisk igen. Ændringer gemmes, når du forlader feltet.",

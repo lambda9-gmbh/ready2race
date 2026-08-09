@@ -38,8 +38,12 @@ type Draft = {
 }
 
 type Props = {
-    /** Die Namensliste darunter zeigt die Wirkung der Regeln und muss deshalb mitgehen. */
-    onRulesChanged: () => void
+    /**
+     * Nur nötig, wenn eine Namensliste auf derselben Seite steht — die zeigt die Wirkung der Regeln
+     * und muss dann mitgehen. Unter dem Einstellungen-Reiter gibt es sie nicht: dort lädt der
+     * Reiter "Kurzformen" seine Liste beim Betreten ohnehin neu.
+     */
+    onRulesChanged?: () => void
 }
 
 /**
@@ -97,7 +101,7 @@ const ClubNameRulePanel = ({onRulesChanged}: Props) => {
     const reload = (writtenRuleId: string | null = null) => {
         justWritten.current = writtenRuleId
         setLastRequested(Date.now())
-        onRulesChanged()
+        onRulesChanged?.()
     }
 
     const reportError = (status: number) => {
