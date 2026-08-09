@@ -635,6 +635,9 @@ import type {
     GetAthleteBoardData,
     GetAthleteBoardError,
     GetAthleteBoardResponse,
+    GetMyEventData,
+    GetMyEventError,
+    GetMyEventResponse,
     FinishLiveDashboardMatchData,
     FinishLiveDashboardMatchError,
     FinishLiveDashboardMatchResponse,
@@ -3486,6 +3489,18 @@ export const getAthleteBoard = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/athlete-board',
+    })
+}
+
+/**
+ * Personal dashboard of one participant, reachable without login through the QR code on the wristband
+ */
+export const getMyEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetMyEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetMyEventResponse, GetMyEventError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/info/my-event/{qrCode}',
     })
 }
 

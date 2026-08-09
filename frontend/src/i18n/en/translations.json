@@ -2482,5 +2482,26 @@
         "unexpected": "The certificates could not be created. Please reload the page and try again."
       }
     }
+  },
+  "myEvent": {
+    "tab": "My Event",
+    "hint": "Scan the QR code on your wristband to see your races and results.",
+    "notFound": "There is no entry for this code at this event.",
+    "next": "Your next race",
+    "running": "Running now",
+    "matches": "My races",
+    "results": "My results",
+    "unscheduled": "Entered, not scheduled yet",
+    "requirements": "My requirements",
+    "requirementsOpen": "Something is still missing",
+    "requirementsAllDone": "All done",
+    "requirementsOfficeHint": "Please sort this out at the registration desk before your first race.",
+    "requirementFulfilled": "done",
+    "requirementOpen": "open",
+    "requirementOptional": "optional",
+    "remove": "Remove entry",
+    "lane": "Start position",
+    "team": "Team",
+    "noMatches": "No race has been scheduled for you yet."
   }
 }

@@ -2482,5 +2482,26 @@
         "unexpected": "Die Urkunden konnten nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
       }
     }
+  },
+  "myEvent": {
+    "tab": "Mein Event",
+    "hint": "Scanne den QR-Code auf deinem Band, um deine Läufe und Ergebnisse zu sehen.",
+    "notFound": "Zu diesem Code gibt es keine Teilnahme bei dieser Veranstaltung.",
+    "next": "Dein nächster Lauf",
+    "running": "Läuft gerade",
+    "matches": "Meine Läufe",
+    "results": "Meine Ergebnisse",
+    "unscheduled": "Gemeldet, noch nicht terminiert",
+    "requirements": "Meine Bedingungen",
+    "requirementsOpen": "Es fehlt noch etwas",
+    "requirementsAllDone": "Alles erledigt",
+    "requirementsOfficeHint": "Bitte kläre das vor deinem ersten Lauf in der Meldestelle.",
+    "requirementFulfilled": "erledigt",
+    "requirementOpen": "offen",
+    "requirementOptional": "freiwillig",
+    "remove": "Eintrag entfernen",
+    "lane": "Startposition",
+    "team": "Mannschaft",
+    "noMatches": "Für dich ist noch kein Lauf eingetragen."
   }
 }

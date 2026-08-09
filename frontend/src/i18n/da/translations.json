@@ -2482,5 +2482,26 @@
         "unexpected": "Diplomerne kunne ikke oprettes. Genindlæs siden, og prøv igen."
       }
     }
+  },
+  "myEvent": {
+    "tab": "Min begivenhed",
+    "hint": "Scan QR-koden på dit armbånd for at se dine løb og resultater.",
+    "notFound": "Der findes ingen deltagelse med denne kode ved dette stævne.",
+    "next": "Dit næste løb",
+    "running": "I gang nu",
+    "matches": "Mine løb",
+    "results": "Mine resultater",
+    "unscheduled": "Tilmeldt, endnu ikke planlagt",
+    "requirements": "Mine betingelser",
+    "requirementsOpen": "Der mangler noget",
+    "requirementsAllDone": "Alt er klaret",
+    "requirementsOfficeHint": "Ordn det venligst i sekretariatet inden dit første løb.",
+    "requirementFulfilled": "klaret",
+    "requirementOpen": "mangler",
+    "requirementOptional": "frivillig",
+    "remove": "Fjern post",
+    "lane": "Startposition",
+    "team": "Hold",
+    "noMatches": "Der er endnu ikke planlagt noget løb for dig."
   }
 }

@@ -1709,6 +1709,84 @@ export type MatchTeamInfo = {
     rank?: number | null
 }
 
+export type MyEventDto = {
+    displayName: string
+    clubName?: string | null
+    eventName: string
+    serverTime: string
+    refreshIntervalSeconds: number
+    running: Array<MyEventMatchDto>
+    upcoming: Array<MyEventMatchDto>
+    results: Array<MyEventResultDto>
+    unscheduled: Array<MyEventRegistrationDto>
+    requirements: Array<MyEventRequirementDto>
+}
+
+export type MyEventMatchDto = {
+    matchId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    /**
+     * scheduled start
+     */
+    startTime?: string | null
+    /**
+     * real start, if stamped
+     */
+    actualStartTime?: string | null
+    startState: AthleteBoardStartState
+    lane?: number | null
+    teamName?: string | null
+    clubName?: string | null
+    teamMembers: Array<MyEventTeamMemberDto>
+}
+
+export type MyEventRegistrationDto = {
+    competitionId: string
+    competitionIdentifier: string
+    competitionName: string
+    categoryName?: string | null
+    teamName?: string | null
+    role?: string | null
+}
+
+export type MyEventRequirementDto = {
+    id: string
+    name: string
+    description?: string | null
+    optional: boolean
+    fulfilled: boolean
+}
+
+export type MyEventResultDto = {
+    matchId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    startTime?: string | null
+    actualStartTime?: string | null
+    place?: number | null
+    timeString?: string | null
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
+    failed: boolean
+    failedReason?: string | null
+    deregistered: boolean
+    deregisteredReason?: string | null
+}
+
+export type MyEventTeamMemberDto = {
+    name: string
+    role?: string | null
+    /**
+     * true for the person this QR code belongs to
+     */
+    self: boolean
+}
+
 export type NamedParticipantDto = {
     id: string
     name: string
@@ -5935,6 +6013,20 @@ export type GetAthleteBoardData = {
 export type GetAthleteBoardResponse = AthleteBoardDto
 
 export type GetAthleteBoardError = ApiError
+
+export type GetMyEventData = {
+    path: {
+        eventId: string
+        /**
+         * Code from the wristband. Unknown codes, codes of another event and codes belonging to a helper account all answer 404 alike.
+         */
+        qrCode: string
+    }
+}
+
+export type GetMyEventResponse = MyEventDto
+
+export type GetMyEventError = ApiError
 
 export type FinishLiveDashboardMatchData = {
     path: {
