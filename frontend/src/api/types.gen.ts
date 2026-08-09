@@ -433,6 +433,18 @@ export type ClubSearchDto = {
     name: string
 }
 
+export type ClubShortNameDto = {
+    nameKey: string
+    names: Array<string>
+    shortName: string
+    maintained: boolean
+}
+
+export type ClubShortNameRequest = {
+    shortName: string
+    sampleName: string
+}
+
 export type ClubUpsertDto = {
     name: string
 }
@@ -4741,6 +4753,37 @@ export type GetPendingClubRepresentativeApprovalsResponse =
     Array<PendingClubRepresentativeApprovalDto>
 
 export type GetPendingClubRepresentativeApprovalsError = BadRequestError | ApiError
+
+export type GetClubShortNamesData = {
+    query?: {
+        eventId?: string
+    }
+}
+
+export type GetClubShortNamesResponse = Array<ClubShortNameDto>
+
+export type GetClubShortNamesError = BadRequestError | ApiError
+
+export type UpdateClubShortNameData = {
+    body: ClubShortNameRequest
+    path: {
+        nameKey: string
+    }
+}
+
+export type UpdateClubShortNameResponse = void
+
+export type UpdateClubShortNameError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteClubShortNameData = {
+    path: {
+        nameKey: string
+    }
+}
+
+export type DeleteClubShortNameResponse = void
+
+export type DeleteClubShortNameError = ApiError
 
 export type GetRegistrationsForEventData = {
     path: {

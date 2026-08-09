@@ -387,6 +387,24 @@
     }
   },
   "club": {
+    "shortName": {
+      "shortNames": "Vereinskurzformen",
+      "tableHint": "Bestimmen, wie ein Verein auf dem Schiedsrichter-Board und der Athleten-Anzeige geschrieben wird. Ohne Eintrag wird die Kurzform automatisch gebildet.",
+      "emptyHint": "Feld leeren heißt: wieder automatisch bilden. Änderungen werden beim Verlassen des Feldes gespeichert.",
+      "name": "Vereinsname",
+      "shortName": "Kurzform",
+      "origin": "Herkunft",
+      "also": "auch: {{name}}",
+      "maintained": "gepflegt",
+      "automatic": "automatisch",
+      "filter": {
+        "all": "Alle Vereine",
+        "event": "Nur Vereine von {{name}}"
+      },
+      "empty": "Es sind noch keine Vereinsnamen vorhanden.",
+      "saved": "Kurzform gespeichert",
+      "removed": "Kurzform entfernt, es gilt wieder die automatische"
+    },
     "nameLengthHint": "{{length}}/{{max}} Zeichen empfohlen – längere Namen werden in Listen gekürzt",
     "club": "Verein",
     "registrant": "Anmelder",

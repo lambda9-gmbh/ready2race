@@ -333,6 +333,15 @@ import type {
     GetPendingClubRepresentativeApprovalsData,
     GetPendingClubRepresentativeApprovalsError,
     GetPendingClubRepresentativeApprovalsResponse,
+    GetClubShortNamesData,
+    GetClubShortNamesError,
+    GetClubShortNamesResponse,
+    UpdateClubShortNameData,
+    UpdateClubShortNameError,
+    UpdateClubShortNameResponse,
+    DeleteClubShortNameData,
+    DeleteClubShortNameError,
+    DeleteClubShortNameResponse,
     GetRegistrationsForEventData,
     GetRegistrationsForEventError,
     GetRegistrationsForEventResponse,
@@ -2207,6 +2216,45 @@ export const getPendingClubRepresentativeApprovals = <ThrowOnError extends boole
     >({
         ...options,
         url: '/club/{clubId}/clubRepresentative',
+    })
+}
+
+export const getClubShortNames = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetClubShortNamesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubShortNamesResponse,
+        GetClubShortNamesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubShortName',
+    })
+}
+
+export const updateClubShortName = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubShortNameData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateClubShortNameResponse,
+        UpdateClubShortNameError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubShortName/{nameKey}',
+    })
+}
+
+export const deleteClubShortName = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteClubShortNameData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteClubShortNameResponse,
+        DeleteClubShortNameError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubShortName/{nameKey}',
     })
 }
 

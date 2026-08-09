@@ -387,6 +387,24 @@
     }
   },
   "club": {
+    "shortName": {
+      "shortNames": "Club short names",
+      "tableHint": "Determine how a club is written on the referee board and the athlete display. Without an entry the short name is derived automatically.",
+      "emptyHint": "Clearing the field means: derive it automatically again. Changes are saved when you leave the field.",
+      "name": "Club name",
+      "shortName": "Short name",
+      "origin": "Origin",
+      "also": "also: {{name}}",
+      "maintained": "maintained",
+      "automatic": "automatic",
+      "filter": {
+        "all": "All clubs",
+        "event": "Only clubs of {{name}}"
+      },
+      "empty": "There are no club names yet.",
+      "saved": "Short name saved",
+      "removed": "Short name removed, the automatic one applies again"
+    },
     "nameLengthHint": "{{length}}/{{max}} characters recommended – longer names are shortened in lists",
     "club": "Club",
     "registrant": "Registrant",

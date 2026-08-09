@@ -387,6 +387,24 @@
     }
   },
   "club": {
+    "shortName": {
+      "shortNames": "Klubforkortelser",
+      "tableHint": "Bestemmer, hvordan en klub skrives på dommertavlen og atletvisningen. Uden en post dannes forkortelsen automatisk.",
+      "emptyHint": "At tømme feltet betyder: dan den automatisk igen. Ændringer gemmes, når du forlader feltet.",
+      "name": "Klubnavn",
+      "shortName": "Forkortelse",
+      "origin": "Oprindelse",
+      "also": "også: {{name}}",
+      "maintained": "vedligeholdt",
+      "automatic": "automatisk",
+      "filter": {
+        "all": "Alle klubber",
+        "event": "Kun klubber fra {{name}}"
+      },
+      "empty": "Der er endnu ingen klubnavne.",
+      "saved": "Forkortelse gemt",
+      "removed": "Forkortelse fjernet, den automatiske gælder igen"
+    },
     "nameLengthHint": "{{length}}/{{max}} tegn anbefales – længere navne forkortes i lister",
     "club": "Klub",
     "registrant": "Tilmeldende",
