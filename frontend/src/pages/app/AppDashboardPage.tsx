@@ -15,7 +15,9 @@ const AppDashboardPage = () => {
         return <Alert severity="info">{t('app.dashboard.noEvent')}</Alert>
     }
 
-    return <LiveDashboardPage eventId={eventId} />
+    // `cacheReads` nur hier: Der zuletzt geladene Stand gehört aufs Telefon am Steg, nicht in den
+    // Speicher eines Arbeitsplatzrechners.
+    return <LiveDashboardPage eventId={eventId} cacheReads />
 }
 
 export default AppDashboardPage

@@ -83,9 +83,17 @@ const useCrewRequested = (): boolean => {
 
 export type LiveDashboardPageProps = {
     eventId: string
+    /**
+     * Legt den zuletzt geladenen Stand auf dem Gerät ab und zeigt ihn ohne Verbindung weiter.
+     *
+     * Nur die Helfer-App schaltet das ein. Am Arbeitsplatzrechner der Verwaltung hätte es keinen
+     * Nutzen, würde aber dauerhaft Teilnehmerdaten mit Klarnamen dort ablegen - die Abwägung in
+     * der Spezifikation stützt sich ausdrücklich auf den Betrieb am Steg.
+     */
+    cacheReads?: boolean
 }
 
-const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
+const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const {confirmAction} = useConfirmation()
@@ -103,7 +111,7 @@ const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
     // Einmal lesen, dreifach verwenden: Der Startwert aller drei Zustände kommt aus demselben
     // Eintrag, und der useState-Initialisierer läuft nur beim ersten Rendern.
     const [cachedStart] = useState(() =>
-        readCachedRead<LiveDashboardDto>('dashboard', cacheUserId, eventId),
+        cacheReads ? readCachedRead<LiveDashboardDto>('dashboard', cacheUserId, eventId) : null,
     )
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(
         cachedStart?.payload ?? null,
@@ -140,7 +148,16 @@ const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
     // nicht, sonst stünde kurz die Live-Auswahl als Gesamtliste da. Am Umschalter hing das früher
     // allein — beim Überschreiten der Breite (Fenster gezogen, Tablet gedreht) gibt es den Klick
     // aber nicht.
+    // Beim ersten Rendern darf das nicht greifen: Dort steht der Startwert aus dem Lese-Cache,
+    // und ein useEffect läuft auch beim Montieren. Ohne diese Sperre wäre der zwischengespeicherte
+    // Stand eine Renderphase später wieder weg - offline dauerhaft, online als roter Fehlerblitz
+    // bei jedem Öffnen.
+    const scopeRef = useRef(scope)
     useEffect(() => {
+        if (scopeRef.current === scope) {
+            return
+        }
+        scopeRef.current = scope
         setDashboard(null)
         etagRef.current = null
     }, [scope])
@@ -176,7 +193,9 @@ const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
                 if (data !== undefined) {
                     etagRef.current = response.headers.get('ETag')
                     setDashboard(data)
-                    writeCachedRead('dashboard', cacheUserId, eventId, data)
+                    if (cacheReads) {
+                        writeCachedRead('dashboard', cacheUserId, eventId, data)
+                    }
                     setLastUpdated(new Date())
                     setStale(false)
                     // Auch ein Lauf, der neu auf sein Beenden wartet, ist eine Änderung im

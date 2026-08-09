@@ -66,7 +66,11 @@ const UserProvider = ({children}: PropsWithChildren) => {
             if (res.status === 401 && userData.authStatus === 'authenticated') {
                 const isInApp = router.state.resolvedLocation.pathname.startsWith('/app')
                 await logout(isInApp)
-            } else if (res.ok) {
+            } else if (res.ok && router.state.resolvedLocation.pathname.startsWith('/app')) {
+                // Nur aus der Helfer-App heraus: Sonst hielte jede Nutzung der
+                // Verwaltungsoberfläche im selben Browserprofil einen abgelegten Helfer-Token
+                // unbegrenzt am Leben, und die Sechs-Stunden-Grenze - die Abfederung für die
+                // Ablage auf dem Gerät - liefe ins Leere.
                 touchSessionToken()
             }
             return res
@@ -187,9 +191,25 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }
 
     const logout = async (isInApp: boolean = false) => {
-        await userLogout()
+        // Erst das Gerät räumen, dann den Server benachrichtigen. Ohne Netz wirft `userLogout`,
+        // und in der umgekehrten Reihenfolge bliebe auf einem geteilten Tablet alles liegen:
+        // ein sechs Stunden gültiger Token, der ganze Privilegiensatz und bis zu zwölf Stunden
+        // Dashboard-Daten mit Klarnamen. Ein Abmelden im Funkloch am Steg ist genau der Fall,
+        // in dem das passiert.
         clearSessionToken(isInApp)
         clearCachedReads()
+        if (isInApp) {
+            // Auswahl der Veranstaltung und der Aufgabe liegen seit dem Kaltstart-Fix ebenfalls
+            // dauerhaft auf dem Gerät. Auf einem geteilten Tablet soll der Nächste nicht die
+            // Auswahl des Vorherigen vorfinden.
+            localStorage.removeItem('eventId')
+            localStorage.removeItem('appFunction')
+        }
+        try {
+            await userLogout()
+        } catch {
+            // Die Sitzung läuft serverseitig von selbst ab. Auf dem Gerät ist sie schon weg.
+        }
         setUserData({
             userInfo: undefined,
             isInApp,
