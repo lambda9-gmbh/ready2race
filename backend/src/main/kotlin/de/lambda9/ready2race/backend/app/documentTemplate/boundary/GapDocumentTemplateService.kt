@@ -300,7 +300,11 @@ object GapDocumentTemplateService {
         place = "1. Platz",
         competitionName = "CF 1x Frauen-Einer",
         competitionShortName = "CF 1x",
-        clubName = "Ruderklub Flensburg",
+        // Eine Kette statt eines einzelnen Vereins: seit dem 09.08.2026 trägt das Feld die Vereine
+        // aller Athleten eines Bootes, bei der CRF 2026 in 42 von 100 Meldungen mehr als einen.
+        // Ein kurzes Beispiel hier hätte die Vorschau zu einem Versprechen gemacht, das die
+        // gedruckte Urkunde nicht hält - der Kasten hat feste Maße und der Renderer bricht nicht um.
+        clubName = "Ruderklub Flensburg / Rostocker Ruderclub / Ruderclub Nürtingen",
         teamName = "Flensburg I",
         eventDate = "16.–17. August 2026",
         eventLocation = "Flensburg",

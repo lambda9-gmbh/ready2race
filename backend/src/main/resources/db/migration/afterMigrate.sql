@@ -613,6 +613,10 @@ select err.event,
 from event_registration_report err
          join event_registration_report_data errd on err.event = errd.result_document;
 
+-- club_name ist der eigene Verein der PERSON, nicht der meldende Verein der Mannschaft (der steht
+-- eine Ebene höher in registered_competition_team). Beides nebeneinander braucht die Urkunde: sie
+-- zeigt seit dem 09.08.2026 die Vereine, die die Athleten tragen, als vollständige Kette - für
+-- Vereinsmitglieder also diese Spalte, für Gastruderer external_club_name.
 create view registered_competition_team_participant as
 select crnp.competition_registration as team_id,
        np.id                         as role_id,
@@ -623,10 +627,12 @@ select crnp.competition_registration as team_id,
        p.year,
        p.gender,
        p.external,
-       p.external_club_name
+       p.external_club_name,
+       c.name                        as club_name
 from competition_registration_named_participant crnp
          join named_participant np on crnp.named_participant = np.id
          join participant p on crnp.participant = p.id
+         left join club c on p.club = c.id
 ;
 
 create view registered_competition_team as

@@ -11,6 +11,18 @@ import org.jooq.impl.DSL
 import java.util.UUID
 
 object CompetitionMatchTeamRepo {
+
+    /**
+     * Der eigene Verein der *Person*, nicht der meldende Verein der Mannschaft. `CLUB` hängt in
+     * diesen Abfragen an `COMPETITION_REGISTRATION.CLUB` und beantwortet damit nur, wer gemeldet
+     * hat; für die Anzeige zählt aber, welchen Verein die Athleten tragen. Deshalb ein zweiter,
+     * aliasierter Join - ohne Alias hielte jOOQ beide für dieselbe Tabelle.
+     */
+    private val PARTICIPANT_CLUB = CLUB.`as`("participant_club")
+
+    /** Spaltenname, unter dem [PARTICIPANT_CLUB] in den Records der drei Anzeige-Abfragen steht. */
+    const val PARTICIPANT_CLUB_NAME = "participant_club_name"
+
     fun get(matchIds: List<UUID>): JIO<List<CompetitionMatchTeamRecord>> = Jooq.query {
         with(COMPETITION_MATCH_TEAM) {
             selectFrom(this)
@@ -66,7 +78,9 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT.ID.`as`("participant_id"),
                 PARTICIPANT.FIRSTNAME,
                 PARTICIPANT.LASTNAME,
+                PARTICIPANT.EXTERNAL,
                 PARTICIPANT.EXTERNAL_CLUB_NAME,
+                PARTICIPANT_CLUB.NAME.`as`(PARTICIPANT_CLUB_NAME),
                 NAMED_PARTICIPANT.NAME.`as`("named_role"),
                 EVENT.MIXED_TEAM_TERM,
                 TIMECODE.TIME,
@@ -82,6 +96,7 @@ object CompetitionMatchTeamRepo {
                 .leftJoin(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
                 .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
                 .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
+                .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
                 .leftJoin(NAMED_PARTICIPANT)
                 .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
                 .leftJoin(COMPETITION_DEREGISTRATION)
@@ -94,7 +109,16 @@ object CompetitionMatchTeamRepo {
                 .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
                 .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
                 .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
-                .orderBy(COMPETITION_MATCH_TEAM.PLACE.asc())
+                .orderBy(
+                    COMPETITION_MATCH_TEAM.PLACE.asc(),
+                    // Innerhalb einer Mannschaft: eine feste Reihenfolge der Crew. Ohne sie gibt
+                    // Postgres die Zeilen in beliebiger Reihenfolge zurück, und die Vereinskette
+                    // stünde bei jedem Abruf anders da - auf einer Anzeige, die im Sekundentakt
+                    // nachlädt, ist das ein flackerndes Boot.
+                    NAMED_PARTICIPANT.NAME.asc().nullsLast(),
+                    PARTICIPANT.LASTNAME.asc().nullsLast(),
+                    PARTICIPANT.ID.asc().nullsLast(),
+                )
                 .fetch()
         }
 
@@ -111,7 +135,9 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT.LASTNAME,
                 PARTICIPANT.YEAR,
                 PARTICIPANT.GENDER,
+                PARTICIPANT.EXTERNAL,
                 PARTICIPANT.EXTERNAL_CLUB_NAME,
+                PARTICIPANT_CLUB.NAME.`as`(PARTICIPANT_CLUB_NAME),
                 NAMED_PARTICIPANT.NAME.`as`("named_role"),
                 EVENT.MIXED_TEAM_TERM
             )
@@ -122,6 +148,7 @@ object CompetitionMatchTeamRepo {
                 .leftJoin(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
                 .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
                 .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
+                .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
                 .leftJoin(NAMED_PARTICIPANT)
                 .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
                 .leftJoin(EVENT_REGISTRATION).on(EVENT_REGISTRATION.ID.eq(COMPETITION_REGISTRATION.EVENT_REGISTRATION))
@@ -129,7 +156,14 @@ object CompetitionMatchTeamRepo {
                 .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
                 .orderBy(
                     COMPETITION_MATCH_TEAM.START_NUMBER.asc().nullsLast(),
-                    COMPETITION_REGISTRATION.NAME.asc().nullsLast()
+                    COMPETITION_REGISTRATION.NAME.asc().nullsLast(),
+                    // Innerhalb einer Mannschaft: eine feste Reihenfolge der Crew. Ohne sie gibt
+                    // Postgres die Zeilen in beliebiger Reihenfolge zurück, und die Vereinskette
+                    // stünde bei jedem Abruf anders da - auf einer Anzeige, die im Sekundentakt
+                    // nachlädt, ist das ein flackerndes Boot.
+                    NAMED_PARTICIPANT.NAME.asc().nullsLast(),
+                    PARTICIPANT.LASTNAME.asc().nullsLast(),
+                    PARTICIPANT.ID.asc().nullsLast(),
                 )
                 .fetch()
         }
@@ -155,7 +189,9 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT.LASTNAME,
                 PARTICIPANT.YEAR,
                 PARTICIPANT.GENDER,
+                PARTICIPANT.EXTERNAL,
                 PARTICIPANT.EXTERNAL_CLUB_NAME,
+                PARTICIPANT_CLUB.NAME.`as`(PARTICIPANT_CLUB_NAME),
                 NAMED_PARTICIPANT.NAME.`as`("named_role"),
                 EVENT.MIXED_TEAM_TERM,
                 TIMECODE.TIME,
@@ -169,6 +205,7 @@ object CompetitionMatchTeamRepo {
                 .leftJoin(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
                 .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
                 .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
+                .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
                 .leftJoin(NAMED_PARTICIPANT)
                 .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
                 .leftJoin(EVENT_REGISTRATION).on(EVENT_REGISTRATION.ID.eq(COMPETITION_REGISTRATION.EVENT_REGISTRATION))
@@ -177,7 +214,14 @@ object CompetitionMatchTeamRepo {
                 .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
                 .orderBy(
                     COMPETITION_MATCH_TEAM.START_NUMBER.asc().nullsLast(),
-                    COMPETITION_REGISTRATION.NAME.asc().nullsLast()
+                    COMPETITION_REGISTRATION.NAME.asc().nullsLast(),
+                    // Innerhalb einer Mannschaft: eine feste Reihenfolge der Crew. Ohne sie gibt
+                    // Postgres die Zeilen in beliebiger Reihenfolge zurück, und die Vereinskette
+                    // stünde bei jedem Abruf anders da - auf einer Anzeige, die im Sekundentakt
+                    // nachlädt, ist das ein flackerndes Boot.
+                    NAMED_PARTICIPANT.NAME.asc().nullsLast(),
+                    PARTICIPANT.LASTNAME.asc().nullsLast(),
+                    PARTICIPANT.ID.asc().nullsLast(),
                 )
                 .fetch()
         }

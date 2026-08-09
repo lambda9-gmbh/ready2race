@@ -14,7 +14,11 @@ const SAMPLE_VALUES: Record<Exclude<GapDocumentPlaceholderType, 'FREE_TEXT'>, st
     PLACE: '1. Platz',
     COMPETITION_NAME: 'CF 1x Frauen-Einer',
     COMPETITION_SHORT_NAME: 'CF 1x',
-    CLUB_NAME: 'Ruderklub Flensburg',
+    // Eine Kette statt eines einzelnen Vereins: das Feld trägt die Vereine aller Athleten eines
+    // Bootes. Der Kasten schneidet den Beispieltext hier ab — die gedruckte Urkunde tut das nicht,
+    // sie lässt ihn über den Rand hinauslaufen. Wer hier anstößt, sieht ihn also im Editor gerade
+    // noch enden und muss die Vorschau (Server-PDF) heranziehen, um das Ausmaß zu sehen.
+    CLUB_NAME: 'Ruderklub Flensburg / Rostocker Ruderclub / Ruderclub Nürtingen',
     TEAM_NAME: 'Flensburg I',
     EVENT_DATE: '16.–17. August 2026',
     EVENT_LOCATION: 'Flensburg',

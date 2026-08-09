@@ -152,7 +152,7 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                             )}
                                             <Box>
                                                 <Typography textAlign={'right'}>
-                                                    {team.actualClubName ?? team.clubName}
+                                                    {team.clubsFull ?? team.clubName}
                                                 </Typography>
                                                 <Typography
                                                     color={'textSecondary'}

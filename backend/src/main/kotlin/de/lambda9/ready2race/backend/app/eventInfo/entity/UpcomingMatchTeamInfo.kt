@@ -9,6 +9,12 @@ data class UpcomingMatchTeamInfo(
     val teamNumber: Int?,
     val startNumber: Int?,
     val clubName: String?,
-    val actualClubName: String?,
+    /**
+     * Die Vereine, die die Athleten dieses Bootes tragen, als Kette in Bootsreihenfolge - kurz
+     * und lang, damit die Anzeige nach Platz entscheiden kann. Fehlt jede Angabe zur Crew, bleiben
+     * beide leer und der meldende [clubName] tritt an ihre Stelle (siehe eventInfo/control).
+     */
+    val clubsShort: String?,
+    val clubsFull: String?,
     val participants: List<UpcomingMatchParticipantInfo>
 )

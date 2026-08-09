@@ -12780,8 +12780,14 @@ components:
         clubName:
           type: string
           nullable: true
-        actualClubName:
+        clubsShort:
           type: string
+          nullable: true
+          description: "the clubs the athletes of this boat wear, chained in boat order, in short form"
+        clubsFull:
+          type: string
+          nullable: true
+          description: "the same chain with the full club names"
         participants:
           type: array
           items:
@@ -12879,8 +12885,14 @@ components:
         clubName:
           type: string
           nullable: true
-        actualClubName:
+        clubsShort:
           type: string
+          nullable: true
+          description: "the clubs the athletes of this boat wear, chained in boat order, in short form"
+        clubsFull:
+          type: string
+          nullable: true
+          description: "the same chain with the full club names"
         place:
           type: integer
         timeString:
@@ -12935,9 +12947,14 @@ components:
           type: integer
           nullable: true
           description: "the nth team of this club in the competition - only shown when teamName is missing"
-        clubName:
+        clubsShort:
           type: string
           nullable: true
+          description: "the clubs the athletes of this boat wear, chained in boat order, in short form; falls back to the registering club when no crew is recorded"
+        clubsFull:
+          type: string
+          nullable: true
+          description: "the same chain with the full club names"
         teamName:
           type: string
           nullable: true
@@ -13033,9 +13050,14 @@ components:
           type: integer
           nullable: true
           description: "the nth team of this club in the competition - only shown when teamName is missing"
-        clubName:
+        clubsShort:
           type: string
           nullable: true
+          description: "the clubs the athletes of this boat wear, chained in boat order, in short form; falls back to the registering club when no crew is recorded"
+        clubsFull:
+          type: string
+          nullable: true
+          description: "the same chain with the full club names"
         teamName:
           type: string
           nullable: true
@@ -13914,8 +13936,14 @@ components:
         clubName:
           type: string
           nullable: true
-        actualClubName:
+        clubsShort:
           type: string
+          nullable: true
+          description: "the clubs the athletes of this boat wear, chained in boat order, in short form"
+        clubsFull:
+          type: string
+          nullable: true
+          description: "the same chain with the full club names"
         currentScore:
           type: integer
           nullable: true

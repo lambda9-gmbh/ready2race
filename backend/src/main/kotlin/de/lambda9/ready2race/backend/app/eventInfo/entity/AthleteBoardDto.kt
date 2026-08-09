@@ -55,7 +55,14 @@ data class AthleteBoardTeam(
     val lane: Int?,
     /** Die n-te Mannschaft dieses Vereins im Wettkampf - nur gezeigt, wenn [teamName] fehlt. */
     val teamNumber: Int?,
-    val clubName: String?,
+    /**
+     * Die Vereine der Athleten dieses Bootes als Kette, in Kurzform und voll ausgeschrieben. Bis
+     * zum 09.08.2026 stand hier ein einzelner Vereinsname und für ein gemischtes Boot pauschal
+     * "Renngemeinschaft" - mehrere Boote desselben Laufs waren damit nicht zu unterscheiden.
+     * Welche der beiden Formen erscheint, entscheidet die Anzeige nach der Breite des Schirms.
+     */
+    val clubsShort: String?,
+    val clubsFull: String?,
     val teamName: String?,
     val participants: List<AthleteBoardParticipant>,
     /**
@@ -95,7 +102,9 @@ data class AthleteBoardResultTeam(
     val lane: Int,
     /** Die n-te Mannschaft dieses Vereins im Wettkampf - nur gezeigt, wenn [teamName] fehlt. */
     val teamNumber: Int?,
-    val clubName: String?,
+    /** Wie bei [AthleteBoardTeam.clubsShort]: die Vereinskette des Bootes, kurz und lang. */
+    val clubsShort: String?,
+    val clubsFull: String?,
     val teamName: String?,
     val timeString: String?,
     /** Nur ausgewiesen, nie verrechnet; [timeString] enthält die Strafe bereits. */
