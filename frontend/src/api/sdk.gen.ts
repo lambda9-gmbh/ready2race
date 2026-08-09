@@ -712,6 +712,9 @@ import type {
     SkipScheduleSlotData,
     SkipScheduleSlotError,
     SkipScheduleSlotResponse,
+    AdvanceAfterSkippedSlotData,
+    AdvanceAfterSkippedSlotError,
+    AdvanceAfterSkippedSlotResponse,
     UnskipScheduleSlotData,
     UnskipScheduleSlotError,
     UnskipScheduleSlotResponse,
@@ -3918,6 +3921,22 @@ export const skipScheduleSlot = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule/slot/{slotId}/skip',
+    })
+}
+
+/**
+ * Moves the schedule up into the time freed by a cancelled slot, up to and including targetSlotId. The delta comes from the cancelled slot itself (its planned duration, else the gap to the following slot on the same race day); the slot must be cancelled. dryRun=true only computes the preview.
+ */
+export const advanceAfterSkippedSlot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AdvanceAfterSkippedSlotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AdvanceAfterSkippedSlotResponse,
+        AdvanceAfterSkippedSlotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/slot/{slotId}/advance',
     })
 }
 

@@ -1711,6 +1711,20 @@
       "skipConfirm_other": "Nur dieser eine Lauf entfällt: „{{label}}“ um {{time}}. Die übrigen {{count}} Läufe der Runde „{{round}}“ bleiben unverändert.",
       "skipConfirmOnly": "Der Lauf „{{label}}“ um {{time}} entfällt und wird von der Kette ausgelassen.",
       "skipConfirmFree": "Der Programmpunkt „{{label}}“ um {{time}} entfällt.",
+      "advance": {
+        "title": "Zeitplan vorziehen",
+        "intro": "„{{label}}“ um {{time}} ist entfallen. Dadurch werden {{minutes}} Minuten frei.",
+        "targetSlot": "Bis-Slot",
+        "help": "Alle Slots vom nächsten bis einschließlich des gewählten Bis-Slots rücken um {{minutes}} Minuten nach vorn. Alles danach behält seine Zeit — dort entsteht ein Puffer.",
+        "apply": "Vorziehen",
+        "decline": "Nicht vorziehen",
+        "success": "Der Zeitplan wurde um {{minutes}} Minuten vorgezogen.",
+        "error": {
+          "noDelta": "Aus diesem Slot lässt sich keine frei gewordene Zeit ableiten — er hat keine gepflegte Dauer und keinen Slot hinter sich am selben Renntag. Der Zeitplan lässt sich über „Zeitplan anpassen“ von Hand verschieben.",
+          "slotNotSkipped": "Dieser Slot ist nicht (mehr) entfallen — vorgezogen wird nur in die Zeit, die eine Absage frei macht. Bitte den Zeitplan neu laden.",
+          "targetInvalid": "Der Bis-Slot gehört nicht zu den Slots, die nachrücken können. Bitte den Zeitplan neu laden und einen Slot hinter dem entfallenen wählen."
+        }
+      },
       "unskipConfirm": "Entfall für „{{label}}“ um {{time}} aufheben? Der Slot wird wieder normal berücksichtigt.",
       "activate": "Lauf aktivieren",
       "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",

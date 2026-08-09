@@ -1711,6 +1711,20 @@
       "skipConfirm_other": "Kun dette ene løb aflyses: „{{label}}“ kl. {{time}}. De øvrige {{count}} løb i runden „{{round}}“ er uændrede.",
       "skipConfirmOnly": "Løbet „{{label}}“ kl. {{time}} aflyses og springes over af kæden.",
       "skipConfirmFree": "Programpunktet „{{label}}“ kl. {{time}} aflyses.",
+      "advance": {
+        "title": "Ryk tidsplanen frem",
+        "intro": "„{{label}}“ kl. {{time}} er aflyst. Det frigør {{minutes}} minutter.",
+        "targetSlot": "Til og med slot",
+        "help": "Alle slots fra den næste til og med den valgte rykker {{minutes}} minutter frem. Alt derefter beholder sin tid — der opstår en buffer.",
+        "apply": "Ryk frem",
+        "decline": "Ryk ikke frem",
+        "success": "Tidsplanen blev rykket {{minutes}} minutter frem.",
+        "error": {
+          "noDelta": "Der kan ikke udledes frigjort tid fra denne slot — den har hverken en planlagt varighed eller en slot efter sig samme stævnedag. Brug „Tilpas tidsplan“ til at flytte tidsplanen manuelt.",
+          "slotNotSkipped": "Denne slot er ikke (længere) aflyst — der rykkes kun ind i tid, som en aflysning frigør. Genindlæs venligst tidsplanen.",
+          "targetInvalid": "Den valgte slot er ikke blandt dem, der kan rykke frem. Genindlæs tidsplanen, og vælg en slot efter den aflyste."
+        }
+      },
       "unskipConfirm": "Aflysning af „{{label}}“ kl. {{time}} fortrydes? Slotten indgår igen normalt.",
       "activate": "Aktiver løb",
       "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",

@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest'
 import {
+    advanceOffer,
     buildShiftPreviewRows,
     competitionTag,
     defaultFromSlotId,
@@ -390,5 +391,53 @@ describe('hasRunningOrFinishedSlots', () => {
 
     it('is false for an empty schedule', () => {
         expect(hasRunningOrFinishedSlots([])).toBe(false)
+    })
+})
+
+describe('advanceOffer', () => {
+    const cancelled = (over: Partial<EventScheduleSlotDto> = {}) =>
+        slot('2026-08-17T10:00:00', {state: 'SKIPPED', ...over})
+
+    it('nimmt die gepflegte Dauer als frei gewordene Zeit', () => {
+        const skipped = cancelled({durationMinutes: 20})
+        const offer = advanceOffer([skipped, slot('2026-08-17T10:30:00')], skipped)
+        expect(offer?.deltaMinutes).toBe(20)
+    })
+
+    it('nimmt ohne Dauer den Abstand zum nächsten Slot', () => {
+        const skipped = cancelled()
+        const offer = advanceOffer([skipped, slot('2026-08-17T10:25:00')], skipped)
+        expect(offer?.deltaMinutes).toBe(25)
+    })
+
+    it('bietet ohne Folgeslot am selben Renntag nichts an', () => {
+        const skipped = cancelled({durationMinutes: 20})
+        // Der Slot am Folgetag zählt nicht - ein Vorziehen bleibt im Renntag.
+        expect(advanceOffer([skipped, slot('2026-08-18T09:00:00')], skipped)).toBeNull()
+        expect(advanceOffer([skipped], skipped)).toBeNull()
+    })
+
+    it('bietet bei einer Dauer von 0 nichts an', () => {
+        const skipped = cancelled({durationMinutes: 0})
+        expect(advanceOffer([skipped, slot('2026-08-17T10:30:00')], skipped)).toBeNull()
+    })
+
+    it('überspringt parallele Slots - sie rücken nicht nach', () => {
+        const skipped = cancelled()
+        const parallel = slot('2026-08-17T10:00:00')
+        const later = slot('2026-08-17T10:40:00')
+        const offer = advanceOffer([skipped, parallel, later], skipped)
+        // Delta aus dem ersten ECHT späteren Slot, und nur der steht zur Wahl.
+        expect(offer?.deltaMinutes).toBe(40)
+        expect(offer?.targets.map(s => s.id)).toEqual([later.id])
+    })
+
+    it('bietet alle folgenden Slots des Renntags als Bis-Slot an, Pausen eingeschlossen', () => {
+        const skipped = cancelled({durationMinutes: 15})
+        const next = slot('2026-08-17T10:20:00')
+        const lunch = slot('2026-08-17T12:00:00', {name: 'Mittagspause'})
+        const afterLunch = slot('2026-08-17T13:00:00')
+        const offer = advanceOffer([skipped, next, lunch, afterLunch], skipped)
+        expect(offer?.targets.map(s => s.id)).toEqual([next.id, lunch.id, afterLunch.id])
     })
 })
