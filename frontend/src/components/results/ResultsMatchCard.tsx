@@ -21,6 +21,11 @@ type Props<M extends ResultsMatchInfo> = {
      * bleibt sichtbar, verliert aber ihre Klickfläche — ein Dialog hätte dort nichts zu zeigen.
      */
     disabled?: boolean
+    /**
+     * Eine zurückgenommene Zusatzzeile unter dem Karteninhalt, z.B. der Hinweis auf eine noch
+     * nicht erzeugte Runde. Fehlt sie, ändert sich an der Karte nichts.
+     */
+    note?: string
 }
 
 const ResultsMatchCard = <M extends ResultsMatchInfo>({
@@ -29,6 +34,7 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({
     competition,
     statusChip,
     disabled = false,
+    note,
 }: Props<M>) => {
     const {t} = useTranslation()
 
@@ -77,6 +83,11 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({
                     )}
                 </Box>
             </Box>
+            {note && (
+                <Typography variant={'body2'} color={'text.secondary'} fontStyle={'italic'}>
+                    {note}
+                </Typography>
+            )}
         </CardContent>
     )
 

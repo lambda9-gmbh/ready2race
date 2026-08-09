@@ -109,6 +109,13 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                                         match.pendingRound === true ||
                                         match.name != null
                                     }
+                                    // Wartende Runde: statt einer (nicht vorhandenen)
+                                    // Mannschaftsliste steht hier der Hinweis darauf.
+                                    note={
+                                        match.pendingRound === true
+                                            ? t('results.liveMatches.pendingRound')
+                                            : undefined
+                                    }
                                     competition={{
                                         competitionName: match.name ?? match.competitionName,
                                         competitionCategory: match.categoryName ?? undefined,
