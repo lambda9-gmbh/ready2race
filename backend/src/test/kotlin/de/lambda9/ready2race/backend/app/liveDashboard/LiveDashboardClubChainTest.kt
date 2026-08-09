@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.liveDashboard
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.club.CHAIN_SEED_TIME
 import de.lambda9.ready2race.backend.app.club.EXPECTED_CLUBS
+import de.lambda9.ready2race.backend.app.club.EXPECTED_FULL
 import de.lambda9.ready2race.backend.app.club.FLENSBURG
 import de.lambda9.ready2race.backend.app.club.MAINZ
 import de.lambda9.ready2race.backend.app.club.MARBURG
@@ -75,15 +76,10 @@ class LiveDashboardClubChainTest {
 
         val team = boardTeam(seeded.eventId)
 
-        // Fünf Glieder: Mainz steht einmal da (zwei Personen, ein Verein) und der "N.N."-Platz
-        // gar nicht. Zur fehlenden Reihenfolge siehe [chainLinks].
-        assertEquals(EXPECTED_CLUBS.toSet(), chainLinks(team.clubsFull).toSet())
-        assertEquals(EXPECTED_CLUBS.size, chainLinks(team.clubsFull).size, "Kette mit doppeltem Glied: ${team.clubsFull}")
-        assertEquals(
-            setOf("Mainz", "Marburg", "Flensburg", "Nürtingen", "Rostock"),
-            chainLinks(team.clubsShort).toSet(),
-        )
-        assertEquals(EXPECTED_CLUBS.size, chainLinks(team.clubsShort).size, "Kurzkette mit doppeltem Glied: ${team.clubsShort}")
+        // Die Kette steht in Bootsreihenfolge: Mainz einmal (zwei Personen, ein Verein), der
+        // "N.N."-Platz gar nicht - und das alles in der Reihenfolge der Rollen im Boot.
+        assertEquals(EXPECTED_FULL, team.clubsFull)
+        assertEquals("Mainz / Marburg / Flensburg / Nürtingen / Rostock", team.clubsShort)
 
         // Der Kern des Ganzen: der meldende Verein steht in keiner der beiden Ketten - obwohl er
         // im Datensatz weiterhin mitkommt, weil die Verwaltung ihn braucht.
@@ -113,7 +109,10 @@ class LiveDashboardClubChainTest {
 
         val team = boardTeam(seeded.eventId)
 
+        // Als Menge verglichen, nicht als Kette - siehe [chainLinks]: nach einer Ummeldung ist die
+        // Reihenfolge auch mit dem orderBy nicht mehr die Bootsreihenfolge.
         assertEquals(setOf(MAINZ, MARBURG, NUERTINGEN, ROSTOCK, berlin), chainLinks(team.clubsFull).toSet())
+        assertEquals(EXPECTED_CLUBS.size, chainLinks(team.clubsFull).size, "Kette mit doppeltem Glied: ${team.clubsFull}")
         assertEquals(
             setOf("Mainz", "Marburg", "Nürtingen", "Rostock", "Berlin"),
             chainLinks(team.clubsShort).toSet(),
@@ -138,8 +137,7 @@ class LiveDashboardClubChainTest {
         val team = boardTeam(seeded.eventId, crew = true)
         val crew = assertNotNull(team.crew, "crew=true müsste die Crew liefern")
 
-        // Nach Namen sortiert verglichen, nicht in Bootsreihenfolge - aus demselben Grund wie bei
-        // der Kette, siehe [chainLinks].
+        // In Bootsreihenfolge, wie die Karte sie zeigt.
         assertEquals(
             listOf(
                 "Albers" to "Mainz",
@@ -150,7 +148,7 @@ class LiveDashboardClubChainTest {
                 "Fischer" to "Nürtingen",
                 "Groth" to "Rostock",
             ),
-            crew.map { it.lastName to it.clubShort }.sortedBy { it.first },
+            crew.map { it.lastName to it.clubShort },
         )
         crew.forEach { assertNotNull(it.role, "Rolle fehlt bei ${it.lastName}") }
 
@@ -160,21 +158,19 @@ class LiveDashboardClubChainTest {
     }
 
     /**
-     * Die Kette in ihre Glieder zerlegt.
+     * Die Kette in ihre Glieder zerlegt - nur für den Ummelde-Fall, der als einziger die Menge der
+     * Vereine statt der Kette prüft.
      *
-     * Verglichen wird hier die MENGE der Vereine, nicht ihre Reihenfolge - und das ist ein Mangel,
-     * kein Entwurf: `LiveDashboardRepo.getTeams` sortiert die Crew-Zeilen nicht. Die drei Abfragen
-     * der Athleten-Anzeige haben dafür seit 95d10153 ein festes
-     * `NAMED_PARTICIPANT.NAME, PARTICIPANT.LASTNAME, PARTICIPANT.ID`; das Board kam später dazu und
-     * hat es nie bekommen. Postgres liefert die Zeilen deshalb in beliebiger Reihenfolge - beim
-     * ersten Lauf dieses Tests stand die Kette als
-     * "Rostocker RC / RK Flensburg / RC Nürtingen / Mainzer RV / Marburger RV" da, während dieselben
-     * Meldedaten auf der Athleten-Anzeige die Bootsreihenfolge zeigten. Auf einer Karte, die im
-     * Sekundentakt nachlädt, ist das ein flackerndes Boot.
+     * Der Grund liegt nicht in der Abfrage:
+     * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.getActuallyParticipatingParticipants]
+     * baut die startende Crew als "wer noch drin ist" plus "wer dazugekommen ist" - die Ersatzperson
+     * hängt also hinten an, statt den Platz der ersetzten Person einzunehmen. Nach einer Ummeldung
+     * ist die Reihenfolge damit auch mit dem `orderBy` in
+     * [de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo.getTeams] nicht
+     * mehr die Reihenfolge im Boot; festzuschreiben wäre hier nur die Reihenfolge, in der der Code
+     * zusammensetzt, und die sagt über die Anzeige nichts aus.
      *
-     * Sobald das `orderBy` nachgezogen ist, gehören hier wieder die festen Ketten hin:
-     * `assertEquals(EXPECTED_FULL, team.clubsFull)` und die Crew-Liste in Bootsreihenfolge statt
-     * nach Nachnamen sortiert.
+     * Alle Fälle ohne Ummeldung prüfen die Kette dagegen vollständig.
      */
     private fun chainLinks(chain: String): List<String> = chain.split(ClubComposition.SEPARATOR)
 

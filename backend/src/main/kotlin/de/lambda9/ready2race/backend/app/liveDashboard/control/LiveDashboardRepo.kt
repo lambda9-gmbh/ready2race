@@ -120,6 +120,19 @@ object LiveDashboardRepo {
             .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
             .and(matchId?.let { COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(it) } ?: DSL.noCondition())
             .and(registrationId?.let { COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(it) } ?: DSL.noCondition())
+            .orderBy(
+                // Innerhalb einer Mannschaft: eine feste Reihenfolge der Crew. Ohne sie gibt
+                // Postgres die Zeilen in beliebiger Reihenfolge zurück, und die Vereinskette
+                // stünde bei jedem Abruf anders da - auf einer Anzeige, die im Sekundentakt
+                // nachlädt, ist das ein flackerndes Boot.
+                //
+                // Dieselbe Regel wie in den Abfragen der Athleten-Anzeige
+                // (CompetitionMatchTeamRepo); die Mannschaften untereinander sortiert der
+                // Aufrufer nach Startnummer, hier zählt nur die Reihenfolge im Boot.
+                NAMED_PARTICIPANT.NAME.asc().nullsLast(),
+                PARTICIPANT.LASTNAME.asc().nullsLast(),
+                PARTICIPANT.ID.asc().nullsLast(),
+            )
             .fetch()
     }
 
