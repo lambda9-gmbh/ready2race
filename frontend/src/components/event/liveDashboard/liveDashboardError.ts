@@ -23,6 +23,9 @@ const trackingKeys = {
     notCheckedIn: 'club.participant.tracking.errorReason.notCheckedIn',
     qrCodeNotAssociated: 'club.participant.tracking.errorReason.qrCodeNotAssociated',
     qrCodeNotFound: 'club.participant.tracking.errorReason.qrCodeNotFound',
+    entryNotFound: 'club.participant.tracking.errorReason.entryNotFound',
+    sequenceConflict: 'club.participant.tracking.errorReason.sequenceConflict',
+    timestampCollision: 'club.participant.tracking.errorReason.timestampCollision',
 } as const
 
 export type LiveDashboardErrorKey =
@@ -72,6 +75,15 @@ export const participantTrackingErrorKey = (
             return trackingKeys.qrCodeNotAssociated
         case 'TRACKING_QR_CODE_NOT_FOUND':
             return trackingKeys.qrCodeNotFound
+        // Die drei Gründe des manuellen Nachtrags. "Widersprüchliche Reihenfolge" ist der
+        // häufigste - und ohne eigenen Satz die irreführendste Meldung von allen, weil sie sich
+        // wie ein Speicherfehler liest, obwohl der Eintrag nur eine andere Uhrzeit braucht.
+        case 'TRACKING_ENTRY_NOT_FOUND':
+            return trackingKeys.entryNotFound
+        case 'TRACKING_SEQUENCE_CONFLICT':
+            return trackingKeys.sequenceConflict
+        case 'TRACKING_TIMESTAMP_COLLISION':
+            return trackingKeys.timestampCollision
     }
 
     return undefined

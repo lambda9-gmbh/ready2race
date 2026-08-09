@@ -1187,6 +1187,9 @@ export type ErrorCode =
     | 'TRACKING_TEAM_NOT_CHECKED_IN'
     | 'TRACKING_QR_CODE_NOT_FOUND'
     | 'TRACKING_QR_CODE_NOT_ASSOCIATED_WITH_PARTICIPANT'
+    | 'TRACKING_ENTRY_NOT_FOUND'
+    | 'TRACKING_SEQUENCE_CONFLICT'
+    | 'TRACKING_TIMESTAMP_COLLISION'
     | 'DEREGISTRATION_ALREADY_EXISTS'
     | 'DEREGISTRATION_IS_LOCKED'
     | 'DEREGISTRATION_RESULTS_ALREADY_EXIST'
@@ -1894,6 +1897,8 @@ export type LiveDashboardParticipantDto = {
     substitutedFor?: string | null
     substitutionReason?: string | null
     requirements: Array<LiveDashboardRequirementStatusDto>
+    trackingStatus?: ParticipantScanType
+    trackingAt?: string | null
 }
 
 export type LiveDashboardRequirementStatusDto = {
@@ -1974,6 +1979,12 @@ export type LoginDto = {
 export type LoginRequest = {
     email: string
     password: string
+}
+
+export type ManualTrackingRequest = {
+    scanType: ParticipantScanType
+    scannedAt: string
+    reason: string
 }
 
 export type MatchForRunningStatusDto = {
@@ -2364,6 +2375,21 @@ export type ParticipantRequirementUpsertDto = {
 
 export type ParticipantScanType = 'ENTRY' | 'EXIT'
 
+export type ParticipantTrackingChangeDto = {
+    id: string
+    trackingId?: string | null
+    changeType: ParticipantTrackingChangeType
+    previousScanType?: ParticipantScanType
+    previousScannedAt?: string | null
+    newScanType: ParticipantScanType
+    newScannedAt: string
+    reason: string
+    createdAt: string
+    createdBy?: AppUserNameDto
+}
+
+export type ParticipantTrackingChangeType = 'CREATE' | 'UPDATE'
+
 export type ParticipantTrackingDto = {
     id: string
     eventId: string
@@ -2379,7 +2405,27 @@ export type ParticipantTrackingDto = {
     scanType?: ParticipantScanType
     scannedAt?: string
     lastScanBy?: AppUserNameDto
+    source: ParticipantTrackingSource
+    editCount: number
 }
+
+export type ParticipantTrackingEntryDto = {
+    id: string
+    scanType: ParticipantScanType
+    scannedAt: string
+    source: ParticipantTrackingSource
+    recordedBy?: AppUserNameDto
+    editCount: number
+    lastEditedAt?: string | null
+    lastEditedBy?: AppUserNameDto
+}
+
+export type ParticipantTrackingHistoryDto = {
+    entries: Array<ParticipantTrackingEntryDto>
+    changes: Array<ParticipantTrackingChangeDto>
+}
+
+export type ParticipantTrackingSource = 'QR' | 'MANUAL'
 
 export type ParticipantUpsertDto = {
     firstname: string
@@ -5572,6 +5618,45 @@ export type CheckInOutParticipantData = {
 export type CheckInOutParticipantResponse = unknown
 
 export type CheckInOutParticipantError = BadRequestError | ApiError
+
+export type GetParticipantTrackingHistoryData = {
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type GetParticipantTrackingHistoryResponse = ParticipantTrackingHistoryDto
+
+export type GetParticipantTrackingHistoryError = ApiError
+
+export type AddManualParticipantTrackingData = {
+    body: ManualTrackingRequest
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type AddManualParticipantTrackingResponse = string
+
+export type AddManualParticipantTrackingError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type CorrectParticipantTrackingData = {
+    body: ManualTrackingRequest
+    path: {
+        eventId: string
+        participantId: string
+        trackingId: string
+    }
+}
+
+export type CorrectParticipantTrackingResponse = unknown
+
+export type CorrectParticipantTrackingError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type UpdateParticipantRequirementData = {
     body: ParticipantRequirementUpsertDto
