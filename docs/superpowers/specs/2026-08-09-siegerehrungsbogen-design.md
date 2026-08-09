@@ -324,7 +324,35 @@ Kategorien vermischen sich nicht.
 `GapDocumentTemplateServiceTest`): Auswahl und Sortierung der Ehrungen, Filterung auf einen
 Wettkampf, leere Auswahl = alle, `IsChallengeEvent` und `NoResults`.
 
-## 11. Bewusst nicht enthalten
+## 11. Offen: Dopplung mit den Wertungskategorie-Abschnitten in `crf-2026`
+
+**Vor dem Merge zu klären.** Dieser Branch zweigt von einem Stand ab, der die
+Wertungskategorie-Abschnitte noch nicht kennt. In `crf-2026` gibt es sie seit dem 09.08.2026:
+Ergebnisse werden dort bereits je Wertungskategorie getrennt und je Abschnitt ab 1 gezählt —
+öffentliche Anzeige, Schiedsrichter-Dashboard, Athleten-Anzeige, Platzierungsansicht und
+Ergebnis-PDF —, gerechnet an genau einer Stelle: `RatingCategoryRanking.groupAndRank`.
+
+Weder diese Klasse noch die Migration mit `event_rating_category.sort_order` existieren hier
+(geprüft am 10.08.2026: 81 Migrationsdateien, letzte `V202608091410`). Daraus folgen zwei Punkte:
+
+1. **Dopplung.** `AwardCeremonyLogic.groupByRatingCategory` und `AwardCeremonyLogic.rank` machen
+   dasselbe wie `RatingCategoryRanking.groupAndRank`. Beim Merge gehört die Ehrung auf die
+   bestehende Stelle umgestellt, statt eine zweite Rechnung derselben Sache stehen zu lassen —
+   sonst laufen die Zahlen auf dem Siegerehrungsbogen früher oder später gegen die der
+   Ergebnisliste.
+2. **Reihenfolge der Kategorien.** Dieser Bogen sortiert Kategorien **alphabetisch** und die
+   Gruppe ohne Kategorie zuletzt, weil es hier nichts anderes gibt. `crf-2026` hat eine
+   **gepflegte** Reihenfolge (`sort_order`) mit `RatingCategoryRef.UNCONFIGURED_SORT_ORDER`
+   (`Int.MAX_VALUE`) für ungepflegte Kategorien. Für eine Siegerehrung ist die gepflegte
+   Reihenfolge die richtige — sie bestimmt, in welcher Folge geehrt wird. Beim Merge also darauf
+   umstellen.
+
+Die Rangvergabe selbst bleibt davon unberührt: Gleichstände sind innerhalb eines Laufs durch
+`place_unique_in_match` ausgeschlossen und entstehen nur über
+`CompetitionSetupPlacesOption.EQUAL` in den Wettkampf-Platzierungen — genau der Fall, den
+[Abschnitt 6](#6-platzvergabe-innerhalb-der-kategorie) behandelt.
+
+## 12. Bewusst nicht enthalten
 
 - **Ersatzleute / Substitutionen.** Liegen vor (`SubstitutionDto`), gehören aber ins Protokoll,
   nicht auf das Pult. Eine Ansage nennt die Crew, die gefahren ist — die steht bereits da.
