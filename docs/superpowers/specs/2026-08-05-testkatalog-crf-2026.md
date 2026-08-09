@@ -373,6 +373,39 @@ Postgres geprüft, aber nichts davon wurde je gerendert.
 
 ---
 
+## K — Manueller Check-in/-out je Athlet:in
+
+Am 09.08. gebaut. Der QR-Scan am Steg bleibt der reguläre Weg; für den Fall, dass ein Boot ohne
+Scan abgelegt hat und die Crew trotzdem auf dem Wasser ist, können Admin und Schiedsrichter
+Einträge von Hand ergänzen und bestehende berichtigen. Jede Änderung verlangt eine Begründung und
+hinterlässt Vorher-/Nachher-Stand samt Urheber in `participant_tracking_change`. Entwurf:
+`docs/superpowers/specs/2026-08-09-manueller-checkin-checkout-design.md`. Migration
+`V202608091600`.
+
+**Kein Agent hat die laufende Anwendung gesehen.** Backend-Suite (632) und Frontend (584) sind
+grün, ein HTTP-Test belegt die Rechteprüfung auf allen drei Endpunkten — gerendert wurde nichts
+davon je. Der wunde Punkt ist **K13**: ob ein von Hand nachgetragener Eintrag im
+Schiedsrichter-Dashboard dieselbe Wirkung hat wie ein Scan, ist nirgends geprüft.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| K1 | Rechte | Aktion und Dialog erscheinen **nur** für Admin und Schiedsrichter (`UPDATE LIVE_DASHBOARD` oder `UPDATE EVENT`). Mit einem Vereinsvertreter-Konto anmelden: weder Zeilenaktion noch Stift, und der direkte Aufruf von `GET /event/{eventId}/participant/{participantId}/tracking` liefert 403 — dort stehen Begründungen im Klartext | `f54cb98d` | |
+| K2 | Der Anlassfall | Ein Boot hat ohne Scan abgelegt. Für eine Person Check-in **und** Check-out von Hand nachtragen, Uhrzeiten frei setzen. Beide Einträge stehen danach im Verlauf und tragen den Chip „manuell" | `f54cb98d` | |
+| K3 | QR-Eintrag berichtigen | Eine Person regulär per QR einchecken, dann im Dialog die Uhrzeit korrigieren. Der Chip wechselt auf **„per QR, berichtigt"** — nicht auf „manuell": dass der Eintrag vom Scanner kam, wird durch die Korrektur nicht unwahr | `f54cb98d` | |
+| K4 | Begründung ist Pflicht | Speichern ohne Begründung ist nicht möglich (Knopf bleibt gesperrt). Gegenprobe über die API mit leerem Grund: 422, nicht 500. Die Datenbank hält zusätzlich dagegen (`check (length(btrim(reason)) > 0)`) | `f54cb98d` | |
+| K5 | Freie Zeitwahl | Ein Zeitpunkt Stunden in der Vergangenheit wird angenommen — das ist der Normalfall, nicht der Sonderfall. Auch ein Zeitpunkt in der Zukunft ist zugelassen; bewusst keine Sperre | `f54cb98d` | |
+| K6 | Widersprüchliche Reihenfolge | Ein Check-out ohne vorherigen Check-in, oder ein Eintrag, der eine spätere Zeile umdreht: die Meldung muss **auf Deutsch erklären, was zu tun ist** („An- und Abmeldungen müssen sich abwechseln und mit einer Anmeldung beginnen"), nicht nach Speicherfehler klingen | `f54cb98d` | |
+| K7 | Gleiche Sekunde | Zwei Einträge derselben Person auf exakt denselben Zeitpunkt werden abgelehnt. Sonst wäre nicht bestimmt, ob die Person am Ende auf dem Wasser ist | `f54cb98d` | |
+| K8 | Änderungsverlauf lesbar | Unten im Dialog steht je Änderung: Zeitpunkt, Name der Person, Vorher → Nachher und die Begründung. Nach zwei Korrekturen desselben Eintrags stehen **beide** da — die zweite überschreibt die erste nicht | `f54cb98d` | |
+| K9 | Schiedsrichter-Ansicht | Im Detail-Dialog einer Mannschaft trägt jede Person einen eigenen Steg-Chip („Drin 9:35" / „Draußen" / „kein Steg-Scan") und daneben den Stift. Bis hierher zeigte der Dialog gar nicht, an wem ein fehlender Scan hängt | `f54cb98d` | |
+| K10 | Protokoll-Spalte | Event-Seite, Tab Teilnehmende, Tabelle „Status Protokoll": die Spalte „Erfassung" unterscheidet die drei Fälle. Über die Zeilenaktion öffnet sich derselbe Dialog | `f54cb98d` | |
+| K11 | QR-App unverändert | **Regression.** Ein regulärer Scan in der QR-App muss weiterhin funktionieren und „per QR" erzeugen. Die alten Meldungen („ist bereits eingecheckt") dürfen sich nicht geändert haben | `f54cb98d` | |
+| K12 | Nichts nach außen | Öffentliche Anzeige und Athleten-Ansicht zeigen weder Bearbeitung noch Begründungen. Auch die Tabelle, die ein Vereinsvertreter über `/participantTracking` erreichen kann, nennt **keine Namen** von Bearbeitern und keinen Grund — nur Herkunft und Anzahl der Korrekturen | `f54cb98d` | |
+| K13 | Wirkung aufs Dashboard | **Der eigentliche Zweck, und der einzige Punkt ohne jeden Beleg.** Für die letzte fehlende Person eines Bootes den Check-in nachtragen: beim nächsten Poll muss die Mannschaft im Schiedsrichter-Dashboard „abgelegt um …" zeigen und der Arena-Chip grün werden — genau so, als wäre gescannt worden. Wenn irgendwo etwas klemmt, dann hier | `f54cb98d` | |
+| K14 | Bestand aus der Zeit davor | Eine Regatta mit alten Scans öffnen: die Einträge tragen alle „per QR", niemand ist als manuell markiert. Die Migration setzt den Bestand auf `QR` — schlägt das fehl, sieht die ganze Historie nach Handarbeit aus | `f54cb98d` | |
+
+---
+
 ## Detailablauf A6/C7 — Zeitstrafe während der Lauf läuft
 
 Der Kernfall: die Anzeige muss eine nachgetragene Strafe übernehmen, **bevor** der Lauf beendet ist.
@@ -461,6 +494,14 @@ bleibende Nummer erwartet, siehe den offenen Punkt „Bootsnummer" unten.
 - **Wer pflegt den Prüfungsschweregrad? (I8).** Ohne optimistisches Sperren überschreiben zwei
   gleichzeitige Bearbeiter sich kommentarlos. Entweder es wird gesperrt oder es gilt organisatorisch:
   einer pflegt.
+- **Wer darf von Hand ein-/auschecken? (K1).** Die Funktion hängt an `UPDATE LIVE_DASHBOARD` **oder**
+  `UPDATE EVENT` — bewusst an vorhandenen Rechten, damit in der laufenden Veranstaltung nichts
+  nachkonfiguriert werden muss. Damit kann sie aber jeder, der das Dashboard bedient. Am Testtag
+  gegenprüfen, ob das der gewünschte Kreis ist; wenn nicht, braucht es doch ein eigenes Privileg —
+  und dann muss es der Schiedsrichter-Rolle **vor** dem 14.08. zugewiesen werden.
+- **Löschen fehlt bewusst (K).** Ein falscher Eintrag wird korrigiert, nicht getilgt. Wenn am
+  Testtag ein Fall auftaucht, in dem ein Eintrag ersatzlos weg muss (etwa eine komplett falsche
+  Person), gibt es dafür heute keinen Weg außer SQL — vor der Regatta entscheiden, ob das reicht.
 
 ## Nicht in diesem Katalog
 
