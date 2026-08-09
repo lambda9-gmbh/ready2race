@@ -78,14 +78,28 @@ Die Ids bekommen deshalb ein Spalten-Präfix (`list` / `live`); der Klick-Handle
 Liste, dann die Live-Spalte. Damit landet der Sprung breit immer in der Gesamtliste — die
 Live-Spalte steht ohnehin schon im Blick.
 
-## 5. Code-Zuschnitt
+## 5. Nachtrag aus dem Handtest: die Karte misst sich selbst
+
+Bei 1024 px (Tablet quer) sind zwei Spalten je ~330 px breit — **schmaler als ein Telefon**. Die
+Karte entschied ihre Kurzformen aber am *Fenster* (`{xs: …, sm: …}`) und nahm bei 1024 px die
+Langform „Ergebnisse vollständig — wartet auf Beenden". Deren Chip sitzt im Kopf-Grid in derselben
+`auto`-Spalte wie die geplante Startzeit, zieht die Spalte also über beide Zeilen auf: vom
+Laufnamen blieb „V…", vom Wettkampf „Mixed Dop…".
+
+`LiveDashboardMatchCard` bekommt deshalb `containerType: 'inline-size'`, und die Umschaltung
+lang/kurz läuft über `@container (min-width: 480px)` statt über den Viewport. Die Karte richtet
+sich damit nach ihrer eigenen Breite — richtig für beide Fälle, auch für den bestehenden schmalen
+Einspalter. Abschnitt 8 bleibt in der Sache gültig: es kommt kein Inhalt hinzu, die Schwelle sitzt
+nur am richtigen Maß.
+
+## 6. Code-Zuschnitt
 
 `LiveDashboardPage.tsx` ist heute 410 Zeilen und würde die beiden Inhaltsblöcke sonst doppelt
 enthalten (einmal je Modus). Die Blöcke wandern deshalb als `LiveColumn` und `MatchListColumn`
 nach `components/event/liveDashboard/LiveDashboardColumns.tsx`. Schmale und breite Ansicht rendern
 dieselben Komponenten, nur in einem anderen Rahmen. Die Seite behält Daten, Polling und Aktionen.
 
-## 6. Prüfung
+## 7. Prüfung
 
 - `dashboardScope` und `dashboardEntryDomId` sind reine Funktionen und werden in `common.test.ts`
   mitgetestet. Das Projekt hat kein jsdom/testing-library, Komponenten werden nicht gerendert.
@@ -93,7 +107,7 @@ dieselben Komponenten, nur in einem anderen Rahmen. Die Seite behält Daten, Pol
   Spalten, Tablet quer), 820 px (eine Spalte, Bottom-Bar), 390 px (unverändert).
 - `npm run type-check` bzw. der Build müssen grün sein.
 
-## 7. Bewusst nicht Teil dieser Änderung
+## 8. Bewusst nicht Teil dieser Änderung
 
 - Karteninhalte bleiben identisch — keine ausgeschriebenen Vereinsnamen oder Statuslabel für breite
   Bildschirme. Die Kurzformen sind fachlich gewollt, nicht platzbedingt.

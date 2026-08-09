@@ -15,6 +15,13 @@ import {
 import FinishMatchButton from './FinishMatchButton.tsx'
 import SeverityIcon from './SeverityIcon.tsx'
 
+/**
+ * Ab dieser Kartenbreite ist Platz für die Langform des Status. Darunter würde sie die Spalte im
+ * Kopf-Grid so weit aufziehen, dass daneben nur noch der erste Buchstabe des Laufnamens bleibt —
+ * beide Zeilen teilen sich dieselbe Spalte.
+ */
+const WIDE_CARD_PX = 480
+
 type Props = {
     match: LiveDashboardMatchDto
     onTeamClick: (matchId: string, teamId: string) => void
@@ -49,6 +56,10 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
             sx={{
                 minWidth: 0,
                 overflow: 'hidden',
+                // Die Karte richtet sich nach ihrer eigenen Breite, nicht nach der des Fensters:
+                // nebeneinander stehende Spalten auf dem Tablet sind schmaler als ein Telefon,
+                // ein Blick aufs Fenster würde dort die Langformen erzwingen.
+                containerType: 'inline-size',
                 // Accent bar instead of a full frame: marks the live race without shouting
                 borderLeft: running ? '6px solid' : undefined,
                 borderLeftColor: running ? 'success.dark' : undefined,
@@ -131,17 +142,29 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                     duration: formatMinutes(match.elapsedMinutes),
                                 })
                             ) : awaitingFinish ? (
-                                // Der volle Text sprengt schmale Karten; auf Telefonbreite
-                                // trägt die Kurzform dieselbe Aussage.
+                                // Der volle Text sprengt schmale Karten; die Kurzform trägt
+                                // dieselbe Aussage. Ausschlaggebend ist die Kartenbreite: der
+                                // Kopf teilt sich eine Spalte mit diesem Label, ein zu langes
+                                // schneidet nebenan den Laufnamen ab.
                                 <>
                                     <Box
                                         component="span"
-                                        sx={{display: {xs: 'none', sm: 'inline'}}}>
+                                        sx={{
+                                            display: 'none',
+                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
+                                                display: 'inline',
+                                            },
+                                        }}>
                                         {t('event.liveDashboard.state.AWAITING_FINISH')}
                                     </Box>
                                     <Box
                                         component="span"
-                                        sx={{display: {xs: 'inline', sm: 'none'}}}>
+                                        sx={{
+                                            display: 'inline',
+                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
+                                                display: 'none',
+                                            },
+                                        }}>
                                         {t('event.liveDashboard.state.AWAITING_FINISH_SHORT')}
                                     </Box>
                                 </>

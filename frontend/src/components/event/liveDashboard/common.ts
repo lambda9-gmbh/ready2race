@@ -19,6 +19,37 @@ export const isLiveMatch = (match: LiveDashboardMatchDto): boolean =>
 export const liveMatches = (matches: LiveDashboardMatchDto[]): LiveDashboardMatchDto[] =>
     matches.filter(isLiveMatch)
 
+/** Die beiden Ansichten des Boards — schmal je eine, breit beide nebeneinander. */
+export type LiveDashboardTab = 'live' | 'matches'
+
+/**
+ * Wie viel der Server liefern soll. Schmal entscheidet der Umschalter: der Live-Tab braucht nur die
+ * laufenden Läufe (plus den nächsten), die vollständige Liste sieht sich dort niemand im
+ * Sekundentakt an. Breit stehen beide Spalten gleichzeitig auf dem Schirm, also führt kein Weg an
+ * der Gesamtliste vorbei.
+ */
+export const dashboardScope = (wide: boolean, tab: LiveDashboardTab): 'LIVE' | 'ALL' =>
+    !wide && tab === 'live' ? 'LIVE' : 'ALL'
+
+/**
+ * DOM-Id der Karte eines Eintrags, geteilt zwischen den Render-Schleifen und dem
+ * Klick-auf-den-Zeitstrahl. Breit steht ein laufender Lauf zweimal auf der Seite — links unter
+ * "Live" und rechts in der Gesamtliste —, deshalb gehört die Spalte in die Id; sonst wären die Ids
+ * doppelt und `getElementById` träfe die falsche Karte.
+ */
+export const dashboardEntryDomId = (id: string, column: 'live' | 'list'): string =>
+    `live-dashboard-entry-${column}-${id}`
+
+/**
+ * Wohin der Klick auf den Zeitstrahl springt: bevorzugt in die Gesamtliste, ersatzweise in die
+ * Live-Spalte. Breit ist die Live-Spalte ohnehin dauerhaft im Blick, dort zu scrollen brächte
+ * nichts; schmal existiert je nach Tab nur eine der beiden Karten.
+ */
+export const dashboardEntryDomIdCandidates = (id: string): string[] => [
+    dashboardEntryDomId(id, 'list'),
+    dashboardEntryDomId(id, 'live'),
+]
+
 /**
  * Welche Knöpfe die Karte anbietet — die Entscheidung liegt hier statt im JSX, damit sie ohne
  * Rendering prüfbar bleibt. `mayFinish`/`mayControl` sind die Rechte der Nutzerin.
@@ -118,7 +149,10 @@ export const shortClubName = (name: string): string => {
         (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
         withoutBallast,
     )
-    return abbreviated.replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').trim()
+    return abbreviated
+        .replace(/\s{2,}/g, ' ')
+        .replace(/\s+,/g, ',')
+        .trim()
 }
 
 /**
@@ -179,8 +213,13 @@ export const nextUpEntry = (
     now: Date,
 ): LiveDashboardTimelineEntry | undefined => {
     const threshold = now.getTime() - NEXT_UP_GRACE_MINUTES * 60_000
-    const stillUpcoming = pendingSlots.filter(slot => new Date(slot.startTime).getTime() > threshold)
-    return buildLiveDashboardTimeline(nextUpcomingMatch ? [nextUpcomingMatch] : [], stillUpcoming)[0]
+    const stillUpcoming = pendingSlots.filter(
+        slot => new Date(slot.startTime).getTime() > threshold,
+    )
+    return buildLiveDashboardTimeline(
+        nextUpcomingMatch ? [nextUpcomingMatch] : [],
+        stillUpcoming,
+    )[0]
 }
 
 /**
