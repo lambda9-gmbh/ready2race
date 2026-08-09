@@ -4,6 +4,7 @@ import {
     MenuItem,
     Paper,
     Select,
+    Stack,
     Table,
     TableBody,
     TableCell,
@@ -28,7 +29,6 @@ import Throbber from '@components/Throbber.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateClubGlobal} from '@authorization/privileges.ts'
 import {clubShortNameAction, mergedSpellings, primaryName} from './clubShortNames.ts'
-import ClubNameRulePanel from './ClubNameRulePanel.tsx'
 
 const ALL_EVENTS = 'all'
 
@@ -125,14 +125,23 @@ const ClubShortNamePanel = () => {
 
     return (
         <Box>
-            {/* Die Kürzungsregeln stehen unter "Einstellungen", nicht mehr über dieser Liste.
-                Die Wirkung einer Regel sieht man deshalb erst beim Wechsel hierher — dieser
-                Reiter lädt seine Liste beim Betreten neu, die Vorbelegung ist also aktuell. */}
-            <Typography variant={'h2'}>{t('club.shortName.names')}</Typography>
-            <Box sx={{color: theme.palette.text.secondary}}>{t('club.shortName.tableHint')}</Box>
-            <Box sx={{color: theme.palette.text.secondary}}>{t('club.shortName.emptyHint')}</Box>
+            {/* Die Kürzungsregeln stehen unter "Einstellungen", nicht mehr über dieser Liste. Die
+                Wirkung einer Regel sieht man deshalb erst beim Wechsel hierher — dieser Reiter
+                lädt seine Liste beim Betreten neu, die Vorbelegung ist also aktuell.
 
-            <Box sx={{display: 'flex', justifyContent: 'flex-end', pt: 1, mb: 1}}>
+                Aufbau wie dort: Überschrift, darunter die Hinweise als zusammenhängender Block,
+                dann erst der Inhalt. */}
+            <Stack spacing={0.5} sx={{mb: 3}}>
+                <Typography variant={'h2'}>{t('club.shortName.names')}</Typography>
+                <Typography variant={'body2'} color={'text.secondary'}>
+                    {t('club.shortName.tableHint')}
+                </Typography>
+                <Typography variant={'body2'} color={'text.secondary'}>
+                    {t('club.shortName.emptyHint')}
+                </Typography>
+            </Stack>
+
+            <Box sx={{display: 'flex', justifyContent: 'flex-end', mb: 1}}>
                 <Select
                     size={'small'}
                     value={eventId}

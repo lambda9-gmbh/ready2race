@@ -154,6 +154,7 @@ object AwardCertificateService {
                             teamName = team.registrationName,
                             result = team.timeString,
                             startNumber = team.startNumber,
+                            ratingCategory = team.ratingCategory?.name,
                             excluded = team.deregistered || team.out || team.failed,
                             participants = team.participants.map {
                                 AwardCertificateParticipant(
@@ -208,6 +209,7 @@ object AwardCertificateService {
                     eventName = event.name,
                     eventLocation = event.location,
                     eventDate = eventDate,
+                    printRatingCategory = options.printRatingCategory,
                 ),
             )
         }

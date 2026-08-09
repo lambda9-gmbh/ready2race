@@ -49,6 +49,7 @@ object AwardCertificateLogic {
                     clubName = team.clubName,
                     teamName = team.teamName,
                     result = team.result,
+                    ratingCategory = team.ratingCategory,
                     names = names,
                     firstName = firstName,
                     lastName = lastName,
@@ -62,13 +63,18 @@ object AwardCertificateLogic {
     /**
      * Baut die Platzhalterwerte für eine einzelne Urkundenseite aus [entry] und den Eckdaten der
      * Veranstaltung. Rein und ohne Datenbankzugriff, damit finding 1 (Namen) hier testbar bleibt.
+     *
+     * @param printRatingCategory Steht die Option aus, bleibt der Kategoriewert null und ein
+     * etwaiger Platzhalter in der Vorlage leer — die Urkunde sieht dann aus wie bisher.
      */
     fun placeholderValues(
         entry: AwardCertificateEntry,
         eventName: String,
         eventLocation: String?,
         eventDate: String,
+        printRatingCategory: Boolean = false,
     ): GapPlaceholderValues = GapPlaceholderValues(
+        ratingCategory = entry.ratingCategory.takeIf { printRatingCategory },
         firstName = entry.firstName,
         lastName = entry.lastName,
         fullName = entry.names.joinToString("\n"),

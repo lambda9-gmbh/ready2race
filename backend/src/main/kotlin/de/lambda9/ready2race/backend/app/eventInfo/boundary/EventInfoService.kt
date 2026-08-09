@@ -16,6 +16,8 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.data.Timecode
@@ -602,7 +604,7 @@ object EventInfoService {
         val records = !CompetitionMatchTeamRepo.getTeamsForMatchResult(matchId).orDie()
         val timePrecision = Timecode.displayPrecision(records.mapNotNull { it[TIMECODE.TIME] })
 
-        val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
+        val teams = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
                 val first = groupedRecords.first()
                 val clubs = clubComposition(groupedRecords, clubShortNames)
@@ -615,6 +617,9 @@ object EventInfoService {
                     clubsFull = clubs.full.ifEmpty { null },
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
                     place = first[COMPETITION_MATCH_TEAM.PLACE],
+                    ratingCategory = ratingCategoryRef(first),
+                    // Der Kategorieplatz entsteht erst, wenn das ganze Feld des Laufs bekannt ist.
+                    categoryPlace = null,
                     timeString = timeStringOrNull(first, timePrecision),
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                     failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
@@ -636,8 +641,40 @@ object EventInfoService {
                 )
             }
 
-        KIO.ok(result)
+        KIO.ok(rankWithinRatingCategories(teams))
     }
+
+    /**
+     * Die Wertungskategorie einer Ergebniszeile, `null` solange das Boot keiner zugeordnet ist.
+     * Die Sortierstelle kommt aus `event_rating_category`; fehlt die Zuordnung zur Veranstaltung,
+     * gilt 0 — die Kategorie bekommt dann ihren Abschnitt vorne und wird alphabetisch einsortiert,
+     * statt die ganze Zeile fallen zu lassen.
+     */
+    private fun ratingCategoryRef(record: Record): RatingCategoryRef? =
+        record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_ID, UUID::class.java)?.let { id ->
+            RatingCategoryRef(
+                id = id,
+                name = record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_NAME, String::class.java) ?: "",
+                sortOrder = record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER, Int::class.java) ?: 0,
+            )
+        }
+
+    /**
+     * Zählt die Mannschaften eines Laufs je Wertungskategorie neu ab 1 und gibt sie in
+     * Abschnittsreihenfolge zurück. Gerechnet wird in
+     * [de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking], damit
+     * öffentliche Ergebnisseite, Athleten-Anzeige und Schiedsrichter-Dashboard nachweislich
+     * dieselbe Zählung zeigen.
+     */
+    private fun rankWithinRatingCategories(teams: List<MatchResultTeamInfo>): List<MatchResultTeamInfo> =
+        RatingCategoryRanking.groupAndRank(
+            items = teams,
+            category = { it.ratingCategory },
+            place = { it.place },
+            tieBreak = { it.startNumber },
+        ).flatMap { section ->
+            section.entries.map { it.item.copy(categoryPlace = it.categoryPlace) }
+        }
 
     private fun getUpcomingMatchTeams(
         matchId: UUID,

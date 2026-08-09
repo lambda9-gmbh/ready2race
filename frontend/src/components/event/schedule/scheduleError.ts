@@ -16,6 +16,15 @@ const shiftKeys = {
     unexpected: 'event.schedule.shift.error.unexpected',
 } as const
 
+// Vorziehen nach einer Absage. Nur die drei eigenen Gründe stehen hier; alles Weitere
+// (Renntag verlassen, Vorgänger überholt) sind dieselben Grenzen wie beim Verschieben und
+// benutzen deshalb auch dieselben Texte - siehe advanceErrorText.
+const advanceKeys = {
+    noDelta: 'event.schedule.advance.error.noDelta',
+    slotNotSkipped: 'event.schedule.advance.error.slotNotSkipped',
+    targetInvalid: 'event.schedule.advance.error.targetInvalid',
+} as const
+
 const importKeys = {
     fileError: 'common.error.upload.FILE_ERROR',
     noHeaders: 'common.error.upload.NO_HEADERS',
@@ -50,6 +59,7 @@ const roundSkipKeys = {
 
 export type ScheduleErrorKey =
     | (typeof shiftKeys)[keyof typeof shiftKeys]
+    | (typeof advanceKeys)[keyof typeof advanceKeys]
     | (typeof importKeys)[keyof typeof importKeys]
     | (typeof slotActionKeys)[keyof typeof slotActionKeys]
     | (typeof roundSkipKeys)[keyof typeof roundSkipKeys]
@@ -153,6 +163,33 @@ export const shiftErrorText = (
     return maxReduction !== undefined
         ? {key: shiftKeys.compressionImpossible, values: {max: maxReduction}}
         : {key: shiftKeys.unexpected}
+}
+
+/**
+ * Der Meldungstext zu einem abgelehnten Vorziehen. Drei Gründe sind dieser Aktion eigen: der Slot
+ * ist gar nicht abgesagt, aus ihm lässt sich kein Delta ableiten, oder der Bis-Slot gehört nicht
+ * (mehr) zum vorziehbaren Block — alle drei heißen "der Zeitplan-Tab ist veraltet, bitte neu laden"
+ * oder "das geht mit diesem Slot nicht".
+ *
+ * Alles Übrige sind dieselben Grenzen wie beim Verschieben (Renntag, Vorgänger) und laufen deshalb
+ * in [shiftErrorText] — dieselbe Ablehnung verdient denselben Satz, egal aus welchem Dialog sie kommt.
+ */
+export const advanceErrorText = (
+    error: ScheduleApiError,
+    ctx: ShiftErrorContext,
+): ScheduleErrorText => {
+    switch (error.errorCode) {
+        case 'SCHEDULE_ADVANCE_NO_DELTA':
+            return {key: advanceKeys.noDelta}
+
+        case 'SCHEDULE_SLOT_NOT_SKIPPED':
+            return {key: advanceKeys.slotNotSkipped}
+
+        case 'SCHEDULE_SHIFT_TARGET_INVALID':
+            return {key: advanceKeys.targetInvalid}
+    }
+
+    return shiftErrorText(error, ctx)
 }
 
 /**

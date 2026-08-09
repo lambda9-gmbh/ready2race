@@ -14,7 +14,6 @@ import {
     TableRow,
     TextField,
     Typography,
-    useTheme,
 } from '@mui/material'
 import {useEffect, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
@@ -55,7 +54,6 @@ type Props = {
  */
 const ClubNameRulePanel = ({onRulesChanged}: Props) => {
     const {t} = useTranslation()
-    const theme = useTheme()
     const feedback = useFeedback()
     const user = useUser()
 
@@ -251,16 +249,19 @@ const ClubNameRulePanel = ({onRulesChanged}: Props) => {
     }
 
     return (
-        <Stack spacing={2} sx={{mb: 3}}>
-            <Box>
-                <Typography variant={'h3'}>{t('club.shortName.rules.rules')}</Typography>
-                <Box sx={{color: theme.palette.text.secondary}}>
+        <Stack spacing={3}>
+            {/* Überschriften bleiben bei h2/h3: das Theme stylt nur h1-h3, ein h4 fiele auf die
+                MUI-Vorgabe von 2,125rem zurück und wäre damit größer als der Abschnitt, zu dem es
+                gehört. */}
+            <Stack spacing={0.5}>
+                <Typography variant={'h2'}>{t('club.shortName.rules.rules')}</Typography>
+                <Typography variant={'body2'} color={'text.secondary'}>
                     {t('club.shortName.rules.hint')}
-                </Box>
-                <Box sx={{color: theme.palette.text.secondary}}>
+                </Typography>
+                <Typography variant={'body2'} color={'text.secondary'}>
                     {t('club.shortName.rules.orderHint')}
-                </Box>
-            </Box>
+                </Typography>
+            </Stack>
 
             <Box>
                 <FormControlLabel
@@ -288,10 +289,10 @@ const ClubNameRulePanel = ({onRulesChanged}: Props) => {
             </Box>
 
             <Box>
-                <Typography variant={'h4'}>{t('club.shortName.rules.wordPairs')}</Typography>
-                <Box sx={{color: theme.palette.text.secondary, mb: 1}}>
+                <Typography variant={'h3'}>{t('club.shortName.rules.wordPairs')}</Typography>
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mb: 1.5}}>
                     {t('club.shortName.rules.wordPairsHint')}
-                </Box>
+                </Typography>
                 <TableContainer component={Paper}>
                     {/* Wie bei den Vereinsnamen: lieber die Tabelle rollen lassen als die
                         Eingabefelder am Telefon auf wenige Zeichen zusammenzudrücken. */}
@@ -359,10 +360,10 @@ const ClubNameRulePanel = ({onRulesChanged}: Props) => {
             </Box>
 
             <Box>
-                <Typography variant={'h4'}>{t('club.shortName.rules.removedTerms')}</Typography>
-                <Box sx={{color: theme.palette.text.secondary, mb: 1}}>
+                <Typography variant={'h3'}>{t('club.shortName.rules.removedTerms')}</Typography>
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mb: 1.5}}>
                     {t('club.shortName.rules.removedTermsHint')}
-                </Box>
+                </Typography>
                 <TableContainer component={Paper}>
                     <Table size={'small'} sx={{minWidth: 360}}>
                         <TableHead>
