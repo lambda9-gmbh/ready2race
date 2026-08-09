@@ -2130,10 +2130,17 @@ object CompetitionExecutionService {
                 optionalColumn(config.colTeamRatingCategory) { ratingCategory?.name ?: "" }
                 optionalColumn(config.colTeamClub) { actualClubName ?: registeringClubName }
 
-                // Die Wellen-Name-Formatierung (Startzeit + Name) MUSS mit CompetitionMatchRepo.
-                // getForRaceClockerPull übereinstimmen (siehe WaveName) - sonst greift dessen
-                // Fallback-Filter über den Wellen-Namen beim Ergebnis-Pull nicht mehr.
-                optionalColumn(config.colMatchName) { WaveName.format(data.matchName, data.startTime) ?: "" }
+                // Die Wellen-Name-Formatierung (Startzeit + Wettkampf + Name) MUSS mit
+                // CompetitionMatchRepo.getForRaceClockerPull übereinstimmen (siehe WaveName) - sonst
+                // greift dessen Fallback-Filter über den Wellen-Namen beim Ergebnis-Pull nicht mehr.
+                optionalColumn(config.colMatchName) {
+                    WaveName.format(
+                        matchName = data.matchName,
+                        startTime = data.startTime,
+                        competitionIdentifier = data.competition.identifier,
+                        competitionShortName = data.competition.shortName,
+                    ) ?: ""
+                }
                 optionalColumn(config.colMatchStartTime) { idx ->
                     val offsetSeconds = idx * (data.startTimeOffset ?: 0)
                     data.startTime?.plusSeconds(offsetSeconds)

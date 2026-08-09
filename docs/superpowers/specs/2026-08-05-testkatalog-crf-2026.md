@@ -141,7 +141,7 @@ nicht die Erwartung anpassen.
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
 | C1 | Startlisten-Export | Export trägt die R2R-UUID in „Extra info"; ohne dieses Mapping findet der Pull keine Boote | `dd8d67b8` | |
-| C2 | Wellenname | Wellenname enthält die Startzeit, Lauf wird im Feed gefunden | `09e6a642` | |
+| C2 | Wellenname | Wellenname lautet `10:30 \| 12 JM4x \| AF1` (Startzeit, Rennnummer und Kürzel, Laufname), Lauf wird im Feed gefunden | `09e6a642` | |
 | C3 | Ergebnisse ziehen | Zeiten und Plätze landen am richtigen Boot, Plätze aus den Zeiten abgeleitet | `dd8d67b8` | |
 | C4 | Teil-Pull | Ein Pull mit nur teilweise genommenen Zeiten ist wiederholbar, ohne die übrigen Boote zu beschädigen | `b1e2e238` | |
 | C5 | Echter Start | Früheste gemessene Startzeit überschreibt `started_at`, auch gegen einen manuellen Stempel | `f86665ae`, `e4cb8753` | |
