@@ -621,6 +621,14 @@
       "DEAKTIVIERT": "Schiedsrichter beenden im Dashboard — nächster Lauf wird von Hand aktiviert",
       "hint": "Die Organisatoren können Läufe über den Zeitplan in jedem Fall beenden, unabhängig von dieser Einstellung."
     },
+    "autoCreateFollowingRounds": {
+      "label": "Folgerunden automatisch erzeugen",
+      "hint": "Sobald alle Läufe einer Runde beendet und gewertet sind, werden die Paarungen der nächsten Runde von selbst gesetzt. Aktiviert wird dadurch nichts - das bleibt beim Zeitplan.",
+      "INHERIT": "Veranstaltung folgen",
+      "ENABLED": "Ein",
+      "DISABLED": "Aus",
+      "inherited": "Veranstaltung: {{value}}"
+    },
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
     "publicResultsVisibility": {
@@ -934,6 +942,7 @@
       },
       "execution": {
         "tabTitle": "Durchführung",
+        "pairingsRecalculated": "Paarung neu berechnet",
         "progress": {
           "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
         },
@@ -953,6 +962,9 @@
             "notEnoughTeamSpace": "Es gibt mehr Meldungen für diesen Wettbewerb als Teams in dem Wettbewerbsablauf definiert sind. Bitte vergewissern Sie sich, dass genügend Teams oder Partien für die erste Runde des Wettbewerbs definiert sind.",
             "notAllPlacesSet": "Es fehlen Ergebnisse. Bitte geben Sie alle Plätze für die Partien an."
           }
+        },
+        "roundProgression": {
+          "saved": "Automatik gespeichert"
         },
         "deleteRound": {
           "delete": "Runde löschen",

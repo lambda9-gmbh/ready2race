@@ -192,6 +192,12 @@ import type {
     UpdateTimingConfigData,
     UpdateTimingConfigError,
     UpdateTimingConfigResponse,
+    GetRoundProgressionConfigData,
+    GetRoundProgressionConfigError,
+    GetRoundProgressionConfigResponse,
+    UpdateRoundProgressionConfigData,
+    UpdateRoundProgressionConfigError,
+    UpdateRoundProgressionConfigResponse,
     PullMatchResultsFromRaceClockerData,
     PullMatchResultsFromRaceClockerError,
     PullMatchResultsFromRaceClockerResponse,
@@ -1635,6 +1641,35 @@ export const updateTimingConfig = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/timing-config',
+    })
+}
+
+/**
+ * Whether this competition creates the pairings of following rounds automatically - its own setting, the event default it inherits from, and what actually applies.
+ */
+export const getRoundProgressionConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRoundProgressionConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRoundProgressionConfigResponse,
+        GetRoundProgressionConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/roundProgression',
+    })
+}
+
+export const updateRoundProgressionConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRoundProgressionConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRoundProgressionConfigResponse,
+        UpdateRoundProgressionConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/roundProgression',
     })
 }
 

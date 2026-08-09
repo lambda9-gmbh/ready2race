@@ -621,6 +621,14 @@
       "DEAKTIVIERT": "Dommere afslutter i dashboardet — næste løb aktiveres manuelt",
       "hint": "Arrangørerne kan altid afslutte løb via tidsplanen, uanset denne indstilling."
     },
+    "autoCreateFollowingRounds": {
+      "label": "Opret automatisk følgende runder",
+      "hint": "Så snart alle løb i en runde er afsluttet og bedømt, sættes parringerne til den næste runde af sig selv. Det aktiverer ikke noget - det afhænger stadig af tidsplanen.",
+      "INHERIT": "Følg arrangementet",
+      "ENABLED": "Til",
+      "DISABLED": "Fra",
+      "inherited": "Arrangement: {{value}}"
+    },
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
     "publicResultsVisibility": {
@@ -934,6 +942,7 @@
       },
       "execution": {
         "tabTitle": "Afvikling",
+        "pairingsRecalculated": "Parring genberegnet",
         "progress": {
           "error": "Kampene i konkurrencen kunne ikke indlæses."
         },
@@ -953,6 +962,9 @@
             "notEnoughTeamSpace": "Der er flere tilmeldinger til denne konkurrence end der er hold i konkurrenceforløbet. Sørg for, at der er nok hold eller kampe defineret til første runde.",
             "notAllPlacesSet": "Der mangler resultater. Indtast venligst alle placeringer for kampene."
           }
+        },
+        "roundProgression": {
+          "saved": "Automatik gemt"
         },
         "deleteRound": {
           "delete": "Slet runde",

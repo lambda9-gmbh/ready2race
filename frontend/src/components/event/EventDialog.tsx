@@ -38,6 +38,7 @@ type EventForm = {
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
     chainProgressionMode: ChainProgressionMode
+    autoCreateFollowingRounds: boolean
     showBreaksOnPublicBoards: boolean
     publicResultsVisibility: PublicResultsVisibility
 }
@@ -76,6 +77,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         submissionNeedsVerification: false,
         allowParticipantSelfRegistration: false,
         chainProgressionMode: 'DEAKTIVIERT',
+        autoCreateFollowingRounds: false,
         showBreaksOnPublicBoards: false,
         publicResultsVisibility: 'FINISHED_ONLY',
     }
@@ -178,6 +180,13 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     {t('event.chainProgressionMode.hint')}
                 </Typography>
                 <FormInputCheckbox
+                    name={`autoCreateFollowingRounds`}
+                    label={t('event.autoCreateFollowingRounds.label')}
+                />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.autoCreateFollowingRounds.hint')}
+                </Typography>
+                <FormInputCheckbox
                     name={`showBreaksOnPublicBoards`}
                     label={t('event.showBreaksOnPublicBoards')}
                 />
@@ -224,6 +233,7 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         chainProgressionMode: formData.chainProgressionMode,
+        autoCreateFollowingRounds: formData.autoCreateFollowingRounds,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
     }
@@ -247,6 +257,7 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         chainProgressionMode: formData.chainProgressionMode,
+        autoCreateFollowingRounds: formData.autoCreateFollowingRounds,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
     }
@@ -271,6 +282,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         submissionNeedsVerification: dto.submissionNeedsVerification,
         allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
         chainProgressionMode: dto.chainProgressionMode ?? 'DEAKTIVIERT',
+        autoCreateFollowingRounds: dto.autoCreateFollowingRounds ?? false,
         showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards ?? false,
         publicResultsVisibility: dto.publicResultsVisibility ?? 'FINISHED_ONLY',
     }

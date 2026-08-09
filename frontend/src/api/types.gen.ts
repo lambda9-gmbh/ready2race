@@ -604,6 +604,10 @@ export type CompetitionMatchDto = {
      * Set while the automatic pull leaves this match alone because results were entered by hand.
      */
     raceClockerAutoPausedAt?: string | null
+    /**
+     * Set while this match's pairing comes from a recalculation and the match has not been called to the start yet
+     */
+    pairingsRecalculatedAt?: string | null
 }
 
 export type CompetitionMatchTeamDto = {
@@ -981,6 +985,10 @@ export type CreateEventRequest = {
     allowParticipantSelfRegistration: boolean
     chainProgressionMode?: ChainProgressionMode
     /**
+     * Creates the pairings of the following round automatically once a round is fully finished
+     */
+    autoCreateFollowingRounds?: boolean
+    /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
@@ -1242,6 +1250,10 @@ export type EventDto = {
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
     chainProgressionMode?: ChainProgressionMode
+    /**
+     * Creates the pairings of the following round automatically once a round is fully finished
+     */
+    autoCreateFollowingRounds?: boolean
     /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
@@ -1833,6 +1845,10 @@ export type LiveDashboardMatchDto = {
      * Set while the automatic pull leaves this match alone because results were entered by hand.
      */
     raceClockerAutoPausedAt?: string | null
+    /**
+     * Set while this match's pairing comes from a recalculation and the match has not been called to the start yet
+     */
+    pairingsRecalculatedAt?: string | null
 }
 
 /**
@@ -2610,6 +2626,22 @@ export type RoleRequest = {
     privileges: Array<string>
 }
 
+export type RoundProgressionConfigDto = {
+    /**
+     * The competition's own choice. null means it follows the event setting.
+     */
+    autoCreateFollowingRounds?: boolean | null
+    eventAutoCreateFollowingRounds: boolean
+    /**
+     * What actually applies - computed by the backend so the inheritance rule lives in one place.
+     */
+    effective: boolean
+}
+
+export type RoundProgressionConfigRequest = {
+    autoCreateFollowingRounds?: boolean | null
+}
+
 export type RunningMatchInfo = {
     matchId: string
     matchNumber?: number | null
@@ -3109,6 +3141,10 @@ export type UpdateEventRequest = {
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
     chainProgressionMode?: ChainProgressionMode
+    /**
+     * Creates the pairings of the following round automatically once a round is fully finished
+     */
+    autoCreateFollowingRounds?: boolean
     /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
@@ -4266,6 +4302,32 @@ export type UpdateTimingConfigData = {
 export type UpdateTimingConfigResponse = void
 
 export type UpdateTimingConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRoundProgressionConfigData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetRoundProgressionConfigResponse = RoundProgressionConfigDto
+
+export type GetRoundProgressionConfigError = BadRequestError | ApiError
+
+export type UpdateRoundProgressionConfigData = {
+    body: RoundProgressionConfigRequest
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type UpdateRoundProgressionConfigResponse = void
+
+export type UpdateRoundProgressionConfigError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
 
 export type PullMatchResultsFromRaceClockerData = {
     path: {

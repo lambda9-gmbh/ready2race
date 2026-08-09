@@ -230,6 +230,11 @@ const LiveDashboardMatchCard = ({
                         </Box>
                     </Box>
                 </Box>
+                {match.pairingsRecalculatedAt && (
+                    <Typography variant={'caption'} color={'warning.main'}>
+                        {t('event.competition.execution.pairingsRecalculated')}
+                    </Typography>
+                )}
                 {(() => {
                     const pollStatus = raceClockerPollStatus(match)
                     if (pollStatus.kind === 'none' || pollStatus.kind === 'ok') return null

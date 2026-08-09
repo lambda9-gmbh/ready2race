@@ -473,6 +473,11 @@ const CompetitionExecutionRound = ({
                                             )}
                                         />
                                     )}
+                                    {match.pairingsRecalculatedAt && (
+                                        <Typography variant={'caption'} color={'warning.main'}>
+                                            {t('event.competition.execution.pairingsRecalculated')}
+                                        </Typography>
+                                    )}
                                     {timingSystem === 'RACECLOCKER' &&
                                         (() => {
                                             const status = raceClockerPollStatus(match)

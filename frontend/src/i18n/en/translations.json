@@ -621,6 +621,14 @@
       "DEAKTIVIERT": "Referees finish in the dashboard — the next race is activated by hand",
       "hint": "The organisers can always finish races via the schedule, regardless of this setting."
     },
+    "autoCreateFollowingRounds": {
+      "label": "Create following rounds automatically",
+      "hint": "As soon as every race of a round is finished and scored, the pairings of the next round are set on their own. This does not activate anything - that still follows the schedule.",
+      "INHERIT": "Follow the event",
+      "ENABLED": "On",
+      "DISABLED": "Off",
+      "inherited": "Event: {{value}}"
+    },
     "showBreaksOnPublicBoards": "Show breaks on public boards",
     "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
     "publicResultsVisibility": {
@@ -934,6 +942,7 @@
       },
       "execution": {
         "tabTitle": "Live",
+        "pairingsRecalculated": "Pairing recalculated",
         "progress": {
           "error": "The matches of the competition could not be loaded."
         },
@@ -953,6 +962,9 @@
             "notEnoughTeamSpace": "There are more registrations for this competition than there are teams defined in the competition setup. Please make sure that there are enough teams or matches defined for the first round of the competition setup.",
             "notAllPlacesSet": "Match results are missing. Please enter all places in the match results."
           }
+        },
+        "roundProgression": {
+          "saved": "Automation saved"
         },
         "deleteRound": {
           "delete": "Delete round",

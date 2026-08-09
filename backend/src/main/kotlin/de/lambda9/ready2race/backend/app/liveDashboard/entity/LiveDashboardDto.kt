@@ -176,6 +176,12 @@ data class LiveDashboardMatchDto(
     val raceClockerPollError: String?,
     /** Gesetzt, solange der automatische Abruf diesen Lauf in Ruhe lässt, weil von Hand Ergebnisse eingetragen wurden. */
     val raceClockerAutoPausedAt: LocalDateTime?,
+    /**
+     * Gesetzt, wenn diese Paarung aus einer Neuberechnung stammt — und nur, solange der Lauf noch
+     * nicht an den Start gerufen wurde. Ab da hat sich die Frage erledigt: Wer am Start steht,
+     * fährt in dieser Aufstellung.
+     */
+    val pairingsRecalculatedAt: LocalDateTime?,
 )
 
 /**

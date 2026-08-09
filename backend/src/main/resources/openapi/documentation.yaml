@@ -12108,6 +12108,11 @@ components:
           format: date-time
           nullable: true
           description: Set while the automatic pull leaves this match alone because results were entered by hand.
+        pairingsRecalculatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Set while this match's pairing comes from a recalculation and the match has not been called to the start yet"
 
     CompetitionMatchTeamDto:
       type: object
@@ -13957,6 +13962,11 @@ components:
           format: date-time
           nullable: true
           description: Set while the automatic pull leaves this match alone because results were entered by hand.
+        pairingsRecalculatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Set while this match's pairing comes from a recalculation and the match has not been called to the start yet"
 
     PendingSlotDto:
       type: object

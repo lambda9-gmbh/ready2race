@@ -65,6 +65,7 @@ import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
 import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
+import RoundProgressionSetting from '@components/event/competition/excecution/RoundProgressionSetting.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
@@ -774,36 +775,50 @@ const CompetitionExecution = () => {
                 </Alert>
             )}
             {!allRoundsCreated && (
-                <Box sx={{my: 2, display: 'flex', alignItems: 'center'}}>
-                    <LoadingButton
-                        pending={submitting}
-                        disabled={progressDto.canNotCreateRoundReasons.length > 0}
-                        variant={'contained'}
-                        onClick={handleCreateNextRound}>
-                        {t('event.competition.execution.nextRound.create')}
-                    </LoadingButton>
-                    {progressDto.canNotCreateRoundReasons.length > 0 && (
-                        <HtmlTooltip
-                            placement={'right'}
-                            title={
-                                <Stack spacing={1} p={1}>
-                                    {progressDto.canNotCreateRoundReasons.map((reason, idx) => (
-                                        <Fragment key={reason}>
-                                            <Stack direction={'row'} spacing={1}>
-                                                <WarningIcon color={'warning'} />
-                                                <Typography>{getReasonText(reason)}</Typography>
-                                            </Stack>
-                                            {idx <
-                                                progressDto.canNotCreateRoundReasons.length - 1 && (
-                                                <Divider />
-                                            )}
-                                        </Fragment>
-                                    ))}
-                                </Stack>
-                            }>
-                            <Info sx={{ml: 1}} color={'info'} fontSize={'small'} />
-                        </HtmlTooltip>
-                    )}
+                <Box
+                    sx={{
+                        my: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 2,
+                    }}>
+                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+                        <LoadingButton
+                            pending={submitting}
+                            disabled={progressDto.canNotCreateRoundReasons.length > 0}
+                            variant={'contained'}
+                            onClick={handleCreateNextRound}>
+                            {t('event.competition.execution.nextRound.create')}
+                        </LoadingButton>
+                        {progressDto.canNotCreateRoundReasons.length > 0 && (
+                            <HtmlTooltip
+                                placement={'right'}
+                                title={
+                                    <Stack spacing={1} p={1}>
+                                        {progressDto.canNotCreateRoundReasons.map(
+                                            (reason, idx) => (
+                                                <Fragment key={reason}>
+                                                    <Stack direction={'row'} spacing={1}>
+                                                        <WarningIcon color={'warning'} />
+                                                        <Typography>
+                                                            {getReasonText(reason)}
+                                                        </Typography>
+                                                    </Stack>
+                                                    {idx <
+                                                        progressDto.canNotCreateRoundReasons
+                                                            .length -
+                                                            1 && <Divider />}
+                                                </Fragment>
+                                            ),
+                                        )}
+                                    </Stack>
+                                }>
+                                <Info sx={{ml: 1}} color={'info'} fontSize={'small'} />
+                            </HtmlTooltip>
+                        )}
+                    </Box>
+                    <RoundProgressionSetting />
                 </Box>
             )}
             <Stack spacing={6}>

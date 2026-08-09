@@ -126,6 +126,9 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                         raceClockerPolledAt = match.first.raceClockerPolledAt,
                         raceClockerPollError = match.first.raceClockerPollError,
                         raceClockerAutoPausedAt = match.first.raceClockerAutoPausedAt,
+                        // Der Vermerk verschwindet mit der Aktivierung. Die Regel steht hier und nicht im
+                        // Frontend, weil sie sonst in zwei Oberflächen doppelt stünde.
+                        pairingsRecalculatedAt = match.first.pairingsRecalculatedAt?.takeIf { match.first.activatedAt == null },
                     )
                 },
             required = required,

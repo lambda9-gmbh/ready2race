@@ -252,6 +252,9 @@ object LiveDashboardService {
                         teams = teams,
                         raceClockerPollError = match[COMPETITION_MATCH.RACECLOCKER_POLL_ERROR],
                         raceClockerAutoPausedAt = match[COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT],
+                        // Der Vermerk verschwindet mit der Aktivierung. Die Regel steht hier und nicht im
+                        // Frontend, weil sie sonst in zwei Oberflächen doppelt stünde.
+                        pairingsRecalculatedAt = match[COMPETITION_MATCH.PAIRINGS_RECALCULATED_AT]?.takeIf { activatedAt == null },
                     )
                 )
             }

@@ -34,4 +34,10 @@ data class CompetitionMatchDto(
     val raceClockerPollError: String?,
     /** Gesetzt, solange die Automatik diesen Lauf wegen einer Handeingabe in Ruhe lässt. */
     val raceClockerAutoPausedAt: LocalDateTime?,
+    /**
+     * Gesetzt, wenn diese Paarung aus einer Neuberechnung stammt — und nur, solange der Lauf noch
+     * nicht an den Start gerufen wurde. Ab da hat sich die Frage erledigt: Wer am Start steht,
+     * fährt in dieser Aufstellung.
+     */
+    val pairingsRecalculatedAt: LocalDateTime?,
 )
