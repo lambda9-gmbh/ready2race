@@ -179,7 +179,7 @@ Ein `document(format = PDRectangle.A4) { page { … } }` je Ehrung, im DSL der E
 
   17-NC · CM 4x+                                             14 pt fett
   Mixed-Coastal-Vierer mit Steuermann                        12 pt
-  Wertung: Masters A            Finale A · Sa 15.08., 14:35  12 pt
+  Wertung: Masters A               Finale A · 15.08., 14:35  12 pt
   ═══════════════════════════════════════════════════════
    1.   Ruderclub Nürtingen                       4:12,7     Rang 20 pt fett / Zeit 14 pt
         Boot „RCN I" · Startnummer 3                         10 pt grau
@@ -200,6 +200,8 @@ Ein `document(format = PDRectangle.A4) { page { … } }` je Ehrung, im DSL der E
   Namen, sofern er von der Titelzeile abweicht.
 - **Zeit** rechtsbündig auf Höhe der Rangzahl. Fehlt sie, bleibt die Stelle leer — keine
   Striche, kein „—".
+- **Lauf-Angabe** ohne Wochentag („Finale A · 15.08., 14:35"): dessen Abkürzung hängt an der
+  CLDR-Fassung des JDK und wäre keine verlässliche Testgrundlage.
 - **Strafe** nur wenn `penaltySeconds != null`: „Zeitstrafe +10 s (Frühstart)"; die Klammer
   entfällt ohne `penaltyNote`.
 - Die Zeile „Boot … · Startnummer …" reduziert sich auf die vorhandenen Teile; ohne
