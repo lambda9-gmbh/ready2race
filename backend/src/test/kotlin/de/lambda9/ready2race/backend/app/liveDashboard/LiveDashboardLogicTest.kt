@@ -906,4 +906,25 @@ class LiveDashboardLogicTest {
         )
         assertEquals(listOf(entryDto), result)
     }
+
+    @Test
+    fun roleIsShortenedWithoutMakingTwoRolesLookAlike() {
+        // Die echten Rollennamen der CRF beginnen beide mit "S" - Anfangsbuchstaben wären hier
+        // wertlos, drei Buchstaben halten sie auseinander.
+        assertEquals("Ste.", LiveDashboardLogic.roleAbbreviation("Steuerleute"))
+        assertEquals("Sen.", LiveDashboardLogic.roleAbbreviation("Senior:in"))
+    }
+
+    @Test
+    fun aShortRoleKeepsItsName() {
+        // Ein Punkt hinter einem Wort, das nicht kürzer wird, wäre eine Lüge.
+        assertEquals("Cox", LiveDashboardLogic.roleAbbreviation("Cox"))
+        assertEquals("Bug", LiveDashboardLogic.roleAbbreviation(" Bug "))
+    }
+
+    @Test
+    fun aMissingRoleStaysMissing() {
+        assertEquals(null, LiveDashboardLogic.roleAbbreviation(null))
+        assertEquals(null, LiveDashboardLogic.roleAbbreviation("   "))
+    }
 }

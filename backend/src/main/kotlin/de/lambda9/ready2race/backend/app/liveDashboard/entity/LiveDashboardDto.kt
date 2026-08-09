@@ -49,18 +49,50 @@ data class LiveDashboardParticipantDto(
     val namedRole: String?,
     val year: Int?,
     val gender: String?,
-    val externalClubName: String?,
+    /**
+     * Der Verein, den diese Person trägt - bei Gastruderern der Freitext aus der Meldung, sonst
+     * der Name ihres eigenen Vereins. Bis zum 09.08.2026 stand hier der Verein der *Meldung*,
+     * derselbe für die ganze Mannschaft; bei 42 der 100 CRF-Meldungen war das schlicht falsch.
+     */
+    val clubName: String?,
     /** Name of the participant this one replaced, if they were substituted into this round. */
     val substitutedFor: String?,
     val substitutionReason: String?,
     val requirements: List<LiveDashboardRequirementStatusDto>,
 )
 
+/**
+ * Eine Person in der Kurzfassung, die die breite Karte je Boot zeigt - bewusst nicht die volle
+ * [LiveDashboardParticipantDto] mit ihren Teilnahmebedingungen: die Karte hängt am Sekunden-Poll,
+ * der Detail-Dialog lädt einzeln nach.
+ */
+data class LiveDashboardCrewMemberDto(
+    /** Der Vorname fehlt bewusst: auf dem Wasser ruft niemand ihn, und die Zeile bleibt kurz. */
+    val lastName: String,
+    /** Kurzform des Vereins, den diese Person trägt - dieselbe Regel wie in der Kette. */
+    val clubShort: String?,
+    /** Kurzform der Rolle, siehe [LiveDashboardLogic.roleAbbreviation]. */
+    val role: String?,
+)
+
 data class LiveDashboardTeamDto(
     val teamId: UUID,
     val teamName: String?,
+    /**
+     * Der *meldende* Verein. Bleibt im Datensatz, weil er die Rechnung trägt und in der Verwaltung
+     * gebraucht wird - angezeigt wird er seit dem 09.08.2026 nirgends mehr, dafür sind
+     * [clubsShort]/[clubsFull] da.
+     */
     val clubName: String?,
-    val actualClubName: String?,
+    /** Die Vereine der Crew in Bootsreihenfolge, Kurzformen - siehe [de.lambda9.ready2race.backend.app.club.boundary.ClubComposition]. */
+    val clubsShort: String,
+    /** Dieselbe Kette in vollen Vereinsnamen; die breite Karte und der Detail-Dialog zeigen sie. */
+    val clubsFull: String,
+    /**
+     * Die Crew in Kurzfassung - nur gefüllt, wenn der Abruf sie mit `crew=true` angefordert hat.
+     * Am Telefon bleibt die Nutzlast damit unverändert; erst die dritte Anzeigestufe braucht sie.
+     */
+    val crew: List<LiveDashboardCrewMemberDto>?,
     val startNumber: Int?,
     val place: Int?,
     val time: String?,

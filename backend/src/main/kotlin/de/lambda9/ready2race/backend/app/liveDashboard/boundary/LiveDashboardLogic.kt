@@ -110,6 +110,21 @@ object LiveDashboardLogic {
         deregistered || place != null || failed
 
     /**
+     * Die Rolle, wie sie in der Crew-Zeile der breiten Karte hinter dem Namen steht. Fünf Personen
+     * mit "Nachname · Vereinskurzform (Rolle)" sprengen die Zeile, sobald die Rolle ausgeschrieben
+     * ist - und die Rolle ist von allen drei Angaben die, die am wenigsten unterscheidet.
+     *
+     * Gekürzt wird stumpf auf drei Buchstaben mit Punkt ("Steuerleute" -> "Ste.",
+     * "Senior:in" -> "Sen."), NICHT auf Anfangsbuchstaben: die echten Rollennamen der CRF beginnen
+     * beide mit "S" und wären danach nicht mehr auseinanderzuhalten. Kurze Rollen ("Cox", "Bug")
+     * bleiben, wie sie sind - ein Punkt hinter einem Wort, das nicht kürzer wird, wäre eine Lüge.
+     */
+    fun roleAbbreviation(role: String?): String? {
+        val trimmed = role?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return if (trimmed.length <= 4) trimmed else trimmed.take(3) + "."
+    }
+
+    /**
      * Was eine Abfrage im gewünschten Umfang zurückgibt: alles, oder die Läufe, die jetzt eine
      * Handlung verlangen — und wenn es keine gibt, der nächste anstehende. Die Reihenfolge bleibt
      * erhalten; die Läufe kommen bereits nach Startzeit sortiert aus der Datenbank.

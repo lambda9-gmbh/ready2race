@@ -2,6 +2,9 @@ package de.lambda9.ready2race.backend.app.liveDashboard.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
+import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameLogic
+import de.lambda9.ready2race.backend.app.club.control.ClubShortNameRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
@@ -21,7 +24,6 @@ import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionCheckSeverityRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
-import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -32,9 +34,15 @@ import java.util.UUID
 
 object LiveDashboardService {
 
+    /**
+     * [crew] schaltet die dritte Anzeigestufe der Karte frei (Nachname, Vereinskurzform und Rolle
+     * je Person). Sie hängt an der Fensterbreite, nicht am Gerät: am Telefon bleibt die Nutzlast
+     * des Sekunden-Polls unverändert, am Laptop kommen grob 5 KB gzip je Abruf dazu.
+     */
     fun getLiveDashboard(
         eventId: UUID,
         scope: LiveDashboardScope,
+        crew: Boolean = false,
     ): App<LiveDashboardError, ApiResponse.ETagged<LiveDashboardDto>> =
         KIO.comprehension {
             val exists = !EventRepo.exists(eventId).orDie()
@@ -86,7 +94,13 @@ object LiveDashboardService {
                 }
             )
 
-            val context = ParticipantContext(requirementRecords, checkRecords, substitutionRecords, severityConfig)
+            // Beides einmal je Abruf, nicht je Mannschaft: der Endpunkt wird im Sekundentakt
+            // gepollt, und eine Veranstaltung hat leicht hundert Mannschaften.
+            val aliases = !ClubShortNameRepo.aliases().orDie()
+            val wornClubs = !wornClubsByParticipant(teamRecords, substitutionRecords)
+
+            val context =
+                ParticipantContext(requirementRecords, checkRecords, substitutionRecords, severityConfig, wornClubs)
 
             val paidAtsByClub = invoiceRecords.groupBy(
                 { it[INVOICE_FOR_EVENT_REGISTRATION.CLUB] },
@@ -134,15 +148,29 @@ object LiveDashboardService {
                     configured = severityConfig.severityFor(competitionId, CheckType.NOT_ON_WATER),
                 )
 
+                // Die Kette entsteht aus der Crew, die wirklich startet - nach den Ummeldungen.
+                // Genau das ist der Fall, der im Betrieb weh tut: kommt die Ersatzperson aus einem
+                // anderen Verein, steht das ab sofort auf der Karte.
+                val clubs = ClubComposition.of(participants.map { it.clubName }, aliases)
+
                 KIO.ok(
                     LiveDashboardTeamDto(
                         teamId = registrationId,
                         teamName = teamName,
                         clubName = clubName,
-                        actualClubName = singletonOrFallback(
-                            participants.map { it.externalClubName }.toSet(),
-                            first[EVENT.MIXED_TEAM_TERM],
-                        ),
+                        clubsShort = clubs.short,
+                        clubsFull = clubs.full,
+                        crew = if (crew) {
+                            participants.map {
+                                LiveDashboardCrewMemberDto(
+                                    lastName = it.lastName,
+                                    clubShort = it.clubName?.let { name -> ClubShortNameLogic.shorten(name, aliases) },
+                                    role = LiveDashboardLogic.roleAbbreviation(it.namedRole),
+                                )
+                            }
+                        } else {
+                            null
+                        },
                         startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                         place = first[COMPETITION_MATCH_TEAM.PLACE],
                         time = first[TIMECODE.TIME]?.let {
@@ -342,7 +370,13 @@ object LiveDashboardService {
             rows = teamRecords,
             registrationId = teamId,
             startTime = startTime,
-            context = ParticipantContext(requirementRecords, checkRecords, substitutionRecords, severityConfig),
+            context = ParticipantContext(
+                requirementRecords,
+                checkRecords,
+                substitutionRecords,
+                severityConfig,
+                !wornClubsByParticipant(teamRecords, substitutionRecords),
+            ),
             competitionId = competitionId,
         )
 
@@ -644,6 +678,8 @@ object LiveDashboardService {
         substitutionRecords: List<SubstitutionViewRecord>,
         /** Abweichende Schweregrade der Veranstaltung, siehe [CheckSeverityConfig]. */
         val severityConfig: CheckSeverityConfig,
+        /** Der getragene Verein je Person, siehe [wornClubsByParticipant]. */
+        val wornClubs: Map<UUID, String>,
     ) {
         /** requirement id -> assigned named participants (null element = global assignment) */
         val requirementAssignments = requirementRecords.groupBy(
@@ -662,6 +698,51 @@ object LiveDashboardService {
         val substitutionsByKey = substitutionRecords
             .groupBy { it.competitionSetupRoundId!! to it.competitionRegistrationId!! }
             .mapValues { (_, subs) -> subs.sortedBy { it.orderForRound } }
+    }
+
+    /**
+     * Der Verein, den jede Person *trägt*, je Personen-Kennung: bei Gastruderern der Freitext aus
+     * der Meldung, sonst der Name ihres eigenen Vereins. Der meldende Verein steht bewusst nicht
+     * darin - er ist für die Durchführung bedeutungslos.
+     *
+     * Zwei Quellen, weil eine nicht reicht: [teamRecords] deckt alle gemeldeten Personen ab, eine
+     * Ummeldung darf aber ein Vereinsmitglied hereinholen, das für diese Veranstaltung nirgends
+     * gemeldet ist. Für genau die wird nachgeschlagen - meist ist die Menge leer und die zweite
+     * Abfrage entfällt.
+     */
+    private fun wornClubsByParticipant(
+        teamRecords: List<Record>,
+        substitutionRecords: List<SubstitutionViewRecord>,
+    ): App<Nothing, Map<UUID, String>> = KIO.comprehension {
+        fun wornClub(external: Boolean?, externalClubName: String?, ownClubName: String?) =
+            if (external == true) externalClubName else ownClubName
+
+        val fromRegistrations = teamRecords.mapNotNull { row ->
+            val id = row.get("participant_id", UUID::class.java) ?: return@mapNotNull null
+            wornClub(
+                external = row[PARTICIPANT.EXTERNAL],
+                externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                ownClubName = row.get("participant_club_name", String::class.java),
+            )?.let { id to it }
+        }.toMap()
+
+        val missing = substitutionRecords.mapNotNull { it.participantIn?.id }.toSet() - fromRegistrations.keys
+        if (missing.isEmpty()) {
+            return@comprehension KIO.ok(fromRegistrations)
+        }
+
+        val fromSubstitutions = !LiveDashboardRepo.getParticipantClubs(missing).orDie().map { rows ->
+            rows.mapNotNull { row ->
+                val id = row[PARTICIPANT.ID] ?: return@mapNotNull null
+                wornClub(
+                    external = row[PARTICIPANT.EXTERNAL],
+                    externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                    ownClubName = row.get("participant_club_name", String::class.java),
+                )?.let { id to it }
+            }.toMap()
+        }
+
+        KIO.ok(fromRegistrations + fromSubstitutions)
     }
 
     /**
@@ -771,7 +852,9 @@ object LiveDashboardService {
                     namedRole = p.namedParticipantName,
                     year = p.year,
                     gender = p.gender.name,
-                    externalClubName = p.externalClubName,
+                    // p.clubName wäre der meldende Verein - für alle gleich, und damit genau die
+                    // Angabe, die mehrere Boote eines Laufs ununterscheidbar gemacht hat.
+                    clubName = context.wornClubs[p.id],
                     substitutedFor = replaced?.let { "${it.firstname} ${it.lastname}" },
                     substitutionReason = substitution?.reason,
                     requirements = requirements,
