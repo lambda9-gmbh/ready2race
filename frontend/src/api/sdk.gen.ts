@@ -180,6 +180,18 @@ import type {
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
+    GetRaceClockerRacesData,
+    GetRaceClockerRacesError,
+    GetRaceClockerRacesResponse,
+    AddRaceClockerRaceData,
+    AddRaceClockerRaceError,
+    AddRaceClockerRaceResponse,
+    UpdateRaceClockerRaceData,
+    UpdateRaceClockerRaceError,
+    UpdateRaceClockerRaceResponse,
+    DeleteRaceClockerRaceData,
+    DeleteRaceClockerRaceError,
+    DeleteRaceClockerRaceResponse,
     GetEventTimingConfigData,
     GetEventTimingConfigError,
     GetEventTimingConfigResponse,
@@ -1577,6 +1589,61 @@ export const updateMatchResults = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results',
+    })
+}
+
+/**
+ * The named RaceClocker races of this event - one per race in the timing system.
+ */
+export const getRaceClockerRaces = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRaceClockerRacesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRaceClockerRacesResponse,
+        GetRaceClockerRacesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/raceclocker-race',
+    })
+}
+
+export const addRaceClockerRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRaceClockerRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddRaceClockerRaceResponse,
+        AddRaceClockerRaceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/raceclocker-race',
+    })
+}
+
+export const updateRaceClockerRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRaceClockerRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRaceClockerRaceResponse,
+        UpdateRaceClockerRaceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/raceclocker-race/{raceId}',
+    })
+}
+
+export const deleteRaceClockerRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteRaceClockerRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteRaceClockerRaceResponse,
+        DeleteRaceClockerRaceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/raceclocker-race/{raceId}',
     })
 }
 

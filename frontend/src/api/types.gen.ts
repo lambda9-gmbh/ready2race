@@ -2490,6 +2490,24 @@ export type QrCodePublicResponse = {
     type?: QrCodeDtoType
 }
 
+export type RaceClockerRaceDto = {
+    id: string
+    name: string
+    resultsUrl: string
+    startMode: RaceClockerStartMode
+    capturesLaps: boolean
+    position: number
+}
+
+export type RaceClockerRaceRequest = {
+    name: string
+    resultsUrl: string
+    startMode: RaceClockerStartMode
+    capturesLaps: boolean
+}
+
+export type RaceClockerStartMode = 'INDIVIDUAL' | 'WAVE'
+
 export type RatingCategoriesToEventRequest = {
     ratingCategories: Array<RatingCategoryToEventRequest>
 }
@@ -4222,6 +4240,50 @@ export type UpdateMatchResultsData = {
 export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRaceClockerRacesData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRaceClockerRacesResponse = Array<RaceClockerRaceDto>
+
+export type GetRaceClockerRacesError = BadRequestError | ApiError
+
+export type AddRaceClockerRaceData = {
+    body: RaceClockerRaceRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type AddRaceClockerRaceResponse = string
+
+export type AddRaceClockerRaceError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateRaceClockerRaceData = {
+    body: RaceClockerRaceRequest
+    path: {
+        eventId: string
+        raceId: string
+    }
+}
+
+export type UpdateRaceClockerRaceResponse = void
+
+export type UpdateRaceClockerRaceError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteRaceClockerRaceData = {
+    path: {
+        eventId: string
+        raceId: string
+    }
+}
+
+export type DeleteRaceClockerRaceResponse = void
+
+export type DeleteRaceClockerRaceError = BadRequestError | ApiError
 
 export type GetEventTimingConfigData = {
     path: {

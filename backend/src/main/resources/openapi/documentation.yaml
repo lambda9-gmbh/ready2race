@@ -1587,6 +1587,103 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/raceclocker-race:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getRaceClockerRaces
+      description: The named RaceClocker races of this event - one per race in the timing system.
+      responses:
+        200:
+          description: RaceClocker races successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RaceClockerRaceDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addRaceClockerRace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaceClockerRaceRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/raceclocker-race/{raceId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: raceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateRaceClockerRace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaceClockerRaceRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteRaceClockerRace
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/timing-config:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -12697,6 +12794,39 @@ components:
         - competitionId
         - identifier
         - name
+
+    RaceClockerRaceDto:
+      type: object
+      required: [id, name, resultsUrl, startMode, capturesLaps, position]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        resultsUrl:
+          type: string
+        startMode:
+          $ref: '#/components/schemas/RaceClockerStartMode'
+        capturesLaps:
+          type: boolean
+        position:
+          type: integer
+    RaceClockerRaceRequest:
+      type: object
+      required: [name, resultsUrl, startMode, capturesLaps]
+      properties:
+        name:
+          type: string
+        resultsUrl:
+          type: string
+        startMode:
+          $ref: '#/components/schemas/RaceClockerStartMode'
+        capturesLaps:
+          type: boolean
+    RaceClockerStartMode:
+      type: string
+      enum: [INDIVIDUAL, WAVE]
 
     EventTimingConfigRequest:
       type: object
