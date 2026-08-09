@@ -25,6 +25,13 @@ export interface PolledState<T> {
  *   muss das von außen von "geladen, aber leer" unterscheidbar sein — sonst behauptet
  *   die Anzeige fälschlich, es sei kein Lauf auf dem Wasser.
  * - Im Hintergrund wird nicht geladen; beim Zurückkehren sofort einmal.
+ *
+ * `deps` steuert ausschließlich, wann der Takt **neu beginnt** (also etwa bei einem Wechsel
+ * der Veranstaltung) — nicht, welche Werte `load` und `intervalOf` sehen. Diese beiden
+ * werden über Referenzen immer in ihrer neuesten Fassung aufgerufen. Ohne das müsste jeder
+ * Aufrufer alle von ihnen erfassten Werte in `deps` auflisten, und ein vergessener Wert
+ * ergäbe einen dauerhaft veralteten Aufruf ohne jede Warnung — die `exhaustive-deps`-Regel
+ * kann das hier nicht prüfen, weil die Abhängigkeiten erst der Aufrufer kennt.
  */
 export const usePolledEndpoint = <T>(
     load: (signal: AbortSignal) => Promise<{data?: T; response: Response}>,
@@ -41,6 +48,14 @@ export const usePolledEndpoint = <T>(
     const intervalRef = useRef(FALLBACK_INTERVAL_SECONDS)
     const abortRef = useRef<AbortController | null>(null)
     const mountedRef = useRef(true)
+
+    // Siehe Kommentar an der Funktion: die beiden Rückrufe werden stets in ihrer neuesten
+    // Fassung aufgerufen, damit ein vom Aufrufer nicht in `deps` genannter Wert keinen
+    // veralteten Aufruf ergibt.
+    const loadRef = useRef(load)
+    const intervalOfRef = useRef(intervalOf)
+    loadRef.current = load
+    intervalOfRef.current = intervalOf
 
     useEffect(() => {
         mountedRef.current = true
@@ -66,7 +81,7 @@ export const usePolledEndpoint = <T>(
         let stopPolling = false
 
         try {
-            const result = await load(controller.signal)
+            const result = await loadRef.current(controller.signal)
             if (!mountedRef.current) return
             if (result.response.status === 404) {
                 setNotFound(true)
@@ -77,7 +92,7 @@ export const usePolledEndpoint = <T>(
                 setLoadFailed(false)
                 setData(result.data)
                 setLastUpdated(new Date())
-                intervalRef.current = intervalOf(result.data)
+                intervalRef.current = intervalOfRef.current(result.data)
             } else {
                 // Antwort ohne Nutzdaten (z. B. HTTP 500): als fehlgeschlagenen Versuch werten,
                 // statt ihn stillschweigend zu ignorieren.

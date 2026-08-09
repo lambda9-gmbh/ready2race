@@ -24,7 +24,7 @@ const ResultsQrCodePage = () => {
                     }),
                 )
             } else {
-                // Der Code wandert in den Geraetespeicher und nicht in die Zieladresse:
+                // Der Code wandert in den Gerätespeicher und nicht in die Zieladresse:
                 // ein weitergereichter Link soll niemanden in ein fremdes Dashboard lassen.
                 rememberMyEventCode({qrCode: qrCode, eventId: response.data.eventId})
                 navigate({
