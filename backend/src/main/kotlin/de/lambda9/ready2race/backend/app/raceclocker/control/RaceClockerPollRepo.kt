@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.raceclocker.control
 
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRef
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerPollCandidate
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerPollEvent
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
@@ -48,32 +49,34 @@ object RaceClockerPollRepo {
     /**
      * Die Läufe einer Veranstaltung, die der Job anfassen darf. Dieselbe Coalesce-Kette wie
      * [de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo.getForRaceClockerPull]
-     * - Wettkampf-Wert vor Veranstaltungs-Voreinstellung.
+     * - Wettkampf-Anwahl vor Veranstaltungs-Voreinstellung.
      *
-     * Ausgeschlossen sind hier nur die harten Fälle: beendet, pausiert, kein RaceClocker, keine URL,
-     * Slot abgesagt. Das Zeitfenster fehlt bewusst - es hängt an `now` und gehört in die prüfbare
+     * Ausgeschlossen sind hier nur die harten Fälle: beendet, pausiert, kein RaceClocker, kein
+     * angewähltes Rennen, Slot abgesagt. Das Zeitfenster fehlt bewusst - es hängt an `now` und gehört in die prüfbare
      * Logik, nicht in SQL.
      */
     fun getCandidates(eventId: UUID) = Jooq.query {
-        // time_trial_url/heats_url werden aliasiert gebraucht: einmal für die SELECT-Liste (die
-        // fetch{}-Projektion liest unten per `it[timeTrialUrl]`/`it[heatsUrl]` genau diese
-        // Alias-Felder), UND roh (ohne Alias) für die WHERE-Klausel. timing_system wird nirgends
-        // projiziert, braucht also gar keinen Alias. jOOQ rendert einen wiederverwendeten
-        // aliasierten Field-Ausdruck im WHERE nämlich nur als bloßen Alias-Bezeichner
-        // ("timing_system" statt coalesce(...)) - Postgres akzeptiert Output-Aliase im WHERE
-        // grundsätzlich nicht, und bei timing_system wäre der bloße Name zusätzlich mehrdeutig,
-        // weil sowohl competition.timing_system als auch event.timing_system in der Join-Kette
-        // stehen. Deshalb hier bewusst eigene *Filter-Variablen ohne Alias für das WHERE - nicht
-        // wieder mit den SELECT-Feldern zusammenlegen.
+        // timing_system wird nirgends projiziert und braucht deshalb keinen Alias. Das ist wichtig:
+        // jOOQ rendert einen wiederverwendeten aliasierten Field-Ausdruck im WHERE nur als bloßen
+        // Alias-Bezeichner ("timing_system" statt coalesce(...)) - Postgres akzeptiert
+        // Output-Aliase im WHERE grundsätzlich nicht, und der bloße Name wäre hier zusätzlich
+        // mehrdeutig, weil sowohl competition.timing_system als auch event.timing_system in der
+        // Join-Kette stehen.
+        //
+        // Die Rennen selbst brauchen diesen Umweg nicht mehr: Sie kommen aus zwei getrennten Joins
+        // statt aus coalesce-Ausdrücken in der SELECT-Liste, und nur ihre Kennungen werden
+        // gecoalesct - Wettkampf-Anwahl vor Veranstaltungs-Voreinstellung.
         val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM)
-        val timeTrialUrl = DSL.coalesce(COMPETITION.RACECLOCKER_TT_RESULTS_URL, EVENT.RACECLOCKER_TT_RESULTS_URL)
-            .`as`("time_trial_url")
-        val timeTrialUrlFilter =
-            DSL.coalesce(COMPETITION.RACECLOCKER_TT_RESULTS_URL, EVENT.RACECLOCKER_TT_RESULTS_URL)
-        val heatsUrl = DSL.coalesce(COMPETITION.RACECLOCKER_HEATS_RESULTS_URL, EVENT.RACECLOCKER_HEATS_RESULTS_URL)
-            .`as`("heats_url")
-        val heatsUrlFilter =
-            DSL.coalesce(COMPETITION.RACECLOCKER_HEATS_RESULTS_URL, EVENT.RACECLOCKER_HEATS_RESULTS_URL)
+        val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
+        val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")
+        val qualiRaceId = DSL.coalesce(
+            COMPETITION.RACECLOCKER_RACE_QUALIFICATION,
+            EVENT.RACECLOCKER_RACE_QUALIFICATION,
+        )
+        val roundsRaceId = DSL.coalesce(
+            COMPETITION.RACECLOCKER_RACE_ROUNDS,
+            EVENT.RACECLOCKER_RACE_ROUNDS,
+        )
 
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
@@ -84,8 +87,12 @@ object RaceClockerPollRepo {
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
             COMPETITION.ID.`as`("competition_id"),
-            timeTrialUrl,
-            heatsUrl,
+            qualiRace.ID,
+            qualiRace.NAME,
+            qualiRace.RESULTS_URL,
+            roundsRace.ID,
+            roundsRace.NAME,
+            roundsRace.RESULTS_URL,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -96,11 +103,15 @@ object RaceClockerPollRepo {
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
+            .leftJoin(qualiRace).on(qualiRace.ID.eq(qualiRaceId))
+            .leftJoin(roundsRace).on(roundsRace.ID.eq(roundsRaceId))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             .and(COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT.isNull)
             .and(timingSystem.eq(TimingSystem.RACECLOCKER.name))
-            .and(DSL.or(timeTrialUrlFilter.isNotNull, heatsUrlFilter.isNotNull))
+            // Ohne jede Anwahl gibt es nichts zu holen - der Lauf fällt still heraus, statt den
+            // Takt mit einem Fehler zu belasten.
+            .and(DSL.or(qualiRaceId.isNotNull, roundsRaceId.isNotNull))
             // Ein abgesagter Slot bleibt abgesagt, auch wenn in RaceClocker jemand die Welle
             // startet. Die volle Zustandsableitung (EventScheduleLogic.deriveSlotState) ist hier
             // nicht nötig: Ihre beiden anderen Eingaben sind an dieser Stelle konstant - der Lauf
@@ -111,18 +122,25 @@ object RaceClockerPollRepo {
                     .where(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
                     .and(EVENT_SCHEDULE_SLOT.SKIPPED_AT.isNotNull)
             )
-            .fetch {
+            .fetch { record ->
                 RaceClockerPollCandidate(
-                    matchId = it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!,
-                    competitionId = it["competition_id", UUID::class.java],
-                    startTime = it[COMPETITION_MATCH.START_TIME],
-                    activatedAt = it[COMPETITION_MATCH.ACTIVATED_AT],
-                    startedAt = it[COMPETITION_MATCH.STARTED_AT],
+                    matchId = record[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!,
+                    competitionId = record["competition_id", UUID::class.java],
+                    startTime = record[COMPETITION_MATCH.START_TIME],
+                    activatedAt = record[COMPETITION_MATCH.ACTIVATED_AT],
+                    startedAt = record[COMPETITION_MATCH.STARTED_AT],
                     target = RaceClockerMatchTarget(
-                        waveName = WaveName.format(it[COMPETITION_SETUP_MATCH.NAME], it[COMPETITION_MATCH.START_TIME]),
-                        isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
-                        timeTrialUrl = it[timeTrialUrl],
-                        heatsUrl = it[heatsUrl],
+                        waveName = WaveName.format(
+                            record[COMPETITION_SETUP_MATCH.NAME],
+                            record[COMPETITION_MATCH.START_TIME],
+                        ),
+                        isQualification = record[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
+                        qualificationRace = record[qualiRace.ID]?.let {
+                            RaceClockerRaceRef(it, record[qualiRace.NAME]!!, record[qualiRace.RESULTS_URL]!!)
+                        },
+                        roundsRace = record[roundsRace.ID]?.let {
+                            RaceClockerRaceRef(it, record[roundsRace.NAME]!!, record[roundsRace.RESULTS_URL]!!)
+                        },
                     ),
                 )
             }

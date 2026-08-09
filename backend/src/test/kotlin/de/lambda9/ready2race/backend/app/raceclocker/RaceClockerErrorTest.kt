@@ -21,7 +21,7 @@ class RaceClockerErrorTest {
         RaceClockerError.UrlInvalid("https://raceclocker.com/xxxx"),
         RaceClockerError.Unreachable("https://raceclocker.com/xxxx", "HTTP 500"),
         RaceClockerError.MalformedFeed("not valid JSON"),
-        RaceClockerError.MatchNotInFeed(listOf("https://raceclocker.com/xxxx")),
+        RaceClockerError.MatchNotInFeed(listOf("https://raceclocker.com/xxxx"), listOf("Kurzstrecke")),
         RaceClockerError.DuplicateTeams("AF1 CM1x", listOf("Boot A", "Boot B")),
         RaceClockerError.NoResults("AF1 CM1x"),
         RaceClockerError.MatchIsBye,
@@ -58,7 +58,7 @@ class RaceClockerErrorTest {
         )
         assertEquals(
             ErrorCode.RACECLOCKER_MATCH_NOT_IN_FEED,
-            RaceClockerError.MatchNotInFeed(listOf("https://raceclocker.com/xxxx")).respond().errorCode,
+            RaceClockerError.MatchNotInFeed(listOf("https://raceclocker.com/xxxx"), listOf("Kurzstrecke")).respond().errorCode,
         )
         assertEquals(
             ErrorCode.RACECLOCKER_DUPLICATE_TEAMS,

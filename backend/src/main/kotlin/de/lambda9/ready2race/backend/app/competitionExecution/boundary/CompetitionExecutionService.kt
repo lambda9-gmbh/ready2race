@@ -1040,7 +1040,7 @@ object CompetitionExecutionService {
         val teams = match.teams.filter { !it.deregistered }
         val rowsByTeam = assignFeedRows(rows, teams, target.waveName)
 
-        if (rowsByTeam.isEmpty()) return@comprehension KIO.fail(RaceClockerError.MatchNotInFeed(target.candidateUrls))
+        if (rowsByTeam.isEmpty()) return@comprehension KIO.fail(RaceClockerError.MatchNotInFeed(target.candidateUrls, target.candidateRaceNames))
 
         // RaceClocker only ever inserts, it never updates: importing the same start list twice leaves
         // duplicate crews behind. Picking one of them silently would be a coin flip, so we refuse and

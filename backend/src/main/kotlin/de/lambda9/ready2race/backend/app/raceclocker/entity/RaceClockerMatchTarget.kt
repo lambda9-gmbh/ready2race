@@ -1,31 +1,47 @@
 package de.lambda9.ready2race.backend.app.raceclocker.entity
 
 /**
- * Where to find a given match in RaceClocker.
+ * Wo ein Lauf in RaceClocker zu finden ist.
  *
- * A competition needs two RaceClocker races, so there are two URLs: a qualification round is timed as
- * an individual-start race (only those have a real countdown), everything else as a wave-start race.
- * [isQualification] picks between them, so nothing has to be assigned by hand.
+ * Eine Veranstaltung führt benannte Rennen; Veranstaltung und Wettkampf wählen daraus je eines für
+ * die Qualifikationsrunden und eines für alle übrigen Runden ([qualificationRace] / [roundsRace]).
+ * [isQualification] entscheidet, welches für DIESEN Lauf gilt.
  *
- * That flag is a tournament-tree setting, though, and nothing stops a time trial round from being left
- * unmarked. The pull therefore treats it as a preference rather than a fact: it starts at
- * [resultsUrl] and falls back to [alternateResultsUrl] when the match cannot be found there.
+ * Diese Anwahl ist eine Angabe, keine Garantie: Nichts hindert daran, eine als Zeitfahren gefahrene
+ * Runde nicht als Qualifikation zu markieren. Deshalb bleibt das jeweils andere Rennen der Rückfall
+ * — geholt wird es allerdings erst, wenn der Lauf im angewählten nicht auftaucht.
  */
 data class RaceClockerMatchTarget(
     /**
-     * The match name plus the planned start time (see
-     * [de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName]), exported as the
-     * RaceClocker wave name. Only used for pre-match-id start lists.
+     * Der Laufname plus die geplante Startzeit (siehe
+     * [de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName]), exportiert als
+     * RaceClocker-Wellenname. Nur für Startlisten ohne Lauf-Kennung nötig.
      */
     val waveName: String?,
     val isQualification: Boolean,
-    val timeTrialUrl: String?,
-    val heatsUrl: String?,
+    val qualificationRace: RaceClockerRaceRef?,
+    val roundsRace: RaceClockerRaceRef?,
 ) {
-    val resultsUrl: String? get() = (if (isQualification) timeTrialUrl else heatsUrl)?.takeIf { it.isNotBlank() }
+    val race: RaceClockerRaceRef? get() = if (isQualification) qualificationRace else roundsRace
 
-    val alternateResultsUrl: String? get() = (if (isQualification) heatsUrl else timeTrialUrl)?.takeIf { it.isNotBlank() }
+    val alternateRace: RaceClockerRaceRef? get() = if (isQualification) roundsRace else qualificationRace
 
-    /** Primary first, so a correctly marked round costs exactly one request. */
+    val resultsUrl: String? get() = race?.resultsUrl
+
+    /**
+     * Null, wenn es kein anderes Rennen gibt — oder wenn beide Anwahlen auf dieselbe Adresse zeigen.
+     * Entdoppelt wird über die Adresse und nicht über die Kennung, weil geholt wird, was die Adresse
+     * hergibt: Ein zweiter Abruf derselben Adresse brächte dieselbe Antwort.
+     */
+    val alternateResultsUrl: String? get() = alternateRace?.resultsUrl?.takeIf { it != resultsUrl }
+
+    /** Angewähltes Rennen zuerst, damit eine richtige Anwahl genau einen Abruf kostet. */
     val candidateUrls: List<String> get() = listOfNotNull(resultsUrl, alternateResultsUrl)
+
+    /**
+     * Dieselbe Reihenfolge wie [candidateUrls], aber lesbar. Die Fehlermeldung braucht das: „Lauf im
+     * Rennen Kurzstrecke nicht gefunden" ist am Renntag brauchbar, eine nackte URL nicht.
+     */
+    val candidateRaceNames: List<String>
+        get() = listOfNotNull(race, alternateRace?.takeIf { it.resultsUrl != resultsUrl }).map { it.name }
 }
