@@ -281,15 +281,41 @@ const CompetitionNavigation = ({
                                         borderLeft: 3,
                                         borderColor: isActive ? 'primary.main' : 'transparent',
                                     }}>
+                                    {/* Kurznamen sind kurz genug, um neben der Rennnummer zu
+                                        stehen - eine Zeile statt zwei, damit mehr Rennen ohne
+                                        Scrollen sichtbar sind. Der lange Name braucht die zweite
+                                        Zeile weiterhin für sich. */}
                                     <ListItemText
-                                        primary={c.properties.identifier}
-                                        // Ohne gepflegten Kurznamen bleibt der lange stehen -
-                                        // besser ein zu langer Name als eine namenlose Zeile.
-                                        secondary={
-                                            shortNames
-                                                ? (c.properties.shortName ?? c.properties.name)
-                                                : c.properties.name
+                                        primary={
+                                            shortNames ? (
+                                                <Stack
+                                                    component={'span'}
+                                                    direction={'row'}
+                                                    spacing={1}
+                                                    sx={{alignItems: 'baseline', minWidth: 0}}>
+                                                    <Box component={'span'} sx={{flex: 'none'}}>
+                                                        {c.properties.identifier}
+                                                    </Box>
+                                                    {/* Ohne gepflegten Kurznamen steht hier der
+                                                        lange Name - besser abgeschnitten als
+                                                        namenlos. */}
+                                                    <Box
+                                                        component={'span'}
+                                                        sx={{
+                                                            color: 'text.secondary',
+                                                            fontWeight: 'normal',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                        }}>
+                                                        {c.properties.shortName ??
+                                                            c.properties.name}
+                                                    </Box>
+                                                </Stack>
+                                            ) : (
+                                                c.properties.identifier
+                                            )
                                         }
+                                        secondary={shortNames ? undefined : c.properties.name}
                                         slotProps={{
                                             primary: {
                                                 fontWeight: isActive ? 'bold' : 'medium',
