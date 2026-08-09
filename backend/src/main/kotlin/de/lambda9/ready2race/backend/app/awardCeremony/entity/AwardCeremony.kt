@@ -81,8 +81,9 @@ data class AwardCeremonySelectionRequest(
 }
 
 /**
- * Genau eine A4-Seite. Wie eng sie gesetzt wird, steht bewusst nicht hier: das misst
- * AwardCeremonyPdf am fertig gesetzten Blatt, weil der Zeilenumbruch an den Textlängen hängt.
+ * Eine Ehrung, in aller Regel ein A4-Blatt. Wie eng sie gesetzt wird - und ob sie ausnahmsweise
+ * auf mehrere Blätter läuft - steht bewusst nicht hier: das misst AwardCeremonyPdf am fertig
+ * gesetzten Blatt, weil der Zeilenumbruch an den Textlängen hängt.
  */
 data class AwardCeremonySheet(
     val eventName: String,

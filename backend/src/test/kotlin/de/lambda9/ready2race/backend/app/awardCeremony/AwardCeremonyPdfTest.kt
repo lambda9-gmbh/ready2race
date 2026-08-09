@@ -11,7 +11,9 @@ import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class AwardCeremonyPdfTest {
 
@@ -99,6 +101,22 @@ class AwardCeremonyPdfTest {
         },
     )
 
+    /**
+     * Der Fall, an dem auch die unterste Schriftstufe zerbricht: geteilter zweiter Platz, vier
+     * Achter mit Steuermann, jede Mannschaft eine Renngemeinschaft aus zwei ausgeschriebenen
+     * Vereinsnamen und dazu ein abweichender meldender Verein.
+     */
+    private fun sharedSecondWithFourMixedEights(): AwardCeremonySheet = sheet(
+        "17-NC",
+        "Masters A",
+        listOf(
+            candidate(1, participants = mixedCrew(9)),
+            candidate(2, startNumber = 2, participants = mixedCrew(9)),
+            candidate(2, startNumber = 3, participants = mixedCrew(9)),
+            candidate(2, startNumber = 4, participants = mixedCrew(9)),
+        ),
+    )
+
     private fun textOfPage(bytes: ByteArray, page: Int): String =
         Loader.loadPDF(bytes).use { doc ->
             PDFTextStripper().apply {
@@ -171,15 +189,27 @@ class AwardCeremonyPdfTest {
     }
 
     @Test
-    fun aSmallFieldIsSetInTheMostGenerousScale() {
-        val sheet = sheet("17-NC", "Masters A")
+    fun aSmallFieldIsSetMoreGenerouslyThanAFullOne() {
+        val small = sheet("17-NC", "Masters A")
+        val full = mixedSheet(crewSize = 9)
 
-        assertEquals(1, pageCount(AwardCeremonyPdf.render(listOf(sheet))))
-        assertEquals(
-            AwardCeremonyPdf.scales.first(),
-            AwardCeremonyPdf.scaleFor(sheet),
-            "Ein kleines Feld darf nicht ohne Not eng gesetzt werden",
+        assertEquals(1, pageCount(AwardCeremonyPdf.render(listOf(small))))
+
+        // Verglichen wird die Position in der Stufenleiter, nicht ein bestimmter Eintrag: eine
+        // zusätzliche oder umsortierte Stufe soll den Test weder grundlos rot noch falsch grün
+        // machen. Bewacht ist damit weiterhin, dass die Messschleife nicht ohne Not eng setzt.
+        assertTrue(
+            AwardCeremonyPdf.scales.indexOf(AwardCeremonyPdf.scaleFor(small)) <
+                AwardCeremonyPdf.scales.indexOf(AwardCeremonyPdf.scaleFor(full)),
+            "Ein kleines Feld darf nicht so eng gesetzt werden wie ein volles",
         )
+    }
+
+    @Test
+    fun anEmptySelectionFailsInsteadOfProducingAFileWithoutPages() {
+        // Der aufrufende Service fängt die leere Auswahl vorher ab; käme sie durch, entstünde ein
+        // PDF mit null Seiten, das kein gängiger Betrachter öffnet.
+        assertFailsWith<IllegalArgumentException> { AwardCeremonyPdf.render(emptyList()) }
     }
 
     @Test
@@ -206,8 +236,12 @@ class AwardCeremonyPdfTest {
         assertContains(first, "Ruderin9 Nachname9 (Ruderin)")
     }
 
+    /**
+     * Vier Achter sprengen das Blatt auch auf der untersten Schriftstufe - kleiner wird bewusst
+     * nicht gesetzt. Zählt, dass dabei kein Boot verloren geht.
+     */
     @Test
-    fun aSharedSecondPlaceWithFourEightsFitsOnOnePage() {
+    fun aSharedSecondPlaceWithFourEightsRunsOntoASecondPage() {
         val bytes = AwardCeremonyPdf.render(
             listOf(
                 sheet(
@@ -223,11 +257,76 @@ class AwardCeremonyPdfTest {
             )
         )
 
-        assertEquals(1, pageCount(bytes))
+        val pages = pageCount(bytes)
+        assertTrue(pages > 1, "Vier Achter passen auf der untersten Stufe nicht auf ein Blatt")
 
-        val first = textOfPage(bytes, 1)
-        assertContains(first, "Startnummer 4")
-        assertEquals(3, occurrences(first, "geteilter 2. Platz"))
+        val whole = (1..pages).joinToString("\n") { textOfPage(bytes, it) }
+        assertContains(whole, "Startnummer 4")
+        assertEquals(3, occurrences(whole, "geteilter 2. Platz"))
+    }
+
+    @Test
+    fun anOverflowingCeremonyRepeatsItsFullHeadingOnEveryPage() {
+        val bytes = AwardCeremonyPdf.render(listOf(sharedSecondWithFourMixedEights()))
+
+        val pages = pageCount(bytes)
+        assertTrue(pages > 1, "Der Aufbau sprengt auch die unterste Stufe")
+
+        (1..pages).forEach { page ->
+            val text = textOfPage(bytes, page)
+            assertContains(text, "SIEGEREHRUNG", message = "Seite $page trägt keinen Kopf")
+            assertContains(text, "17-NC", message = "Seite $page nennt die Rennnummer nicht")
+            assertContains(text, "Masters A", message = "Seite $page nennt die Wertung nicht")
+        }
+    }
+
+    @Test
+    fun onlyThePagesAfterTheFirstAreMarkedAsAContinuation() {
+        val bytes = AwardCeremonyPdf.render(listOf(sharedSecondWithFourMixedEights()))
+
+        val pages = pageCount(bytes)
+        assertFalse(
+            textOfPage(bytes, 1).contains("Fortsetzung"),
+            "Die erste Seite einer Ehrung ist keine Fortsetzung",
+        )
+        (2..pages).forEach { page ->
+            assertContains(
+                textOfPage(bytes, page),
+                "Fortsetzung",
+                message = "Seite $page wirkt wie eine neue Ehrung",
+            )
+        }
+    }
+
+    @Test
+    fun theBreakRunsBetweenRankBlocksAndNeverThroughOne() {
+        val bytes = AwardCeremonyPdf.render(listOf(sharedSecondWithFourMixedEights()))
+
+        val pages = pageCount(bytes)
+        assertTrue(pages > 1)
+
+        // Je Boot eine Bootszeile mit Startnummer und genau neun Personen. Stimmt das Verhältnis
+        // auf jeder Seite, steht keine Mannschaft ohne ihre Vereinszeile - und keine Vereinszeile
+        // ohne ihre Mannschaft.
+        (1..pages).forEach { page ->
+            val text = textOfPage(bytes, page)
+            assertEquals(
+                occurrences(text, "Startnummer") * 9,
+                occurrences(text, "(Ruderin)"),
+                "Seite $page zerreißt einen Rangblock",
+            )
+        }
+    }
+
+    @Test
+    fun aCeremonyThatFitsCarriesNoContinuationMark() {
+        val bytes = AwardCeremonyPdf.render(listOf(mixedSheet(crewSize = 9)))
+
+        assertEquals(1, pageCount(bytes))
+        assertFalse(
+            textOfPage(bytes, 1).contains("Fortsetzung"),
+            "Der Normalfall bleibt ein Blatt ohne jeden Vermerk",
+        )
     }
 
     @Test
