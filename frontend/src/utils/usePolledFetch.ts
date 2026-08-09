@@ -36,6 +36,14 @@ export const usePolledFetch = <T,>(
             onState: setState,
         })
         poller.start()
+        // Hängt sich der Hook in einem bereits versteckten Tab ein, feuert kein
+        // `visibilitychange` mehr - ohne diese Prüfung würde bis zur ersten Sichtbarkeitsänderung
+        // trotzdem im Hintergrund weitergetaktet, im Widerspruch zum JSDoc oben. Der erste Abruf
+        // aus `poller.start()` läuft trotzdem durch: `suspend()` hält nur den Timer für den
+        // NÄCHSTEN Abruf an, sodass beim Zurückkehren schon Daten da sind.
+        if (document.hidden) {
+            poller.suspend()
+        }
 
         const onVisibilityChange = () => {
             if (document.hidden) {

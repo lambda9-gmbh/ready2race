@@ -31,8 +31,6 @@ export type PollerOptions<T> = {
     load: (signal: AbortSignal) => Promise<T | null>
     intervalMs: number
     onState: (state: PollerState<T>) => void
-    /** Nur für Tests: die Uhr für [PollerState.lastUpdated]. */
-    now?: () => Date
 }
 
 export type Poller = {
@@ -61,12 +59,7 @@ export type Poller = {
  * - **Fehler behalten den Stand.** Siehe [PollerState].
  * - **Im Hintergrund wird nicht geladen**, beim Zurückkehren sofort einmal.
  */
-export const createPoller = <T,>({
-    load,
-    intervalMs,
-    onState,
-    now = () => new Date(),
-}: PollerOptions<T>): Poller => {
+export const createPoller = <T,>({load, intervalMs, onState}: PollerOptions<T>): Poller => {
     let state = initialPollerState<T>()
     let timer: ReturnType<typeof setTimeout> | null = null
     // Der Abruf, der gerade gilt. Ein älterer, abgelöster Abruf erkennt sich daran, dass hier
@@ -106,12 +99,17 @@ export const createPoller = <T,>({
             if (data === null) {
                 emit({initialLoad: false, failed: true})
             } else {
-                emit({data, lastUpdated: now(), initialLoad: false, failed: false})
+                emit({data, lastUpdated: new Date(), initialLoad: false, failed: false})
             }
         } catch (error) {
             if (current !== own) return
-            // Abgelöst oder gestoppt - kein echter Fehler, und der Nachfolger hat bereits
-            // übernommen.
+            // Für einen vom Takter selbst ausgelösten Abbruch (refreshNow, stop) unterscheidet
+            // dieser Zweig praktisch nichts mehr: `run()` und `stop()` weisen `current` neu zu,
+            // BEVOR die alte Zusage mit AbortError abgelehnt wird - der Regelfall scheitert also
+            // schon eine Zeile weiter oben am `current !== own` und kommt hier nie an. Der Zweig
+            // bleibt trotzdem stehen, weil ein von AUSSEN abgebrochenes `load` (z.B. ein Signal,
+            // das der Aufrufer selbst kappt) ihn durchaus erreichen könnte, ohne dass `current`
+            // zwischenzeitlich neu zugewiesen wurde.
             if (error instanceof Error && error.name === 'AbortError') return
             emit({initialLoad: false, failed: true})
         } finally {
