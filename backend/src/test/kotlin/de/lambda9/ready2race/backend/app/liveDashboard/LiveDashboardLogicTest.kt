@@ -24,33 +24,33 @@ class LiveDashboardLogicTest {
 
     private val start = LocalDateTime.of(2026, 7, 29, 14, 0)
 
-    // --- teamOnWaterAt ---
+    // --- teamInArenaAt ---
 
     @Test
-    fun onWaterWhenWholeCrewCheckedIn() {
+    fun inArenaWhenWholeCrewCheckedIn() {
         val scans = listOf(
             "ENTRY" to start.minusMinutes(10),
             "ENTRY" to start.minusMinutes(8),
             "ENTRY" to start.minusMinutes(12),
         )
-        assertEquals(start.minusMinutes(8), LiveDashboardLogic.teamOnWaterAt(scans))
+        assertEquals(start.minusMinutes(8), LiveDashboardLogic.teamInArenaAt(scans))
     }
 
     @Test
-    fun notOnWaterWhenAnyCrewMemberMissingOrCheckedOut() {
+    fun notInArenaWhenAnyCrewMemberMissingOrCheckedOut() {
         // Eine Person nie gescannt
         assertNull(
-            LiveDashboardLogic.teamOnWaterAt(listOf("ENTRY" to start, null))
+            LiveDashboardLogic.teamInArenaAt(listOf("ENTRY" to start, null))
         )
         // Eine Person wieder ausgecheckt (letzter Scan EXIT) - zurück am Steg
         assertNull(
-            LiveDashboardLogic.teamOnWaterAt(listOf("ENTRY" to start, "EXIT" to start.plusMinutes(1)))
+            LiveDashboardLogic.teamInArenaAt(listOf("ENTRY" to start, "EXIT" to start.plusMinutes(1)))
         )
     }
 
     @Test
-    fun notOnWaterWithoutKnownCrew() {
-        assertNull(LiveDashboardLogic.teamOnWaterAt(emptyList()))
+    fun notInArenaWithoutKnownCrew() {
+        assertNull(LiveDashboardLogic.teamInArenaAt(emptyList()))
     }
 
     // --- computeTimeCheck ---
@@ -470,7 +470,7 @@ class LiveDashboardLogicTest {
     @Test
     fun defaultsReproduceTodaysBehaviour() {
         assertEquals(CheckSeverity.CRITICAL, LiveDashboardLogic.defaultSeverity(CheckType.INVOICE_OPEN, false))
-        assertEquals(CheckSeverity.CRITICAL, LiveDashboardLogic.defaultSeverity(CheckType.NOT_ON_WATER, false))
+        assertEquals(CheckSeverity.CRITICAL, LiveDashboardLogic.defaultSeverity(CheckType.NOT_IN_ARENA, false))
         // Pflichtbedingung rot, optionale Bedingung ohne Wirkung - wie vor der Einstellmöglichkeit
         assertEquals(CheckSeverity.CRITICAL, LiveDashboardLogic.defaultSeverity(CheckType.REQUIREMENT, false))
         assertEquals(CheckSeverity.OK, LiveDashboardLogic.defaultSeverity(CheckType.REQUIREMENT, true))
@@ -566,51 +566,51 @@ class LiveDashboardLogicTest {
     }
 
     @Test
-    fun onWaterIsOnlyJudgedWhenItApplies() {
+    fun inArenaIsOnlyJudgedWhenItApplies() {
         // Wettkampf ohne An-/Abmeldung oder Lauf nicht aktiv: keine Aussage
         assertEquals(
             EffectiveSeverity.NEUTRAL,
-            LiveDashboardLogic.onWaterSeverity(evaluated = false, onWater = false, configured = CheckSeverity.CRITICAL)
+            LiveDashboardLogic.inArenaSeverity(evaluated = false, inArena = false, configured = CheckSeverity.CRITICAL)
         )
         assertEquals(
             EffectiveSeverity.CRITICAL,
-            LiveDashboardLogic.onWaterSeverity(evaluated = true, onWater = false, configured = CheckSeverity.CRITICAL)
+            LiveDashboardLogic.inArenaSeverity(evaluated = true, inArena = false, configured = CheckSeverity.CRITICAL)
         )
-        // Auf dem Wasser ist keine erfüllte Teilnahmebedingung, sondern der unauffällige
+        // In der Arena ist keine erfüllte Teilnahmebedingung, sondern der unauffällige
         // Regelfall - wie bei einer bezahlten Rechnung bleibt das NEUTRAL, nicht OK.
         assertEquals(
             EffectiveSeverity.NEUTRAL,
-            LiveDashboardLogic.onWaterSeverity(evaluated = true, onWater = true, configured = CheckSeverity.CRITICAL)
+            LiveDashboardLogic.inArenaSeverity(evaluated = true, inArena = true, configured = CheckSeverity.CRITICAL)
         )
     }
 
-    // --- onWaterApplies ---
+    // --- inArenaApplies ---
 
     /**
      * Deckt namentlich die Gating-Bedingung aus `LiveDashboardService.buildTeamDto` ab
      * (`matchRunning && checkInOutRequired && !deregistered`), statt sie im Test ein zweites Mal
      * abzuschreiben. Ändert sich der Service, muss diese Funktion mitziehen - sonst würde der Test
-     * unbemerkt an einer Kopie vorbeilaufen, während der Wasser-Term im echten Code abweicht.
+     * unbemerkt an einer Kopie vorbeilaufen, während der Arena-Term im echten Code abweicht.
      */
     @Test
-    fun onWaterAppliesOnlyDuringAnActiveRunWithCheckInOutAndNotDeregistered() {
+    fun inArenaAppliesOnlyDuringAnActiveRunWithCheckInOutAndNotDeregistered() {
         assertTrue(
-            LiveDashboardLogic.onWaterApplies(matchRunning = true, checkInOutRequired = true, deregistered = false)
+            LiveDashboardLogic.inArenaApplies(matchRunning = true, checkInOutRequired = true, deregistered = false)
         )
         // Beachsprint-Opt-out: kein Auschecken am Steg, also nie eine Aussage.
         assertFalse(
-            LiveDashboardLogic.onWaterApplies(matchRunning = true, checkInOutRequired = false, deregistered = false)
+            LiveDashboardLogic.inArenaApplies(matchRunning = true, checkInOutRequired = false, deregistered = false)
         )
         // Vor dem Start am Steg ist "nicht draußen" kein Fehler.
         assertFalse(
-            LiveDashboardLogic.onWaterApplies(matchRunning = false, checkInOutRequired = true, deregistered = false)
+            LiveDashboardLogic.inArenaApplies(matchRunning = false, checkInOutRequired = true, deregistered = false)
         )
-        // Abgemeldet fährt nicht mehr - für das Wasser gibt es nichts mehr zu prüfen.
+        // Abgemeldet fährt nicht mehr - für die Arena gibt es nichts mehr zu prüfen.
         assertFalse(
-            LiveDashboardLogic.onWaterApplies(matchRunning = true, checkInOutRequired = true, deregistered = true)
+            LiveDashboardLogic.inArenaApplies(matchRunning = true, checkInOutRequired = true, deregistered = true)
         )
         assertFalse(
-            LiveDashboardLogic.onWaterApplies(matchRunning = false, checkInOutRequired = false, deregistered = true)
+            LiveDashboardLogic.inArenaApplies(matchRunning = false, checkInOutRequired = false, deregistered = true)
         )
     }
 
@@ -621,7 +621,7 @@ class LiveDashboardLogicTest {
             LiveDashboardLogic.teamSeverity(
                 requirementSeverities = listOf(EffectiveSeverity.OK),
                 invoice = EffectiveSeverity.CRITICAL,
-                onWater = EffectiveSeverity.NEUTRAL,
+                inArena = EffectiveSeverity.NEUTRAL,
             )
         )
         // Mannschaft ohne jede Prüfung bleibt grau
@@ -644,7 +644,7 @@ class LiveDashboardLogicTest {
      *     timeIssues      > 0 ? 'warning' : 'neutral',
      *     fulfilled       > 0 ? 'ok'      : 'neutral',
      *     invoiceState === 'OPEN' ? 'error' : 'neutral',
-     *     matchActive && !deregistered && !onWaterAt ? 'error' : 'neutral',
+     *     matchActive && !deregistered && !inArenaAt ? 'error' : 'neutral',
      * ])
      * ```
      *
@@ -659,14 +659,14 @@ class LiveDashboardLogicTest {
         invoiceState: LiveDashboardInvoiceState,
         matchActive: Boolean,
         deregistered: Boolean,
-        onWater: Boolean,
+        inArena: Boolean,
     ): EffectiveSeverity {
         val signals = listOf(
             if (missingRequired > 0) EffectiveSeverity.CRITICAL else EffectiveSeverity.NEUTRAL,
             if (timeIssues > 0) EffectiveSeverity.WARNING else EffectiveSeverity.NEUTRAL,
             if (fulfilled > 0) EffectiveSeverity.OK else EffectiveSeverity.NEUTRAL,
             if (invoiceState == LiveDashboardInvoiceState.OPEN) EffectiveSeverity.CRITICAL else EffectiveSeverity.NEUTRAL,
-            if (matchActive && !deregistered && !onWater) EffectiveSeverity.CRITICAL else EffectiveSeverity.NEUTRAL,
+            if (matchActive && !deregistered && !inArena) EffectiveSeverity.CRITICAL else EffectiveSeverity.NEUTRAL,
         )
         return signals.reduce { acc, s -> if (s.ordinal > acc.ordinal) s else acc }
     }
@@ -739,10 +739,10 @@ class LiveDashboardLogicTest {
      * einzelnen Beispiel: Ohne jede Konfiguration und mit `checkInOutRequired = true` muss die neue
      * zusammengesetzte Bewertung in JEDEM Fall dasselbe liefern wie die alte Frontend-Formel. Genau
      * ein Beispiel hat die frühere Regression bei der Rechnung (PAID -> OK statt NEUTRAL) und jetzt
-     * dieselbe Fehlerklasse beim Wasser (onWater -> OK statt NEUTRAL) beide Male durchgelassen.
+     * dieselbe Fehlerklasse bei der Arena (inArena -> OK statt NEUTRAL) beide Male durchgelassen.
      *
      * Für `checkInOutRequired = false` (Beachsprint-Opt-out) weicht das neue Verhalten von der
-     * alten Formel bewusst ab - dort gibt es kein Auschecken am Steg, "auf dem Wasser" darf also
+     * alten Formel bewusst ab - dort gibt es kein Auschecken am Steg, "in der Arena" darf also
      * nie mehr die Ampel verschlechtern. Das ist die gewollte Wirkung der Einstellung und deshalb
      * hier bewusst NICHT geprüft; die alte Formel kannte diesen Fall nie.
      */
@@ -755,7 +755,7 @@ class LiveDashboardLogicTest {
             for (invoiceState in LiveDashboardInvoiceState.entries) {
                 for (matchActive in listOf(false, true)) {
                     for (deregistered in listOf(false, true)) {
-                        for (onWater in listOf(false, true)) {
+                        for (inArena in listOf(false, true)) {
                             val requirements = requirementCase.requirements
 
                             // Alte Formel: unabhängige Zähler, wie sie vor dem Umbau tatsächlich
@@ -770,7 +770,7 @@ class LiveDashboardLogicTest {
                             }
                             val fulfilled = requirements.count { it.checked }
                             val old = oldFormulaSeverity(
-                                missingRequired, timeIssues, fulfilled, invoiceState, matchActive, deregistered, onWater,
+                                missingRequired, timeIssues, fulfilled, invoiceState, matchActive, deregistered, inArena,
                             )
 
                             // Neu: die tatsächliche, zusammengesetzte Bewertung aus der Implementierung.
@@ -793,23 +793,23 @@ class LiveDashboardLogicTest {
                                 invoiceState,
                                 config.severityFor(competitionA, CheckType.INVOICE_OPEN),
                             )
-                            val onWaterEvaluated = LiveDashboardLogic.onWaterApplies(
+                            val inArenaEvaluated = LiveDashboardLogic.inArenaApplies(
                                 matchRunning = matchActive,
                                 checkInOutRequired = checkInOutRequired,
                                 deregistered = deregistered,
                             )
-                            val onWaterSeverity = LiveDashboardLogic.onWaterSeverity(
-                                evaluated = onWaterEvaluated,
-                                onWater = onWater,
-                                configured = config.severityFor(competitionA, CheckType.NOT_ON_WATER),
+                            val inArenaSeverity = LiveDashboardLogic.inArenaSeverity(
+                                evaluated = inArenaEvaluated,
+                                inArena = inArena,
+                                configured = config.severityFor(competitionA, CheckType.NOT_IN_ARENA),
                             )
-                            val new = LiveDashboardLogic.teamSeverity(requirementSeverities, invoice, onWaterSeverity)
+                            val new = LiveDashboardLogic.teamSeverity(requirementSeverities, invoice, inArenaSeverity)
 
                             assertEquals(
                                 old,
                                 new,
                                 "Bedingung=${requirementCase.label}, Rechnung=$invoiceState, " +
-                                    "Lauf aktiv=$matchActive, abgemeldet=$deregistered, auf dem Wasser=$onWater",
+                                    "Lauf aktiv=$matchActive, abgemeldet=$deregistered, in der Arena=$inArena",
                             )
                         }
                     }
@@ -925,9 +925,9 @@ class LiveDashboardLogicTest {
 
     @Test
     fun entryWithoutRequirementIsAlwaysKept() {
-        // Rechnung und "auf dem Wasser" hängen an keiner Teilnahmebedingung und damit an keinem
+        // Rechnung und "in der Arena" hängen an keiner Teilnahmebedingung und damit an keinem
         // Fremdschlüssel, den eine abgemeldete Bedingung verletzen könnte.
-        val entryDto = entry(checkType = CheckType.NOT_ON_WATER, severity = CheckSeverity.WARNING)
+        val entryDto = entry(checkType = CheckType.NOT_IN_ARENA, severity = CheckSeverity.WARNING)
         val result = LiveDashboardLogic.entriesToPersist(
             entries = listOf(entryDto),
             competitionIds = setOf(competitionA),

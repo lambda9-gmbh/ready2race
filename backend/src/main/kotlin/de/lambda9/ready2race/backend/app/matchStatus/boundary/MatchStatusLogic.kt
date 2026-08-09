@@ -30,9 +30,9 @@ object MatchStatusLogic {
         teams.count { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) }
 
     /**
-     * Setzt den Zustand eines Laufs zusammen. [teamsOnWater] bleibt null, wo die Ansicht die
+     * Setzt den Zustand eines Laufs zusammen. [teamsInArena] bleibt null, wo die Ansicht die
      * Check-in-Daten nicht erhebt (Zeitplan, öffentliche Anzeigen) - das ist etwas anderes als 0
-     * ("erhoben, aber niemand draußen") und darf im Frontend nicht zum Wasser-Chip führen.
+     * ("erhoben, aber niemand draußen") und darf im Frontend nicht zum Arena-Chip führen.
      */
     fun matchStatus(
         activatedAt: LocalDateTime?,
@@ -41,7 +41,7 @@ object MatchStatusLogic {
         finishedAt: LocalDateTime?,
         skipped: Boolean,
         teams: List<MatchStatusTeam>,
-        teamsOnWater: Int? = null,
+        teamsInArena: Int? = null,
     ): MatchStatusDto {
         val scored = scoredCount(teams)
         return MatchStatusDto(
@@ -61,29 +61,29 @@ object MatchStatusLogic {
             startedAt = startedAt,
             teamsTotal = teams.size,
             teamsScored = scored,
-            teamsOnWater = teamsOnWater,
+            teamsInArena = teamsInArena,
         )
     }
 
     /**
-     * Wie viele Mannschaften je Lauf einer Runde auf dem Wasser sind - null, wenn die Runde dazu
+     * Wie viele Mannschaften je Lauf einer Runde in der Arena sind - null, wenn die Runde dazu
      * nichts hergibt.
      *
      * [roundCrewScans] enthält je Lauf der Runde je Mannschaft die letzten Scans ihrer Crew, in
      * der Reihenfolge der Läufe. Ob eine einzelne Mannschaft draußen ist, entscheidet unverändert
-     * [LiveDashboardLogic.teamOnWaterAt] (jede bekannte Person zuletzt EXIT) - dieselbe Regel wie
+     * [LiveDashboardLogic.teamInArenaAt] (jede bekannte Person zuletzt EXIT) - dieselbe Regel wie
      * im Schiedsrichter-Dashboard, an genau einem Ort.
      *
      * Der Null-Fall ist der wichtigere Teil (Abschnitt 6 der Spec): hatte in der ganzen Runde
      * KEINE Person je einen Scan, läuft die Veranstaltung ohne Check-in. Dann ist 0 keine Aussage,
-     * sondern eine Lücke - und bei jedem Lauf stünde dauerhaft "Wasser 0/6". Die Runde als Ganzes
+     * sondern eine Lücke - und bei jedem Lauf stünde dauerhaft "Arena 0/6". Die Runde als Ganzes
      * entscheidet, nicht der einzelne Lauf: ein Lauf, dessen Crews noch nicht am Steg waren,
      * gehört zur erhobenen Runde und soll seine ehrliche 0 zeigen.
      */
-    fun teamsOnWaterPerMatch(roundCrewScans: List<List<CrewLastScans>>): List<Int?> {
+    fun teamsInArenaPerMatch(roundCrewScans: List<List<CrewLastScans>>): List<Int?> {
         val anyScan = roundCrewScans.any { match -> match.any { crew -> crew.any { it != null } } }
         return roundCrewScans.map { match ->
-            if (anyScan) match.count { LiveDashboardLogic.teamOnWaterAt(it) != null } else null
+            if (anyScan) match.count { LiveDashboardLogic.teamInArenaAt(it) != null } else null
         }
     }
 

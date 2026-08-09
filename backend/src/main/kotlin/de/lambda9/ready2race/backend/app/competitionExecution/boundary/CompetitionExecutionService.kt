@@ -351,10 +351,10 @@ object CompetitionExecutionService {
 
             val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
 
-            // Letzter Steg-Scan je Person dieses Wettkampfs — Grundlage des Wasser-Chips. Dieselbe
+            // Letzter Steg-Scan je Person dieses Wettkampfs — Grundlage des Arena-Chips. Dieselbe
             // Reduktion wie im Schiedsrichter-Dashboard (LiveDashboardService): die Abfrage liefert
             // alle Scans flach, der letzte je Person zählt. Bleibt die Karte leer, läuft die
-            // Veranstaltung ohne Check-in und der Chip entfällt (teamsOnWater = null).
+            // Veranstaltung ohne Check-in und der Chip entfällt (teamsInArena = null).
             val lastScanByParticipant = !CompetitionMatchRepo.getScansByCompetition(eventId, competitionId).orDie()
                 .map { scans ->
                     scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }

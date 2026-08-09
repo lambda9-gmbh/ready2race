@@ -36,9 +36,9 @@ private fun List<CompetitionMatchTeamParticipant>.toNamedParticipantsDto() =
 
 /**
  * [lastScanByParticipant] ist der letzte Steg-Scan je Person (aus
- * [CompetitionMatchRepo.getScansByCompetition]) und speist allein den Wasser-Chip. Eine leere Karte
- * heißt "keine Scans" - dann bleibt `teamsOnWater` null und der Chip entfällt, statt bei jedem Lauf
- * dauerhaft "Wasser 0/6" zu behaupten.
+ * [CompetitionMatchRepo.getScansByCompetition]) und speist allein den Arena-Chip. Eine leere Karte
+ * heißt "keine Scans" - dann bleibt `teamsInArena` null und der Chip entfällt, statt bei jedem Lauf
+ * dauerhaft "Arena 0/6" zu behaupten.
  *
  * Bekannte Ungenauigkeit: die Crew kommt hier aus der Anmeldung (View
  * `registered_competition_team_participant`), Ummeldungen der Runde sind darin nicht aufgelöst -
@@ -55,7 +55,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
 
     // Ein Aufruf für die ganze Runde: nur so lässt sich der Fall "kein Team der Runde hatte je
     // einen Scan" überhaupt erkennen (Abschnitt 6 der Spec).
-    val teamsOnWaterPerMatch = MatchStatusLogic.teamsOnWaterPerMatch(
+    val teamsInArenaPerMatch = MatchStatusLogic.teamsInArenaPerMatch(
         matchPairs.map { (match, _) ->
             match.teams.map { team ->
                 team.participants.distinctBy { it.participantId }
@@ -106,7 +106,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                         finishedAt = match.first.finishedAt,
                         skipped = match.first.skipped,
                         // Dieselbe Ableitung wie im Schiedsrichter-Dashboard - eine Ableitung, drei
-                        // Aufrufer. teamsOnWater führt nur diese Ansicht: Zeitplan und öffentliche
+                        // Aufrufer. teamsInArena führt nur diese Ansicht: Zeitplan und öffentliche
                         // Anzeigen lassen es null ("nicht erhoben" ist etwas anderes als 0).
                         status = MatchStatusLogic.matchStatus(
                             activatedAt = match.first.activatedAt,
@@ -121,7 +121,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                                     deregistered = team.deregistered,
                                 )
                             },
-                            teamsOnWater = teamsOnWaterPerMatch[index],
+                            teamsInArena = teamsInArenaPerMatch[index],
                         ),
                         raceClockerPolledAt = match.first.raceClockerPolledAt,
                         raceClockerPollError = match.first.raceClockerPollError,

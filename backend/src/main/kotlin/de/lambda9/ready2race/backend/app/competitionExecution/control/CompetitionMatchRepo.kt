@@ -433,8 +433,8 @@ object CompetitionMatchRepo {
     }
 
     /**
-     * Die Steg-Scans der Crews dieses Wettkampfs — die Grundlage des Wasser-Chips auf der
-     * Durchführungsseite („Wasser 2/6").
+     * Die Steg-Scans der Crews dieses Wettkampfs — die Grundlage des Arena-Chips auf der
+     * Durchführungsseite („Arena 2/6").
      *
      * Bewusst je Wettkampf statt je Veranstaltung: die Durchführungsseite zeigt immer genau einen
      * Wettkampf, die Scans der übrigen läse dort niemand. Das ist der einzige Unterschied zu
@@ -442,7 +442,7 @@ object CompetitionMatchRepo {
      * dem Pendant des Schiedsrichter-Dashboards — sonst dasselbe Muster: eine flache Abfrage, die
      * Reduktion auf den letzten Scan je Person macht der Aufrufer, und ob eine Mannschaft draußen
      * ist, entscheidet weiterhin allein
-     * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamOnWaterAt].
+     * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamInArenaAt].
      *
      * Abfragelast: ein Index-Zugriff auf `participant_tracking` (Index auf `event`) plus ein
      * `exists` über die Anmeldungen des Wettkampfs. Kein Join je Lauf und kein N+1 je Mannschaft —

@@ -76,7 +76,7 @@ data class UpdateCheckSeverityRequest(
                 ),
                 allOf(
                     select(
-                        anyOf(isValue(CheckType.INVOICE_OPEN), isValue(CheckType.NOT_ON_WATER)),
+                        anyOf(isValue(CheckType.INVOICE_OPEN), isValue(CheckType.NOT_IN_ARENA)),
                         CheckSeverityEntryDto::checkType,
                     ),
                     select(isNull, CheckSeverityEntryDto::requirementId),

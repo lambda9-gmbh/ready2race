@@ -96,10 +96,10 @@ object LiveDashboardLogic {
      * Fall erreicht ein Lauf mit einer Abmeldung nie den Zustand [LiveDashboardMatchState.FINISHED].
      */
     /**
-     * Wann ist die Mannschaft aufs Wasser gegangen? Ein Boot gilt als "auf dem Wasser", wenn
+     * Wann ist die Mannschaft in die Arena gegangen? Ein Boot gilt als "in der Arena", wenn
      * JEDE bekannte Person der Crew zuletzt eingecheckt ist (letzter Scan = ENTRY am Steg) -
      * dann zählt der späteste dieser Scans als Ablegezeit. Das Einchecken IST die Anmeldung
-     * aufs Wasser; das Auschecken (EXIT) meldet die zurückgekehrte Crew wieder ab. Fehlt auch
+     * in die Arena; das Auschecken (EXIT) meldet die zurückgekehrte Crew wieder ab. Fehlt auch
      * nur ein Scan oder ist jemand schon wieder ausgecheckt, ist das Boot nicht (mehr)
      * vollständig draußen -> null. Ohne bekannte Crew lässt sich nichts belegen -> ebenfalls
      * null; die Anzeige behandelt null bei aktivem Lauf als Fehler, denn genau dann muss das
@@ -108,7 +108,7 @@ object LiveDashboardLogic {
      * [lastScans] enthält je Crew-Mitglied den letzten Scan (scanType zu Zeitpunkt) oder null,
      * wenn die Person nie gescannt wurde.
      */
-    fun teamOnWaterAt(lastScans: List<Pair<String, LocalDateTime>?>): LocalDateTime? =
+    fun teamInArenaAt(lastScans: List<Pair<String, LocalDateTime>?>): LocalDateTime? =
         if (lastScans.isNotEmpty() && lastScans.all { it?.first == ParticipantScanType.ENTRY.name }) {
             lastScans.maxOf { it!!.second }
         } else {
@@ -176,7 +176,7 @@ object LiveDashboardLogic {
      */
     fun defaultSeverity(checkType: CheckType, optional: Boolean): CheckSeverity = when (checkType) {
         CheckType.INVOICE_OPEN -> CheckSeverity.CRITICAL
-        CheckType.NOT_ON_WATER -> CheckSeverity.CRITICAL
+        CheckType.NOT_IN_ARENA -> CheckSeverity.CRITICAL
         CheckType.REQUIREMENT -> if (optional) CheckSeverity.OK else CheckSeverity.CRITICAL
         CheckType.REQUIREMENT_TIME_WINDOW -> CheckSeverity.WARNING
     }
@@ -224,11 +224,11 @@ object LiveDashboardLogic {
     /**
      * Grün ([EffectiveSeverity.OK]) heißt in der Ampel "geprüft und in Ordnung" und bleibt den
      * Teilnahmebedingungen vorbehalten - nur sie können eine Mannschaft nach Erfüllung wirklich
-     * bestätigen. Rechnung ([invoiceSeverity]) und Wasser ([onWaterSeverity]) sind keine
+     * bestätigen. Rechnung ([invoiceSeverity]) und Arena ([inArenaSeverity]) sind keine
      * Teilnahmebedingungen: sie können die Ampel nur verschlechtern (Rechnung offen / Boot nicht
      * draußen) oder schweigen ([EffectiveSeverity.NEUTRAL]), aber nie verbessern. Das folgt exakt
      * der alten Frontend-Formel (`invoiceState === 'OPEN' ? 'error' : 'neutral'` bzw.
-     * `matchActive && !deregistered && !onWaterAt ? 'error' : 'neutral'`) - in beiden Zweigen gab
+     * `matchActive && !deregistered && !inArenaAt ? 'error' : 'neutral'`) - in beiden Zweigen gab
      * es dort keinen Weg zu `'ok'`. Sonst zeigt eine Regatta ohne jede eingestellte
      * Teilnahmebedingung überall einen grünen Haken, wo vorher ein grauer Kreis stand.
      *
@@ -243,7 +243,7 @@ object LiveDashboardLogic {
         }
 
     /**
-     * Ob "auf dem Wasser" für diese Mannschaft gerade überhaupt eine Aussage ist. Alle drei
+     * Ob "in der Arena" für diese Mannschaft gerade überhaupt eine Aussage ist. Alle drei
      * Bedingungen sind nötig:
      *
      * - [matchRunning]: vor dem Start am Steg ist "nicht draußen" der Normalfall, kein Fehler -
@@ -252,31 +252,31 @@ object LiveDashboardLogic {
      *   Abmeldung (z.B. Beachsprint) gibt es kein Auschecken am Steg zu bewerten - dort wäre jedes
      *   Boot für immer "nicht draußen".
      * - `!`[deregistered]: eine abgemeldete Mannschaft fährt nicht mehr; für sie gibt es kein
-     *   Wasser mehr zu betreten und keinen Grund, das einzufordern.
+     *   Arena mehr zu betreten und keinen Grund, das einzufordern.
      *
      * Fehlt eine der drei, ist die Prüfung nicht anwendbar statt verletzt - deshalb `evaluated`,
-     * nicht `onWater`, in [onWaterSeverity].
+     * nicht `inArena`, in [inArenaSeverity].
      */
-    fun onWaterApplies(matchRunning: Boolean, checkInOutRequired: Boolean, deregistered: Boolean): Boolean =
+    fun inArenaApplies(matchRunning: Boolean, checkInOutRequired: Boolean, deregistered: Boolean): Boolean =
         matchRunning && checkInOutRequired && !deregistered
 
     /**
-     * [evaluated] fasst zusammen, wann "auf dem Wasser" überhaupt eine Aussage ist - siehe
-     * [onWaterApplies].
+     * [evaluated] fasst zusammen, wann "in der Arena" überhaupt eine Aussage ist - siehe
+     * [inArenaApplies].
      *
-     * Ist das Boot auf dem Wasser, ist das - wie bei [invoiceSeverity] beschrieben - keine erfüllte
+     * Ist das Boot in der Arena, ist das - wie bei [invoiceSeverity] beschrieben - keine erfüllte
      * Teilnahmebedingung, sondern der unauffällige Regelfall: [EffectiveSeverity.NEUTRAL], nicht OK.
      * Nur das Fehlen ("nicht draußen, obwohl der Lauf läuft") bekommt den konfigurierten
      * Schweregrad.
      */
-    fun onWaterSeverity(evaluated: Boolean, onWater: Boolean, configured: CheckSeverity): EffectiveSeverity =
-        if (!evaluated || onWater) EffectiveSeverity.NEUTRAL else effectiveSeverity(false, configured)
+    fun inArenaSeverity(evaluated: Boolean, inArena: Boolean, configured: CheckSeverity): EffectiveSeverity =
+        if (!evaluated || inArena) EffectiveSeverity.NEUTRAL else effectiveSeverity(false, configured)
 
     fun teamSeverity(
         requirementSeverities: List<EffectiveSeverity>,
         invoice: EffectiveSeverity,
-        onWater: EffectiveSeverity,
-    ): EffectiveSeverity = worstSeverity(requirementSeverities + invoice + onWater)
+        inArena: EffectiveSeverity,
+    ): EffectiveSeverity = worstSeverity(requirementSeverities + invoice + inArena)
 
     /**
      * Baut die Konfiguration aus den Datenbankzeilen. Unbekannte Werte werden übergangen statt zu
@@ -301,7 +301,7 @@ object LiveDashboardLogic {
      * die gesamte Konfiguration einer Veranstaltung - ein Eintrag, den diese Funktion verwirft, ist
      * damit unwiderruflich gelöscht, auch wenn er vorher gültig war.
      *
-     * Ein Eintrag ohne [CheckSeverityEntryDto.requirementId] (Rechnung, Wasser) hängt an keiner
+     * Ein Eintrag ohne [CheckSeverityEntryDto.requirementId] (Rechnung, Arena) hängt an keiner
      * Teilnahmebedingung und damit an keinem Fremdschlüssel - er bleibt immer erhalten. Ein Eintrag
      * mit Bedingung bleibt erhalten, wenn die Bedingung aktuell zur Veranstaltung gehört
      * ([optionalByRequirement]) ODER wenn er bereits gespeichert war ([persistedRequirementIds]):

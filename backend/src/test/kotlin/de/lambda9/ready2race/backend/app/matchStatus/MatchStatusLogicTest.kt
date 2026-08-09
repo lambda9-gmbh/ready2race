@@ -154,7 +154,7 @@ class MatchStatusLogicTest {
 
     /** null heißt "nicht erhoben" und ist etwas anderes als 0 ("erhoben, niemand draußen"). */
     @Test
-    fun teamsOnWaterDefaultsToNotCollected() {
+    fun teamsInArenaDefaultsToNotCollected() {
         val status = MatchStatusLogic.matchStatus(
             activatedAt = null,
             startTime = start,
@@ -163,21 +163,21 @@ class MatchStatusLogicTest {
             skipped = false,
             teams = listOf(open()),
         )
-        assertNull(status.teamsOnWater)
+        assertNull(status.teamsInArena)
 
-        val withWater = MatchStatusLogic.matchStatus(
+        val withArena = MatchStatusLogic.matchStatus(
             activatedAt = null,
             startTime = start,
             startedAt = null,
             finishedAt = null,
             skipped = false,
             teams = listOf(open()),
-            teamsOnWater = 0,
+            teamsInArena = 0,
         )
-        assertEquals(0, withWater.teamsOnWater)
+        assertEquals(0, withArena.teamsInArena)
     }
 
-    // --- teamsOnWaterPerMatch ---
+    // --- teamsInArenaPerMatch ---
 
     private fun exit(minute: Int) = ParticipantScanType.EXIT.name to start.plusMinutes(minute.toLong())
     private fun entry(minute: Int) = ParticipantScanType.ENTRY.name to start.plusMinutes(minute.toLong())
@@ -189,7 +189,7 @@ class MatchStatusLogicTest {
             listOf(listOf(null, null), listOf(null, null)),
             listOf(listOf(null, null)),
         )
-        assertEquals(listOf(null, null), MatchStatusLogic.teamsOnWaterPerMatch(round))
+        assertEquals(listOf(null, null), MatchStatusLogic.teamsInArenaPerMatch(round))
     }
 
     /** Ein Lauf ohne Mannschaften bleibt bei 0, sobald die Runde überhaupt erhoben ist. */
@@ -199,7 +199,7 @@ class MatchStatusLogicTest {
             listOf(listOf(entry(1), entry(2))),
             emptyList(),
         )
-        assertEquals(listOf(1, 0), MatchStatusLogic.teamsOnWaterPerMatch(round))
+        assertEquals(listOf(1, 0), MatchStatusLogic.teamsInArenaPerMatch(round))
     }
 
     /** Genau die Regel des Dashboards: nur wenn JEDE bekannte Person zuletzt ENTRY ist. */
@@ -217,7 +217,7 @@ class MatchStatusLogicTest {
                 emptyList(),
             )
         )
-        assertEquals(listOf(1), MatchStatusLogic.teamsOnWaterPerMatch(round))
+        assertEquals(listOf(1), MatchStatusLogic.teamsInArenaPerMatch(round))
     }
 
     /** Ein einziger Scan irgendwo in der Runde macht die ganze Runde erhoben. */
@@ -227,12 +227,12 @@ class MatchStatusLogicTest {
             listOf(listOf(exit(1), null)),
             listOf(listOf(null, null)),
         )
-        assertEquals(listOf(0, 0), MatchStatusLogic.teamsOnWaterPerMatch(round))
+        assertEquals(listOf(0, 0), MatchStatusLogic.teamsInArenaPerMatch(round))
     }
 
     @Test
     fun emptyRoundStaysEmpty() {
-        assertEquals(emptyList(), MatchStatusLogic.teamsOnWaterPerMatch(emptyList()))
+        assertEquals(emptyList(), MatchStatusLogic.teamsInArenaPerMatch(emptyList()))
     }
 
     // --- roundCounters ---

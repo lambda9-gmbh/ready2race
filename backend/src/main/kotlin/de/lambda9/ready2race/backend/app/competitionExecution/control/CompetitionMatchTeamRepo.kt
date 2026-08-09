@@ -170,7 +170,7 @@ object CompetitionMatchTeamRepo {
 
     // Zeit, Zeitstrafe und Ausscheidungsgrund sind hier bewusst mit dabei, obwohl der Lauf noch
     // läuft: eine externe Zeitmessung schreibt Zeiten und Strafen ein, während die letzten Boote
-    // noch auf dem Wasser sind, und die Athleten-Anzeige zeigt sie als Teilergebnis.
+    // noch in der Arena sind, und die Athleten-Anzeige zeigt sie als Teilergebnis.
     fun getTeamForRunningMatch(matchId: UUID) =
         Jooq.query {
             select(

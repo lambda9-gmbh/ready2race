@@ -56,7 +56,7 @@ object LiveDashboardService {
             val checkRecords = !LiveDashboardRepo.getChecks(eventId).orDie()
             val invoiceRecords = !LiveDashboardRepo.getInvoicePaymentsByClub(eventId).orDie()
             val substitutionRecords = !SubstitutionRepo.getByEvent(eventId, null, Privilege.Scope.GLOBAL).orDie()
-            // Letzter Steg-Scan je Person: Grundlage für "Boot ist auf dem Wasser" pro Team.
+            // Letzter Steg-Scan je Person: Grundlage für "Boot ist in der Arena" pro Team.
             val lastScanByParticipant = !ParticipantTrackingRepo.getScansByEvent(eventId).orDie()
                 .map { scans ->
                     scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }
@@ -132,21 +132,21 @@ object LiveDashboardService {
 
                 val participants = !buildParticipants(rows, registrationId, startTime, context, competitionId)
 
-                val onWaterAt = LiveDashboardLogic.teamOnWaterAt(
+                val inArenaAt = LiveDashboardLogic.teamInArenaAt(
                     participants.map { lastScanByParticipant[it.participantId] }
                 )
                 val invoiceSeverity = LiveDashboardLogic.invoiceSeverity(
                     invoiceState,
                     severityConfig.severityFor(competitionId, CheckType.INVOICE_OPEN),
                 )
-                val onWaterSeverity = LiveDashboardLogic.onWaterSeverity(
-                    evaluated = LiveDashboardLogic.onWaterApplies(
+                val inArenaSeverity = LiveDashboardLogic.inArenaSeverity(
+                    evaluated = LiveDashboardLogic.inArenaApplies(
                         matchRunning = matchRunning,
                         checkInOutRequired = checkInOutRequired,
                         deregistered = deregistered,
                     ),
-                    onWater = onWaterAt != null,
-                    configured = severityConfig.severityFor(competitionId, CheckType.NOT_ON_WATER),
+                    inArena = inArenaAt != null,
+                    configured = severityConfig.severityFor(competitionId, CheckType.NOT_IN_ARENA),
                 )
 
                 // Die Kette entsteht aus der Crew, die wirklich startet - nach den Ummeldungen.
@@ -191,16 +191,16 @@ object LiveDashboardService {
                         // Die Personendaten selbst bleiben hier: sie sind der größte Posten im
                         // Poll und werden erst im Detail-Dialog gebraucht - nur die fertige Ampel
                         // je Bedingung fließt in die Team-Ampel ein.
-                        onWaterRequired = checkInOutRequired,
+                        inArenaRequired = checkInOutRequired,
                         invoiceSeverity = invoiceSeverity,
-                        onWaterSeverity = onWaterSeverity,
+                        inArenaSeverity = inArenaSeverity,
                         severity = LiveDashboardLogic.teamSeverity(
                             requirementSeverities = participants.flatMap { it.requirements }.map { it.severity },
                             invoice = invoiceSeverity,
-                            onWater = onWaterSeverity,
+                            inArena = inArenaSeverity,
                         ),
                         substituted = participants.any { it.substitutedFor != null },
-                        onWaterAt = onWaterAt,
+                        inArenaAt = inArenaAt,
                     )
                 )
             }
@@ -211,7 +211,7 @@ object LiveDashboardService {
                 val startedAt = match[COMPETITION_MATCH.STARTED_AT]
                 val finishedAt = match[COMPETITION_MATCH.FINISHED_AT]
                 val activatedAt = match[COMPETITION_MATCH.ACTIVATED_AT]
-                // Für die Wasser-Prüfung zählt weiterhin die Aktivierung, nicht der Ist-Start: ein
+                // Für die Arena-Prüfung zählt weiterhin die Aktivierung, nicht der Ist-Start: ein
                 // Boot, das an den Start gerufen ist, gehört raus - unabhängig davon, ob das Rennen
                 // schon unterwegs ist.
                 val running = activatedAt != null
@@ -579,7 +579,7 @@ object LiveDashboardService {
 
         val rows = buildList {
             add(CheckSeverityRowDto(CheckType.INVOICE_OPEN, null, null))
-            add(CheckSeverityRowDto(CheckType.NOT_ON_WATER, null, null))
+            add(CheckSeverityRowDto(CheckType.NOT_IN_ARENA, null, null))
             requirements.forEach { req ->
                 val id = req[PARTICIPANT_REQUIREMENT.ID]!!
                 add(CheckSeverityRowDto(CheckType.REQUIREMENT, id, req[PARTICIPANT_REQUIREMENT.NAME]))
