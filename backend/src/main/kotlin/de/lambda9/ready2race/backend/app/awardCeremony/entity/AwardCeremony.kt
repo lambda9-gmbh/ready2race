@@ -123,7 +123,7 @@ data class AwardCeremonyTeam(
     val clubLine: String,
     /** Der meldende Verein - nur gesetzt, wenn er von [clubLine] abweicht. */
     val registeringClub: String?,
-    /** „Boot „RCN I" · Startnummer 3" - reduziert auf die vorhandenen Teile. */
+    /** `Boot „RCN I“ · Startnummer 3` - reduziert auf die vorhandenen Teile. */
     val boatLine: String,
     val time: String?,
     /** „Zeitstrafe +10 s (Frühstart)" - null ohne Strafe. */

@@ -92,14 +92,20 @@ object AwardCeremonyLogic {
         // roher Stringvergleich sähe dann fälschlich einen Unterschied. Bei mehreren Vereinen
         // bleibt clubLine die zusammengesetzte Kette "A / B"; kein einzelner Vereinsname ist je
         // gleich dieser Kette, und genau das muss für die gemischte Crew so bleiben.
+        //
+        // Die Gleichheit der ganzen Zeichenkette steht bewusst vorn: die Kettenglieder werden
+        // hier aus der fertigen Zeile zurückgewonnen, und ein Verein, der das Trennzeichen im
+        // Namen trägt ("Ruder- / Kanuverein X"), zerfiele dabei in zwei Glieder. Der direkte
+        // Vergleich fängt genau diesen Fall.
         val clubLineKeys = clubLine.split(ClubComposition.SEPARATOR).map(ClubNameKey::of).toSet()
-        fun sameAsClubLine(name: String) = clubLineKeys.size == 1 && ClubNameKey.of(name) in clubLineKeys
+        fun sameAsClubLine(name: String) =
+            name == clubLine || (clubLineKeys.size == 1 && ClubNameKey.of(name) in clubLineKeys)
 
         return AwardCeremonyTeam(
             clubLine = clubLine,
             // Sagt die Titelzeile schon alles, wäre "Meldender Verein: dasselbe" reine
             // Wiederholung - dann entfällt die Zeile.
-            registeringClub = candidate.registeringClubName.takeIf { !sameAsClubLine(it) },
+            registeringClub = candidate.registeringClubName.takeIf { it.isNotBlank() && !sameAsClubLine(it) },
             boatLine = formatBoatLine(candidate.teamName, candidate.startNumber),
             time = candidate.time,
             penalty = formatPenalty(candidate.penaltySeconds, candidate.penaltyNote),

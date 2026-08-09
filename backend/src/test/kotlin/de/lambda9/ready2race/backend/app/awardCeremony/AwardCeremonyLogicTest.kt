@@ -267,7 +267,10 @@ class AwardCeremonyLogicTest {
         val team = AwardCeremonyLogic.team(
             candidate(
                 1,
-                registeringClubName = "Rostocker Ruderclub",
+                // Bewusst die andere Schreibweise als die der Titelzeile: nur so trägt
+                // assertNull(team.registeringClub) unten wirklich - mit derselben Schreibweise
+                // bestünde die Zusicherung auch bei rohem Stringvergleich.
+                registeringClubName = "Rostocker Ruder-Club von 1885 e.V.",
                 participants = listOf(
                     rower(firstName = "Anna", ownClubName = "Rostocker Ruderclub"),
                     rower(firstName = "Bernd", ownClubName = "Rostocker Ruder-Club von 1885 e.V."),
