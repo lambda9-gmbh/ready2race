@@ -624,6 +624,10 @@
     "competition": {
       "competition": "Konkurrence",
       "competitions": "Konkurrencer",
+      "navigation": {
+        "backToEvent": "Tilbage til arrangementet",
+        "filter": "Filtrér"
+      },
       "noCompetitionsAvailable": "Ingen konkurrencer tilgængelige",
       "identifier": "Identifikator",
       "name": "Navn",

@@ -624,6 +624,10 @@
     "competition": {
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
+      "navigation": {
+        "backToEvent": "Zurück zur Veranstaltung",
+        "filter": "Filtern"
+      },
       "noCompetitionsAvailable": "Keine Wettkämpfe verfügbar",
       "identifier": "Kennung",
       "name": "Name",
