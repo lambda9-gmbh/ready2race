@@ -5,7 +5,7 @@ import {useServerClock} from '../athleteBoard/useServerClock'
 import AthleteBoardColumnCard from '../athleteBoard/AthleteBoardColumnCard'
 import AthleteBoardMatchCard from '../athleteBoard/AthleteBoardMatchCard'
 import AthleteBoardResultCard from '../athleteBoard/AthleteBoardResultCard'
-import {BoardCardKind, densityScale, maxBoats, selectBoardCards} from '../athleteBoard/boardLayout'
+import {BoardCardKind, boardScale, selectBoardCards} from '../athleteBoard/boardLayout'
 import {scaled} from '../athleteBoard/common'
 
 interface AthleteBoardViewProps {
@@ -73,7 +73,7 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
         Date.now() - lastUpdated.getTime() > staleThresholdMs
 
     const layout = selectBoardCards(data)
-    const scale = densityScale(maxBoats(layout.cards), layout.cards.length)
+    const scale = boardScale(layout)
 
     const titleFor = (kind: BoardCardKind) =>
         kind === 'running'
@@ -102,7 +102,11 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
                 rowGap: 'clamp(0.4rem, 0.9vh, 1rem)',
                 p: 'clamp(0.5rem, 1vw, 1.5rem)',
                 overflow: {xs: 'auto', lg: 'hidden'},
-                '--ab-scale': scale,
+                // Der Dichte-Faktor löst nur das Höhenproblem der festen Bühne ab lg; darunter
+                // scrollt die Seite ohnehin, dort bliebe er ein reiner Verkleinerungsfaktor auf
+                // Text, der schon am Minimum von scaled() klemmt. Neutral halten (1), statt die
+                // gestapelte mobile Ansicht mitschrumpfen zu lassen.
+                '--ab-scale': {xs: 1, lg: scale},
                 // Höhe der Overlay-Knöpfe (top: 16 + Knopfhöhe) plus Luft
                 ...(controlsOverlayed && {pt: '4rem'}),
             }}>
@@ -131,11 +135,17 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
                                 }),
                             })}
                             {stale ? ` — ${t('event.info.athleteBoard.stale')}` : ''}
-                            {/* Ein gekappter Lauf verschwindet nicht stumm: von einem
-                                Anzeigefehler wäre das nicht zu unterscheiden. */}
-                            {layout.hiddenRunning > 0
-                                ? ` — ${t('event.info.athleteBoard.moreRunning', {count: layout.hiddenRunning})}`
-                                : ''}
+                        </Typography>
+                    )}
+                    {/* Ein gekappter Lauf verschwindet nicht stumm: von einem Anzeigefehler wäre
+                        das nicht zu unterscheiden. Eigene, stagenskalierte Zeile statt Anhängsel
+                        an die "Stand"-Zeile — deren feste, kleine Schrift wäre vom Steg aus nicht
+                        zu lesen. */}
+                    {layout.hiddenRunning > 0 && (
+                        <Typography
+                            sx={{fontWeight: 600, fontSize: scaled('0.8rem', '1.1vw', '1.8rem')}}
+                            color="warning.main">
+                            {t('event.info.athleteBoard.moreRunning', {count: layout.hiddenRunning})}
                         </Typography>
                     )}
                 </Stack>

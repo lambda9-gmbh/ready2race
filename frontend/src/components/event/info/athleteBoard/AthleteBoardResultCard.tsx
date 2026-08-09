@@ -77,8 +77,10 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                     minHeight: 0,
                     display: 'grid',
                     gridTemplateRows: {
-                        xs: `repeat(${boats}, auto)`,
-                        lg: `repeat(${boats}, minmax(0, 1fr))`,
+                        // Math.max gegen ein leeres Feld: `repeat(0, …)` ist ungültiges CSS
+                        // und ließe die ganze Deklaration ins Leere laufen.
+                        xs: `repeat(${Math.max(boats, 1)}, auto)`,
+                        lg: `repeat(${Math.max(boats, 1)}, minmax(0, 1fr))`,
                     },
                 }}>
                 {teams.map((team, index) => (

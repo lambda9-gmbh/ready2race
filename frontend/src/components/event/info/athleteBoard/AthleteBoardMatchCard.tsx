@@ -178,6 +178,8 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                         </Typography>
                     )}
                 </Stack>
+                {/* Kein Inhalt, sondern das zweite Kind: AthleteBoardColumnCard erwartet genau
+                    zwei Elemente für ihr Kopf/Liste-Raster (siehe deren KDoc). */}
                 <Box />
             </>
         )
@@ -237,6 +239,8 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
             </Stack>
 
             {match.name ? (
+                // Kein Inhalt, sondern das zweite Kind: AthleteBoardColumnCard erwartet genau
+                // zwei Elemente für ihr Kopf/Liste-Raster (siehe deren KDoc).
                 <Box />
             ) : match.pendingRound ? (
                 <Typography
@@ -256,13 +260,17 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                         minHeight: 0,
                         display: 'grid',
                         gridTemplateRows: {
-                            xs: `repeat(${boats}, auto)`,
-                            lg: `repeat(${boats}, minmax(0, 1fr))`,
+                            // Math.max gegen ein leeres Feld: `repeat(0, …)` ist ungültiges CSS
+                            // und ließe die ganze Deklaration ins Leere laufen.
+                            xs: `repeat(${Math.max(boats, 1)}, auto)`,
+                            lg: `repeat(${Math.max(boats, 1)}, minmax(0, 1fr))`,
                         },
                     }}>
                     {match.teams.map((team, index) => (
                         <Stack
-                            key={`${match.matchId}-${team.startNumber ?? index}`}
+                            // startNumber fehlt gelegentlich (Zeile zeigt dann "–") und ist nicht
+                            // eindeutig genug für einen React-Schlüssel; der Index macht ihn das.
+                            key={`${match.matchId}-${team.startNumber ?? 'x'}-${index}`}
                             direction="row"
                             alignItems="center"
                             gap={1.5}

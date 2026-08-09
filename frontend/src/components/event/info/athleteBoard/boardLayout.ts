@@ -41,11 +41,14 @@ export const selectBoardCards = (data: AthleteBoardDto | null): BoardLayout => {
     const running = data?.running ?? []
     const shownRunning = running.slice(0, MAX_RUNNING_CARDS)
 
+    // Der Schlüssel trägt die Art der Spalte mit sich: ein Lauf, der gerade erst gestartet ist,
+    // kann zwischen zwei Backend-Abfragen kurz sowohl in `running` als auch noch in `upcoming`
+    // stehen. Ohne das Präfix hätten zwei nebeneinanderstehende Spalten denselben Schlüssel.
     const runningCards: BoardCard[] =
         shownRunning.length > 0
             ? shownRunning.map(match => ({
                   kind: 'running' as const,
-                  key: match.matchId,
+                  key: `running-${match.matchId}`,
                   match,
                   result: null,
               }))
@@ -59,13 +62,13 @@ export const selectBoardCards = (data: AthleteBoardDto | null): BoardLayout => {
             ...runningCards,
             {
                 kind: 'upcoming',
-                key: upcoming?.matchId ?? 'upcoming-empty',
+                key: upcoming ? `upcoming-${upcoming.matchId}` : 'upcoming-empty',
                 match: upcoming,
                 result: null,
             },
             {
                 kind: 'result',
-                key: latest?.matchId ?? 'result-empty',
+                key: latest ? `result-${latest.matchId}` : 'result-empty',
                 match: null,
                 result: latest,
             },
@@ -119,3 +122,13 @@ export const densityScale = (boats: number, columns: number): number => {
     const forColumns = COLUMN_STEP * Math.max(0, columns - COLUMNS_AT_FULL_SIZE)
     return Math.min(MAX_DENSITY_SCALE, Math.max(MIN_DENSITY_SCALE, 1 - forBoats - forColumns))
 }
+
+/**
+ * Der Skalierungsfaktor der Bühne, aus ihrem eigenen Layout abgeleitet.
+ *
+ * [maxBoats] und [densityScale] sind bewusst pur und einzeln testbar; ihre Verdrahtung
+ * (welches Feld bestimmt die Dichte, welche Spaltenzahl zählt) ist die einzige Stelle, an der
+ * beide falsch zusammengesteckt werden könnten — deshalb steht sie hier statt in der Ansicht.
+ */
+export const boardScale = (layout: BoardLayout): number =>
+    densityScale(maxBoats(layout.cards), layout.cards.length)

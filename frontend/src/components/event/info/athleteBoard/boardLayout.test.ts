@@ -4,12 +4,13 @@ import {
     MAX_DENSITY_SCALE,
     MAX_RUNNING_CARDS,
     MIN_DENSITY_SCALE,
+    boardScale,
     densityScale,
     maxBoats,
     selectBoardCards,
 } from './boardLayout'
 
-const match = (id: string, boats = 4): AthleteBoardMatch =>
+const match = (id: string, boats = 4, extra: Partial<AthleteBoardMatch> = {}): AthleteBoardMatch =>
     ({
         matchId: id,
         competitionName: 'CM 4x+',
@@ -19,11 +20,15 @@ const match = (id: string, boats = 4): AthleteBoardMatch =>
         startTime: null,
         state: 'RUNNING',
         startState: 'UNSCHEDULED',
+        pendingRound: false,
+        name: null,
+        cancelled: false,
         teams: Array.from({length: boats}, (_, i) => ({
             startNumber: i + 1,
             participants: [],
             failed: false,
         })),
+        ...extra,
     }) as unknown as AthleteBoardMatch
 
 const result = (id: string, boats = 4): AthleteBoardResult =>
@@ -116,6 +121,37 @@ describe('selectBoardCards', () => {
         )
         expect(new Set(cards.map(c => c.key)).size).toBe(cards.length)
     })
+
+    // "Ein Lauf verschwindet nie" ist das Kernversprechen der Bühne, und der abgesagte Lauf ist
+    // der Fall, der einem Verschwinden am ähnlichsten sieht — er bleibt an seiner Stelle stehen.
+    test('ein abgesagter Lauf bleibt auf der Bühne', () => {
+        const cancelled = match('u1', 0, {cancelled: true, teams: []})
+        const {cards} = selectBoardCards(board({upcoming: [cancelled]}))
+        expect(cards[1].match?.matchId).toBe('u1')
+        expect(cards[1].match?.cancelled).toBe(true)
+    })
+
+    // Ein Lauf, der gerade erst gestartet ist, kann zwischen zwei Backend-Abfragen kurz sowohl
+    // in `running` als auch noch in `upcoming` stehen — ohne Präfix im Schlüssel bekämen zwei
+    // nebeneinanderstehende Spalten denselben React-Schlüssel.
+    test('Schlüssel bleiben eindeutig, wenn derselbe Lauf in zwei Blöcken steht', () => {
+        const {cards} = selectBoardCards(
+            board({running: [match('r1')], upcoming: [match('r1')]}),
+        )
+        expect(new Set(cards.map(c => c.key)).size).toBe(cards.length)
+    })
+
+    // Bewusste Asymmetrie zum laufenden Block: dort wird eine Kappung über hiddenRunning
+    // gemeldet, hier nicht — die Bühne zeigt ohnehin immer nur den je ersten Eintrag. Ein
+    // künftiger Leser soll das nicht versehentlich als fehlende Meldung "reparieren".
+    test('über den ersten hinaus werden kommende Läufe und Ergebnisse ohne Meldung verworfen', () => {
+        const {cards, hiddenRunning} = selectBoardCards(
+            board({upcoming: [match('u1'), match('u2')], results: [result('e1'), result('e2')]}),
+        )
+        expect(cards[1].match?.matchId).toBe('u1')
+        expect(cards[2].result?.matchId).toBe('e1')
+        expect(hiddenRunning).toBe(0)
+    })
 })
 
 describe('maxBoats', () => {
@@ -164,5 +200,27 @@ describe('densityScale', () => {
                 expect(scale).toBeLessThanOrEqual(MAX_DENSITY_SCALE)
             }
         }
+    })
+
+    // Leere Bühne ist der häufigste Zustand über einen ganzen Regattatag — der konkrete Wert
+    // hält fest, wie groß die drei leeren Statusspalten dabei tatsächlich stehen.
+    test('leere Bühne', () => {
+        expect(densityScale(0, 3)).toBe(1.24)
+    })
+})
+
+describe('boardScale', () => {
+    // Die einzige Stelle, an der maxBoats und densityScale falsch verdrahtet werden könnten —
+    // deshalb eigens getestet statt nur implizit über die Ansicht.
+    test('verdrahtet die Kartenauswahl mit dem Dichtefaktor', () => {
+        const layout = selectBoardCards(
+            board({running: [match('r1', 3)], upcoming: [match('u1', 7)], results: [result('e1', 5)]}),
+        )
+        expect(boardScale(layout)).toBe(densityScale(maxBoats(layout.cards), layout.cards.length))
+        expect(boardScale(layout)).toBe(densityScale(7, 3))
+    })
+
+    test('leere Bühne ergibt densityScale(0, 3)', () => {
+        expect(boardScale(selectBoardCards(null))).toBe(densityScale(0, 3))
     })
 })
