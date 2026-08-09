@@ -38,6 +38,11 @@ const AthleteBoardTeamLabel = ({team, color}: AthleteBoardTeamLabelProps) => {
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
+                // Auf dem großen Schirm wird die Schrift so groß, dass schon ein einzelnes
+                // Wort ("Rudergemeinschaft") breiter als die Spalte sein kann. Ohne diese
+                // Zeile ragt es aus der Karte und wird vom overflow hart abgeschnitten,
+                // statt umzubrechen — im Sichttest am 09.08.2026 genau so aufgetreten.
+                overflowWrap: 'anywhere',
             }}
             color={color}>
             <Box component="span" sx={{display: {xs: 'inline', md: 'none'}}}>
