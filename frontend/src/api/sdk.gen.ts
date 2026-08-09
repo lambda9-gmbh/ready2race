@@ -881,6 +881,12 @@ import type {
     DownloadAwardCertificatesForEventData,
     DownloadAwardCertificatesForEventError,
     DownloadAwardCertificatesForEventResponse,
+    GetAwardCeremoniesData,
+    GetAwardCeremoniesError,
+    GetAwardCeremoniesResponse,
+    DownloadAwardCeremonySheetsData,
+    DownloadAwardCeremonySheetsError,
+    DownloadAwardCeremonySheetsResponse,
     DownloadAwardCertificatesForCompetitionData,
     DownloadAwardCertificatesForCompetitionError,
     DownloadAwardCertificatesForCompetitionResponse,
@@ -4727,6 +4733,38 @@ export const downloadAwardCertificatesForEvent = <ThrowOnError extends boolean =
     >({
         ...options,
         url: '/event/{eventId}/awardCertificates',
+    })
+}
+
+/**
+ * Alle Ehrungen der Veranstaltung, je Wettkampf und Wertung eine. Wird bei jedem Aufruf aus der Platzberechnung abgeleitet und nicht gespeichert - bis zur Ehrung ändern sich Ergebnisse noch.
+ */
+export const getAwardCeremonies = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetAwardCeremoniesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAwardCeremoniesResponse,
+        GetAwardCeremoniesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/awardCeremony',
+    })
+}
+
+/**
+ * Die ausgewählten Ehrungen als ein druckfertiges PDF, je Ehrung ein A4-Blatt. POST, obwohl es ein Download ist: die Auswahl umfasst bei einer Regatta leicht hundert Schlüssel und passt nicht mehr sinnvoll in einen Query-String.
+ */
+export const downloadAwardCeremonySheets = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadAwardCeremonySheetsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        DownloadAwardCeremonySheetsResponse,
+        DownloadAwardCeremonySheetsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/awardCeremony/pdf',
     })
 }
 

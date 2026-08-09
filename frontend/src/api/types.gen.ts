@@ -281,6 +281,48 @@ export type AthleteBoardTeam = {
     failedReason?: string | null
 }
 
+/**
+ * Eine Ehrung zur Auswahl - die Einheit ist (Wettkampf, Wertung).
+ */
+export type AwardCeremonyChoiceDto = {
+    competitionId: string
+    /**
+     * Die Rennnummer des Wettkampfs, z. B. "17-NC".
+     */
+    competitionIdentifier: string
+    /**
+     * Der Kurzname des Wettkampfs, z. B. "CM 4x+".
+     */
+    competitionShortName?: string | null
+    competitionName: string
+    /**
+     * Die Wertung, in der geehrt wird. `null` ist ein gültiger Wert und heißt "der Wettkampf wird als Ganzes geehrt", nicht "unbekannt".
+     */
+    ratingCategoryName?: string | null
+    /**
+     * Die Zahl der Boote, die auf dem Blatt landen: Ränge bis drei, Gleichstände eingeschlossen. Bewusst nicht die Zahl aller platzierten Boote der Wertung.
+     */
+    awardedTeams: number
+}
+
+/**
+ * Verweist auf genau eine Ehrung aus der Liste.
+ */
+export type AwardCeremonyKeyRequest = {
+    competitionId: string
+    /**
+     * Muss dem Wert der gewünschten Ehrung entsprechen - `null` trifft die Ehrung ohne Wertung und ist kein Platzhalter für "alle".
+     */
+    ratingCategoryName?: string | null
+}
+
+export type AwardCeremonySelectionRequest = {
+    /**
+     * Leere oder fehlende Auswahl heißt "alle Ehrungen drucken". Ein Schlüssel, zu dem es keine Ehrung gibt, führt zu 400 statt zu einem still fehlenden Blatt.
+     */
+    selection?: Array<AwardCeremonyKeyRequest>
+}
+
 export type BadRequestError = ApiError & {
     details?: {
         validExample?: unknown
@@ -7347,6 +7389,27 @@ export type DownloadAwardCertificatesForEventData = {
 export type DownloadAwardCertificatesForEventResponse = Blob | File
 
 export type DownloadAwardCertificatesForEventError = BadRequestError | ApiError
+
+export type GetAwardCeremoniesData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetAwardCeremoniesResponse = Array<AwardCeremonyChoiceDto>
+
+export type GetAwardCeremoniesError = BadRequestError | ApiError
+
+export type DownloadAwardCeremonySheetsData = {
+    body: AwardCeremonySelectionRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type DownloadAwardCeremonySheetsResponse = Blob | File
+
+export type DownloadAwardCeremonySheetsError = BadRequestError | ApiError
 
 export type DownloadAwardCertificatesForCompetitionData = {
     path: {

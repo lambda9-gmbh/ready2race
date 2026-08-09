@@ -8067,6 +8067,73 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/awardCeremony:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getAwardCeremonies
+      description: >-
+        Alle Ehrungen der Veranstaltung, je Wettkampf und Wertung eine. Wird bei jedem Aufruf aus
+        der Platzberechnung abgeleitet und nicht gespeichert - bis zur Ehrung ändern sich
+        Ergebnisse noch.
+      responses:
+        200:
+          description: Award ceremonies successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AwardCeremonyChoiceDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/awardCeremony/pdf:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: downloadAwardCeremonySheets
+      description: >-
+        Die ausgewählten Ehrungen als ein druckfertiges PDF, je Ehrung ein A4-Blatt. POST, obwohl
+        es ein Download ist: die Auswahl umfasst bei einer Regatta leicht hundert Schlüssel und
+        passt nicht mehr sinnvoll in einen Query-String.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardCeremonySelectionRequest'
+      responses:
+        200:
+          description: Award ceremony sheets successfully rendered
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/competition/{competitionId}/awardCertificates:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -15788,3 +15855,63 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GapDocumentPlaceholderRequest'
+
+    AwardCeremonyChoiceDto:
+      description: Eine Ehrung zur Auswahl - die Einheit ist (Wettkampf, Wertung).
+      type: object
+      required:
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+        - awardedTeams
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          description: Die Rennnummer des Wettkampfs, z. B. "17-NC".
+          type: string
+        competitionShortName:
+          description: Der Kurzname des Wettkampfs, z. B. "CM 4x+".
+          type: string
+          nullable: true
+        competitionName:
+          type: string
+        ratingCategoryName:
+          description: >-
+            Die Wertung, in der geehrt wird. `null` ist ein gültiger Wert und heißt "der Wettkampf
+            wird als Ganzes geehrt", nicht "unbekannt".
+          type: string
+          nullable: true
+        awardedTeams:
+          description: >-
+            Die Zahl der Boote, die auf dem Blatt landen: Ränge bis drei, Gleichstände
+            eingeschlossen. Bewusst nicht die Zahl aller platzierten Boote der Wertung.
+          type: integer
+
+    AwardCeremonyKeyRequest:
+      description: Verweist auf genau eine Ehrung aus der Liste.
+      type: object
+      required:
+        - competitionId
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        ratingCategoryName:
+          description: >-
+            Muss dem Wert der gewünschten Ehrung entsprechen - `null` trifft die Ehrung ohne
+            Wertung und ist kein Platzhalter für "alle".
+          type: string
+          nullable: true
+
+    AwardCeremonySelectionRequest:
+      type: object
+      properties:
+        selection:
+          description: >-
+            Leere oder fehlende Auswahl heißt "alle Ehrungen drucken". Ein Schlüssel, zu dem es
+            keine Ehrung gibt, führt zu 400 statt zu einem still fehlenden Blatt.
+          type: array
+          items:
+            $ref: '#/components/schemas/AwardCeremonyKeyRequest'
