@@ -36,7 +36,7 @@ class LiveMatchesLogicTest {
         executionOrder = executionOrder,
     )
 
-    /** Wer die Seite oeffnet, sucht zuerst, was gerade passiert. */
+    /** Wer die Seite öffnet, sucht zuerst, was gerade passiert. */
     @Test
     fun activatedMatchesComeFirst() {
         val running = match(MatchState.RUNNING, noon.plusHours(2))
@@ -80,7 +80,7 @@ class LiveMatchesLogicTest {
 
     /**
      * Die zwei Abfragen laufen nacheinander. Wird ein Lauf dazwischen aktiviert, steht er in beiden
-     * Listen - der aktivierte Eintrag traegt die frischere Aussage.
+     * Listen - der aktivierte Eintrag trägt die frischere Aussage.
      */
     @Test
     fun aMatchInBothListsAppearsOnceAndActivatedWins() {
@@ -94,7 +94,7 @@ class LiveMatchesLogicTest {
         assertEquals(MatchState.PREPARING, merged.single().status.state)
     }
 
-    /** Der Deckel gilt ueber beide Zweige - sonst verdraengen anstehende Laeufe den laufenden. */
+    /** Der Deckel gilt über beide Zweige - sonst verdrängen anstehende Läufe den laufenden. */
     @Test
     fun theLimitAppliesToBothBranchesTogether() {
         val running = match(MatchState.RUNNING, noon)
@@ -115,12 +115,12 @@ class LiveMatchesLogicTest {
     }
 
     /**
-     * Der Schutz der Ergebnisfreigabe. Ein beendeter oder vollstaendig gewerteter Lauf gehoert
-     * ausschliesslich zu `/latest-match-results`, wo `PublicResultsVisibility` entscheidet, ob er
-     * gezeigt werden darf. Die beiden Abfragen hinter [LiveMatchesLogic.merge] koennen ihn per SQL
-     * gar nicht erst liefern (`CompetitionMatchRepo.getUpcomingMatchesForBoard` schliesst
+     * Der Schutz der Ergebnisfreigabe. Ein beendeter oder vollständig gewerteter Lauf gehört
+     * ausschließlich zu `/latest-match-results`, wo `PublicResultsVisibility` entscheidet, ob er
+     * gezeigt werden darf. Die beiden Abfragen hinter [LiveMatchesLogic.merge] können ihn per SQL
+     * gar nicht erst liefern (`CompetitionMatchRepo.getUpcomingMatchesForBoard` schließt
      * `finished_at is not null` und „alle Boote gewertet" aus) - kommt er trotzdem an, ist das ein
-     * Fehler, und die Zusammenfuehrung laesst ihn nicht durch.
+     * Fehler, und die Zusammenführung lässt ihn nicht durch.
      */
     @Test
     fun finishedAndAwaitingFinishMatchesNeverReachTheLiveList() {
@@ -137,7 +137,7 @@ class LiveMatchesLogicTest {
         assertEquals(listOf(upcoming.matchId), merged.map { it.matchId })
     }
 
-    /** Abgesagte Laeufe bleiben stehen - sie sind die Antwort auf „wo ist mein Lauf?". */
+    /** Abgesagte Läufe bleiben stehen - sie sind die Antwort auf „wo ist mein Lauf?". */
     @Test
     fun cancelledMatchesStayInTheList() {
         val cancelled = match(MatchState.SKIPPED, noon).copy(cancelled = true)
