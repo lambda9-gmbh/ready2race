@@ -320,7 +320,7 @@ export type AwardCeremonySelectionRequest = {
     /**
      * Leere oder fehlende Auswahl heißt "alle Ehrungen drucken". Ein Schlüssel, zu dem es keine Ehrung gibt, führt zu 400 statt zu einem still fehlenden Blatt.
      */
-    selection?: Array<AwardCeremonyKeyRequest>
+    selection?: Array<AwardCeremonyKeyRequest> | null
 }
 
 export type BadRequestError = ApiError & {
@@ -1179,6 +1179,10 @@ export type ErrorCode =
     | 'AWARD_CERTIFICATE_UNREADABLE_TEMPLATE'
     | 'AWARD_CERTIFICATE_COMPETITION_NOT_IN_EVENT'
     | 'AWARD_CERTIFICATE_IS_CHALLENGE_EVENT'
+    | 'AWARD_CEREMONY_NO_RESULTS'
+    | 'AWARD_CEREMONY_COMPETITION_NOT_IN_EVENT'
+    | 'AWARD_CEREMONY_UNKNOWN_RATING_CATEGORY'
+    | 'AWARD_CEREMONY_IS_CHALLENGE_EVENT'
     | 'DOCUMENT_TEMPLATE_INVALID_FONT'
     | 'DOCUMENT_TEMPLATE_INVALID_PDF'
     | 'DOCUMENT_TEMPLATE_TYPE_MISMATCH'

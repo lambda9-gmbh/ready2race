@@ -2651,5 +2651,26 @@
         "unexpected": "Diplomerne kunne ikke oprettes. Genindlæs siden, og prøv igen."
       }
     }
+  },
+  "awardCeremony": {
+    "download": {
+      "button": "Præmieoverrækkelsesark",
+      "title": "Download præmieoverrækkelsesark",
+      "action": "Download",
+      "hint": "Én side per bedømmelseskategori med placeringerne 1 til 3.",
+      "selectAll": "Vælg alle",
+      "deselectAll": "Fravælg alle",
+      "withoutCategory": "Uden bedømmelseskategori",
+      "boats_one": "{{count}} båd",
+      "boats_other": "{{count}} både",
+      "empty": "Der er endnu ingen overrækkelser — placeringerne mangler.",
+      "error": {
+        "noResults": "Der er ingen placeringer til de valgte overrækkelser.",
+        "competitionNotInEvent": "Denne konkurrence hører ikke til dette stævne. Genindlæs siden.",
+        "unknownRatingCategory": "En af de valgte bedømmelseskategorier findes ikke længere. Genindlæs siden.",
+        "isChallengeEvent": "Et challenge-stævne har ingen præmieoverrækkelsesark — der afvikles ingen løb, og der gives ingen placeringer.",
+        "unexpected": "Præmieoverrækkelsesarket kunne ikke oprettes. Genindlæs siden, og prøv igen."
+      }
+    }
   }
 }
