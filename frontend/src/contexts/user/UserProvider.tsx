@@ -9,6 +9,7 @@ import i18next from 'i18next'
 import {Language} from '@i18n/config.ts'
 import PanicPage from '../../pages/PanicPage.tsx'
 import {clearSessionToken, readSessionToken, touchSessionToken, writeSessionToken} from './sessionToken.ts'
+import {clearCachedReads} from '@pwa/readCache.ts'
 
 type Session = {
     token: string
@@ -159,6 +160,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
     const logout = async (isInApp: boolean = false) => {
         await userLogout()
         clearSessionToken(isInApp)
+        clearCachedReads()
         setUserData({
             userInfo: undefined,
             isInApp,
