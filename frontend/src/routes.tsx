@@ -17,7 +17,6 @@ import {
     updateEventGlobal,
     updateUserGlobal,
     readLiveDashboardGlobal,
-    readClubGlobal,
 } from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'

@@ -72,6 +72,23 @@ sealed interface EventScheduleError : ServiceError {
         val maxAdvanceMinutes: Long,
     ) : EventScheduleError
 
+    // --- Vorziehen nach einem entfallenen Slot ---
+
+    /**
+     * Der Slot, hinter dem vorgezogen werden soll, ist gar nicht abgesagt. Das Vorziehen setzt genau
+     * dort an, wo eine Absage Zeit frei gemacht hat - ohne Absage gibt es nichts, was nachrücken
+     * könnte, und das Angebot käme aus einem veralteten Zustand des Zeitplan-Tabs.
+     */
+    data class SlotNotSkipped(val slotId: UUID) : EventScheduleError
+
+    /**
+     * Aus dem entfallenen Slot lässt sich kein belastbares Delta ableiten: keine gepflegte Dauer UND
+     * kein Folgeslot am selben Renntag, hinter dem etwas nachrücken könnte (siehe
+     * [de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic.advanceDeltaMinutes]).
+     * Der Zeitplan lässt sich dann nur von Hand über das Verschieben-Werkzeug anpassen.
+     */
+    data class AdvanceDeltaUndeterminable(val slotId: UUID) : EventScheduleError
+
     data class DuplicateImportRow(val rowNumbers: List<Int>) : EventScheduleError
 
     // --- Lesefehler des Excel-Imports ---
@@ -197,6 +214,19 @@ sealed interface EventScheduleError : ServiceError {
                 "maxAdvanceMinutes" to maxAdvanceMinutes,
             ),
             errorCode = ErrorCode.SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR,
+        )
+
+        is SlotNotSkipped -> ApiError(
+            HttpStatusCode.Conflict,
+            "Slot $slotId is not cancelled - there is no freed time to move up to",
+            errorCode = ErrorCode.SCHEDULE_SLOT_NOT_SKIPPED,
+        )
+
+        is AdvanceDeltaUndeterminable -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Cannot derive a time delta from slot $slotId: it has no planned duration and no " +
+                "following slot on the same race day",
+            errorCode = ErrorCode.SCHEDULE_ADVANCE_NO_DELTA,
         )
 
         is DuplicateImportRow -> ApiError(
