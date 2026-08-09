@@ -1527,6 +1527,8 @@
         "startsIn": "in {{time}}",
         "asOf": "Stand {{time}}",
         "stale": "Verbindung unterbrochen",
+        "moreRunning_one": "+{{count}} weiterer Lauf in der Arena",
+        "moreRunning_other": "+{{count}} weitere Läufe in der Arena",
         "eventNotFound": "Veranstaltung nicht gefunden",
         "settingsTitle": "Athleten-Anzeige",
         "limitRunning": "Anzahl laufender Läufe",

@@ -1527,6 +1527,8 @@
         "startsIn": "in {{time}}",
         "asOf": "As of {{time}}",
         "stale": "Connection lost",
+        "moreRunning_one": "+{{count}} more race in the arena",
+        "moreRunning_other": "+{{count}} more races in the arena",
         "eventNotFound": "Event not found",
         "settingsTitle": "Athlete board",
         "limitRunning": "Number of running races",

@@ -1,10 +1,12 @@
-import {ReactNode} from 'react'
 import {Box, CircularProgress, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useAthleteBoardData} from '../athleteBoard/useAthleteBoardData'
 import {useServerClock} from '../athleteBoard/useServerClock'
+import AthleteBoardColumnCard from '../athleteBoard/AthleteBoardColumnCard'
 import AthleteBoardMatchCard from '../athleteBoard/AthleteBoardMatchCard'
 import AthleteBoardResultCard from '../athleteBoard/AthleteBoardResultCard'
+import {densityScale, maxBoats, selectBoardCards} from '../athleteBoard/boardLayout'
+import {scaled} from '../athleteBoard/common'
 
 interface AthleteBoardViewProps {
     eventId: string
@@ -70,40 +72,36 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
         lastUpdated !== null &&
         Date.now() - lastUpdated.getTime() > staleThresholdMs
 
-    const column = (
-        title: string,
-        emptyText: string,
-        items: ReactNode[],
-    ) => (
-        <Box sx={{flex: 1, minWidth: 0}}>
-            <Typography
-                sx={{
-                    fontSize: 'clamp(1rem, 1.9vw, 1.8rem)',
-                    fontWeight: 700,
-                    mb: 1,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                }}>
-                {title}
-            </Typography>
-            {items.length > 0 ? (
-                items
-            ) : (
-                <Typography
-                    sx={{fontSize: 'clamp(0.85rem, 1.3vw, 1.1rem)'}}
-                    color="text.secondary">
-                    {emptyText}
-                </Typography>
-            )}
-        </Box>
-    )
+    const layout = selectBoardCards(data)
+    const scale = densityScale(maxBoats(layout.cards), layout.cards.length)
+
+    const titleFor = (kind: string) =>
+        kind === 'running'
+            ? t('event.info.athleteBoard.running')
+            : kind === 'upcoming'
+              ? t('event.info.athleteBoard.upcoming')
+              : t('event.info.athleteBoard.results')
+
+    const emptyTextFor = (kind: string) =>
+        kind === 'running'
+            ? t('event.info.athleteBoard.noRunning')
+            : kind === 'upcoming'
+              ? t('event.info.athleteBoard.noUpcoming')
+              : t('event.info.athleteBoard.noResults')
 
     return (
         <Box
             sx={{
                 height: '100%',
-                overflow: 'auto',
-                p: 'clamp(0.75rem, 1.5vw, 2rem)',
+                minHeight: 0,
+                display: 'grid',
+                gridTemplateRows: 'auto minmax(0, 1fr)',
+                rowGap: 'clamp(0.4rem, 0.9vh, 1rem)',
+                p: 'clamp(0.5rem, 1vw, 1.5rem)',
+                // Ab lg gilt das Scroll-Verbot: die Bühne passt sich der Höhe an, statt
+                // überzulaufen. Darunter bleibt die gestapelte Darstellung von früher.
+                overflow: {xs: 'auto', lg: 'hidden'},
+                '--ab-scale': scale,
                 // Höhe der Overlay-Knöpfe (top: 16 + Knopfhöhe) plus Luft
                 ...(controlsOverlayed && {pt: '4rem'}),
             }}>
@@ -111,13 +109,14 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
                 direction="row"
                 justifyContent="space-between"
                 alignItems="baseline"
-                gap={2}
-                sx={{mb: 2}}>
-                <Typography sx={{fontSize: 'clamp(1.1rem, 2.2vw, 2.2rem)', fontWeight: 800}}>
+                gap={2}>
+                <Typography
+                    sx={{fontSize: 'clamp(1rem, 1.8vw, 2rem)', fontWeight: 800}}
+                    noWrap>
                     {data?.eventName ?? ''}
                 </Typography>
-                <Stack alignItems="flex-end">
-                    <Typography sx={{fontSize: 'clamp(1.1rem, 2.2vw, 2.2rem)', fontWeight: 800}}>
+                <Stack alignItems="flex-end" sx={{flexShrink: 0}}>
+                    <Typography sx={{fontSize: 'clamp(1rem, 1.8vw, 2rem)', fontWeight: 800}}>
                         {now.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})}
                     </Typography>
                     {asOfTime && (
@@ -131,51 +130,44 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
                                 }),
                             })}
                             {stale ? ` — ${t('event.info.athleteBoard.stale')}` : ''}
+                            {/* Ein gekappter Lauf verschwindet nicht stumm: von einem
+                                Anzeigefehler wäre das nicht zu unterscheiden. */}
+                            {layout.hiddenRunning > 0
+                                ? ` — ${t('event.info.athleteBoard.moreRunning', {count: layout.hiddenRunning})}`
+                                : ''}
                         </Typography>
                     )}
                 </Stack>
             </Stack>
 
-            <Stack
-                direction={{xs: 'column', lg: 'row'}}
-                gap={{xs: 2, lg: 3}}
-                alignItems="stretch">
-                {/* Reihenfolge nach Dringlichkeit für die Besatzung am Steg: was jetzt läuft,
-                    was als Nächstes kommt, und erst danach das bereits Gelaufene. Auf dem
-                    Telefon entscheidet dieselbe Reihenfolge, was ohne Scrollen sichtbar ist. */}
-                {column(
-                    t('event.info.athleteBoard.running'),
-                    t('event.info.athleteBoard.noRunning'),
-                    (data?.running ?? []).map(match => (
-                        <AthleteBoardMatchCard
-                            key={match.matchId}
-                            match={match}
-                            now={now}
-                            variant="running"
-                        />
-                    )),
-                )}
-                {column(
-                    t('event.info.athleteBoard.upcoming'),
-                    t('event.info.athleteBoard.noUpcoming'),
-                    (data?.upcoming ?? []).map(match => (
-                        <AthleteBoardMatchCard
-                            key={match.matchId}
-                            match={match}
-                            now={now}
-                            variant="upcoming"
-                            showCountdown={data?.showCountdown ?? true}
-                        />
-                    )),
-                )}
-                {column(
-                    t('event.info.athleteBoard.results'),
-                    t('event.info.athleteBoard.noResults'),
-                    (data?.results ?? []).map(result => (
-                        <AthleteBoardResultCard key={result.matchId} result={result} />
-                    )),
-                )}
-            </Stack>
+            {/* Gleich breite Spalten, keine dominante: bei zwei Läufen in der Arena stehen sie
+                gleichwertig nebeneinander. Unterhalb lg stapeln sie wie bisher. */}
+            <Box
+                sx={{
+                    minHeight: 0,
+                    display: 'grid',
+                    gap: scaled('0.4rem', '0.7vw', '1rem'),
+                    gridAutoFlow: {xs: 'row', lg: 'column'},
+                    gridAutoColumns: {lg: 'minmax(0, 1fr)'},
+                }}>
+                {layout.cards.map(card => (
+                    <AthleteBoardColumnCard
+                        key={card.key}
+                        title={titleFor(card.kind)}
+                        emptyText={emptyTextFor(card.kind)}>
+                        {card.match ? (
+                            <AthleteBoardMatchCard
+                                match={card.match}
+                                now={now}
+                                variant={card.kind === 'running' ? 'running' : 'upcoming'}
+                                showCountdown={data?.showCountdown ?? true}
+                            />
+                        ) : card.result ? (
+                            <AthleteBoardResultCard result={card.result} />
+                        ) : undefined}
+                    </AthleteBoardColumnCard>
+                ))}
+            </Box>
         </Box>
     )
 }

@@ -11,7 +11,7 @@ const AthleteBoardPage = () => {
     const {eventId} = athleteBoardRoute.useParams()
 
     return (
-        <Box sx={{height: '100vh', overflow: 'hidden'}}>
+        <Box sx={{height: '100dvh', overflow: 'hidden'}}>
             <AthleteBoardView eventId={eventId} />
         </Box>
     )

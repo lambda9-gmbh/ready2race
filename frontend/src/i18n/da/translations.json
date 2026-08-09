@@ -1527,6 +1527,8 @@
         "startsIn": "om {{time}}",
         "asOf": "Opdateret {{time}}",
         "stale": "Forbindelsen afbrudt",
+        "moreRunning_one": "+{{count}} løb mere i arenaen",
+        "moreRunning_other": "+{{count}} løb mere i arenaen",
         "eventNotFound": "Arrangementet blev ikke fundet",
         "settingsTitle": "Atletvisning",
         "limitRunning": "Antal igangværende løb",
