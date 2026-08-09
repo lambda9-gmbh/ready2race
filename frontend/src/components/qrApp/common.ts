@@ -41,11 +41,6 @@ export const getAppRights = (privileges: PrivilegeDto[]): AppFunction[] => {
 }
 
 /**
- * Ein Eintrag der Funktionsauswahl. Scanner-Funktionen tragen ihre `AppFunction`; das
- * Dashboard ist keine Scanner-Funktion und trägt deshalb `null` - der Scanner darf nichts
- * bekommen, womit er nichts anfangen kann.
- */
-/**
  * Die Beschriftungen sind bewusst als Literale getippt und nicht als `string`: `t()` nimmt nur
  * bekannte Schlüssel entgegen, ein loser `string` scheitert an dessen Typprüfung.
  */
@@ -56,6 +51,11 @@ export type AppEntryLabelKey =
     | 'app.functionSelect.functions.caterer'
     | 'app.functionSelect.functions.liveDashboard'
 
+/**
+ * Ein Eintrag der Funktionsauswahl. Scanner-Funktionen tragen ihre `AppFunction`; das
+ * Dashboard ist keine Scanner-Funktion und trägt deshalb `null` - der Scanner darf nichts
+ * bekommen, womit er nichts anfangen kann.
+ */
 export type AppEntry = {
     key: string
     labelKey: AppEntryLabelKey
