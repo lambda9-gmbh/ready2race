@@ -21,6 +21,11 @@ alter table competition
 -- Läufen, weil es genau deren Löschen überleben muss: Erst daran ist zu erkennen, ob eine erzeugte
 -- Runde die erste ihrer Art ist oder die Wiederholung nach einer Ergebniskorrektur.
 -- deleteCurrentRound räumt die Spalte deshalb NICHT ab.
+--
+-- Nicht zu verwechseln mit "round_materialized" (EventScheduleRepo, korrelierte Subquery): Das ist
+-- eine Ist-Abfrage, "hat diese Runde JETZT Läufe" - sie wird mit jedem Löschen wieder falsch. Diese
+-- Spalte hier hält dagegen fest, dass die Runde JEMALS Läufe hatte, und bleibt es auch danach. Wer
+-- beide verwechselt, verschiebt Zeitstrahl-Zustände.
 alter table competition_setup_round
     add column materialized_at timestamp;
 
@@ -34,3 +39,19 @@ alter table competition_match
 -- Lauf neu. Vorab droppen hält bestehende Datenbanken sauber (gleiches Vorgehen wie V202608091400).
 drop view if exists competition_setup_round_with_matches;
 drop view if exists competition_match_with_teams;
+
+-- Nachtrag für Bestandsdaten: Runden, die zu diesem Zeitpunkt bereits Läufe haben, sind für die
+-- laufende Regatta keine Erst-Erzeugung mehr, sondern längst gesetzt. Ohne diesen Nachtrag bliebe
+-- ihr materialized_at NULL, und ihre nächste Wiedererzeugung (Ergebniskorrektur, Automatik) würde
+-- als Erst-Erzeugung gelesen - mit der Folge, dass der Vermerk am wiedererzeugten Lauf ausbleibt,
+-- ausgerechnet dort, wo er gerade gebraucht wird. Der genaue Zeitpunkt ist beliebig, nur "gesetzt"
+-- zählt.
+update competition_setup_round
+set materialized_at = now()
+where materialized_at is null
+  and exists (
+    select 1
+    from competition_setup_match
+    join competition_match on competition_match.competition_setup_match = competition_setup_match.id
+    where competition_setup_match.competition_setup_round = competition_setup_round.id
+  );

@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameLogic
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionLogic
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionService
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
@@ -252,9 +253,15 @@ object LiveDashboardService {
                         teams = teams,
                         raceClockerPollError = match[COMPETITION_MATCH.RACECLOCKER_POLL_ERROR],
                         raceClockerAutoPausedAt = match[COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT],
-                        // Der Vermerk verschwindet mit der Aktivierung. Die Regel steht hier und nicht im
-                        // Frontend, weil sie sonst in zwei Oberflächen doppelt stünde.
-                        pairingsRecalculatedAt = match[COMPETITION_MATCH.PAIRINGS_RECALCULATED_AT]?.takeIf { activatedAt == null },
+                        // Die Sichtbarkeitsregel steht gemeinsam mit der Durchführungs-Ansicht
+                        // (Conversions.kt) in AutoRoundProgressionLogic.visibleRecalculationNotice,
+                        // damit sie nicht in zwei Oberflächen auseinanderlaufen kann.
+                        pairingsRecalculatedAt = AutoRoundProgressionLogic.visibleRecalculationNotice(
+                            pairingsRecalculatedAt = match[COMPETITION_MATCH.PAIRINGS_RECALCULATED_AT],
+                            activatedAt = activatedAt,
+                            startedAt = startedAt,
+                            finishedAt = finishedAt,
+                        ),
                     )
                 )
             }

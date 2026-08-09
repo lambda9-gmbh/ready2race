@@ -38,7 +38,7 @@ import java.util.UUID
  * Die Zeitbasis der Vorrichtung - beliebig, aber fest, damit gleichartige Aufrufe vergleichbar
  * bleiben.
  */
-val ROUND_PROGRESSION_SEED_TIME: LocalDateTime = LocalDateTime.of(2026, 8, 14, 10, 0)
+private val ROUND_PROGRESSION_SEED_TIME: LocalDateTime = LocalDateTime.of(2026, 8, 14, 10, 0)
 
 /**
  * Das Ergebnis von [seedTwoRoundCompetition] - alle Ids, die die Automatik und ihre Tests
@@ -47,11 +47,9 @@ val ROUND_PROGRESSION_SEED_TIME: LocalDateTime = LocalDateTime.of(2026, 8, 14, 1
 data class SeededRoundProgression(
     val eventId: UUID,
     val competitionId: UUID,
-    val firstRoundId: UUID,
     val secondRoundId: UUID,
     val firstRoundMatchIds: List<UUID>,
     val secondRoundSetupMatchId: UUID,
-    val registrationIds: List<UUID>,
     val userId: UUID,
 )
 
@@ -269,11 +267,9 @@ fun TestComprehensionScope<JEnv>.seedTwoRoundCompetition(
     return SeededRoundProgression(
         eventId = eventId,
         competitionId = competitionId,
-        firstRoundId = firstRoundId,
         secondRoundId = secondRoundId,
         firstRoundMatchIds = listOf(firstRoundMatchAId, firstRoundMatchBId),
         secondRoundSetupMatchId = secondRoundSetupMatchId,
-        registrationIds = registrationIds,
         userId = userId,
     )
 }

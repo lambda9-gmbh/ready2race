@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
 import de.lambda9.ready2race.backend.singletonOrFallback
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionLogic
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
@@ -126,9 +127,15 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                         raceClockerPolledAt = match.first.raceClockerPolledAt,
                         raceClockerPollError = match.first.raceClockerPollError,
                         raceClockerAutoPausedAt = match.first.raceClockerAutoPausedAt,
-                        // Der Vermerk verschwindet mit der Aktivierung. Die Regel steht hier und nicht im
-                        // Frontend, weil sie sonst in zwei Oberflächen doppelt stünde.
-                        pairingsRecalculatedAt = match.first.pairingsRecalculatedAt?.takeIf { match.first.activatedAt == null },
+                        // Die Sichtbarkeitsregel steht gemeinsam mit dem Schiedsrichter-Dashboard
+                        // (LiveDashboardService) in AutoRoundProgressionLogic.visibleRecalculationNotice,
+                        // damit sie nicht in zwei Oberflächen auseinanderlaufen kann.
+                        pairingsRecalculatedAt = AutoRoundProgressionLogic.visibleRecalculationNotice(
+                            pairingsRecalculatedAt = match.first.pairingsRecalculatedAt,
+                            activatedAt = match.first.activatedAt,
+                            startedAt = match.first.startedAt,
+                            finishedAt = match.first.finishedAt,
+                        ),
                     )
                 },
             required = required,

@@ -327,6 +327,9 @@ object EventScheduleService {
         val rows = !EventScheduleRepo.getSlots(eventId, setupRoundId).orDie()
 
         val toSkip = mutableListOf<UUID>()
+        // Irgendein Setup-Lauf der Runde reicht der Automatik, um von dort zum Wettkampf zu finden
+        // (siehe unten) - alle Slots dieser Runde gehören zum selben Wettkampf.
+        var someSetupMatchId: UUID? = null
         for (row in rows) {
             val slotId = row[EVENT_SCHEDULE_SLOT.ID]!!
             val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
@@ -334,7 +337,11 @@ object EventScheduleService {
                 continue
             }
 
-            val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+            val setupMatchId = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
+            val isFree = setupMatchId == null
+            if (setupMatchId != null) {
+                someSetupMatchId = setupMatchId
+            }
             val matchExists = row.get("match_exists", Boolean::class.java) == true
             val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
             val state = EventScheduleLogic.deriveSlotState(
@@ -367,6 +374,13 @@ object EventScheduleService {
         // Wie beim Einzel-Skip: die Kette könnte an einem der jetzt übersprungenen Slots geparkt
         // gewesen sein.
         !ScheduleChainService.resumeIfParked(eventId, userId)
+
+        // Wie in setSlotSkipped: eine ganze abgesagte Runde kann die laufende Runde des Wettkampfs
+        // fertigstellen (matchIsSettled zählt skipped-Läufe als erledigt) und damit die Folgerunde
+        // auslösen. Ein einziger Setup-Lauf der Runde genügt, um von dort zum Wettkampf zu finden.
+        if (someSetupMatchId != null) {
+            !AutoRoundProgressionService.progressAfterMatch(eventId, someSetupMatchId, userId)
+        }
 
         noData
     }

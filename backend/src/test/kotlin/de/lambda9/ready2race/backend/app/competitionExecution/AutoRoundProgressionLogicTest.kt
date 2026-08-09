@@ -152,9 +152,35 @@ class AutoRoundProgressionLogicTest {
         assertTrue(AutoRoundProgressionLogic.roundIsComplete(withBye))
     }
 
-    /** Ein abgesagter Lauf ist erledigt, auch ohne Ergebnis. */
+    /**
+     * Ein abgesagter Lauf mit vollständig gesetzten Plätzen ist erledigt, auch ohne
+     * Beenden-Stempel — die Platzbedingung war schon vor der Absage erfüllt.
+     */
     @Test
-    fun aSkippedMatchIsDone() {
+    fun aSkippedMatchWithPlacesSetIsDone() {
+        val withSkipped = round(
+            matches = listOf(
+                match(teams = listOf(team(place = 1, startNumber = 1), team(place = 2, startNumber = 2))),
+                match(
+                    finishedAt = null,
+                    skipped = true,
+                    teams = listOf(team(place = 1, startNumber = 1), team(place = 2, startNumber = 2)),
+                ),
+            )
+        )
+
+        assertTrue(AutoRoundProgressionLogic.roundIsComplete(withSkipped))
+    }
+
+    /**
+     * Ein abgesagter Lauf mit zwei ungewerteten Booten hält die Runde auf — genau wie beim Knopf
+     * „Nächste Runde erstellen". Früher blendete `skipped` die Platzprüfung ganz aus: Die
+     * Automatik sagte „durch", während `createNewRound` anschließend mit `NotAllPlacesSet`
+     * scheiterte und der Fehler nur im Log landete. Dieser Test hat vorher das Gegenteil geprüft
+     * (`aSkippedMatchIsDone`) und damit genau diese Lücke festgeschrieben.
+     */
+    @Test
+    fun aSkippedMatchWithoutPlacesHoldsTheRoundBack() {
         val withSkipped = round(
             matches = listOf(
                 match(teams = listOf(team(place = 1, startNumber = 1), team(place = 2, startNumber = 2))),
@@ -162,7 +188,27 @@ class AutoRoundProgressionLogicTest {
             )
         )
 
-        assertTrue(AutoRoundProgressionLogic.roundIsComplete(withSkipped))
+        assertFalse(AutoRoundProgressionLogic.roundIsComplete(withSkipped))
+    }
+
+    /**
+     * Ein Lauf, dessen Boote alle ausgeschieden sind, wird nie gefahren und nie beendet — trotzdem
+     * hält er die Runde nicht auf. `createNewRound` erzeugt solche Läufe für ausgeschiedene und
+     * abgemeldete Mannschaften; auf sie zu warten würde die Runde für immer offen halten.
+     */
+    @Test
+    fun aMatchWithOnlyOutTeamsDoesNotHoldTheRoundBack() {
+        val allOut = round(
+            matches = listOf(
+                match(teams = listOf(team(place = 1, startNumber = 1), team(place = 2, startNumber = 2))),
+                match(
+                    finishedAt = null,
+                    teams = listOf(team(out = true, startNumber = 1), team(out = true, startNumber = 2)),
+                ),
+            )
+        )
+
+        assertTrue(AutoRoundProgressionLogic.roundIsComplete(allOut))
     }
 
     /**
@@ -276,5 +322,76 @@ class AutoRoundProgressionLogicTest {
         )
 
         assertFalse(AutoRoundProgressionLogic.roundIsComplete(timeTrial))
+    }
+
+    // --- Vermerk ---
+
+    /** Ein unberührter Lauf — keiner der drei Zeitstempel gesetzt — zeigt den Vermerk. */
+    @Test
+    fun anUntouchedMatchShowsTheNotice() {
+        assertTrue(
+            AutoRoundProgressionLogic.visibleRecalculationNotice(
+                pairingsRecalculatedAt = now,
+                activatedAt = null,
+                startedAt = null,
+                finishedAt = null,
+            ) != null
+        )
+    }
+
+    /** Aktivierung blendet den Vermerk aus — die Paarung ist damit für den Start gesetzt. */
+    @Test
+    fun anActivatedMatchHidesTheNotice() {
+        assertFalse(
+            AutoRoundProgressionLogic.visibleRecalculationNotice(
+                pairingsRecalculatedAt = now,
+                activatedAt = now,
+                startedAt = null,
+                finishedAt = null,
+            ) != null
+        )
+    }
+
+    /** Ist-Start blendet den Vermerk ebenfalls aus, auch ohne Aktivierung. */
+    @Test
+    fun aStartedMatchHidesTheNotice() {
+        assertFalse(
+            AutoRoundProgressionLogic.visibleRecalculationNotice(
+                pairingsRecalculatedAt = now,
+                activatedAt = null,
+                startedAt = now,
+                finishedAt = null,
+            ) != null
+        )
+    }
+
+    /**
+     * Beenden blendet den Vermerk aus, obwohl `finishMatchInternal` dabei `activatedAt` zurücksetzt
+     * — genau der Fall, den die geteilte Funktion beheben soll: Ohne die Prüfung auf `finishedAt`
+     * käme der Vermerk am beendeten Lauf wieder hervor.
+     */
+    @Test
+    fun aFinishedMatchHidesTheNotice() {
+        assertFalse(
+            AutoRoundProgressionLogic.visibleRecalculationNotice(
+                pairingsRecalculatedAt = now,
+                activatedAt = null,
+                startedAt = null,
+                finishedAt = now,
+            ) != null
+        )
+    }
+
+    /** Ohne Vermerk in der Datenbank bleibt es bei `null`, unabhängig vom Zustand des Laufs. */
+    @Test
+    fun noNoticeStaysNull() {
+        assertTrue(
+            AutoRoundProgressionLogic.visibleRecalculationNotice(
+                pairingsRecalculatedAt = null,
+                activatedAt = null,
+                startedAt = null,
+                finishedAt = null,
+            ) == null
+        )
     }
 }
