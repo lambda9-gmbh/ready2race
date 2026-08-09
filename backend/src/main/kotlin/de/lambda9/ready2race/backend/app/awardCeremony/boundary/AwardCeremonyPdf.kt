@@ -102,22 +102,40 @@ object AwardCeremonyPdf {
     }
 
     private fun layoutOf(sheet: AwardCeremonySheet): Layout {
-        val scale = scaleFor(sheet)
-        return Layout(sheet, scale, rankPagesOf(sheet, scale))
+        val (scale, fitsOnOnePage) = fitFor(sheet)
+        // Die Stufensuche hat den Bogen auf dieser Stufe bereits gesetzt und gezählt. Im Normalfall
+        // passt er, und die Aufteilung ist damit schon beantwortet - eine zweite Messung derselben
+        // Sache wäre je Bogen ein kompletter überflüssiger A4-Satz.
+        val rankPages = if (fitsOnOnePage) listOf(sheet.ranks) else splitRankPages(sheet, scale)
+        return Layout(sheet, scale, rankPages)
     }
 
-    internal fun scaleFor(sheet: AwardCeremonySheet): Scale =
-        scales.firstOrNull { pagesOf(sheet, it, sheet.ranks, continued = false) == 1 } ?: scales.last()
+    /** Die gewählte Stufe samt der Messung, die zu ihr geführt hat. */
+    internal data class Fit(
+        val scale: Scale,
+        /** Auf dieser Stufe kommt der ganze Bogen mit einem Blatt aus. */
+        val fitsOnOnePage: Boolean,
+    )
 
     /**
-     * Die Rangblöcke je Blatt. Der Normalfall - alles passt auf ein Blatt - kostet genau eine
-     * Messung und ergibt genau einen Eintrag.
+     * Die erste Stufe, auf der der Bogen mit einem Blatt auskommt - sonst die unterste, der lesbare
+     * Boden der Leiter.
      */
-    private fun rankPagesOf(sheet: AwardCeremonySheet, scale: Scale): List<List<AwardCeremonyRank>> {
-        if (pagesOf(sheet, scale, sheet.ranks, continued = false) == 1) {
-            return listOf(sheet.ranks)
+    internal fun fitFor(sheet: AwardCeremonySheet): Fit {
+        scales.forEach { scale ->
+            if (pagesOf(sheet, scale, sheet.ranks, continued = false) == 1) return Fit(scale, true)
         }
+        return Fit(scales.last(), fitsOnOnePage = false)
+    }
 
+    /** Sichtbar bis zur Modulgrenze, damit der Test die Wahl der Stufe für sich prüfen kann. */
+    internal fun scaleFor(sheet: AwardCeremonySheet): Scale = fitFor(sheet).scale
+
+    /**
+     * Die Rangblöcke je Blatt für einen Bogen, der auch auf der untersten Stufe nicht auf ein Blatt
+     * passt. Der Normalfall kommt hier gar nicht an - er ist mit der Stufensuche schon entschieden.
+     */
+    private fun splitRankPages(sheet: AwardCeremonySheet, scale: Scale): List<List<AwardCeremonyRank>> {
         val pages = mutableListOf<List<AwardCeremonyRank>>()
         var rest = sheet.ranks
         while (rest.isNotEmpty()) {
