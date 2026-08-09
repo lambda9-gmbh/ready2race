@@ -286,7 +286,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                     fontSize: scaled('1.4rem', '2.8vw', '4.5rem'),
                                     fontWeight: 800,
                                     lineHeight: 1,
-                                    minWidth: '1.8em',
+                                    minWidth: '1.4em',
                                     textAlign: 'center',
                                     flexShrink: 0,
                                 }}>

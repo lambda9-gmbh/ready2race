@@ -104,7 +104,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                                 fontSize: scaled('1.4rem', '2.8vw', '4.5rem'),
                                 fontWeight: 800,
                                 lineHeight: 1,
-                                minWidth: '1.8em',
+                                minWidth: '1.4em',
                                 textAlign: 'center',
                                 flexShrink: 0,
                             }}>
@@ -124,7 +124,7 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                         </Box>
                         {/* Ein langer DNF-Grund darf den Vereinsnamen nicht überlagern:
                             rechts bündig in der eigenen Hälfte umbrechen. */}
-                        <Stack alignItems="flex-end" sx={{flexShrink: 0, maxWidth: '45%'}}>
+                        <Stack alignItems="flex-end" sx={{flexShrink: 0, maxWidth: '35%'}}>
                             <Typography
                                 sx={{
                                     fontSize: scaled('0.9rem', '1.5vw', '2.2rem'),
