@@ -98,23 +98,41 @@ const TeamDialog = ({
 
     return (
         <Dialog open onClose={onClose} fullWidth maxWidth="sm">
+            {/*
+                Startnummer und Mannschaftsname, nie die Kette: die stand hier in vollen Namen und
+                war auf dem Telefon fünf Zeilen Titeltext — unmittelbar darüber, wo sie gleich
+                darunter noch einmal steht.
+            */}
             <DialogTitle sx={{pr: 6}}>
-                {team.startNumber != null && `#${team.startNumber} — `}
-                {team.teamName ?? team.clubsFull}
+                {[team.startNumber != null ? `#${team.startNumber}` : null, team.teamName]
+                    .filter(Boolean)
+                    .join(' — ')}
                 <IconButton onClick={onClose} sx={{position: 'absolute', right: 8, top: 8}}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
             <DialogContent>
                 <Stack spacing={2}>
-                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                        {/*
-                            Die volle Kette, nie die Kurzform: der Dialog ist die Stelle, an der
-                            nachgesehen wird, welcher Verein genau gemeint ist.
-                        */}
-                        {team.clubsFull !== '' && (
-                            <Typography variant="body2">{team.clubsFull}</Typography>
-                        )}
+                    {/*
+                        Die volle Kette, nie die Kurzform: der Dialog ist die Stelle, an der
+                        nachgesehen wird, welcher Verein genau gemeint ist. Sie steht in einer
+                        eigenen Zeile und nicht mehr zwischen den Schildern — dort schob sie am
+                        Telefon jedes Schild in eine eigene Zeile.
+                    */}
+                    {team.clubsFull !== '' && (
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            aria-label={t('event.liveDashboard.team.clubs')}>
+                            {team.clubsFull}
+                        </Typography>
+                    )}
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        flexWrap="wrap"
+                        useFlexGap>
                         {/*
                             Die Team-Ampel hält Grün den Teilnahmebedingungen vor: Rechnung und
                             Wasser können sie nur verschlechtern, nie bestätigen (siehe

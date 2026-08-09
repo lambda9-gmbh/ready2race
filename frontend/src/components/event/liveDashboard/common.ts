@@ -65,18 +65,67 @@ export const crewMemberLabel = (member: LiveDashboardCrewMemberDto): string => {
 }
 
 /**
- * Ob unter dem Mannschaftsnamen noch die Vereinskette steht. Trägt der Name den Verein bereits —
- * bei reinen Vereinsbooten der Regelfall —, stünde er sonst zweimal untereinander. Geprüft wird
- * gegen beide Fassungen der Kette, weil die Karte je nach Breite die eine oder die andere zeigt
- * und die Entscheidung nur einmal fallen kann.
+ * Ob die Zeile eine Vereinskette bekommt. Sie steht immer in der kleinen grauen Zeile und nie in
+ * der Überschrift — die trägt nur den Mannschaftsnamen (`#1`, `#2`), und den haben die wenigsten
+ * Boote. Stand die Kette dort, wurde aus jedem vereinsgemischten Boot zwei Zeilen Titeltext.
+ *
+ * Weggelassen wird sie nur, wenn der Mannschaftsname den Verein bereits trägt — sonst stünde er
+ * zweimal untereinander. Geprüft wird gegen beide Fassungen, weil die Karte je nach Breite die
+ * eine oder die andere zeigt und die Entscheidung nur einmal fallen kann.
  */
 export const teamShowsClubLine = (
     team: Pick<LiveDashboardTeamDto, 'teamName' | 'clubsShort' | 'clubsFull'>,
 ): boolean =>
-    team.teamName != null &&
     team.clubsFull !== '' &&
-    !team.teamName.includes(team.clubsFull) &&
-    !team.teamName.includes(team.clubsShort)
+    (team.teamName == null ||
+        (!team.teamName.includes(team.clubsFull) && !team.teamName.includes(team.clubsShort)))
+
+/** Trennzeichen der Kette — dieselbe Zeichenfolge wie `ClubComposition.SEPARATOR` im Backend. */
+export const CLUB_CHAIN_SEPARATOR = ' / '
+
+/**
+ * Wie viele Zeichen der Kurzform-Kette die schmale Karte trägt, bevor gekürzt wird.
+ *
+ * Nachgemessen am 09.08.2026 im Browser an der echten Karte (390 px Telefon, Roboto 14 px = MUI
+ * `body2`, im Mittel 6,6 px je Zeichen): der Vereinszeile bleiben 277 px, also gut 42 Zeichen je
+ * Zeile und rund 84 auf den zwei Zeilen, die sie hoch werden darf. Umgebrochen wird an den
+ * Trennern, eine Zeile füllt sich also nie ganz — der Abschlag darauf ergibt die 72.
+ */
+export const CLUB_CHAIN_NARROW_CHARS = 72
+
+/**
+ * Dasselbe für eine Karte, die bereits Ergebnisse zeigt: Zeit, Platz und Ampel nehmen sich feste
+ * Spalten, und der Vereinszeile bleiben am Telefon nur noch 149 px (nachgemessen wie oben) — etwa
+ * 22 Zeichen je Zeile. Ohne diesen zweiten Wert schnitte die Zeilenbegrenzung mitten im
+ * Vereinsnamen ab, und genau das soll das `+n` verhindern.
+ */
+export const CLUB_CHAIN_NARROW_RESULT_CHARS = 40
+
+/**
+ * Die Kurzform-Kette für die schmale Karte: so viele **ganze** Vereinsnamen, wie in etwa zwei
+ * Zeilen passen, der Rest als `+n`. Aus `Humlebæk Roklub / Nakskov Roklub / Kerteminde Roklub …`
+ * wird `Humlebæk Roklub / Nakskov Roklub +1`.
+ *
+ * Entschieden wird nach Textlänge und nicht nach einer festen Vereinszahl: zwei kurze dänische
+ * Vereine stehen noch nebeneinander, wo zwei lange deutsche schon abfallen. Ein Vereinsname wird
+ * dabei nie zerrissen — lieber steht ein einzelner überlanger Name allein da (und läuft in der
+ * Zeilenbegrenzung aus), als dass die Anzeige einen halben Verein behauptet.
+ *
+ * Nur für die schmale Stufe: ab 480 px zeigt die Karte die vollständige Kette in vollen Namen.
+ */
+export const shortenClubChain = (
+    chain: string,
+    maxChars: number = CLUB_CHAIN_NARROW_CHARS,
+): string => {
+    if (chain.length <= maxChars) return chain
+
+    const clubs = chain.split(CLUB_CHAIN_SEPARATOR)
+    for (let keep = clubs.length - 1; keep >= 1; keep--) {
+        const shortened = `${clubs.slice(0, keep).join(CLUB_CHAIN_SEPARATOR)} +${clubs.length - keep}`
+        if (shortened.length <= maxChars || keep === 1) return shortened
+    }
+    return chain
+}
 
 /**
  * DOM-Id der Karte eines Eintrags, geteilt zwischen den Render-Schleifen und dem
@@ -128,6 +177,50 @@ export const matchControls = (
  */
 export const teamHasResult = (team: LiveDashboardTeamDto): boolean =>
     team.deregistered || team.failed || team.place != null || team.time != null
+
+/**
+ * Ob der Lauf überhaupt schon etwas gewertet hat — dieselbe Bedingung, unter der die Karte ihre
+ * Ergebnisspalten aufzieht. Eine Abmeldung zählt bewusst nicht dazu: sie steht oft schon vor dem
+ * Start fest und soll die Anzeige nicht umsortieren, solange nichts gefahren ist.
+ */
+export const matchHasResults = (teams: LiveDashboardTeamDto[]): boolean =>
+    teams.some(team => team.time != null || team.place != null || team.failed)
+
+/**
+ * Rang der vier Gruppen, in denen die Boote untereinander stehen: gewertet, noch offen,
+ * ausgeschieden, abgemeldet.
+ *
+ * Die noch offenen Boote stehen bewusst über den ausgeschiedenen — auf sie wartet noch jemand,
+ * während bei DSQ/DNF nichts mehr zu entscheiden ist.
+ */
+const teamOrderGroup = (team: LiveDashboardTeamDto): number =>
+    team.place != null ? 0 : team.deregistered ? 3 : team.failed ? 2 : 1
+
+/**
+ * Die Boote eines Laufs in Anzeigereihenfolge: nach Bahn, solange nichts gewertet ist — und nach
+ * Platz, sobald es etwas zu sehen gibt. Der Erste steht dann oben, so wie ihn der Schiedsrichter
+ * ins Ziel kommen sieht; ohne das musste er die Plätze in der Bahnliste zusammensuchen.
+ *
+ * **Die Zahl links bleibt die Bahn** und wird nie zur Zählnummer der Liste — sie ist die einzige
+ * Verbindung zwischen der Karte und dem, was auf dem Wasser liegt.
+ *
+ * Solange kein einziges Boot ein Ergebnis hat, bleibt die Reihenfolge des Backends stehen (dort
+ * nach Startnummer sortiert): ein Umsortieren, das nichts aussagt, verwirrt nur.
+ */
+export const teamsInDisplayOrder = (teams: LiveDashboardTeamDto[]): LiveDashboardTeamDto[] => {
+    if (!matchHasResults(teams)) return teams
+
+    return [...teams].sort((a, b) => {
+        const group = teamOrderGroup(a) - teamOrderGroup(b)
+        if (group !== 0) return group
+        // Innerhalb der gewerteten Boote entscheidet der Platz, in allen anderen Gruppen die Bahn.
+        // Boote ohne Bahn fallen ans Ende ihrer Gruppe, statt die Sortierung zu stören.
+        if (a.place != null && b.place != null) return a.place - b.place
+        if (a.startNumber == null) return b.startNumber == null ? 0 : 1
+        if (b.startNumber == null) return -1
+        return a.startNumber - b.startNumber
+    })
+}
 
 /** Die Boote, für die beim Beenden eines Laufs noch zu entscheiden ist. */
 export const openResultTeams = (match: {teams: LiveDashboardTeamDto[]}): LiveDashboardTeamDto[] =>
