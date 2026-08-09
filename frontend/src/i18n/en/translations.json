@@ -1702,6 +1702,20 @@
       "skipConfirm_other": "Only this single run is cancelled: \"{{label}}\" at {{time}}. The other {{count}} runs of round \"{{round}}\" stay unchanged.",
       "skipConfirmOnly": "The run \"{{label}}\" at {{time}} is cancelled and will be passed over by the chain.",
       "skipConfirmFree": "The programme item \"{{label}}\" at {{time}} is cancelled.",
+      "advance": {
+        "title": "Move schedule up",
+        "intro": "\"{{label}}\" at {{time}} has been cancelled. That frees up {{minutes}} minutes.",
+        "targetSlot": "Up to slot",
+        "help": "Every slot from the next one up to and including the selected slot moves {{minutes}} minutes earlier. Everything after it keeps its time — a buffer appears there.",
+        "apply": "Move up",
+        "decline": "Don't move up",
+        "success": "The schedule was moved up by {{minutes}} minutes.",
+        "error": {
+          "noDelta": "No freed-up time can be derived from this slot — it has no planned duration and no slot after it on the same race day. Use \"Adjust schedule\" to shift the timeline by hand.",
+          "slotNotSkipped": "This slot is not (or no longer) cancelled — the schedule only moves into time that a cancellation frees up. Please reload the schedule.",
+          "targetInvalid": "That slot is not among the ones that can move up. Please reload the schedule and pick a slot after the cancelled one."
+        }
+      },
       "unskipConfirm": "Undo cancellation for \"{{label}}\" at {{time}}? The slot will be considered normally again.",
       "activate": "Activate race",
       "activateConfirm": "Activate race \"{{label}}\" at {{time}} now?",

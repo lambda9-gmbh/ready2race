@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.eventSchedule.entity.AdvanceScheduleRequest
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.ShiftScheduleRequest
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.UpsertScheduleSlotRequest
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
@@ -114,6 +115,19 @@ fun Route.eventSchedule() {
                 val setupRoundId = !pathParam("setupRoundId", uuid)
 
                 EventScheduleService.setRoundSkipped(eventId, setupRoundId, userId = user.id!!)
+            }
+        }
+        // Vorziehen nach einer Absage. Bewusst UPDATE EVENT allein, nicht wie /skip zusätzlich
+        // UPDATE LIVE_DASHBOARD: Der Schiedsrichter sagt einen Lauf ab, den Zeitplan baut das
+        // Regattabüro um - dieselbe Grenze wie bei /shift.
+        post("/slot/{slotId}/advance") {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val slotId = !pathParam("slotId", uuid)
+                val body = !receiveKIO(AdvanceScheduleRequest.example)
+
+                EventScheduleService.advanceAfterSkippedSlot(eventId, slotId, body, user.id!!)
             }
         }
         post("/shift") {
