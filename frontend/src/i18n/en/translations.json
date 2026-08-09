@@ -629,6 +629,11 @@
       "RESULTS_COMPLETE": "Fully scored matches too",
       "hint": "Applies to the athlete board, the kiosk view and the public results page. Finished matches only by default: as long as a match is not finished a time penalty can still arrive, and a result that is already public cannot be taken back."
     },
+    "executionAutoRefresh": {
+      "label": "Keep the execution page up to date automatically",
+      "seconds": "Interval in seconds",
+      "hint": "The execution page picks up times, results, matches, round changes and check-ins in the background at the configured interval — without reloading the page. Allowed are 5 to 60 seconds, 5 by default. The sync rests while a dialog is open."
+    },
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -936,6 +941,10 @@
         "tabTitle": "Live",
         "progress": {
           "error": "The matches of the competition could not be loaded."
+        },
+        "autoRefresh": {
+          "lastUpdated": "Data from {{time}}",
+          "disconnected": "No connection"
         },
         "nextRound": {
           "create": "Create next round",

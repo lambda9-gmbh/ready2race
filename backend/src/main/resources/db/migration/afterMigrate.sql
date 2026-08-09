@@ -574,6 +574,8 @@ select e.id,
        e.chain_progression_mode,
        e.show_breaks_on_public_boards,
        e.public_results_visibility,
+       e.execution_auto_refresh,
+       e.execution_auto_refresh_seconds,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        max(cpcc.end_at)                                                                 as challenge_end,
        err.event is not null                                                            as registrations_finalized

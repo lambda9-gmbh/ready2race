@@ -1437,13 +1437,20 @@ paths:
       - $ref: '#/components/parameters/competitionId'
     get:
       operationId: getCompetitionExecutionProgress
+      description: "Polled by the execution page in the interval configured on the event. Send the ETag of the previous answer as If-None-Match to get a 304 without a body while nothing changed."
       responses:
         200:
           description: Competition execution progress successfully retrieved
+          headers:
+            ETag:
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CompetitionExecutionProgressDto'
+        304:
+          description: Unchanged since the ETag sent as If-None-Match
         400:
           $ref: '#/components/responses/400'
         401:
@@ -9255,6 +9262,8 @@ components:
         - allowSelfSubmission
         - submissionNeedsVerification
         - allowParticipantSelfRegistration
+        - executionAutoRefresh
+        - executionAutoRefreshSeconds
       properties:
         id:
           type: string
@@ -9315,6 +9324,14 @@ components:
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
+        executionAutoRefresh:
+          type: boolean
+          description: "Whether the execution page keeps itself up to date in the background"
+        executionAutoRefreshSeconds:
+          type: integer
+          minimum: 5
+          maximum: 60
+          description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
         challengesFinished:
           type: boolean
 
@@ -9421,6 +9438,8 @@ components:
         - allowSelfSubmission
         - submissionNeedsVerification
         - allowParticipantSelfRegistration
+        - executionAutoRefresh
+        - executionAutoRefreshSeconds
       properties:
         name:
           type: string
@@ -9466,6 +9485,14 @@ components:
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
+        executionAutoRefresh:
+          type: boolean
+          description: "Whether the execution page keeps itself up to date in the background"
+        executionAutoRefreshSeconds:
+          type: integer
+          minimum: 5
+          maximum: 60
+          description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
 
     UpdateEventRequest:
       type: object
@@ -9476,6 +9503,8 @@ components:
         - allowSelfSubmission
         - submissionNeedsVerification
         - allowParticipantSelfRegistration
+        - executionAutoRefresh
+        - executionAutoRefreshSeconds
       properties:
         name:
           type: string
@@ -9519,6 +9548,14 @@ components:
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
+        executionAutoRefresh:
+          type: boolean
+          description: "Whether the execution page keeps itself up to date in the background"
+        executionAutoRefreshSeconds:
+          type: integer
+          minimum: 5
+          maximum: 60
+          description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
 
 
     # eventDay

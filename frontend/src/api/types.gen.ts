@@ -985,6 +985,14 @@ export type CreateEventRequest = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
 }
 
 export type CustomFontDto = {
@@ -1247,6 +1255,14 @@ export type EventDto = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
     challengesFinished?: boolean
 }
 
@@ -3114,6 +3130,14 @@ export type UpdateEventRequest = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
 }
 
 export type UpdateGlobalConfigurationsRequest = {
@@ -4160,7 +4184,7 @@ export type GetCompetitionExecutionProgressData = {
 
 export type GetCompetitionExecutionProgressResponse = CompetitionExecutionProgressDto
 
-export type GetCompetitionExecutionProgressError = BadRequestError | ApiError
+export type GetCompetitionExecutionProgressError = unknown | BadRequestError | ApiError
 
 export type DeleteCurrentCompetitionExecutionRoundData = {
     path: {

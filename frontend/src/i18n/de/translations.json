@@ -629,6 +629,11 @@
       "RESULTS_COMPLETE": "Auch vollständig gewertete Läufe",
       "hint": "Gilt für Athleten-Anzeige, Kiosk-Ansicht und die öffentliche Ergebnisseite. Standardmäßig nur beendete Läufe: solange ein Lauf nicht beendet ist, kann noch eine Zeitstrafe kommen, und ein bereits veröffentlichtes Ergebnis lässt sich nicht zurückholen."
     },
+    "executionAutoRefresh": {
+      "label": "Durchführungsseite automatisch aktualisieren",
+      "seconds": "Takt in Sekunden",
+      "hint": "Die Durchführungsseite zieht Zeiten, Ergebnisse, Läufe, Rundenwechsel und Check-ins im eingestellten Takt im Hintergrund nach — ohne die Seite neu zu laden. Erlaubt sind 5 bis 60 Sekunden, voreingestellt sind 5. Während ein Dialog offen ist, ruht der Abgleich."
+    },
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -936,6 +941,10 @@
         "tabTitle": "Durchführung",
         "progress": {
           "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
+        },
+        "autoRefresh": {
+          "lastUpdated": "Daten von {{time}}",
+          "disconnected": "Keine Verbindung"
         },
         "nextRound": {
           "create": "Erstelle nächste Runde",

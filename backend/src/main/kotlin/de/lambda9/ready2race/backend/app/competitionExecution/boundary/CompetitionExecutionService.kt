@@ -327,10 +327,19 @@ object CompetitionExecutionService {
         noData
     }
 
+    /**
+     * Der Stand der Durchführung: Runden, Läufe, Ergebnisse, Steg-Scans.
+     *
+     * Antwortet mit ETag, weil die Durchführungsseite diesen Endpunkt im eingestellten Takt abruft
+     * (siehe `event.execution_auto_refresh`). Ein unveränderter Stand kommt dann als 304 ohne
+     * Rumpf zurück, und die Seite rührt ihren State nicht an - das ist der Unterschied zwischen
+     * einem Abgleich, der nebenbei läuft, und einem, der alle fünf Sekunden das Rendern auslöst.
+     * Gespart wird die Übertragung, nicht die Abfrage.
+     */
     fun getProgress(
         eventId: UUID,
         competitionId: UUID,
-    ): App<ServiceError, ApiResponse.Dto<CompetitionExecutionProgressDto>> =
+    ): App<ServiceError, ApiResponse.ETagged<CompetitionExecutionProgressDto>> =
         KIO.comprehension {
             val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
@@ -368,7 +377,7 @@ object CompetitionExecutionService {
                 round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
                     .toCompetitionRoundDto(event.mixedTeamTerm, lastScanByParticipant)
             }.map {
-                ApiResponse.Dto(
+                ApiResponse.ETagged(
                     CompetitionExecutionProgressDto(
                         rounds = it,
                         canNotCreateRoundReasons,
