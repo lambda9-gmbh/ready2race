@@ -170,8 +170,12 @@ Vermerk „geteilt".
 ## 7. Seitenlayout
 
 Ein `document(format = PDRectangle.A4) { page { … } }` je Ehrung, im DSL der Ergebnisliste
-(`ResultsService.buildPdf`). Ein `page { }` ist im Renderer die Seitengrenze — „eine Kategorie
-= eine Seite" ist damit strukturell garantiert und nicht das Ergebnis einer Höhenrechnung.
+(`ResultsService.buildPdf`).
+
+**Korrektur gegenüber dem ursprünglichen Entwurf:** Ein `page { }` ist **keine** harte
+Seitengrenze. `Page.render` gibt eine Liste von `PDPage` zurück und legt bei Überlauf über einen
+Callback nach. „Eine Kategorie = eine Seite" ist damit nicht strukturell garantiert, sondern
+muss erzwungen werden — siehe [Seitenpassung](#seitenpassung).
 
 ```
                         SIEGEREHRUNG                         18 pt fett, zentriert
@@ -209,13 +213,30 @@ Ein `document(format = PDRectangle.A4) { page { … } }` je Ehrung, im DSL der E
 - Die Kopfzeile „Wertung: …" entfällt für Ehrungen ohne Kategorie.
 - Die Lauf-Angabe rechts entfällt in Teilen, die fehlen (kein Laufname, keine Uhrzeit).
 
-### Umbruchschutz
+### Seitenpassung
 
-Drei Achter mit Steuermann ergeben 27 Personenzeilen und sprengen A4. Deshalb sinken die
-Personenzeilen einmalig um eine Stufe (12 → 10 pt, Zusatzzeilen 10 → 9 pt), sobald die Seite
-mehr als 18 Personenzeilen trägt; Rangzahl und Kopf bleiben unverändert lesbar. Die Regel ist
-eine reine Logikfunktion `AwardCeremonyLogic.densityFor(personRows): Density` und damit
-testbar, ohne das PDF zu vermessen.
+Der erste Entwurf wollte die Schriftgröße aus der **Personenzahl** ableiten („ab 19 Zeilen eine
+Stufe enger"). Das ist beim Bau widerlegt worden und wurde ersetzt.
+
+Der Grund: die Zahl der Personen sagt nichts über die Zahl der **gesetzten** Zeilen. Eine
+Renngemeinschaft trägt eine mehrgliedrige Vereinskette in der Titelzeile, eine Zeile „Meldender
+Verein" und hinter jedem Namen den Heimatverein — und jede dieser Zeilen kann umbrechen, wenn
+die Vereine ausgeschrieben sind. Gemessen: drei Boote à **vier** Ruderern, abwechselnd aus „Der
+Hamburger und Germania Ruder Club von 1836 e.V." und „Rostocker Ruderclub von 1885 e.V.",
+liefen auf zwei Seiten — bei zwölf Personenzeilen, weit unter der geplanten Schwelle. Das
+Verhalten war über die Bootsgröße nicht einmal monoton: bei sieben Personen passte es zufällig
+wieder, weil dort die kompakte Stufe einsetzte. Und die Überlaufseite trägt keinen Kopf: die
+Sprecherin bekäme ein Blatt ohne Veranstaltung, Rennnummer und Wertung.
+
+Stattdessen wird **gemessen statt geschätzt**. `AwardCeremonyPdf` kennt eine geordnete Folge von
+Schriftstufen, von großzügig nach eng. Je Bogen wird probeweise gesetzt und `numberOfPages`
+geprüft; genommen wird die erste Stufe, die genau eine Seite ergibt, sonst die engste. Erst
+danach entsteht das eigentliche Dokument mit allen Bögen in ihrer jeweiligen Stufe. Die
+Rangzahl bleibt in allen Stufen gleich groß — sie muss vom Pult aus lesbar bleiben.
+
+Der Preis sind zwei Durchgänge über dieselbe Layoutfunktion. Bei einer Handvoll Blättern je
+Ehrung ist das nicht messbar, und es ist die einzige Art, die Zusicherung tatsächlich zu geben
+statt sie zu behaupten.
 
 ## 8. Aufbau im Code
 
@@ -224,9 +245,9 @@ dem Schnitt der bestehenden Domänen:
 
 | Datei | Aufgabe |
 |---|---|
-| `entity/AwardCeremony.kt` | `AwardCeremonyKey`, `AwardCeremonySelection`, `AwardCeremonyChoiceDto`, `AwardCeremonySheet`, `AwardCeremonyRank`, `AwardCeremonyTeam`, `AwardCeremonyAthlete`, `Density` |
+| `entity/AwardCeremony.kt` | `AwardCeremonyKey`, `AwardCeremonySelectionRequest`, `AwardCeremonyChoiceDto`, `AwardCeremonySheet`, `AwardCeremonyRank`, `AwardCeremonyTeam`, `AwardCeremonyAthlete` |
 | `entity/AwardCeremonyError.kt` | die vier Fehler samt ErrorCodes |
-| `boundary/AwardCeremonyLogic.kt` | **rein**: Gruppierung nach Kategorie, Standard-Ranking mit Gleichständen, Vereinsverdichtung, `densityFor`, Formatierung von Strafe/Bootszeile/Laufangabe |
+| `boundary/AwardCeremonyLogic.kt` | **rein**: Gruppierung nach Kategorie, Standard-Ranking mit Gleichständen, Vereinsverdichtung, Formatierung von Strafe/Bootszeile/Laufangabe |
 | `boundary/AwardCeremonyService.kt` | lädt Daten, baut die Bögen, ruft den Renderer, liefert `ApiResponse.File` |
 | `boundary/AwardCeremonyPdf.kt` | das `document { }`-Layout, sonst nichts |
 | `boundary/awardCeremony.kt` | Ktor-Routen |
@@ -265,7 +286,9 @@ Registrierung der Route in `plugins/Routing.kt` neben `results()` und `awardCert
 8. DNF / DSQ / abgemeldet ⇒ fallen raus und verschieben die Ränge der übrigen.
 9. Fehlende Zeit, fehlender Bootsname, fehlende Strafe, fehlender Laufname ⇒ Zeile bzw.
    Bestandteil entfällt, nirgends ein leerer Platzhalter.
-10. `densityFor`: 18 Zeilen normal, 19 Zeilen reduziert.
+10. Seitenpassung: der Härtefall aus [Seitenpassung](#seitenpassung) — Renngemeinschaft mit
+    ausgeschriebenen Vereinsnamen, abweichender meldender Verein, Zeitstrafe — ergibt genau
+    eine Seite, und der letzte Rang steht noch darauf.
 
 **`AwardCeremonyPdfTest`** — Seitenzahl gleich Zahl der Ehrungen; Text je Seite über
 PDFBox-Extraktion (`PDFTextStripper` mit `startPage`/`endPage`), so wie es `PdfTest` bereits
