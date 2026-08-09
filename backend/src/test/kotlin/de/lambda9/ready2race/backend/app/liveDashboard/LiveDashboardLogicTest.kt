@@ -27,24 +27,24 @@ class LiveDashboardLogicTest {
     // --- teamOnWaterAt ---
 
     @Test
-    fun onWaterWhenWholeCrewCheckedOut() {
+    fun onWaterWhenWholeCrewCheckedIn() {
         val scans = listOf(
-            "EXIT" to start.minusMinutes(10),
-            "EXIT" to start.minusMinutes(8),
-            "EXIT" to start.minusMinutes(12),
+            "ENTRY" to start.minusMinutes(10),
+            "ENTRY" to start.minusMinutes(8),
+            "ENTRY" to start.minusMinutes(12),
         )
         assertEquals(start.minusMinutes(8), LiveDashboardLogic.teamOnWaterAt(scans))
     }
 
     @Test
-    fun notOnWaterWhenAnyCrewMemberMissingOrCheckedIn() {
+    fun notOnWaterWhenAnyCrewMemberMissingOrCheckedOut() {
         // Eine Person nie gescannt
         assertNull(
-            LiveDashboardLogic.teamOnWaterAt(listOf("EXIT" to start, null))
+            LiveDashboardLogic.teamOnWaterAt(listOf("ENTRY" to start, null))
         )
-        // Eine Person wieder eingecheckt (letzter Scan ENTRY)
+        // Eine Person wieder ausgecheckt (letzter Scan EXIT) - zurück am Steg
         assertNull(
-            LiveDashboardLogic.teamOnWaterAt(listOf("EXIT" to start, "ENTRY" to start.plusMinutes(1)))
+            LiveDashboardLogic.teamOnWaterAt(listOf("ENTRY" to start, "EXIT" to start.plusMinutes(1)))
         )
     }
 

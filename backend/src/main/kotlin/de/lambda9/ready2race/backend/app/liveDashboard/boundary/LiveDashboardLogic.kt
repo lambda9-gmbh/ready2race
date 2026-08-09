@@ -90,17 +90,19 @@ object LiveDashboardLogic {
      */
     /**
      * Wann ist die Mannschaft aufs Wasser gegangen? Ein Boot gilt als "auf dem Wasser", wenn
-     * JEDE bekannte Person der Crew zuletzt ausgecheckt ist (letzter Scan = EXIT am Steg) -
-     * dann zählt der späteste dieser Scans als Ablegezeit. Fehlt auch nur ein Scan oder ist
-     * jemand wieder eingecheckt, ist das Boot nicht (mehr) vollständig draußen -> null.
-     * Ohne bekannte Crew lässt sich nichts belegen -> ebenfalls null; die Anzeige behandelt
-     * null bei aktivem Lauf als Fehler, denn genau dann muss das Boot draußen sein.
+     * JEDE bekannte Person der Crew zuletzt eingecheckt ist (letzter Scan = ENTRY am Steg) -
+     * dann zählt der späteste dieser Scans als Ablegezeit. Das Einchecken IST die Anmeldung
+     * aufs Wasser; das Auschecken (EXIT) meldet die zurückgekehrte Crew wieder ab. Fehlt auch
+     * nur ein Scan oder ist jemand schon wieder ausgecheckt, ist das Boot nicht (mehr)
+     * vollständig draußen -> null. Ohne bekannte Crew lässt sich nichts belegen -> ebenfalls
+     * null; die Anzeige behandelt null bei aktivem Lauf als Fehler, denn genau dann muss das
+     * Boot draußen sein.
      *
      * [lastScans] enthält je Crew-Mitglied den letzten Scan (scanType zu Zeitpunkt) oder null,
      * wenn die Person nie gescannt wurde.
      */
     fun teamOnWaterAt(lastScans: List<Pair<String, LocalDateTime>?>): LocalDateTime? =
-        if (lastScans.isNotEmpty() && lastScans.all { it?.first == ParticipantScanType.EXIT.name }) {
+        if (lastScans.isNotEmpty() && lastScans.all { it?.first == ParticipantScanType.ENTRY.name }) {
             lastScans.maxOf { it!!.second }
         } else {
             null
