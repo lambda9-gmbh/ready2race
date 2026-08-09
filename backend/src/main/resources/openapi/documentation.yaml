@@ -3619,6 +3619,38 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/participantRequirement/open/export:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: exportOpenParticipantRequirements
+      description: >-
+        Downloads an xlsx of the registered participants who are still missing requirements -
+        the basis for notifying their clubs. Without requirementId every requirement active at
+        the event counts. Requirements bound to a named participant only apply to that role,
+        and participants with nothing open are left out.
+      parameters:
+        - name: requirementId
+          in: query
+          required: false
+          description: Limits the export to a single requirement.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/participantRequirement/{participantRequirementId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -10359,8 +10391,14 @@ components:
           type: boolean
         requirementColName:
           type: string
-        requirementIsValidValue:
-          type: string
+        requirementIsValidValues:
+          type: array
+          description: >-
+            Values of the requirement column that count as fulfilled. Several are allowed -
+            the DRV list carries both "ja" and "erweitert". Empty or absent means every row
+            counts, which is also what an unmapped requirement column does.
+          items:
+            type: string
 
     ParticipantRequirementCheckForEventUpsertDto:
       type: object
@@ -13427,7 +13465,7 @@ components:
           type: string
           format: date-time
           nullable: true
-          description: "When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known"
+          description: "When the boat went on the water (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known"
 
     LiveDashboardTeamDetailDto:
       type: object
@@ -13706,6 +13744,14 @@ components:
         competitionName:
           type: string
           nullable: true
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab"
+        competitionShortName:
+          type: string
+          nullable: true
+          description: "The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab"
         roundName:
           type: string
           nullable: true
@@ -13759,6 +13805,14 @@ components:
           format: uuid
         competitionName:
           type: string
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer)"
+        competitionShortName:
+          type: string
+          nullable: true
+          description: "The competition's short name (Kurzname)"
         roundName:
           type: string
         matchName:

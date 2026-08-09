@@ -196,23 +196,23 @@ class MatchStatusLogicTest {
     @Test
     fun matchWithoutTeamsCountsZeroInATrackedRound() {
         val round = listOf(
-            listOf(listOf(exit(1), exit(2))),
+            listOf(listOf(entry(1), entry(2))),
             emptyList(),
         )
         assertEquals(listOf(1, 0), MatchStatusLogic.teamsOnWaterPerMatch(round))
     }
 
-    /** Genau die Regel des Dashboards: nur wenn JEDE bekannte Person zuletzt EXIT ist. */
+    /** Genau die Regel des Dashboards: nur wenn JEDE bekannte Person zuletzt ENTRY ist. */
     @Test
-    fun onlyFullyCheckedOutCrewsCount() {
+    fun onlyFullyCheckedInCrewsCount() {
         val round = listOf(
             listOf(
                 // vollständig draußen
-                listOf(exit(1), exit(3)),
-                // eine Person wieder eingecheckt
-                listOf(exit(1), entry(4)),
+                listOf(entry(1), entry(3)),
+                // eine Person wieder ausgecheckt
+                listOf(entry(1), exit(4)),
                 // eine Person nie gescannt
-                listOf(exit(1), null),
+                listOf(entry(1), null),
                 // keine Crew bekannt - lässt sich nichts belegen
                 emptyList(),
             )
@@ -224,7 +224,7 @@ class MatchStatusLogicTest {
     @Test
     fun oneScanAnywhereMakesTheWholeRoundCounted() {
         val round = listOf(
-            listOf(listOf(entry(1), null)),
+            listOf(listOf(exit(1), null)),
             listOf(listOf(null, null)),
         )
         assertEquals(listOf(0, 0), MatchStatusLogic.teamsOnWaterPerMatch(round))

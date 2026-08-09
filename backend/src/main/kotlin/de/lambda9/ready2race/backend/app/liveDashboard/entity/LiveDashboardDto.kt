@@ -121,8 +121,8 @@ data class LiveDashboardTeamDto(
     /** Ob mindestens eine Person für diese Runde umgemeldet wurde. */
     val substituted: Boolean,
     /**
-     * Wann das Boot aufs Wasser gegangen ist (spätester Auscheck-Scan, wenn die gesamte Crew
-     * zuletzt ausgecheckt ist) - null, solange mindestens eine Person nicht ausgecheckt ist
+     * Wann das Boot aufs Wasser gegangen ist (spätester Eincheck-Scan, wenn die gesamte Crew
+     * zuletzt eingecheckt ist) - null, solange mindestens eine Person nicht eingecheckt ist
      * oder keine Crew bekannt ist. Siehe [LiveDashboardLogic.teamOnWaterAt].
      */
     val onWaterAt: LocalDateTime?,

@@ -1365,6 +1365,14 @@ export type EventScheduleSlotDto = {
     durationMinutes?: number | null
     competitionId?: string | null
     competitionName?: string | null
+    /**
+     * The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab
+     */
+    competitionShortName?: string | null
     roundName?: string | null
     matchName?: string | null
     matchId?: string | null
@@ -1857,7 +1865,7 @@ export type LiveDashboardTeamDto = {
     onWaterSeverity: EffectiveSeverity
     substituted: boolean
     /**
-     * When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known
+     * When the boat went on the water (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known
      */
     onWaterAt?: string | null
 }
@@ -2187,7 +2195,10 @@ export type ParticipantRequirementCheckForEventConfigDto = {
     clubColName?: string
     noHeader: boolean
     requirementColName?: string
-    requirementIsValidValue?: string
+    /**
+     * Values of the requirement column that count as fulfilled. Several are allowed - the DRV list carries both "ja" and "erweitert". Empty or absent means every row counts, which is also what an unmapped requirement column does.
+     */
+    requirementIsValidValues?: Array<string>
 }
 
 export type ParticipantRequirementCheckForEventUpsertDto = {
@@ -2860,6 +2871,14 @@ export type UnplannedSetupMatchDto = {
     setupMatchId: string
     competitionId: string
     competitionName: string
+    /**
+     * The competition's race number (Rennnummer)
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname)
+     */
+    competitionShortName?: string | null
     roundName: string
     matchName?: string | null
 }
@@ -5140,6 +5159,22 @@ export type GetActiveParticipantRequirementsForEventError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type ExportOpenParticipantRequirementsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Limits the export to a single requirement.
+         */
+        requirementId?: string
+    }
+}
+
+export type ExportOpenParticipantRequirementsResponse = Blob | File
+
+export type ExportOpenParticipantRequirementsError = BadRequestError | ApiError
 
 export type ActivateParticipantRequirementForEventData = {
     path: {

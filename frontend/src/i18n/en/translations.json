@@ -151,7 +151,10 @@
       "step3": {
         "title": "Value Mappings",
         "info": "Configure how values in your CSV should be interpreted.",
-        "valueMappings": "Value Mappings"
+        "valueMappings": "Value Mappings",
+        "valueWithCount": "{{value}} ({{count}} rows)",
+        "selectedCount": "{{selected}} of {{total}} values selected",
+        "nothingSelected": "Nothing selected — every row counts"
       },
       "error": {
         "noConfig": "Configuration is incomplete",
@@ -621,6 +624,12 @@
     "competition": {
       "competition": "Competition",
       "competitions": "Competitions",
+      "navigation": {
+        "backToEvent": "Back to the event",
+        "filter": "Filter",
+        "showShortNames": "Show short names",
+        "showLongNames": "Show long names"
+      },
       "noCompetitionsAvailable": "No competitions available",
       "identifier": "Identifier",
       "name": "Name",
@@ -1212,7 +1221,7 @@
       "yearsColName": "Column to check year of birth",
       "clubColName": "Column to check for name of club",
       "requirementColName": "Column to check for requirement",
-      "requirementIsValidValue": "Accepted value in requirement column",
+      "requirementIsValidValues": "Accepted values in requirement column",
       "participantsOpen": "Open",
       "participantsApproved": "Approved",
       "tableHint": {
@@ -1227,6 +1236,15 @@
         "content": "Do you really want to cancel the confirmation of the verified participation condition?",
         "ok": "Yes",
         "cancel": "No"
+      },
+      "openExportAction": "Export open requirements",
+      "openExport": {
+        "title": "Export open requirements",
+        "description": "Creates a spreadsheet of every registered participant still missing a requirement, sorted by club so the clubs concerned can be notified. Participants with nothing open are left out.",
+        "requirement": "Requirement",
+        "allRequirements": "All active requirements",
+        "submit": "Export",
+        "error": "The export could not be created."
       }
     },
     "action": {

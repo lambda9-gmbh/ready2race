@@ -21,6 +21,18 @@ export const groupSlotsByDay = (slots: EventScheduleSlotDto[]): DaySection[] => 
 export const slotLabel = (slot: EventScheduleSlotDto): string =>
     slot.name ?? [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' – ')
 
+// Rennnummer und Kurzname des Wettkampfs, wie sie im Zeitplan vor dem Slot-Namen stehen, z. B.
+// "17 CM 4x+". Beides ist optional: der Kurzname ist ein Pflegefeld, das leer bleiben darf, und
+// freie Slots (Programmpunkte) haben gar keinen Wettkampf. Was fehlt, fällt weg - übrig bleibt
+// dann eben nur die Nummer, oder ein leerer String, den die Anzeige nicht rendert.
+export const competitionTag = (competition: {
+    competitionIdentifier?: string | null
+    competitionShortName?: string | null
+}): string =>
+    [competition.competitionIdentifier, competition.competitionShortName]
+        .filter(v => v)
+        .join(' ')
+
 // Editieren ist für freie Slots und für Match-Slots möglich, solange die Setup-Zeile noch
 // existiert (setupMatchId) - das deckt FREE, WAITING und LINKED ab. Nur OBSOLETE (die Setup-Zeile
 // wurde gelöscht/das Match existiert nicht mehr) bleibt ein Sackgasse ohne Bearbeiten. setupMatchId

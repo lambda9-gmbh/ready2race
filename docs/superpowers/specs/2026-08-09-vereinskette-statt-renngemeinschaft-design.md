@@ -2,7 +2,7 @@
 
 **Datum:** 09.08.2026
 **Branch:** `feature/crf-2026`
-**Belegte Migrationsnummer:** `V202608091200`
+**Belegte Migrationsnummern:** `V202608091200`, `V202608091300`
 
 ## Problem
 
@@ -83,6 +83,10 @@ gängige Vereinstypen werden abgekürzt (`Ruderclub` → `RC`, `Rudergesellschaf
 zieht **nach Kotlin um**, weil Board, Athleten-Anzeige und Pflegeseite jetzt dieselbe Regel
 brauchen; die TS-Fassung samt ihrem Test entfällt.
 
+Die Regeln selbst sind **konfigurierbar** und stehen nicht mehr im Code — siehe
+„Kürzungsregeln" weiter unten. `Ruderclub → RC` ist Sportart-Wissen, und ready2race ist keine
+Rudersoftware.
+
 ### Verein je Athlet
 
 ```
@@ -156,10 +160,50 @@ Vereinsnamen erwartet hat. Die Vorlagen haben feste Textkästen. Ob das Feld umb
 überläuft, wird **nicht** blind eingebaut, sondern im Urkunden-Editor nachgesehen und als
 Handtest im Testkatalog geführt.
 
+## Kürzungsregeln
+
+*Nachtrag vom 09.08.2026: die Heuristik gehört konfiguriert, nicht einkompiliert.*
+
+Migration `V202608091300__club_name_rules.sql`, Tabelle `club_name_rule`:
+
+| Spalte | |
+|---|---|
+| `id` | uuid, PK |
+| `kind` | `ABBREVIATION` \| `REMOVE_TERM` \| `REMOVE_YEARS` \| `REMOVE_BRACKETED` |
+| `term` | text, null bei den beiden strukturellen Arten |
+| `replacement` | text, nur bei `ABBREVIATION` |
+| `sort_order` | int — die Reihenfolge entscheidet, `Ruderverein` vor `Verein` |
+| Audit-Spalten | wie überall |
+
+**Keine regulären Ausdrücke in der Oberfläche.** Gepflegt werden Wortpaare
+(`Bestandteil → Kürzel`, wortgenau, Groß-/Kleinschreibung egal) und eine Streichliste literaler
+Bestandteile. Ein Tippfehler in einem Muster könnte sonst die Anzeige aller Vereine zerlegen, ein
+unglücklich verschachteltes Muster den Server hängen — und die Seite bedient jemand, der eine
+Regatta organisiert, kein Backend.
+
+Die beiden strukturellen Regeln lassen sich nicht als Wort ausdrücken und sind deshalb **Schalter**
+statt Listeneinträge: „Gründungsjahre entfernen" (`von 1889`, `v. 1899`, nachgestellte Jahreszahl)
+und „Klammerzusätze mit Zahl entfernen" (`(1879/83)`). Technisch sind es Zeilen der Arten
+`REMOVE_YEARS` / `REMOVE_BRACKETED` ohne `term` — vorhanden heißt aktiv. Damit braucht es keine
+zusätzliche Einstellungstabelle.
+
+**Ausgeliefert wird nur das Sportartübergreifende**: die Rechtsformen (`e.V.`, `e. V.`, `eV`) als
+`REMOVE_TERM` und beide Schalter. Die elf Vereinstyp-Kürzel (`Ruderclub → RC`,
+`Rudergesellschaft → RG`, `Segelverein → SV`, …) kommen als Seed-Datei unter `docs/seeds/` für
+bestehende Installationen — für die CRF 2026 sieht damit alles aus wie heute, ohne dass Rudern im
+Produktkern steht.
+
+**Die Regeln wirken ausschließlich auf die angezeigte Kurzform, nie auf `ClubNameKey`.** Der Key
+ist Primärschlüssel der gepflegten Kurzformen; würde eine Regeländerung ihn verschieben, verlören
+alle gepflegten Einträge still ihre Zuordnung. Seine Normalisierung bleibt deshalb fest
+einkompiliert — sie beantwortet „ist das derselbe Verein", nicht „wie schreibe ich ihn kurz".
+
 ## Pflegeseite
 
 Ort: Stammdaten → **Vereinskurzformen**, global (Vereinsnamen hängen nicht an einer
-Veranstaltung).
+Veranstaltung). Zwei Abschnitte auf einer Seite: oben die Kürzungsregeln, darunter die Liste der
+Vereinsnamen — die sich sofort mitverändert, wenn oben eine Regel angefasst wird. Zwei getrennte
+Orte für dieselbe Sache wären schlechter, weil die Wirkung einer Regel sonst unsichtbar bliebe.
 
 Rechte: Lesen mit `ReadClubGlobal`, Ändern mit `UpdateClubGlobal` — **kein neues Privileg**. Neue
 Privilegien landen erfahrungsgemäß nur an der Admin-Rolle und fehlen allen anderen still
