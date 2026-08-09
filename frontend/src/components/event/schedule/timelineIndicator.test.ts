@@ -25,7 +25,7 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     setupMatchId: crypto.randomUUID(),
     matchStartedAt: null,
     matchFinishedAt: null,
-    matchCurrentlyRunning: false,
+    matchActivatedAt: null,
     matchTeamsTotal: 0,
     matchTeamsScored: 0,
     ...over,
@@ -41,7 +41,6 @@ const match = (over: Partial<LiveDashboardMatchDto> = {}): LiveDashboardMatchDto
     executionOrder: 1,
     startTime: '2026-08-17T09:00:00',
     startedAt: null,
-    currentlyRunning: false,
     elapsedMinutes: null,
     teams: [],
     ...over,
@@ -68,6 +67,19 @@ describe('scheduleSlotState', () => {
             scheduleSlotState(slot('2026-08-17T08:00:00', {state: 'LINKED', matchStartedAt: '2026-08-17T08:01:00'})),
         ).toBe('running')
     })
+    it('maps an activated but not yet started slot to preparing', () => {
+        // Aktiviert heißt "an den Start gerufen", nicht "unterwegs" - der Balken darf dafür nicht
+        // dieselbe Farbe tragen wie ein fahrender Lauf.
+        expect(
+            scheduleSlotState(
+                slot('2026-08-17T08:00:00', {
+                    state: 'LINKED',
+                    matchActivatedAt: '2026-08-17T07:55:00',
+                    matchStartedAt: null,
+                }),
+            ),
+        ).toBe('preparing')
+    })
     it('maps WAITING/LINKED/FREE/SKIPPED/OBSOLETE to their generic states', () => {
         expect(scheduleSlotState(slot('t', {state: 'WAITING'}))).toBe('waiting')
         expect(scheduleSlotState(slot('t', {state: 'LINKED'}))).toBe('linked')
@@ -86,6 +98,10 @@ describe('dashboardMatchState', () => {
         expect(dashboardMatchState(match({state: 'RUNNING'}))).toBe('running')
         expect(dashboardMatchState(match({state: 'FINISHED'}))).toBe('finished')
         expect(dashboardMatchState(match({state: 'UPCOMING'}))).toBe('linked')
+    })
+
+    it('gives a match at the start its own look, not the one of a racing match', () => {
+        expect(dashboardMatchState(match({state: 'PREPARING'}))).toBe('preparing')
     })
 
     it('gives a match waiting to be finished its own look, neither running nor finished', () => {

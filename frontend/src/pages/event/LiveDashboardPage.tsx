@@ -20,9 +20,12 @@ import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
     finishLiveDashboardMatch,
+    getEventTimingConfig,
     getLiveDashboard,
-    setLiveDashboardMatchRunning,
+    resumeRaceClockerAutoPull,
+    setLiveDashboardMatchActivated,
     skipScheduleSlot,
+    startLiveDashboardMatch,
 } from '@api/sdk.gen.ts'
 import {LiveDashboardDto} from '@api/types.gen.ts'
 import {useFetch, useFeedback} from '@utils/hooks.ts'
@@ -103,7 +106,7 @@ const LiveDashboardPage = () => {
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(null)
     // In REGATTABUERO läuft "Lauf beenden" ausschließlich über den Zeitplan-Tab (siehe
     // EventSchedule.tsx) - der Button verschwindet hier dafür, das Notfall-Override
-    // (onSetRunning) bleibt unabhängig vom Modus verfügbar.
+    // (onSetActivated) bleibt unabhängig vom Modus verfügbar.
     const mayFinish = mayControl && dashboard?.chainProgressionMode !== 'REGATTABUERO'
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
     const [stale, setStale] = useState(false)
@@ -191,6 +194,23 @@ const LiveDashboardPage = () => {
         },
     )
 
+    /**
+     * Ob RaceClocker den Start dieser Veranstaltung ohnehin selbst meldet — daran hängt allein der
+     * Hinweis am „Läuft"-Knopf, nicht der Knopf selbst. Einmal geladen, nicht im Abruftakt: die
+     * Einstellung ändert sich am Renntag nicht.
+     *
+     * Scheitert der Abruf (die Zeitnahme-Voreinstellung verlangt `ReadEventGlobal`, und das hat
+     * nicht jede Schiedsrichter-Rolle), bleibt der Hinweis weg. Das ist die richtige Richtung: ein
+     * fehlender Hinweis kostet einen überflüssigen Klick, ein falscher ließe jemanden auf eine
+     * Automatik warten, die es nicht gibt.
+     */
+    const timingConfigData = useFetch(signal => getEventTimingConfig({signal, path: {eventId}}), {
+        deps: [eventId],
+    })
+    const raceClockerAutoPull =
+        timingConfigData.data?.autoPull === true &&
+        timingConfigData.data.timingSystem === 'RACECLOCKER'
+
     // Der Live-Tab zeigt, was jetzt eine Handlung verlangt: die laufenden Läufe UND die, die
     // vollständig gewertet auf ihr Beenden warten (siehe liveMatches / selectForScope im Backend).
     const currentMatches = liveMatches(dashboard?.matches ?? [])
@@ -259,13 +279,42 @@ const LiveDashboardPage = () => {
         dashboardData.reload()
     }
 
-    const handleSetRunning = async (matchId: string, running: boolean) => {
-        const {error} = await setLiveDashboardMatchRunning({
+    const handleSetActivated = async (matchId: string, activated: boolean) => {
+        const {error} = await setLiveDashboardMatchActivated({
             path: {eventId, matchId},
-            query: {running},
+            query: {activated},
         })
         if (error) {
             feedback.error(t('event.liveDashboard.control.error'))
+        }
+        dashboardData.reload()
+    }
+
+    /**
+     * „Läuft": stellt fest, dass das Rennen unterwegs ist. Der Endpunkt ist idempotent und setzt
+     * nur den Ist-Start — eine Zeitnahme löst er nicht aus.
+     */
+    const handleMarkStarted = async (matchId: string) => {
+        const {error} = await startLiveDashboardMatch({path: {eventId, matchId}})
+        if (error) {
+            feedback.error(t('event.liveDashboard.control.error'))
+        }
+        dashboardData.reload()
+    }
+
+    /**
+     * Gibt den automatischen RaceClocker-Abruf wieder frei. Der Knopf gehört hierher, weil das
+     * Deaktivieren eines Laufs die Automatik pausiert und im Dashboard deaktiviert wird — im
+     * Durchführungs-Tab käme der Schiedsrichter am Steg nicht vorbei.
+     */
+    const handleResumeAutoPull = async (matchId: string, competitionId: string) => {
+        const {error} = await resumeRaceClockerAutoPull({
+            path: {eventId, competitionId, competitionMatchId: matchId},
+        })
+        if (error) {
+            feedback.error(t('event.liveDashboard.control.error'))
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.poll.resumed'))
         }
         dashboardData.reload()
     }
@@ -289,8 +338,11 @@ const LiveDashboardPage = () => {
     const actions: LiveDashboardActions = {
         onTeamClick: handleTeamClick,
         onFinish: mayFinish ? handleFinish : undefined,
-        onSetRunning: mayControl ? handleSetRunning : undefined,
+        onSetActivated: mayControl ? handleSetActivated : undefined,
+        onMarkStarted: mayControl ? handleMarkStarted : undefined,
+        onResumeAutoPull: mayControl ? handleResumeAutoPull : undefined,
         onSkipSlot: mayControl ? handleSkipSlot : undefined,
+        raceClockerAutoPull,
     }
 
     const liveColumn = (

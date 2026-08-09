@@ -136,20 +136,20 @@ describe('preservedEntries', () => {
         // Die Zeile existiert, aber der Wettkampf verlangt keine An-/Abmeldung mehr -
         // isRowApplicable nimmt die Kombination aus der Matrix.
         const entries: CheckSeverityEntryDto[] = [
-            {competitionId: 'c1', checkType: 'NOT_ON_WATER', requirementId: null, severity: 'OK'},
+            {competitionId: 'c1', checkType: 'NOT_IN_ARENA', requirementId: null, severity: 'OK'},
         ]
-        const cfg = config([competition('c1', false)], [row('NOT_ON_WATER')], entries)
+        const cfg = config([competition('c1', false)], [row('NOT_IN_ARENA')], entries)
         expect(preservedEntries(cfg)).toEqual(entries)
     })
 
     test('ein gespeicherter Wert, dessen Kombination weiterhin in der Matrix steht, wird nicht erhalten', () => {
         const entries: CheckSeverityEntryDto[] = [
-            {competitionId: 'c1', checkType: 'NOT_ON_WATER', requirementId: null, severity: 'OK'},
+            {competitionId: 'c1', checkType: 'NOT_IN_ARENA', requirementId: null, severity: 'OK'},
             {competitionId: 'c1', checkType: 'INVOICE_OPEN', requirementId: null, severity: 'WARNING'},
         ]
         const cfg = config(
             [competition('c1', true)],
-            [row('NOT_ON_WATER'), row('INVOICE_OPEN')],
+            [row('NOT_IN_ARENA'), row('INVOICE_OPEN')],
             entries,
         )
         expect(preservedEntries(cfg)).toEqual([])
@@ -183,7 +183,7 @@ describe('preservedEntries', () => {
         // Das Backend lehnt doppelte Kombinationen aus Wettkampf, Prüfungsart und Bedingung ab -
         // bewahrte und bearbeitbare Einträge dürfen sich daher nie überschneiden.
         const entries: CheckSeverityEntryDto[] = [
-            {competitionId: 'c1', checkType: 'NOT_ON_WATER', requirementId: null, severity: 'OK'},
+            {competitionId: 'c1', checkType: 'NOT_IN_ARENA', requirementId: null, severity: 'OK'},
             {
                 competitionId: 'c1',
                 checkType: 'REQUIREMENT_TIME_WINDOW',
@@ -193,7 +193,7 @@ describe('preservedEntries', () => {
         ]
         const cfg = config(
             [competition('c1', true), competition('c2', false)],
-            [row('NOT_ON_WATER')],
+            [row('NOT_IN_ARENA')],
             entries,
         )
         const cellKeys = new Set(
@@ -216,7 +216,7 @@ describe('buildSavePayload', () => {
             {competitionId: 'c1', checkType: 'INVOICE_OPEN', requirementId: null, severity: 'WARNING'},
         ]
         const preserved: CheckSeverityEntryDto[] = [
-            {competitionId: 'c2', checkType: 'NOT_ON_WATER', requirementId: null, severity: 'OK'},
+            {competitionId: 'c2', checkType: 'NOT_IN_ARENA', requirementId: null, severity: 'OK'},
         ]
         expect(buildSavePayload(entries, preserved)).toEqual([...entries, ...preserved])
     })

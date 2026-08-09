@@ -12,7 +12,7 @@ import {
 } from './common'
 
 /**
- * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits auf dem Wasser,
+ * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits in der Arena,
  * eine verstrichene Startzeit ist hier der Normalfall und wird nicht kommentiert.
  * "upcoming": Karte im Block "Nächster Lauf" — nur hier ergeben Countdown und der
  * Hinweis "erwartet" (Start verpasst) inhaltlich einen Sinn, siehe KDoc von
@@ -44,22 +44,26 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
         variant === 'upcoming' &&
         (match.startState === 'OVERDUE' || (startsInSeconds !== null && startsInSeconds <= 0))
 
-    // Im Block "Aktueller Lauf" trägt der tatsächliche Start die Aussage: ein Lauf ohne
-    // Zeitstempel ist als aktuell gesetzt, liegt aber noch am Steg. Im Block "Nächster Lauf"
-    // ist actualStartTime immer leer (siehe KDoc von AthleteBoardMatch im Backend).
+    // Im Block "Aktueller Lauf" unterscheidet der Zustand: ein Lauf in Vorbereitung ist an den
+    // Start gerufen, liegt aber noch am Steg. Der Zustand kommt vom Server (`match.state`, gefüllt
+    // über dieselbe `deriveMatchState` wie in jeder anderen Oberfläche) — vorher stand hier eine
+    // zweite Ableitung aus `actualStartTime`, die dasselbe behaupten sollte und dabei zwangsläufig
+    // von den übrigen Anzeigen abweichen konnte. `actualStartTime` trägt jetzt nur noch die Uhrzeit
+    // für "gestartet 14:32". Im Block "Nächster Lauf" ist sie immer leer (siehe KDoc von
+    // AthleteBoardMatch im Backend).
     const renderRunningStart = () =>
         // Ein Programmpunkt (FREE-Platzhalter) startet nicht und wird nicht gestempelt.
-        match.name ? null : match.actualStartTime ? (
+        match.name ? null : match.state === 'PREPARING' ? (
+            <Typography sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}} color="text.secondary">
+                {t('event.info.athleteBoard.preparing')}
+            </Typography>
+        ) : match.actualStartTime ? (
             <Typography sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}} color="text.secondary">
                 {t('event.info.athleteBoard.startedAt', {
                     time: formatClockTime(match.actualStartTime),
                 })}
             </Typography>
-        ) : (
-            <Typography sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}} color="text.secondary">
-                {t('event.info.athleteBoard.preparing')}
-            </Typography>
-        )
+        ) : null
 
     const renderTiming = () => {
         if (!match.startTime) {

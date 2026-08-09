@@ -2,20 +2,21 @@ import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/m
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
-import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
+import {LiveDashboardMatchDto, MatchStatusDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
+import {matchStatusChip} from '@components/event/match/matchStatusChip.ts'
 import {
     CLUB_CHAIN_NARROW_CHARS,
     CLUB_CHAIN_NARROW_RESULT_CHARS,
     competitionLabel,
     crewMemberLabel,
-    formatMinutes,
     matchControls,
     matchHasResults,
     openResultTeams,
     pendingSlotLabel,
     shortenClubChain,
+    teamHasResult,
     teamShowsClubLine,
     teamShowsCrew,
     teamsInDisplayOrder,
@@ -44,7 +45,17 @@ type Props = {
     onTeamClick: (matchId: string, teamId: string) => void
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
-    onSetRunning?: (matchId: string, running: boolean) => Promise<void>
+    onSetActivated?: (matchId: string, activated: boolean) => Promise<void>
+    /** „Läuft": stellt fest, dass das Rennen unterwegs ist — löst keine Zeitnahme aus. */
+    onMarkStarted?: (matchId: string) => Promise<void>
+    /** Gibt den pausierten RaceClocker-Abruf dieses Laufs wieder frei. */
+    onResumeAutoPull?: (matchId: string, competitionId: string) => Promise<void>
+    /**
+     * Ob der automatische RaceClocker-Abruf für diese Veranstaltung eingeschaltet ist. Dann trägt
+     * der „Läuft"-Knopf den Hinweis, dass RaceClocker den Start ohnehin selbst meldet — bedienbar
+     * bleibt er trotzdem (Feed-Ausfall, Zeitnahme ohne Startstempel).
+     */
+    raceClockerAutoPull?: boolean
     /** Rennen am Kürzel statt am ausgeschriebenen Wettkampfnamen (geteilt mit dem Zeitplan-Tab). */
     shortLabels: boolean
 }
@@ -53,19 +64,50 @@ const LiveDashboardMatchCard = ({
     match,
     onTeamClick,
     onFinish,
-    onSetRunning,
+    onSetActivated,
+    onMarkStarted,
+    onResumeAutoPull,
+    raceClockerAutoPull = false,
     shortLabels,
 }: Props) => {
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
+    // An den Start gerufen, aber noch nicht unterwegs — der Lauf, der als Nächstes losgeht.
+    const preparing = match.state === 'PREPARING'
     // Abgesagt wird gekennzeichnet, nicht versteckt: der Schiedsrichter muss die Absage sehen, um
     // sie im Zeitplan zurücknehmen zu können. Solange sie steht, gibt es hier aber nichts zu
     // steuern - aktiviert würde der Lauf sonst wieder abgesagt UND laufend zugleich.
     const skipped = match.state === 'SKIPPED'
     // Vollständig gewertet, aber nicht beendet: der Lauf wartet auf den Beenden-Klick.
     const awaitingFinish = match.state === 'AWAITING_FINISH'
-    const {showFinish, showRunToggle} = matchControls(match, onFinish != null, onSetRunning != null)
+    const {showFinish, showActivationToggle, showMarkStarted} = matchControls(
+        match,
+        onFinish != null,
+        onSetActivated != null,
+    )
+    /**
+     * Der Zustandstext der Karte kommt aus derselben Ableitung wie in Durchführung und Zeitplan —
+     * die Karte entscheidet nichts mehr selbst, sie malt nur. Vorher stand hier eigene Textlogik
+     * („läuft seit …", Lang-/Kurzform für „wartet auf Beenden"), die dieselbe Aussage anders
+     * formulierte; genau daran ließ sich nicht mehr erkennen, ob zwei Ansichten dasselbe meinen.
+     *
+     * `teamsScored` zählt nach derselben Regel wie `MatchStatusLogic.scoredCount` im Backend
+     * (Platz, ausgeschieden oder abgemeldet), damit „Teilweise gewertet" hier nichts anderes sagt
+     * als dort. Die Uhr ist die des Browsers: die Seite rendert bei jedem Abruf und mindestens alle
+     * 30 Sekunden neu (siehe `useLocalClock` in LiveDashboardPage), die Minutenangabe zählt also
+     * zwischen zwei Abrufen weiter.
+     */
+    const status: MatchStatusDto = {
+        state: match.state,
+        startedAt: match.startedAt ?? undefined,
+        teamsTotal: match.teams.length,
+        teamsScored: match.teams.filter(teamHasResult).length,
+    }
+    const statusChip = matchStatusChip(status, match.startTime, new Date())
+    // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur — dasselbe Muster
+    // wie `StatusChip` in CompetitionExecutionRound.tsx.
+    const translate = t as (key: string, values?: Record<string, string | number>) => string
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = matchHasResults(match.teams)
@@ -90,9 +132,11 @@ const LiveDashboardMatchCard = ({
                 // nebeneinander stehende Spalten auf dem Tablet sind schmaler als ein Telefon,
                 // ein Blick aufs Fenster würde dort die Langformen erzwingen.
                 containerType: 'inline-size',
-                // Accent bar instead of a full frame: marks the live race without shouting
-                borderLeft: running ? '6px solid' : undefined,
-                borderLeftColor: running ? 'success.dark' : undefined,
+                // Accent bar instead of a full frame: marks the live race without shouting. Ein
+                // Lauf am Start bekommt denselben Balken in seinem eigenen Ton — er ist der
+                // nächste, der losgeht, und soll in der Liste genauso auffallen.
+                borderLeft: running || preparing ? '6px solid' : undefined,
+                borderLeftColor: running ? 'success.dark' : preparing ? 'info.main' : undefined,
             }}>
             <CardContent sx={{p: 1.25, '&:last-child': {pb: 0.5}}}>
                 <Box
@@ -161,69 +205,76 @@ const LiveDashboardMatchCard = ({
                                 fontSize: '0.8rem',
                                 fontWeight: 700,
                                 whiteSpace: 'nowrap',
+                                // Die Farbe bleibt die Betonung der Karte (der laufende Lauf trägt
+                                // den kräftigsten Ton), der Text kommt aus der geteilten
+                                // Ableitung. „In Vorbereitung" bekommt den helleren Blauton, weil
+                                // „wartet auf Beenden" den dunklen schon belegt.
                                 backgroundColor: running
                                     ? 'success.dark'
-                                    : skipped
-                                      ? 'warning.dark'
-                                      : awaitingFinish
-                                        ? 'info.dark'
-                                        : 'grey.200',
+                                    : preparing
+                                      ? 'info.main'
+                                      : skipped
+                                        ? 'warning.dark'
+                                        : awaitingFinish
+                                          ? 'info.dark'
+                                          : 'grey.200',
                                 color:
-                                    running || skipped || awaitingFinish
+                                    running || preparing || skipped || awaitingFinish
                                         ? 'common.white'
                                         : 'grey.900',
+                                textDecoration: statusChip.strikeThrough
+                                    ? 'line-through'
+                                    : 'none',
                             }}>
-                            {running && match.elapsedMinutes != null ? (
-                                t('event.liveDashboard.runningSince', {
-                                    duration: formatMinutes(match.elapsedMinutes),
-                                })
-                            ) : awaitingFinish ? (
-                                // Der volle Text sprengt schmale Karten; die Kurzform trägt
-                                // dieselbe Aussage. Ausschlaggebend ist die Kartenbreite: der
-                                // Kopf teilt sich eine Spalte mit diesem Label, ein zu langes
-                                // schneidet nebenan den Laufnamen ab.
-                                <>
-                                    <Box
-                                        component="span"
-                                        sx={{
-                                            display: 'none',
-                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
-                                                display: 'inline',
-                                            },
-                                        }}>
-                                        {t('event.liveDashboard.state.AWAITING_FINISH')}
-                                    </Box>
-                                    <Box
-                                        component="span"
-                                        sx={{
-                                            display: 'inline',
-                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
-                                                display: 'none',
-                                            },
-                                        }}>
-                                        {t('event.liveDashboard.state.AWAITING_FINISH_SHORT')}
-                                    </Box>
-                                </>
-                            ) : (
-                                t(`event.liveDashboard.state.${match.state}`)
-                            )}
+                            {translate(statusChip.labelKey, statusChip.values)}
                         </Box>
                     </Box>
                 </Box>
                 {(() => {
-                    const status = raceClockerPollStatus(match)
-                    if (status.kind === 'none' || status.kind === 'ok') return null
+                    const pollStatus = raceClockerPollStatus(match)
+                    if (pollStatus.kind === 'none' || pollStatus.kind === 'ok') return null
 
                     return (
-                        <Typography variant={'caption'} color={'warning.main'}>
-                            {status.kind === 'paused'
-                                ? t('event.competition.execution.results.raceclocker.poll.paused')
-                                : t('event.competition.execution.results.raceclocker.poll.error', {
-                                      reason: status.errorKey
-                                          ? t(status.errorKey)
-                                          : t('common.error.unexpected'),
-                                  })}
-                        </Typography>
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            flexWrap="wrap"
+                            useFlexGap>
+                            <Typography variant={'caption'} color={'warning.main'}>
+                                {pollStatus.kind === 'paused'
+                                    ? t(
+                                          'event.competition.execution.results.raceclocker.poll.paused',
+                                      )
+                                    : t(
+                                          'event.competition.execution.results.raceclocker.poll.error',
+                                          {
+                                              reason: pollStatus.errorKey
+                                                  ? t(pollStatus.errorKey)
+                                                  : t('common.error.unexpected'),
+                                          },
+                                      )}
+                            </Typography>
+                            {/*
+                                Der Weg zurück gehört dorthin, wo pausiert wurde: Deaktivieren
+                                pausiert den automatischen Abruf (sonst aktivierte ihn der Job im
+                                nächsten Takt wieder), und deaktiviert wird hier im Dashboard.
+                                Bisher gab es diesen Knopf nur im Durchführungs-Tab — der
+                                Schiedsrichter am Steg käme dort nicht hin.
+                            */}
+                            {pollStatus.kind === 'paused' && onResumeAutoPull && (
+                                <Button
+                                    size="small"
+                                    variant="text"
+                                    onClick={() =>
+                                        onResumeAutoPull(match.matchId, match.competitionId)
+                                    }>
+                                    {t(
+                                        'event.competition.execution.results.raceclocker.poll.resume',
+                                    )}
+                                </Button>
+                            )}
+                        </Stack>
                     )
                 })()}
                 <Divider sx={{mt: 1.5}} />
@@ -364,7 +415,7 @@ const LiveDashboardMatchCard = ({
                                         {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
                                     </Typography>
                                 )}
-                                {team.onWaterRequired && team.onWaterAt && (
+                                {team.inArenaRequired && team.inArenaAt && (
                                     <Typography
                                         variant="caption"
                                         display="block"
@@ -372,8 +423,8 @@ const LiveDashboardMatchCard = ({
                                             color: 'success.dark',
                                             fontVariantNumeric: 'tabular-nums',
                                         }}>
-                                        {t('event.liveDashboard.team.onWaterAt', {
-                                            time: format(new Date(team.onWaterAt), t('format.time')),
+                                        {t('event.liveDashboard.team.inArenaAt', {
+                                            time: format(new Date(team.inArenaAt), t('format.time')),
                                         })}
                                     </Typography>
                                 )}
@@ -441,7 +492,7 @@ const LiveDashboardMatchCard = ({
                         </Box>
                     )
                 })}
-                {(showFinish || showRunToggle) && (
+                {(showFinish || showActivationToggle || showMarkStarted) && (
                     <Stack
                         direction="row"
                         spacing={1}
@@ -459,15 +510,40 @@ const LiveDashboardMatchCard = ({
                                 {t('event.liveDashboard.resultsCompleteWaiting')}
                             </Typography>
                         )}
-                        {showRunToggle && onSetRunning && (
+                        {showActivationToggle && onSetActivated && (
                             <Button
                                 size="small"
                                 variant="text"
-                                onClick={() => onSetRunning(match.matchId, !running)}>
-                                {running
+                                onClick={() =>
+                                    onSetActivated(match.matchId, !(running || preparing))
+                                }>
+                                {running || preparing
                                     ? t('event.liveDashboard.control.deactivate')
                                     : t('event.liveDashboard.control.activate')}
                             </Button>
+                        )}
+                        {/*
+                            „Läuft" statt „Start": der Klick löst keine Zeitnahme aus, er stellt
+                            fest, dass das Rennen unterwegs ist. Bei eingeschaltetem RaceClocker-
+                            Abruf bleibt er trotzdem bedienbar — der Feed kann ausfallen, und
+                            manche Zeitnahme meldet gar keinen Startstempel.
+                        */}
+                        {showMarkStarted && onMarkStarted && (
+                            <Stack alignItems="flex-end">
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() => onMarkStarted(match.matchId)}>
+                                    {t('event.liveDashboard.control.markStarted')}
+                                </Button>
+                                {raceClockerAutoPull && (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{color: 'grey.700', textAlign: 'right'}}>
+                                        {t('event.liveDashboard.control.markStartedAutoHint')}
+                                    </Typography>
+                                )}
+                            </Stack>
                         )}
                         {showFinish && onFinish && (
                             <FinishMatchButton

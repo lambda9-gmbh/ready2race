@@ -986,7 +986,7 @@
           "manageRunning": "Manage Running Matches",
           "running": "Running",
           "roundAndMatch": "Round {{round}}, Match {{match}}",
-          "currentlyRunning": "Currently Running",
+          "activated": "At the start",
           "availableMatches": "Available Matches",
           "noRunningMatches": "No matches are currently running",
           "noAvailableMatches": "No matches available to start"
@@ -1574,18 +1574,8 @@
       "unscheduled": "Without start time",
       "noMatches": "No matches available.",
       "noStartTime": "No start time scheduled",
-      "runningSince": "Running for {{duration}}",
       "plannedAt": "planned {{time}}",
       "startedAtLabel": "started {{time}}",
-      "state": {
-        "RUNNING": "Running",
-        "FINISHED": "Finished",
-        "SKIPPED": "Cancelled",
-        "AWAITING_FINISH": "Results complete — waiting to finish",
-        "AWAITING_FINISH_SHORT": "waiting to finish",
-        "UPCOMING": "Upcoming",
-        "UNSCHEDULED": "Unscheduled"
-      },
       "invoice": {
         "PAID": "Invoice paid",
         "OPEN": "Invoice open",
@@ -1603,6 +1593,8 @@
         "finishing": "Finishing …",
         "undo": "Undo",
         "finished": "Race finished — next races activated",
+        "markStarted": "Running",
+        "markStartedAutoHint": "RaceClocker reports the start by itself as soon as it sees it.",
         "deactivate": "Deactivate race",
         "activate": "Activate race",
         "incompleteWarning": "Results are still missing — finishing activates the next races anyway.",
@@ -1784,6 +1776,7 @@
         "now": "Now",
         "state": {
           "finished": "Finished",
+          "preparing": "Preparing",
           "running": "Running",
           "awaitingFinish": "Waiting to finish",
           "linked": "Linked",

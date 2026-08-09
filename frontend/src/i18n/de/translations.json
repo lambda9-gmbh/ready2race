@@ -986,7 +986,7 @@
           "manageRunning": "Laufende Partien verwalten",
           "running": "Läuft",
           "roundAndMatch": "Runde {{round}}, Partie {{match}}",
-          "currentlyRunning": "Aktuell laufend",
+          "activated": "Am Start",
           "availableMatches": "Verfügbare Partien",
           "noRunningMatches": "Keine Partien laufen gerade",
           "noAvailableMatches": "Keine Partien zum Starten verfügbar"
@@ -1574,18 +1574,8 @@
       "unscheduled": "Ohne Startzeit",
       "noMatches": "Keine Läufe vorhanden.",
       "noStartTime": "Keine Startzeit geplant",
-      "runningSince": "Läuft seit {{duration}}",
       "plannedAt": "geplant {{time}}",
       "startedAtLabel": "gestartet {{time}}",
-      "state": {
-        "RUNNING": "Läuft",
-        "FINISHED": "Beendet",
-        "SKIPPED": "Abgesagt",
-        "AWAITING_FINISH": "Ergebnisse vollständig — wartet auf Beenden",
-        "AWAITING_FINISH_SHORT": "wartet auf Beenden",
-        "UPCOMING": "Anstehend",
-        "UNSCHEDULED": "Ungeplant"
-      },
       "invoice": {
         "PAID": "Rechnung bezahlt",
         "OPEN": "Rechnung offen",
@@ -1603,6 +1593,8 @@
         "finishing": "Wird beendet …",
         "undo": "Rückgängig",
         "finished": "Lauf beendet — nächste Läufe aktiviert",
+        "markStarted": "Läuft",
+        "markStartedAutoHint": "RaceClocker meldet den Start automatisch, sobald er ihn sieht.",
         "deactivate": "Lauf deaktivieren",
         "activate": "Lauf aktivieren",
         "incompleteWarning": "Es fehlen noch Ergebnisse — beenden aktiviert trotzdem die nächsten Läufe.",
@@ -1784,6 +1776,7 @@
         "now": "Jetzt",
         "state": {
           "finished": "Beendet",
+          "preparing": "In Vorbereitung",
           "running": "Läuft",
           "awaitingFinish": "Wartet auf Beenden",
           "linked": "Verknüpft",

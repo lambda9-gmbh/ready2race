@@ -48,7 +48,7 @@ const isPartiallyScored = (status: MatchStatusDto): boolean =>
  * Die Reihenfolge der Zweige folgt bewusst der von `LiveDashboardLogic.deriveMatchState` im
  * Backend: Was tatsächlich passiert, schlägt den zurückgenommenen Plan. Ein abgesagter Lauf, der
  * trotzdem aktiviert wurde, kommt vom Server als RUNNING und zeigt hier „Läuft" — die Anzeige
- * behauptet nicht, es passiere nichts, während Boote auf dem Wasser sind.
+ * behauptet nicht, es passiere nichts, während Boote in der Arena sind.
  *
  * „Überfällig" und „Teilweise gewertet" sind keine Zustände, sondern Ablesungen zusätzlicher
  * Felder (siehe KDoc von `MatchStatusDto`). Sie stehen deshalb erst hinter den echten Zuständen:

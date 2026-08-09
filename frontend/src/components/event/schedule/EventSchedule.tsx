@@ -579,7 +579,7 @@ const EventSchedule = () => {
                                                         <Box sx={actionSlotSx}>
                                                             {slot.state === 'LINKED' &&
                                                                 !slot.matchFinishedAt &&
-                                                                !slot.matchCurrentlyRunning && (
+                                                                slot.matchActivatedAt == null && (
                                                                     <Tooltip
                                                                         title={t(
                                                                             'event.schedule.activate',
@@ -596,7 +596,7 @@ const EventSchedule = () => {
                                                                     </Tooltip>
                                                                 )}
                                                             {slot.state === 'LINKED' &&
-                                                                slot.matchCurrentlyRunning && (
+                                                                slot.matchActivatedAt != null && (
                                                                     <Tooltip
                                                                         title={t(
                                                                             'event.schedule.finish',

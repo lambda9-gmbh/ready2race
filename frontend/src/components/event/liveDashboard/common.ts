@@ -13,9 +13,12 @@ import {
  *
  * AWAITING_FINISH gehört dazu, weil der Lauf sonst genau dort fehlte, wo jemand handeln muss:
  * alle Boote sind gewertet, aber niemand hat beendet.
+ *
+ * PREPARING ebenso: ein Lauf, der an den Start gerufen ist, liegt im Zugriff des Schiedsrichters —
+ * er ist der nächste, der losgeht, und der Knopf „Läuft" sitzt auf seiner Karte.
  */
 export const isLiveMatch = (match: LiveDashboardMatchDto): boolean =>
-    match.state === 'RUNNING' || match.state === 'AWAITING_FINISH'
+    match.state === 'PREPARING' || match.state === 'RUNNING' || match.state === 'AWAITING_FINISH'
 
 export const liveMatches = (matches: LiveDashboardMatchDto[]): LiveDashboardMatchDto[] =>
     matches.filter(isLiveMatch)
@@ -156,18 +159,22 @@ export const dashboardEntryDomIdCandidates = (id: string): string[] => [
  *   Handlung, auf die alles wartet — ein Aktivieren würde den fertigen Lauf zurückwerfen.
  * - Ein abgesagter Lauf bietet gar nichts an: aktiviert wäre er abgesagt UND laufend zugleich,
  *   und beenden muss ihn niemand.
+ * - "Läuft" gibt es nur am Start (PREPARING): der Knopf stellt fest, dass das Rennen unterwegs
+ *   ist. Bei einem Lauf, der schon unterwegs ist, gäbe es nichts mehr festzustellen; bei einem,
+ *   den niemand aufgerufen hat, wäre die Feststellung eine Behauptung.
  */
 export const matchControls = (
     match: LiveDashboardMatchDto,
     mayFinish: boolean,
     mayControl: boolean,
-): {showFinish: boolean; showRunToggle: boolean} => {
+): {showFinish: boolean; showActivationToggle: boolean; showMarkStarted: boolean} => {
     if (match.state === 'SKIPPED') {
-        return {showFinish: false, showRunToggle: false}
+        return {showFinish: false, showActivationToggle: false, showMarkStarted: false}
     }
     return {
         showFinish: mayFinish && isLiveMatch(match),
-        showRunToggle: mayControl && match.state !== 'AWAITING_FINISH',
+        showActivationToggle: mayControl && match.state !== 'AWAITING_FINISH',
+        showMarkStarted: mayControl && match.state === 'PREPARING',
     }
 }
 
@@ -202,7 +209,7 @@ const teamOrderGroup = (team: LiveDashboardTeamDto): number =>
  * ins Ziel kommen sieht; ohne das musste er die Plätze in der Bahnliste zusammensuchen.
  *
  * **Die Zahl links bleibt die Bahn** und wird nie zur Zählnummer der Liste — sie ist die einzige
- * Verbindung zwischen der Karte und dem, was auf dem Wasser liegt.
+ * Verbindung zwischen der Karte und dem, was in der Arena steht.
  *
  * Solange kein einziges Boot ein Ergebnis hat, bleibt die Reihenfolge des Backends stehen (dort
  * nach Startnummer sortiert): ein Umsortieren, das nichts aussagt, verwirrt nur.

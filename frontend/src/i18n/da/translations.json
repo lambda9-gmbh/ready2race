@@ -986,7 +986,7 @@
           "manageRunning": "Administrer igangværende kampe",
           "running": "Kører",
           "roundAndMatch": "Runde {{round}}, kamp {{match}}",
-          "currentlyRunning": "Kører lige nu",
+          "activated": "Ved start",
           "availableMatches": "Tilgængelige kampe",
           "noRunningMatches": "Ingen kampe kører i øjeblikket",
           "noAvailableMatches": "Ingen kampe klar til start"
@@ -1574,18 +1574,8 @@
       "unscheduled": "Uden starttid",
       "noMatches": "Ingen løb tilgængelige.",
       "noStartTime": "Ingen starttid planlagt",
-      "runningSince": "I gang i {{duration}}",
       "plannedAt": "planlagt {{time}}",
       "startedAtLabel": "startet {{time}}",
-      "state": {
-        "RUNNING": "I gang",
-        "FINISHED": "Afsluttet",
-        "SKIPPED": "Aflyst",
-        "AWAITING_FINISH": "Resultater komplette — venter på afslutning",
-        "AWAITING_FINISH_SHORT": "venter på afslutning",
-        "UPCOMING": "Kommende",
-        "UNSCHEDULED": "Ikke planlagt"
-      },
       "invoice": {
         "PAID": "Faktura betalt",
         "OPEN": "Faktura åben",
@@ -1603,6 +1593,8 @@
         "finishing": "Afsluttes …",
         "undo": "Fortryd",
         "finished": "Løbet er afsluttet — næste løb aktiveret",
+        "markStarted": "I gang",
+        "markStartedAutoHint": "RaceClocker melder selv starten, så snart den ser den.",
         "deactivate": "Deaktiver løb",
         "activate": "Aktiver løb",
         "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
@@ -1778,6 +1770,7 @@
         "now": "Nu",
         "state": {
           "finished": "Afsluttet",
+          "preparing": "Forbereder",
           "running": "Kører",
           "awaitingFinish": "Venter på afslutning",
           "linked": "Tilknyttet",

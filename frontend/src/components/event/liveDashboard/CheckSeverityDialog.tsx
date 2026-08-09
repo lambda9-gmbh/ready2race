@@ -78,7 +78,7 @@ const CheckSeverityDialog = ({open, onClose, eventId}: Props) => {
 
     // Die Matrix wird beim Öffnen vollständig aufgefüllt - auch mit den Standardwerten. Damit ist
     // jedes Feld ein bearbeitbarer Wert; welche davon gespeichert werden, entscheidet der Server.
-    // Wettkämpfe, für die eine Zeile nicht anwendbar ist (z.B. "Nicht auf dem Wasser" ohne
+    // Wettkämpfe, für die eine Zeile nicht anwendbar ist (z.B. "Nicht in der Arena" ohne
     // checkInOutRequired), bekommen dort bewusst gar keinen Eintrag - sie sind nicht einstellbar.
     useEffect(() => {
         if (!config) return
@@ -128,7 +128,7 @@ const CheckSeverityDialog = ({open, onClose, eventId}: Props) => {
         const severities = entries.filter(e => matches(e, row)).map(e => e.severity)
         const summary = rowSummary(severities)
         switch (summary.kind) {
-            // Keinem Wettkampf anwendbar (z.B. "Nicht auf dem Wasser", wenn das kein Wettkampf
+            // Keinem Wettkampf anwendbar (z.B. "Nicht in der Arena", wenn das kein Wettkampf
             // verlangt) - dann gibt es nichts zu verdichten und keine Sammelaktion zu beschriften.
             case 'empty':
                 return ''
