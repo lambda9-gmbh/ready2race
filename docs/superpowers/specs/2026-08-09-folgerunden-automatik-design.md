@@ -176,7 +176,7 @@ Datenbank bleibt stehen; er ist Historie.
   Beide Ansichten hängen an `ReadEventGlobal` bzw. `ReadLiveDashboardGlobal`.
 - **Öffentliche Anzeige und Athletenanzeige bekommen das Feld nicht.** `AthleteBoardDto` und die
   `eventInfo`-DTOs werden nicht angefasst.
-- i18n DE und EN.
+- i18n DE, EN und DA — alle drei Dateien sind gepflegt (`frontend/src/i18n/*/translations.json`).
 
 ## Tests
 
