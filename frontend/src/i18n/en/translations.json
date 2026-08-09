@@ -151,7 +151,10 @@
       "step3": {
         "title": "Value Mappings",
         "info": "Configure how values in your CSV should be interpreted.",
-        "valueMappings": "Value Mappings"
+        "valueMappings": "Value Mappings",
+        "valueWithCount": "{{value}} ({{count}} rows)",
+        "selectedCount": "{{selected}} of {{total}} values selected",
+        "nothingSelected": "Nothing selected — every row counts"
       },
       "error": {
         "noConfig": "Configuration is incomplete",
@@ -258,14 +261,22 @@
         "preview": {
           "title": "Certificate template preview",
           "error": "Cannot load preview.",
-          "show": "Preview certificate"
+          "show": "Preview certificate",
+          "approximate": "The editor view is an approximation. The preview of the saved template is authoritative."
         },
         "error": {
           "invalidFont": "The font file could not be read. Please upload a valid TTF or OTF file.",
+          "invalidPdf": "The selected file cannot be read as a PDF.",
+          "invalidPackage": "The package cannot be read. It must be an unmodified .r2rtpl.zip file.",
+          "unsupportedPackageVersion": "This package comes from a newer version. Please update ready2race.",
           "typeMismatch": "The template does not match the document type it is being assigned to.",
           "placeholderPageNotSupported": "Award certificates have exactly one page — every placeholder has to be on page 1.",
           "placeholderTypeNotSupported": "This placeholder is not available for the chosen document type. Please pick one from that type's list."
-        }
+        },
+        "export": "Export template",
+        "exportHint": "The package contains the PDF, the placeholders and the stored font.",
+        "import": "Import template",
+        "importSucceeded": "Template imported"
       },
       "placeholder": {
         "available": "Available Placeholders",
@@ -298,6 +309,10 @@
         "page": "Page",
         "position": "Position",
         "size": "Size",
+        "positionX": "X",
+        "positionY": "Y",
+        "width": "Width",
+        "height": "Height",
         "fontSize": "Font Size (pt)",
         "fontSizeHelp": "Leave empty to use the placeholder box height.",
         "bold": "Bold",
@@ -508,6 +523,8 @@
           "error": "Error checking out participant"
         },
         "noTeamsFound": "No teams found",
+        "noCheckInOutNeeded": "no check-in/out needed",
+        "noCheckInOutForAnyTeam": "None of these entries use check-in/out.",
         "participantNotFound": "Participant not found",
         "errorReason": {
           "alreadyCheckedIn": "This person is already checked in — there is nothing left to do.",
@@ -552,10 +569,11 @@
     "submissionNeedsVerification": "Submitted results must be verified",
     "allowParticipantSelfRegistration": "Allow participants to register themselves",
     "chainProgressionMode": {
-      "label": "Chain progression mode",
-      "SCHIEDSRICHTER": "Referee — finish and chain via the referee dashboard",
-      "REGATTABUERO": "Regatta office — finish and activate exclusively via the schedule",
-      "DEAKTIVIERT": "Disabled — no automatic activation"
+      "label": "Finishing races & activating the next one",
+      "SCHIEDSRICHTER": "Referees finish in the dashboard — the next race starts automatically",
+      "REGATTABUERO": "Only the organisers finish, via the schedule — the next race starts automatically",
+      "DEAKTIVIERT": "Referees finish in the dashboard — the next race is activated by hand",
+      "hint": "The organisers can always finish races via the schedule, regardless of this setting."
     },
     "showBreaksOnPublicBoards": "Show breaks on public boards",
     "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
@@ -614,6 +632,7 @@
       "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
+      "checkInOutRequired": "Requires check-in/out on the water",
       "challenge": {
         "configs": "Challenge configs",
         "resultConfirmationImageRequired": "Confirmation image for results required",
@@ -1049,6 +1068,14 @@
               "duplicateTeams": "RaceClocker contains duplicate crews ({{teams}}). Please clean them up there and pull again.",
               "noResults": "There are no times for this heat in RaceClocker yet.",
               "matchIsBye": "This heat is a bye: the team moves on without racing, so there are no results to pull."
+            },
+            "poll": {
+              "lastPolled": "Pulled automatically: {{time}}",
+              "error": "Automatic pull is stuck: {{reason}}",
+              "paused": "Automatic pull paused — results were entered by hand.",
+              "resume": "Resume automatic pull",
+              "resumed": "The automatic pull is active again.",
+              "duplicateTeams": "RaceClocker has duplicate crews. Pulling with the button shows which ones."
             }
           }
         },
@@ -1129,22 +1156,32 @@
         "system": "Timing system",
         "systems": {
           "none": "not set",
-          "inherited": "Event default ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
-        "inheritedHint": "This competition uses the event's timing setup. The addresses below are only needed if it has a RaceClocker race of its own – otherwise leave them empty.",
-        "inheritedUrl": "Event default: {{url}}",
+        "eventDefaults": {
+          "title": "Event default",
+          "unset": "not set",
+          "link": "Edit the event's timing setup"
+        },
+        "override": {
+          "label": "Set separately for this competition",
+          "hint": "Off: the competition follows the event and picks up every later change there. On: it gets values of its own – only useful if it has a race of its own in the timing system."
+        },
+        "presets": {
+          "title": "File formats",
+          "hint": "Which columns are exported and imported. Only needed separately if this competition runs into a different race in the timing system."
+        },
         "raceclockerHint": "RaceClocker needs two races per competition: one of type \"individual starts (time trial)\" for the qualification round and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here. ready2race determines by itself which one applies to a given heat.",
         "timeTrialUrl": "Results address for time trial",
         "heatsUrl": "Results address for heats",
-        "startlistQualification": "Start list preset for qualification",
-        "startlistRounds": "Start list preset for other rounds",
-        "startlist": "Start list preset",
-        "resultImport": "Result import preset (xlsx)",
+        "startlistQualification": "Start list export for qualification",
+        "startlistRounds": "Start list export for other rounds",
+        "startlist": "Start list export",
+        "resultImport": "Race results import",
         "importHint": "The RaceClocker presets export without a header row, because RaceClocker would otherwise import that row as a participant. Map the columns by their position when importing into RaceClocker – the internal identifier in particular onto \"Extra info\".",
         "presetsHint": {
-          "1": "Presets are created ",
+          "1": "Start list exports and race results imports are created ",
           "2": "in the configuration",
           "3": " and apply to all events."
         },
@@ -1152,8 +1189,8 @@
           "title": "This timing setup is not ready for use yet",
           "heatsUrl": "The results address for the heats race is missing – without it, results cannot be pulled from RaceClocker.",
           "timeTrialUrl": "This competition has a qualification round, but the results address for the time trial race is missing – without it, no results can be pulled from RaceClocker for the qualification.",
-          "startlistRounds": "The start list preset is missing – without it, no start list can be exported as CSV.",
-          "startlistQualification": "This competition has a qualification round, but the start list preset for the qualification is missing – without it, no start list can be exported for the qualification.",
+          "startlistRounds": "The start list export is missing – without it, no start list can be exported as CSV.",
+          "startlistQualification": "This competition has a qualification round, but the start list export for the qualification is missing – without it, no start list can be exported for the qualification.",
           "link": "Go to the timing settings"
         },
         "saved": "Timing settings saved",
@@ -1178,7 +1215,7 @@
       "yearsColName": "Column to check year of birth",
       "clubColName": "Column to check for name of club",
       "requirementColName": "Column to check for requirement",
-      "requirementIsValidValue": "Accepted value in requirement column",
+      "requirementIsValidValues": "Accepted values in requirement column",
       "participantsOpen": "Open",
       "participantsApproved": "Approved",
       "tableHint": {
@@ -1193,6 +1230,15 @@
         "content": "Do you really want to cancel the confirmation of the verified participation condition?",
         "ok": "Yes",
         "cancel": "No"
+      },
+      "openExportAction": "Export open requirements",
+      "openExport": {
+        "title": "Export open requirements",
+        "description": "Creates a spreadsheet of every registered participant still missing a requirement, sorted by club so the clubs concerned can be notified. Participants with nothing open are left out.",
+        "requirement": "Requirement",
+        "allRequirements": "All active requirements",
+        "submit": "Export",
+        "error": "The export could not be created."
       }
     },
     "action": {
@@ -1328,8 +1374,35 @@
       "raceclockerHint": "RaceClocker needs two races: one of type \"individual starts (time trial)\" for the qualification rounds and one of type \"start in multiple heats\" for all other rounds. Enter the public results addresses of both races here – they then apply to the whole event.",
       "timeTrialUrl": "Results address for time trial",
       "heatsUrl": "Results address for heats",
+      "autoPull": {
+        "enabled": "Pull results automatically",
+        "hint": "While a match is running, the server pulls its results at the fast interval. Upcoming matches are watched at the slow interval to detect their start; finished matches are not polled at all.",
+        "intervalActive": "Interval while a match is running (seconds)",
+        "intervalUpcoming": "Interval while a match is upcoming (seconds)",
+        "watchBefore": "Start watching (minutes before the planned start)",
+        "watchAfter": "Stop watching (minutes after the planned start)"
+      },
+      "startlistQualification": "Start list export for qualification",
+      "startlistRounds": "Start list export for other rounds",
+      "startlist": "Start list export",
+      "resultImport": "Race results import",
+      "formatsHint": {
+        "1": "Start list exports and race results imports are created ",
+        "2": "in the configuration",
+        "3": " and apply to all events."
+      },
       "saved": "Timing defaults saved",
-      "invalid": "Please enter addresses on raceclocker.com."
+      "invalid": "The input was rejected: addresses must point to raceclocker.com, the intervals must be at least 2 seconds, and the watch windows must not be negative.",
+      "deviations": {
+        "title": "Competitions with their own timing",
+        "none": "No competition deviates – all of them follow these defaults.",
+        "system": "own system",
+        "timeTrialUrl": "own time trial address",
+        "heatsUrl": "own heats address",
+        "startlistQualification": "own start list export for qualification",
+        "startlistRounds": "own start list export",
+        "resultImport": "own race results import"
+      }
     },
     "info": {
       "infoPage": "Info Display",
@@ -1411,7 +1484,29 @@
         "refreshHint": "The public athlete board refreshes at this rate, but never faster than every 10 seconds.",
         "loadError": "Data could not be loaded. Please check the connection.",
         "minutesUnit": "min",
+        "hoursUnit": "h",
         "secondsUnit": "s"
+      }
+    },
+    "match": {
+      "status": {
+        "upcoming": "Upcoming",
+        "overdue": "Overdue · {{minutes}} min",
+        "running": "Running · {{minutes}} min",
+        "runningPlain": "Running",
+        "partiallyScored": "Partially scored {{scored}}/{{total}}",
+        "awaitingFinish": "Waiting to be finished",
+        "finished": "Finished",
+        "cancelled": "Cancelled",
+        "unscheduled": "Unscheduled",
+        "water": "On water {{onWater}}/{{total}}",
+        "doesNotTakePlace": "Does not take place",
+        "counter": {
+          "running": "{{n}} running",
+          "open": "{{n}} open",
+          "finished": "{{n}} finished",
+          "cancelled": "{{n}} cancelled"
+        }
       }
     },
     "liveDashboard": {
@@ -1486,7 +1581,8 @@
         "deregistered": "Deregistered",
         "failed": "Did not finish",
         "failedShort": "DNF",
-        "onWaterAt": "on water {{time}}"
+        "onWaterAt": "on water {{time}}",
+        "notOnWater": "Not on the water"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",
@@ -1501,6 +1597,28 @@
         "NOT_CHECKED": "Pending",
         "beforeStart": "{{delta}} before start",
         "afterStart": "{{delta}} after start"
+      },
+      "checkSeverity": {
+        "manage": "Manage checks",
+        "title": "Severity of checks",
+        "description": "Sets per competition how much an unmet check weighs.",
+        "setAll": "set all",
+        "uniform": "all: {{severity}}",
+        "mixed": "mixed",
+        "noCheckInOut": "no check-in/out required",
+        "noCompetitions": "This event has no competitions yet, so there is nothing to configure.",
+        "check": {
+          "INVOICE_OPEN": "Invoice open",
+          "NOT_ON_WATER": "Not on the water",
+          "REQUIREMENT_TIME_WINDOW": "Time window violated"
+        },
+        "severity": {
+          "OK": "OK (no effect)",
+          "WARNING": "Warning",
+          "CRITICAL": "Critical"
+        },
+        "saved": "Settings saved",
+        "saveError": "Settings could not be saved."
       }
     },
     "schedule": {
@@ -1539,7 +1657,7 @@
       "activateConfirm": "Activate race \"{{label}}\" at {{time}} now?",
       "activateAnyway": "Activate anyway",
       "finish": "Finish race",
-      "finishConfirm": "Finish race \"{{label}}\" at {{time}} now? Depending on the chain progression mode, this activates the next races.",
+      "finishConfirm": "Finish race \"{{label}}\" at {{time}} now? If the event advances automatically, this activates the next races.",
       "finishAnyway": "Finish anyway",
       "refereeModeWarning": "Referee mode is active: races are normally activated and finished by a referee via the referee dashboard. Acting from here bypasses that path.",
       "managedHint": "Managed via the schedule",
@@ -1552,6 +1670,9 @@
       "importDialog": {
         "title": "Excel import",
         "choose": "Choose file",
+        "templateHint": "Not sure how the file needs to be structured?",
+        "template": "Download example file",
+        "templateError": "The example file could not be downloaded.",
         "replacesAll": "The import replaces all existing slots.",
         "runningWarning": "The current schedule already contains started or finished races. These will also be replaced by the import.",
         "row": "Row",
@@ -1559,6 +1680,9 @@
         "text": "Text",
         "rowLinked": "Linked: {{target}}",
         "rowFree": "Free slot",
+        "rowCompetitionNotFound": "Competition not found — will be imported as a free slot",
+        "rowMatchNotFound": "Race not found — the competition has: {{available}}",
+        "rowMatchNotFoundEmpty": "Competition has no races — will be imported as a free slot",
         "rowAmbiguous": "Not unique — will be imported as a free slot",
         "rowDuplicate": "Duplicate in the file — import blocked",
         "apply": "Import",

@@ -1,10 +1,18 @@
 # Testkatalog `feature/crf-2026`
 
-**Stand:** 2026-08-05, Sammelbranch bei `4b98dd09`
+**Stand:** 2026-08-07, Sammelbranch bei `4149d7de` (alle Worktrees des Tages zusammengeführt)
 **Zweck:** Ein Katalog aller Fälle, die vor der Regatta am 14.08. auf **einem** gebauten Stand
 durchlaufen werden. Er sammelt die Fälle über alle Arbeitsstränge (Athleten-Anzeige, Zeitstrahl,
-RaceClocker, Schiedsrichter-Dashboard, Betrieb, Zeitnahme-Einstellungen, Urkunden), damit der große
-Test in der Woche vom 10.08. nicht aus dem Gedächtnis zusammengesucht werden muss.
+RaceClocker, Schiedsrichter-Dashboard, Betrieb, Zeitnahme-Einstellungen, Urkunden, Lauf-Status,
+Prüfungsschweregrad), damit der große Test in der Woche vom 10.08. nicht aus dem Gedächtnis
+zusammengesucht werden muss.
+
+> **Am 07.08. dazugekommen.** An diesem Tag liefen sechs Worktrees parallel; sie sind alle in
+> `feature/crf-2026` zusammengeführt und danach gelöscht worden. Was sie beigetragen haben, steht
+> als **C15–C26** (automatischer RaceClocker-Abruf), **E9** (QR-Code löschen), **G25–G35**
+> (Vorlagen-Austausch), **H1–H10** (Lauf-Status-Chips) und **I1–I8** (Prüfungsschweregrad).
+> Für **keinen** dieser Blöcke gibt es einen Nachweis aus einer laufenden Anwendung — sie sind
+> ausschließlich durch Unit-Tests und Code-Reviews abgesichert. Hier zuerst hinsehen.
 
 ## Wie dieser Katalog benutzt wird
 
@@ -49,7 +57,18 @@ nicht die Erwartung anpassen.
 7. **Seiten.** Athleten-Anzeige `/board/{eventId}` · Kiosk `/event/{eventId}/info` ·
    Schiedsrichter `/event/{eventId}/live-dashboard` · Zeitplan-Tab der Veranstaltung ·
    Wettkampf-Durchführung · Zeitnahme-Tab des Wettkampfs · Gap-Vorlagenverwaltung unter `/config`.
-8. **Seed-Daten für den Zeitstrahl.** Zwei gitignorierte Skripte im `zeitstrahl`-Worktree unter
+8. **Für C15–C26 ein echtes RaceClocker-Rennen.** Der automatische Abruf lässt sich nicht trocken
+   prüfen: gebraucht werden eine Veranstaltung mit gepflegten RaceClocker-URLs, eingeschalteter
+   Automatik und mindestens zwei Läufen mit geplanter Startzeit — einer im Vorlauf-Fenster, einer
+   weit davor. Für C24 zusätzlich ein Lauf, bei dem in RaceClocker dieselbe Crew zweimal steht.
+   Nützlich beim Zusehen: `raceclocker_polled_at`, `raceclocker_poll_error` und
+   `raceclocker_auto_paused_at` auf `competition_match` direkt in der DB mitlesen.
+9. **Für H den Vergleich mit dem alten Stand.** H prüft vor allem, dass sich die Kette **nicht**
+   anders verhält. Am einfachsten mit zwei Fenstern: der neue Stand und ein Checkout von
+   `4b98dd09` daneben, dieselbe Runde in beiden.
+10. **Für I5 einen Wettkampf ohne Check-in/out.** `checkInOutRequired` abschalten und die QR-App
+   auf dem Telefon offen haben — der Fall betrifft beide Oberflächen.
+11. **Seed-Daten für den Zeitstrahl.** Zwei gitignorierte Skripte im `zeitstrahl`-Worktree unter
    `.superpowers/sdd/`: `seed-zeitstrahl.sql` (kleines Szenario, UUID-Präfix `5eed`) und
    `seed-foerde.sql` (Nachbau der Regatta 2025, Präfix `f0de`: 7 Wettkämpfe, 2 Renntage, 21 Slots,
    Sprint-Wettkämpfe mit Zeitfahren → Halbfinale → Finale A/B). Grundlage für die B-Fälle.
@@ -133,6 +152,33 @@ nicht die Erwartung anpassen.
 | C13 | Boot ohne Zeile im Feed | Behält eine eindeutige Nummer oberhalb der importierten und kollidiert nie mit einer echten Bahn | `d64ae540` | |
 | C14 | xlsx-Import nach dem Bahn-Umbau | Startnummern kommen weiterhin aus der Datei — beide Wege teilen sich seit `d64ae540` eine Schreibroutine | `d64ae540` | |
 
+### C15–C26 — Automatischer Abruf (Polling)
+
+Neu am 07.08. Bis hierher kamen Ergebnisse nur, wenn jemand pro Lauf „Ergebnisse eintragen →
+RaceClocker" klickte. Jetzt holt ein Hintergrund-Job sie selbst: ein aktiver Lauf alle 5 s, ein
+bevorstehender einmal pro Minute, ein beendeter nie. **Vorbelegung ist `aus`** — Bestandsdaten
+ändern sich nicht ungefragt, die Automatik muss im Zeitnahme-Tab der Veranstaltung erst
+eingeschaltet werden.
+
+Zwei Zusagen tragen den ganzen Block und gehören zuerst geprüft: der Abruf **beendet nie einen
+Lauf** (C16), und eine **Handeingabe gewinnt** immer gegen die Automatik (C21). Entwurf:
+`docs/superpowers/specs/2026-08-07-raceclocker-polling-design.md`.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| C15 | Automatik einschalten | Zeitnahme-Tab der **Veranstaltung**: Schalter „Ergebnisse automatisch abrufen" plus vier Zahlenfelder (Takt aktiv 5 s, Takt bevorstehend 60 s, Vorlauf 15 min, Nachlauf 120 min). Ohne Einschalten passiert nichts — eine bestehende Veranstaltung verhält sich exakt wie vorher | `a484883e` | |
+| C16 | Start wird erkannt | Lauf steht an, in RaceClocker die Welle starten. Ohne einen Klick in ready2race springt der Lauf innerhalb eines Takts auf „läuft", mit dem Ist-Start aus dem Feed. Er wird dabei **nicht** beendet, auch wenn alle Zeiten schon da sind — Beenden bleibt Handarbeit | `605a2259` | |
+| C17 | Ergebnisse laufen ein | Während der Lauf aktiv ist, Zeiten in RaceClocker nehmen: sie erscheinen ohne Klick in Durchführung, Schiedsrichter-Dashboard und Athleten-Anzeige. Bahnen, Plätze und Strafen wie beim Knopf — Knopf und Automatik teilen sich seit `351b8714` dieselbe Anwendungsroutine | `605a2259` | |
+| C18 | Fenster um die Startzeit | Ein Lauf, dessen geplante Startzeit mehr als der Vorlauf entfernt ist, wird gar nicht beobachtet; einer jenseits des Nachlaufs fällt wieder heraus. Ein Lauf **ohne** Startzeit wird nie beobachtet — den aktiviert man von Hand, danach greift der schnelle Takt | `ece1598e` | |
+| C19 | Statusanzeige je Lauf | Durchführungs-Tab zeigt je Lauf „zuletzt abgerufen HH:MM:SS", bei Problemen den Grund im Klartext | `ffbc158a` | |
+| C20 | Wettkampf erbt RaceClocker | Der Wettkampf hat **kein** eigenes Zeitnahmesystem und erbt RaceClocker von der Veranstaltung — der Normalfall. Statusanzeige und „Automatik wieder aufnehmen" müssen trotzdem da sein. Sie hingen einmal an der eigenen Spalte und verschwanden genau dort, wo die Automatik läuft | `1c16f91f` | |
+| C21 | Handeingabe pausiert | Ergebnis von Hand im Formular eintragen oder eine Datei hochladen, während die Automatik läuft: der Lauf wird für die Automatik pausiert, die Handeingabe wird **nicht** überschrieben. Der manuelle RaceClocker-Pull pausiert dagegen **nicht** — er ist derselbe Weg, nur ausgelöst | `af8464c4` | |
+| C22 | Keine Vermerke ohne Automatik | Veranstaltung ohne Zeitnahmesystem oder mit ausgeschalteter Automatik: eine Handeingabe hinterlässt **keinen** Pausenvermerk. Sonst sammelte jede Regatta Vermerke ein, die sich auf nichts beziehen | `b012fb21` | |
+| C23 | Wieder aufnehmen | Knopf „Automatik wieder aufnehmen" am pausierten Lauf: der nächste Takt schreibt wieder — sichtbar, nicht bloß im Vermerk. Der Fingerabdruck im Job muss dabei mit vergessen werden, sonst nimmt der Takt die Abkürzung „unverändert, nichts schreiben" und die Freigabe tut sichtbar nichts | `a83cfe4a` | |
+| C24 | Fehler reißt nichts mit | Einen Lauf mit doppelten Crews in RaceClocker anlegen: nur dieser Lauf trägt den Fehler, die übrigen Läufe derselben Veranstaltung laufen weiter. Dasselbe mit einer unerreichbaren URL — dann tragen alle Läufe an dieser URL denselben Grund | `6f39d0f9` | |
+| C25 | Kein Dauer-Alarm | Solange eine Welle in RaceClocker noch nicht angelegt ist oder jedes Boot `In race…` zeigt, erscheint **keine** Warnung — das ist der Normalzustand. Das Live-Dashboard warnt erst, wenn der Abruf wirklich hängt | `b1d42612`, `89f31d1e` | |
+| C26 | Takt-Untergrenze und ETag | Takt auf `1` stellen: die Untergrenze greift, es geht kein Dauerfeuer an raceclocker.com raus, und das Formular sagt, was abgelehnt wurde. Parallel im Netzwerk-Tab: das Live-Dashboard liefert weiter `304`-Antworten — der Abrufzeitpunkt darf nicht in seinem ETag stecken | `5778a111`, `2628e50a` | |
+
 ## D — Schiedsrichter-Dashboard
 
 | ID | Fall | Erwartung | testbar ab | Nachweis |
@@ -169,6 +215,7 @@ nicht die Erwartung anpassen.
 | E6 | Zeitzone | Postgres läuft auf UTC, die Anwendung auf Europe/Berlin — angezeigte Zeiten stimmen mit dem Zeitplan überein | — | |
 | E7 | Migration auf bestehender Datenbank | Der Moduswechsel (Boolean → drei Modi) läuft auf einer DB durch, die `event_view` schon trägt | `bb19b126` | |
 | E8 | Migrationen außer der Reihe | Die aus `issue/94` nachgezogenen Migrationen blockieren den Start nicht (`outOfOrder`) | `41b808e9` | |
+| E9 | QR-Code löschen | In der QR-Verwaltung einen Code löschen: verschwindet. Denselben Code ein zweites Mal löschen (Liste in einem zweiten Tab offen halten): die Oberfläche meldet, dass er nicht mehr existiert, statt Erfolg zu behaupten. Vorher war das ein stiller `KIO.fail` ohne `!` — der Fehlerzweig wurde gebaut und weggeworfen, die Antwort war immer 200. Die Scanner-Seite der QR-App bleibt bewusst gutmütig: rescannt ein Helfer ein Band, darf das keinen Fehler geben | `aa249792`, `c7f2ae32` | |
 
 ## F — Zeitnahme-Einstellungen
 
@@ -199,6 +246,14 @@ und xlsx-Import wieder funktionieren — das ist gewollt und muss trotzdem gepr�
 Neu auf dem Sammelbranch. Die Vorlagenpflege nutzt die bestehende Gap-Mechanik: PDF-Export der
 DRV-PowerPoint hochladen, Platzhalter visuell setzen.
 
+G25–G35 kamen mit `de0aac66` dazu: Vorlagen lassen sich als `.r2rtpl.zip` exportieren und
+importieren, und der Editor zeigt Beispieltexte statt leerer Kästen, dazu Zahlenfelder und
+Pfeiltasten für die Platzhalter. Für diesen Block zusätzlich vorbereiten: eine fertig eingerichtete
+Siegerurkunden-Vorlage **mit** hochgeladener Schrift, eine Vorlage im **Querformat**, und eine
+zweite Instanz (lokal neben dem Server), in die ein Paket importiert werden kann. Keiner dieser
+Fälle wurde je in einer laufenden Anwendung gesehen — sie entstanden aus Code-Reviews, nicht aus
+Bedienung.
+
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
 | G1 | Vorlage anlegen | Typ „Siegerurkunde" wählbar, Platzhalter setzbar; angeboten werden nur die für den Typ erlaubten | `4b98dd09` | |
@@ -225,6 +280,62 @@ DRV-PowerPoint hochladen, Platzhalter visuell setzen.
 | G22 | Mehrseitige Teilnahme-Vorlage als Word | Eine Vorlage mit zwei Seiten liefert ein zweiseitiges .docx; Platzhalter von Seite 2 fehlen nicht, und jede Seite behält ihr eigenes Format | `4b98dd09` | |
 | G23 | Vorlage falsch zuweisen | Die Auswahl bietet nur Vorlagen des passenden Typs an; wird trotzdem eine fremde zugewiesen, lehnt der Server sichtbar ab statt stumm leere Urkunden zu erzeugen | `4b98dd09` | |
 | G24 | Kaputte Vorlage | Eine unlesbare oder nullseitige PDF-Vorlage liefert eine verständliche Meldung — keine leere .docx und kein Serverfehler | `4b98dd09` | |
+| G25 | Schrift-Vorschau an gespeicherter Vorlage | Eine **gespeicherte** Vorlage mit hochgeladener Schrift öffnen: die Beispieltexte im Editor stehen in dieser Schrift, nicht in der Standardschrift. Netzwerk-Tab: `GET /gapDocumentTemplate/{id}/font` antwortet 200. Der Fall ist der Kern der Vorschau — er schlug vorher still fehl, weil `.ttf`/`.otf` keinen ratbaren Content-Type haben und die Antwort mit 500 endete, ohne dass die Oberfläche etwas zeigte | `de0aac66` | |
+| G26 | Dateiantwort mit unbekannter Endung | Regression zu G25 an einer **bestehenden** Stelle: ein hochgeladenes Veranstaltungsdokument ohne Dateiendung (oder mit exotischer) herunterladen. Muss ankommen statt 500 — der Fehler saß im gemeinsamen Datei-Responder, nicht im Urkunden-Code | `de0aac66` | |
+| G27 | Vorlage exportieren und wieder importieren | ~~Rundlauf in einer Instanz~~ — seit `2ce88d59` durch `GapDocumentTemplateServiceTest` gegen echtes Postgres abgedeckt: Export → Import → Export ergibt dasselbe Paket, jedes Platzhalter-Feld inklusive Schriftgröße und festem Text übersteht die Runde. Von Hand bleibt nur der Blick auf die **Oberfläche**: Knopf vorhanden, Datei kommt an, Vorlage taucht in der Liste auf | `de0aac66` | |
+| G28 | Paket in einer zweiten Instanz | Dasselbe Paket in eine andere Instanz importieren (lokal ↔ Server). Dort eine Urkunde erzeugen und mit dem Original vergleichen. Das ist der eigentliche Zweck des Formats und die einzige Prüfung, die den ganzen Weg abdeckt | `de0aac66` | |
+| G29 | Import abgelehnt, verständlich | Dass der Server ablehnt, prüft seit `2ce88d59` der Service-Test (kaputtes ZIP, `formatVersion 2`, `template.pdf` das keines ist, Platzhaltertyp fremd zum Urkundentyp — jeweils mit eigenem Fehler, und die Datenbank bleibt leer). Von Hand bleibt: kommt im Dialog die **deutsche Meldung** an, oder das generische „Vorlage konnte nicht angelegt werden"? Mit einer umbenannten Nicht-ZIP-Datei und einem Paket mit `formatVersion 2` durchspielen | `de0aac66` | |
+| G30 | Import derselben Datei erneut | Nach einem abgelehnten Import dieselbe Datei nochmals wählen. Bekannte Schwachstelle: das Dateifeld setzt sich nicht zurück, die zweite Auswahl löst womöglich nichts aus. Prüfen und notieren, ob es den Bedienenden trifft | `de0aac66` | |
+| G31 | Nach dem Import | Erwartet ist **nicht**, dass sich der Bearbeiten-Dialog öffnet (bewusste Abweichung vom Entwurf): Erfolgsmeldung, Tabelle neu geladen, neue Vorlage in der Liste | `de0aac66` | |
+| G32 | Schriftgröße im Editor gegen die Vorschau | Einen Platzhalter auf 20 pt setzen, speichern, Server-Vorschau daneben legen: die Textgröße muss übereinstimmen. **Einmal hochkant und einmal quer** prüfen — der Fehler, den das behebt, kehrte zwischen beiden Formaten das Vorzeichen um (zu klein im Hochformat, zu groß im Querformat) | `de0aac66` | |
+| G33 | Koordinaten tippen | In den Feldern X/Y/Breite/Höhe: `44,7` mit Komma eintippen (muss ankommen, nicht zu 447 werden), `0` als Breite (muss auf die Mindestgröße gehen, kein unsichtbarer Kasten), `150` als X (muss auf 100 % begrenzt werden). Der Wert wird beim Verlassen des Feldes übernommen, nicht bei jedem Tastendruck | `de0aac66` | |
+| G34 | Pfeiltasten | Platzhalter anklicken, Pfeiltasten bewegen ihn in kleinen Schritten, mit Shift in großen, und er bleibt auf der Seite. Danach in ein Zahlenfeld der Seitenleiste klicken und dort die Pfeiltasten drücken: der Kasten darf sich **nicht** bewegen | `de0aac66` | |
+| G35 | Schrift entfernen | Bei geöffnetem Editor „Entfernen" drücken: die Beispieltexte wechseln sofort auf die Standardschrift, ohne Speichern. „Rückgängig" holt die Schrift zurück | `de0aac66` | |
+
+## H — Lauf-Status in Durchführung, Zeitplan und öffentlicher Anzeige
+
+Neu am 07.08. Bis dahin kannte die Durchführungsseite genau einen Zustand — die Checkbox „Aktuell
+laufend". Ein beendeter, ein abgesagter und ein nie angefasster Lauf sahen dort identisch aus, und
+der Zeitplan zeigte für einen verknüpften Lauf nur den *Slot*-Zustand „Verknüpft", also eine Aussage
+über den Plan statt über den Lauf.
+
+**Die Leitplanke ist der eigentliche Testgegenstand:** *nur* Anzeige. Kein neuer Zustandsübergang,
+keine geänderte Aktivier-/Beenden-Logik, kein Eingriff in `ScheduleChain.decideNext` oder
+`deriveMatchState`. Wer H durchgeht, prüft in erster Linie, dass die schon getestete Kette (B8–B11)
+sich **nicht** anders verhält als vorher. Entwurf:
+`docs/superpowers/specs/2026-08-07-lauf-status-anzeige-design.md`.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| H1 | Ein Vokabular, vier Oberflächen | Derselbe Lauf trägt in Durchführung, Zeitplan, Schiedsrichter-Dashboard und öffentlicher Anzeige dieselbe Aussage. Alle Chips stammen aus `matchStatusChip.ts` — sie können nicht auseinanderlaufen, aber sie können falsch abgeleitet sein | `31135e3b` | |
+| H2 | Anstehend → Läuft → Beendet | Einen Lauf durch seinen normalen Weg schicken: grau „Anstehend", blau „Läuft · n min" (zählt ab dem **Ist**-Start, nicht ab der geplanten Zeit), grün „Beendet" | `31135e3b` | |
+| H3 | Überfällig | Ein anstehender Lauf, dessen Startzeit über 5 min zurückliegt, wird rot „Überfällig · n min". Zwei Minuten Verzug sind Regattaalltag und dürfen **nicht** leuchten — sonst steht die halbe Liste in Rot | `31135e3b` | |
+| H4 | Teilweise gewertet | Vier von sechs Booten werten, ohne den Lauf zu beenden: orange „Teilweise gewertet 4/6". Bei 0 gewerteten und bei allen gewerteten erscheint dieser Chip **nicht** — dann greifen „Anstehend" bzw. „Wartet auf Beenden" | `31135e3b` | |
+| H5 | Wartet auf Beenden | Alle Ergebnisse vollständig, Lauf nicht beendet: orange „Wartet auf Beenden" — dieselbe Aussage wie D15 im Dashboard, jetzt auch im Büro sichtbar | `31135e3b` | |
+| H6 | Abgesagt | Ein abgesagter Lauf steht durchgestrichen und grau da, statt wie vorher als „nicht aktiv" von einem noch nicht gestarteten ununterscheidbar zu sein | `31135e3b` | |
+| H7 | Zeitplan zeigt den Lauf, nicht den Slot | In der Status-Spalte des Zeitplans trägt ein **verknüpfter** Slot (`matchId` gesetzt) den Lauf-Chip. Programmpunkte und noch nicht gesetzte Runden behalten ihren bisherigen Slot-Chip — dort gibt es keinen Lauf, über den man etwas sagen könnte | `31135e3b` | |
+| H8 | Öffentlich bleibt grob | Athleten-Anzeige und Kiosk zeigen nur vier Zustände: Anstehend · Läuft · Ergebnisse da · Abgesagt. **Keine** Teilwertung und **kein** Wasserstand — Zuschauer würden ein Teilergebnis als Ergebnis lesen. Gegenprobe zu H4 auf `/board/{eventId}` | `31135e3b` | |
+| H9 | Zählerleiste über der Runde | Über den Läufen einer Runde steht „1 läuft · 1 offen · 3 beendet · 1 abgesagt". Die Zahlen müssen mit den Chips darunter zusammenpassen; die Leiste erscheint erst ab zwei Läufen | `31135e3b` | |
+| H10 | Wasser-Chip | Nur auf der Durchführungsseite, nur solange er etwas aussagt: „Wasser 4/6", wenn der Lauf ansteht oder läuft und noch nicht alle Crews ausgecheckt sind. Bei einem Wettkampf **ohne** Check-in/out (siehe I5) und bei vollständig ausgecheckten Crews erscheint er gar nicht — eine leere Hülle wäre schlimmer als nichts | `14fe10bb` | |
+
+## I — Prüfungsschweregrad (Schiedsrichter-Dashboard)
+
+Am 07.08. als Squash `93017cca` gelandet. Pro Wettkampf lässt sich einstellen, wie schwer eine
+fehlende Prüfung wiegt: OK / Warnung / Kritisch. Backend und Frontend sind grün, **das Verhalten in
+der laufenden Anwendung hat niemand gesehen** — der Serverstart scheiterte damals an der
+Berechtigungsprüfung. Entwurf und Plan unter
+`docs/superpowers/specs/2026-08-07-schiedsrichter-pruefungsschweregrad*`.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| I1 | Ohne Konfiguration wie vorher | **Die zentrale Zusage.** Eine Regatta ohne einen einzigen Konfigurationseintrag sieht aus wie vorher. Ampel je Boot mit dem alten Stand vergleichen, besonders ein Boot mit bezahlter Rechnung und ohne Teilnahmebedingungen: **grauer** Kreis, nicht grün | `93017cca` | |
+| I2 | Verwaltungsdialog | Event-Seite, Knopf neben „Schiedsrichter-Dashboard öffnen": Sammelaktion je Zeile, speichern, Dialog neu öffnen — steht der Wert noch da? Wirkt er im Dashboard beim nächsten Poll? | `93017cca` | |
+| I3 | Zurücksetzen | Alle Prüfungen auf Standard stellen und speichern. Das schickt eine **leere** Liste — der Fall hat einmal einen 500er erzeugt | `93017cca` | |
+| I4 | Chip-Farben im Detail-Dialog | Bezahlt = grün, offen = nach eingestelltem Schweregrad, keine Rechnung = grau. Dasselbe für den Wasser-Chip | `93017cca` | |
+| I5 | Beachsprint ohne Check-in/out | `checkInOutRequired` am Wettkampf abschalten: „auf dem Wasser" wird im Dashboard nicht mehr bewertet, in der QR-App bekommt die Team-Karte einen Hinweis-Chip, und hat die Person nur solche Meldungen, verschwindet der An-/Abmelden-Knopf | `93017cca` | |
+| I6 | Ausgecheckt färbt nicht grün | Ein ausgechecktes Boot darf über `onWaterSeverity` nicht grün werden — es ist auf dem Wasser, das ist keine erfüllte Auflage | `b8848452` | |
+| I7 | Vorübergehend abgemeldete Auflage | Eine Auflage abmelden und wieder anmelden: der eingestellte Schweregrad ist noch da und nicht stillschweigend auf Standard zurückgefallen | `c70f18d7`, `4d3c8a24` | |
+| I8 | Zwei Bearbeiter gleichzeitig | **Bewusst offen gelassen, hier nur bestätigen:** `PUT /event/{eventId}/checkSeverity` hat kein optimistisches Sperren. Zwei gleichzeitig geöffnete Dialoge überschreiben sich kommentarlos. Vor der Regatta entscheiden, ob das reicht — im Zweifel heißt die Regel: einer pflegt | `93017cca` | |
 
 ---
 
@@ -308,6 +419,14 @@ bleibende Nummer erwartet, siehe den offenen Punkt „Bootsnummer" unten.
   lizenzpflichtig und darf nicht im Repo liegen) und wir prüfen, ob sie die Zeichen enthält — oder wir
   liefern eine frei lizenzierte Schrift mit breiterem Zeichensatz als Fallback mit. Vor der Regatta
   entscheiden, sonst steht am Tag ein `?` auf der Urkunde.
+- **Automatik am Renntag an oder aus? (C15).** Die Vorbelegung ist `aus`, die Umstellung ist ein
+  Schalter. Wird sie eingeschaltet, hängt die Anzeige an einer fremden Cloud: ist raceclocker.com
+  langsam oder weg, steht in jedem Lauf ein Fehler. Wird sie ausgelassen, bleibt es beim Klicken pro
+  Lauf. Vorschlag: am Testtag mit eingeschalteter Automatik fahren und die Rückfallregel („Schalter
+  aus, weiter wie bisher") einmal geübt haben, damit sie am 14.08. niemand suchen muss.
+- **Wer pflegt den Prüfungsschweregrad? (I8).** Ohne optimistisches Sperren überschreiben zwei
+  gleichzeitige Bearbeiter sich kommentarlos. Entweder es wird gesperrt oder es gilt organisatorisch:
+  einer pflegt.
 
 ## Nicht in diesem Katalog
 

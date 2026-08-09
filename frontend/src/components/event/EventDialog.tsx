@@ -174,6 +174,9 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     options={chainProgressionModes}
                     fullWidth
                 />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.chainProgressionMode.hint')}
+                </Typography>
                 <FormInputCheckbox
                     name={`showBreaksOnPublicBoards`}
                     label={t('event.showBreaksOnPublicBoards')}

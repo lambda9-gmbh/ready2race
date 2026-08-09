@@ -22,6 +22,10 @@ object EventScheduleRepo {
      * [setupRoundId], wenn gesetzt, schränkt auf die Slots genau dieser Setup-Runde ein - Grundlage
      * für "ganze Runde überspringen" (siehe EventScheduleService.setRoundSkipped), das dieselbe
      * Zustandsableitung braucht wie der Einzel-Slot-Skip, nur für mehrere Zeilen auf einmal.
+     *
+     * `match_teams_total`/`match_teams_scored` tragen den Wertungsstand des verknüpften Laufs für
+     * den Status-Chip im Zeitplan bei. Beide sind 0, wo kein Lauf hängt - dort fragt die Anzeige
+     * ohnehin erst `matchId` ab.
      */
     fun getSlots(eventId: UUID, setupRoundId: UUID? = null) = Jooq.query {
         val sibling = COMPETITION_SETUP_MATCH.`as`("sibling")
@@ -36,6 +40,40 @@ object EventScheduleRepo {
                     .where(sibling.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
             )
         ).`as`("round_materialized")
+
+        // Mannschaften des verknüpften Laufs, die im Rennen sind: OUT-Zeilen sind Boote, die aus
+        // der Vorrunde nicht weitergekommen sind und nur als Lücke mitgeführt werden. Sowohl das
+        // Dashboard (LiveDashboardRepo) als auch die Durchführungsseite
+        // (CompetitionExecutionService) blenden sie aus - der Zeitplan zählt deshalb genauso, sonst
+        // stünde dort 2/6, wo die anderen Oberflächen 2/4 zeigen.
+        val teamInMatch = COMPETITION_MATCH_TEAM.COMPETITION_MATCH
+            .eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH)
+            .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
+
+        val matchTeamsTotal = DSL.field(
+            DSL.selectCount()
+                .from(COMPETITION_MATCH_TEAM)
+                .where(teamInMatch)
+        ).`as`("match_teams_total")
+
+        // "Gewertet" ist wortgleich zu LiveDashboardLogic.teamHasResult (Platz ODER ausgeschieden
+        // ODER abgemeldet) und damit genau die Negation von `match_open` in [getChainSlots].
+        // Korrelierte Unterabfrage statt zweitem Query: eine Abfrage bleibt eine Abfrage.
+        val matchTeamsScored = DSL.field(
+            DSL.selectCount()
+                .from(COMPETITION_MATCH_TEAM)
+                .where(teamInMatch)
+                .and(
+                    COMPETITION_MATCH_TEAM.PLACE.isNotNull
+                        .or(COMPETITION_MATCH_TEAM.FAILED.isTrue)
+                        .orExists(
+                            selectOne()
+                                .from(COMPETITION_DEREGISTRATION)
+                                .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                                .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+                        )
+                )
+        ).`as`("match_teams_scored")
 
         var condition = EVENT_SCHEDULE_SLOT.EVENT.eq(eventId)
         if (setupRoundId != null) {
@@ -55,6 +93,8 @@ object EventScheduleRepo {
             COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
             COMPETITION_MATCH.CURRENTLY_RUNNING,
             roundMaterialized,
+            matchTeamsTotal,
+            matchTeamsScored,
         )
             .from(EVENT_SCHEDULE_SLOT)
             .leftJoin(COMPETITION_SETUP_MATCH)

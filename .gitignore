@@ -4,3 +4,12 @@
 deploy*.sh
 /.cursor/
 /CLAUDE.md
+
+# Visual-Companion-Mockups aus dem Brainstorming
+.superpowers/
+
+# Abzüge der produktiven Datenbank. Sie enthalten echte Meldungen mit Klarnamen,
+# Jahrgängen und E-Mail-Adressen und gehören weder in die Historie noch in einen
+# Merge-Request. Die gepflegten Testseeds daneben (seed-dm-coastal-2026.sql und
+# Geschwister) bleiben versioniert.
+/docs/seeds/seed-prod-*.sql

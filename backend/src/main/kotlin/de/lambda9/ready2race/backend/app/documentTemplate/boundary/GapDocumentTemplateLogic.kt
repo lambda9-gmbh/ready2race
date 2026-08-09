@@ -38,4 +38,8 @@ object GapDocumentTemplateLogic {
      */
     fun templateTypeMatches(templateType: GapDocumentType, slot: GapDocumentType): Boolean =
         templateType == slot
+
+    /** Grobe Vorprüfung des Font-Uploads anhand der Dateiendung, bevor der Inhalt gelesen wird. */
+    fun hasValidFontExtension(fileName: String): Boolean =
+        fileName.substringAfterLast('.', "").lowercase() in setOf("ttf", "otf")
 }

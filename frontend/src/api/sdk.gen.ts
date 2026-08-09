@@ -195,6 +195,9 @@ import type {
     PullMatchResultsFromRaceClockerData,
     PullMatchResultsFromRaceClockerError,
     PullMatchResultsFromRaceClockerResponse,
+    ResumeRaceClockerAutoPullData,
+    ResumeRaceClockerAutoPullError,
+    ResumeRaceClockerAutoPullResponse,
     DownloadStartListData,
     DownloadStartListError,
     DownloadStartListResponse,
@@ -402,6 +405,9 @@ import type {
     GetActiveParticipantRequirementsForEventData,
     GetActiveParticipantRequirementsForEventError,
     GetActiveParticipantRequirementsForEventResponse,
+    ExportOpenParticipantRequirementsData,
+    ExportOpenParticipantRequirementsError,
+    ExportOpenParticipantRequirementsResponse,
     ActivateParticipantRequirementForEventData,
     ActivateParticipantRequirementForEventError,
     ActivateParticipantRequirementForEventResponse,
@@ -466,6 +472,9 @@ import type {
     AddGapDocumentTemplateData,
     AddGapDocumentTemplateError,
     AddGapDocumentTemplateResponse,
+    ImportGapDocumentTemplateData,
+    ImportGapDocumentTemplateError,
+    ImportGapDocumentTemplateResponse,
     UpdateGapDocumentTemplateData,
     UpdateGapDocumentTemplateError,
     UpdateGapDocumentTemplateResponse,
@@ -478,6 +487,12 @@ import type {
     DownloadGapDocumentTemplateSampleData,
     DownloadGapDocumentTemplateSampleError,
     DownloadGapDocumentTemplateSampleResponse,
+    ExportGapDocumentTemplateData,
+    ExportGapDocumentTemplateError,
+    ExportGapDocumentTemplateResponse,
+    GetGapDocumentTemplateFontData,
+    GetGapDocumentTemplateFontError,
+    GetGapDocumentTemplateFontResponse,
     GetGapDocumentTemplateTypesError,
     GetGapDocumentTemplateTypesResponse,
     AssignGapDocumentTemplateData,
@@ -650,6 +665,12 @@ import type {
     GetLiveDashboardTeamDetailData,
     GetLiveDashboardTeamDetailError,
     GetLiveDashboardTeamDetailResponse,
+    GetCheckSeverityConfigData,
+    GetCheckSeverityConfigError,
+    GetCheckSeverityConfigResponse,
+    UpdateCheckSeverityConfigData,
+    UpdateCheckSeverityConfigError,
+    UpdateCheckSeverityConfigResponse,
     GetEventScheduleData,
     GetEventScheduleError,
     GetEventScheduleResponse,
@@ -683,6 +704,9 @@ import type {
     ImportEventScheduleData,
     ImportEventScheduleError,
     ImportEventScheduleResponse,
+    DownloadEventScheduleImportTemplateData,
+    DownloadEventScheduleImportTemplateError,
+    DownloadEventScheduleImportTemplateResponse,
     GetInfoViewsData,
     GetInfoViewsError,
     GetInfoViewsResponse,
@@ -1604,6 +1628,22 @@ export const pullMatchResultsFromRaceClocker = <ThrowOnError extends boolean = f
     })
 }
 
+/**
+ * Releases a match back to the automatic RaceClocker pull. Entering results by hand or uploading a file pauses the pull for that match, so the office keeps the last word; this undoes that and clears the last poll error.
+ */
+export const resumeRaceClockerAutoPull = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResumeRaceClockerAutoPullData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ResumeRaceClockerAutoPullResponse,
+        ResumeRaceClockerAutoPullError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/raceclocker/resume',
+    })
+}
+
 export const downloadStartList = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<DownloadStartListData, ThrowOnError>,
 ) => {
@@ -2474,6 +2514,22 @@ export const getActiveParticipantRequirementsForEvent = <ThrowOnError extends bo
     })
 }
 
+/**
+ * Downloads an xlsx of the registered participants who are still missing requirements - the basis for notifying their clubs. Without requirementId every requirement active at the event counts. Requirements bound to a named participant only apply to that role, and participants with nothing open are left out.
+ */
+export const exportOpenParticipantRequirements = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ExportOpenParticipantRequirementsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        ExportOpenParticipantRequirementsResponse,
+        ExportOpenParticipantRequirementsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/open/export',
+    })
+}
+
 export const activateParticipantRequirementForEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<ActivateParticipantRequirementForEventData, ThrowOnError>,
 ) => {
@@ -2765,6 +2821,24 @@ export const addGapDocumentTemplate = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const importGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ImportGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ImportGapDocumentTemplateResponse,
+        ImportGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/gapDocumentTemplate/import',
+    })
+}
+
 export const updateGapDocumentTemplate = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<UpdateGapDocumentTemplateData, ThrowOnError>,
 ) => {
@@ -2819,6 +2893,32 @@ export const downloadGapDocumentTemplateSample = <ThrowOnError extends boolean =
     >({
         ...options,
         url: '/gapDocumentTemplate/{gapDocumentTemplateId}/preview',
+    })
+}
+
+export const exportGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ExportGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        ExportGapDocumentTemplateResponse,
+        ExportGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}/export',
+    })
+}
+
+export const getGapDocumentTemplateFont = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetGapDocumentTemplateFontData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetGapDocumentTemplateFontResponse,
+        GetGapDocumentTemplateFontError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}/font',
     })
 }
 
@@ -3567,6 +3667,38 @@ export const getLiveDashboardTeamDetail = <ThrowOnError extends boolean = false>
 }
 
 /**
+ * The competitions, the configurable checks with their defaults and the deviations set for this event - administration for the referee dashboard's severity configuration.
+ */
+export const getCheckSeverityConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCheckSeverityConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCheckSeverityConfigResponse,
+        GetCheckSeverityConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/checkSeverity',
+    })
+}
+
+/**
+ * Replaces the event's deviations. Entries matching the built-in default are dropped rather than stored, so a later change to the default keeps applying to existing data.
+ */
+export const updateCheckSeverityConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCheckSeverityConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCheckSeverityConfigResponse,
+        UpdateCheckSeverityConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/checkSeverity',
+    })
+}
+
+/**
  * The event's timeline: planned slots plus setup rounds that have no slot yet
  */
 export const getEventSchedule = <ThrowOnError extends boolean = false>(
@@ -3735,6 +3867,22 @@ export const importEventSchedule = <ThrowOnError extends boolean = false>(
             ...options?.headers,
         },
         url: '/event/{eventId}/schedule/import',
+    })
+}
+
+/**
+ * Downloads an example xlsx for the schedule import, using the columns importEventSchedule reads. The example rows are dated to the event's first day.
+ */
+export const downloadEventScheduleImportTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadEventScheduleImportTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadEventScheduleImportTemplateResponse,
+        DownloadEventScheduleImportTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/import/template',
     })
 }
 

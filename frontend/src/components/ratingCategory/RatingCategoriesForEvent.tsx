@@ -1,9 +1,7 @@
 import {useState} from 'react'
 import {
+    Box,
     Button,
-    Card,
-    CardContent,
-    CardHeader,
     DialogActions,
     DialogContent,
     DialogTitle,
@@ -130,60 +128,56 @@ const RatingCategoriesForEvent = () => {
         ) ?? []
 
     if (loadingAssigned || loadingAll) {
-        return (
-            <Card>
-                <CardContent>
-                    <Throbber />
-                </CardContent>
-            </Card>
-        )
+        return <Throbber />
     }
 
     return (
         <>
-            <Card sx={{maxWidth: 500}}>
-                <CardHeader
-                    title={t('event.ratingCategory.title')}
-                    action={
-                        <IconButton
-                            onClick={() => setDialogOpen(true)}
-                            className="cursor-pointer"
-                            disabled={availableCategories.length === 0}>
-                            <AddIcon />
-                        </IconButton>
-                    }
-                />
-                <CardContent>
-                    <List>
-                        {assignedCategories?.map(category => (
-                            <ListItem
-                                key={category.ratingCategory.id}
-                                secondaryAction={
-                                    <IconButton
-                                        edge="end"
-                                        onClick={() => handleRemove(category)}
-                                        className="cursor-pointer">
-                                        <DeleteIcon />
-                                    </IconButton>
-                                }>
-                                <ListItemText
-                                    primary={category.ratingCategory.name}
-                                    secondary={
-                                        category.yearFrom || category.yearTo
-                                            ? `${t('event.ratingCategory.yearFrom')}: ${category.yearFrom ?? '-'} | ${t('event.ratingCategory.yearTo')}: ${category.yearTo ?? '-'}`
-                                            : undefined
-                                    }
-                                />
-                            </ListItem>
-                        ))}
-                        {(!assignedCategories || assignedCategories.length === 0) && (
-                            <ListItem>
-                                <ListItemText primary={t('event.ratingCategory.noEntries')} />
-                            </ListItem>
-                        )}
-                    </List>
-                </CardContent>
-            </Card>
+            {/* Blanker Abschnitt statt Karte: die Nachbarn im Einstellungen-Tab (Zeitnahme,
+                Dokumente, Teilnahmebedingungen) sind h2-Überschrift plus Inhalt darunter, und die
+                Anlegen-Schaltfläche sitzt dort rechts über der Liste — siehe EntityTable. */}
+            <Box>
+                <Typography variant={'h2'}>{t('event.ratingCategory.title')}</Typography>
+                <Box display={'flex'} justifyContent={'flex-end'} mb={1} pt={1}>
+                    <Button
+                        variant={'outlined'}
+                        startIcon={<AddIcon />}
+                        onClick={() => setDialogOpen(true)}
+                        disabled={availableCategories.length === 0}>
+                        {/* „zuweisen", nicht „anlegen": die Kategorien selbst entstehen in der
+                            Konfiguration, hier wird eine bestehende an die Veranstaltung gehängt. */}
+                        {t('event.ratingCategory.add.title')}
+                    </Button>
+                </Box>
+                <List sx={{maxWidth: 500}}>
+                    {assignedCategories?.map(category => (
+                        <ListItem
+                            key={category.ratingCategory.id}
+                            secondaryAction={
+                                <IconButton
+                                    edge="end"
+                                    onClick={() => handleRemove(category)}
+                                    className="cursor-pointer">
+                                    <DeleteIcon />
+                                </IconButton>
+                            }>
+                            <ListItemText
+                                primary={category.ratingCategory.name}
+                                secondary={
+                                    category.yearFrom || category.yearTo
+                                        ? `${t('event.ratingCategory.yearFrom')}: ${category.yearFrom ?? '-'} | ${t('event.ratingCategory.yearTo')}: ${category.yearTo ?? '-'}`
+                                        : undefined
+                                }
+                            />
+                        </ListItem>
+                    ))}
+                    {(!assignedCategories || assignedCategories.length === 0) && (
+                        <ListItem>
+                            <ListItemText primary={t('event.ratingCategory.noEntries')} />
+                        </ListItem>
+                    )}
+                </List>
+            </Box>
 
             <BaseDialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm">
                 <DialogTitle>{t('event.ratingCategory.add.title')}</DialogTitle>

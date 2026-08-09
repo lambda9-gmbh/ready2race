@@ -2,29 +2,26 @@ import {describe, expect, it} from 'vitest'
 import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
     buildLiveDashboardTimeline,
+    dashboardEntryDomId,
+    dashboardEntryDomIdCandidates,
+    dashboardScope,
     liveMatches,
     matchControls,
     nextUpEntry,
     openResultTeams,
     pendingSlotLabel,
     teamHasResult,
-    teamSeverity,
 } from './common.ts'
-
-const noRequirements = {
-    total: 0,
-    fulfilled: 0,
-    missingRequired: 0,
-    missingOptional: 0,
-    timeIssues: 0,
-}
 
 const team = (overrides: Partial<LiveDashboardTeamDto>): LiveDashboardTeamDto => ({
     teamId: crypto.randomUUID(),
     failed: false,
     deregistered: false,
     invoiceState: 'NONE',
-    requirements: noRequirements,
+    severity: 'NEUTRAL',
+    invoiceSeverity: 'NEUTRAL',
+    onWaterRequired: false,
+    onWaterSeverity: 'NEUTRAL',
     substituted: false,
     ...overrides,
 })
@@ -42,80 +39,6 @@ describe('teamHasResult', () => {
 
     it('erkennt ein offenes Boot', () => {
         expect(teamHasResult(team({}))).toBe(false)
-    })
-})
-
-describe('teamSeverity', () => {
-    it('meldet ein Boot ohne Auscheck-Scan bei aktivem Lauf als Fehler', () => {
-        expect(teamSeverity(team({}), true)).toBe('error')
-        expect(teamSeverity(team({onWaterAt: '2026-08-15T07:48:41'}), true)).not.toBe('error')
-    })
-
-    it('ignoriert den Auscheck-Scan, solange der Lauf nicht aktiv ist', () => {
-        expect(teamSeverity(team({}), false)).toBe('neutral')
-        expect(teamSeverity(team({}))).toBe('neutral')
-    })
-
-    it('verlangt von abgemeldeten Booten keinen Auscheck-Scan', () => {
-        expect(teamSeverity(team({deregistered: true}), true)).toBe('neutral')
-    })
-
-    it('meldet eine fehlende Pflichtbedingung als Fehler', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 3, fulfilled: 2, missingRequired: 1}}),
-        )
-        expect(severity).toBe('error')
-    })
-
-    it('meldet eine offene Rechnung als Fehler', () => {
-        expect(teamSeverity(team({invoiceState: 'OPEN'}))).toBe('error')
-    })
-
-    it('meldet eine Prüfung außerhalb des Zeitfensters als Warnung', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 2, fulfilled: 2, timeIssues: 1}}),
-        )
-        expect(severity).toBe('warning')
-    })
-
-    it('wertet eine fehlende Pflichtbedingung schwerer als eine Zeitabweichung', () => {
-        const severity = teamSeverity(
-            team({
-                requirements: {
-                    ...noRequirements,
-                    total: 3,
-                    fulfilled: 2,
-                    missingRequired: 1,
-                    timeIssues: 1,
-                },
-            }),
-        )
-        expect(severity).toBe('error')
-    })
-
-    it('bleibt neutral, wenn ausschließlich Optionales fehlt', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 1, missingOptional: 1}}),
-        )
-        expect(severity).toBe('neutral')
-    })
-
-    it('lässt eine fehlende optionale Bedingung eine erfüllte nicht abwerten', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 2, fulfilled: 1, missingOptional: 1}}),
-        )
-        expect(severity).toBe('ok')
-    })
-
-    it('meldet vollständig erfüllte Bedingungen als in Ordnung', () => {
-        const severity = teamSeverity(
-            team({requirements: {...noRequirements, total: 3, fulfilled: 3}}),
-        )
-        expect(severity).toBe('ok')
-    })
-
-    it('bleibt ohne zugewiesene Bedingungen neutral', () => {
-        expect(teamSeverity(team({}))).toBe('neutral')
     })
 })
 
@@ -162,16 +85,45 @@ describe('liveMatches', () => {
         const anstehend = match({matchId: 'anstehend', state: 'UPCOMING'})
         const abgesagt = match({matchId: 'abgesagt', state: 'SKIPPED'})
 
-        expect(liveMatches([beendet, laeuft, wartet, anstehend, abgesagt]).map(m => m.matchId)).toEqual([
-            'laeuft',
-            'wartet',
+        expect(
+            liveMatches([beendet, laeuft, wartet, anstehend, abgesagt]).map(m => m.matchId),
+        ).toEqual(['laeuft', 'wartet'])
+    })
+})
+
+describe('dashboardScope', () => {
+    it('holt schmal im Live-Tab nur den Live-Ausschnitt', () => {
+        expect(dashboardScope(false, 'live')).toBe('LIVE')
+    })
+
+    it('holt schmal im Läufe-Tab die Gesamtliste', () => {
+        expect(dashboardScope(false, 'matches')).toBe('ALL')
+    })
+
+    it('holt breit immer die Gesamtliste, weil beide Spalten sichtbar sind', () => {
+        expect(dashboardScope(true, 'live')).toBe('ALL')
+        expect(dashboardScope(true, 'matches')).toBe('ALL')
+    })
+})
+
+describe('dashboardEntryDomId', () => {
+    it('unterscheidet dieselbe Karte in Live-Spalte und Gesamtliste', () => {
+        expect(dashboardEntryDomId('abc', 'live')).not.toBe(dashboardEntryDomId('abc', 'list'))
+    })
+
+    it('sucht beim Zeitstrahl-Klick zuerst in der Gesamtliste', () => {
+        expect(dashboardEntryDomIdCandidates('abc')).toEqual([
+            dashboardEntryDomId('abc', 'list'),
+            dashboardEntryDomId('abc', 'live'),
         ])
     })
 })
 
 describe('matchControls', () => {
     it('bietet bei einem laufenden Lauf Beenden und Deaktivieren an', () => {
-        expect(matchControls(match({state: 'RUNNING', currentlyRunning: true}), true, true)).toEqual({
+        expect(
+            matchControls(match({state: 'RUNNING', currentlyRunning: true}), true, true),
+        ).toEqual({
             showFinish: true,
             showRunToggle: true,
         })
@@ -203,7 +155,9 @@ describe('matchControls', () => {
             showFinish: false,
             showRunToggle: false,
         })
-        expect(matchControls(match({state: 'RUNNING', currentlyRunning: true}), false, false)).toEqual({
+        expect(
+            matchControls(match({state: 'RUNNING', currentlyRunning: true}), false, false),
+        ).toEqual({
             showFinish: false,
             showRunToggle: false,
         })
@@ -218,11 +172,11 @@ describe('buildLiveDashboardTimeline', () => {
 
         const timeline = buildLiveDashboardTimeline([late, early], [between])
 
-        expect(timeline.map(entry => (entry.kind === 'match' ? entry.match.matchId : entry.slot.slotId))).toEqual([
-            'early',
-            'between',
-            'late',
-        ])
+        expect(
+            timeline.map(entry =>
+                entry.kind === 'match' ? entry.match.matchId : entry.slot.slotId,
+            ),
+        ).toEqual(['early', 'between', 'late'])
     })
 
     it('reiht Läufe ohne Startzeit ans Ende ein', () => {
@@ -231,10 +185,11 @@ describe('buildLiveDashboardTimeline', () => {
 
         const timeline = buildLiveDashboardTimeline([unscheduled, scheduled], [])
 
-        expect(timeline.map(entry => (entry.kind === 'match' ? entry.match.matchId : entry.slot.slotId))).toEqual([
-            'scheduled',
-            'unscheduled',
-        ])
+        expect(
+            timeline.map(entry =>
+                entry.kind === 'match' ? entry.match.matchId : entry.slot.slotId,
+            ),
+        ).toEqual(['scheduled', 'unscheduled'])
     })
 })
 
@@ -306,7 +261,11 @@ describe('pendingSlotLabel', () => {
     it('setzt Wettkampf, Runde und Lauf mit Trennzeichen zusammen', () => {
         expect(
             pendingSlotLabel(
-                pendingSlot({competitionName: 'CM 1x', roundName: 'Achtelfinale', matchName: 'AF1'}),
+                pendingSlot({
+                    competitionName: 'CM 1x',
+                    roundName: 'Achtelfinale',
+                    matchName: 'AF1',
+                }),
             ),
         ).toBe('CM 1x · Achtelfinale · AF1')
     })

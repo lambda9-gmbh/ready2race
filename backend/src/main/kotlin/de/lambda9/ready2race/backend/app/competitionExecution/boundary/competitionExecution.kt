@@ -173,6 +173,22 @@ fun Route.competitionExecution() {
                 }
             }
 
+            post("/results/raceclocker/resume") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    CompetitionExecutionService.resumeRaceClockerAutoPull(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                    )
+                }
+            }
+
             get("/startList") {
                 call.respondComprehension {
                     !authenticate(Privilege.ReadEventGlobal)

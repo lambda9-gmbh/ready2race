@@ -125,6 +125,14 @@ fun Route.eventSchedule() {
                 EventScheduleService.shiftSchedule(eventId, body, user.id!!)
             }
         }
+        get("/import/template") {
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+
+                EventScheduleService.scheduleImportTemplate(eventId)
+            }
+        }
         post("/import") {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateEventGlobal)

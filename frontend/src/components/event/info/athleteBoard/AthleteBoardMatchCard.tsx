@@ -1,9 +1,15 @@
 import {Box, Card, CardContent, Chip, Stack, Typography} from '@mui/material'
-import {TFunction} from 'i18next'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch} from '@api/types.gen'
 import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
-import {formatClockTime, teamLabel} from './common'
+import {
+    COUNTDOWN_MAX_SECONDS,
+    formatClockTime,
+    formatRemaining,
+    formatShortDate,
+    isSameDay,
+    teamLabel,
+} from './common'
 
 /**
  * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits auf dem Wasser,
@@ -21,15 +27,6 @@ interface AthleteBoardMatchCardProps {
     // Nur innerhalb variant="upcoming" relevant: ob zusätzlich zum "erwartet"-Hinweis
     // auch die genaue Countdown-Zahl gezeigt wird (Einstellung der Veranstaltung).
     showCountdown?: boolean
-}
-
-const formatRemaining = (seconds: number, t: TFunction) => {
-    const total = Math.max(0, Math.floor(seconds))
-    const minutes = Math.floor(total / 60)
-    const rest = total % 60
-    return minutes > 0
-        ? `${minutes} ${t('event.info.athleteBoard.minutesUnit')}`
-        : `${rest} ${t('event.info.athleteBoard.secondsUnit')}`
 }
 
 const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: AthleteBoardMatchCardProps) => {
@@ -77,8 +74,23 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                 </Stack>
             )
         }
+        // Ein Start an einem anderen Kalendertag bekommt sein Datum dazu: "16:30" allein
+        // liest sich sonst wie heute, auch wenn der Lauf erst nächste Woche stattfindet.
+        const startsOnAnotherDay = !isSameDay(new Date(match.startTime), now)
+
+        // Jenseits eines Tages ersetzt das Datum die Restzeit (siehe COUNTDOWN_MAX_SECONDS).
+        const countdownFitsOnScreen =
+            startsInSeconds !== null && startsInSeconds <= COUNTDOWN_MAX_SECONDS
+
         return (
             <Stack alignItems="flex-end">
+                {startsOnAnotherDay && (
+                    <Typography
+                        sx={{fontSize: 'clamp(0.7rem, 1.2vw, 0.95rem)'}}
+                        color="text.secondary">
+                        {formatShortDate(match.startTime)}
+                    </Typography>
+                )}
                 <Typography
                     sx={{fontSize: 'clamp(1.1rem, 2.4vw, 2rem)', fontWeight: 700, lineHeight: 1.1}}>
                     {formatClockTime(match.startTime)}
@@ -94,7 +106,8 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                 ) : (
                     variant === 'upcoming' &&
                     showCountdown &&
-                    startsInSeconds !== null && (
+                    startsInSeconds !== null &&
+                    countdownFitsOnScreen && (
                         <Typography
                             sx={{fontSize: 'clamp(0.75rem, 1.3vw, 1rem)'}}
                             color="text.secondary">
@@ -105,6 +118,56 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     )
                 )}
             </Stack>
+        )
+    }
+
+    // Abgesagter Lauf: Er bleibt an seiner geplanten Stelle stehen, statt spurlos zu verschwinden —
+    // für eine Besatzung am Steg ist ein verschwundener Lauf nicht von einem Anzeigefehler zu
+    // unterscheiden. Gezeigt wird nur noch, worum es ging und wann es hätte sein sollen: keine
+    // Mannschaften (der Server liefert sie gar nicht erst mit), kein Countdown auf einen Start, der
+    // nicht kommt. Die Nachfrist im Backend räumt die Karte von selbst wieder ab.
+    if (match.cancelled) {
+        return (
+            <Card variant="outlined" sx={{mb: 1.5, opacity: 0.6}}>
+                <CardContent sx={{p: 'clamp(0.75rem, 1.2vw, 1.5rem)'}}>
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        gap={1}>
+                        <Box sx={{minWidth: 0}}>
+                            <Typography
+                                sx={{
+                                    fontSize: 'clamp(1rem, 1.8vw, 1.6rem)',
+                                    fontWeight: 700,
+                                    textDecoration: 'line-through',
+                                }}
+                                color="text.secondary">
+                                {[match.competitionName, match.roundName, match.matchName]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                            </Typography>
+                            <Typography
+                                sx={{fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)', fontWeight: 600}}
+                                color="text.secondary">
+                                {t('event.match.status.doesNotTakePlace')}
+                            </Typography>
+                        </Box>
+                        {match.startTime && (
+                            <Typography
+                                sx={{
+                                    fontSize: 'clamp(1.1rem, 2.4vw, 2rem)',
+                                    fontWeight: 700,
+                                    lineHeight: 1.1,
+                                    textDecoration: 'line-through',
+                                }}
+                                color="text.secondary">
+                                {formatClockTime(match.startTime)}
+                            </Typography>
+                        )}
+                    </Stack>
+                </CardContent>
+            </Card>
         )
     }
 

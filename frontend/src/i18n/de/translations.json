@@ -151,7 +151,10 @@
       "step3": {
         "title": "Wertzuordnungen",
         "info": "Konfigurieren Sie, wie Werte in Ihrer CSV interpretiert werden sollen.",
-        "valueMappings": "Wertzuordnungen"
+        "valueMappings": "Wertzuordnungen",
+        "valueWithCount": "{{value}} ({{count}} Zeilen)",
+        "selectedCount": "{{selected}} von {{total}} Werten ausgewählt",
+        "nothingSelected": "Nichts ausgewählt — es zählen alle Zeilen"
       },
       "error": {
         "noConfig": "Konfiguration ist unvollständig",
@@ -258,14 +261,22 @@
         "preview": {
           "title": "Urkundenvorlagenvorschau",
           "error": "Vorschau konnte nicht geladen werden.",
-          "show": "Urkunde in der Vorschau anzeigen"
+          "show": "Urkunde in der Vorschau anzeigen",
+          "approximate": "Die Darstellung im Editor ist eine Näherung. Verbindlich ist die Vorschau der gespeicherten Vorlage."
         },
         "error": {
           "invalidFont": "Die Schriftdatei konnte nicht gelesen werden. Bitte eine gültige TTF- oder OTF-Datei hochladen.",
+          "invalidPdf": "Die gewählte Datei lässt sich nicht als PDF lesen.",
+          "invalidPackage": "Das Paket lässt sich nicht lesen. Es muss eine unveränderte .r2rtpl.zip-Datei sein.",
+          "unsupportedPackageVersion": "Das Paket stammt aus einer neueren Version. Bitte ready2race aktualisieren.",
           "typeMismatch": "Die Vorlage passt nicht zu dem Dokumenttyp, dem sie zugewiesen werden soll.",
           "placeholderPageNotSupported": "Siegerurkunden haben genau eine Seite — alle Platzhalter müssen auf Seite 1 liegen.",
           "placeholderTypeNotSupported": "Dieser Platzhalter ist für den gewählten Dokumenttyp nicht vorgesehen. Bitte einen Platzhalter aus der Liste dieses Typs wählen."
-        }
+        },
+        "export": "Vorlage exportieren",
+        "exportHint": "Das Paket enthält PDF, Platzhalter und die hinterlegte Schrift.",
+        "import": "Vorlage importieren",
+        "importSucceeded": "Vorlage importiert"
       },
       "placeholder": {
         "available": "Verfügbare Platzhalter",
@@ -298,6 +309,10 @@
         "page": "Seite",
         "position": "Position",
         "size": "Größe",
+        "positionX": "X",
+        "positionY": "Y",
+        "width": "Breite",
+        "height": "Höhe",
         "fontSize": "Schriftgröße (pt)",
         "fontSizeHelp": "Leer lassen, um die Höhe des Platzhalter-Kastens zu verwenden.",
         "bold": "Fett",
@@ -508,6 +523,8 @@
           "error": "Fehler beim Auschecken des Teilnehmenden"
         },
         "noTeamsFound": "Keine Teams gefunden",
+        "noCheckInOutNeeded": "keine An-/Abmeldung nötig",
+        "noCheckInOutForAnyTeam": "Für diese Meldungen ist keine An-/Abmeldung vorgesehen.",
         "participantNotFound": "Teilnehmer nicht gefunden",
         "errorReason": {
           "alreadyCheckedIn": "Diese Person ist bereits eingecheckt — es ist nichts weiter zu tun.",
@@ -552,10 +569,11 @@
     "submissionNeedsVerification": "Eingereichte Ergebnisse müssen verifiziert werden",
     "allowParticipantSelfRegistration": "Selbstständiges Anmelden von Teilnehmenden erlauben",
     "chainProgressionMode": {
-      "label": "Kettenmodus",
-      "SCHIEDSRICHTER": "Schiedsrichter — Beenden und Kette über das Schiedsrichter-Dashboard",
-      "REGATTABUERO": "Regattabüro — Beenden und Aktivieren exklusiv über den Zeitplan",
-      "DEAKTIVIERT": "Deaktiviert — keine automatische Aktivierung"
+      "label": "Lauf beenden & nächsten aktivieren",
+      "SCHIEDSRICHTER": "Schiedsrichter beenden im Dashboard — nächster Lauf startet automatisch",
+      "REGATTABUERO": "Nur die Organisatoren beenden, über den Zeitplan — nächster Lauf startet automatisch",
+      "DEAKTIVIERT": "Schiedsrichter beenden im Dashboard — nächster Lauf wird von Hand aktiviert",
+      "hint": "Die Organisatoren können Läufe über den Zeitplan in jedem Fall beenden, unabhängig von dieser Einstellung."
     },
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
@@ -614,6 +632,7 @@
       "ratingCategoryRequired": "Wertungskategorie erforderlich",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
+      "checkInOutRequired": "An-/Abmeldung aufs Wasser erforderlich",
       "challenge": {
         "configs": "Challenge Einstellungen",
         "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
@@ -1049,6 +1068,14 @@
               "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden ({{teams}}). Bitte dort bereinigen und erneut holen.",
               "noResults": "Für diesen Lauf liegen in RaceClocker noch keine Zeiten vor.",
               "matchIsBye": "Dieser Lauf ist ein Freilos: Das Team kommt ohne Rennen weiter, es gibt keine Ergebnisse zu holen."
+            },
+            "poll": {
+              "lastPolled": "Automatisch abgerufen: {{time}}",
+              "error": "Automatischer Abruf klemmt: {{reason}}",
+              "paused": "Automatischer Abruf pausiert — es wurde von Hand eingetragen.",
+              "resume": "Automatik wieder aufnehmen",
+              "resumed": "Der automatische Abruf ist wieder aktiv.",
+              "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden. Welche, zeigt der Abruf über den Knopf."
             }
           }
         },
@@ -1129,22 +1156,32 @@
         "system": "Zeitnahme-System",
         "systems": {
           "none": "nicht gesetzt",
-          "inherited": "Vorgabe der Veranstaltung ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
-        "inheritedHint": "Dieser Wettkampf übernimmt die Zeitnahme der Veranstaltung. Die Adressen unten sind nur nötig, wenn er ein eigenes RaceClocker-Rennen hat — sonst leer lassen.",
-        "inheritedUrl": "Vorgabe der Veranstaltung: {{url}}",
+        "eventDefaults": {
+          "title": "Vorgabe der Veranstaltung",
+          "unset": "nicht gesetzt",
+          "link": "Zeitnahme der Veranstaltung bearbeiten"
+        },
+        "override": {
+          "label": "Für diesen Wettkampf abweichend einstellen",
+          "hint": "Aus: der Wettkampf folgt der Veranstaltung und übernimmt jede spätere Änderung dort. An: er bekommt eigene Werte — sinnvoll nur, wenn er ein eigenes Rennen im Zeitnahme-System hat."
+        },
+        "presets": {
+          "title": "Dateiformate",
+          "hint": "Welche Spalten exportiert und importiert werden. Abweichend nur nötig, wenn dieser Wettkampf in ein anderes Rennen im Zeitnahme-System läuft."
+        },
         "raceclockerHint": "RaceClocker benötigt pro Wettkampf zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunde und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein. Welche davon für einen Lauf gilt, ermittelt ready2race selbst.",
         "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
         "heatsUrl": "Ergebnis-Adresse Läufe",
-        "startlistQualification": "Startlisten-Preset Qualifikation",
-        "startlistRounds": "Startlisten-Preset übrige Runden",
-        "startlist": "Startlisten-Preset",
-        "resultImport": "Ergebnis-Import-Preset (xlsx)",
+        "startlistQualification": "Startlisten Export Qualifikation",
+        "startlistRounds": "Startlisten Export übrige Runden",
+        "startlist": "Startlisten Export",
+        "resultImport": "Rennergebnisse Import",
         "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
         "presetsHint": {
-          "1": "Presets werden ",
+          "1": "Startlisten Exports und Rennergebnisse Imports werden ",
           "2": "in der Konfiguration",
           "3": " angelegt und gelten für alle Veranstaltungen."
         },
@@ -1152,8 +1189,8 @@
           "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
           "heatsUrl": "Es fehlt die Ergebnis-Adresse des Läufe-Rennens – ohne sie lassen sich keine Ergebnisse aus RaceClocker holen.",
           "timeTrialUrl": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt die Ergebnis-Adresse des Zeitfahren-Rennens – ohne sie lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen.",
-          "startlistRounds": "Es fehlt das Startlisten-Preset – ohne es lässt sich keine Startliste als CSV exportieren.",
-          "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt das Startlisten-Preset für die Qualifikation – ohne es lässt sich für die Qualifikation keine Startliste exportieren.",
+          "startlistRounds": "Es fehlt der Startlisten Export – ohne ihn lässt sich keine Startliste als CSV exportieren.",
+          "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt der Startlisten Export für die Qualifikation – ohne ihn lässt sich für die Qualifikation keine Startliste exportieren.",
           "link": "Zu den Zeitnahme-Einstellungen"
         },
         "saved": "Zeitnahme-Einstellungen gespeichert",
@@ -1178,7 +1215,7 @@
       "yearsColName": "Spalte mit Jahrgang",
       "clubColName": "Spalte mit Vereinsnamen",
       "requirementColName": "Spalte mit Teilnahmebedingung",
-      "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
+      "requirementIsValidValues": "Gültige Werte für Teilnahmebedingung",
       "participantsOpen": "Offen",
       "participantsApproved": "Überprüft",
       "tableHint": {
@@ -1193,6 +1230,15 @@
         "content": "Soll die Bestätigung der überprüften Teilnahmebedingung wirklich storniert werden?",
         "ok": "Ja",
         "cancel": "Nein"
+      },
+      "openExportAction": "Offene Bedingungen exportieren",
+      "openExport": {
+        "title": "Offene Bedingungen exportieren",
+        "description": "Erzeugt eine Excel-Datei mit allen Gemeldeten, denen noch Bedingungen fehlen — nach Verein sortiert, damit sich die betroffenen Vereine anschreiben lassen. Wer nichts offen hat, steht nicht darin.",
+        "requirement": "Bedingung",
+        "allRequirements": "Alle aktiven Bedingungen",
+        "submit": "Exportieren",
+        "error": "Der Export konnte nicht erstellt werden."
       }
     },
     "action": {
@@ -1328,8 +1374,35 @@
       "raceclockerHint": "RaceClocker braucht zwei Rennen: eines vom Typ \"Einzelstarts (Zeitfahren)\" für die Qualifikationsrunden und eines vom Typ \"Start in mehreren Läufen\" für alle übrigen Runden. Tragen Sie hier die öffentlichen Ergebnis-Adressen der beiden Rennen ein — sie gelten dann für die ganze Veranstaltung.",
       "timeTrialUrl": "Ergebnis-Adresse Zeitfahren",
       "heatsUrl": "Ergebnis-Adresse Läufe",
+      "autoPull": {
+        "enabled": "Ergebnisse automatisch abrufen",
+        "hint": "Läuft ein Lauf, holt der Server die Ergebnisse im schnellen Takt. Bevorstehende Läufe werden im langsamen Takt beobachtet, um ihren Start zu erkennen; beendete Läufe gar nicht.",
+        "intervalActive": "Takt bei aktivem Lauf (Sekunden)",
+        "intervalUpcoming": "Takt bei bevorstehendem Lauf (Sekunden)",
+        "watchBefore": "Beobachten ab (Minuten vor der geplanten Startzeit)",
+        "watchAfter": "Beobachten bis (Minuten nach der geplanten Startzeit)"
+      },
+      "startlistQualification": "Startlisten Export Qualifikation",
+      "startlistRounds": "Startlisten Export übrige Runden",
+      "startlist": "Startlisten Export",
+      "resultImport": "Rennergebnisse Import",
+      "formatsHint": {
+        "1": "Startlisten Exports und Rennergebnisse Imports werden ",
+        "2": "in der Konfiguration",
+        "3": " angelegt und gelten für alle Veranstaltungen."
+      },
       "saved": "Zeitnahme-Voreinstellung gespeichert",
-      "invalid": "Bitte geben Sie Adressen auf raceclocker.com an."
+      "invalid": "Die Eingaben wurden abgelehnt: Adressen müssen auf raceclocker.com zeigen, die Takte mindestens 2 Sekunden betragen und die Beobachtungsfenster dürfen nicht negativ sein.",
+      "deviations": {
+        "title": "Wettkämpfe mit eigener Zeitnahme",
+        "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
+        "system": "eigenes System",
+        "timeTrialUrl": "eigene Zeitfahren-Adresse",
+        "heatsUrl": "eigene Läufe-Adresse",
+        "startlistQualification": "eigener Startlisten Export Qualifikation",
+        "startlistRounds": "eigener Startlisten Export",
+        "resultImport": "eigener Rennergebnisse Import"
+      }
     },
     "info": {
       "infoPage": "Info-Anzeige",
@@ -1411,7 +1484,29 @@
         "refreshHint": "Die öffentliche Athleten-Anzeige aktualisiert sich in diesem Takt, aber nie schneller als alle 10 Sekunden.",
         "loadError": "Daten konnten nicht geladen werden. Bitte Verbindung prüfen.",
         "minutesUnit": "min",
+        "hoursUnit": "Std.",
         "secondsUnit": "s"
+      }
+    },
+    "match": {
+      "status": {
+        "upcoming": "Anstehend",
+        "overdue": "Überfällig · {{minutes}} min",
+        "running": "Läuft · {{minutes}} min",
+        "runningPlain": "Läuft",
+        "partiallyScored": "Teilweise gewertet {{scored}}/{{total}}",
+        "awaitingFinish": "Wartet auf Beenden",
+        "finished": "Beendet",
+        "cancelled": "Abgesagt",
+        "unscheduled": "Ungeplant",
+        "water": "Wasser {{onWater}}/{{total}}",
+        "doesNotTakePlace": "Findet nicht statt",
+        "counter": {
+          "running": "{{n}} läuft",
+          "open": "{{n}} offen",
+          "finished": "{{n}} beendet",
+          "cancelled": "{{n}} abgesagt"
+        }
       }
     },
     "liveDashboard": {
@@ -1486,7 +1581,8 @@
         "deregistered": "Abgemeldet",
         "failed": "Ausgeschieden",
         "failedShort": "DNF",
-        "onWaterAt": "aufs Wasser {{time}}"
+        "onWaterAt": "aufs Wasser {{time}}",
+        "notOnWater": "Nicht auf dem Wasser"
       },
       "requirement": {
         "checkedAt": "Erfüllt am {{time}}",
@@ -1501,6 +1597,28 @@
         "NOT_CHECKED": "Ausstehend",
         "beforeStart": "{{delta}} vor Start",
         "afterStart": "{{delta}} nach Start"
+      },
+      "checkSeverity": {
+        "manage": "Prüfungen verwalten",
+        "title": "Schweregrad der Prüfungen",
+        "description": "Legt je Wettkampf fest, wie schwer eine nicht erfüllte Prüfung wiegt.",
+        "setAll": "alle setzen",
+        "uniform": "alle: {{severity}}",
+        "mixed": "gemischt",
+        "noCheckInOut": "keine An-/Abmeldung erforderlich",
+        "noCompetitions": "Diese Veranstaltung hat noch keine Wettkämpfe. Es gibt daher nichts einzustellen.",
+        "check": {
+          "INVOICE_OPEN": "Rechnung offen",
+          "NOT_ON_WATER": "Nicht auf dem Wasser",
+          "REQUIREMENT_TIME_WINDOW": "Zeitfenster verletzt"
+        },
+        "severity": {
+          "OK": "OK (ohne Wirkung)",
+          "WARNING": "Warnung",
+          "CRITICAL": "Kritisch"
+        },
+        "saved": "Einstellungen gespeichert",
+        "saveError": "Einstellungen konnten nicht gespeichert werden."
       }
     },
     "schedule": {
@@ -1539,7 +1657,7 @@
       "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",
       "activateAnyway": "Trotzdem aktivieren",
       "finish": "Lauf beenden",
-      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Je nach Kettenmodus werden dabei die nächsten Läufe aktiviert.",
+      "finishConfirm": "Lauf „{{label}}“ um {{time}} jetzt beenden? Wenn die Veranstaltung automatisch weiterschaltet, werden dabei die nächsten Läufe aktiviert.",
       "finishAnyway": "Trotzdem beenden",
       "refereeModeWarning": "Der Schiedsrichter-Modus ist aktiv: Läufe werden normalerweise von einem Schiedsrichter über das Schiedsrichter-Dashboard aktiviert und beendet. Ein Eingriff von hier übergeht diesen Weg.",
       "managedHint": "Wird über den Zeitplan gepflegt",
@@ -1552,6 +1670,9 @@
       "importDialog": {
         "title": "Excel-Import",
         "choose": "Datei auswählen",
+        "templateHint": "Sie wissen nicht, wie die Datei aufgebaut sein muss?",
+        "template": "Beispieldatei herunterladen",
+        "templateError": "Die Beispieldatei konnte nicht heruntergeladen werden.",
         "replacesAll": "Der Import ersetzt alle vorhandenen Slots.",
         "runningWarning": "Der aktuelle Zeitplan enthält bereits gestartete oder beendete Läufe. Auch diese werden beim Import ersetzt.",
         "row": "Zeile",
@@ -1559,6 +1680,9 @@
         "text": "Text",
         "rowLinked": "Verknüpft: {{target}}",
         "rowFree": "Freier Slot",
+        "rowCompetitionNotFound": "Wettkampf nicht gefunden — wird als freier Slot importiert",
+        "rowMatchNotFound": "Lauf nicht gefunden — im Wettkampf gibt es: {{available}}",
+        "rowMatchNotFoundEmpty": "Wettkampf hat keine Läufe — wird als freier Slot importiert",
         "rowAmbiguous": "Nicht eindeutig — wird als freier Slot importiert",
         "rowDuplicate": "Doppelt in der Datei — Import blockiert",
         "apply": "Importieren",

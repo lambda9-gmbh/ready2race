@@ -1,6 +1,14 @@
 package de.lambda9.ready2race.backend.calls.responses
 
 enum class ErrorCode {
+    /**
+     * Ein Defekt, kein fachlicher Fehler. Wird nicht beantwortet, sondern vom automatischen
+     * RaceClocker-Abruf in `competition_match.raceclocker_poll_error` abgelegt, wenn ein Lauf an
+     * etwas gescheitert ist, das keinen eigenen Code hat (typischerweise ein `orDie`-Fehlschlag in
+     * SQL). Die Oberfläche zeigt dafür „Unerwarteter Fehler" - der Grund steht im Server-Log.
+     */
+    INTERNAL_ERROR,
+
     CANNOT_ASSIGN_ROLES,
     CAPTCHA_WRONG,
     EMAIL_IN_USE,
@@ -83,6 +91,9 @@ enum class ErrorCode {
     DOCUMENT_TEMPLATE_TYPE_MISMATCH,
     DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED,
     DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED,
+    DOCUMENT_TEMPLATE_INVALID_PDF,
+    DOCUMENT_TEMPLATE_INVALID_PACKAGE,
+    DOCUMENT_TEMPLATE_UNSUPPORTED_PACKAGE_VERSION,
 
     SUBSTITUTION_NOT_FOUND,
     SUBSTITUTION_PARTICIPANT_OUT_NOT_FOUND,

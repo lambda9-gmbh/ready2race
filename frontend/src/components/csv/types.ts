@@ -40,6 +40,23 @@ export type CsvValueMapping = {
      * Default value
      */
     defaultValue?: string
+    /**
+     * Key of the field mapping whose column supplies the selectable values.
+     *
+     * When set and that column is mapped, step 3 offers the values actually present in the
+     * file as checkboxes instead of a free text field, and the result is a string[]. Columns
+     * with more distinct values than the collector keeps (see DISTINCT_VALUE_LIMIT) fall back
+     * to the text field - those are free text columns where picking from a list makes no sense.
+     */
+    valuesFromColumn?: string
+}
+
+/**
+ * A value found in a CSV column together with how often it occurs.
+ */
+export type CsvColumnValue = {
+    value: string
+    count: number
 }
 
 /**
@@ -62,7 +79,7 @@ export type CsvColumnMappings = Record<string, string | number | undefined>
  * The result of value mappings
  * Maps value mapping keys to their configured values
  */
-export type CsvValueMappings = Record<string, string | undefined>
+export type CsvValueMappings = Record<string, string | string[] | undefined>
 
 /**
  * Parsed CSV data structure
@@ -84,6 +101,12 @@ export type ParsedCsvData = {
      * Total number of rows in the file
      */
     totalRows: number
+    /**
+     * Distinct values per column header, most frequent first. Columns whose value count
+     * exceeds DISTINCT_VALUE_LIMIT are left out entirely - a name or id column would only
+     * produce thousands of useless entries.
+     */
+    columnValues: Record<string, CsvColumnValue[]>
 }
 
 /**

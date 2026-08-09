@@ -7,6 +7,8 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import {Delete, DragIndicator} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import '@utils/pdfWorker'
+import {clampRect, MIN_EXTENT, nudgeRect, renderedFontSize} from './placeholderGeometry.ts'
+import {sampleTextFor} from './placeholderSample.ts'
 
 type PlaceholderData = {
     id: string
@@ -32,6 +34,10 @@ type Props = {
     onAddPlaceholder: (type: GapDocumentPlaceholderType, page: number) => void
     selectedPlaceholder: string | null
     onSelectPlaceholder: (id: string | null) => void
+    /** CSS-Familienname der hochgeladenen Schrift, bereits per FontFace geladen. `undefined` lässt
+     * den Browser die Standardschrift verwenden — sowohl ohne Schrift als auch nach fehlgeschlagenem
+     * Laden. */
+    fontFamily?: string
 }
 
 const PdfPlaceholderEditor = (props: Props) => {
@@ -39,6 +45,12 @@ const PdfPlaceholderEditor = (props: Props) => {
     const [numPages, setNumPages] = useState<number>(0)
     const [pageWidth, setPageWidth] = useState<number>(0)
     const [pageDimensions, setPageDimensions] = useState<{width: number; height: number}>({
+        width: 0,
+        height: 0,
+    })
+    // Die von der PDF selbst berichtete Seitengröße in Punkten, getrennt von pageDimensions
+    // (gerenderte Pixel) — nötig, um Schriftgrößen in Punkten korrekt hochzuskalieren.
+    const [originalPageSize, setOriginalPageSize] = useState<{width: number; height: number}>({
         width: 0,
         height: 0,
     })
@@ -74,11 +86,20 @@ const PdfPlaceholderEditor = (props: Props) => {
         setNumPages(numPages)
     }
 
-    const onPageLoadSuccess = (page: {width: number; height: number}) => {
+    const onPageLoadSuccess = (page: {
+        width: number
+        height: number
+        originalWidth: number
+        originalHeight: number
+    }) => {
         // Update dimensions based on the actual rendered page
         setPageDimensions({
             width: page.width,
             height: page.height,
+        })
+        setOriginalPageSize({
+            width: page.originalWidth,
+            height: page.originalHeight,
         })
     }
 
@@ -113,14 +134,11 @@ const PdfPlaceholderEditor = (props: Props) => {
                 const relDeltaX = deltaX / pageDimensions.width
                 const relDeltaY = deltaY / pageDimensions.height
 
-                const newLeft = Math.max(
-                    0,
-                    Math.min(1 - placeholder.relWidth, placeholder.relLeft + relDeltaX),
-                )
-                const newTop = Math.max(
-                    0,
-                    Math.min(1 - placeholder.relHeight, placeholder.relTop + relDeltaY),
-                )
+                const {relLeft: newLeft, relTop: newTop} = clampRect({
+                    ...placeholder,
+                    relLeft: placeholder.relLeft + relDeltaX,
+                    relTop: placeholder.relTop + relDeltaY,
+                })
 
                 props.onPlaceholdersChange(
                     props.placeholders.map(p =>
@@ -143,13 +161,13 @@ const PdfPlaceholderEditor = (props: Props) => {
                 const edge = resizingPlaceholder.edge
                 if (edge.includes('e')) {
                     newWidth = Math.max(
-                        0.01,
+                        MIN_EXTENT,
                         Math.min(1 - placeholder.relLeft, placeholder.relWidth + relDeltaX),
                     )
                 } else if (edge.includes('w')) {
                     const adjustedDelta = Math.max(
                         -placeholder.relLeft,
-                        Math.min(placeholder.relWidth - 0.01, relDeltaX),
+                        Math.min(placeholder.relWidth - MIN_EXTENT, relDeltaX),
                     )
                     newLeft = placeholder.relLeft + adjustedDelta
                     newWidth = placeholder.relWidth - adjustedDelta
@@ -157,29 +175,28 @@ const PdfPlaceholderEditor = (props: Props) => {
 
                 if (edge.includes('s')) {
                     newHeight = Math.max(
-                        0.01,
+                        MIN_EXTENT,
                         Math.min(1 - placeholder.relTop, placeholder.relHeight + relDeltaY),
                     )
                 } else if (edge.includes('n')) {
                     const adjustedDelta = Math.max(
                         -placeholder.relTop,
-                        Math.min(placeholder.relHeight - 0.01, relDeltaY),
+                        Math.min(placeholder.relHeight - MIN_EXTENT, relDeltaY),
                     )
                     newTop = placeholder.relTop + adjustedDelta
                     newHeight = placeholder.relHeight - adjustedDelta
                 }
 
+                const clamped = clampRect({
+                    relLeft: newLeft,
+                    relTop: newTop,
+                    relWidth: newWidth,
+                    relHeight: newHeight,
+                })
+
                 props.onPlaceholdersChange(
                     props.placeholders.map(p =>
-                        p.id === resizingPlaceholder.id
-                            ? {
-                                  ...p,
-                                  relLeft: newLeft,
-                                  relTop: newTop,
-                                  relWidth: newWidth,
-                                  relHeight: newHeight,
-                              }
-                            : p,
+                        p.id === resizingPlaceholder.id ? {...p, ...clamped} : p,
                     ),
                 )
                 setDragStart({x: e.clientX, y: e.clientY})
@@ -205,6 +222,37 @@ const PdfPlaceholderEditor = (props: Props) => {
         }
     }, [draggedPlaceholder, resizingPlaceholder, handleMouseMove, handleMouseUp])
 
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (!props.selectedPlaceholder) {
+            return
+        }
+        const direction =
+            event.key === 'ArrowLeft'
+                ? 'left'
+                : event.key === 'ArrowRight'
+                  ? 'right'
+                  : event.key === 'ArrowUp'
+                    ? 'up'
+                    : event.key === 'ArrowDown'
+                      ? 'down'
+                      : undefined
+        if (!direction) {
+            return
+        }
+        event.preventDefault()
+        const placeholder = props.placeholders.find(p => p.id === props.selectedPlaceholder)
+        if (!placeholder) {
+            return
+        }
+        props.onPlaceholdersChange(
+            props.placeholders.map(p =>
+                p.id === props.selectedPlaceholder
+                    ? {...p, ...nudgeRect(p, direction, event.shiftKey)}
+                    : p,
+            ),
+        )
+    }
+
     const handleDeletePlaceholder = (id: string) => {
         props.onPlaceholdersChange(props.placeholders.filter(p => p.id !== id))
         if (props.selectedPlaceholder === id) {
@@ -217,6 +265,13 @@ const PdfPlaceholderEditor = (props: Props) => {
             .filter(p => p.page === page)
             .map(placeholder => {
                 const isSelected = props.selectedPlaceholder === placeholder.id
+                const fontSize = renderedFontSize(placeholder, pageDimensions, originalPageSize)
+                const justifyContent =
+                    placeholder.textAlign === 'CENTER'
+                        ? 'center'
+                        : placeholder.textAlign === 'RIGHT'
+                          ? 'flex-end'
+                          : 'flex-start'
                 return (
                     <Box
                         key={placeholder.id}
@@ -232,16 +287,58 @@ const PdfPlaceholderEditor = (props: Props) => {
                                 ? 'rgba(25, 118, 210, 0.1)'
                                 : 'rgba(0, 0, 0, 0.05)',
                             cursor: 'move',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
                             boxSizing: 'border-box',
+                            overflow: 'hidden',
                             '&:hover': {
                                 backgroundColor: 'rgba(25, 118, 210, 0.15)',
                                 borderColor: '#1976d2',
                             },
                         }}>
-                        <Stack direction="row" spacing={0.5} alignItems="center">
+                        {/* Beispieltext, in Ausrichtung/Größe/Schnitt/Schrift des Platzhalters,
+                            vertikal zentriert. Darf den Kasten nie sprengen. */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                inset: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent,
+                                overflow: 'hidden',
+                                px: 0.5,
+                                pointerEvents: 'none',
+                            }}>
+                            <Typography
+                                component="span"
+                                sx={{
+                                    fontSize: `${fontSize}px`,
+                                    fontWeight: placeholder.bold ? 'bold' : 'normal',
+                                    fontStyle: placeholder.italic ? 'italic' : 'normal',
+                                    fontFamily: props.fontFamily,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    userSelect: 'none',
+                                    lineHeight: 1,
+                                }}>
+                                {sampleTextFor(
+                                    placeholder.type,
+                                    placeholder.staticText,
+                                    t('gap.document.placeholder.staticText'),
+                                )}
+                            </Typography>
+                        </Box>
+                        <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                            sx={{
+                                position: 'absolute',
+                                top: 2,
+                                left: 2,
+                                backgroundColor: 'background.paper',
+                                opacity: 0.9,
+                                borderRadius: 0.5,
+                                px: 0.5,
+                            }}>
                             <DragIndicator fontSize="small" />
                             <Typography
                                 variant="caption"
@@ -355,7 +452,11 @@ const PdfPlaceholderEditor = (props: Props) => {
     const visiblePages = isSinglePageDocumentType ? Math.min(numPages, 1) : numPages
 
     return (
-        <Box ref={containerRef} sx={{overflow: 'auto', maxHeight: '70vh'}}>
+        <Box
+            ref={containerRef}
+            tabIndex={0}
+            onKeyDown={handleKeyDown}
+            sx={{overflow: 'auto', maxHeight: '70vh'}}>
             {isSinglePageDocumentType && numPages > 1 && (
                 <Typography variant="caption" color="text.secondary" sx={{display: 'block', mb: 1}}>
                     {t('gap.document.template.singlePageNotice')}

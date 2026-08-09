@@ -106,6 +106,7 @@ fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCou
         teams = teams.map { it.toAthleteBoardTeam() },
         pendingRound = pendingRound,
         name = name,
+        cancelled = cancelled,
     )
 
 fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(

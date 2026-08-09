@@ -1716,6 +1716,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/raceclocker/resume:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: resumeRaceClockerAutoPull
+      description: >-
+        Releases a match back to the automatic RaceClocker pull. Entering results by hand or
+        uploading a file pauses the pull for that match, so the office keeps the last word; this
+        undoes that and clears the last poll error.
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/startList:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -3590,6 +3619,38 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/participantRequirement/open/export:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: exportOpenParticipantRequirements
+      description: >-
+        Downloads an xlsx of the registered participants who are still missing requirements -
+        the basis for notifying their clubs. Without requirementId every requirement active at
+        the event counts. Requirements bound to a named participant only apply to that role,
+        and participants with nothing open are left out.
+      parameters:
+        - name: requirementId
+          in: query
+          required: false
+          description: Limits the export to a single requirement.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/participantRequirement/{participantRequirementId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -4185,6 +4246,35 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /gapDocumentTemplate/import:
+    post:
+      operationId: importGapDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  description: Austauschpaket (.r2rtpl.zip) einer Urkundenvorlage.
+                  type: string
+                  format: binary
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /gapDocumentTemplate/{gapDocumentTemplateId}:
     parameters:
       - in: path
@@ -4274,6 +4364,58 @@ paths:
           $ref: '#/components/responses/file'
         400:
           $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /gapDocumentTemplate/{gapDocumentTemplateId}/export:
+    parameters:
+      - in: path
+        name: gapDocumentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: exportGapDocumentTemplate
+      responses:
+        200:
+          description: Template package successfully created
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /gapDocumentTemplate/{gapDocumentTemplateId}/font:
+    parameters:
+      - in: path
+        name: gapDocumentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getGapDocumentTemplateFont
+      responses:
+        200:
+          description: Font successfully retrieved
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         401:
           $ref: '#/components/responses/401'
         403:
@@ -5913,6 +6055,52 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/checkSeverity:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getCheckSeverityConfig
+      description: "The competitions, the configurable checks with their defaults and the deviations set for this event - administration for the referee dashboard's severity configuration."
+      responses:
+        200:
+          description: Check severity configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckSeverityConfigDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateCheckSeverityConfig
+      description: "Replaces the event's deviations. Entries matching the built-in default are dropped rather than stored, so a later change to the default keeps applying to existing data."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCheckSeverityRequest'
+      responses:
+        204:
+          description: Check severity configuration updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/schedule:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6224,6 +6412,28 @@ paths:
           $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/import/template:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: downloadEventScheduleImportTemplate
+      description: >-
+        Downloads an example xlsx for the schedule import, using the columns importEventSchedule
+        reads. The example rows are dated to the event's first day.
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
 
@@ -7984,6 +8194,7 @@ components:
     ErrorCode:
       type: string
       enum:
+        - INTERNAL_ERROR
         - CAPTCHA_WRONG
         - EMAIL_IN_USE
         - CANNOT_ASSIGN_ROLES
@@ -8051,9 +8262,12 @@ components:
         - AWARD_CERTIFICATE_COMPETITION_NOT_IN_EVENT
         - AWARD_CERTIFICATE_IS_CHALLENGE_EVENT
         - DOCUMENT_TEMPLATE_INVALID_FONT
+        - DOCUMENT_TEMPLATE_INVALID_PDF
         - DOCUMENT_TEMPLATE_TYPE_MISMATCH
         - DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED
         - DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED
+        - DOCUMENT_TEMPLATE_INVALID_PACKAGE
+        - DOCUMENT_TEMPLATE_UNSUPPORTED_PACKAGE_VERSION
         - SUBSTITUTION_NOT_FOUND
         - SUBSTITUTION_PARTICIPANT_OUT_NOT_FOUND
         - SUBSTITUTION_PARTICIPANT_IN_NOT_FOUND
@@ -9160,6 +9374,7 @@ components:
       required:
         - identifier
         - name
+        - checkInOutRequired
         - namedParticipants
         - fees
         - lateRegistrationAllowed
@@ -9172,6 +9387,9 @@ components:
           type: string
         shortName:
           type: string
+        checkInOutRequired:
+          type: boolean
+          description: "Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all."
         description:
           type: string
         competitionCategory:
@@ -9269,6 +9487,7 @@ components:
       required:
         - identifier
         - name
+        - checkInOutRequired
         - namedParticipants
         - fees
         - lateRegistrationAllowed
@@ -9280,6 +9499,9 @@ components:
           type: string
         shortName:
           type: string
+        checkInOutRequired:
+          type: boolean
+          description: "Whether boats of this competition check in and out at the pontoon. Off for formats without it (e.g. beach sprint) - the referee dashboard then does not judge 'on the water' at all."
         description:
           type: string
         competitionCategory:
@@ -10163,8 +10385,14 @@ components:
           type: boolean
         requirementColName:
           type: string
-        requirementIsValidValue:
-          type: string
+        requirementIsValidValues:
+          type: array
+          description: >-
+            Values of the requirement column that count as fulfilled. Several are allowed -
+            the DRV list carries both "ja" and "erweitert". Empty or absent means every row
+            counts, which is also what an unmapped requirement column does.
+          items:
+            type: string
 
     ParticipantRequirementCheckForEventUpsertDto:
       type: object
@@ -11436,6 +11664,40 @@ components:
           items:
             $ref: '#/components/schemas/SubstitutionDto'
 
+    MatchStatusDto:
+      type: object
+      description: >-
+        The derived state of a match, read by every surface - one derivation, three callers
+        (execution page, schedule, referee dashboard).
+
+
+        "Overdue" and "partially scored" are deliberately NOT states of their own but readings of
+        these fields: partially scored is state != RUNNING && 0 < teamsScored < teamsTotal, overdue
+        is state == UPCOMING && startTime + 5 min < now. Elapsed minutes and overdueness are
+        computed in the frontend against the browser clock so the chip keeps counting between two
+        polls.
+      required:
+        - state
+        - teamsTotal
+        - teamsScored
+      properties:
+        state:
+          $ref: '#/components/schemas/LiveDashboardMatchState'
+        startedAt:
+          type: string
+          format: date-time
+          description: Actual start - null while nobody started the match.
+        teamsTotal:
+          type: integer
+        teamsScored:
+          type: integer
+          description: >-
+            Scored means: deregistered OR place set OR failed - the same rule the referee dashboard
+            uses.
+        teamsOnWater:
+          type: integer
+          description: null = not collected in this view (schedule, public boards).
+
     CompetitionMatchDto:
       type: object
       required:
@@ -11444,6 +11706,8 @@ components:
         - weighting
         - executionOrder
         - currentlyRunning
+        - skipped
+        - status
       properties:
         id:
           type: string
@@ -11461,11 +11725,40 @@ components:
         startTime:
           type: string
           format: date-time
+          description: Planned start from the schedule.
         startTimeOffset:
           type: integer
           description: Offset between the starts of consecutive teams, in seconds
         currentlyRunning:
           type: boolean
+        startedAt:
+          type: string
+          format: date-time
+          description: Actual start - null while nobody started the match.
+        finishedAt:
+          type: string
+          format: date-time
+          description: >-
+            Persisted end. Set means exclusively that somebody finished the match.
+        skipped:
+          type: boolean
+          description: The schedule slot of this match was cancelled.
+        status:
+          $ref: '#/components/schemas/MatchStatusDto'
+        raceClockerPolledAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the automatic pull last tried this match - not when it last wrote something.
+        raceClockerPollError:
+          type: string
+          nullable: true
+          description: Error code of the last failed automatic pull, null when it is fine.
+        raceClockerAutoPausedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Set while the automatic pull leaves this match alone because results were entered by hand.
 
     CompetitionMatchTeamDto:
       type: object
@@ -11991,6 +12284,21 @@ components:
           type: string
           nullable: true
           description: Event-wide default heats results URL; inherited while the competition's own field is null.
+        eventStartlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+          description: Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
+        eventStartlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+          description: Event-wide default start list export for the other rounds; inherited while the competition's own field is null.
+        eventResultImportConfig:
+          type: string
+          format: uuid
+          nullable: true
+          description: Event-wide default race results import; inherited while the competition's own field is null.
 
     EventTimingConfigDto:
       type: object
@@ -12008,12 +12316,92 @@ components:
         heatsResultsUrl:
           type: string
           nullable: true
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
+          nullable: true
+        autoPull:
+          type: boolean
+          description: Whether the background job pulls results for this event on its own.
+        intervalActiveSeconds:
+          type: integer
+          description: Poll interval while at least one match of this event is running. Never goes below 2 seconds.
+        intervalUpcomingSeconds:
+          type: integer
+          description: Poll interval while only upcoming matches are watched. Never goes below 2 seconds.
+        watchBeforeMinutes:
+          type: integer
+          description: How long before its planned start an upcoming match is watched.
+        watchAfterMinutes:
+          type: integer
+          description: How long after its planned start a match that is not active yet is still watched.
+        deviatingCompetitions:
+          type: array
+          description: The competitions that do not follow these defaults but set at least one of the three fields themselves.
+          items:
+            $ref: '#/components/schemas/CompetitionTimingDeviationDto'
+      required:
+        - autoPull
+        - intervalActiveSeconds
+        - intervalUpcomingSeconds
+        - watchBeforeMinutes
+        - watchAfterMinutes
+
+    CompetitionTimingDeviationDto:
+      type: object
+      description: >
+        A competition that overrides the event-wide timing defaults. Only the inheritable fields are
+        listed; the column presets are per competition anyway and therefore no deviation. A null
+        timingSystem with a URL set is a partial override - the competition inherits the system and
+        has a race of its own.
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+        timingSystem:
+          $ref: '#/components/schemas/TimingSystem'
+          nullable: true
+        timeTrialResultsUrl:
+          type: string
+          nullable: true
+        heatsResultsUrl:
+          type: string
+          nullable: true
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+        - competitionId
+        - identifier
+        - name
 
     EventTimingConfigRequest:
       type: object
       description: >
-        Every field is optional, like the per-competition config. The URLs must be https URLs on
-        raceclocker.com.
+        The RaceClocker fields are optional, like the per-competition config. The URLs must be https
+        URLs on raceclocker.com. The five auto-pull fields are not optional - the database always has
+        a value for them, and null here would ambiguously mean "leave unchanged".
       properties:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
@@ -12024,6 +12412,39 @@ components:
         heatsResultsUrl:
           type: string
           nullable: true
+        startlistConfigQualification:
+          type: string
+          format: uuid
+          nullable: true
+        startlistConfigRounds:
+          type: string
+          format: uuid
+          nullable: true
+        resultImportConfig:
+          type: string
+          format: uuid
+          nullable: true
+        autoPull:
+          type: boolean
+          description: Whether the background job pulls results for this event on its own.
+        intervalActiveSeconds:
+          type: integer
+          description: Poll interval while at least one match of this event is running. Never goes below 2 seconds.
+        intervalUpcomingSeconds:
+          type: integer
+          description: Poll interval while only upcoming matches are watched. Never goes below 2 seconds.
+        watchBeforeMinutes:
+          type: integer
+          description: How long before its planned start an upcoming match is watched.
+        watchAfterMinutes:
+          type: integer
+          description: How long after its planned start a match that is not active yet is still watched.
+      required:
+        - autoPull
+        - intervalActiveSeconds
+        - intervalUpcomingSeconds
+        - watchBeforeMinutes
+        - watchAfterMinutes
 
     TimingSystem:
       type: string
@@ -12325,6 +12746,7 @@ components:
         - executionOrder
         - teams
         - pendingRound
+        - cancelled
       properties:
         matchId:
           type: string
@@ -12371,6 +12793,9 @@ components:
           type: string
           nullable: true
           description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
+        cancelled:
+          type: boolean
+          description: "the schedule slot of this match was cancelled. The match stays in the list anyway - a match that vanishes without a trace is indistinguishable from a display error for the crew waiting at the pontoon. teams is then always empty"
 
     UpcomingMatchTeamInfo:
       type: object
@@ -12587,6 +13012,7 @@ components:
         - startState
         - teams
         - pendingRound
+        - cancelled
       properties:
         matchId:
           type: string
@@ -12625,6 +13051,9 @@ components:
           type: string
           nullable: true
           description: "name of a FREE placeholder (break/schedule item like a lunch break) - null for real matches and for waiting-round placeholders (pendingRound); only set when the event shows breaks on public boards"
+        cancelled:
+          type: boolean
+          description: "the match is cancelled ('does not take place'). It stays at its planned position in the upcoming block anyway - a crew waiting at the pontoon cannot tell a match that vanished without a trace from a display error. teams is then always empty"
 
     AthleteBoardResultTeam:
       type: object
@@ -12828,6 +13257,23 @@ components:
         - LATE
         - NOT_CHECKED
 
+    CheckSeverity:
+      type: string
+      description: "What can be configured per competition for a failed check"
+      enum:
+        - OK
+        - WARNING
+        - CRITICAL
+
+    EffectiveSeverity:
+      type: string
+      description: "What is delivered for display; NEUTRAL means there is nothing to say about this check - either it does not apply, or it failed but is explicitly configured as CheckSeverity.OK"
+      enum:
+        - NEUTRAL
+        - OK
+        - WARNING
+        - CRITICAL
+
     TimeCheckDto:
       type: object
       required:
@@ -12847,6 +13293,7 @@ components:
         - name
         - optional
         - checked
+        - severity
       properties:
         requirementId:
           type: string
@@ -12871,6 +13318,8 @@ components:
           nullable: true
           allOf:
             - $ref: '#/components/schemas/TimeCheckDto'
+        severity:
+          $ref: '#/components/schemas/EffectiveSeverity'
 
     LiveDashboardParticipantDto:
       type: object
@@ -12918,7 +13367,10 @@ components:
         - failed
         - deregistered
         - invoiceState
-        - requirements
+        - severity
+        - invoiceSeverity
+        - onWaterRequired
+        - onWaterSeverity
         - substituted
       properties:
         teamId:
@@ -12960,36 +13412,25 @@ components:
           nullable: true
         invoiceState:
           $ref: '#/components/schemas/LiveDashboardInvoiceState'
-        requirements:
-          $ref: '#/components/schemas/LiveDashboardRequirementSummaryDto'
+        severity:
+          $ref: '#/components/schemas/EffectiveSeverity'
+          description: "Final severity for the row - the evaluation rules live in the backend"
+        invoiceSeverity:
+          $ref: '#/components/schemas/EffectiveSeverity'
+          description: "The invoice evaluated separately: the detail dialog colors its invoice chip by this; it cannot be recovered from severity, which already combines everything else"
+        onWaterRequired:
+          type: boolean
+          description: "Whether this competition requires check-in/check-out at all; controls the display of onWaterAt"
+        onWaterSeverity:
+          $ref: '#/components/schemas/EffectiveSeverity'
+          description: "The on-water check evaluated separately: the detail dialog colors its on-water chip by this; it cannot be recovered from severity, which already combines everything else"
         substituted:
           type: boolean
         onWaterAt:
           type: string
           format: date-time
           nullable: true
-          description: "When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known"
-
-    LiveDashboardRequirementSummaryDto:
-      type: object
-      description: "Condensed requirement state per team; the requirements themselves are only in the team detail"
-      required:
-        - total
-        - fulfilled
-        - missingRequired
-        - missingOptional
-        - timeIssues
-      properties:
-        total:
-          type: integer
-        fulfilled:
-          type: integer
-        missingRequired:
-          type: integer
-        missingOptional:
-          type: integer
-        timeIssues:
-          type: integer
+          description: "When the boat went on the water (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known"
 
     LiveDashboardTeamDetailDto:
       type: object
@@ -13055,6 +13496,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LiveDashboardTeamDto'
+        raceClockerPollError:
+          type: string
+          nullable: true
+          description: Error code of the last failed automatic pull, null when it is fine.
+        raceClockerAutoPausedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Set while the automatic pull leaves this match alone because results were entered by hand.
 
     PendingSlotDto:
       type: object
@@ -13101,6 +13551,124 @@ components:
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
 
+    CheckType:
+      type: string
+      description: >-
+        The checks evaluated by the referee dashboard. REQUIREMENT and REQUIREMENT_TIME_WINDOW
+        refer to the same participant requirement and are still configured separately: "not
+        checked at all" and "checked but at the wrong time" are two different situations at the
+        tent.
+      enum:
+        - INVOICE_OPEN
+        - NOT_ON_WATER
+        - REQUIREMENT
+        - REQUIREMENT_TIME_WINDOW
+
+    CheckSeverityCompetitionDto:
+      type: object
+      description: "A competition as the administration needs it - id, name and whether it requires check-in/check-out"
+      required:
+        - competitionId
+        - identifier
+        - name
+        - checkInOutRequired
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+        checkInOutRequired:
+          type: boolean
+
+    CheckSeverityRowDto:
+      type: object
+      description: "A row of the administration matrix. requirementId is only set for the requirement checks, name carries the requirement's name for them - the UI names the two fixed checks itself."
+      required:
+        - checkType
+      properties:
+        checkType:
+          $ref: '#/components/schemas/CheckType'
+        requirementId:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          nullable: true
+
+    CheckSeverityRowDefaultDto:
+      type: object
+      required:
+        - checkType
+        - severity
+      properties:
+        checkType:
+          $ref: '#/components/schemas/CheckType'
+        requirementId:
+          type: string
+          format: uuid
+          nullable: true
+        severity:
+          $ref: '#/components/schemas/CheckSeverity'
+
+    CheckSeverityEntryDto:
+      type: object
+      required:
+        - competitionId
+        - checkType
+        - severity
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        checkType:
+          $ref: '#/components/schemas/CheckType'
+        requirementId:
+          type: string
+          format: uuid
+          nullable: true
+        severity:
+          $ref: '#/components/schemas/CheckSeverity'
+
+    CheckSeverityConfigDto:
+      type: object
+      description: "entries contains ONLY deviations from the default. The UI shows, for every combination of competitions and rows, the matching entry or the default from defaults."
+      required:
+        - competitions
+        - rows
+        - defaults
+        - entries
+      properties:
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityCompetitionDto'
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityRowDto'
+        defaults:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityRowDefaultDto'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityEntryDto'
+
+    UpdateCheckSeverityRequest:
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSeverityEntryDto'
+
     EventScheduleSlotState:
       type: string
       enum:
@@ -13117,6 +13685,8 @@ components:
         - startTime
         - state
         - matchCurrentlyRunning
+        - matchTeamsTotal
+        - matchTeamsScored
       properties:
         id:
           type: string
@@ -13172,6 +13742,12 @@ components:
         matchCurrentlyRunning:
           type: boolean
           description: "Whether the linked match is currently running - drives whether the schedule tab offers 'activate' or 'finish' for a LINKED slot"
+        matchTeamsTotal:
+          type: integer
+          description: "Teams of the linked match that are still in the race (without the OUT rows carried over from the previous round) - 0 without a linked match"
+        matchTeamsScored:
+          type: integer
+          description: "Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own"
 
     UnplannedSetupMatchDto:
       type: object
@@ -13307,9 +13883,14 @@ components:
 
     ImportRowStatus:
       type: string
+      description: >-
+        FREE, COMPETITION_NOT_FOUND and MATCH_NOT_FOUND all end up as a free slot; only FREE is
+        intentional, the other two point at a mistake in the file.
       enum:
         - LINKED
         - FREE
+        - COMPETITION_NOT_FOUND
+        - MATCH_NOT_FOUND
         - AMBIGUOUS
         - DUPLICATE
 
@@ -13321,6 +13902,7 @@ components:
         - startTime
         - laufText
         - status
+        - availableMatches
       properties:
         rowNumber:
           type: integer
@@ -13337,6 +13919,11 @@ components:
         targetLabel:
           type: string
           nullable: true
+        availableMatches:
+          type: array
+          description: "Only filled for MATCH_NOT_FOUND: the match names the found competition actually has."
+          items:
+            type: string
 
     ScheduleImportResultDto:
       type: object
@@ -13837,6 +14424,7 @@ components:
         - competitionId
         - competitionIdentifier
         - competitionName
+        - checkInOutRequired
         - clubId
         - clubName
         - participants
@@ -13851,6 +14439,9 @@ components:
           type: string
         competitionName:
           type: string
+        checkInOutRequired:
+          type: boolean
+          description: "Whether this competition uses check-in/out at all. Scans are recorded per participant and event, so a participant racing in one competition that requires it still checks out - the flag only drives what the app shows."
         clubId:
           type: string
           format: uuid

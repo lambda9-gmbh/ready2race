@@ -1,7 +1,6 @@
 import {
+    EffectiveSeverity,
     LiveDashboardMatchDto,
-    LiveDashboardParticipantDto,
-    LiveDashboardRequirementStatusDto,
     LiveDashboardTeamDto,
     PendingSlotDto,
 } from '@api/types.gen.ts'
@@ -19,6 +18,37 @@ export const isLiveMatch = (match: LiveDashboardMatchDto): boolean =>
 
 export const liveMatches = (matches: LiveDashboardMatchDto[]): LiveDashboardMatchDto[] =>
     matches.filter(isLiveMatch)
+
+/** Die beiden Ansichten des Boards — schmal je eine, breit beide nebeneinander. */
+export type LiveDashboardTab = 'live' | 'matches'
+
+/**
+ * Wie viel der Server liefern soll. Schmal entscheidet der Umschalter: der Live-Tab braucht nur die
+ * laufenden Läufe (plus den nächsten), die vollständige Liste sieht sich dort niemand im
+ * Sekundentakt an. Breit stehen beide Spalten gleichzeitig auf dem Schirm, also führt kein Weg an
+ * der Gesamtliste vorbei.
+ */
+export const dashboardScope = (wide: boolean, tab: LiveDashboardTab): 'LIVE' | 'ALL' =>
+    !wide && tab === 'live' ? 'LIVE' : 'ALL'
+
+/**
+ * DOM-Id der Karte eines Eintrags, geteilt zwischen den Render-Schleifen und dem
+ * Klick-auf-den-Zeitstrahl. Breit steht ein laufender Lauf zweimal auf der Seite — links unter
+ * "Live" und rechts in der Gesamtliste —, deshalb gehört die Spalte in die Id; sonst wären die Ids
+ * doppelt und `getElementById` träfe die falsche Karte.
+ */
+export const dashboardEntryDomId = (id: string, column: 'live' | 'list'): string =>
+    `live-dashboard-entry-${column}-${id}`
+
+/**
+ * Wohin der Klick auf den Zeitstrahl springt: bevorzugt in die Gesamtliste, ersatzweise in die
+ * Live-Spalte. Breit ist die Live-Spalte ohnehin dauerhaft im Blick, dort zu scrollen brächte
+ * nichts; schmal existiert je nach Tab nur eine der beiden Karten.
+ */
+export const dashboardEntryDomIdCandidates = (id: string): string[] => [
+    dashboardEntryDomId(id, 'list'),
+    dashboardEntryDomId(id, 'live'),
+]
 
 /**
  * Welche Knöpfe die Karte anbietet — die Entscheidung liegt hier statt im JSX, damit sie ohne
@@ -45,43 +75,6 @@ export const matchControls = (
     }
 }
 
-export type Severity = 'ok' | 'warning' | 'error' | 'neutral'
-
-const rank: Record<Severity, number> = {neutral: 0, ok: 1, warning: 2, error: 3}
-
-export const worstSeverity = (severities: Severity[]): Severity =>
-    severities.reduce<Severity>((acc, s) => (rank[s] > rank[acc] ? s : acc), 'neutral')
-
-export const requirementSeverity = (r: LiveDashboardRequirementStatusDto): Severity => {
-    if (!r.checked) {
-        return r.optional ? 'neutral' : 'error'
-    }
-    if (r.timeCheck && (r.timeCheck.status === 'LATE' || r.timeCheck.status === 'TOO_EARLY')) {
-        return 'warning'
-    }
-    return 'ok'
-}
-
-export const participantSeverity = (p: LiveDashboardParticipantDto): Severity =>
-    worstSeverity(p.requirements.map(requirementSeverity))
-
-/**
- * Dieselbe Bewertung wie [requirementSeverity], nur aus den verdichteten Zahlen der Liste: die
- * Bedingungen selbst kommen erst mit dem Detail-Dialog.
- *
- * "Auf dem Wasser" fließt mit in die Ampel ein, obwohl es keine konfigurierbare Bedingung ist:
- * bei aktivem Lauf ([matchActive]) muss das Boot ausgecheckt sein, sonst ist die Zeile ein
- * Fehler. Abgemeldete Boote fahren nicht mehr und sind ausgenommen.
- */
-export const teamSeverity = (team: LiveDashboardTeamDto, matchActive = false): Severity =>
-    worstSeverity([
-        team.requirements.missingRequired > 0 ? 'error' : 'neutral',
-        team.requirements.timeIssues > 0 ? 'warning' : 'neutral',
-        team.requirements.fulfilled > 0 ? 'ok' : 'neutral',
-        team.invoiceState === 'OPEN' ? 'error' : 'neutral',
-        matchActive && !team.deregistered && !team.onWaterAt ? 'error' : 'neutral',
-    ])
-
 /**
  * Ein Boot ist erledigt, sobald Platz, Zeit oder ein Ausscheidungsgrund vorliegt. Abgemeldete
  * Boote sind es ebenfalls — auf ihr Ergebnis wartet niemand mehr.
@@ -93,11 +86,14 @@ export const teamHasResult = (team: LiveDashboardTeamDto): boolean =>
 export const openResultTeams = (match: {teams: LiveDashboardTeamDto[]}): LiveDashboardTeamDto[] =>
     match.teams.filter(team => !teamHasResult(team))
 
-export const severityChipColor: Record<Severity, 'success' | 'warning' | 'error' | 'default'> = {
-    ok: 'success',
-    warning: 'warning',
-    error: 'error',
-    neutral: 'default',
+export const severityChipColor: Record<
+    EffectiveSeverity,
+    'success' | 'warning' | 'error' | 'default'
+> = {
+    OK: 'success',
+    WARNING: 'warning',
+    CRITICAL: 'error',
+    NEUTRAL: 'default',
 }
 
 export const formatMinutes = (totalMinutes: number): string => {
@@ -153,7 +149,10 @@ export const shortClubName = (name: string): string => {
         (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
         withoutBallast,
     )
-    return abbreviated.replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').trim()
+    return abbreviated
+        .replace(/\s{2,}/g, ' ')
+        .replace(/\s+,/g, ',')
+        .trim()
 }
 
 /**
@@ -214,8 +213,13 @@ export const nextUpEntry = (
     now: Date,
 ): LiveDashboardTimelineEntry | undefined => {
     const threshold = now.getTime() - NEXT_UP_GRACE_MINUTES * 60_000
-    const stillUpcoming = pendingSlots.filter(slot => new Date(slot.startTime).getTime() > threshold)
-    return buildLiveDashboardTimeline(nextUpcomingMatch ? [nextUpcomingMatch] : [], stillUpcoming)[0]
+    const stillUpcoming = pendingSlots.filter(
+        slot => new Date(slot.startTime).getTime() > threshold,
+    )
+    return buildLiveDashboardTimeline(
+        nextUpcomingMatch ? [nextUpcomingMatch] : [],
+        stillUpcoming,
+    )[0]
 }
 
 /**

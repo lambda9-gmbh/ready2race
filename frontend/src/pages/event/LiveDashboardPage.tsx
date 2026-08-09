@@ -9,6 +9,7 @@ import {
     Paper,
     Stack,
     Typography,
+    useMediaQuery,
     useTheme,
 } from '@mui/material'
 import LiveTvIcon from '@mui/icons-material/LiveTv'
@@ -27,25 +28,29 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import {eventLiveDashboardRoute} from '@routes'
-import LiveDashboardMatchCard, {
-    LiveDashboardPendingSlotCard,
-} from '@components/event/liveDashboard/LiveDashboardMatchCard.tsx'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
 import {
+    LiveColumn,
+    LiveDashboardActions,
+    MatchListColumn,
+} from '@components/event/liveDashboard/LiveDashboardColumns.tsx'
+import {
     buildLiveDashboardTimeline,
+    dashboardEntryDomIdCandidates,
+    dashboardScope,
+    LiveDashboardTab,
     liveMatches,
     nextUpEntry,
     storedPollInterval,
 } from '@components/event/liveDashboard/common.ts'
 import ScheduleTimelineIndicator from '@components/event/schedule/ScheduleTimelineIndicator.tsx'
-import {dashboardEntriesForDay, resolveDashboardDay} from '@components/event/schedule/timelineIndicator.ts'
+import {
+    dashboardEntriesForDay,
+    resolveDashboardDay,
+} from '@components/event/schedule/timelineIndicator.ts'
 import {MatchResultStatus} from '@utils/matchResultStatus.ts'
 import {liveDashboardErrorKey} from '@components/event/liveDashboard/liveDashboardError.ts'
-
-/** DOM id for a dashboard entry's card wrapper, shared between the render loops below and the
- * indicator's click-to-scroll handler. */
-const dashboardEntryDomId = (id: string) => `live-dashboard-entry-${id}`
 
 /** The dashboard payload carries no server clock of its own (unlike the athlete board), so the
  * now-marker ticks off the local clock every 30s - plenty for a position on a day-long axis. */
@@ -67,8 +72,11 @@ const LiveDashboardPage = () => {
     const {eventId} = eventLiveDashboardRoute.useParams()
     const mayControl = user.checkPrivilege(updateLiveDashboardGlobal)
     const now = useLocalClock(30_000)
+    // Ab hier ist Platz für beide Ansichten nebeneinander, der Umschalter entfällt. Derselbe Bruch,
+    // an dem RootLayout von Drawer auf feste Seitenleiste wechselt.
+    const wide = useMediaQuery(theme.breakpoints.up('md'))
 
-    const [tab, setTab] = useState<'live' | 'matches'>('live')
+    const [tab, setTab] = useState<LiveDashboardTab>('live')
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(null)
     // In REGATTABUERO läuft "Lauf beenden" ausschließlich über den Zeitplan-Tab (siehe
@@ -78,17 +86,34 @@ const LiveDashboardPage = () => {
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
     const [stale, setStale] = useState(false)
     const [liveChanged, setLiveChanged] = useState(false)
-    const [selectedTeamRef, setSelectedTeamRef] = useState<{matchId: string; teamId: string} | null>(
-        null,
-    )
+    const [selectedTeamRef, setSelectedTeamRef] = useState<{
+        matchId: string
+        teamId: string
+    } | null>(null)
     const runningIdsRef = useRef<string | null>(null)
-    const tabRef = useRef<'live' | 'matches'>('live')
+    const tabRef = useRef<LiveDashboardTab>('live')
+    const wideRef = useRef(wide)
     /** Stand der letzten Antwort; spart den Rumpf, solange sich nichts geändert hat. */
     const etagRef = useRef<string | null>(null)
 
-    // Der Live-Tab braucht nur die laufenden Läufe; die vollständige Liste sieht sich niemand im
-    // Sekundentakt an. Beim Wechsel wird neu geladen, der letzte Stand gilt nicht für beide.
-    const scope = tab === 'live' ? 'LIVE' : 'ALL'
+    const scope = dashboardScope(wide, tab)
+
+    // Der andere Umfang hat einen anderen Stand: ETag und Daten des bisherigen gelten für ihn
+    // nicht, sonst stünde kurz die Live-Auswahl als Gesamtliste da. Am Umschalter hing das früher
+    // allein — beim Überschreiten der Breite (Fenster gezogen, Tablet gedreht) gibt es den Klick
+    // aber nicht.
+    useEffect(() => {
+        setDashboard(null)
+        etagRef.current = null
+    }, [scope])
+
+    // Breit ist "Live" immer sichtbar, der Hinweispunkt am Umschalter hätte nichts zu melden.
+    useEffect(() => {
+        wideRef.current = wide
+        if (wide) {
+            setLiveChanged(false)
+        }
+    }, [wide])
 
     const dashboardData = useFetch(
         signal =>
@@ -123,6 +148,7 @@ const LiveDashboardPage = () => {
                     if (
                         runningIdsRef.current !== null &&
                         ids !== runningIdsRef.current &&
+                        !wideRef.current &&
                         tabRef.current !== 'live'
                     ) {
                         setLiveChanged(true)
@@ -156,10 +182,16 @@ const LiveDashboardPage = () => {
     // Kompakter "wo stehen wir gerade"-Balken über den Listen: ein Tag, ausgewählt über den
     // ersten laufenden bzw. nächsten anstehenden Eintrag (Fallback: heute).
     const indicatorDay = resolveDashboardDay(dashboard?.matches ?? [], pendingSlots, now)
-    const indicatorEntries = dashboardEntriesForDay(dashboard?.matches ?? [], pendingSlots, indicatorDay)
+    const indicatorEntries = dashboardEntriesForDay(
+        dashboard?.matches ?? [],
+        pendingSlots,
+        indicatorDay,
+    )
 
     const scrollToTimelineEntry = (id: string) => {
-        const el = document.getElementById(dashboardEntryDomId(id))
+        const el = dashboardEntryDomIdCandidates(id)
+            .map(domId => document.getElementById(domId))
+            .find(found => found !== null)
         if (!el) {
             return
         }
@@ -182,7 +214,8 @@ const LiveDashboardPage = () => {
         }
     }, [selectedTeam, dashboard, selectedTeamRef])
 
-    const handleTeamClick = (matchId: string, teamId: string) => setSelectedTeamRef({matchId, teamId})
+    const handleTeamClick = (matchId: string, teamId: string) =>
+        setSelectedTeamRef({matchId, teamId})
 
     const handleFinish = async (matchId: string, openResults: MatchResultStatus | null) => {
         const {error} = await finishLiveDashboardMatch({
@@ -226,17 +259,46 @@ const LiveDashboardPage = () => {
         )
     }
 
+    const actions: LiveDashboardActions = {
+        onTeamClick: handleTeamClick,
+        onFinish: mayFinish ? handleFinish : undefined,
+        onSetRunning: mayControl ? handleSetRunning : undefined,
+        onSkipSlot: mayControl ? handleSkipSlot : undefined,
+    }
+
+    const liveColumn = (
+        <LiveColumn
+            currentMatches={currentMatches}
+            nextEntry={nextEntry}
+            loaded={dashboard !== null}
+            actions={actions}
+        />
+    )
+    const matchListColumn = (
+        <MatchListColumn
+            scheduledTimeline={scheduledTimeline}
+            unscheduledMatches={unscheduledMatches}
+            empty={
+                dashboard !== null && dashboard.matches.length === 0 && pendingSlots.length === 0
+            }
+            actions={actions}
+        />
+    )
+
     return (
         <Box
             sx={{
-                pb: 9,
+                // Platz für die fixierte Leiste — die gibt es nur schmal.
+                pb: {xs: 9, md: 0},
                 // width + maxWidth statt nur maxWidth: das Layout setzt die Seite als
                 // Flex-Kind ein, das sonst mit seinem Inhalt über den Viewport wächst
                 width: '100%',
-                maxWidth: 700,
+                maxWidth: {xs: 700, md: 1400},
                 mx: 'auto',
                 minWidth: 0,
-                overflowX: 'hidden',
+                // Schmal fängt das ausreißende Inhalte ab. Breit muss es weg: overflow macht diese
+                // Box zum Scroll-Container und die klebende Live-Spalte darin wirkungslos.
+                overflowX: {xs: 'hidden', md: 'visible'},
             }}>
             <Stack spacing={2} sx={{px: 1, py: 2, minWidth: 0}}>
                 <Stack
@@ -281,88 +343,41 @@ const LiveDashboardPage = () => {
                         onEntryClick={scrollToTimelineEntry}
                     />
                 )}
-                {tab === 'live' && (
-                    <>
-                        {currentMatches.length === 0 && dashboard && (
-                            <Alert severity="info">{t('event.liveDashboard.noRunning')}</Alert>
-                        )}
-                        {currentMatches.map(match => (
-                            <Box key={match.matchId} id={dashboardEntryDomId(match.matchId)}>
-                                <LiveDashboardMatchCard
-                                    match={match}
-                                    onTeamClick={handleTeamClick}
-                                    onFinish={mayFinish ? handleFinish : undefined}
-                                    onSetRunning={mayControl ? handleSetRunning : undefined}
-                                />
-                            </Box>
-                        ))}
-                        {currentMatches.length === 0 && nextEntry && (
-                            <>
-                                <Typography variant="subtitle2" color="text.secondary">
-                                    {t('event.liveDashboard.nextUp')}
-                                </Typography>
-                                {nextEntry.kind === 'match' ? (
-                                    <Box id={dashboardEntryDomId(nextEntry.match.matchId)}>
-                                        <LiveDashboardMatchCard
-                                            match={nextEntry.match}
-                                            onTeamClick={handleTeamClick}
-                                            onSetRunning={mayControl ? handleSetRunning : undefined}
-                                        />
-                                    </Box>
-                                ) : (
-                                    <Box id={dashboardEntryDomId(nextEntry.slot.slotId)}>
-                                        <LiveDashboardPendingSlotCard
-                                            slot={nextEntry.slot}
-                                            onSkip={mayControl ? handleSkipSlot : undefined}
-                                        />
-                                    </Box>
-                                )}
-                            </>
-                        )}
-                    </>
-                )}
-                {tab === 'matches' && (
-                    <>
-                        {scheduledTimeline.map(entry =>
-                            entry.kind === 'match' ? (
-                                <Box key={entry.match.matchId} id={dashboardEntryDomId(entry.match.matchId)}>
-                                    <LiveDashboardMatchCard
-                                        match={entry.match}
-                                        onTeamClick={handleTeamClick}
-                                        onFinish={mayFinish ? handleFinish : undefined}
-                                        onSetRunning={mayControl ? handleSetRunning : undefined}
-                                    />
-                                </Box>
-                            ) : (
-                                <Box key={entry.slot.slotId} id={dashboardEntryDomId(entry.slot.slotId)}>
-                                    <LiveDashboardPendingSlotCard
-                                        slot={entry.slot}
-                                        onSkip={mayControl ? handleSkipSlot : undefined}
-                                    />
-                                </Box>
-                            ),
-                        )}
-                        {unscheduledMatches.length > 0 && (
-                            <>
-                                <Typography variant="subtitle2" color="text.secondary">
-                                    {t('event.liveDashboard.unscheduled')}
-                                </Typography>
-                                {unscheduledMatches.map(match => (
-                                    <Box key={match.matchId} id={dashboardEntryDomId(match.matchId)}>
-                                        <LiveDashboardMatchCard
-                                            match={match}
-                                            onTeamClick={handleTeamClick}
-                                            onFinish={mayFinish ? handleFinish : undefined}
-                                            onSetRunning={mayControl ? handleSetRunning : undefined}
-                                        />
-                                    </Box>
-                                ))}
-                            </>
-                        )}
-                        {dashboard && dashboard.matches.length === 0 && pendingSlots.length === 0 && (
-                            <Alert severity="info">{t('event.liveDashboard.noMatches')}</Alert>
-                        )}
-                    </>
+                {wide ? (
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+                            gap: 2,
+                            alignItems: 'start',
+                        }}>
+                        {/* Der laufende Lauf bleibt im Blick, während nebenan durch die
+                            Gesamtliste gescrollt wird. */}
+                        <Stack
+                            spacing={2}
+                            sx={{
+                                minWidth: 0,
+                                position: 'sticky',
+                                top: 16,
+                                maxHeight: 'calc(100vh - 32px)',
+                                overflowY: 'auto',
+                            }}>
+                            <Typography variant="subtitle1" fontWeight={700}>
+                                {t('event.liveDashboard.tabs.live')}
+                            </Typography>
+                            {liveColumn}
+                        </Stack>
+                        <Stack spacing={2} sx={{minWidth: 0}}>
+                            <Typography variant="subtitle1" fontWeight={700}>
+                                {t('event.liveDashboard.tabs.matches')}
+                            </Typography>
+                            {matchListColumn}
+                        </Stack>
+                    </Box>
+                ) : tab === 'live' ? (
+                    liveColumn
+                ) : (
+                    matchListColumn
                 )}
             </Stack>
             <LiveDashboardTeamDialog
@@ -371,37 +386,39 @@ const LiveDashboardPage = () => {
                 eventId={eventId}
                 onClose={() => setSelectedTeamRef(null)}
             />
-            <Paper sx={{position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10}} elevation={3}>
-                <BottomNavigation
-                    showLabels
-                    value={tab}
-                    onChange={(_, newTab: 'live' | 'matches') => {
-                        tabRef.current = newTab
-                        setTab(newTab)
-                        // Der andere Tab hat einen anderen Umfang: der bisherige Stand samt ETag
-                        // gilt für ihn nicht, sonst stünde kurz die Live-Auswahl als Gesamtliste da.
-                        setDashboard(null)
-                        etagRef.current = null
-                        if (newTab === 'live') {
-                            setLiveChanged(false)
-                        }
-                    }}>
-                    <BottomNavigationAction
-                        value="live"
-                        label={t('event.liveDashboard.tabs.live')}
-                        icon={
-                            <Badge color="error" variant="dot" invisible={!liveChanged}>
-                                <LiveTvIcon />
-                            </Badge>
-                        }
-                    />
-                    <BottomNavigationAction
-                        value="matches"
-                        label={t('event.liveDashboard.tabs.matches')}
-                        icon={<FormatListNumberedIcon />}
-                    />
-                </BottomNavigation>
-            </Paper>
+            {/* Nur schmal: breit stehen beide Ansichten nebeneinander, eine über die ganze
+                Fensterbreite geklebte Telefonleiste hätte dort nichts zu schalten. */}
+            {!wide && (
+                <Paper
+                    sx={{position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10}}
+                    elevation={3}>
+                    <BottomNavigation
+                        showLabels
+                        value={tab}
+                        onChange={(_, newTab: LiveDashboardTab) => {
+                            tabRef.current = newTab
+                            setTab(newTab)
+                            if (newTab === 'live') {
+                                setLiveChanged(false)
+                            }
+                        }}>
+                        <BottomNavigationAction
+                            value="live"
+                            label={t('event.liveDashboard.tabs.live')}
+                            icon={
+                                <Badge color="error" variant="dot" invisible={!liveChanged}>
+                                    <LiveTvIcon />
+                                </Badge>
+                            }
+                        />
+                        <BottomNavigationAction
+                            value="matches"
+                            label={t('event.liveDashboard.tabs.matches')}
+                            icon={<FormatListNumberedIcon />}
+                        />
+                    </BottomNavigation>
+                </Paper>
+            )}
         </Box>
     )
 }

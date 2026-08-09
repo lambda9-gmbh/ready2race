@@ -46,6 +46,7 @@ import Throbber from '@components/Throbber.tsx'
 import {groupSlotsByDay, isCancellable, isEditable, slotLabel, slotsInRound} from './common.ts'
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
+import {matchStatusChip, slotMatchStatus} from '@components/event/match/matchStatusChip.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 import ScheduleImportDialog from './ScheduleImportDialog.tsx'
@@ -71,10 +72,30 @@ const actionSlotSx = {
     justifyContent: 'center',
 } as const
 
+/**
+ * Der Chip in der Status-Spalte.
+ *
+ * Ist der Slot mit einem Lauf verknüpft, entscheidet der Lauf-Status — bis hierher stand dort nur
+ * "Verknüpft", eine Aussage über den Plan statt über den Lauf. Programmpunkte und wartende Runden
+ * haben keinen Lauf und behalten deshalb unverändert ihren Slot-Chip.
+ *
+ * [now] speist nur die Anzeige ("Überfällig", verstrichene Minuten); der Zustand selbst kommt vom
+ * Server.
+ */
 const stateChipProps = (
     slot: EventScheduleSlotDto,
-    t: (key: string) => string,
+    now: Date,
+    t: (key: string, values?: Record<string, string | number>) => string,
 ): {label: string; color: ChipProps['color']; sx?: ChipProps['sx']} => {
+    const matchStatus = slotMatchStatus(slot)
+    if (matchStatus) {
+        const chip = matchStatusChip(matchStatus, slot.startTime, now)
+        return {
+            label: t(chip.labelKey, chip.values),
+            color: chip.color,
+            sx: chip.strikeThrough ? {textDecoration: 'line-through'} : undefined,
+        }
+    }
     if (slot.matchFinishedAt) {
         return {label: t('event.schedule.state.finished'), color: 'success'}
     }
@@ -400,7 +421,7 @@ const EventSchedule = () => {
                             </TableHead>
                             <TableBody>
                                 {section.slots.map(slot => {
-                                    const chip = stateChipProps(slot, t)
+                                    const chip = stateChipProps(slot, now, t)
                                     return (
                                         <TableRow
                                             key={slot.id}

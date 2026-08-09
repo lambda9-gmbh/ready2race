@@ -38,6 +38,8 @@ data class LiveDashboardRequirementStatusDto(
     val checkedAt: LocalDateTime?,
     val note: String?,
     val timeCheck: TimeCheckDto?,
+    /** Fertige Ampel dieser Bedingung - siehe [LiveDashboardLogic.requirementSeverity]. */
+    val severity: EffectiveSeverity,
 )
 
 data class LiveDashboardParticipantDto(
@@ -52,20 +54,6 @@ data class LiveDashboardParticipantDto(
     val substitutedFor: String?,
     val substitutionReason: String?,
     val requirements: List<LiveDashboardRequirementStatusDto>,
-)
-
-/**
- * Verdichtung der Teilnahmebedingungen einer Mannschaft. Die Liste zeigt daraus ein Ampel-Icon;
- * die Bedingungen selbst holt erst der Detail-Dialog. Bei 150 Personen mal drei Bedingungen ist
- * das der Unterschied zwischen einer Antwort von 100 KB und einer von wenigen KB.
- */
-data class LiveDashboardRequirementSummaryDto(
-    val total: Int,
-    val fulfilled: Int,
-    val missingRequired: Int,
-    val missingOptional: Int,
-    /** Prüfungen außerhalb des konfigurierten Zeitfensters. */
-    val timeIssues: Int,
 )
 
 data class LiveDashboardTeamDto(
@@ -84,12 +72,25 @@ data class LiveDashboardTeamDto(
     val deregistered: Boolean,
     val deregisteredReason: String?,
     val invoiceState: LiveDashboardInvoiceState,
-    val requirements: LiveDashboardRequirementSummaryDto,
+    /** Fertige Ampel der Zeile - die Bewertungsregeln liegen im Backend, siehe [LiveDashboardLogic]. */
+    val severity: EffectiveSeverity,
+    /**
+     * Die Rechnung getrennt bewertet: der Detail-Dialog färbt seinen Rechnungs-Chip danach ein.
+     * Aus [severity] ließe sich das nicht zurückrechnen - dort ist sie mit allem anderen verrechnet.
+     */
+    val invoiceSeverity: EffectiveSeverity,
+    /** Ob dieser Wettkampf überhaupt eine An-/Abmeldung verlangt; steuert die Anzeige von [onWaterAt]. */
+    val onWaterRequired: Boolean,
+    /**
+     * "Auf dem Wasser" getrennt bewertet: der Detail-Dialog färbt seinen Chip danach ein.
+     * Aus [severity] ließe sich das nicht zurückrechnen - dort ist sie mit allem anderen verrechnet.
+     */
+    val onWaterSeverity: EffectiveSeverity,
     /** Ob mindestens eine Person für diese Runde umgemeldet wurde. */
     val substituted: Boolean,
     /**
-     * Wann das Boot aufs Wasser gegangen ist (spätester Auscheck-Scan, wenn die gesamte Crew
-     * zuletzt ausgecheckt ist) - null, solange mindestens eine Person nicht ausgecheckt ist
+     * Wann das Boot aufs Wasser gegangen ist (spätester Eincheck-Scan, wenn die gesamte Crew
+     * zuletzt eingecheckt ist) - null, solange mindestens eine Person nicht eingecheckt ist
      * oder keine Crew bekannt ist. Siehe [LiveDashboardLogic.teamOnWaterAt].
      */
     val onWaterAt: LocalDateTime?,
@@ -115,6 +116,19 @@ data class LiveDashboardMatchDto(
     val currentlyRunning: Boolean,
     val elapsedMinutes: Long?,
     val teams: List<LiveDashboardTeamDto>,
+    /**
+     * Fehlercode des letzten fehlgeschlagenen automatischen Abrufs, null wenn er in Ordnung ist.
+     *
+     * Der Zeitpunkt des letzten Abrufs (`raceclocker_polled_at`) steht hier bewusst NICHT, obwohl
+     * der Durchführungs-Tab ihn zeigt: `respondETagged` bildet den Hash über das serialisierte DTO,
+     * und ein Feld, das sich für jeden beobachteten Lauf alle fünf Sekunden ändert, macht jede
+     * 304-Antwort unmöglich - jedes Schiedsrichter-Telefon lüde das ganze Dashboard neu, solange der
+     * Job läuft. Die Karte zeigt den Zeitpunkt ohnehin nicht an; sie unterscheidet nur „Fehler" und
+     * „pausiert" von „alles in Ordnung".
+     */
+    val raceClockerPollError: String?,
+    /** Gesetzt, solange der automatische Abruf diesen Lauf in Ruhe lässt, weil von Hand Ergebnisse eingetragen wurden. */
+    val raceClockerAutoPausedAt: LocalDateTime?,
 )
 
 /**

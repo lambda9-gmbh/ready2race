@@ -32,6 +32,8 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     matchStartedAt: null,
     matchFinishedAt: null,
     matchCurrentlyRunning: false,
+    matchTeamsTotal: 0,
+    matchTeamsScored: 0,
     ...over,
 })
 
@@ -277,6 +279,7 @@ const importRow = (over: Partial<ImportRowResultDto> = {}): ImportRowResultDto =
     laufText: 'Achtelfinale AF1',
     status: 'LINKED',
     targetLabel: 'CM 1x – Achtelfinale – AF1',
+    availableMatches: [],
     ...over,
 })
 
@@ -289,6 +292,15 @@ describe('hasBlockingImportRows', () => {
 
     it('is false for AMBIGUOUS rows - they just fall back to a free slot', () => {
         expect(hasBlockingImportRows([importRow({status: 'AMBIGUOUS'})])).toBe(false)
+    })
+
+    it('is false for rows whose competition or race was not found - also just free slots', () => {
+        expect(
+            hasBlockingImportRows([
+                importRow({status: 'COMPETITION_NOT_FOUND'}),
+                importRow({status: 'MATCH_NOT_FOUND', availableMatches: ['HF1']}),
+            ]),
+        ).toBe(false)
     })
 
     it('is true as soon as one row is a DUPLICATE', () => {
@@ -306,6 +318,8 @@ describe('importRowChipColor', () => {
     it('maps each status to its chip color', () => {
         expect(importRowChipColor('LINKED')).toBe('success')
         expect(importRowChipColor('FREE')).toBe('default')
+        expect(importRowChipColor('COMPETITION_NOT_FOUND')).toBe('warning')
+        expect(importRowChipColor('MATCH_NOT_FOUND')).toBe('warning')
         expect(importRowChipColor('AMBIGUOUS')).toBe('warning')
         expect(importRowChipColor('DUPLICATE')).toBe('error')
     })

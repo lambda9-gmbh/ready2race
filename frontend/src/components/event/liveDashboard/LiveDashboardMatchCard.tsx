@@ -1,23 +1,26 @@
 import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import CancelIcon from '@mui/icons-material/Cancel'
-import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
+import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
 import {
     formatMinutes,
     matchControls,
     openResultTeams,
     pendingSlotLabel,
-    Severity,
     shortClubName,
-    teamSeverity,
 } from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
+import SeverityIcon from './SeverityIcon.tsx'
+
+/**
+ * Ab dieser Kartenbreite ist Platz für die Langform des Status. Darunter würde sie die Spalte im
+ * Kopf-Grid so weit aufziehen, dass daneben nur noch der erste Buchstabe des Laufnamens bleibt —
+ * beide Zeilen teilen sich dieselbe Spalte.
+ */
+const WIDE_CARD_PX = 480
 
 type Props = {
     match: LiveDashboardMatchDto
@@ -25,24 +28,6 @@ type Props = {
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
     onSetRunning?: (matchId: string, running: boolean) => Promise<void>
-}
-
-// One glanceable icon per team replaces the detail chips — everything else
-// lives in the team dialog, one tap away.
-// Draußen zählt Kontrast: die dunklen Palette-Varianten bleiben auch bei Sonne
-// lesbar, während die konfigurierten main-Töne verblassen.
-const severityIcon = (severity: Severity) => {
-    const sx = {fontSize: 28, display: 'block'}
-    switch (severity) {
-        case 'ok':
-            return <CheckCircleIcon sx={{...sx, color: 'success.dark'}} />
-        case 'warning':
-            return <WarningAmberIcon sx={{...sx, color: 'warning.dark'}} />
-        case 'error':
-            return <CancelIcon sx={{...sx, color: 'error.dark'}} />
-        case 'neutral':
-            return <RadioButtonUncheckedIcon sx={{...sx, color: 'text.disabled'}} />
-    }
 }
 
 const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Props) => {
@@ -71,6 +56,10 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
             sx={{
                 minWidth: 0,
                 overflow: 'hidden',
+                // Die Karte richtet sich nach ihrer eigenen Breite, nicht nach der des Fensters:
+                // nebeneinander stehende Spalten auf dem Tablet sind schmaler als ein Telefon,
+                // ein Blick aufs Fenster würde dort die Langformen erzwingen.
+                containerType: 'inline-size',
                 // Accent bar instead of a full frame: marks the live race without shouting
                 borderLeft: running ? '6px solid' : undefined,
                 borderLeftColor: running ? 'success.dark' : undefined,
@@ -153,17 +142,29 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                     duration: formatMinutes(match.elapsedMinutes),
                                 })
                             ) : awaitingFinish ? (
-                                // Der volle Text sprengt schmale Karten; auf Telefonbreite
-                                // trägt die Kurzform dieselbe Aussage.
+                                // Der volle Text sprengt schmale Karten; die Kurzform trägt
+                                // dieselbe Aussage. Ausschlaggebend ist die Kartenbreite: der
+                                // Kopf teilt sich eine Spalte mit diesem Label, ein zu langes
+                                // schneidet nebenan den Laufnamen ab.
                                 <>
                                     <Box
                                         component="span"
-                                        sx={{display: {xs: 'none', sm: 'inline'}}}>
+                                        sx={{
+                                            display: 'none',
+                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
+                                                display: 'inline',
+                                            },
+                                        }}>
                                         {t('event.liveDashboard.state.AWAITING_FINISH')}
                                     </Box>
                                     <Box
                                         component="span"
-                                        sx={{display: {xs: 'inline', sm: 'none'}}}>
+                                        sx={{
+                                            display: 'inline',
+                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
+                                                display: 'none',
+                                            },
+                                        }}>
                                         {t('event.liveDashboard.state.AWAITING_FINISH_SHORT')}
                                     </Box>
                                 </>
@@ -173,6 +174,22 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         </Box>
                     </Box>
                 </Box>
+                {(() => {
+                    const status = raceClockerPollStatus(match)
+                    if (status.kind === 'none' || status.kind === 'ok') return null
+
+                    return (
+                        <Typography variant={'caption'} color={'warning.main'}>
+                            {status.kind === 'paused'
+                                ? t('event.competition.execution.results.raceclocker.poll.paused')
+                                : t('event.competition.execution.results.raceclocker.poll.error', {
+                                      reason: status.errorKey
+                                          ? t(status.errorKey)
+                                          : t('common.error.unexpected'),
+                                  })}
+                        </Typography>
+                    )
+                })()}
                 <Divider sx={{mt: 1.5}} />
                 {match.teams.map((team, index) => {
                     const substituted = team.substituted
@@ -254,7 +271,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                         {clubLine}
                                     </Typography>
                                 )}
-                                {team.onWaterAt && (
+                                {team.onWaterRequired && team.onWaterAt && (
                                     <Typography
                                         variant="caption"
                                         display="block"
@@ -327,8 +344,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                     </Box>
                                 </>
                             )}
-                            {/* "Auf dem Wasser" zählt nur bei aktivem Lauf in die Ampel. */}
-                            {severityIcon(teamSeverity(team, running))}
+                            <SeverityIcon severity={team.severity} />
                         </Box>
                     )
                 })}
