@@ -24,7 +24,7 @@ const dto = (o: Partial<MyEventDto>): MyEventDto => ({
 })
 
 describe('openRequirements', () => {
-    it('meldet nur nicht erfuellte Pflichtbedingungen', () => {
+    it('meldet nur nicht erfüllte Pflichtbedingungen', () => {
         const open = requirement({fulfilled: false, optional: false})
         const result = openRequirements([
             open,
@@ -48,7 +48,7 @@ describe('blockOrder', () => {
         expect(order[0]).toBe('requirementBanner')
     })
 
-    it('stellt kommende Laeufe vor die Ergebnisse', () => {
+    it('stellt kommende Läufe vor die Ergebnisse', () => {
         const order = blockOrder(
             dto({upcoming: [{matchId: 'm1'} as never], results: [{matchId: 'm0'} as never]}),
         )

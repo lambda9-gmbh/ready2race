@@ -1,7 +1,22 @@
 import {Outlet} from '@tanstack/react-router'
 import {Container, Box} from '@mui/material'
+import {useEffect} from 'react'
 
 const ResultsLayout = () => {
+    // Die Ergebnisseite trägt Namen von Teilnehmenden und über "Mein Event" den Zustand
+    // persönlicher Bedingungen. Ein Suchmaschinentreffer würde aus "wer den Link hat"
+    // ein "wer den Namen sucht" machen. Der Schutz hängt bewusst am Layout und nicht an
+    // der Reiter-Logik, damit er beim Umbau der Reiter nicht verloren geht.
+    useEffect(() => {
+        const meta = document.createElement('meta')
+        meta.name = 'robots'
+        meta.content = 'noindex, nofollow'
+        document.head.appendChild(meta)
+        return () => {
+            document.head.removeChild(meta)
+        }
+    }, [])
+
     return (
         <Container
             className="mobile-optimized-layout"
