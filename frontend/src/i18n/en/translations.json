@@ -621,6 +621,10 @@
     "competition": {
       "competition": "Competition",
       "competitions": "Competitions",
+      "navigation": {
+        "backToEvent": "Back to the event",
+        "filter": "Filter"
+      },
       "noCompetitionsAvailable": "No competitions available",
       "identifier": "Identifier",
       "name": "Name",

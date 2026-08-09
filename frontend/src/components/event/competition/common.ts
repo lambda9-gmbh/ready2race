@@ -6,6 +6,17 @@ import {
     CompetitionSetupTemplateOverviewDto,
 } from '@api/types.gen.ts'
 
+const COMPETITION_TABS = [
+    'general',
+    'registrations',
+    'teams',
+    'setup',
+    'execution',
+    'timing',
+    'places',
+] as const
+export type CompetitionTab = (typeof COMPETITION_TABS)[number]
+
 export type CompetitionForm = {
     identifier: string
     name: string
