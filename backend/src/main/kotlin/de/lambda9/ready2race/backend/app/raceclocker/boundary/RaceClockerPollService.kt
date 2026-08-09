@@ -284,15 +284,18 @@ object RaceClockerPollService {
         // dort gesetzter Zeitstempel fiele dem Rollback zum Opfer. Ohne diesen Zweig bliebe ein von
         // der Kette aktivierter Lauf "in Vorbereitung", bis das erste Boot durchs Ziel ist.
         //
-        // Bewusst ohne `?.let { … }`: Der `!`-Operator der Comprehension funktioniert nur direkt im
-        // Block, nicht in einem geschachtelten Lambda.
-        val measuredStart = RaceClockerFeedRow.earliestStart(assigned)
-        if (candidate.startedAt == null && measuredStart != null) {
-            // Der Feed liefert nur die Uhrzeit; den Tag gibt der Lauf vor, sonst läge ein am
-            // Vortag geplanter Lauf um Mitternacht falsch.
-            val raceDay = candidate.startTime?.toLocalDate() ?: now.toLocalDate()
+        // Welche Zeit das ist, entscheidet [RaceClockerPollLogic.measuredStartFor] - hier steht nur
+        // noch das Schreiben. Bewusst ohne `?.let { … }`: Der `!`-Operator der Comprehension
+        // funktioniert nur direkt im Block, nicht in einem geschachtelten Lambda.
+        val measuredStart = RaceClockerPollLogic.measuredStartFor(
+            rows = assigned,
+            existingStartedAt = candidate.startedAt,
+            plannedStart = candidate.startTime,
+            now = now,
+        )
+        if (measuredStart != null) {
             !CompetitionMatchRepo.update(candidate.matchId) {
-                startedAt = raceDay.atTime(measuredStart)
+                startedAt = measuredStart
                 updatedBy = SYSTEM_USER
                 updatedAt = now
             }.orDie()
