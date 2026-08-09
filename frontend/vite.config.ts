@@ -9,15 +9,15 @@ import { resolve } from 'node:path'
  * Legt den gebauten Service Worker nach dist/app/ um.
  *
  * Der Scope eines Service Workers folgt seinem Ablageort. Nur unter /app/ kontrolliert er die
- * Helfer-App und sonst nichts - der Header `Service-Worker-Allowed` waere die Alternative und
+ * Helfer-App und sonst nichts - der Header `Service-Worker-Allowed` wäre die Alternative und
  * setzt Zugriff aufs Hosting voraus, den wir nicht haben. vite-plugin-pwa schreibt die Datei ins
- * Wurzelverzeichnis von dist; das Verschieben danach ist der verlaessliche Weg, weil keine
- * Plugin-Option dafuer dokumentiert ist.
+ * Wurzelverzeichnis von dist; das Verschieben danach ist der verlässliche Weg, weil keine
+ * Plugin-Option dafür dokumentiert ist.
  *
- * Die Precache-Eintraege im Worker sind absolute Pfade ab '/', das Verschieben beruehrt sie nicht.
+ * Die Precache-Einträge im Worker sind absolute Pfade ab '/', das Verschieben berührt sie nicht.
  *
  * `sequential` und `order: 'post'` sind hier tragend, nicht kosmetisch: Vite ruft `closeBundle`
- * sonst parallel auf, und dann laeuft der Umzug, bevor vite-plugin-pwa die Datei ueberhaupt
+ * sonst parallel auf, und dann läuft der Umzug, bevor vite-plugin-pwa die Datei überhaupt
  * geschrieben hat - der Build bricht mit ENOENT auf dist/sw.js ab.
  */
 const moveServiceWorkerToApp = (): Plugin => ({
@@ -46,21 +46,21 @@ export default defineConfig({
       injectRegister: false,
       manifestFilename: 'app/manifest.webmanifest',
       injectManifest: {
-        // Die index.html wird bewusst nicht vorgeladen, sie laeuft ueber NetworkFirst.
+        // Die index.html wird bewusst nicht vorgeladen, sie läuft über NetworkFirst.
         globIgnores: ['**/index.html'],
         // Das Bundle ist ein einziger Brocken von gut 3 MB und wird vom Server unkomprimiert
-        // ausgeliefert. Workbox laesst standardmaessig nur 2 MiB in den Precache und wuerde es
-        // stillschweigend auslassen - womit die Helfer-App offline nichts mehr haette. Die
-        // Grenze liegt deshalb darueber. Faellt das Bundle durch Code-Splitting einmal kleiner
-        // aus, kann sie zurueck.
+        // ausgeliefert. Workbox lässt standardmäßig nur 2 MiB in den Precache und würde es
+        // stillschweigend auslassen - womit die Helfer-App offline nichts mehr hätte. Die
+        // Grenze liegt deshalb darüber. Fällt das Bundle durch Code-Splitting einmal kleiner
+        // aus, kann sie zurück.
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       manifest: {
         name: 'Ready2Race',
         short_name: 'R2R',
-        // Der Plan wollte gar keine Sprache setzen, weil die App Deutsch, Englisch und Daenisch
-        // kann. vite-plugin-pwa traegt dann aber 'en' ein - fuer eine deutsche Regatta die
-        // schlechteste der drei. Die Oberflaeche selbst bleibt davon unberuehrt und folgt
+        // Der Plan wollte gar keine Sprache setzen, weil die App Deutsch, Englisch und Dänisch
+        // kann. vite-plugin-pwa trägt dann aber 'en' ein - für eine deutsche Regatta die
+        // schlechteste der drei. Die Oberfläche selbst bleibt davon unberührt und folgt
         // weiterhin der Spracherkennung.
         lang: 'de',
         start_url: '/app',

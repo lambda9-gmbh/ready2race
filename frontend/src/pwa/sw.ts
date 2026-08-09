@@ -21,8 +21,8 @@ cleanupOutdatedCaches()
 
 // Bewusst NICHT createHandlerBoundToURL('index.html'): Das setzt voraus, dass die index.html im
 // Precache liegt, und genau die ist per globIgnores ausgenommen (sie wird beim Ausliefern nicht
-// veraendert, aber ein eingefrorener Shell-Einstieg ist bei einem Regatta-Update das Letzte, was
-// wir wollen). NetworkFirst holt sie frisch, faellt offline auf die zuletzt gesehene zurueck.
+// verändert, aber ein eingefrorener Shell-Einstieg ist bei einem Regatta-Update das Letzte, was
+// wir wollen). NetworkFirst holt sie frisch, fällt offline auf die zuletzt gesehene zurück.
 registerRoute(
     new NavigationRoute(new NetworkFirst({cacheName: 'app-shell'}), {
         allowlist: [/^\/app(\/|$)/],

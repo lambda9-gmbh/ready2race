@@ -44,7 +44,7 @@ const readStored = (stores: TokenStores): StoredToken | null => {
             return parsed
         }
     } catch {
-        // faellt unten auf Aufraeumen durch
+        // fällt unten auf Aufräumen durch
     }
     stores.app.removeItem(APP_KEY)
     return null

@@ -45,8 +45,8 @@ export const useRegisterAppSW = () => {
                 registration.addEventListener('updatefound', () => watchInstalling(registration))
             })
             .catch(() => {
-                // Kein HTTPS, privater Modus, Browser ohne Unterstuetzung: Die App laeuft
-                // unveraendert weiter, nur ohne Offline. Kein Fehlerdialog.
+                // Kein HTTPS, privater Modus, Browser ohne Unterstützung: Die App läuft
+                // unverändert weiter, nur ohne Offline. Kein Fehlerdialog.
             })
 
         return () => {
@@ -60,7 +60,7 @@ export const useRegisterAppSW = () => {
             window.location.reload()
             return
         }
-        // Erst wenn der neue Worker das Ruder uebernommen hat, wird neu geladen - sonst zeigt die
+        // Erst wenn der neue Worker das Ruder übernommen hat, wird neu geladen - sonst zeigt die
         // frisch geladene Seite wieder die alte Fassung.
         navigator.serviceWorker.addEventListener(
             'controllerchange',
