@@ -155,10 +155,26 @@ Weiterreichung in `eventInfo/control/Conversions.kt`.
 `AwardCertificateService.kt:135` setzt statt `singletonOrFallback(...)` die **volle** Kette ein,
 mit ` / ` verbunden, ohne jede Kürzung.
 
-**Offener Vorbehalt:** bei fünf Vereinen sind das rund 130 Zeichen in einem Feld, das bisher einen
-Vereinsnamen erwartet hat. Die Vorlagen haben feste Textkästen. Ob das Feld umbricht oder
-überläuft, wird **nicht** blind eingebaut, sondern im Urkunden-Editor nachgesehen und als
-Handtest im Testkatalog geführt.
+**Nachgemessen am 09.08.** (PDFBox, Helvetica, A4 = 595,3 pt breit): echte CRF-Namen ergeben nicht
+130, sondern **158 Zeichen**. Eine fünfgliedrige Kette ist bei 14 pt **1012 pt** breit — das
+1,7-fache der Seite, bei 18 pt das 2,2-fache. Der PDF-Pfad bricht nicht um, kürzt nicht und
+verkleinert nicht; bei zentrierter Ausrichtung läuft der Text über **beide** Ränder hinaus. Der
+DOCX-Pfad bricht dagegen um, weil Word das selbst tut — die beiden Formate liefen auseinander. Und
+der Vorlagen-Editor zeigte `whiteSpace: nowrap; overflow: hidden`: eine saubere Zeile an der
+Kastenkante, während der Druck über die Seite lief.
+
+**Entscheidung: Umbruch an den Vereinsgrenzen, nicht an Wortgrenzen.** Ein Vereinsname wird nie
+zerrissen; umgebrochen wird an den ` / `-Trennern. Die Zerlegung passiert **vor** dem Rendern an
+einer Stelle, die beide Renderer teilen — so viele vollständige Vereinsnamen je Zeile, wie in den
+Kasten passen, gemessen mit den Schriftmaßen der PDF-Seite. Der DOCX-Pfad bekommt dieselben fertigen
+Zeilen und muss im Normalfall gar nicht mehr umbrechen; damit stimmen beide Formate wieder überein.
+
+Rückfallebene: passt ein einzelner Vereinsname allein nicht in die Breite — Kandidat aus den echten
+Daten ist `Ruder-Club Allemannia von 1866 e.V. - Leuphana Universität Lüneburg` —, wird für diese
+eine Zeile an Wortgrenzen weitergebrochen.
+
+Die Editor-Vorschau muss den Umbruch zeigen. Eine Vorschau, die den Überlauf verschweigt, ist
+schlimmer als keine.
 
 ## Kürzungsregeln
 
