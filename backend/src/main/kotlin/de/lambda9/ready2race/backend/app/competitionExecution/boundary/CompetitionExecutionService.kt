@@ -132,6 +132,10 @@ object CompetitionExecutionService {
             // Number of teams placed into the round being created - used to resolve the bracket size N below.
             var justPlacedCount = 0
 
+            // Die Setup-Lauf-Ids der Runde, die dieser Durchlauf erzeugt - Grundlage des Vermerks
+            // unten. `createdSetupMatchIds` sammelt über alle Durchläufe hinweg und taugt dafür nicht.
+            var createdThisRound: List<UUID> = emptyList()
+
             if (currentRound == null) {
                 // First Round
 
@@ -164,6 +168,7 @@ object CompetitionExecutionService {
                     }
                 !CompetitionMatchRepo.create(matchRecords).orDie()
                 createdSetupMatchIds += matchRecords.map { it.competitionSetupMatch!! }
+                createdThisRound = matchRecords.map { it.competitionSetupMatch!! }
 
 
                 val seedingList = getSeedingList(nextRoundSetupMatches.map { it.teams }, registrations.size)
@@ -239,6 +244,7 @@ object CompetitionExecutionService {
                     }
                 !CompetitionMatchRepo.create(matchRecords).orDie()
                 createdSetupMatchIds += matchRecords.map { it.competitionSetupMatch!! }
+                createdThisRound = matchRecords.map { it.competitionSetupMatch!! }
 
                 val nextRoundSetupParticipants =
                     !CompetitionSetupParticipantRepo.get(nextRoundSetupMatches.map { it.id }).orDie()
@@ -314,6 +320,19 @@ object CompetitionExecutionService {
                             ).orDie()
                         }
                     }
+                }
+            }
+
+            // Stand die Runde schon einmal, sind diese Paarungen eine Neuberechnung - und die
+            // Orga-Ansichten sollen das sehen. Dass es sie schon einmal gab, weiß nur die
+            // Setup-Runde: Sie überlebt das Löschen der Runde, die Läufe tun es nicht
+            // (siehe V202608091501).
+            if (nextRound != null && createdThisRound.isNotEmpty()) {
+                val markedAt = LocalDateTime.now()
+                if (nextRound.materializedAt != null) {
+                    !CompetitionMatchRepo.markPairingsRecalculated(createdThisRound, markedAt).orDie()
+                } else {
+                    !CompetitionSetupRoundRepo.markMaterialized(nextRound.setupRoundId, markedAt).orDie()
                 }
             }
         }

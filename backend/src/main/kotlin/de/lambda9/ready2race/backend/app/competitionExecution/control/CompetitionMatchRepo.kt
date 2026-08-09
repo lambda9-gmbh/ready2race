@@ -36,6 +36,28 @@ object CompetitionMatchRepo {
 
     fun delete(ids: List<UUID>) = COMPETITION_MATCH.delete { COMPETITION_SETUP_MATCH.`in`(ids) }
 
+    /** Setzt den Vermerk "Paarung neu berechnet" auf die angegebenen Läufe. */
+    fun markPairingsRecalculated(setupMatchIds: List<UUID>, at: LocalDateTime) =
+        COMPETITION_MATCH.updateMany(
+            f = { pairingsRecalculatedAt = at },
+            condition = { COMPETITION_SETUP_MATCH.`in`(setupMatchIds) },
+        )
+
+    /**
+     * Der Wettkampf, zu dem dieser Lauf gehört — die Kette Lauf → Setup-Lauf → Runde →
+     * Eigenschaften → Wettkampf. Die Aufrufer der Automatik kennen nur den Lauf.
+     */
+    fun getCompetitionId(setupMatchId: UUID) = Jooq.query {
+        select(COMPETITION_PROPERTIES.COMPETITION)
+            .from(COMPETITION_SETUP_MATCH)
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_ROUND.ID.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_PROPERTIES.ID.eq(COMPETITION_SETUP_ROUND.COMPETITION_SETUP))
+            .where(COMPETITION_SETUP_MATCH.ID.eq(setupMatchId))
+            .fetchOne(COMPETITION_PROPERTIES.COMPETITION)
+    }
+
     fun getForStartList(id: UUID) = STARTLIST_VIEW.selectOne { ID.eq(id) }
 
     /**
