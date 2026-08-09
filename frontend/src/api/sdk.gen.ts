@@ -342,6 +342,20 @@ import type {
     DeleteClubShortNameData,
     DeleteClubShortNameError,
     DeleteClubShortNameResponse,
+    GetClubNameRulesError,
+    GetClubNameRulesResponse,
+    AddClubNameRuleData,
+    AddClubNameRuleError,
+    AddClubNameRuleResponse,
+    ReorderClubNameRulesData,
+    ReorderClubNameRulesError,
+    ReorderClubNameRulesResponse,
+    UpdateClubNameRuleData,
+    UpdateClubNameRuleError,
+    UpdateClubNameRuleResponse,
+    DeleteClubNameRuleData,
+    DeleteClubNameRuleError,
+    DeleteClubNameRuleResponse,
     GetRegistrationsForEventData,
     GetRegistrationsForEventError,
     GetRegistrationsForEventResponse,
@@ -2255,6 +2269,71 @@ export const deleteClubShortName = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/clubShortName/{nameKey}',
+    })
+}
+
+export const getClubNameRules = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubNameRulesResponse,
+        GetClubNameRulesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule',
+    })
+}
+
+export const addClubNameRule = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddClubNameRuleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddClubNameRuleResponse,
+        AddClubNameRuleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule',
+    })
+}
+
+export const reorderClubNameRules = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ReorderClubNameRulesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        ReorderClubNameRulesResponse,
+        ReorderClubNameRulesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule/order',
+    })
+}
+
+export const updateClubNameRule = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubNameRuleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateClubNameRuleResponse,
+        UpdateClubNameRuleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule/{ruleId}',
+    })
+}
+
+export const deleteClubNameRule = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteClubNameRuleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteClubNameRuleResponse,
+        DeleteClubNameRuleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule/{ruleId}',
     })
 }
 

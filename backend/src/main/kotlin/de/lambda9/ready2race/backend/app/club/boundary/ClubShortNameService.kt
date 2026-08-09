@@ -27,7 +27,7 @@ object ClubShortNameService {
         eventId: UUID?,
     ): App<Nothing, ApiResponse.ListDto<ClubShortNameDto>> = KIO.comprehension {
 
-        val aliases = !ClubShortNameRepo.aliases().orDie()
+        val settings = !ClubShortNameSettings.load()
 
         val occurring = !when (eventId) {
             null -> ClubShortNameRepo.occurringNames()
@@ -56,8 +56,9 @@ object ClubShortNameService {
                 ClubShortNameDto(
                     nameKey = nameKey,
                     names = names,
-                    shortName = aliases[nameKey] ?: ClubShortNameLogic.heuristic(names.first()),
-                    maintained = aliases.containsKey(nameKey),
+                    shortName = settings.aliases[nameKey]
+                        ?: ClubShortNameLogic.heuristic(names.first(), settings.rules),
+                    maintained = settings.aliases.containsKey(nameKey),
                 )
             }
             .sortedBy { it.names.first().lowercase() }

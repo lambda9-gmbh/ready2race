@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.bankAccount.boundary.bankAccount
 import de.lambda9.ready2race.backend.app.captcha.boundary.captcha
 import de.lambda9.ready2race.backend.app.caterer.boundary.catererRoutes
 import de.lambda9.ready2race.backend.app.club.boundary.club
+import de.lambda9.ready2race.backend.app.club.boundary.clubNameRule
 import de.lambda9.ready2race.backend.app.club.boundary.clubShortName
 import de.lambda9.ready2race.backend.app.competitionCategory.boundary.competitionCategory
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.boundary.competitionSetupTemplate
@@ -53,6 +54,7 @@ fun Application.configureRouting(config: Config, env: JEnv) {
             eventSchedule()
             club()
             clubShortName()
+            clubNameRule()
             namedParticipant()
             fee()
             participantRequirement()

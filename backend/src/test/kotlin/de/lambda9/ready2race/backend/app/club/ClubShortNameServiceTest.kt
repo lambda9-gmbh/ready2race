@@ -3,8 +3,10 @@ package de.lambda9.ready2race.backend.app.club
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.club.boundary.ClubNameKey
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameService
+import de.lambda9.ready2race.backend.app.club.entity.ClubNameRuleKind
 import de.lambda9.ready2race.backend.app.club.entity.ClubShortNameRequest
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
+import de.lambda9.ready2race.backend.database.generated.tables.records.ClubNameRuleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationNamedParticipantRecord
@@ -15,6 +17,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.NamedPart
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
+import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB_NAME_RULE
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_REGISTRATION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_REGISTRATION_NAMED_PARTICIPANT
@@ -54,6 +57,26 @@ class ClubShortNameServiceTest {
             !Jooq.query { select(APP_USER.ID).from(APP_USER).limit(1).fetchOne(APP_USER.ID) },
             "Ohne angelegten Benutzer lässt sich keine Kurzform pflegen",
         )
+
+    /**
+     * Die Vereinstyp-Kürzel stehen seit dem Nachtrag vom 09.08.2026 nicht mehr im Code, sondern in
+     * `club_name_rule` - eine frisch migrierte Datenbank kennt "Ruderclub" nicht. Wer die
+     * Vorbelegung der Pflegeseite prüfen will, muss die Regel also erst anlegen; genau das tut eine
+     * Ruder-Installation mit `docs/seeds/seed-club-name-rules-rowing.sql`.
+     */
+    private fun TestComprehensionScope<JEnv>.abbreviation(term: String, replacement: String) {
+        !CLUB_NAME_RULE.insert(
+            ClubNameRuleRecord(
+                id = UUID.randomUUID(),
+                kind = ClubNameRuleKind.ABBREVIATION.name,
+                term = term,
+                replacement = replacement,
+                sortOrder = 100,
+                createdAt = now,
+                updatedAt = now,
+            )
+        )
+    }
 
     private fun TestComprehensionScope<JEnv>.club(name: String): UUID {
         val id = UUID.randomUUID()
@@ -143,6 +166,8 @@ class ClubShortNameServiceTest {
      */
     @Test
     fun aClubRecordAndAGuestsFreeTextMeetInOneRow() = testComprehension {
+        abbreviation("Ruderclub", "RC")
+        abbreviation("Ruder-Club", "RC")
         val clubId = club(rostock)
         participant(clubId, "Gast", externalClubName = rostockLong)
 
@@ -179,6 +204,7 @@ class ClubShortNameServiceTest {
     /** Leeren heißt "zurück zur Heuristik", nicht "keine Kurzform" - und nicht "Zeile weg". */
     @Test
     fun deletingLeavesTheHeuristicInCharge() = testComprehension {
+        abbreviation("Ruderclub", "RC")
         val clubId = club(rostock)
         participant(clubId, "Gast", externalClubName = rostockLong)
 
@@ -220,5 +246,33 @@ class ClubShortNameServiceTest {
 
         val atTheStart = (!ClubShortNameService.list(eventId)).data.map { it.names.first() }
         assertEquals(listOf("Marburger Ruderverein", rostock), atTheStart)
+    }
+
+    /**
+     * Der Nachtrag vom 09.08.2026 in einem Satz: die Vorbelegung kommt aus der Tabelle, nicht aus
+     * dem Code. Eine frisch migrierte Installation kürzt "Ruderclub" nicht - erst die Regel macht
+     * daraus "RC". Deshalb stehen die Regeln auf derselben Seite direkt über dieser Liste: wer sie
+     * anfasst, sieht unmittelbar darunter, was sie mit den echten Namen macht.
+     */
+    @Test
+    fun theAutomaticShortNameFollowsTheRulesInTheDatabase() = testComprehension {
+        club(rostock)
+
+        assertEquals(rostock, (!ClubShortNameService.list(null)).data.single().shortName)
+
+        abbreviation("Ruderclub", "RC")
+
+        assertEquals("Rostocker RC", (!ClubShortNameService.list(null)).data.single().shortName)
+    }
+
+    /**
+     * Die mitgelieferten Regeln der Migration wirken auch ohne jeden Seed - sie sind das, was für
+     * jede Sportart gilt.
+     */
+    @Test
+    fun theShippedRulesAlreadyStripLegalFormAndYear() = testComprehension {
+        club(rostockLong)
+
+        assertEquals("Rostocker Ruder-Club", (!ClubShortNameService.list(null)).data.single().shortName)
     }
 }
