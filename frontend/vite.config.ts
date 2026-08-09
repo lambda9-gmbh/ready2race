@@ -15,14 +15,22 @@ import { resolve } from 'node:path'
  * Plugin-Option dafuer dokumentiert ist.
  *
  * Die Precache-Eintraege im Worker sind absolute Pfade ab '/', das Verschieben beruehrt sie nicht.
+ *
+ * `sequential` und `order: 'post'` sind hier tragend, nicht kosmetisch: Vite ruft `closeBundle`
+ * sonst parallel auf, und dann laeuft der Umzug, bevor vite-plugin-pwa die Datei ueberhaupt
+ * geschrieben hat - der Build bricht mit ENOENT auf dist/sw.js ab.
  */
 const moveServiceWorkerToApp = (): Plugin => ({
   name: 'r2r-move-sw-to-app',
   apply: 'build',
-  closeBundle() {
-    const dist = resolve(__dirname, 'dist')
-    mkdirSync(resolve(dist, 'app'), {recursive: true})
-    renameSync(resolve(dist, 'sw.js'), resolve(dist, 'app/sw.js'))
+  closeBundle: {
+    sequential: true,
+    order: 'post',
+    handler() {
+      const dist = resolve(__dirname, 'dist')
+      mkdirSync(resolve(dist, 'app'), {recursive: true})
+      renameSync(resolve(dist, 'sw.js'), resolve(dist, 'app/sw.js'))
+    },
   },
 })
 
@@ -40,10 +48,21 @@ export default defineConfig({
       injectManifest: {
         // Die index.html wird bewusst nicht vorgeladen, sie laeuft ueber NetworkFirst.
         globIgnores: ['**/index.html'],
+        // Das Bundle ist ein einziger Brocken von gut 3 MB und wird vom Server unkomprimiert
+        // ausgeliefert. Workbox laesst standardmaessig nur 2 MiB in den Precache und wuerde es
+        // stillschweigend auslassen - womit die Helfer-App offline nichts mehr haette. Die
+        // Grenze liegt deshalb darueber. Faellt das Bundle durch Code-Splitting einmal kleiner
+        // aus, kann sie zurueck.
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       manifest: {
         name: 'Ready2Race',
         short_name: 'R2R',
+        // Der Plan wollte gar keine Sprache setzen, weil die App Deutsch, Englisch und Daenisch
+        // kann. vite-plugin-pwa traegt dann aber 'en' ein - fuer eine deutsche Regatta die
+        // schlechteste der drei. Die Oberflaeche selbst bleibt davon unberuehrt und folgt
+        // weiterhin der Spracherkennung.
+        lang: 'de',
         start_url: '/app',
         scope: '/app/',
         display: 'standalone',
