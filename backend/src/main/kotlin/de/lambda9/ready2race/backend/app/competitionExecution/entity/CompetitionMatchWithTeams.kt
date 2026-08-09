@@ -21,5 +21,10 @@ data class CompetitionMatchWithTeams(
     val raceClockerPollError: String?,
     /** Gesetzt, solange die Automatik diesen Lauf wegen einer Handeingabe in Ruhe lässt. */
     val raceClockerAutoPausedAt: LocalDateTime?,
+    /**
+     * Gesetzt, wenn die Paarung dieses Laufs aus einer Wiederholung stammt — die Runde war schon
+     * einmal gesetzt, wurde gelöscht und nach einer Ergebniskorrektur neu gerechnet.
+     */
+    val pairingsRecalculatedAt: LocalDateTime?,
     val teams: List<CompetitionMatchTeamWithRegistration>
 )

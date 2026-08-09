@@ -846,6 +846,7 @@ select cm.competition_setup_match,
        cm.raceclocker_polled_at,
        cm.raceclocker_poll_error,
        cm.raceclocker_auto_paused_at,
+       cm.pairings_recalculated_at,
        coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams,
        cmtwr.mixed_team_term                                                as mixed_team_term
 from competition_match cm
@@ -890,6 +891,7 @@ select sr.id                                                                    
        sr.required,
        sr.is_qualification,
        sr.places_option,
+       sr.materialized_at,
        coalesce(array_agg(distinct csp) filter ( where csp.competition_setup_round is not null ), '{}') as places,
        coalesce(array_agg(distinct sm) filter (where sm.id is not null),
                 '{}')                                                                                   as setup_matches,

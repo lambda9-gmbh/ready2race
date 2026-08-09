@@ -153,6 +153,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
         required = required!!,
         isQualification = isQualification ?: false,
         placesOption = placesOption!!,
+        materializedAt = materializedAt,
         places = places!!.toList().filterNotNull(),
         setupMatches = setupMatches!!.toList().filterNotNull(),
         matches = matches!!.filterNotNull().map { match ->
@@ -166,6 +167,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 raceClockerPolledAt = match.raceclockerPolledAt,
                 raceClockerPollError = match.raceclockerPollError,
                 raceClockerAutoPausedAt = match.raceclockerAutoPausedAt,
+                pairingsRecalculatedAt = match.pairingsRecalculatedAt,
                 teams = match.teams!!.filterNotNull().map { team ->
                     CompetitionMatchTeamWithRegistration(
                         id = team.id!!,
