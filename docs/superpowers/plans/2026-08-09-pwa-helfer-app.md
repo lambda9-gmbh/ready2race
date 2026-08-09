@@ -561,7 +561,13 @@ und in `logout` direkt nach `clearSessionToken()` einfügen:
         clearCachedReads()
 ```
 
-Hinweis: `@pwa` ist noch kein Pfad-Alias. Prüfe `frontend/tsconfig.app.json` auf die vorhandenen `paths`-Einträge (`@components`, `@contexts`, …) und ergänze `"@pwa/*": ["src/pwa/*"]` nach demselben Muster. `vite-tsconfig-paths` übernimmt das für den Build ohne weitere Änderung.
+Hinweis: `@pwa` ist noch kein Pfad-Alias. In `frontend/tsconfig.app.json` steht in `compilerOptions.paths` bereits `"@api/*": ["api/*"]`, `"@contexts/*": ["contexts/*"]` und so weiter — die Pfade sind relativ zu `baseUrl`, das auf `src` zeigt. Ergänze deshalb genau:
+
+```json
+      "@pwa/*": ["pwa/*"],
+```
+
+Nicht `["src/pwa/*"]` — das wäre doppelt. `vite-tsconfig-paths` übernimmt den Eintrag für den Build ohne weitere Änderung.
 
 - [ ] **Step 6: Build und Gesamttests**
 
