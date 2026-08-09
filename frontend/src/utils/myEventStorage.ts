@@ -20,8 +20,28 @@ const isCode = (value: unknown): value is MyEventCode =>
     typeof (value as MyEventCode).qrCode === 'string' &&
     typeof (value as MyEventCode).eventId === 'string'
 
+// Diese Seite wird per QR-Code auf beliebigen fremden Telefonen geöffnet. Im privaten Modus
+// von Safari und bei abgeschaltetem Speicher wirft schon der bloße Zugriff auf localStorage
+// eine Ausnahme — ohne Absicherung zerlegt das die ganze Ergebnisseite, nicht nur den Reiter
+// „Mein Event". Deshalb kapseln wir jeden Zugriff hier und schlucken Fehler bewusst.
+const safeGetItem = (key: string): string | null => {
+    try {
+        return localStorage.getItem(key)
+    } catch {
+        return null
+    }
+}
+
+const safeSetItem = (key: string, value: string): void => {
+    try {
+        localStorage.setItem(key, value)
+    } catch {
+        // Speicher voll oder gesperrt: der Aufruf bleibt wirkungslos statt die Seite zu sprengen.
+    }
+}
+
 export const readMyEventCodes = (): MyEventCode[] => {
-    const raw = localStorage.getItem(MY_EVENT_STORAGE_KEY)
+    const raw = safeGetItem(MY_EVENT_STORAGE_KEY)
     if (!raw) return []
     try {
         const parsed: unknown = JSON.parse(raw)
@@ -36,7 +56,7 @@ export const readMyEventCodes = (): MyEventCode[] => {
 }
 
 const write = (codes: MyEventCode[]) =>
-    localStorage.setItem(MY_EVENT_STORAGE_KEY, JSON.stringify(codes))
+    safeSetItem(MY_EVENT_STORAGE_KEY, JSON.stringify(codes))
 
 export const codesForEvent = (eventId: string): MyEventCode[] =>
     readMyEventCodes().filter(c => c.eventId === eventId)
