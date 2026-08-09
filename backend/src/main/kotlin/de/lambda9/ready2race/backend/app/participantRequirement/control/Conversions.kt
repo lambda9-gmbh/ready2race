@@ -6,13 +6,18 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.CheckedPa
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementForEventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementRecord
+import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
 
-// Env-unabhängig (KIO<Any?, ...> statt App<Nothing, ...>): reine Abbildung ohne DB-Zugriff,
-// dadurch per unsafeRunSync ohne echten Jooq-Kontext testbar.
-fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): KIO<Any?, Nothing, ParticipantRequirementRecord> =
+/**
+ * Rückgabetyp ist bewusst `IO<...>` (= `KIO<Any, ...>`) statt des Typalias `App` (= `KIO<JEnv,
+ * ...>`): die Funktion greift nie auf die Umgebung zu, bleibt also reine Abbildung ohne DB-Zugriff
+ * und lässt sich per `unsafeRunSync()` ohne echtes `JEnv` testen (siehe `CertificateService.
+ * participantForEvent` für dieselbe Begründung ausführlicher).
+ */
+fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): IO<Nothing, ParticipantRequirementRecord> =
     KIO.ok(
         LocalDateTime.now().let { now ->
             ParticipantRequirementRecord(
@@ -32,8 +37,9 @@ fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): KIO<Any?, Nothing, P
         }
     )
 
-// Env-unabhängig aus demselben Grund wie toRecord oben.
-fun ParticipantRequirementRecord.toDto(): KIO<Any?, Nothing, ParticipantRequirementDto> = KIO.ok(
+// Env-unabhängig aus demselben Grund wie toRecord oben: reine Abbildung ohne Umgebungszugriff,
+// deshalb `IO` statt `App` und per `unsafeRunSync()` ohne echtes `JEnv` testbar.
+fun ParticipantRequirementRecord.toDto(): IO<Nothing, ParticipantRequirementDto> = KIO.ok(
     ParticipantRequirementDto(
         id = id,
         name = name,
@@ -48,6 +54,9 @@ fun ParticipantRequirementRecord.toDto(): KIO<Any?, Nothing, ParticipantRequirem
     )
 )
 
+// Bleibt bewusst bei `App` statt `IO`: strukturell zwar ebenso eine reine Abbildung wie toRecord/
+// toDto oben, aber ohne begleitenden Test, der von der schwächeren Typisierung profitieren würde.
+// Umstellung auf `IO` wäre unproblematisch, ist hier aber nicht Teil dieser Änderung.
 fun ParticipantRequirementForEventRecord.toDto(): App<Nothing, ParticipantRequirementForEventDto> = KIO.ok(
     ParticipantRequirementForEventDto(
         id = id!!,
@@ -92,6 +101,7 @@ fun ParticipantRequirementNamedParticipantRecord.toNamedParticipantRequirementDt
         qrCodeRequired = qrCodeRequired ?: false,
     )
 
+// Bleibt aus demselben Grund wie ParticipantRequirementForEventRecord.toDto oben bei `App`.
 fun CheckedParticipantRequirementRecord.toDto(): App<Nothing, CheckedParticipantRequirement> = KIO.ok(
     CheckedParticipantRequirement(
         id = id!!,

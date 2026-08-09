@@ -32,14 +32,14 @@ class ParticipantRequirementConversionsTest {
 
     @Test
     fun upsertCarriesPubliclyVisibleIntoRecord() {
-        val record = upsert(true).toRecord(UUID.randomUUID()).unsafeRunSync(Unit).getOrNull()
+        val record = upsert(true).toRecord(UUID.randomUUID()).unsafeRunSync().getOrNull()
         assertNotNull(record)
         assertEquals(true, record.publiclyVisible)
     }
 
     @Test
     fun missingPubliclyVisibleDefaultsToFalse() {
-        val record = upsert(null).toRecord(UUID.randomUUID()).unsafeRunSync(Unit).getOrNull()
+        val record = upsert(null).toRecord(UUID.randomUUID()).unsafeRunSync().getOrNull()
         assertNotNull(record)
         assertEquals(false, record.publiclyVisible)
     }
@@ -61,12 +61,12 @@ class ParticipantRequirementConversionsTest {
             updatedAt = now,
             updatedBy = null,
         )
-        val dto = record.toDto().unsafeRunSync(Unit).getOrNull()
+        val dto = record.toDto().unsafeRunSync().getOrNull()
         assertNotNull(dto)
         assertEquals(true, dto.publiclyVisible)
 
         record.publiclyVisible = false
-        val dtoOff = record.toDto().unsafeRunSync(Unit).getOrNull()
+        val dtoOff = record.toDto().unsafeRunSync().getOrNull()
         assertNotNull(dtoOff)
         assertFalse(dtoOff.publiclyVisible)
     }
