@@ -839,7 +839,7 @@ group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.com
 create view competition_match_with_teams as
 select cm.competition_setup_match,
        cm.start_time,
-       cm.currently_running,
+       cm.activated_at,
        cm.started_at,
        cm.finished_at,
        (ess.skipped_at is not null)                                         as skipped,
