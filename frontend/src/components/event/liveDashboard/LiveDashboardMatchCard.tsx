@@ -267,26 +267,16 @@ const LiveDashboardMatchCard = ({
                                     sx={{minWidth: 0}}>
                                     <Box sx={{minWidth: 0}}>
                                         {/*
-                                            Die Überschriftenzeile trägt nur den Mannschaftsnamen —
-                                            und den haben nur Vereine mit mehreren Booten (`#1`,
-                                            `#2`). Sonst bleibt sie weg: die Bahnnummer links ist
-                                            der Anker, und die Zeile bleibt so ruhig wie die mit
-                                            "#2". Die Vereinskette steht nie hier.
+                                            Die Vereinskette steht oben und trägt die Zeile: sie
+                                            sagt, wer da rudert. Der Mannschaftsname ist dagegen
+                                            nur ein Zähler (`#1`, `#2`) für Vereine mit mehreren
+                                            Booten und steht deshalb klein darunter — er
+                                            unterscheidet, er benennt nicht.
+
+                                            Fehlt die Kette (der Name trägt den Verein schon),
+                                            rückt der Name an ihre Stelle und bekommt ihr Gewicht:
+                                            prominent ist immer das, was oben steht.
                                         */}
-                                        {team.teamName != null && (
-                                            <Typography
-                                                variant="subtitle1"
-                                                sx={{
-                                                    lineHeight: 1.25,
-                                                    overflowWrap: 'break-word',
-                                                    display: '-webkit-box',
-                                                    WebkitLineClamp: 2,
-                                                    WebkitBoxOrient: 'vertical',
-                                                    overflow: 'hidden',
-                                                }}>
-                                                {team.teamName}
-                                            </Typography>
-                                        )}
                                         {showClubLine && (
                                             <Typography
                                                 variant="body2"
@@ -326,6 +316,21 @@ const LiveDashboardMatchCard = ({
                                                     }}>
                                                     {team.clubsFull}
                                                 </Box>
+                                            </Typography>
+                                        )}
+                                        {team.teamName != null && (
+                                            <Typography
+                                                variant={showClubLine ? 'caption' : 'subtitle1'}
+                                                sx={{
+                                                    lineHeight: 1.25,
+                                                    overflowWrap: 'break-word',
+                                                    color: showClubLine ? 'grey.600' : undefined,
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden',
+                                                }}>
+                                                {team.teamName}
                                             </Typography>
                                         )}
                                     </Box>
