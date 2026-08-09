@@ -627,7 +627,11 @@
       "INHERIT": "Follow the event",
       "ENABLED": "On",
       "DISABLED": "Off",
-      "inherited": "Event: {{value}}"
+      "inherited": "Event: {{value}}",
+      "effective": {
+        "ENABLED": "Currently in effect: following rounds are created automatically.",
+        "DISABLED": "Currently in effect: following rounds are not created automatically."
+      }
     },
     "showBreaksOnPublicBoards": "Show breaks on public boards",
     "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",

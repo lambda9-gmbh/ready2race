@@ -1,5 +1,5 @@
 import {Box, Stack, Typography} from '@mui/material'
-import {FormContainer, useForm} from 'react-hook-form-mui'
+import {FormContainer, useForm, useWatch} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useState} from 'react'
 import {competitionRoute, eventRoute} from '@routes'
@@ -7,7 +7,12 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getRoundProgressionConfig, updateRoundProgressionConfig} from '@api/sdk.gen.ts'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
-import {choiceFromDto, requestFromChoice, RoundProgressionChoice} from './roundProgressionForm.ts'
+import {
+    choiceFromDto,
+    effectiveFromChoice,
+    requestFromChoice,
+    RoundProgressionChoice,
+} from './roundProgressionForm.ts'
 
 type RoundProgressionForm = {
     choice: RoundProgressionChoice
@@ -25,9 +30,11 @@ const choiceLabelKeys = {
  * eigenen Karte: die Einstellung betrifft genau das, was daneben angestoßen wird.
  *
  * Erben (`INHERIT`) ist der Normalfall - die Veranstaltung entscheidet dann für alle ihre
- * Wettkämpfe auf einmal (siehe `EventDialog.tsx`). Was dabei tatsächlich gilt, kommt fertig
- * gerechnet vom Backend (`effective` in [RoundProgressionConfigDto]) und steht als Hinweistext
- * darunter, damit „Veranstaltung folgen" nicht rätseln lässt, was das gerade bedeutet.
+ * Wettkämpfe auf einmal (siehe `EventDialog.tsx`). Das Backend liefert beim Laden bereits fertig
+ * gerechnet, was gilt (`effective` in [RoundProgressionConfigDto]) - das gilt aber nur für den
+ * geladenen Stand. Sobald der Nutzer eine andere Auswahl trifft, muss der Hinweistext darunter
+ * mitziehen, ohne auf Speichern zu warten; dafür wird `effectiveFromChoice` auf die aktuelle
+ * Formularauswahl angewandt statt auf den geladenen Wert.
  */
 const RoundProgressionSetting = () => {
     const {t} = useTranslation()
@@ -53,6 +60,11 @@ const RoundProgressionSetting = () => {
         deps: [eventId, competitionId],
     })
 
+    // useWatch() ohne `name` typisiert das Ergebnis als DeepPartialSkipArrayKey<RoundProgressionForm>;
+    // tatsächlich ist jedes Feld belegt, weil defaultValues bereits alle Felder abdeckt.
+    const {choice} = useWatch<RoundProgressionForm>({control: formContext.control}) as RoundProgressionForm
+    const effective = effectiveFromChoice(choice, eventDefault)
+
     return (
         <Box>
             <FormContainer
@@ -76,18 +88,27 @@ const RoundProgressionSetting = () => {
                         name={'choice'}
                         label={t('event.autoCreateFollowingRounds.label')}
                         row
-                        options={(['INHERIT', 'ENABLED', 'DISABLED'] as const).map(choice => ({
-                            id: choice,
-                            label: t(choiceLabelKeys[choice]),
+                        options={(['INHERIT', 'ENABLED', 'DISABLED'] as const).map(option => ({
+                            id: option,
+                            label: t(choiceLabelKeys[option]),
                         }))}
                     />
                     <SubmitButton submitting={submitting}>{t('common.save')}</SubmitButton>
                 </Stack>
+                {/* Was die aktuelle Auswahl bedeutet - live aus dem Formular berechnet, damit der
+                    Hinweis der Auswahl folgt und nicht erst nach dem Speichern nachzieht. */}
                 <Typography variant={'body2'} color={'text.secondary'}>
-                    {t('event.autoCreateFollowingRounds.inherited', {
-                        value: t(choiceLabelKeys[eventDefault ? 'ENABLED' : 'DISABLED']),
-                    })}
+                    {t(
+                        `event.autoCreateFollowingRounds.effective.${effective ? 'ENABLED' : 'DISABLED'}`,
+                    )}
                 </Typography>
+                {choice === 'INHERIT' && (
+                    <Typography variant={'body2'} color={'text.secondary'}>
+                        {t('event.autoCreateFollowingRounds.inherited', {
+                            value: t(choiceLabelKeys[eventDefault ? 'ENABLED' : 'DISABLED']),
+                        })}
+                    </Typography>
+                )}
             </FormContainer>
         </Box>
     )

@@ -627,7 +627,11 @@
       "INHERIT": "Følg arrangementet",
       "ENABLED": "Til",
       "DISABLED": "Fra",
-      "inherited": "Arrangement: {{value}}"
+      "inherited": "Arrangement: {{value}}",
+      "effective": {
+        "ENABLED": "Der gælder: Følgende runder oprettes automatisk.",
+        "DISABLED": "Der gælder: Følgende runder oprettes ikke automatisk."
+      }
     },
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",

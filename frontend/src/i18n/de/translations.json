@@ -627,7 +627,11 @@
       "INHERIT": "Veranstaltung folgen",
       "ENABLED": "Ein",
       "DISABLED": "Aus",
-      "inherited": "Veranstaltung: {{value}}"
+      "inherited": "Veranstaltung: {{value}}",
+      "effective": {
+        "ENABLED": "Es gilt: Folgerunden werden automatisch erzeugt.",
+        "DISABLED": "Es gilt: Folgerunden werden nicht automatisch erzeugt."
+      }
     },
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
