@@ -2,6 +2,8 @@ import {describe, expect, it} from 'vitest'
 import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
     buildLiveDashboardTimeline,
+    crewMemberLabel,
+    dashboardCrew,
     dashboardEntryDomId,
     dashboardEntryDomIdCandidates,
     dashboardScope,
@@ -11,10 +13,14 @@ import {
     openResultTeams,
     pendingSlotLabel,
     teamHasResult,
+    teamShowsClubLine,
+    teamShowsCrew,
 } from './common.ts'
 
 const team = (overrides: Partial<LiveDashboardTeamDto>): LiveDashboardTeamDto => ({
     teamId: crypto.randomUUID(),
+    clubsShort: '',
+    clubsFull: '',
     failed: false,
     deregistered: false,
     invoiceState: 'NONE',
@@ -103,6 +109,86 @@ describe('dashboardScope', () => {
     it('holt breit immer die Gesamtliste, weil beide Spalten sichtbar sind', () => {
         expect(dashboardScope(true, 'live')).toBe('ALL')
         expect(dashboardScope(true, 'matches')).toBe('ALL')
+    })
+})
+
+describe('dashboardCrew', () => {
+    it('bestellt die Crew erst am Laptop mit', () => {
+        expect(dashboardCrew(1440)).toBe(true)
+        expect(dashboardCrew(1920)).toBe(true)
+    })
+
+    it('lässt die Nutzlast am Telefon und in der Tablet-Spalte unverändert', () => {
+        expect(dashboardCrew(390)).toBe(false)
+        expect(dashboardCrew(1439)).toBe(false)
+    })
+})
+
+describe('teamShowsCrew', () => {
+    it('zeigt die Crew, sobald sie im Datensatz steht', () => {
+        expect(teamShowsCrew(team({crew: [{lastName: 'Meier', clubShort: 'RC Bergedorf'}]}))).toBe(
+            true,
+        )
+    })
+
+    // Der Fall unmittelbar nach dem Verbreitern des Fensters: die Karte ist schon breit genug, der
+    // Abruf mit crew=true aber noch unterwegs. Dann bleibt es bei Stufe 2.
+    it('fällt ohne Crew im Datensatz auf Stufe 2 zurück', () => {
+        expect(teamShowsCrew(team({}))).toBe(false)
+        expect(teamShowsCrew(team({crew: null}))).toBe(false)
+        expect(teamShowsCrew(team({crew: []}))).toBe(false)
+    })
+})
+
+describe('crewMemberLabel', () => {
+    it('setzt die Rolle in Klammern hinter Nachname und Vereinskurzform', () => {
+        expect(
+            crewMemberLabel({lastName: 'Meier', clubShort: 'RC Bergedorf', role: 'Ste.'}),
+        ).toBe('Meier · RC Bergedorf (Ste.)')
+    })
+
+    it('lässt weg, was fehlt, statt Trennzeichen ins Leere zu setzen', () => {
+        expect(crewMemberLabel({lastName: 'Meier'})).toBe('Meier')
+        expect(crewMemberLabel({lastName: 'Meier', role: 'Ste.'})).toBe('Meier (Ste.)')
+    })
+})
+
+describe('teamShowsClubLine', () => {
+    it('zeigt die Kette unter einem Mannschaftsnamen, der sie nicht enthält', () => {
+        expect(
+            teamShowsClubLine(
+                team({teamName: '#1', clubsShort: 'RC Bergedorf', clubsFull: 'Ruderclub Bergedorf e.V.'}),
+            ),
+        ).toBe(true)
+    })
+
+    it('lässt sie weg, wenn der Name den Verein schon trägt — in beiden Fassungen', () => {
+        expect(
+            teamShowsClubLine(
+                team({
+                    teamName: 'Ruderclub Bergedorf e.V. #1',
+                    clubsShort: 'RC Bergedorf',
+                    clubsFull: 'Ruderclub Bergedorf e.V.',
+                }),
+            ),
+        ).toBe(false)
+        expect(
+            teamShowsClubLine(
+                team({
+                    teamName: 'RC Bergedorf #1',
+                    clubsShort: 'RC Bergedorf',
+                    clubsFull: 'Ruderclub Bergedorf e.V.',
+                }),
+            ),
+        ).toBe(false)
+    })
+
+    // Ohne Mannschaftsname steht die Kette bereits als Überschrift der Zeile.
+    it('lässt sie weg, wenn es keinen Mannschaftsnamen und keine Kette gibt', () => {
+        expect(teamShowsClubLine(team({clubsShort: 'RC Bergedorf', clubsFull: 'Ruderclub Bergedorf'}))).toBe(
+            false,
+        )
+        expect(teamShowsClubLine(team({teamName: '#1'}))).toBe(false)
     })
 })
 

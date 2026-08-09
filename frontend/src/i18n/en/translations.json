@@ -1570,7 +1570,9 @@
         "failed": "Did not finish",
         "failedShort": "DNF",
         "onWaterAt": "on water {{time}}",
-        "notOnWater": "Not on the water"
+        "notOnWater": "Not on the water",
+        "clubs": "Clubs",
+        "crew": "Crew"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",

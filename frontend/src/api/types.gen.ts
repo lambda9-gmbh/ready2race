@@ -1714,6 +1714,18 @@ export type LatestMatchResultInfo = {
     teams: Array<MatchResultTeamInfo>
 }
 
+export type LiveDashboardCrewMemberDto = {
+    lastName: string
+    /**
+     * Short form of the club this person wears - the same rule as the chain in clubsShort
+     */
+    clubShort?: string | null
+    /**
+     * Abbreviated role, e.g. Ste. for Steuerleute
+     */
+    role?: string | null
+}
+
 export type LiveDashboardDto = {
     matches: Array<LiveDashboardMatchDto>
     /**
@@ -1769,7 +1781,10 @@ export type LiveDashboardParticipantDto = {
     namedRole?: string | null
     year?: number | null
     gender?: string | null
-    externalClubName?: string | null
+    /**
+     * The club this person wears - the free text of a guest rower, otherwise the name of their own club. Not the registering club, which is the same for the whole team
+     */
+    clubName?: string | null
     /**
      * Name of the participant this one replaced when substituted into the round
      */
@@ -1798,8 +1813,22 @@ export type LiveDashboardTeamDetailDto = {
 export type LiveDashboardTeamDto = {
     teamId: string
     teamName?: string | null
+    /**
+     * The registering club. Kept because it carries the invoice; no display uses it any more
+     */
     clubName?: string | null
-    actualClubName?: string | null
+    /**
+     * The clubs of the crew in boat order, short forms, joined by ' / '
+     */
+    clubsShort: string
+    /**
+     * The same chain in full club names
+     */
+    clubsFull: string
+    /**
+     * The crew in short form; only filled when the request asked for it with crew=true
+     */
+    crew?: Array<LiveDashboardCrewMemberDto> | null
     startNumber?: number | null
     place?: number | null
     time?: string | null
@@ -6263,6 +6292,10 @@ export type GetLiveDashboardData = {
         eventId: string
     }
     query?: {
+        /**
+         * Fills crew per team - last name, short club form and role. Only set from a window wide enough to show it; the payload of a phone stays unchanged. Defaults to false.
+         */
+        crew?: boolean
         /**
          * LIVE returns the running matches, or the next upcoming one if none is running. Defaults to ALL.
          */

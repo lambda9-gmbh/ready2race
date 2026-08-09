@@ -1570,7 +1570,9 @@
         "failed": "Ausgeschieden",
         "failedShort": "DNF",
         "onWaterAt": "aufs Wasser {{time}}",
-        "notOnWater": "Nicht auf dem Wasser"
+        "notOnWater": "Nicht auf dem Wasser",
+        "clubs": "Vereine",
+        "crew": "Mannschaft"
       },
       "requirement": {
         "checkedAt": "Erfüllt am {{time}}",

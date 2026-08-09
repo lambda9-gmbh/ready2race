@@ -100,7 +100,7 @@ const TeamDialog = ({
         <Dialog open onClose={onClose} fullWidth maxWidth="sm">
             <DialogTitle sx={{pr: 6}}>
                 {team.startNumber != null && `#${team.startNumber} — `}
-                {team.teamName ?? team.clubName ?? ''}
+                {team.teamName ?? team.clubsFull}
                 <IconButton onClick={onClose} sx={{position: 'absolute', right: 8, top: 8}}>
                     <CloseIcon />
                 </IconButton>
@@ -108,10 +108,12 @@ const TeamDialog = ({
             <DialogContent>
                 <Stack spacing={2}>
                     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                        {(team.actualClubName ?? team.clubName) && (
-                            <Typography variant="body2">
-                                {team.actualClubName ?? team.clubName}
-                            </Typography>
+                        {/*
+                            Die volle Kette, nie die Kurzform: der Dialog ist die Stelle, an der
+                            nachgesehen wird, welcher Verein genau gemeint ist.
+                        */}
+                        {team.clubsFull !== '' && (
+                            <Typography variant="body2">{team.clubsFull}</Typography>
                         )}
                         {/*
                             Die Team-Ampel hält Grün den Teilnahmebedingungen vor: Rechnung und
@@ -186,6 +188,16 @@ const TeamDialog = ({
                                     </Typography>
                                 )}
                             </Typography>
+                            {/*
+                                Der Verein JEDER Person, nicht der der Meldung: bei einem
+                                vereinsgemischten Boot ist genau das die Angabe, die der
+                                Schiedsrichter hier sucht.
+                            */}
+                            {p.clubName && (
+                                <Typography variant="body2" color="text.secondary">
+                                    {p.clubName}
+                                </Typography>
+                            )}
                             {p.substitutedFor && (
                                 <Stack direction="row" spacing={0.5} alignItems="center">
                                     <SwapHorizIcon sx={{fontSize: 20, color: 'info.dark'}} />

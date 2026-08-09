@@ -6,11 +6,13 @@ import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
 import {
+    crewMemberLabel,
     formatMinutes,
     matchControls,
     openResultTeams,
     pendingSlotLabel,
-    shortClubName,
+    teamShowsClubLine,
+    teamShowsCrew,
 } from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
 import SeverityIcon from './SeverityIcon.tsx'
@@ -21,6 +23,15 @@ import SeverityIcon from './SeverityIcon.tsx'
  * beide Zeilen teilen sich dieselbe Spalte.
  */
 const WIDE_CARD_PX = 480
+
+/**
+ * Ab hier trägt die Karte zusätzlich die Crew je Boot — Nachname, Vereinskurzform und Rolle. Auch
+ * das entscheidet die Kartenbreite und nicht das Fenster: auf dem Tablet stehen zwei Spalten
+ * nebeneinander, von denen keine so breit wird, obwohl das Fenster es wäre. Ob die Crew überhaupt
+ * geladen wurde, hängt dagegen am Fenster (`dashboardCrew`) — die Nutzlast wird je Abruf
+ * entschieden, nicht je Karte.
+ */
+const CREW_CARD_PX = 700
 
 type Props = {
     match: LiveDashboardMatchDto
@@ -193,16 +204,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                 <Divider sx={{mt: 1.5}} />
                 {match.teams.map((team, index) => {
                     const substituted = team.substituted
-                    // Kurzform in der Liste; der vollständige Name steht im Detail-Dialog
-                    const fullClub = team.actualClubName ?? team.clubName
-                    const clubLine = fullClub != null ? shortClubName(fullClub) : null
-                    // Team names often already contain the club — then drop the second line
-                    const showClubLine =
-                        team.teamName != null &&
-                        fullClub != null &&
-                        clubLine != null &&
-                        !team.teamName.includes(fullClub) &&
-                        !team.teamName.includes(clubLine)
+                    const showClubLine = teamShowsClubLine(team)
+                    const showCrew = teamShowsCrew(team)
 
                     return (
                         <Box
@@ -247,7 +250,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                             WebkitBoxOrient: 'vertical',
                                             overflow: 'hidden',
                                         }}>
-                                        {team.teamName ?? clubLine ?? ''}
+                                        {team.teamName ?? team.clubsShort}
                                     </Typography>
                                     {substituted && (
                                         <SwapHorizIcon
@@ -265,10 +268,53 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                 {showClubLine && (
                                     <Typography
                                         variant="body2"
-                                        noWrap
-                                        display="block"
-                                        sx={{color: 'grey.800'}}>
-                                        {clubLine}
+                                        aria-label={t('event.liveDashboard.team.clubs')}
+                                        sx={{
+                                            color: 'grey.800',
+                                            // Die Kette wird nicht gekappt, sie bricht auf zwei
+                                            // Zeilen um; ein sechster Verein fällt hinten heraus.
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                        }}>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                display: 'inline',
+                                                [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
+                                                    display: 'none',
+                                                },
+                                            }}>
+                                            {team.clubsShort}
+                                        </Box>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                display: 'none',
+                                                [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
+                                                    display: 'inline',
+                                                },
+                                            }}>
+                                            {team.clubsFull}
+                                        </Box>
+                                    </Typography>
+                                )}
+                                {showCrew && (
+                                    <Typography
+                                        variant="caption"
+                                        aria-label={t('event.liveDashboard.team.crew')}
+                                        sx={{
+                                            color: 'grey.700',
+                                            display: 'none',
+                                            [`@container (min-width: ${CREW_CARD_PX}px)`]: {
+                                                display: '-webkit-box',
+                                            },
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                        }}>
+                                        {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
                                     </Typography>
                                 )}
                                 {team.onWaterRequired && team.onWaterAt && (
