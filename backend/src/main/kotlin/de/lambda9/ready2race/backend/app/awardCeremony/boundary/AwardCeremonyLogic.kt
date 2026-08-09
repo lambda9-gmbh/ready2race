@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.awardCeremony.boundary
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.*
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubNameKey
-import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -74,10 +73,9 @@ object AwardCeremonyLogic {
             ClubComposition.clubWorn(it.external, it.externalClubName, it.ownClubName)
         }
 
-        // Volle Namen, keine Kurzformen: das Blatt wird vorgelesen, und "RC Nürtingen" spricht
-        // sich schlechter als der ausgeschriebene Name.
-        val chain = ClubComposition.of(worn, ClubShortNameSettings.none).full
-        val clubLine = chain.ifEmpty { candidate.registeringClubName }
+        // Dieselbe Regel wie auf der Urkunde, deshalb an einer Stelle: volle Namen, keine
+        // Kurzformen, ersatzweise der meldende Verein. Begründung bei ClubComposition.printedLine.
+        val clubLine = ClubComposition.printedLine(worn, candidate.registeringClubName)
 
         // Vergleich über den Namensschlüssel, nicht über die Zeichenkette: zwei Schreibvarianten
         // desselben Vereins ("Rostocker Ruderclub" / "...von 1885 e.V.") fasst ClubComposition zu
