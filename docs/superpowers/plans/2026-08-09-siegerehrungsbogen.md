@@ -19,7 +19,11 @@
 - **Nie ein leerer Platzhalter im PDF.** Fehlt ein optionaler Wert, entfällt die Zeile bzw. der Bestandteil komplett — kein „—", kein Doppelpunkt ins Leere. Das ist eine ausdrückliche Anforderung.
 - **Privileg:** beide Endpoints `Privilege.ReadEventGlobal`.
 - **Commits:** deutsch, im Ton der bestehenden Historie („Gather club short names …" ist die Ausnahme; die letzten Commits sind deutsche Aussagesätze). Nie Claude, KI oder Co-Authored-By erwähnen.
-- **Backend-Tests:** `./mvnw test -Dtest=<Klasse>` im Repo-Wurzelverzeichnis. `JAVA_HOME` fehlt in dieser Shell oft — dann `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` voranstellen (Version notfalls über `/usr/libexec/java_home -V` ermitteln).
+- **Backend-Tests:** Der Maven-Wrapper liegt in `backend/`, nicht im Repo-Wurzelverzeichnis, und `JAVA_HOME` ist in dieser Shell nicht gesetzt. Jeder Testlauf beginnt deshalb mit:
+  ```bash
+  export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test -Dtest=AwardCeremonyLogicTest
+  ```
+  Die Service-Tests brauchen einen laufenden Docker (Testcontainers).
 
 ---
 
@@ -52,7 +56,7 @@
 
 ---
 
-## Task 1: Datentypen und Ranking
+## Task 1: Die reine Fachlogik
 
 **Files:**
 - Create: `backend/src/main/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/entity/AwardCeremony.kt`
@@ -60,10 +64,21 @@
 - Test: `backend/src/test/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/AwardCeremonyLogicTest.kt`
 
 **Interfaces:**
-- Consumes: `de.lambda9.ready2race.backend.app.club.boundary.ClubComposition` (Task 2 nutzt es, hier noch nicht)
-- Produces: sämtliche Typen aus `AwardCeremony.kt` (unten vollständig), sowie
-  `AwardCeremonyLogic.groupByRatingCategory(List<AwardCeremonyCandidate>): List<Pair<String?, List<AwardCeremonyCandidate>>>` und
-  `AwardCeremonyLogic.rank(List<AwardCeremonyCandidate>): List<AwardCeremonyRank>`
+- Consumes: `de.lambda9.ready2race.backend.app.club.boundary.ClubComposition.of(clubNames: List<String?>, settings: ClubShortNameSettings): ClubComposition` und `ClubComposition.clubWorn(external: Boolean?, externalClubName: String?, ownClubName: String?): String?`; `ClubShortNameSettings.none`; `de.lambda9.ready2race.backend.validation.Validatable` / `ValidationResult`
+- Produces: sämtliche Typen aus `AwardCeremony.kt` (unten vollständig) und
+  `AwardCeremonyLogic.groupByRatingCategory(List<AwardCeremonyCandidate>): List<Pair<String?, List<AwardCeremonyCandidate>>>`,
+  `.rank(List<AwardCeremonyCandidate>): List<AwardCeremonyRank>`,
+  `.team(AwardCeremonyCandidate): AwardCeremonyTeam` (internal),
+  `.sheet(eventName, eventDate, eventLocation, competitionIdentifier, competitionShortName, competitionName, ratingCategoryName, candidates): AwardCeremonySheet`,
+  `.densityFor(personRows: Int): AwardCeremonyDensity`,
+  `.formatBoatLine(teamName: String?, startNumber: Int): String`,
+  `.formatPenalty(seconds: Int?, note: String?): String?`,
+  `.formatRaceLine(roundName: String?, matchName: String?, at: LocalDateTime?): String?`
+
+**Reihenfolge:** erst die Datentypen, dann *alle* Tests, dann die vollständige Logik. Ein
+Zwischenstand, in dem `team()` schon existiert, aber Verein, Strafe und Lauf noch nicht füllt,
+ist ausdrücklich nicht gewollt — er wäre nicht abnehmbar.
+
 
 - [ ] **Step 1: Datentypen anlegen**
 
@@ -213,7 +228,7 @@ data class AwardCeremonyAthlete(
 )
 ```
 
-- [ ] **Step 2: Den Test für Gruppierung und Ranking schreiben**
+- [ ] **Step 2: Die Tests für Gruppierung und Ranking schreiben**
 
 Datei `backend/src/test/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/AwardCeremonyLogicTest.kt`:
 
@@ -361,128 +376,9 @@ class AwardCeremonyLogicTest {
 }
 ```
 
-- [ ] **Step 3: Test laufen lassen und Fehlschlag prüfen**
+- [ ] **Step 3: Die Tests für Verdichtung, Strafe, Lauf und Dichte ergänzen**
 
-```bash
-./mvnw -q -pl backend test -Dtest=AwardCeremonyLogicTest
-```
-
-Erwartet: Kompilierfehler „Unresolved reference: AwardCeremonyLogic".
-
-- [ ] **Step 4: `AwardCeremonyLogic` mit Gruppierung und Ranking anlegen**
-
-Datei `boundary/AwardCeremonyLogic.kt` — in diesem Schritt nur `groupByRatingCategory`, `rank`, `team`, `formatBoatLine`. `team` bleibt hier bewusst schlicht (Vereinsverdichtung folgt in Task 2), muss aber `boatLine` schon korrekt liefern, weil `rank` es zurückgibt:
-
-```kotlin
-package de.lambda9.ready2race.backend.app.awardCeremony.boundary
-
-import de.lambda9.ready2race.backend.app.awardCeremony.entity.*
-
-object AwardCeremonyLogic {
-
-    /** Geehrt wird bis Rang drei - die Zahl der Medaillensätze, nicht die Zahl der Boote. */
-    const val MAX_RANK = 3
-
-    fun groupByRatingCategory(
-        candidates: List<AwardCeremonyCandidate>,
-    ): List<Pair<String?, List<AwardCeremonyCandidate>>> = candidates
-        .groupBy { it.ratingCategoryName }
-        .toList()
-        // Kategorien alphabetisch, die Gruppe ohne Kategorie zuletzt: sie ist bei gemischten
-        // Wettkämpfen der Rest, nicht der Anfang.
-        .sortedWith(compareBy(nullsLast<String>()) { it.first })
-
-    /**
-     * Die Ränge einer Wertungskategorie, neu ab 1 gezählt.
-     *
-     * Standard-Wettkampfranking: gleicher Platz im Gesamtfeld ⇒ gleicher Rang in der Kategorie,
-     * der nächste Rang überspringt entsprechend viele Stellen (1, 2, 2, 4). Bei einem Gleichstand
-     * auf zwei gibt es damit keine Bronze - das ist fachlich richtig und kein Fehler in der
-     * Ausgabe.
-     *
-     * Beginnt eine Gruppe von Gleichplatzierten noch innerhalb der ersten drei Ränge, kommen
-     * *alle* ihre Boote auf das Blatt, auch wenn dadurch mehr als drei Blöcke entstehen: geehrt
-     * wird, wer den Rang hat.
-     */
-    fun rank(candidates: List<AwardCeremonyCandidate>): List<AwardCeremonyRank> {
-        val sorted = candidates.sortedWith(compareBy({ it.competitionPlace }, { it.startNumber }))
-        val ranks = mutableListOf<AwardCeremonyRank>()
-
-        var index = 0
-        while (index < sorted.size) {
-            val rank = index + 1
-            if (rank > MAX_RANK) break
-
-            val place = sorted[index].competitionPlace
-            val tied = sorted.drop(index).takeWhile { it.competitionPlace == place }
-
-            tied.forEachIndexed { position, candidate ->
-                ranks.add(
-                    AwardCeremonyRank(
-                        rank = rank,
-                        shared = tied.size > 1,
-                        first = position == 0,
-                        team = team(candidate),
-                    )
-                )
-            }
-
-            index += tied.size
-        }
-
-        return ranks
-    }
-
-    /** Vorläufig ohne Vereinsverdichtung - die kommt in Task 2. */
-    internal fun team(candidate: AwardCeremonyCandidate): AwardCeremonyTeam = AwardCeremonyTeam(
-        clubLine = candidate.registeringClubName,
-        registeringClub = null,
-        boatLine = formatBoatLine(candidate.teamName, candidate.startNumber),
-        time = candidate.time,
-        penalty = null,
-        raceLine = null,
-        athletes = candidate.participants.map {
-            AwardCeremonyAthlete(name = "${it.firstName} ${it.lastName}", role = it.role, club = null)
-        },
-    )
-
-    fun formatBoatLine(teamName: String?, startNumber: Int): String = listOfNotNull(
-        teamName?.takeIf { it.isNotBlank() }?.let { "Boot „$it\"" },
-        "Startnummer $startNumber",
-    ).joinToString(" · ")
-}
-```
-
-- [ ] **Step 5: Test laufen lassen**
-
-```bash
-./mvnw -q -pl backend test -Dtest=AwardCeremonyLogicTest
-```
-
-Erwartet: alle neun Tests grün.
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add backend/src/main/kotlin/de/lambda9/ready2race/backend/app/awardCeremony backend/src/test/kotlin/de/lambda9/ready2race/backend/app/awardCeremony
-git commit -m "Ränge einer Wertungskategorie ab eins zählen"
-```
-
----
-
-## Task 2: Vereinsverdichtung, Strafe, Lauf, Dichte
-
-**Files:**
-- Modify: `backend/src/main/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/boundary/AwardCeremonyLogic.kt`
-- Test: `backend/src/test/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/AwardCeremonyLogicTest.kt` (erweitern)
-
-**Interfaces:**
-- Consumes: `AwardCeremonyLogic.team`, `AwardCeremonyLogic.rank` aus Task 1; `ClubComposition.of(List<String?>, ClubShortNameSettings): ClubComposition` und `ClubComposition.clubWorn(external: Boolean?, externalClubName: String?, ownClubName: String?): String?` aus `app/club/boundary/ClubComposition.kt`; `ClubShortNameSettings.none`
-- Produces: `AwardCeremonyLogic.densityFor(personRows: Int): AwardCeremonyDensity`, `AwardCeremonyLogic.formatPenalty(seconds: Int?, note: String?): String?`, `AwardCeremonyLogic.formatRaceLine(roundName: String?, matchName: String?, at: LocalDateTime?): String?`, `AwardCeremonyLogic.sheet(...)` (Signatur in Step 4)
-
-- [ ] **Step 1: Die Tests schreiben**
-
-An `AwardCeremonyLogicTest` anhängen (die Hilfsfunktionen `rower`/`candidate` aus Task 1 bleiben):
+An `AwardCeremonyLogicTest` anhängen (die Hilfsfunktionen `rower`/`candidate` aus Step 2 bleiben):
 
 ```kotlin
     @Test
@@ -641,15 +537,102 @@ An `AwardCeremonyLogicTest` anhängen (die Hilfsfunktionen `rower`/`candidate` a
 
 Die Imports der Testdatei um `java.time.LocalDateTime`, `kotlin.test.assertNull` und `de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyDensity` ergänzen.
 
-- [ ] **Step 2: Tests laufen lassen und Fehlschlag prüfen**
+- [ ] **Step 4: Tests laufen lassen und Fehlschlag prüfen**
 
 ```bash
-./mvnw -q -pl backend test -Dtest=AwardCeremonyLogicTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test -Dtest=AwardCeremonyLogicTest
 ```
 
-Erwartet: Kompilierfehler für `formatPenalty`, `formatRaceLine`, `densityFor`, `sheet`; danach Fehlschläge in den Vereinstests.
+Erwartet: Kompilierfehler „Unresolved reference: AwardCeremonyLogic".
 
-- [ ] **Step 3: `AwardCeremonyLogic` vervollständigen**
+- [ ] **Step 5: `AwardCeremonyLogic` schreiben**
+
+Datei `boundary/AwardCeremonyLogic.kt`. Zuerst das Grundgerüst mit Gruppierung und Ranking:
+
+Grundgerüst mit `groupByRatingCategory`, `rank` und `formatBoatLine`. Das `team()` darin ist nur der Aufhänger und wird gleich darunter vollständig ersetzt — es darf nicht so stehen bleiben:
+
+```kotlin
+package de.lambda9.ready2race.backend.app.awardCeremony.boundary
+
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.*
+
+object AwardCeremonyLogic {
+
+    /** Geehrt wird bis Rang drei - die Zahl der Medaillensätze, nicht die Zahl der Boote. */
+    const val MAX_RANK = 3
+
+    fun groupByRatingCategory(
+        candidates: List<AwardCeremonyCandidate>,
+    ): List<Pair<String?, List<AwardCeremonyCandidate>>> = candidates
+        .groupBy { it.ratingCategoryName }
+        .toList()
+        // Kategorien alphabetisch, die Gruppe ohne Kategorie zuletzt: sie ist bei gemischten
+        // Wettkämpfen der Rest, nicht der Anfang.
+        .sortedWith(compareBy(nullsLast<String>()) { it.first })
+
+    /**
+     * Die Ränge einer Wertungskategorie, neu ab 1 gezählt.
+     *
+     * Standard-Wettkampfranking: gleicher Platz im Gesamtfeld ⇒ gleicher Rang in der Kategorie,
+     * der nächste Rang überspringt entsprechend viele Stellen (1, 2, 2, 4). Bei einem Gleichstand
+     * auf zwei gibt es damit keine Bronze - das ist fachlich richtig und kein Fehler in der
+     * Ausgabe.
+     *
+     * Beginnt eine Gruppe von Gleichplatzierten noch innerhalb der ersten drei Ränge, kommen
+     * *alle* ihre Boote auf das Blatt, auch wenn dadurch mehr als drei Blöcke entstehen: geehrt
+     * wird, wer den Rang hat.
+     */
+    fun rank(candidates: List<AwardCeremonyCandidate>): List<AwardCeremonyRank> {
+        val sorted = candidates.sortedWith(compareBy({ it.competitionPlace }, { it.startNumber }))
+        val ranks = mutableListOf<AwardCeremonyRank>()
+
+        var index = 0
+        while (index < sorted.size) {
+            val rank = index + 1
+            if (rank > MAX_RANK) break
+
+            val place = sorted[index].competitionPlace
+            val tied = sorted.drop(index).takeWhile { it.competitionPlace == place }
+
+            tied.forEachIndexed { position, candidate ->
+                ranks.add(
+                    AwardCeremonyRank(
+                        rank = rank,
+                        shared = tied.size > 1,
+                        first = position == 0,
+                        team = team(candidate),
+                    )
+                )
+            }
+
+            index += tied.size
+        }
+
+        return ranks
+    }
+
+    /** Gerüst: die Vereinsverdichtung ersetzt diese Fassung im selben Task. */
+    internal fun team(candidate: AwardCeremonyCandidate): AwardCeremonyTeam = AwardCeremonyTeam(
+        clubLine = candidate.registeringClubName,
+        registeringClub = null,
+        boatLine = formatBoatLine(candidate.teamName, candidate.startNumber),
+        time = candidate.time,
+        penalty = null,
+        raceLine = null,
+        athletes = candidate.participants.map {
+            AwardCeremonyAthlete(name = "${it.firstName} ${it.lastName}", role = it.role, club = null)
+        },
+    )
+
+    fun formatBoatLine(teamName: String?, startNumber: Int): String = listOfNotNull(
+        teamName?.takeIf { it.isNotBlank() }?.let { "Boot „$it\"" },
+        "Startnummer $startNumber",
+    ).joinToString(" · ")
+}
+```
+
+Und im selben Zug die Verdichtung, die Formatierer und die Dichte — `team()` ersetzt dabei die
+vorläufige Fassung aus dem Gerüst vollständig:
 
 `team` ersetzen und die neuen Funktionen ergänzen:
 
@@ -755,31 +738,31 @@ Erwartet: Kompilierfehler für `formatPenalty`, `formatRaceLine`, `densityFor`, 
 
 Imports ergänzen: `de.lambda9.ready2race.backend.app.club.boundary.ClubComposition`, `de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings`, `java.time.LocalDateTime`, `java.time.format.DateTimeFormatter`, `java.util.Locale`.
 
-- [ ] **Step 4: Tests laufen lassen**
+- [ ] **Step 6: Tests laufen lassen**
 
 ```bash
-./mvnw -q -pl backend test -Dtest=AwardCeremonyLogicTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test -Dtest=AwardCeremonyLogicTest
 ```
 
-Erwartet: alle Tests grün (Task 1 und Task 2).
+Erwartet: alle Tests grün.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/kotlin/de/lambda9/ready2race/backend/app/awardCeremony backend/src/test/kotlin/de/lambda9/ready2race/backend/app/awardCeremony
-git commit -m "Vereine, Strafe und Lauf für den Siegerehrungsbogen aufbereiten"
+git commit -m "Ränge, Vereine und Zeiten einer Wertungskategorie aufbereiten"
 ```
 
 ---
 
-## Task 3: Das Seitenlayout
+## Task 2: Das Seitenlayout
 
 **Files:**
 - Create: `backend/src/main/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/boundary/AwardCeremonyPdf.kt`
 - Test: `backend/src/test/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/AwardCeremonyPdfTest.kt`
 
 **Interfaces:**
-- Consumes: `AwardCeremonySheet` und die darin hängenden Typen aus Task 1; `AwardCeremonyLogic.sheet(...)` aus Task 2; das PDF-DSL `de.lambda9.ready2race.backend.pdf.document(format, pagePadding) { page { block { text { } table { column(); row { cell { } } } } } }`, `FontStyle`, `Padding`
+- Consumes: `AwardCeremonySheet` und die darin hängenden Typen aus Task 1; das PDF-DSL `de.lambda9.ready2race.backend.pdf.document(format, pagePadding) { page { block { text { } table { column(); row { cell { } } } } } }`, `FontStyle`, `Padding`
 - Produces: `AwardCeremonyPdf.render(sheets: List<AwardCeremonySheet>): ByteArray`
 
 **Hinweis zum DSL:** `text(...)` kennt nur `centered`, keine Rechtsbündigkeit. Die Zeit rechts neben der Rangzahl entsteht deshalb über eine zweispaltige `table`. `block(keepTogether = true)` hält einen Rangblock zusammen. Ein `page { }` ist die Seitengrenze — genau eine pro Bogen, nie mehr.
@@ -931,7 +914,7 @@ class AwardCeremonyPdfTest {
 - [ ] **Step 2: Test laufen lassen und Fehlschlag prüfen**
 
 ```bash
-./mvnw -q -pl backend test -Dtest=AwardCeremonyPdfTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test -Dtest=AwardCeremonyPdfTest
 ```
 
 Erwartet: Kompilierfehler „Unresolved reference: AwardCeremonyPdf".
@@ -1083,7 +1066,7 @@ object AwardCeremonyPdf {
 - [ ] **Step 4: Tests laufen lassen**
 
 ```bash
-./mvnw -q -pl backend test -Dtest=AwardCeremonyPdfTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test -Dtest=AwardCeremonyPdfTest
 ```
 
 Erwartet: alle fünf Tests grün. Schlägt `aFullFieldOfEightsStillFitsOnOnePage` fehl, sind die Abstände zu großzügig — `gap`, das `Padding` des Headers und `COMPACT_THRESHOLD` sind die Stellschrauben; die Größe der Rangzahl bleibt unverändert.
@@ -1097,7 +1080,7 @@ git commit -m "Siegerehrungsbogen auf A4 setzen"
 
 ---
 
-## Task 4: Service — Daten, Auswahl, Fehler
+## Task 3: Service — Daten, Auswahl, Fehler
 
 **Files:**
 - Create: `backend/src/main/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/entity/AwardCeremonyError.kt`
@@ -1106,7 +1089,7 @@ git commit -m "Siegerehrungsbogen auf A4 setzen"
 - Test: `backend/src/test/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/AwardCeremonyServiceTest.kt`
 
 **Interfaces:**
-- Consumes: `AwardCeremonyLogic.groupByRatingCategory`, `AwardCeremonyLogic.sheet`, `AwardCeremonyPdf.render`; `CompetitionExecutionService.computeCompetitionPlaces(competitionId: UUID): App<ServiceError, List<Pair<CompetitionMatchTeamWithRegistration, Int>>>`; `CompetitionExecutionService.sortRounds`; `CompetitionSetupService.getSetupRoundsWithMatches(key: UUID): App<CompetitionSetupError, List<CompetitionSetupRoundWithMatches>>`; `CompetitionRepo.getByEvent(eventId)`; `EventRepo.get(eventId)`; `EventDayRepo.getByEvent(eventId)`; `EventService.checkIsChallengeEvent(eventId)`; `AwardCertificateLogic.formatEventDate(days: List<LocalDate>): String`; `lexiNumberComp`
+- Consumes: `AwardCeremonyLogic.groupByRatingCategory`, `AwardCeremonyLogic.sheet`, `AwardCeremonyPdf.render` (Task 2); `CompetitionExecutionService.computeCompetitionPlaces(competitionId: UUID): App<ServiceError, List<Pair<CompetitionMatchTeamWithRegistration, Int>>>`; `CompetitionExecutionService.sortRounds`; `CompetitionSetupService.getSetupRoundsWithMatches(key: UUID): App<CompetitionSetupError, List<CompetitionSetupRoundWithMatches>>`; `CompetitionRepo.getByEvent(eventId)`; `EventRepo.get(eventId)`; `EventDayRepo.getByEvent(eventId)`; `EventService.checkIsChallengeEvent(eventId)`; `AwardCertificateLogic.formatEventDate(days: List<LocalDate>): String`; `lexiNumberComp`
 - Produces: `AwardCeremonyService.listCeremonies(eventId: UUID): App<ServiceError, ApiResponse.ListDto<AwardCeremonyChoiceDto>>` und `AwardCeremonyService.download(eventId: UUID, request: AwardCeremonySelectionRequest): App<ServiceError, ApiResponse.File>`
 
 - [ ] **Step 1: Fehler und ErrorCodes anlegen**
@@ -1202,7 +1185,7 @@ Seitenzahl im Test über `Loader.loadPDF(file.bytes).use { it.numberOfPages }`.
 - [ ] **Step 3: Tests laufen lassen und Fehlschlag prüfen**
 
 ```bash
-./mvnw -q -pl backend test -Dtest=AwardCeremonyServiceTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test -Dtest=AwardCeremonyServiceTest
 ```
 
 Erwartet: Kompilierfehler „Unresolved reference: AwardCeremonyService".
@@ -1308,7 +1291,7 @@ object AwardCeremonyService {
 - [ ] **Step 5: Tests laufen lassen**
 
 ```bash
-./mvnw -q -pl backend test -Dtest=AwardCeremonyServiceTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test -Dtest=AwardCeremonyServiceTest
 ```
 
 Erwartet: alle Tests grün. Jede `KIO.failOn`-Zeile im Code noch einmal ansehen — ohne führendes `!` ist sie ein No-Op und der Test würde still danebengreifen.
@@ -1322,7 +1305,7 @@ git commit -m "Ehrungen einer Veranstaltung sammeln und als PDF ausliefern"
 
 ---
 
-## Task 5: Routen und OpenAPI
+## Task 4: Routen und OpenAPI
 
 **Files:**
 - Create: `backend/src/main/kotlin/de/lambda9/ready2race/backend/app/awardCeremony/boundary/awardCeremony.kt`
@@ -1392,7 +1375,7 @@ In `documentation.yaml` beide Pfade eintragen. Vorlage sind die vorhandenen `/ev
 - [ ] **Step 4: Backend bauen und alle Modul-Tests laufen lassen**
 
 ```bash
-./mvnw -q -pl backend test -Dtest='AwardCeremony*'
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test -Dtest='AwardCeremony*'
 ```
 
 Erwartet: alle drei Testklassen grün, keine Kompilierfehler.
@@ -1420,7 +1403,7 @@ git commit -m "Endpunkte für den Siegerehrungsbogen bereitstellen"
 
 ---
 
-## Task 6: Auswahloberfläche
+## Task 5: Auswahloberfläche
 
 **Files:**
 - Create: `frontend/src/components/awardCeremony/AwardCeremonyDialog.tsx`
@@ -1430,7 +1413,7 @@ git commit -m "Endpunkte für den Siegerehrungsbogen bereitstellen"
 - Modify: `frontend/src/i18n/de/translations.json`, `frontend/src/i18n/en/translations.json`, `frontend/src/i18n/da/translations.json`
 
 **Interfaces:**
-- Consumes: `getAwardCeremonies`, `downloadAwardCeremonySheets` aus `@api/sdk.gen.ts` (Task 5); `AwardCeremonyChoiceDto` aus `@api/types.gen.ts`; `useFetch`, `useFeedback` aus `@utils/hooks.ts`; `getFilename` aus `@utils/helpers.ts`; `BaseDialog`, `SubmitButton`, `Throbber`
+- Consumes: `getAwardCeremonies`, `downloadAwardCeremonySheets` aus `@api/sdk.gen.ts` (Task 4); `AwardCeremonyChoiceDto` aus `@api/types.gen.ts`; `useFetch`, `useFeedback` aus `@utils/hooks.ts`; `getFilename` aus `@utils/helpers.ts`; `BaseDialog`, `SubmitButton`, `Throbber`
 - Produces: `<AwardCeremonyDialog open onClose eventId competitionId? />`
 
 **Vorbild:** `frontend/src/components/awardCertificate/AwardCertificateDialog.tsx` und `frontend/src/components/certificate/certificateError.ts` — **beide zuerst lesen** und Aufbau, Download-Mechanik und Fehleranzeige davon übernehmen.
@@ -1508,7 +1491,7 @@ git commit -m "Ehrungen für den Siegerehrungsbogen auswählen lassen"
 - [ ] **Vollständiger Backend-Testlauf**
 
 ```bash
-./mvnw -q -pl backend test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21 && cd backend && ./mvnw -q test
 ```
 
 Erwartet: keine neuen Fehlschläge gegenüber dem Stand vor Task 1. Der Vergleichslauf gehört an den Anfang von Task 1, falls auf `main` bereits etwas rot ist.
@@ -1523,16 +1506,16 @@ Erwartet: keine neuen Fehlschläge gegenüber dem Stand vor Task 1. Der Vergleic
 
 | Spec-Abschnitt | Task |
 |---|---|
-| 4 Datenquellen, Zuordnung Team → Lauf | Task 4, Step 4 (`raceOf`) |
-| 4 Kein Ehrungstermin, kein Platzhalter | Task 1 (`ceremonyTime`), Task 2 (`sheet`), Task 3 (Header) |
-| 5 Bildung und Reihenfolge der Ehrungen | Task 1 (`groupByRatingCategory`), Task 4 (`collect`) |
-| 5 API `GET` / `POST` | Task 5 |
-| 5 Fehlerfälle | Task 4, Step 1 + Tests in Step 2 |
-| 6 Ranking und Gleichstände | Task 1, Steps 2 und 4 |
-| 7 Layout, Verdichtung, Umbruchschutz | Task 2 (Verdichtung), Task 3 (Layout, Dichte) |
-| 8 Modulaufbau | File Structure, Tasks 1–5 |
-| 9 Frontend | Task 6 |
-| 10 Tests 1–10 | Task 1 (1, 2, 6, 7, 8), Task 2 (3, 4, 5, 9, 10), Task 3 (Pdf), Task 4 (Service) |
+| 4 Datenquellen, Zuordnung Team → Lauf | Task 3, Step 4 (`raceOf`) |
+| 4 Kein Ehrungstermin, kein Platzhalter | Task 1 (`ceremonyTime`, `sheet`), Task 2 (Header) |
+| 5 Bildung und Reihenfolge der Ehrungen | Task 1 (`groupByRatingCategory`), Task 3 (`collect`) |
+| 5 API `GET` / `POST` | Task 4 |
+| 5 Fehlerfälle | Task 3, Step 1 + Tests in Step 2 |
+| 6 Ranking und Gleichstände | Task 1, Steps 2 und 5 |
+| 7 Layout, Verdichtung, Umbruchschutz | Task 1 (Verdichtung, Dichte), Task 2 (Layout) |
+| 8 Modulaufbau | File Structure, Tasks 1–4 |
+| 9 Frontend | Task 5 |
+| 10 Tests 1–10 | Task 1 (alle zehn), Task 2 (Pdf), Task 3 (Service) |
 | 11 Nicht enthalten | nirgends implementiert — bewusst |
 
 **Namenskonsistenz geprüft:** `AwardCeremonyDensity` (nicht `Density`) in Entity, Logic, Pdf; `registeringClubName` am Kandidaten gegenüber `registeringClub` am aufbereiteten Team — die Unterscheidung ist gewollt (Rohwert vs. „nur wenn abweichend") und in beiden Doc-Kommentaren benannt. `boatLine` ist nicht-nullable (leer kann sie nicht werden, die Startnummer gibt es immer), `raceLine` und `penalty` sind nullable.
