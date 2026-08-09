@@ -77,6 +77,11 @@ class AwardCeremonyLogicTest {
     }
 
     @Test
+    fun groupingAnEmptyListYieldsNoGroups() {
+        assertEquals(emptyList(), AwardCeremonyLogic.groupByRatingCategory(emptyList()))
+    }
+
+    @Test
     fun theGroupWithoutCategoryComesLast() {
         val groups = AwardCeremonyLogic.groupByRatingCategory(
             listOf(
@@ -132,7 +137,7 @@ class AwardCeremonyLogicTest {
             listOf(candidate(1, startNumber = 9, teamName = "spät"), candidate(1, startNumber = 2, teamName = "früh"))
         )
 
-        assertEquals(listOf("früh", "spät"), ranks.map { it.team.boatLine.substringAfter("Boot „").substringBefore("\"") })
+        assertEquals(listOf("früh", "spät"), ranks.map { it.team.boatLine.substringAfter("Boot „").substringBefore("“") })
     }
 
     @Test
@@ -140,6 +145,29 @@ class AwardCeremonyLogicTest {
         val ranks = AwardCeremonyLogic.rank((1..8).map { candidate(it) })
 
         assertEquals(listOf(1, 2, 3), ranks.map { it.rank })
+    }
+
+    @Test
+    fun rankingAnEmptyListYieldsNoRanks() {
+        assertEquals(emptyList(), AwardCeremonyLogic.rank(emptyList()))
+    }
+
+    @Test
+    fun aTieOnFirstWithFourBoatsPrintsAllFourAtRankOne() {
+        // Beginnt der Gleichstand schon auf Rang 1, kommen laut KDoc an rank() *alle* Boote der
+        // Gruppe aufs Blatt - auch wenn das mehr als drei Blöcke ergibt.
+        val ranks = AwardCeremonyLogic.rank(
+            listOf(
+                candidate(1, startNumber = 1),
+                candidate(1, startNumber = 2),
+                candidate(1, startNumber = 3),
+                candidate(1, startNumber = 4),
+            )
+        )
+
+        assertEquals(listOf(1, 1, 1, 1), ranks.map { it.rank })
+        assertEquals(listOf(true, true, true, true), ranks.map { it.shared })
+        assertEquals(listOf(true, false, false, false), ranks.map { it.first })
     }
 
     @Test
@@ -230,6 +258,29 @@ class AwardCeremonyLogicTest {
     }
 
     @Test
+    fun twoSpellingsOfTheSameClubCollapseToASingleLine() {
+        // "Rostocker Ruderclub" und "Rostocker Ruder-Club von 1885 e.V." sind nach ClubNameKey
+        // derselbe Verein. ClubComposition fasst sie zu einem Kettenglied zusammen (mit der
+        // zuerst gesehenen Schreibweise) - der Vereinsvergleich in team() darf das nicht per
+        // rohem Stringvergleich wieder auseinanderreißen, sonst sähe ein Vereinsboot wie eine
+        // Renngemeinschaft aus.
+        val team = AwardCeremonyLogic.team(
+            candidate(
+                1,
+                registeringClubName = "Rostocker Ruderclub",
+                participants = listOf(
+                    rower(firstName = "Anna", ownClubName = "Rostocker Ruderclub"),
+                    rower(firstName = "Bernd", ownClubName = "Rostocker Ruder-Club von 1885 e.V."),
+                ),
+            )
+        )
+
+        assertEquals("Rostocker Ruderclub", team.clubLine)
+        assertNull(team.registeringClub)
+        assertEquals(listOf(null, null), team.athletes.map { it.club })
+    }
+
+    @Test
     fun everyAthleteKeepsNameAndRole() {
         val team = AwardCeremonyLogic.team(
             candidate(
@@ -249,7 +300,7 @@ class AwardCeremonyLogicTest {
     fun aBoatWithoutNameShowsOnlyTheStartNumber() {
         assertEquals("Startnummer 3", AwardCeremonyLogic.formatBoatLine(null, 3))
         assertEquals("Startnummer 3", AwardCeremonyLogic.formatBoatLine("  ", 3))
-        assertEquals("Boot „RCN I\" · Startnummer 3", AwardCeremonyLogic.formatBoatLine("RCN I", 3))
+        assertEquals("Boot „RCN I“ · Startnummer 3", AwardCeremonyLogic.formatBoatLine("RCN I", 3))
     }
 
     @Test
@@ -268,6 +319,22 @@ class AwardCeremonyLogicTest {
         assertEquals("Finale · 15.08., 14:35", AwardCeremonyLogic.formatRaceLine("Finale", null, at))
         assertEquals("Finale A", AwardCeremonyLogic.formatRaceLine("Finale", "Finale A", null))
         assertNull(AwardCeremonyLogic.formatRaceLine(null, null, null))
+    }
+
+    @Test
+    fun aBlankMatchNameFallsBackToTheRoundNameInsteadOfVanishing() {
+        // Ein leerer, aber nicht-null matchName darf den vorhandenen Rundennamen nicht
+        // verschlucken - dieselbe Regel wie bei formatBoatLine und formatPenalty.
+        assertEquals("Finale · 15.08., 14:35", AwardCeremonyLogic.formatRaceLine("Finale", "  ", LocalDateTime.of(2026, 8, 15, 14, 35)))
+        assertEquals("Finale", AwardCeremonyLogic.formatRaceLine("Finale", "", null))
+    }
+
+    @Test
+    fun onlyATimeWithoutAnyNameStillPrintsTheTime() {
+        val at = LocalDateTime.of(2026, 8, 15, 14, 35)
+
+        assertEquals("15.08., 14:35", AwardCeremonyLogic.formatRaceLine(null, null, at))
+        assertEquals("15.08., 14:35", AwardCeremonyLogic.formatRaceLine("  ", "  ", at))
     }
 
     @Test

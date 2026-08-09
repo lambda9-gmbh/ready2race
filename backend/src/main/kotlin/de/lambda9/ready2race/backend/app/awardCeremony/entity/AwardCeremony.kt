@@ -11,7 +11,7 @@ import java.util.UUID
  * testen lassen.
  */
 data class AwardCeremonyCandidate(
-    /** Der in [CompetitionExecutionService.computeCompetitionPlaces] berechnete Platz im Gesamtfeld. */
+    /** Der von CompetitionExecutionService.computeCompetitionPlaces berechnete Platz im Gesamtfeld. */
     val competitionPlace: Int,
     val startNumber: Int,
     val ratingCategoryName: String?,
@@ -82,8 +82,8 @@ data class AwardCeremonySelectionRequest(
 
 /**
  * Schriftgrößenstufe einer Seite. Drei Achter mit Steuermann ergeben 27 Personenzeilen und
- * sprengen A4; ab [AwardCeremonyLogic.COMPACT_THRESHOLD] Zeilen rückt die Seite eine Stufe
- * zusammen, statt unkontrolliert umzubrechen.
+ * sprengen A4; über AwardCeremonyLogic.COMPACT_THRESHOLD Zeilen (die Schwelle selbst bleibt noch
+ * normal) rückt die Seite eine Stufe zusammen, statt unkontrolliert umzubrechen.
  */
 enum class AwardCeremonyDensity {
     NORMAL,
@@ -128,7 +128,7 @@ data class AwardCeremonyTeam(
     val time: String?,
     /** „Zeitstrafe +10 s (Frühstart)" - null ohne Strafe. */
     val penalty: String?,
-    /** „Finale A · Sa 15.08., 14:35" - null, wenn nichts davon vorliegt. */
+    /** „Finale A · 15.08., 14:35" - null, wenn nichts davon vorliegt. */
     val raceLine: String?,
     val athletes: List<AwardCeremonyAthlete>,
 )

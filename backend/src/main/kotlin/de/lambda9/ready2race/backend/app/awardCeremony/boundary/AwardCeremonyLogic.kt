@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.awardCeremony.boundary
 
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.*
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
+import de.lambda9.ready2race.backend.app.club.boundary.ClubNameKey
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -85,11 +86,20 @@ object AwardCeremonyLogic {
         val chain = ClubComposition.of(worn, ClubShortNameSettings.none).full
         val clubLine = chain.ifEmpty { candidate.registeringClubName }
 
+        // Vergleich über den Namensschlüssel, nicht über die Zeichenkette: zwei Schreibvarianten
+        // desselben Vereins ("Rostocker Ruderclub" / "...von 1885 e.V.") fasst ClubComposition zu
+        // einem Kettenglied zusammen, behält dabei aber die zuerst gesehene Schreibweise - ein
+        // roher Stringvergleich sähe dann fälschlich einen Unterschied. Bei mehreren Vereinen
+        // bleibt clubLine die zusammengesetzte Kette "A / B"; kein einzelner Vereinsname ist je
+        // gleich dieser Kette, und genau das muss für die gemischte Crew so bleiben.
+        val clubLineKeys = clubLine.split(ClubComposition.SEPARATOR).map(ClubNameKey::of).toSet()
+        fun sameAsClubLine(name: String) = clubLineKeys.size == 1 && ClubNameKey.of(name) in clubLineKeys
+
         return AwardCeremonyTeam(
             clubLine = clubLine,
             // Sagt die Titelzeile schon alles, wäre "Meldender Verein: dasselbe" reine
             // Wiederholung - dann entfällt die Zeile.
-            registeringClub = candidate.registeringClubName.takeIf { it != clubLine },
+            registeringClub = candidate.registeringClubName.takeIf { !sameAsClubLine(it) },
             boatLine = formatBoatLine(candidate.teamName, candidate.startNumber),
             time = candidate.time,
             penalty = formatPenalty(candidate.penaltySeconds, candidate.penaltyNote),
@@ -103,14 +113,14 @@ object AwardCeremonyLogic {
                 AwardCeremonyAthlete(
                     name = "${participant.firstName} ${participant.lastName}",
                     role = participant.role,
-                    club = club?.takeIf { it.isNotBlank() && it != clubLine },
+                    club = club?.takeIf { it.isNotBlank() && !sameAsClubLine(it) },
                 )
             },
         )
     }
 
     fun formatBoatLine(teamName: String?, startNumber: Int): String = listOfNotNull(
-        teamName?.takeIf { it.isNotBlank() }?.let { "Boot „$it\"" },
+        teamName?.takeIf { it.isNotBlank() }?.let { "Boot „$it“" },
         "Startnummer $startNumber",
     ).joinToString(" · ")
 
@@ -126,12 +136,13 @@ object AwardCeremonyLogic {
 
     /**
      * Der Laufname ist die genauere Angabe („Finale A") und verdrängt deshalb den Rundennamen
-     * („Finale"); fehlt er, tritt die Runde an seine Stelle. Fehlt beides und die Uhrzeit, gibt
-     * es keine Zeile - eine leere Klammer wäre schlechter als gar nichts.
+     * („Finale"); fehlt er - auch als leerer Text -, tritt die Runde an seine Stelle. Fehlt
+     * beides und die Uhrzeit, gibt es keine Zeile - eine leere Klammer wäre schlechter als gar
+     * nichts.
      */
     fun formatRaceLine(roundName: String?, matchName: String?, at: LocalDateTime?): String? =
         listOfNotNull(
-            (matchName ?: roundName)?.takeIf { it.isNotBlank() },
+            listOfNotNull(matchName, roundName).firstOrNull { it.isNotBlank() },
             at?.format(raceTimeFormat),
         ).takeIf { it.isNotEmpty() }?.joinToString(" · ")
 
