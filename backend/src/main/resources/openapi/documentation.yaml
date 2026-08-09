@@ -3619,6 +3619,38 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/participantRequirement/open/export:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: exportOpenParticipantRequirements
+      description: >-
+        Downloads an xlsx of the registered participants who are still missing requirements -
+        the basis for notifying their clubs. Without requirementId every requirement active at
+        the event counts. Requirements bound to a named participant only apply to that role,
+        and participants with nothing open are left out.
+      parameters:
+        - name: requirementId
+          in: query
+          required: false
+          description: Limits the export to a single requirement.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/participantRequirement/{participantRequirementId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -10353,8 +10385,14 @@ components:
           type: boolean
         requirementColName:
           type: string
-        requirementIsValidValue:
-          type: string
+        requirementIsValidValues:
+          type: array
+          description: >-
+            Values of the requirement column that count as fulfilled. Several are allowed -
+            the DRV list carries both "ja" and "erweitert". Empty or absent means every row
+            counts, which is also what an unmapped requirement column does.
+          items:
+            type: string
 
     ParticipantRequirementCheckForEventUpsertDto:
       type: object

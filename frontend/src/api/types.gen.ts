@@ -2158,7 +2158,10 @@ export type ParticipantRequirementCheckForEventConfigDto = {
     clubColName?: string
     noHeader: boolean
     requirementColName?: string
-    requirementIsValidValue?: string
+    /**
+     * Values of the requirement column that count as fulfilled. Several are allowed - the DRV list carries both "ja" and "erweitert". Empty or absent means every row counts, which is also what an unmapped requirement column does.
+     */
+    requirementIsValidValues?: Array<string>
 }
 
 export type ParticipantRequirementCheckForEventUpsertDto = {
@@ -5111,6 +5114,22 @@ export type GetActiveParticipantRequirementsForEventError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type ExportOpenParticipantRequirementsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Limits the export to a single requirement.
+         */
+        requirementId?: string
+    }
+}
+
+export type ExportOpenParticipantRequirementsResponse = Blob | File
+
+export type ExportOpenParticipantRequirementsError = BadRequestError | ApiError
 
 export type ActivateParticipantRequirementForEventData = {
     path: {

@@ -1,5 +1,5 @@
 import Papa from 'papaparse'
-import {ParsedCsvData} from './types'
+import {CsvColumnValue, ParsedCsvData} from './types'
 
 /**
  * Common CSV separators to try for auto-detection
@@ -53,6 +53,56 @@ export const detectCharset = async (file: File): Promise<string> => {
 /**
  * Parses a CSV file and returns structured data with auto-detection
  */
+/**
+ * Above this many distinct values a column is treated as free text and left out of
+ * {@link collectColumnValues}. Picking from a list of thousands of names helps nobody, and the
+ * caller falls back to a text field.
+ */
+export const DISTINCT_VALUE_LIMIT = 50
+
+/**
+ * Collects the distinct values of every column together with how often each occurs, most
+ * frequent first.
+ *
+ * Columns that exceed {@link DISTINCT_VALUE_LIMIT} are dropped from the result rather than
+ * truncated - a partial list would invite selecting from something incomplete.
+ */
+export const collectColumnValues = (
+    headers: string[],
+    rows: string[][],
+    limit: number = DISTINCT_VALUE_LIMIT,
+): Record<string, CsvColumnValue[]> => {
+    const counters = headers.map(() => new Map<string, number>())
+    const exceeded = headers.map(() => false)
+
+    for (const row of rows) {
+        for (let i = 0; i < headers.length; i++) {
+            if (exceeded[i]) continue
+
+            const value = (row[i] ?? '').trim()
+            if (value === '') continue
+
+            const counter = counters[i]
+            const seen = counter.get(value)
+            if (seen === undefined && counter.size >= limit) {
+                exceeded[i] = true
+                counter.clear()
+                continue
+            }
+            counter.set(value, (seen ?? 0) + 1)
+        }
+    }
+
+    const result: Record<string, CsvColumnValue[]> = {}
+    headers.forEach((header, i) => {
+        if (exceeded[i] || counters[i].size === 0) return
+        result[header] = [...counters[i].entries()]
+            .map(([value, count]) => ({value, count}))
+            .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+    })
+    return result
+}
+
 export const parseCsvFile = async (
     file: File,
     options?: {
@@ -113,6 +163,7 @@ export const parseCsvFile = async (
                         previewRows,
                         detectedSeparator: separator,
                         totalRows: dataRows.length,
+                        columnValues: collectColumnValues(headers, dataRows),
                     })
                 },
                 error: (error: any) => {

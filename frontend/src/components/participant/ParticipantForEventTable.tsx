@@ -17,6 +17,7 @@ import {
     Cancel,
     CheckCircle,
     Delete,
+    Download,
     Edit,
     Email,
     Info,
@@ -31,6 +32,8 @@ import ParticipantRequirementApproveManuallyForEventDialog, {
 } from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
 import ParticipantRequirementCheckForEventUploadFileDialog
     from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
+import OpenRequirementExportDialog
+    from '@components/event/participantRequirement/OpenRequirementExportDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Box, Link, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
@@ -333,8 +336,16 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
             {entityUpdate: true},
         )
 
+    const [openRequirementExportOpen, setOpenRequirementExportOpen] = useState(false)
+
     const splitOptions: SplitButtonOption[] = useMemo(() => {
-        const options: SplitButtonOption[] = []
+        const options: SplitButtonOption[] = [
+            {
+                icon: <Download />,
+                label: t('event.participantRequirement.openExportAction'),
+                onClick: () => setOpenRequirementExportOpen(true),
+            },
+        ]
 
         // Get all named participant requirement IDs
         const namedRequirementIds = new Set(
@@ -538,6 +549,12 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 open={participantRequirementCheckForEventConfigProps.dialog.dialogIsOpen}
                 onClose={participantRequirementCheckForEventConfigProps.dialog.closeDialog}
                 onSuccess={props.reloadData}
+            />
+            <OpenRequirementExportDialog
+                open={openRequirementExportOpen}
+                onClose={() => setOpenRequirementExportOpen(false)}
+                requirements={requirementsData?.data ?? []}
+                downloadRef={downloadRef}
             />
             <EntityTable
                 {...props}
