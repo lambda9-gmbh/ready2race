@@ -96,7 +96,12 @@ export const touchSessionToken = (
     }
 }
 
-export const clearSessionToken = (stores: TokenStores = browserStores()): void => {
-    stores.app.removeItem(APP_KEY)
+export const clearSessionToken = (
+    isInApp: boolean,
+    stores: TokenStores = browserStores(),
+): void => {
+    if (isInApp) {
+        stores.app.removeItem(APP_KEY)
+    }
     stores.session.removeItem(SESSION_KEY)
 }

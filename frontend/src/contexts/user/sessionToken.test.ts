@@ -65,12 +65,21 @@ describe('sessionToken', () => {
         expect(s.app.size()).toBe(0)
     })
 
-    it('löscht beide Ablagen beim Abmelden', () => {
+    it('löscht beim Abmelden in der App beide Ablagen', () => {
         const s = stores()
         writeSessionToken('abc', true, 1_000, s)
         writeSessionToken('def', false, 1_000, s)
-        clearSessionToken(s)
+        clearSessionToken(true, s)
         expect(s.app.size()).toBe(0)
+        expect(s.session.size()).toBe(0)
+    })
+
+    it('lässt die Helfer-Ablage stehen, wenn sich die Verwaltung abmeldet', () => {
+        const s = stores()
+        writeSessionToken('abc', true, 1_000, s)
+        writeSessionToken('def', false, 1_000, s)
+        clearSessionToken(false, s)
+        expect(readSessionToken(true, 1_000, s)).toBe('abc')
         expect(s.session.size()).toBe(0)
     })
 

@@ -120,7 +120,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
             if (response.status === 200 && data !== undefined) {
                 setAuth(data, undefined, userData.isInApp)
             } else {
-                clearSessionToken()
+                clearSessionToken(userData.isInApp)
                 setUserData(prevState => ({
                     userInfo: undefined,
                     token: null,
@@ -158,7 +158,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
 
     const logout = async (isInApp: boolean = false) => {
         await userLogout()
-        clearSessionToken()
+        clearSessionToken(isInApp)
         setUserData({
             userInfo: undefined,
             isInApp,
