@@ -28,7 +28,8 @@ Leser erkennbar bleiben als das, was er ist. Ein manueller Eintrag darf nie wie 
 
 ## Datenmodell
 
-Migration `V202608091500__participant_tracking_manual.sql`.
+Migration `V202608091600__participant_tracking_manual.sql`. (`…1500` war bereits vom
+Auto-Abgleich der Durchführungsseite auf einem parallelen Branch belegt.)
 
 ```sql
 alter table participant_tracking
