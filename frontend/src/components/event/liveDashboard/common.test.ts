@@ -13,7 +13,9 @@ import {
     nextUpEntry,
     openResultTeams,
     pendingSlotLabel,
+    shortenClubChain,
     teamHasResult,
+    teamsInDisplayOrder,
     teamShowsClubLine,
     teamShowsCrew,
 } from './common.ts'
@@ -46,6 +48,72 @@ describe('teamHasResult', () => {
 
     it('erkennt ein offenes Boot', () => {
         expect(teamHasResult(team({}))).toBe(false)
+    })
+})
+
+describe('teamsInDisplayOrder', () => {
+    const lanes = (teams: LiveDashboardTeamDto[]): (number | null | undefined)[] =>
+        teamsInDisplayOrder(teams).map(t => t.startNumber)
+
+    it('lässt die Reihenfolge nach Bahn stehen, solange nichts gewertet ist', () => {
+        const teams = [team({startNumber: 1}), team({startNumber: 2}), team({startNumber: 3})]
+
+        expect(lanes(teams)).toEqual([1, 2, 3])
+    })
+
+    // Eine Abmeldung steht oft schon vor dem Start fest und sortiert deshalb noch nichts um.
+    it('sortiert wegen einer bloßen Abmeldung noch nicht um', () => {
+        const teams = [
+            team({startNumber: 1, deregistered: true}),
+            team({startNumber: 2}),
+            team({startNumber: 3}),
+        ]
+
+        expect(lanes(teams)).toEqual([1, 2, 3])
+    })
+
+    it('stellt bei vollständiger Wertung den Ersten nach oben', () => {
+        const teams = [
+            team({startNumber: 1, place: 3}),
+            team({startNumber: 2, place: 1}),
+            team({startNumber: 3, place: 2}),
+        ]
+
+        expect(lanes(teams)).toEqual([2, 3, 1])
+    })
+
+    it('reiht offene Boote vor die ausgeschiedenen und die abgemeldeten ganz nach hinten', () => {
+        const teams = [
+            team({startNumber: 1, deregistered: true}),
+            team({startNumber: 2, failed: true, failedReason: 'DSQ'}),
+            team({startNumber: 3}),
+            team({startNumber: 4, place: 2}),
+            team({startNumber: 5, place: 1}),
+        ]
+
+        expect(lanes(teams)).toEqual([5, 4, 3, 2, 1])
+    })
+
+    // Der Fall von Thomas' Bildschirm: Bahn 1 Platz 1, Bahn 2 Platz 3, Bahn 3 DSQ, Bahn 4 Platz 2,
+    // Bahn 5 DNF.
+    it('bringt den echten Lauf in die Reihenfolge 1, 4, 2, 3, 5', () => {
+        const teams = [
+            team({startNumber: 1, place: 1}),
+            team({startNumber: 2, place: 3}),
+            team({startNumber: 3, failed: true, failedReason: 'DSQ'}),
+            team({startNumber: 4, place: 2}),
+            team({startNumber: 5, failed: true, failedReason: 'DNF'}),
+        ]
+
+        expect(lanes(teams)).toEqual([1, 4, 2, 3, 5])
+    })
+
+    it('lässt die übergebene Liste unangetastet', () => {
+        const teams = [team({startNumber: 1, place: 2}), team({startNumber: 2, place: 1})]
+
+        teamsInDisplayOrder(teams)
+
+        expect(teams.map(t => t.startNumber)).toEqual([1, 2])
     })
 })
 
@@ -143,9 +211,9 @@ describe('teamShowsCrew', () => {
 
 describe('crewMemberLabel', () => {
     it('setzt die Rolle in Klammern hinter Nachname und Vereinskurzform', () => {
-        expect(
-            crewMemberLabel({lastName: 'Meier', clubShort: 'RC Bergedorf', role: 'Ste.'}),
-        ).toBe('Meier · RC Bergedorf (Ste.)')
+        expect(crewMemberLabel({lastName: 'Meier', clubShort: 'RC Bergedorf', role: 'Ste.'})).toBe(
+            'Meier · RC Bergedorf (Ste.)',
+        )
     })
 
     it('lässt weg, was fehlt, statt Trennzeichen ins Leere zu setzen', () => {
@@ -158,7 +226,11 @@ describe('teamShowsClubLine', () => {
     it('zeigt die Kette unter einem Mannschaftsnamen, der sie nicht enthält', () => {
         expect(
             teamShowsClubLine(
-                team({teamName: '#1', clubsShort: 'RC Bergedorf', clubsFull: 'Ruderclub Bergedorf e.V.'}),
+                team({
+                    teamName: '#1',
+                    clubsShort: 'RC Bergedorf',
+                    clubsFull: 'Ruderclub Bergedorf e.V.',
+                }),
             ),
         ).toBe(true)
     })
@@ -184,12 +256,63 @@ describe('teamShowsClubLine', () => {
         ).toBe(false)
     })
 
-    // Ohne Mannschaftsname steht die Kette bereits als Überschrift der Zeile.
-    it('lässt sie weg, wenn es keinen Mannschaftsnamen und keine Kette gibt', () => {
-        expect(teamShowsClubLine(team({clubsShort: 'RC Bergedorf', clubsFull: 'Ruderclub Bergedorf'}))).toBe(
-            false,
-        )
+    // Der Regelfall: die wenigsten Boote haben einen Mannschaftsnamen. Die Kette steht trotzdem
+    // in der kleinen grauen Zeile und nie in der Überschrift.
+    it('zeigt sie auch ohne Mannschaftsnamen', () => {
+        expect(
+            teamShowsClubLine(
+                team({clubsShort: 'RC Bergedorf', clubsFull: 'Ruderclub Bergedorf e.V.'}),
+            ),
+        ).toBe(true)
+    })
+
+    it('lässt sie weg, wenn es gar keine Kette gibt', () => {
         expect(teamShowsClubLine(team({teamName: '#1'}))).toBe(false)
+        expect(teamShowsClubLine(team({}))).toBe(false)
+    })
+})
+
+describe('shortenClubChain', () => {
+    it('lässt eine Kette, die in zwei Zeilen passt, unangetastet', () => {
+        const fuenf = 'Mainzer RV / Marburger RV / RK Flensburg / RC Nürtingen / 1. KRC'
+
+        expect(shortenClubChain(fuenf)).toBe(fuenf)
+        expect(shortenClubChain('RC Bergedorf')).toBe('RC Bergedorf')
+        expect(shortenClubChain('')).toBe('')
+    })
+
+    it('kürzt hinten mit "+n" und lässt die verbleibenden Vereinsnamen ganz', () => {
+        expect(
+            shortenClubChain(
+                'Humlebæk Roklub / Nakskov Roklub / Kerteminde Roklub / Rungsted Roklub',
+                40,
+            ),
+        ).toBe('Humlebæk Roklub / Nakskov Roklub +2')
+    })
+
+    // Entschieden wird nach Textlänge, nicht nach Vereinszahl: dieselbe Grenze lässt zwei kurze
+    // dänische Vereine stehen und kappt zwei lange deutsche schon nach dem ersten.
+    it('entscheidet nach Länge, nicht nach Anzahl', () => {
+        expect(shortenClubChain('Humlebæk Roklub / Nakskov Roklub / Rungsted Roklub', 40)).toBe(
+            'Humlebæk Roklub / Nakskov Roklub +1',
+        )
+        expect(
+            shortenClubChain(
+                'Rostocker Ruder-Club von 1885 / Akademischer Ruderverein Kiel / Erster Kieler Ruder-Club',
+                40,
+            ),
+        ).toBe('Rostocker Ruder-Club von 1885 +2')
+    })
+
+    // Lieber ein einzelner überlanger Name, der in der Zeilenbegrenzung ausläuft, als ein halber
+    // Verein: ein Vereinsname wird nie zerrissen.
+    it('zerreißt keinen Vereinsnamen, auch wenn er allein zu lang ist', () => {
+        expect(
+            shortenClubChain(
+                'Ruder-Club Allemannia von 1866 - Leuphana Universität Lüneburg / RC Bergedorf',
+                40,
+            ),
+        ).toBe('Ruder-Club Allemannia von 1866 - Leuphana Universität Lüneburg +1')
     })
 })
 

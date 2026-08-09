@@ -3,7 +3,7 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
-import de.lambda9.ready2race.backend.app.club.control.ClubShortNameRepo
+import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
@@ -147,7 +147,7 @@ object EventInfoService {
         eventId: UUID,
         limit: Int,
         competitionId: UUID?,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
 
         val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
@@ -185,7 +185,7 @@ object EventInfoService {
     private fun getUpcomingCompetitionMatches(
         eventId: UUID,
         limit: Int,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, ApiResponse.ListDto<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
 
         val matches =
@@ -212,7 +212,7 @@ object EventInfoService {
     private fun getUpcomingMatchesForBoard(
         eventId: UUID,
         limit: Int,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, ApiResponse.ListDto<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
 
         val grace = Duration.ofMinutes(AthleteBoardLogic.DEFAULT_OVERDUE_GRACE_MINUTES.toLong())
@@ -342,7 +342,7 @@ object EventInfoService {
     // dieselbe Spaltenform.
     private fun toUpcomingCompetitionMatchInfos(
         matches: List<Record>,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, List<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
@@ -377,7 +377,7 @@ object EventInfoService {
     private fun getRunningMatches(
         eventId: UUID,
         limit: Int,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, ApiResponse.ListDto<RunningMatchInfo>> = KIO.comprehension {
 
         val matches = !CompetitionMatchRepo.getRunningMatches(eventId, limit).orDie()
@@ -476,13 +476,13 @@ object EventInfoService {
     // Helper Methods
 
     /**
-     * Die gepflegten Vereinskurzformen, EINMAL je Abruf. Aufgelöst wird danach ohne weitere
+     * Die gepflegten Vereinskurzformen und die Kürzungsregeln, EINMAL je Abruf. Aufgelöst wird danach ohne weitere
      * Abfrage - die öffentlichen Endpoints hier laufen im Sekunden- bis Viertelminutentakt und
      * bauen je Antwort Dutzende Mannschaften auf; ein Nachschlagen je Boot wäre derselbe Fehler
      * in klein, gegen den der Zwischenspeicher der Athleten-Anzeige gebaut wurde.
      */
-    private fun clubShortNames(): App<Nothing, Map<String, String>> =
-        ClubShortNameRepo.aliases().orDie()
+    private fun clubShortNames(): App<Nothing, ClubShortNameSettings> =
+        ClubShortNameSettings.load()
 
     /**
      * Die Vereinskette einer Mannschaft aus den Zeilen ihrer Crew - in Bootsreihenfolge, wie die
@@ -491,7 +491,7 @@ object EventInfoService {
      */
     private fun clubComposition(
         records: List<Record>,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): ClubComposition = ClubComposition.of(
         records.map {
             ClubComposition.clubWorn(
@@ -520,7 +520,7 @@ object EventInfoService {
 
     private fun getMatchResultTeams(
         matchId: UUID,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, List<MatchResultTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamsForMatchResult(matchId).orDie()
         val timePrecision = Timecode.displayPrecision(records.mapNotNull { it[TIMECODE.TIME] })
@@ -564,7 +564,7 @@ object EventInfoService {
 
     private fun getUpcomingMatchTeams(
         matchId: UUID,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, List<UpcomingMatchTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamsForUpcomingMatch(matchId).orDie()
 
@@ -601,7 +601,7 @@ object EventInfoService {
 
     private fun getRunningMatchTeams(
         matchId: UUID,
-        clubShortNames: Map<String, String>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, List<RunningMatchTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamForRunningMatch(matchId).orDie()
         val timePrecision = Timecode.displayPrecision(records.mapNotNull { it[TIMECODE.TIME] })

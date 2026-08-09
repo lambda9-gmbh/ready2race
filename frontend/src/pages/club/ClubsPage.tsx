@@ -9,7 +9,8 @@ import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {useState} from 'react'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {updateAdministrationConfigGlobal} from '@authorization/privileges.ts'
+import {readClubGlobal, updateAdministrationConfigGlobal} from '@authorization/privileges.ts'
+import ClubShortNamePanel from '@components/club/shortName/ClubShortNamePanel.tsx'
 
 type GlobalConfigForm = {
     allowClubCreationOnRegistration: boolean
@@ -85,6 +86,13 @@ const ClubsPage = () => {
             )}
             <ClubTable {...administrationProps.table} title={t('club.clubs')} />
             <ClubDialog {...administrationProps.dialog} />
+            {/* Die Kurzformen hängen an Vereins*namen*, nicht an Vereins-Datensätzen, und stehen
+                deshalb neben der Vereinsliste statt in ihr. */}
+            {user.checkPrivilege(readClubGlobal) && (
+                <Box sx={{mt: 4}}>
+                    <ClubShortNamePanel />
+                </Box>
+            )}
         </Box>
     )
 }

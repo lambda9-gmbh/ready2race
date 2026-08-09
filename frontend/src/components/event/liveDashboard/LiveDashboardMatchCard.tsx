@@ -6,14 +6,19 @@ import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
 import {
+    CLUB_CHAIN_NARROW_CHARS,
+    CLUB_CHAIN_NARROW_RESULT_CHARS,
     competitionLabel,
     crewMemberLabel,
     formatMinutes,
     matchControls,
+    matchHasResults,
     openResultTeams,
     pendingSlotLabel,
+    shortenClubChain,
     teamShowsClubLine,
     teamShowsCrew,
+    teamsInDisplayOrder,
 } from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
 import SeverityIcon from './SeverityIcon.tsx'
@@ -63,12 +68,17 @@ const LiveDashboardMatchCard = ({
     const {showFinish, showRunToggle} = matchControls(match, onFinish != null, onSetRunning != null)
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
-    const hasResults = match.teams.some(team => team.time || team.place != null || team.failed)
+    const hasResults = matchHasResults(match.teams)
+    // Sobald gewertet wird, steht der Erste oben — die Zahl links bleibt dabei die Bahn.
+    const teams = teamsInDisplayOrder(match.teams)
     const openTeams = openResultTeams(match)
     const resultsComplete = match.teams.length > 0 && openTeams.length === 0
     const columns = hasResults
         ? '2ch minmax(0, 1fr) 10.5ch 2rem 26px'
         : '2ch minmax(0, 1fr) 26px'
+    // Sobald Zeit und Platz ihre Spalten belegen, bleibt der Vereinszeile am Telefon noch die
+    // Hälfte der Breite - die Kette muss dann früher aufs "+n" ausweichen.
+    const narrowChainChars = hasResults ? CLUB_CHAIN_NARROW_RESULT_CHARS : CLUB_CHAIN_NARROW_CHARS
 
     return (
         <Card
@@ -217,7 +227,7 @@ const LiveDashboardMatchCard = ({
                     )
                 })()}
                 <Divider sx={{mt: 1.5}} />
-                {match.teams.map((team, index) => {
+                {teams.map((team, index) => {
                     const substituted = team.substituted
                     const showClubLine = teamShowsClubLine(team)
                     const showCrew = teamShowsCrew(team)
@@ -236,7 +246,7 @@ const LiveDashboardMatchCard = ({
                                 px: 1,
                                 cursor: 'pointer',
                                 borderRadius: 1,
-                                borderBottom: index < match.teams.length - 1 ? '1px solid' : 'none',
+                                borderBottom: index < teams.length - 1 ? '1px solid' : 'none',
                                 borderBottomColor: 'divider',
                                 '&:active': {backgroundColor: 'action.selected'},
                                 '@media (hover: hover)': {
@@ -255,18 +265,70 @@ const LiveDashboardMatchCard = ({
                                     spacing={0.5}
                                     alignItems="center"
                                     sx={{minWidth: 0}}>
-                                    <Typography
-                                        variant="subtitle1"
-                                        sx={{
-                                            lineHeight: 1.25,
-                                            overflowWrap: 'break-word',
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden',
-                                        }}>
-                                        {team.teamName ?? team.clubsShort}
-                                    </Typography>
+                                    <Box sx={{minWidth: 0}}>
+                                        {/*
+                                            Die Überschriftenzeile trägt nur den Mannschaftsnamen —
+                                            und den haben nur Vereine mit mehreren Booten (`#1`,
+                                            `#2`). Sonst bleibt sie weg: die Bahnnummer links ist
+                                            der Anker, und die Zeile bleibt so ruhig wie die mit
+                                            "#2". Die Vereinskette steht nie hier.
+                                        */}
+                                        {team.teamName != null && (
+                                            <Typography
+                                                variant="subtitle1"
+                                                sx={{
+                                                    lineHeight: 1.25,
+                                                    overflowWrap: 'break-word',
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden',
+                                                }}>
+                                                {team.teamName}
+                                            </Typography>
+                                        )}
+                                        {showClubLine && (
+                                            <Typography
+                                                variant="body2"
+                                                aria-label={t('event.liveDashboard.team.clubs')}
+                                                sx={{
+                                                    color: 'grey.800',
+                                                    // Zwei Zeilen hoch; schmal ist die Kette
+                                                    // vorher schon auf ganze Vereinsnamen samt
+                                                    // "+n" gekürzt, breit läuft sie hier aus.
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden',
+                                                }}>
+                                                <Box
+                                                    component="span"
+                                                    sx={{
+                                                        display: 'inline',
+                                                        [`@container (min-width: ${WIDE_CARD_PX}px)`]:
+                                                            {
+                                                                display: 'none',
+                                                            },
+                                                    }}>
+                                                    {shortenClubChain(
+                                                        team.clubsShort,
+                                                        narrowChainChars,
+                                                    )}
+                                                </Box>
+                                                <Box
+                                                    component="span"
+                                                    sx={{
+                                                        display: 'none',
+                                                        [`@container (min-width: ${WIDE_CARD_PX}px)`]:
+                                                            {
+                                                                display: 'inline',
+                                                            },
+                                                    }}>
+                                                    {team.clubsFull}
+                                                </Box>
+                                            </Typography>
+                                        )}
+                                    </Box>
                                     {substituted && (
                                         <SwapHorizIcon
                                             sx={{
@@ -280,41 +342,6 @@ const LiveDashboardMatchCard = ({
                                         />
                                     )}
                                 </Stack>
-                                {showClubLine && (
-                                    <Typography
-                                        variant="body2"
-                                        aria-label={t('event.liveDashboard.team.clubs')}
-                                        sx={{
-                                            color: 'grey.800',
-                                            // Die Kette wird nicht gekappt, sie bricht auf zwei
-                                            // Zeilen um; ein sechster Verein fällt hinten heraus.
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden',
-                                        }}>
-                                        <Box
-                                            component="span"
-                                            sx={{
-                                                display: 'inline',
-                                                [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
-                                                    display: 'none',
-                                                },
-                                            }}>
-                                            {team.clubsShort}
-                                        </Box>
-                                        <Box
-                                            component="span"
-                                            sx={{
-                                                display: 'none',
-                                                [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
-                                                    display: 'inline',
-                                                },
-                                            }}>
-                                            {team.clubsFull}
-                                        </Box>
-                                    </Typography>
-                                )}
                                 {showCrew && (
                                     <Typography
                                         variant="caption"

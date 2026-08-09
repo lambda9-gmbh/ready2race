@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateOpti
 import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateParticipant
 import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateTeam
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
+import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.GapPlaceholderLogic
@@ -133,15 +134,17 @@ object AwardCertificateService {
 
                     val teams = places.map { (team, place) ->
                         // Die Urkunde zeigt die Vereine der Athleten in voller Länge und ohne jede
-                        // Kürzung - auch ohne heuristische (deshalb `emptyMap()`): sie geht in die
-                        // Hand des Ruderers und hängt danach im Bootshaus, da hat "RC Nürtingen"
-                        // nichts verloren. Bis zum 09.08.2026 stand hier bei gemischter Crew das
+                        // Kürzung - auch ohne heuristische (deshalb [ClubShortNameSettings.none],
+                        // ohne jede gepflegte Kurzform und ohne Regel): sie geht in die Hand des
+                        // Ruderers und hängt danach im Bootshaus, da hat "RC Nürtingen" nichts
+                        // verloren. Aus demselben Grund lädt die Urkunde die Einstellungen gar
+                        // nicht erst. Bis zum 09.08.2026 stand hier bei gemischter Crew das
                         // pauschale "Renngemeinschaft".
                         val clubs = ClubComposition.of(
                             team.participants.map {
                                 ClubComposition.clubWorn(it.external, it.externalClubName, it.clubName)
                             },
-                            emptyMap(),
+                            ClubShortNameSettings.none,
                         )
                         val clubName = clubs.full.ifEmpty { null } ?: team.clubName
 

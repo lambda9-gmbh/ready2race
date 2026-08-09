@@ -390,6 +390,46 @@
     }
   },
   "club": {
+    "shortName": {
+      "names": "Vereinsnamen",
+      "rules": {
+        "rules": "Kürzungsregeln",
+        "hint": "Bestimmen, wie aus einem Vereinsnamen automatisch eine Kurzform wird. Sie wirken auf die Liste darunter — ein gepflegter Eintrag schlägt sie weiterhin.",
+        "removeYears": "Gründungsjahre entfernen",
+        "removeBracketed": "Klammerzusätze mit Zahl entfernen",
+        "wordPairs": "Wortpaare",
+        "wordPairsHint": "Bestandteil und sein Kürzel, z. B. Ruderverein → RV. Es wird wortgenau ersetzt, Groß- und Kleinschreibung spielt keine Rolle; Schreibvarianten wie „Ruder-Verein“ brauchen eine eigene Zeile.",
+        "removedTerms": "Streichliste",
+        "removedTermsHint": "Bestandteile, die ersatzlos wegfallen, z. B. die Rechtsform.",
+        "term": "Bestandteil",
+        "replacement": "Kürzel",
+        "add": "Regel hinzufügen",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "orderHint": "Die Reihenfolge entscheidet: Die längere Zusammensetzung muss vor der kürzeren stehen.",
+        "saved": "Regel gespeichert",
+        "removed": "Regel entfernt",
+        "error": {
+          "rejected": "Bitte Bestandteil und Kürzel angeben — und keinen Bestandteil zweimal."
+        }
+      },
+      "shortNames": "Vereinskurzformen",
+      "tableHint": "Bestimmen, wie ein Verein auf dem Schiedsrichter-Board und der Athleten-Anzeige geschrieben wird. Ohne Eintrag wird die Kurzform automatisch gebildet.",
+      "emptyHint": "Feld leeren heißt: wieder automatisch bilden. Änderungen werden beim Verlassen des Feldes gespeichert.",
+      "name": "Vereinsname",
+      "shortName": "Kurzform",
+      "origin": "Herkunft",
+      "also": "auch: {{name}}",
+      "maintained": "gepflegt",
+      "automatic": "automatisch",
+      "filter": {
+        "all": "Alle Vereine",
+        "event": "Nur Vereine von {{name}}"
+      },
+      "empty": "Es sind noch keine Vereinsnamen vorhanden.",
+      "saved": "Kurzform gespeichert",
+      "removed": "Kurzform entfernt, es gilt wieder die automatische"
+    },
     "nameLengthHint": "{{length}}/{{max}} Zeichen empfohlen – längere Namen werden in Listen gekürzt",
     "club": "Verein",
     "registrant": "Anmelder",
@@ -2140,6 +2180,7 @@
     "download": "Herunterladen",
     "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
     "invoiceNumber": "Rechnungsnummer",
+    "billedTo": "Rechnung an",
     "amount": "Rechnungsbetrag",
     "paid": "Bezahlt",
     "tableHint": {

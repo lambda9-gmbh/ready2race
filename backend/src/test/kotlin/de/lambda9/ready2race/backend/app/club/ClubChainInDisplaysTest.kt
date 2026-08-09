@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateMode
 import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateOptions
 import de.lambda9.ready2race.backend.app.club.boundary.ClubNameKey
 import de.lambda9.ready2race.backend.app.club.control.ClubShortNameRepo
+import de.lambda9.ready2race.backend.app.club.entity.ClubNameRuleKind
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.GapDocumentTemplateService
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentPlaceholderRequest
@@ -13,8 +14,11 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentPlac
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventInfoService
+import de.lambda9.ready2race.backend.database.generated.tables.records.ClubNameRuleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubShortNameRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB_NAME_RULE
 import de.lambda9.ready2race.backend.database.generated.tables.references.GAP_DOCUMENT_TEMPLATE
+import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.text.TextAlign
 import de.lambda9.ready2race.testing.kio.TestComprehensionScope
@@ -28,6 +32,7 @@ import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -47,9 +52,38 @@ import kotlin.test.assertTrue
  */
 class ClubChainInDisplaysTest {
 
+    /**
+     * Die Vereinstyp-Kürzel des Rudersports, wie `docs/seeds/seed-club-name-rules-rowing.sql` sie
+     * einer bestehenden Installation nachliefert.
+     *
+     * Sie stehen seit dem 09.08.2026 nicht mehr im Code: eine frisch migrierte Datenbank bringt nur
+     * das Sportartübergreifende mit (Rechtsform, Gründungsjahre, Klammerzusätze). Ohne diesen Seed
+     * zeigte die Athleten-Anzeige hier "Ruderclub Nürtingen" statt "RC Nürtingen" - richtig für
+     * ready2race, falsch für die CRF. Genommen wird [ClubNameRuleFixtures.rowing], damit Seed-Datei
+     * und Erwartung nicht auseinanderlaufen.
+     */
+    private fun TestComprehensionScope<JEnv>.seedRowingAbbreviations() {
+        ClubNameRuleFixtures.rowing
+            .filter { it.kind == ClubNameRuleKind.ABBREVIATION }
+            .forEachIndexed { index, rule ->
+                !CLUB_NAME_RULE.insert(
+                    ClubNameRuleRecord(
+                        id = UUID.randomUUID(),
+                        kind = rule.kind.name,
+                        term = rule.term,
+                        replacement = rule.replacement,
+                        sortOrder = 100 + index * 10,
+                        createdAt = CHAIN_SEED_TIME,
+                        updatedAt = CHAIN_SEED_TIME,
+                    )
+                )
+            }
+    }
+
     @Test
     fun theAthleteBoardShowsTheClubsTheAthletesWearInsteadOfOneMixedTeamTerm() = testComprehension {
         val seeded = seedClubChain()
+        seedRowingAbbreviations()
 
         // Eine gepflegte Kurzform, die die Heuristik nicht erraten könnte ("Mainzer RV") - so ist
         // belegt, dass die Anzeige club_short_name wirklich heranzieht.
