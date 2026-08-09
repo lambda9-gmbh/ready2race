@@ -98,8 +98,8 @@ const LiveDashboardPage = () => {
 
     const [tab, setTab] = useState<LiveDashboardTab>('live')
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
-    // Geteilt mit dem Zeitplan-Tab (siehe shortLabels.ts).
-    const [shortLabels, toggleShortLabels] = useShortLabels()
+    // Geteilt mit dem Zeitplan-Tab (siehe shortLabels.ts); hier startet es in der Kurzform.
+    const [shortLabels, toggleShortLabels] = useShortLabels(true)
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(null)
     // In REGATTABUERO läuft "Lauf beenden" ausschließlich über den Zeitplan-Tab (siehe
     // EventSchedule.tsx) - der Button verschwindet hier dafür, das Notfall-Override
