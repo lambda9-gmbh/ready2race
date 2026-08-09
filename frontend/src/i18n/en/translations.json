@@ -2296,6 +2296,14 @@
     },
     "dashboard": {
       "noEvent": "No event selected."
+    },
+    "update": {
+      "available": "New version available",
+      "reload": "Reload now"
+    },
+    "reset": {
+      "button": "Reset app",
+      "confirm": "Resets the app on this device and reloads it. You stay signed in."
     }
   },
   "caterer": {

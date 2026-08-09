@@ -21,6 +21,8 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {AppEntry, appEntries} from '@components/qrApp/common.ts'
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import LogoutIcon from "@mui/icons-material/Logout";
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import {resetAppInstallation} from '@pwa/registerAppSW.ts'
 
 const ENTRY_ICONS: Record<string, typeof QrCodeIcon> = {
     APP_QR_MANAGEMENT: QrCodeIcon,
@@ -36,6 +38,7 @@ const AppFunctionSelectPage = () => {
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const user = useUser()
+    const {confirmAction} = useConfirmation()
 
     const entries = appEntries(user)
 
@@ -48,6 +51,13 @@ const AppFunctionSelectPage = () => {
     const handleSelect = (entry: AppEntry) => {
         setAppFunction(entry.appFunction)
         navigateTo(entry.target)
+    }
+
+    const handleReset = () => {
+        confirmAction(() => void resetAppInstallation(), {
+            content: t('app.reset.confirm'),
+            okText: t('app.reset.button'),
+        })
     }
 
     return (
@@ -140,6 +150,9 @@ const AppFunctionSelectPage = () => {
                     {t('user.settings.logout')}
                 </Button>
             )}
+            <Button onClick={handleReset} variant="text" size="small" sx={{mt: 1}}>
+                {t('app.reset.button')}
+            </Button>
         </Stack>
     )
 }

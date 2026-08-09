@@ -1,11 +1,31 @@
+import {useEffect} from 'react'
 import {Outlet} from '@tanstack/react-router'
-import {Container, Box} from '@mui/material'
+import {Container, Box, Button} from '@mui/material'
+import {useSnackbar} from 'notistack'
+import {useTranslation} from 'react-i18next'
 import {AppSessionProvider} from '@contexts/app/AppSessionContext.tsx'
 import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 import {useRegisterAppSW} from '@pwa/registerAppSW.ts'
 
 const AppLayout = () => {
-    useRegisterAppSW()
+    const {t} = useTranslation()
+    const {enqueueSnackbar} = useSnackbar()
+    const {needRefresh, updateApp} = useRegisterAppSW()
+
+    useEffect(() => {
+        if (needRefresh) {
+            enqueueSnackbar(t('app.update.available'), {
+                variant: 'info',
+                persist: true,
+                action: (
+                    <Button color="inherit" size="small" onClick={updateApp}>
+                        {t('app.update.reload')}
+                    </Button>
+                ),
+            })
+        }
+    }, [needRefresh, enqueueSnackbar, t, updateApp])
+
     return (
         <Container
             className="mobile-optimized-layout"

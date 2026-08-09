@@ -2296,6 +2296,14 @@
     },
     "dashboard": {
       "noEvent": "Keine Veranstaltung gewählt."
+    },
+    "update": {
+      "available": "Neue Version verfügbar",
+      "reload": "Jetzt laden"
+    },
+    "reset": {
+      "button": "App zurücksetzen",
+      "confirm": "Setzt die App auf dem Gerät zurück und lädt sie neu. Angemeldet bleibst du."
     }
   },
   "caterer": {

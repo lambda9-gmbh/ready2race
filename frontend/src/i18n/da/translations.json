@@ -2290,6 +2290,14 @@
     },
     "dashboard": {
       "noEvent": "Ingen begivenhed valgt."
+    },
+    "update": {
+      "available": "Ny version tilgængelig",
+      "reload": "Indlæs nu"
+    },
+    "reset": {
+      "button": "Nulstil app",
+      "confirm": "Nulstiller appen på denne enhed og genindlæser den. Du forbliver logget ind."
     }
   },
   "caterer": {
