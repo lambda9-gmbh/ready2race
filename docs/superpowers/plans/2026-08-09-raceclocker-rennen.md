@@ -158,19 +158,23 @@ with sources as (
     from event e
     where e.raceclocker_heats_results_url is not null
     union all
+    -- LEFT join, nicht inner: `competition_properties.competition` trägt weder Eindeutigkeit
+    -- noch eine Pflicht. Ein Wettkampf ohne Eigenschaftszeile fiele bei einem inneren Join aus
+    -- der Menge, bekäme kein Rennen und behielte unten null -- und weil die Vererbung am
+    -- Lesepunkt sitzt, holte er ab dann still die Adresse der VERANSTALTUNG statt seiner
+    -- eigenen. Ein falscher Feed ohne Fehlermeldung. Fehlt der Name, greift unten der
+    -- `label is null`-Zweig und vergibt den allgemeinen Namen.
     select c.event, c.raceclocker_tt_results_url, 'INDIVIDUAL', false,
            coalesce(cp.short_name, cp.identifier)
     from competition c
-             join competition_properties cp on cp.competition = c.id
+             left join competition_properties cp on cp.competition = c.id
     where c.raceclocker_tt_results_url is not null
-      and c.event is not null
     union all
     select c.event, c.raceclocker_heats_results_url, 'WAVE', false,
            coalesce(cp.short_name, cp.identifier)
     from competition c
-             join competition_properties cp on cp.competition = c.id
+             left join competition_properties cp on cp.competition = c.id
     where c.raceclocker_heats_results_url is not null
-      and c.event is not null
 ),
 deduped as (
     select event_id,
