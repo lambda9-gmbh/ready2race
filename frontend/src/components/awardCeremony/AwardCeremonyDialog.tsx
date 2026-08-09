@@ -90,6 +90,15 @@ const AwardCeremonyDialog = ({open, onClose, eventId, competitionId}: Props) => 
 
     const allSelected = ceremonies.length > 0 && selected.size === ceremonies.length
 
+    // Genau das, was gleich verschickt wird - und nicht die Größe von `selected`. Die beiden
+    // können auseinanderlaufen, solange eine frisch geladene Liste noch nicht mit der Vorauswahl
+    // abgeglichen ist; dann stünden in `selected` nur Schlüssel, die es nicht mehr gibt. Eine
+    // leere Auswahl bedeutet dem Server "alle Ehrungen drucken", der Knopf dürfte in diesem
+    // Moment also gerade nicht bedienbar sein.
+    const selection = ceremonies
+        .filter(choice => selected.has(ceremonyKey(choice)))
+        .map(ceremonyRequestKey)
+
     const toggle = (choice: AwardCeremonyChoiceDto) => {
         const key = ceremonyKey(choice)
         setSelected(prev => {
@@ -120,11 +129,7 @@ const AwardCeremonyDialog = ({open, onClose, eventId, competitionId}: Props) => 
             response,
         } = await downloadAwardCeremonySheets({
             path: {eventId},
-            body: {
-                selection: ceremonies
-                    .filter(choice => selected.has(ceremonyKey(choice)))
-                    .map(ceremonyRequestKey),
-            },
+            body: {selection},
         })
 
         setSubmitting(false)
@@ -233,7 +238,7 @@ const AwardCeremonyDialog = ({open, onClose, eventId, competitionId}: Props) => 
                 <LoadingButton
                     variant={'contained'}
                     pending={submitting}
-                    disabled={selected.size === 0}
+                    disabled={selection.length === 0}
                     onClick={handleSubmit}>
                     <Trans i18nKey={'awardCeremony.download.action'} />
                 </LoadingButton>

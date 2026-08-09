@@ -17,7 +17,7 @@ const choice = (partial: Partial<AwardCeremonyChoiceDto>): AwardCeremonyChoiceDt
 
 describe('ceremonyKey', () => {
     it('trifft die Ehrung ohne Wertung, ob sie nun als undefined oder als null ankommt', () => {
-        // Der Server lässt null-Felder weg (JsonInclude.NON_NULL), eine selbst gebaute Auswahl
+        // Der Server lässt null-Felder weg (JsonInclude.NON_ABSENT), eine selbst gebaute Auswahl
         // setzt dagegen leicht null. Unterschieden die beiden sich hier, fände der Dialog seine
         // eigene Vorauswahl nicht wieder und der Haken erschiene nie.
         expect(ceremonyKey(choice({}))).toBe(ceremonyKey(choice({ratingCategoryName: null})))

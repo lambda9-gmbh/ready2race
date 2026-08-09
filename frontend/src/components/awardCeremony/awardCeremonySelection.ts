@@ -3,7 +3,7 @@ import {AwardCeremonyChoiceDto, AwardCeremonyKeyRequest} from '@api/types.gen.ts
 /**
  * Der Schlüssel, unter dem eine Ehrung in der Auswahl geführt wird.
  *
- * Der Server lässt null-Felder weg (`JsonInclude.NON_NULL`), also kommt die Ehrung ohne Wertung mit
+ * Der Server lässt null-Felder weg (`JsonInclude.NON_ABSENT`), also kommt die Ehrung ohne Wertung mit
  * `ratingCategoryName === undefined` an, während dieselbe Ehrung in einer selbst gebauten Auswahl
  * leicht als `null` entsteht. Beide müssen denselben Schlüssel ergeben, sonst findet der Dialog
  * seine eigene Vorauswahl nicht wieder und der Haken erscheint nie.
