@@ -1,10 +1,12 @@
 import {beforeEach, describe, expect, it} from 'vitest'
 import {
+    activeCodeForEvent,
     codesForEvent,
     forgetMyEventCode,
     MY_EVENT_STORAGE_KEY,
     readMyEventCodes,
     rememberMyEventCode,
+    rememberMyEventDisplayName,
 } from './myEventStorage.ts'
 
 const eventA = '11111111-1111-1111-1111-111111111111'
@@ -37,7 +39,9 @@ describe('myEventStorage', () => {
 
     it('merkt einen Code und liest ihn zurueck', () => {
         rememberMyEventCode({qrCode: 'abc', eventId: eventA})
-        expect(readMyEventCodes()).toEqual([{qrCode: 'abc', eventId: eventA}])
+        expect(readMyEventCodes()).toEqual([
+            {qrCode: 'abc', eventId: eventA, lastSeenAt: expect.any(Number)},
+        ])
     })
 
     it('haelt mehrere Codes nebeneinander', () => {
@@ -50,14 +54,91 @@ describe('myEventStorage', () => {
         rememberMyEventCode({qrCode: 'abc', eventId: eventA})
         rememberMyEventCode({qrCode: 'abc', eventId: eventA, displayName: 'Ilka Heller'})
         expect(readMyEventCodes()).toEqual([
-            {qrCode: 'abc', eventId: eventA, displayName: 'Ilka Heller'},
+            {
+                qrCode: 'abc',
+                eventId: eventA,
+                displayName: 'Ilka Heller',
+                lastSeenAt: expect.any(Number),
+            },
         ])
+    })
+
+    it('behaelt den bekannten Namen, wenn derselbe Code erneut gescannt wird', () => {
+        // Der Scan selbst kennt den Namen nicht — er darf ihn nicht wieder ausradieren.
+        rememberMyEventCode({qrCode: 'abc', eventId: eventA, displayName: 'Ilka Heller'})
+        rememberMyEventCode({qrCode: 'abc', eventId: eventA})
+        expect(readMyEventCodes()[0].displayName).toBe('Ilka Heller')
     })
 
     it('filtert nach Veranstaltung', () => {
         rememberMyEventCode({qrCode: 'abc', eventId: eventA})
         rememberMyEventCode({qrCode: 'def', eventId: eventB})
         expect(codesForEvent(eventA).map(c => c.qrCode)).toEqual(['abc'])
+    })
+
+    // Die Reihenfolge der Liste und die Auswahl der angezeigten Person sind zwei
+    // verschiedene Fragen. Vorher trug die Reihenfolge beides — dadurch zeigte das zweite
+    // gescannte Band die erste Person, und der Umschalter sortierte sich beim Nachtragen
+    // des Namens unter dem Finger um.
+    describe('Reihenfolge und Auswahl', () => {
+        it('haelt die Reihenfolge des ersten Scans, auch beim erneuten Scan', () => {
+            rememberMyEventCode({qrCode: 'abc', eventId: eventA})
+            rememberMyEventCode({qrCode: 'def', eventId: eventA})
+            rememberMyEventCode({qrCode: 'abc', eventId: eventA})
+            expect(codesForEvent(eventA).map(c => c.qrCode)).toEqual(['abc', 'def'])
+        })
+
+        it('waehlt den zuletzt gescannten Code aus', () => {
+            rememberMyEventCode({qrCode: 'abc', eventId: eventA})
+            rememberMyEventCode({qrCode: 'def', eventId: eventA})
+            expect(activeCodeForEvent(eventA)?.qrCode).toBe('def')
+        })
+
+        it('waehlt auch dann den zuletzt gescannten Code, wenn er schon in der Liste stand', () => {
+            rememberMyEventCode({qrCode: 'abc', eventId: eventA, lastSeenAt: 1000})
+            rememberMyEventCode({qrCode: 'def', eventId: eventA, lastSeenAt: 2000})
+            rememberMyEventCode({qrCode: 'abc', eventId: eventA, lastSeenAt: 3000})
+            expect(codesForEvent(eventA).map(c => c.qrCode)).toEqual(['abc', 'def'])
+            expect(activeCodeForEvent(eventA)?.qrCode).toBe('abc')
+        })
+
+        it('beachtet nur Codes der eigenen Veranstaltung', () => {
+            rememberMyEventCode({qrCode: 'abc', eventId: eventA, lastSeenAt: 1000})
+            rememberMyEventCode({qrCode: 'def', eventId: eventB, lastSeenAt: 2000})
+            expect(activeCodeForEvent(eventA)?.qrCode).toBe('abc')
+        })
+
+        it('liefert nichts, wenn fuer die Veranstaltung kein Code hinterlegt ist', () => {
+            rememberMyEventCode({qrCode: 'abc', eventId: eventB})
+            expect(activeCodeForEvent(eventA)).toBeUndefined()
+        })
+
+        it('waehlt Alteintraege ohne Zeitstempel in Listenreihenfolge', () => {
+            localStorage.setItem(
+                MY_EVENT_STORAGE_KEY,
+                JSON.stringify([
+                    {qrCode: 'abc', eventId: eventA},
+                    {qrCode: 'def', eventId: eventA},
+                ]),
+            )
+            expect(activeCodeForEvent(eventA)?.qrCode).toBe('def')
+        })
+
+        it('traegt den Namen nach, ohne Position und Auswahl zu veraendern', () => {
+            rememberMyEventCode({qrCode: 'abc', eventId: eventA, lastSeenAt: 1000})
+            rememberMyEventCode({qrCode: 'def', eventId: eventA, lastSeenAt: 2000})
+            rememberMyEventDisplayName('abc', 'Nina Nordmann')
+            expect(codesForEvent(eventA)).toEqual([
+                {qrCode: 'abc', eventId: eventA, lastSeenAt: 1000, displayName: 'Nina Nordmann'},
+                {qrCode: 'def', eventId: eventA, lastSeenAt: 2000},
+            ])
+            expect(activeCodeForEvent(eventA)?.qrCode).toBe('def')
+        })
+
+        it('ignoriert einen Namen fuer einen unbekannten Code', () => {
+            rememberMyEventDisplayName('abc', 'Nina Nordmann')
+            expect(readMyEventCodes()).toEqual([])
+        })
     })
 
     it('entfernt einen einzelnen Code', () => {

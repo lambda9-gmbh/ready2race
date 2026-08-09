@@ -1,5 +1,4 @@
 import {Box, Card, CardContent, Chip, Stack, Typography} from '@mui/material'
-import {TFunction} from 'i18next'
 import {useTranslation} from 'react-i18next'
 import {
     MyEventMatchDto,
@@ -8,7 +7,7 @@ import {
     MyEventTeamMemberDto,
 } from '@api/types.gen.ts'
 import AthleteBoardPenaltyNote from '@components/event/info/athleteBoard/AthleteBoardPenaltyNote.tsx'
-import {formatClockTime} from '@components/event/info/athleteBoard/common.ts'
+import {formatClockTime, formatRemaining} from '@components/event/info/athleteBoard/common.ts'
 import {useServerClock} from '@components/event/info/athleteBoard/useServerClock.ts'
 
 type MyEventMatchListProps = {
@@ -19,20 +18,14 @@ type MyEventMatchListProps = {
     serverTime: string
     // "next": nur der erste Eintrag, groß, mit Countdown. "list": alle als kompakte Zeilen.
     variant: 'next' | 'list'
+    // Nur in "list": der Lauf, der oben schon als große Karte steht. Die Zeile wird markiert,
+    // damit die Zuordnung zwischen Karte und Tagesplan ohne Nachdenken gelingt.
+    highlightedMatchId?: string
 }
 
 type MyEventResultListProps = {results: MyEventResultDto[]}
 
 type MyEventUnscheduledListProps = {registrations: MyEventRegistrationDto[]}
-
-const formatRemaining = (seconds: number, t: TFunction) => {
-    const total = Math.max(0, Math.floor(seconds))
-    const minutes = Math.floor(total / 60)
-    const rest = total % 60
-    return minutes > 0
-        ? `${minutes} ${t('event.info.athleteBoard.minutesUnit')}`
-        : `${rest} ${t('event.info.athleteBoard.secondsUnit')}`
-}
 
 const competitionSubtitle = (match: {
     roundName?: string | null
@@ -164,12 +157,29 @@ const MyEventNextCard = ({match, serverTime}: {match: MyEventMatchDto; serverTim
     )
 }
 
-const MyEventMatchRow = ({match}: {match: MyEventMatchDto}) => {
+const MyEventMatchRow = ({match, current}: {match: MyEventMatchDto; current?: boolean}) => {
     const {t} = useTranslation()
     const subtitle = competitionSubtitle(match)
 
     return (
-        <Stack direction="row" gap={1.5} alignItems="flex-start" sx={{py: 1}}>
+        <Stack
+            direction="row"
+            gap={1.5}
+            alignItems="flex-start"
+            sx={{
+                py: 1,
+                // Die markierte Zeile ist derselbe Lauf wie die Karte darüber. Ein farbiger
+                // Balken links reicht dafür — ein zweites Mal "nächster Lauf" hinzuschreiben
+                // würde die Zeile nur verbreitern.
+                ...(current
+                    ? {
+                          borderLeft: 3,
+                          borderColor: 'primary.main',
+                          pl: 1,
+                          bgcolor: 'action.hover',
+                      }
+                    : {borderLeft: 3, borderColor: 'transparent', pl: 1}),
+            }}>
             <Typography
                 sx={{fontWeight: 700, minWidth: '4.5em', flexShrink: 0}}
                 color={match.startTime ? 'text.primary' : 'text.secondary'}>
@@ -201,7 +211,12 @@ const MyEventMatchRow = ({match}: {match: MyEventMatchDto}) => {
     )
 }
 
-export const MyEventMatchList = ({matches, serverTime, variant}: MyEventMatchListProps) => {
+export const MyEventMatchList = ({
+    matches,
+    serverTime,
+    variant,
+    highlightedMatchId,
+}: MyEventMatchListProps) => {
     if (matches.length === 0) {
         return null
     }
@@ -213,7 +228,11 @@ export const MyEventMatchList = ({matches, serverTime, variant}: MyEventMatchLis
     return (
         <Stack divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
             {matches.map(match => (
-                <MyEventMatchRow key={match.matchId} match={match} />
+                <MyEventMatchRow
+                    key={match.matchId}
+                    match={match}
+                    current={match.matchId === highlightedMatchId}
+                />
             ))}
         </Stack>
     )
@@ -307,7 +326,9 @@ export const MyEventUnscheduledList = ({registrations}: MyEventUnscheduledListPr
         <Stack divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
             {registrations.map(registration => (
                 <Stack
-                    key={`${registration.competitionId}-${registration.teamName ?? ''}`}
+                    // Rolle mit im Schlüssel: wer im selben Wettkampf in zwei Rollen gemeldet
+                    // ist und keinen Mannschaftsnamen trägt, ergäbe sonst zweimal denselben.
+                    key={`${registration.competitionId}-${registration.teamName ?? ''}-${registration.role ?? ''}`}
                     direction="row"
                     gap={1.5}
                     alignItems="center"

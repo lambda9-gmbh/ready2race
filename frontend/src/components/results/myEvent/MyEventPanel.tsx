@@ -1,16 +1,17 @@
-import {useCallback, useEffect, useState} from 'react'
+import {Fragment, useCallback, useEffect, useState} from 'react'
 import {Alert, Box, Button, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {getMyEvent} from '@api/sdk.gen.ts'
 import {MyEventDto} from '@api/types.gen.ts'
 import Throbber from '@components/Throbber.tsx'
 import {
+    activeCodeForEvent,
     codesForEvent,
     forgetMyEventCode,
     MyEventCode,
-    rememberMyEventCode,
+    rememberMyEventDisplayName,
 } from '@utils/myEventStorage.ts'
-import {blockOrder, MyEventBlock} from './myEventOrder.ts'
+import {blockOrder, MyEventBlock, nothingToShow} from './myEventOrder.ts'
 import {MyEventMatchList, MyEventResultList, MyEventUnscheduledList} from './MyEventMatchList.tsx'
 import {MyEventPersonSwitcher} from './MyEventPersonSwitcher.tsx'
 import {MyEventRequirements} from './MyEventRequirements.tsx'
@@ -111,18 +112,17 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
                     </Box>
                 ) : null
             case 'matches':
+                // Ob dieser Block überhaupt erscheint, entscheidet blockOrder: erst ab zwei
+                // anstehenden Läufen trägt der Tagesplan mehr als die Karte darüber.
                 return (
                     <Box>
                         <BlockHeading title={t('myEvent.matches')} />
-                        {scheduled.length > 0 ? (
-                            <MyEventMatchList
-                                matches={scheduled}
-                                serverTime={data.serverTime}
-                                variant="list"
-                            />
-                        ) : (
-                            <Typography color="text.secondary">{t('myEvent.noMatches')}</Typography>
-                        )}
+                        <MyEventMatchList
+                            matches={scheduled}
+                            serverTime={data.serverTime}
+                            variant="list"
+                            highlightedMatchId={highlighted[0]?.matchId}
+                        />
                     </Box>
                 )
             case 'results':
@@ -178,11 +178,18 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
                 )}
             </Stack>
 
+            {/* Steht überhaupt nichts an und ist auch nichts gelaufen, trägt eine ruhige
+                Leermeldung die ganze Ansicht — der Satz gehört nicht unter eine Überschrift,
+                die das Gegenteil behauptet. Etwaige Bedingungen stehen darunter weiter. */}
+            {nothingToShow(data) && (
+                <Typography color="text.secondary">{t('myEvent.noMatches')}</Typography>
+            )}
+
             {/* Leere Blöcke fallen ganz weg, damit der Abstand zwischen den sichtbaren
                 Blöcken gleich bleibt. */}
             {blockOrder(data).map(block => {
                 const content = renderBlock(block)
-                return content ? <Box key={block}>{content}</Box> : null
+                return content ? <Fragment key={block}>{content}</Fragment> : null
             })}
         </Stack>
     )
@@ -196,14 +203,16 @@ export const MyEventPanel = ({eventId}: {eventId: string}) => {
     const {t} = useTranslation()
 
     const [codes, setCodes] = useState<MyEventCode[]>(() => codesForEvent(eventId))
+    // Der Umschalter zeigt die Codes in ihrer stabilen Speicherreihenfolge; welche Person
+    // beim Öffnen erscheint, entscheidet dagegen der Zeitpunkt des letzten Scans. Wer gerade
+    // das Band des zweiten Kindes gescannt hat, landet damit auch bei diesem Kind.
     const [activeQrCode, setActiveQrCode] = useState<string | null>(
-        () => codesForEvent(eventId)[0]?.qrCode ?? null,
+        () => activeCodeForEvent(eventId)?.qrCode ?? null,
     )
 
     useEffect(() => {
-        const forEvent = codesForEvent(eventId)
-        setCodes(forEvent)
-        setActiveQrCode(forEvent[0]?.qrCode ?? null)
+        setCodes(codesForEvent(eventId))
+        setActiveQrCode(activeCodeForEvent(eventId)?.qrCode ?? null)
     }, [eventId])
 
     const handleDisplayName = useCallback(
@@ -214,7 +223,9 @@ export const MyEventPanel = ({eventId}: {eventId: string}) => {
                 // Speicher und stieße eine neue Darstellung an.
                 return
             }
-            rememberMyEventCode({qrCode, eventId, displayName})
+            // Nur der Name wird ergänzt: Position und Zeitstempel bleiben, sonst sortierte
+            // sich der Umschalter eine Sekunde nach dem Öffnen unter dem Finger um.
+            rememberMyEventDisplayName(qrCode, displayName)
             setCodes(codesForEvent(eventId))
         },
         [eventId],
@@ -223,9 +234,10 @@ export const MyEventPanel = ({eventId}: {eventId: string}) => {
     const handleRemove = useCallback(
         (qrCode: string) => {
             forgetMyEventCode(qrCode)
-            const rest = codesForEvent(eventId)
-            setCodes(rest)
-            setActiveQrCode(current => (current === qrCode ? (rest[0]?.qrCode ?? null) : current))
+            setCodes(codesForEvent(eventId))
+            setActiveQrCode(current =>
+                current === qrCode ? (activeCodeForEvent(eventId)?.qrCode ?? null) : current,
+            )
         },
         [eventId],
     )

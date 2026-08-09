@@ -13,7 +13,9 @@ const ResultsLayout = () => {
         meta.content = 'noindex, nofollow'
         document.head.appendChild(meta)
         return () => {
-            document.head.removeChild(meta)
+            // remove() statt head.removeChild(): wirkungsgleich, wirft aber nicht, falls der
+            // Knoten von außen (Erweiterung, Hot Reload) schon entfernt wurde.
+            meta.remove()
         }
     }, [])
 

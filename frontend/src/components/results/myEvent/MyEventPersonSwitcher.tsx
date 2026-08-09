@@ -1,4 +1,4 @@
-import {Box, IconButton, ToggleButton, ToggleButtonGroup, Typography} from '@mui/material'
+import {IconButton, Stack, ToggleButton, ToggleButtonGroup, Typography} from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import {useTranslation} from 'react-i18next'
 import {MyEventCode} from '@utils/myEventStorage.ts'
@@ -26,43 +26,50 @@ export const MyEventPersonSwitcher = ({
         return null
     }
 
+    const label = (code: MyEventCode) =>
+        // Vor dem ersten erfolgreichen Abruf ist der Name noch nicht bekannt; der Codeanfang
+        // reicht, um zwei Bänder zu unterscheiden.
+        code.displayName ?? code.qrCode.slice(0, 8)
+
+    // Ein einzelnes Kreuz braucht die Person im Namen: "Eintrag entfernen" allein sagt nicht,
+    // welcher der Einträge verschwindet.
+    const active = codes.find(c => c.qrCode === activeQrCode)
+    const removeLabel = active ? `${t('myEvent.remove')}: ${label(active)}` : t('myEvent.remove')
+
     return (
-        <ToggleButtonGroup
-            value={activeQrCode}
-            exclusive
-            size="small"
-            sx={{mb: 2, flexWrap: 'wrap'}}
-            onChange={(_, value: string | null) => {
-                // MUI meldet beim erneuten Tippen auf den aktiven Knopf null — dann bleibt
-                // die Auswahl stehen, statt die Anzeige leer zu räumen.
-                if (value !== null) {
-                    onSelect(value)
-                }
-            }}>
-            {codes.map(code => (
-                <ToggleButton key={code.qrCode} value={code.qrCode} sx={{textTransform: 'none'}}>
-                    <Typography variant="body2" sx={{mr: 0.5}}>
-                        {/* Vor dem ersten erfolgreichen Abruf ist der Name noch nicht bekannt;
-                            der Codeanfang reicht, um zwei Bänder zu unterscheiden. */}
-                        {code.displayName ?? code.qrCode.slice(0, 8)}
-                    </Typography>
-                    <Box
-                        component="span"
-                        onClick={event => {
-                            // Der Klick auf das Kreuz darf nicht zusätzlich die Person wechseln.
-                            event.stopPropagation()
-                        }}
-                        sx={{display: 'inline-flex'}}>
-                        <IconButton
-                            size="small"
-                            aria-label={t('myEvent.remove')}
-                            title={t('myEvent.remove')}
-                            onClick={() => onRemove(code.qrCode)}>
-                            <CloseIcon fontSize="inherit" />
-                        </IconButton>
-                    </Box>
-                </ToggleButton>
-            ))}
-        </ToggleButtonGroup>
+        <Stack direction="row" gap={0.5} flexWrap="wrap" alignItems="center" sx={{mb: 2}}>
+            <ToggleButtonGroup
+                value={activeQrCode}
+                exclusive
+                size="small"
+                sx={{flexWrap: 'wrap'}}
+                onChange={(_, value: string | null) => {
+                    // MUI meldet beim erneuten Tippen auf den aktiven Knopf null — dann bleibt
+                    // die Auswahl stehen, statt die Anzeige leer zu räumen.
+                    if (value !== null) {
+                        onSelect(value)
+                    }
+                }}>
+                {codes.map(code => (
+                    <ToggleButton
+                        key={code.qrCode}
+                        value={code.qrCode}
+                        sx={{textTransform: 'none'}}>
+                        <Typography variant="body2">{label(code)}</Typography>
+                    </ToggleButton>
+                ))}
+            </ToggleButtonGroup>
+            {/* Das Kreuz steht neben der Gruppe und nicht in einem der Knöpfe: eine
+                Schaltfläche in einer Schaltfläche ist ungültiges HTML und für Tastatur und
+                Screenreader nicht sauber erreichbar. Entfernt wird die gerade angezeigte
+                Person; wer eine andere loswerden will, schaltet vorher auf sie um. */}
+            <IconButton
+                size="small"
+                aria-label={removeLabel}
+                title={removeLabel}
+                onClick={() => onRemove(activeQrCode)}>
+                <CloseIcon fontSize="inherit" />
+            </IconButton>
+        </Stack>
     )
 }

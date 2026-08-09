@@ -37,8 +37,10 @@ export const MyEventRequirements = ({requirements, variant}: MyEventRequirements
         if (open.length === 0) {
             return null
         }
+        // Kein eigener Abstand nach unten: den trägt bereits das gap der umschließenden Stack
+        // im Panel, sonst steht das Band doppelt so weit vom nächsten Block ab.
         return (
-            <Alert severity="warning" sx={{mb: 2}}>
+            <Alert severity="warning">
                 <AlertTitle>{t('myEvent.requirementsOpen')}</AlertTitle>
                 <Stack component="ul" sx={{pl: 2.5, my: 0.5}} spacing={0.25}>
                     {open.map(r => (

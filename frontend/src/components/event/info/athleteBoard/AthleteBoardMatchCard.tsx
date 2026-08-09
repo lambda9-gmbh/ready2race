@@ -1,9 +1,8 @@
 import {Box, Card, CardContent, Chip, Stack, Typography} from '@mui/material'
-import {TFunction} from 'i18next'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch} from '@api/types.gen'
 import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
-import {formatClockTime, teamLabel} from './common'
+import {formatClockTime, formatRemaining, teamLabel} from './common'
 
 /**
  * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits auf dem Wasser,
@@ -23,16 +22,7 @@ interface AthleteBoardMatchCardProps {
     showCountdown?: boolean
 }
 
-const formatRemaining = (seconds: number, t: TFunction) => {
-    const total = Math.max(0, Math.floor(seconds))
-    const minutes = Math.floor(total / 60)
-    const rest = total % 60
-    return minutes > 0
-        ? `${minutes} ${t('event.info.athleteBoard.minutesUnit')}`
-        : `${rest} ${t('event.info.athleteBoard.secondsUnit')}`
-}
-
-const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: AthleteBoardMatchCardProps) => {
+const AthleteBoardMatchCard =({match, now, variant, showCountdown = true}: AthleteBoardMatchCardProps) => {
     const {t} = useTranslation()
 
     const startsInSeconds = match.startTime
