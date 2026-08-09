@@ -33,6 +33,11 @@ object LiveDashboardRepo {
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
+            // Rennnummer und Kurzname für die Kurzform der Karten - dieselben Spalten wie im
+            // Zeitplan (EventScheduleRepo.getSlots), hier aus COMPETITION_PROPERTIES, weil
+            // COMPETITION_VIEW sie nicht führt.
+            COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
+            COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
         )
             .from(COMPETITION_MATCH)

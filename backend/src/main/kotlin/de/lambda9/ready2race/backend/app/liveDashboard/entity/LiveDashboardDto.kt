@@ -139,6 +139,10 @@ data class LiveDashboardMatchDto(
     val state: LiveDashboardMatchState,
     val competitionId: UUID,
     val competitionName: String,
+    /** Rennnummer und Kurzname des Wettkampfs - das Board zeigt sie statt des ausgeschriebenen
+     * Namens, wenn die Kurzform eingeschaltet ist (dieselbe Wahl wie im Zeitplan-Tab). */
+    val competitionIdentifier: String?,
+    val competitionShortName: String?,
     val categoryName: String?,
     val roundName: String?,
     val matchName: String?,
@@ -175,6 +179,9 @@ data class PendingSlotDto(
     /** Name des Programmpunkts - null bei einem Lauf-Platzhalter. */
     val name: String?,
     val competitionName: String?,
+    /** Wie bei [LiveDashboardMatchDto]; für Programmpunkte beide null. */
+    val competitionIdentifier: String?,
+    val competitionShortName: String?,
     val roundName: String?,
     val matchName: String?,
 )

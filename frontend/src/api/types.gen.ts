@@ -1750,6 +1750,14 @@ export type LiveDashboardMatchDto = {
     state: LiveDashboardMatchState
     competitionId: string
     competitionName: string
+    /**
+     * The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname, e.g. 'CM 4x+')
+     */
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -2313,6 +2321,14 @@ export type PendingSlotDto = {
     startTime: string
     name?: string | null
     competitionName?: string | null
+    /**
+     * The competition's race number (Rennnummer) - null for program items
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname) - null for program items
+     */
+    competitionShortName?: string | null
     roundName?: string | null
     matchName?: string | null
 }

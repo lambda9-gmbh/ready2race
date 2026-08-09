@@ -6,6 +6,7 @@ import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
 import {
+    competitionLabel,
     crewMemberLabel,
     formatMinutes,
     matchControls,
@@ -39,9 +40,17 @@ type Props = {
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
     onSetRunning?: (matchId: string, running: boolean) => Promise<void>
+    /** Rennen am Kürzel statt am ausgeschriebenen Wettkampfnamen (geteilt mit dem Zeitplan-Tab). */
+    shortLabels: boolean
 }
 
-const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Props) => {
+const LiveDashboardMatchCard = ({
+    match,
+    onTeamClick,
+    onFinish,
+    onSetRunning,
+    shortLabels,
+}: Props) => {
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
@@ -88,7 +97,9 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         fontWeight={700}
                         noWrap
                         sx={{textDecoration: skipped ? 'line-through' : 'none'}}>
-                        {match.matchName ?? match.roundName ?? match.competitionName}
+                        {match.matchName ??
+                            match.roundName ??
+                            competitionLabel(match, shortLabels ? 'short' : 'full')}
                     </Typography>
                     <Box sx={{justifySelf: 'end', textAlign: 'right'}}>
                         <Typography
@@ -121,7 +132,11 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
                         }}>
-                        {[match.competitionName, match.categoryName, match.roundName]
+                        {[
+                            competitionLabel(match, shortLabels ? 'short' : 'full'),
+                            match.categoryName,
+                            match.roundName,
+                        ]
                             .filter(Boolean)
                             .join(' · ')}
                     </Typography>
@@ -441,6 +456,7 @@ type PendingSlotCardProps = {
     slot: PendingSlotDto
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onSkip?: (slotId: string, label: string, time: string) => void
+    shortLabels: boolean
 }
 
 /**
@@ -448,10 +464,14 @@ type PendingSlotCardProps = {
  * ein wartender Lauf-Slot (Runde noch nicht gesetzt); `slot.name` unterscheidet die Fälle (siehe
  * `PendingSlotDto`). Bewusst ohne Teams oder Ergebnis-Spalten, die gibt es für beide Fälle nicht.
  */
-export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProps) => {
+export const LiveDashboardPendingSlotCard = ({
+    slot,
+    onSkip,
+    shortLabels,
+}: PendingSlotCardProps) => {
     const {t} = useTranslation()
     const isFree = slot.name != null
-    const label = pendingSlotLabel(slot)
+    const label = pendingSlotLabel(slot, shortLabels ? 'short' : 'full')
     const time = format(new Date(slot.startTime), t('format.time'))
     const stateLabel = t(isFree ? 'event.schedule.state.FREE' : 'event.schedule.state.WAITING')
 

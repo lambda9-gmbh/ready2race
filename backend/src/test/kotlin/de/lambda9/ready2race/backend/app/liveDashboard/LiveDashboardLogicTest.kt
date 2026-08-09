@@ -296,6 +296,8 @@ class LiveDashboardLogicTest {
         state = state,
         competitionId = UUID.randomUUID(),
         competitionName = "Coastal",
+        competitionIdentifier = null,
+        competitionShortName = null,
         categoryName = null,
         roundName = null,
         matchName = name,
