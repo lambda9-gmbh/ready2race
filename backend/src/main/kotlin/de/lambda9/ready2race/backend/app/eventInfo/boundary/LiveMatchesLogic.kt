@@ -5,31 +5,31 @@ import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 import java.time.LocalDateTime
 
 /**
- * Reine Funktionen fuer den Tab „Live" der oeffentlichen Ergebnisanzeige - ohne Datenbank und ohne
- * Uhr, damit die Reihenfolge und der Schutz der Ergebnisfreigabe ohne laufenden Server pruefbar
+ * Reine Funktionen für den Tab „Live" der öffentlichen Ergebnisanzeige - ohne Datenbank und ohne
+ * Uhr, damit die Reihenfolge und der Schutz der Ergebnisfreigabe ohne laufenden Server prüfbar
  * bleiben.
  */
 object LiveMatchesLogic {
 
     /**
-     * Zustaende, die in der oeffentlichen Live-Liste nichts zu suchen haben.
+     * Zustände, die in der öffentlichen Live-Liste nichts zu suchen haben.
      *
-     * Ein beendeter ([MatchState.FINISHED]) und ein vollstaendig gewerteter, aber nicht beendeter
-     * Lauf ([MatchState.AWAITING_FINISH]) sind ERGEBNISSE. Ob sie oeffentlich sichtbar sind,
-     * entscheidet allein `Event.publicResultsVisibility` ueber `/latest-match-results` - bis zum
+     * Ein beendeter ([MatchState.FINISHED]) und ein vollständig gewerteter, aber nicht beendeter
+     * Lauf ([MatchState.AWAITING_FINISH]) sind ERGEBNISSE. Ob sie öffentlich sichtbar sind,
+     * entscheidet allein `Event.publicResultsVisibility` über `/latest-match-results` - bis zum
      * Beenden kann noch eine Zeitstrafe kommen.
      *
-     * Die beiden Abfragen hinter [merge] koennen solche Laeufe per SQL gar nicht liefern
-     * (`CompetitionMatchRepo.getUpcomingMatchesForBoard` schliesst `finished_at is not null` und
+     * Die beiden Abfragen hinter [merge] können solche Läufe per SQL gar nicht liefern
+     * (`CompetitionMatchRepo.getUpcomingMatchesForBoard` schließt `finished_at is not null` und
      * „kein Boot mehr ohne Ergebnis" aus). Dieser Filter ist deshalb kein Arbeitsschritt, sondern
-     * ein Riegel: Aendert jemand eine der Abfragen, faellt die Freigaberegel nicht still um,
+     * ein Riegel: Ändert jemand eine der Abfragen, fällt die Freigaberegel nicht still um,
      * sondern der Lauf verschwindet aus der Live-Liste.
      */
     private val notLive = setOf(MatchState.FINISHED, MatchState.AWAITING_FINISH)
 
     /**
-     * Innerhalb einer Gruppe zaehlt die geplante Zeit; ein Lauf ohne Termin steht ans Ende, weil er
-     * ueber seine Reihenfolge nichts aussagt. Bei gleicher Zeit entscheidet die Startfolge des
+     * Innerhalb einer Gruppe zählt die geplante Zeit; ein Lauf ohne Termin steht ans Ende, weil er
+     * über seine Reihenfolge nichts aussagt. Bei gleicher Zeit entscheidet die Startfolge des
      * Wettkampfs.
      */
     private val byStartTime: Comparator<LiveMatchInfo> =
@@ -37,14 +37,14 @@ object LiveMatchesLogic {
             .thenBy { it.executionOrder }
 
     /**
-     * Fuehrt die aktivierten und die anstehenden Laeufe zu einer Liste zusammen.
+     * Führt die aktivierten und die anstehenden Läufe zu einer Liste zusammen.
      *
-     * [activated] steht vorn: wer die Seite oeffnet, sucht zuerst, was gerade passiert. Steht ein
+     * [activated] steht vorn: wer die Seite öffnet, sucht zuerst, was gerade passiert. Steht ein
      * Lauf in beiden Listen - die zwei Abfragen laufen nacheinander, dazwischen kann jemand
-     * aktivieren -, gewinnt der aktivierte Eintrag; er traegt die frischere Aussage.
+     * aktivieren -, gewinnt der aktivierte Eintrag; er trägt die frischere Aussage.
      *
-     * [limit] deckelt das GESAMTE Ergebnis und nicht jeden Zweig fuer sich. Andernfalls
-     * verdraengten zwanzig anstehende Laeufe den einen, der gerade faehrt.
+     * [limit] deckelt das GESAMTE Ergebnis und nicht jeden Zweig für sich. Andernfalls
+     * verdrängten zwanzig anstehende Läufe den einen, der gerade fährt.
      */
     fun merge(
         activated: List<LiveMatchInfo>,
