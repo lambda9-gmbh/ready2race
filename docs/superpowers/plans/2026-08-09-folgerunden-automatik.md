@@ -25,6 +25,14 @@ OpenAPI, i18n über i18next.
   `JAVA_HOME=/opt/homebrew/opt/openjdk@21`. Der Build-Datenbank-Container muss laufen
   (`docker ps` zeigt `backend-build-db-1` auf Port 7652); sonst scheitert der JOOQ-Codegen.
   Falls er fehlt: `cd backend && docker compose up -d`.
+- **Eigene Build-Datenbank für diesen Worktree.** Der Container wird von allen Worktrees geteilt,
+  und die Standard-Datenbank `ready2race-build` trägt Spalten einer parallelen Sitzung
+  (`event.execution_auto_refresh*`), die unsere Migrationen nicht anlegen. JOOQ generiert sie mit,
+  das Testcontainers-Postgres kennt sie nicht — jeder Test, der ein Event einfügt, stirbt daran.
+  Deshalb hängt **jeder** Maven-Aufruf an:
+  `-Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds`. Die Datenbank existiert
+  bereits. Wechselt man die Datenbank, muss einmal `clean` mitlaufen, sonst schlagen Tests mit
+  `NoSuchMethod` auf `EventRecord.<init>` fehl (Klassen aus dem alten Schema im `target`).
 - **JOOQ-Klassen sind generiert und nicht eingecheckt.** Nach jeder Migration muss der Build
   laufen, damit `target/generated-sources/jooq` neu entsteht. Das passiert im normalen
   `./mvnw test-compile` automatisch (Flyway migriert die Build-DB, dann generiert JOOQ).
@@ -41,11 +49,11 @@ OpenAPI, i18n über i18next.
 ### Befehle
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test-compile
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test-compile
 ```
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test -Dtest=AutoRoundProgressionLogicTest
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test -Dtest=AutoRoundProgressionLogicTest
 ```
 
 ```bash
@@ -199,7 +207,7 @@ gesetzt. Nach dem Compile-Fehler-Lauf in Step 5 ist sicher, welche Stellen anzup
 - [ ] **Step 5: Compile laufen lassen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test-compile
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test-compile
 ```
 
 Erwartet: BUILD SUCCESS. Der Lauf migriert die Build-Datenbank und erzeugt die JOOQ-Klassen neu, so
@@ -519,7 +527,7 @@ class AutoRoundProgressionLogicTest {
 - [ ] **Step 2: Test laufen lassen und Scheitern sehen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test -Dtest=AutoRoundProgressionLogicTest
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test -Dtest=AutoRoundProgressionLogicTest
 ```
 
 Erwartet: Compile-Fehler „Unresolved reference: AutoRoundProgressionLogic".
@@ -608,7 +616,7 @@ object AutoRoundProgressionLogic {
 - [ ] **Step 4: Test laufen lassen und grün sehen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test -Dtest=AutoRoundProgressionLogicTest
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test -Dtest=AutoRoundProgressionLogicTest
 ```
 
 Erwartet: `Tests run: 13, Failures: 0, Errors: 0`.
@@ -944,7 +952,7 @@ In `backend/src/main/resources/openapi/documentation.yaml`:
 - [ ] **Step 7: Compile laufen lassen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test-compile
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test-compile
 ```
 
 Erwartet: BUILD SUCCESS. Bricht es an `EventDto`/`CreateEventRequest`-Aufrufstellen ab, fehlt das
@@ -1152,7 +1160,7 @@ aufbauen.
 - [ ] **Step 4: Test laufen lassen und Scheitern sehen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test -Dtest=AutoRoundProgressionServiceTest
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test -Dtest=AutoRoundProgressionServiceTest
 ```
 
 Erwartet: `aSecondCreationCarriesTheNotice` scheitert mit „Der Vermerk hätte gesetzt sein müssen".
@@ -1206,7 +1214,7 @@ benutzt — die Prüfung `nextRound != null` oben macht den Zugriff hier ohne we
 - [ ] **Step 6: Test laufen lassen und grün sehen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test -Dtest=AutoRoundProgressionServiceTest
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test -Dtest=AutoRoundProgressionServiceTest
 ```
 
 Erwartet: `Tests run: 2, Failures: 0, Errors: 0`.
@@ -1338,7 +1346,7 @@ seit Task 4 — sie schreiben `event.auto_create_following_rounds` bzw.
 - [ ] **Step 2: Tests laufen lassen und Scheitern sehen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test -Dtest=AutoRoundProgressionServiceTest
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test -Dtest=AutoRoundProgressionServiceTest
 ```
 
 Erwartet: Compile-Fehler „Unresolved reference: AutoRoundProgressionService".
@@ -1460,7 +1468,7 @@ deshalb richtig: Eine fehlende Veranstaltung ist hier ein Programmfehler, kein B
 - [ ] **Step 4: Tests laufen lassen und grün sehen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test -Dtest=AutoRoundProgressionServiceTest
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test -Dtest=AutoRoundProgressionServiceTest
 ```
 
 Erwartet: `Tests run: 8, Failures: 0, Errors: 0`.
@@ -1502,7 +1510,7 @@ zur Verfügung steht.
 - [ ] **Step 6: Gesamten Backend-Testlauf**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test
 ```
 
 Erwartet: BUILD SUCCESS, keine neuen Fehlschläge.
@@ -1647,7 +1655,7 @@ Die Felder von `UpdateCompetitionMatchTeamResultRequest` sind gegen den Bestand 
 - [ ] **Step 2: Tests laufen lassen**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test -Dtest=AutoRoundProgressionServiceTest
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test -Dtest=AutoRoundProgressionServiceTest
 ```
 
 Erwartet: `Tests run: 10, Failures: 0, Errors: 0`.
@@ -1916,7 +1924,7 @@ git commit -m "Automatik einstellen und neu berechnete Paarungen anzeigen"
 - [ ] **Backend vollständig**
 
 ```bash
-cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o test
+cd backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw -o -Ddatabase.url=jdbc:postgresql://localhost:7652/r2r-follow-rounds test
 ```
 
 - [ ] **Frontend vollständig**
