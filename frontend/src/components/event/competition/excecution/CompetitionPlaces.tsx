@@ -152,9 +152,14 @@ const CompetitionPlaces = () => {
                                                     color={'textSecondary'}
                                                     variant={'body2'}
                                                     textAlign={'right'}>
-                                                    {`${t('club.registeredBy')} ` +
-                                                        team.clubName +
-                                                        ` | ${team.teamName}`}
+                                                    {[
+                                                        t('club.registeredBy') +
+                                                            ' ' +
+                                                            team.clubName,
+                                                        team.teamName,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' | ')}
                                                 </Typography>
                                             </Box>
                                             {/* Teams ohne Urkunde (DNF, DSQ, abgemeldet) zeigen das Download-Icon
