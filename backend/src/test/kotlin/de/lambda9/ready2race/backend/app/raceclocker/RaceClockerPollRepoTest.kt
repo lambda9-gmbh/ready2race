@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.raceclocker
 
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerStartMode
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
@@ -362,5 +363,29 @@ class RaceClockerPollRepoTest {
         !RACECLOCKER_RACE.delete { EVENT.eq(eventId) }
 
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
+    }
+
+    /**
+     * Der Knopf-Weg liest dieselbe Anwahl wie der Job, aber über eine eigene Abfrage mit eigener
+     * Join-Kette (`CompetitionMatchRepo.getForRaceClockerPull`). Zwei Aliase derselben Tabelle sind
+     * genau die Konstruktion, bei der ein Lesefehler stumm bleibt: Die Abfrage liefert etwas, nur
+     * eben aus dem falschen Alias. Deshalb steht auch sie einmal gegen echtes Postgres.
+     */
+    @Test
+    fun theButtonPathReadsTheSameSelectionAsTheJob() = testComprehension {
+        val ownHeats = "https://www.raceclocker.com/competition-heats"
+        val (_, matchId) = seed(competitionHeatsUrl = ownHeats)
+
+        val target = !CompetitionMatchRepo.getForRaceClockerPull(matchId)
+
+        assertNotNull(target)
+        assertEquals("10:00 Lauf 1", target.waveName)
+        // Anwahl des Wettkampfs schlägt die Voreinstellung, das andere Rennen erbt weiter.
+        assertEquals(ownHeats, target.roundsRace?.resultsUrl)
+        assertEquals(eventTimeTrialUrl, target.qualificationRace?.resultsUrl)
+        // Und die Namen kommen aus dem jeweils richtigen Alias, nicht zweimal aus demselben.
+        assertEquals("Laeufe eigen", target.roundsRace?.name)
+        assertEquals("Zeitfahren", target.qualificationRace?.name)
+        assertEquals(listOf(ownHeats, eventTimeTrialUrl), target.candidateUrls)
     }
 }
