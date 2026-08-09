@@ -28,7 +28,6 @@ import Throbber from '@components/Throbber.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateClubGlobal} from '@authorization/privileges.ts'
 import {clubShortNameAction, mergedSpellings, primaryName} from './clubShortNames.ts'
-import ClubNameRulePanel from './ClubNameRulePanel.tsx'
 
 const ALL_EVENTS = 'all'
 
