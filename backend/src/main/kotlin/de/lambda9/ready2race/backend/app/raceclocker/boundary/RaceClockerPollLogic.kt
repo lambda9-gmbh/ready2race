@@ -26,22 +26,24 @@ object RaceClockerPollLogic {
     /**
      * Ob dieser Lauf überhaupt beobachtet wird.
      *
-     * Ein aktiver Lauf immer — er kann längst vor oder nach seinem Plan laufen, und was tatsächlich
-     * passiert, schlägt den Plan. Ein noch nicht aktiver nur im Fenster um seine geplante Startzeit:
-     * ohne diese Grenze würde eine Veranstaltung in drei Monaten jede Minute abgefragt.
+     * Ein aktivierter Lauf immer — er kann längst vor oder nach seinem Plan laufen, und was
+     * tatsächlich passiert, schlägt den Plan. Dass er dabei erst am Start steht und noch nicht
+     * unterwegs ist, ändert nichts: Gerade dann soll der Abruf den gemessenen Start entdecken. Ein
+     * noch nicht aktivierter nur im Fenster um seine geplante Startzeit: ohne diese Grenze würde
+     * eine Veranstaltung in drei Monaten jede Minute abgefragt.
      *
      * Beide Grenzen zählen einschließlich. Ohne geplante Startzeit gibt es kein Fenster, also auch
      * keine Beobachtung — solche Läufe aktiviert weiterhin jemand von Hand, und ab dann greift der
      * erste Zweig.
      */
     fun isWatched(
-        currentlyRunning: Boolean,
+        activated: Boolean,
         startTime: LocalDateTime?,
         now: LocalDateTime,
         watchBeforeMinutes: Int,
         watchAfterMinutes: Int,
     ): Boolean = when {
-        currentlyRunning -> true
+        activated -> true
         startTime == null -> false
         else -> !now.isBefore(startTime.minusMinutes(watchBeforeMinutes.toLong())) &&
             !now.isAfter(startTime.plusMinutes(watchAfterMinutes.toLong()))

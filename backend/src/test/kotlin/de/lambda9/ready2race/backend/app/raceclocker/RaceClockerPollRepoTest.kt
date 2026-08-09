@@ -59,7 +59,8 @@ class RaceClockerPollRepoTest {
         eventHeatsResultsUrl: String? = eventHeatsUrl,
         eventTimeTrialResultsUrl: String? = eventTimeTrialUrl,
         isQualification: Boolean = false,
-        currentlyRunning: Boolean = true,
+        activated: Boolean = true,
+        startedAt: LocalDateTime? = null,
         finishedAt: LocalDateTime? = null,
         autoPausedAt: LocalDateTime? = null,
         slotSkippedAt: LocalDateTime? = null,
@@ -141,7 +142,8 @@ class RaceClockerPollRepoTest {
                 startTime = now,
                 createdAt = now,
                 updatedAt = now,
-                activatedAt = if (currentlyRunning) now else null,
+                activatedAt = if (activated) now else null,
+                startedAt = startedAt,
                 finishedAt = finishedAt,
                 raceclockerAutoPausedAt = autoPausedAt,
             )
@@ -173,12 +175,30 @@ class RaceClockerPollRepoTest {
         val candidate = candidates.singleOrNull()
         assertNotNull(candidate, "Der Lauf hätte als Kandidat zurückkommen müssen, kam aber nicht: $candidates")
         assertEquals(matchId, candidate.matchId)
-        assertTrue(candidate.currentlyRunning)
+        assertNotNull(candidate.activatedAt)
         assertEquals(now, candidate.startTime)
         // Die Wellenbezeichnung entsteht wie beim Startlisten-Export aus Startzeit und Laufname.
         assertEquals("10:00 Lauf 1", candidate.target.waveName)
         assertEquals(eventHeatsUrl, candidate.target.heatsUrl)
         assertEquals(eventTimeTrialUrl, candidate.target.timeTrialUrl)
+    }
+
+    /**
+     * Aktivierung und Ist-Start kommen getrennt zurück. Daran hängt der Zweig in
+     * `RaceClockerPollService.pollMatch`, der den gemessenen Start eines bereits an den Start
+     * gerufenen Laufs nachträgt: Er greift genau dann, wenn `startedAt` null ist. Käme die Spalte
+     * nicht mit, bliebe ein von der Kette aktivierter Lauf für immer "in Vorbereitung".
+     */
+    @Test
+    fun anActivatedMatchIsReportedWithoutARealStartUntilOneIsStamped() = testComprehension {
+        val (preparingEventId, _) = seed()
+        val preparing = (!RaceClockerPollRepo.getCandidates(preparingEventId)).single()
+        assertNotNull(preparing.activatedAt)
+        assertEquals(null, preparing.startedAt)
+
+        val (runningEventId, _) = seed(startedAt = now.plusMinutes(2))
+        val running = (!RaceClockerPollRepo.getCandidates(runningEventId)).single()
+        assertEquals(now.plusMinutes(2), running.startedAt)
     }
 
     /** Der Job beendet nie einen Lauf und fasst einen beendeten auch nicht mehr an. */

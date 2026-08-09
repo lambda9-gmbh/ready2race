@@ -119,7 +119,7 @@ object RaceClockerPollService {
         val candidates = !RaceClockerPollRepo.getCandidates(event.eventId).orDie()
         val watched = candidates.filter {
             RaceClockerPollLogic.isWatched(
-                currentlyRunning = it.currentlyRunning,
+                activated = it.activatedAt != null,
                 startTime = it.startTime,
                 now = now,
                 watchBeforeMinutes = event.watchBeforeMinutes,
@@ -160,7 +160,9 @@ object RaceClockerPollService {
             val outcome = runIsolated(candidate.matchId, MatchOutcome(errorCode = ErrorCode.INTERNAL_ERROR.name)) {
                 pollMatch(candidate, feeds, setupRounds, now)
             }
-            anyRunning = anyRunning || candidate.currentlyRunning || outcome.activated
+            // Der schnelle Takt hängt an der Aktivierung, nicht am Ist-Start: Ein Lauf am Start ist
+            // genau der, dessen Startmeldung so früh wie möglich ankommen soll.
+            anyRunning = anyRunning || candidate.activatedAt != null || outcome.activated
 
             runIsolated(candidate.matchId, Unit) {
                 RaceClockerPollRepo.recordPoll(candidate.matchId, now, outcome.errorCode).orDie().map { }
@@ -258,7 +260,7 @@ object RaceClockerPollService {
 
         // Bevorstehender Lauf: nur hinsehen, nichts schreiben außer der Aktivierung. Ein
         // Umsortieren in RaceClocker vor dem Start schlägt erst durch, wenn der Lauf aktiv ist.
-        if (!candidate.currentlyRunning) {
+        if (candidate.activatedAt == null) {
             if (!RaceClockerPollLogic.startDetected(assigned)) return@comprehension KIO.ok(MatchOutcome())
 
             !CompetitionMatchRepo.update(candidate.matchId) {
@@ -273,6 +275,28 @@ object RaceClockerPollService {
             }.orDie()
             logger.info { "RaceClocker meldet den Start von Lauf ${candidate.matchId} - Lauf aktiviert." }
             return@comprehension KIO.ok(MatchOutcome(activated = true))
+        }
+
+        // Aktiviert, aber noch ohne Ist-Start: Der Lauf wurde von Hand oder von der Kette an den
+        // Start gerufen, und der Feed weiß vielleicht schon, dass er losgegangen ist. Der Stempel
+        // steht hier und nicht in `applyRaceClockerRows`: Dort bricht der NoResults-Zweig ab, bevor
+        // die gemessene Startzeit übernommen wird, und er läuft innerhalb von `.transact()` - ein
+        // dort gesetzter Zeitstempel fiele dem Rollback zum Opfer. Ohne diesen Zweig bliebe ein von
+        // der Kette aktivierter Lauf "in Vorbereitung", bis das erste Boot durchs Ziel ist.
+        //
+        // Bewusst ohne `?.let { … }`: Der `!`-Operator der Comprehension funktioniert nur direkt im
+        // Block, nicht in einem geschachtelten Lambda.
+        val measuredStart = RaceClockerFeedRow.earliestStart(assigned)
+        if (candidate.startedAt == null && measuredStart != null) {
+            // Der Feed liefert nur die Uhrzeit; den Tag gibt der Lauf vor, sonst läge ein am
+            // Vortag geplanter Lauf um Mitternacht falsch.
+            val raceDay = candidate.startTime?.toLocalDate() ?: now.toLocalDate()
+            !CompetitionMatchRepo.update(candidate.matchId) {
+                startedAt = raceDay.atTime(measuredStart)
+                updatedBy = SYSTEM_USER
+                updatedAt = now
+            }.orDie()
+            logger.info { "RaceClocker meldet den Ist-Start von Lauf ${candidate.matchId}." }
         }
 
         // Unverändert seit dem letzten Abruf: nichts schreiben.

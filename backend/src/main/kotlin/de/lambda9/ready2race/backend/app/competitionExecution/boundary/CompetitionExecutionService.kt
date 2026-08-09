@@ -1247,7 +1247,6 @@ object CompetitionExecutionService {
             unit
         }
 
-
     fun deleteCurrentRound(
         competitionId: UUID,
         eventId: UUID,

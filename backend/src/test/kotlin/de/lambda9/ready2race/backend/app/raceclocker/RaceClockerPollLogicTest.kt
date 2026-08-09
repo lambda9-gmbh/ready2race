@@ -43,12 +43,29 @@ class RaceClockerPollLogicTest {
     // --- Fenster ---
 
     @Test
-    fun aRunningMatchIsWatchedRegardlessOfItsPlannedTime() {
+    fun anActivatedMatchIsWatchedRegardlessOfItsPlannedTime() {
         assertTrue(
             RaceClockerPollLogic.isWatched(
-                currentlyRunning = true,
+                activated = true,
                 startTime = now.minusHours(6),
                 now = now,
+                watchBeforeMinutes = 15,
+                watchAfterMinutes = 120,
+            )
+        )
+    }
+
+    @Test
+    fun anActivatedMatchWithoutARealStartStaysWatched() {
+        // Aktiviert schlägt das Zeitfenster: Der Lauf kann längst vor oder nach seinem Plan
+        // stattfinden, und was tatsächlich passiert, schlägt den Plan. Genau dieser Fall trägt
+        // seit dem 09.08.2026 den Ist-Start nach - ein von der Kette an den Start gerufener Lauf
+        // bliebe sonst "in Vorbereitung", bis das erste Boot durchs Ziel ist.
+        assertTrue(
+            RaceClockerPollLogic.isWatched(
+                activated = true,
+                startTime = LocalDateTime.of(2026, 8, 14, 10, 0),
+                now = LocalDateTime.of(2026, 8, 14, 14, 0),
                 watchBeforeMinutes = 15,
                 watchAfterMinutes = 120,
             )
