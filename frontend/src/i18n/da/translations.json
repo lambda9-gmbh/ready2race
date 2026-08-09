@@ -1526,6 +1526,7 @@
       },
       "lastUpdated": "Opdateret: {{time}}",
       "staleWarning": "Forbindelsen er afbrudt — visningen er muligvis ikke aktuel.",
+      "staleSince": "Pr. {{time}} — ingen handlinger er mulige uden forbindelse.",
       "loadError": "Data kunne ikke indlæses.",
       "noRunning": "Der er ingen igangværende løb.",
       "nextUp": "Næste",

@@ -1526,6 +1526,7 @@
       },
       "lastUpdated": "Updated: {{time}}",
       "staleWarning": "Connection lost — data may be outdated.",
+      "staleSince": "As of {{time}} — no actions are possible while offline.",
       "loadError": "Could not load data.",
       "noRunning": "No match is currently running.",
       "nextUp": "Up next",

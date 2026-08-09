@@ -1526,6 +1526,7 @@
       },
       "lastUpdated": "Stand: {{time}}",
       "staleWarning": "Verbindung gestört — Anzeige ist möglicherweise nicht aktuell.",
+      "staleSince": "Stand von {{time}} — ohne Verbindung sind keine Aktionen möglich.",
       "loadError": "Daten konnten nicht geladen werden.",
       "noRunning": "Aktuell läuft kein Rennen.",
       "nextUp": "Als Nächstes",

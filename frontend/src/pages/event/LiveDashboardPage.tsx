@@ -51,6 +51,8 @@ import {
 } from '@components/event/schedule/timelineIndicator.ts'
 import {MatchResultStatus} from '@utils/matchResultStatus.ts'
 import {liveDashboardErrorKey} from '@components/event/liveDashboard/liveDashboardError.ts'
+import {readCachedRead, writeCachedRead} from '@pwa/readCache.ts'
+import {describeStale} from '@components/event/liveDashboard/staleState.ts'
 
 /** The dashboard payload carries no server clock of its own (unlike the athlete board), so the
  * now-marker ticks off the local clock every 30s - plenty for a position on a day-long axis. */
@@ -97,13 +99,25 @@ const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
 
     const [tab, setTab] = useState<LiveDashboardTab>('live')
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
-    const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(null)
+    const cacheUserId = user.loggedIn ? user.id : ''
+    // Einmal lesen, dreifach verwenden: Der Startwert aller drei Zustände kommt aus demselben
+    // Eintrag, und der useState-Initialisierer läuft nur beim ersten Rendern.
+    const [cachedStart] = useState(() =>
+        readCachedRead<LiveDashboardDto>('dashboard', cacheUserId, eventId),
+    )
+    const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(
+        cachedStart?.payload ?? null,
+    )
     // In REGATTABUERO läuft "Lauf beenden" ausschließlich über den Zeitplan-Tab (siehe
     // EventSchedule.tsx) - der Button verschwindet hier dafür, das Notfall-Override
     // (onSetRunning) bleibt unabhängig vom Modus verfügbar.
     const mayFinish = mayControl && dashboard?.chainProgressionMode !== 'REGATTABUERO'
-    const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-    const [stale, setStale] = useState(false)
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(
+        cachedStart ? new Date(cachedStart.fetchedAt) : null,
+    )
+    // Ein Stand aus dem Cache gilt bis zum ersten erfolgreichen Abruf als veraltet - sonst
+    // stünden die Aktionen auf Daten von vorhin offen.
+    const [stale, setStale] = useState(cachedStart !== null)
     const [liveChanged, setLiveChanged] = useState(false)
     const [selectedTeamRef, setSelectedTeamRef] = useState<{
         matchId: string
@@ -162,6 +176,7 @@ const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
                 if (data !== undefined) {
                     etagRef.current = response.headers.get('ETag')
                     setDashboard(data)
+                    writeCachedRead('dashboard', cacheUserId, eventId, data)
                     setLastUpdated(new Date())
                     setStale(false)
                     // Auch ein Lauf, der neu auf sein Beenden wartet, ist eine Änderung im
@@ -283,11 +298,13 @@ const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
         )
     }
 
+    const staleState = describeStale(lastUpdated?.getTime() ?? null, stale, now.getTime())
+
     const actions: LiveDashboardActions = {
         onTeamClick: handleTeamClick,
-        onFinish: mayFinish ? handleFinish : undefined,
-        onSetRunning: mayControl ? handleSetRunning : undefined,
-        onSkipSlot: mayControl ? handleSkipSlot : undefined,
+        onFinish: mayFinish && !staleState.actionsLocked ? handleFinish : undefined,
+        onSetRunning: mayControl && !staleState.actionsLocked ? handleSetRunning : undefined,
+        onSkipSlot: mayControl && !staleState.actionsLocked ? handleSkipSlot : undefined,
     }
 
     const liveColumn = (
@@ -349,8 +366,14 @@ const LiveDashboardPage = ({eventId}: LiveDashboardPageProps) => {
                         />
                     </Stack>
                 </Stack>
-                {stale && dashboard && (
-                    <Alert severity="warning">{t('event.liveDashboard.staleWarning')}</Alert>
+                {staleState.show && dashboard && (
+                    <Alert severity="warning">
+                        {staleState.fromCache && lastUpdated
+                            ? t('event.liveDashboard.staleSince', {
+                                  time: format(lastUpdated, t('format.datetime')),
+                              })
+                            : t('event.liveDashboard.staleWarning')}
+                    </Alert>
                 )}
                 {stale && !dashboard && (
                     <Alert severity="error">{t('event.liveDashboard.loadError')}</Alert>
