@@ -258,16 +258,14 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                                         ? 'divider'
                                                                         : 'transparent',
                                                             }}>
-                                                            {team.startNumber && (
-                                                                <Avatar
-                                                                    sx={{
-                                                                        width: 32,
-                                                                        height: 32,
-                                                                        fontSize: '0.875rem',
-                                                                    }}>
-                                                                    {team.startNumber}
-                                                                </Avatar>
-                                                            )}
+                                                            <Avatar
+                                                                sx={{
+                                                                    width: 32,
+                                                                    height: 32,
+                                                                    fontSize: '0.875rem',
+                                                                }}>
+                                                                {team.startNumber}
+                                                            </Avatar>
                                                             <Box sx={{flex: 1}}>
                                                                 {team.participants.length === 1 ? (
                                                                     <>

@@ -268,9 +268,10 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     }}>
                     {match.teams.map((team, index) => (
                         <Stack
-                            // startNumber fehlt gelegentlich (Zeile zeigt dann "–") und ist nicht
-                            // eindeutig genug für einen React-Schlüssel; der Index macht ihn das.
-                            key={`${match.matchId}-${team.startNumber ?? 'x'}-${index}`}
+                            // Die Startnummer ist je Lauf eindeutig (Index
+                            // `starting_position_unique_in_match`) und nie leer, trägt den
+                            // Schlüssel also allein.
+                            key={`${match.matchId}-${team.startNumber}`}
                             direction="row"
                             alignItems="center"
                             gap={1.5}
@@ -290,7 +291,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                     textAlign: 'center',
                                     flexShrink: 0,
                                 }}>
-                                {team.startNumber ?? '–'}
+                                {team.startNumber}
                             </Typography>
                             <Box sx={{flex: 1, minWidth: 0}}>
                                 <AthleteBoardTeamLabel team={team} />

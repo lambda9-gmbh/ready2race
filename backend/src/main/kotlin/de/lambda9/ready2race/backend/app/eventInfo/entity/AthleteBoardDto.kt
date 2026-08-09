@@ -60,9 +60,16 @@ data class AthleteBoardMatch(
 )
 
 data class AthleteBoardTeam(
-    /** Startposition im Lauf, aus `competition_match_team.start_number`. Die Anzeige nannte sie
-     *  bis zum 09.08.2026 „Bahn"; eine davon unabhängige Bahnnummer gibt es im Datenmodell nicht. */
-    val startNumber: Int?,
+    /**
+     * Startposition im Lauf, aus `competition_match_team.start_number`. Die Anzeige nannte sie
+     * bis zum 09.08.2026 „Bahn"; eine davon unabhängige Bahnnummer gibt es im Datenmodell nicht.
+     *
+     * Nicht nullbar - die Spalte ist seit Migration V202507040930 NOT NULL. Bis zum 09.08.2026
+     * stand hier `Int?`, und die Anzeige führte für den vermeintlich fehlenden Wert eine
+     * „–"-Zeile mit, die es nie zu sehen gab. Begründung bei
+     * `EventInfoService.getMatchResultTeams`.
+     */
+    val startNumber: Int,
     /** Die n-te Mannschaft dieses Vereins im Wettkampf - nur gezeigt, wenn [teamName] fehlt. */
     val teamNumber: Int?,
     /**

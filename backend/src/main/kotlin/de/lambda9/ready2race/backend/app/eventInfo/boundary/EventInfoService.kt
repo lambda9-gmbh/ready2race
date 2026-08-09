@@ -590,11 +590,13 @@ object EventInfoService {
             .map { (registrationId, groupedRecords) ->
                 val first = groupedRecords.first()
                 val clubs = clubComposition(groupedRecords, clubShortNames)
+                // Zu den beiden `!!`: siehe die Begründung bei [getMatchResultTeams] - dieselben
+                // NOT-NULL-Spalten aus derselben führenden Tabelle.
                 UpcomingMatchTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
                     teamNumber = first[COMPETITION_REGISTRATION.TEAM_NUMBER],
-                    startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
+                    startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
                     clubName = first.get("club_name", String::class.java),
                     clubsShort = clubs.short.ifEmpty { null },
                     clubsFull = clubs.full.ifEmpty { null },
@@ -628,11 +630,13 @@ object EventInfoService {
             .map { (registrationId, groupedRecords) ->
                 val first = groupedRecords.first()
                 val clubs = clubComposition(groupedRecords, clubShortNames)
+                // Zu den beiden `!!`: siehe die Begründung bei [getMatchResultTeams] - dieselben
+                // NOT-NULL-Spalten aus derselben führenden Tabelle.
                 RunningMatchTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
                     teamNumber = first[COMPETITION_REGISTRATION.TEAM_NUMBER],
-                    startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
+                    startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
                     clubName = first.get("club_name", String::class.java),
                     clubsShort = clubs.short.ifEmpty { null },
                     clubsFull = clubs.full.ifEmpty { null },
