@@ -571,15 +571,15 @@ object EventInfoService {
     /**
      * Die Wertungskategorie einer Ergebniszeile, `null` solange das Boot keiner zugeordnet ist.
      * Die Sortierstelle kommt aus `event_rating_category`; fehlt die Zuordnung zur Veranstaltung,
-     * gilt 0 — die Kategorie bekommt dann ihren Abschnitt vorne und wird alphabetisch einsortiert,
-     * statt die ganze Zeile fallen zu lassen.
+     * gilt [RatingCategoryRef.UNCONFIGURED_SORT_ORDER].
      */
     private fun ratingCategoryRef(record: Record): RatingCategoryRef? =
         record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_ID, UUID::class.java)?.let { id ->
             RatingCategoryRef(
                 id = id,
                 name = record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_NAME, String::class.java) ?: "",
-                sortOrder = record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER, Int::class.java) ?: 0,
+                sortOrder = record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER, Int::class.java)
+                    ?: RatingCategoryRef.UNCONFIGURED_SORT_ORDER,
             )
         }
 

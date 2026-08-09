@@ -206,7 +206,8 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                             RatingCategoryRef(
                                 id = it,
                                 name = team.ratingCategoryName!!,
-                                sortOrder = team.ratingCategorySortOrder ?: 0,
+                                sortOrder = team.ratingCategorySortOrder
+                                    ?: RatingCategoryRef.UNCONFIGURED_SORT_ORDER,
                             )
                         },
                         mixedTeamTerm = mixedTeamTerm,

@@ -219,4 +219,43 @@ class RatingCategoryRankingTest {
         assertNull(result[0].category)
         assertEquals(listOf(1, 2, 3), result[0].entries.map { it.categoryPlace })
     }
+
+    @Test
+    fun anUnconfiguredCategorySortsBehindEveryConfiguredOne() {
+        // Am 09.08.2026 in der laufenden Anwendung aufgefallen: der Bestand traegt Kategorien an
+        // den Meldungen, ohne dass sie je einer Veranstaltung zugeordnet wurden. Mit der alten
+        // Ersatzstelle 0 drueckte sich so eine Kategorie vor jede gepflegte Reihenfolge.
+        val unkonfiguriert = RatingCategoryRef(
+            UUID.randomUUID(),
+            "Internationale Wertung",
+            RatingCategoryRef.UNCONFIGURED_SORT_ORDER,
+        )
+
+        val result = rank(
+            listOf(
+                boat("a", 1, unkonfiguriert),
+                boat("b", 2, masters),
+                boat("c", 3, meisterschaft),
+                boat("d", 4, null),
+            )
+        )
+
+        assertEquals(
+            listOf("Meisterschaften", "Masters", "Internationale Wertung", null),
+            result.map { it.category?.name },
+        )
+    }
+
+    @Test
+    fun unconfiguredCategoriesSortAmongThemselvesByName() {
+        val zuerst = RatingCategoryRef(UUID.randomUUID(), "Deutsche Meisterschaft Wertung", RatingCategoryRef.UNCONFIGURED_SORT_ORDER)
+        val danach = RatingCategoryRef(UUID.randomUUID(), "Internationale Wertung", RatingCategoryRef.UNCONFIGURED_SORT_ORDER)
+
+        val result = rank(listOf(boat("a", 1, danach), boat("b", 2, zuerst)))
+
+        assertEquals(
+            listOf("Deutsche Meisterschaft Wertung", "Internationale Wertung"),
+            result.map { it.category?.name },
+        )
+    }
 }

@@ -189,9 +189,14 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                             color={'textSecondary'}
                                                             variant={'body2'}
                                                             textAlign={'right'}>
-                                                            {`${t('club.registeredBy')} ` +
-                                                                team.clubName +
-                                                                ` | ${team.teamName}`}
+                                                            {[
+                                                                t('club.registeredBy') +
+                                                                    ' ' +
+                                                                    team.clubName,
+                                                                team.teamName,
+                                                            ]
+                                                                .filter(Boolean)
+                                                                .join(' | ')}
                                                         </Typography>
                                                     </Box>
                                                 </Stack>
