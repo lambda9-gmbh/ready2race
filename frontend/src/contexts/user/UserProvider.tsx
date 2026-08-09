@@ -8,6 +8,7 @@ import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
 import i18next from 'i18next'
 import {Language} from '@i18n/config.ts'
 import PanicPage from '../../pages/PanicPage.tsx'
+import {clearSessionToken, readSessionToken, touchSessionToken, writeSessionToken} from './sessionToken.ts'
 
 type Session = {
     token: string
@@ -41,10 +42,11 @@ type UserData =
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [language, setLanguage] = useState(i18nLanguage())
+    const initialIsInApp = router.state.resolvedLocation.pathname.startsWith('/app')
     const [userData, setUserData] = useState<UserData>({
         userInfo: undefined,
-        token: sessionStorage.getItem('session'),
-        isInApp: router.state.resolvedLocation.pathname.startsWith('/app'),
+        token: readSessionToken(initialIsInApp),
+        isInApp: initialIsInApp,
         authStatus: 'initial',
     })
     const [error, setError] = useState<string | null>(null)
@@ -56,6 +58,8 @@ const UserProvider = ({children}: PropsWithChildren) => {
             if (res.status === 401 && userData.authStatus === 'authenticated') {
                 const isInApp = router.state.resolvedLocation.pathname.startsWith('/app')
                 await logout(isInApp)
+            } else if (res.ok) {
+                touchSessionToken()
             }
             return res
         }
@@ -116,7 +120,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
             if (response.status === 200 && data !== undefined) {
                 setAuth(data, undefined, userData.isInApp)
             } else {
-                sessionStorage.removeItem('session')
+                clearSessionToken()
                 setUserData(prevState => ({
                     userInfo: undefined,
                     token: null,
@@ -139,7 +143,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
                 throw Error('Missing header on login response')
             }
             token = (JSON.parse(sessionHeader) as Session).token
-            sessionStorage.setItem('session', token)
+            writeSessionToken(token, isInApp)
         }
         if (!token) {
             throw Error('Missing session token on login')
@@ -153,16 +157,14 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }
 
     const logout = async (isInApp: boolean = false) => {
-        const {error} = await userLogout()
-        if (error === undefined) {
-            sessionStorage.removeItem('session')
-            setUserData({
-                userInfo: undefined,
-                isInApp,
-                token: null,
-                authStatus: 'pending',
-            })
-        }
+        await userLogout()
+        clearSessionToken()
+        setUserData({
+            userInfo: undefined,
+            isInApp,
+            token: null,
+            authStatus: 'pending',
+        })
     }
 
     const changeLanguage = async (language: Language) => {
