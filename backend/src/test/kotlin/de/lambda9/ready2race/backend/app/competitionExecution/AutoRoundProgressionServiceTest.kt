@@ -2,8 +2,12 @@ package de.lambda9.ready2race.backend.app.competitionExecution
 
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionService
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchResultRequest
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchTeamResultRequest
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_TEAM
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
 import de.lambda9.ready2race.backend.database.select
@@ -181,5 +185,115 @@ class AutoRoundProgressionServiceTest {
         finishFirstRound(on, at = LocalDateTime.of(2026, 8, 14, 10, 30))
         !AutoRoundProgressionService.progressIfRoundComplete(on.eventId, on.competitionId, on.userId)
         assertEquals(1, (!COMPETITION_MATCH.select { COMPETITION_SETUP_MATCH.eq(on.secondRoundSetupMatchId) }).size)
+    }
+
+    /**
+     * Der Weg zur Korrektur: Folgerunde löschen, Ergebnis richtigstellen, Automatik rechnet neu.
+     * Die neuen Paarungen tragen den Vermerk, an dem die Orga sieht, dass sich etwas verschoben hat.
+     */
+    @Test
+    fun aCorrectionAfterDeletingRecreatesThePairingsWithANotice() = testComprehension {
+        val seed = seedTwoRoundCompetition(eventAutoCreate = true)
+        finishFirstRound(seed, at = LocalDateTime.of(2026, 8, 14, 10, 30))
+        !AutoRoundProgressionService.progressIfRoundComplete(seed.eventId, seed.competitionId, seed.userId)
+
+        !CompetitionExecutionService.deleteCurrentRound(seed.competitionId, seed.eventId)
+
+        // Beleg, dass die Folgerunde nach dem Löschen wirklich weg ist - sonst prüfte der Test am
+        // Ende bloß, dass etwas dasteht, das schon vor der Korrektur dastand.
+        val afterDelete = !COMPETITION_MATCH.selectOne { COMPETITION_SETUP_MATCH.eq(seed.secondRoundSetupMatchId) }
+        assertNull(afterDelete, "Die Folgerunde hätte nach dem Löschen weg sein müssen")
+
+        // Die Plätze des ersten Laufs tauschen - so sieht eine Korrektur aus.
+        val firstMatchId = seed.firstRoundMatchIds.first()
+        val teams = (!COMPETITION_MATCH_TEAM.select { COMPETITION_MATCH.eq(firstMatchId) }).sortedBy { it.startNumber }
+        !CompetitionExecutionService.updateMatchResult(
+            eventId = seed.eventId,
+            competitionId = seed.competitionId,
+            matchId = firstMatchId,
+            userId = seed.userId,
+            request = UpdateCompetitionMatchResultRequest(
+                teamResults = listOf(
+                    UpdateCompetitionMatchTeamResultRequest(
+                        registrationId = teams[0].competitionRegistration!!,
+                        place = 2,
+                        timeString = null,
+                        failed = false,
+                        failedReason = null,
+                        penaltySeconds = null,
+                        penaltyNote = null,
+                    ),
+                    UpdateCompetitionMatchTeamResultRequest(
+                        registrationId = teams[1].competitionRegistration!!,
+                        place = 1,
+                        timeString = null,
+                        failed = false,
+                        failedReason = null,
+                        penaltySeconds = null,
+                        penaltyNote = null,
+                    ),
+                )
+            ),
+        )
+
+        val finalMatch = !COMPETITION_MATCH.selectOne { COMPETITION_SETUP_MATCH.eq(seed.secondRoundSetupMatchId) }
+        assertNotNull(finalMatch, "Die Folgerunde hätte neu gesetzt werden müssen")
+        assertNotNull(finalMatch.pairingsRecalculatedAt, "Die Neuberechnung hätte vermerkt werden müssen")
+    }
+
+    /**
+     * Steht die Folgerunde bereits, ist die davor gesperrt — dieselbe Antwort wie vor der
+     * Automatik. Genau darauf beruht der Schutz gestarteter Läufe: Die Automatik kann eine
+     * bestehende Runde nicht überschreiben, weil an ihr Ergebnis gar nicht mehr heranzukommen ist.
+     */
+    @Test
+    fun aStartedFollowingRoundLocksTheRoundBefore() = testComprehension {
+        val seed = seedTwoRoundCompetition(eventAutoCreate = true)
+        finishFirstRound(seed, at = LocalDateTime.of(2026, 8, 14, 10, 30))
+        !AutoRoundProgressionService.progressIfRoundComplete(seed.eventId, seed.competitionId, seed.userId)
+
+        !COMPETITION_MATCH.update(
+            f = { startedAt = LocalDateTime.of(2026, 8, 14, 11, 0) },
+            condition = { COMPETITION_SETUP_MATCH.eq(seed.secondRoundSetupMatchId) },
+        )
+
+        // Über den echten Schreibweg geprüft, nicht über die interne Prüffunktion: Was zählt, ist
+        // dass die Korrektur nicht durchgeht - nicht, dass eine private Hilfsfunktion nein sagt.
+        val firstMatchId = seed.firstRoundMatchIds.first()
+        val teams = (!COMPETITION_MATCH_TEAM.select { COMPETITION_MATCH.eq(firstMatchId) }).sortedBy { it.startNumber }
+        assertKIOFails(CompetitionExecutionError.MatchResultsLocked) {
+            CompetitionExecutionService.updateMatchResult(
+                eventId = seed.eventId,
+                competitionId = seed.competitionId,
+                matchId = firstMatchId,
+                userId = seed.userId,
+                request = UpdateCompetitionMatchResultRequest(
+                    teamResults = listOf(
+                        UpdateCompetitionMatchTeamResultRequest(
+                            registrationId = teams[0].competitionRegistration!!,
+                            place = 2,
+                            timeString = null,
+                            failed = false,
+                            failedReason = null,
+                            penaltySeconds = null,
+                            penaltyNote = null,
+                        ),
+                        UpdateCompetitionMatchTeamResultRequest(
+                            registrationId = teams[1].competitionRegistration!!,
+                            place = 1,
+                            timeString = null,
+                            failed = false,
+                            failedReason = null,
+                            penaltySeconds = null,
+                            penaltyNote = null,
+                        ),
+                    )
+                ),
+            )
+        }
+
+        // Und der Beleg, dass wirklich nichts passiert ist: die Plätze stehen wie vorher.
+        val after = (!COMPETITION_MATCH_TEAM.select { COMPETITION_MATCH.eq(firstMatchId) }).sortedBy { it.startNumber }
+        assertEquals(listOf(1, 2), after.map { it.place })
     }
 }
