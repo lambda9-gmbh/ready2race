@@ -114,7 +114,7 @@ Unter `/event/{eventId}/awardCeremony`, Privileg `ReadEventGlobal` (wie der Urku
 {"data": [
   {"competitionId": "…", "competitionIdentifier": "17-NC", "competitionShortName": "CM 4x+",
    "competitionName": "Mixed-Coastal-Vierer mit Steuermann",
-   "ratingCategoryName": "Masters A", "placedTeams": 3}
+   "ratingCategoryName": "Masters A", "awardedTeams": 3}
 ]}
 ```
 

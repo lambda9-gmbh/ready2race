@@ -136,7 +136,8 @@ data class AwardCeremonyChoiceDto(
     val competitionShortName: String?,
     val competitionName: String,
     val ratingCategoryName: String?,
-    val placedTeams: Int,
+    /** Die Zahl der tatsächlich geehrten Boote, also der Ränge bis drei samt Gleichständen. */
+    val awardedTeams: Int,
 )
 
 data class AwardCeremonyKeyRequest(
@@ -1159,7 +1160,7 @@ enum class AwardCeremonyError : ServiceError {
 
 ```kotlin
     @Test
-    fun ceremoniesAreListedPerCompetitionAndCategory() { /* zwei Kategorien in einem Wettkampf ⇒ zwei Einträge, sortiert nach Rennnummer, placedTeams stimmt */ }
+    fun ceremoniesAreListedPerCompetitionAndCategory() { /* zwei Kategorien in einem Wettkampf ⇒ zwei Einträge, sortiert nach Rennnummer, awardedTeams stimmt */ }
 
     @Test
     fun aCompetitionWithoutPlacedTeamsIsNotOffered() { /* Wettkampf ohne gesetzte Plätze taucht in listCeremonies nicht auf */ }
@@ -1283,7 +1284,7 @@ object AwardCeremonyService {
 ```
 
 6. Je Boot einen `AwardCeremonyCandidate` bauen (`registeringClubName = team.clubName`, `teamName = team.registrationName`, `time = team.timeString`, Beteiligte aus `team.participants` mit `external`, `externalClubName`, `clubName` → `ownClubName`).
-7. `AwardCeremonyLogic.groupByRatingCategory(...)` und je Gruppe ein internes `Ceremony(choice = AwardCeremonyChoiceDto(...), candidates = …)` mit `placedTeams = candidates.size`.
+7. `AwardCeremonyLogic.groupByRatingCategory(...)` und je Gruppe ein internes `Ceremony(choice = AwardCeremonyChoiceDto(...), candidates = …)` mit `awardedTeams = AwardCeremonyLogic.rank(candidates).size`.
 8. Gruppen ohne Kandidaten entfallen; sie können nach Schritt 4 leer sein.
 
 `candidateMatchesSelection` ist ein einfacher Vergleich auf `(competitionId, ratingCategoryName)`.
