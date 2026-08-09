@@ -2673,7 +2673,7 @@
       "error": {
         "noResults": "There are no placements for the selected ceremonies.",
         "competitionNotInEvent": "This competition does not belong to this event. Please reload the page.",
-        "unknownRatingCategory": "One of the selected rating categories no longer exists. Please reload the page.",
+        "unknownRatingCategory": "One of the selected ceremonies is not available — the rating category is gone, or the competition has no placements yet. Please reload the page.",
         "isChallengeEvent": "A challenge event has no award ceremony sheets — there are no runs and no placements.",
         "unexpected": "The award ceremony sheet could not be created. Please reload the page and try again."
       }

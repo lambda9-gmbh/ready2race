@@ -2673,7 +2673,7 @@
       "error": {
         "noResults": "Für die gewählten Ehrungen gibt es keine Platzierungen.",
         "competitionNotInEvent": "Dieser Wettkampf gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.",
-        "unknownRatingCategory": "Eine gewählte Wertungskategorie gibt es nicht mehr. Bitte die Seite neu laden.",
+        "unknownRatingCategory": "Eine gewählte Ehrung steht nicht zur Wahl — die Wertungskategorie ist entfallen, oder der Wettkampf hat noch keine Platzierungen. Bitte die Seite neu laden.",
         "isChallengeEvent": "Für eine Challenge-Veranstaltung gibt es keine Siegerehrungsbögen — dort werden keine Läufe gefahren und keine Plätze vergeben.",
         "unexpected": "Der Siegerehrungsbogen konnte nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
       }
