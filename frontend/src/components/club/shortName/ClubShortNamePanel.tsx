@@ -14,7 +14,7 @@ import {
     Typography,
     useTheme,
 } from '@mui/material'
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {
     deleteClubShortName,
@@ -42,6 +42,7 @@ const ClubShortNamePanel = () => {
     const [eventId, setEventId] = useState<string>(ALL_EVENTS)
     const [lastRequested, setLastRequested] = useState(Date.now())
     const [drafts, setDrafts] = useState<Record<string, string>>({})
+    const justWritten = useRef<string | null>(null)
 
     const {data: events} = useFetch(signal => getEvents({signal}), {deps: []})
 
@@ -65,10 +66,27 @@ const ClubShortNamePanel = () => {
 
     // Die Felder werden aus der Antwort vorbelegt - mit der gepflegten Kurzform, sonst mit der
     // automatischen. Ein leeres Feld hieße "löschen", und das darf das Laden nicht auslösen.
+    //
+    // Bereits Getipptes überlebt das Nachladen: nach dem Speichern einer Zeile wird die Liste neu
+    // geholt, und wer währenddessen schon in der nächsten Zeile schreibt, verlöre sonst seine
+    // Eingabe. Nur die gerade geschriebene Zeile übernimmt den Wert vom Server - bei ihr ist er
+    // die Antwort auf die eigene Änderung, beim Löschen die zurückgekehrte Heuristik.
     useEffect(() => {
-        if (rows) {
-            setDrafts(Object.fromEntries(rows.map(row => [row.nameKey, row.shortName])))
-        }
+        if (!rows) return
+
+        const written = justWritten.current
+        justWritten.current = null
+
+        setDrafts(prev =>
+            Object.fromEntries(
+                rows.map(row => [
+                    row.nameKey,
+                    prev[row.nameKey] !== undefined && row.nameKey !== written
+                        ? prev[row.nameKey]
+                        : row.shortName,
+                ]),
+            ),
+        )
     }, [rows])
 
     const save = async (row: ClubShortNameDto) => {
@@ -100,6 +118,7 @@ const ClubShortNamePanel = () => {
             }
         }
 
+        justWritten.current = row.nameKey
         setLastRequested(Date.now())
     }
 
@@ -113,7 +132,12 @@ const ClubShortNamePanel = () => {
                 <Select
                     size={'small'}
                     value={eventId}
-                    onChange={event => setEventId(event.target.value as string)}>
+                    onChange={event => {
+                        // Ein anderer Ausschnitt heißt andere Zeilen - halb Getipptes von vorher
+                        // gehört nicht in eine Liste, in der die Zeile womöglich gar nicht steht.
+                        setDrafts({})
+                        setEventId(event.target.value as string)
+                    }}>
                     <MenuItem value={ALL_EVENTS}>{t('club.shortName.filter.all')}</MenuItem>
                     {events?.data.map(event => (
                         <MenuItem key={event.id} value={event.id}>
