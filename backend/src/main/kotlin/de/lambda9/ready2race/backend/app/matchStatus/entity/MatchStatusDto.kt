@@ -37,6 +37,13 @@ data class MatchStatusDto(
     val teamsScored: Int,
     /** null = in dieser Ansicht nicht erhoben (Zeitplan, öffentliche Anzeigen). */
     val teamsInArena: Int? = null,
+    /**
+     * Gesetzt, wenn dieser Lauf ein Freilos ist - siehe `MatchStatusLogic.deriveBye`. Wie
+     * "Überfällig" und "Teilweise gewertet" ist das eine Ablesung und ausdrücklich KEIN eigener
+     * [MatchState]: ein neuer Wert in der Aufzählung fiele still in jedes `when`/`switch`, das
+     * heute über sie verzweigt.
+     */
+    val bye: MatchByeDto? = null,
 )
 
 /**
