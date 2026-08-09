@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventForExportRecord
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
+import de.lambda9.ready2race.backend.app.event.entity.ExecutionAutoRefresh
 import de.lambda9.ready2race.backend.app.event.entity.MatchResultType
 import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
@@ -42,6 +43,8 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 chainProgressionMode = chainProgressionMode.name,
                 showBreaksOnPublicBoards = showBreaksOnPublicBoards,
                 publicResultsVisibility = publicResultsVisibility.name,
+                executionAutoRefresh = executionAutoRefresh,
+                executionAutoRefreshSeconds = executionAutoRefreshSeconds,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -83,6 +86,8 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         showBreaksOnPublicBoards = showBreaksOnPublicBoards ?: false,
         publicResultsVisibility = publicResultsVisibility?.let { PublicResultsVisibility.valueOf(it) }
             ?: PublicResultsVisibility.FINISHED_ONLY,
+        executionAutoRefresh = executionAutoRefresh ?: true,
+        executionAutoRefreshSeconds = executionAutoRefreshSeconds ?: ExecutionAutoRefresh.DEFAULT_SECONDS,
         challengesFinished = challengeEnd?.let { it < LocalDateTime.now() },
     )
 )

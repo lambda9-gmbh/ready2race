@@ -1517,6 +1517,9 @@ export const getCompetitionSetup = <ThrowOnError extends boolean = false>(
     })
 }
 
+/**
+ * Polled by the execution page in the interval configured on the event. Send the ETag of the previous answer as If-None-Match to get a 304 without a body while nothing changed.
+ */
 export const getCompetitionExecutionProgress = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetCompetitionExecutionProgressData, ThrowOnError>,
 ) => {

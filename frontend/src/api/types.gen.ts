@@ -1012,6 +1012,14 @@ export type CreateEventRequest = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
 }
 
 export type CustomFontDto = {
@@ -1279,6 +1287,14 @@ export type EventDto = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
     challengesFinished?: boolean
 }
 
@@ -1478,6 +1494,10 @@ export type EventScheduleSlotDto = {
      * Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own
      */
     matchTeamsScored: number
+    /**
+     * Set when the linked match is a bye - null for free slots and slots whose round is not materialized yet.
+     */
+    bye?: MatchByeDto | null
 }
 
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
@@ -1840,6 +1860,10 @@ export type LiveDashboardMatchDto = {
      * The derived match state - the card's only statement about where the match stands. A separate running flag stood next to it until 2026-08-09; since "at the start" and "under way" are two states, a second field would only be a second truth.
      */
     state: LiveDashboardMatchState
+    /**
+     * Set when this match is a bye - the referee dashboard shows the reason below the match.
+     */
+    bye?: MatchByeDto | null
     competitionId: string
     competitionName: string
     /**
@@ -1999,6 +2023,26 @@ export type ManualTrackingRequest = {
     reason: string
 }
 
+/**
+ * Why a match is a bye. DEREGISTRATION is only used when one of the non-racing rows of the match carries a deregistration record - competition_deregistration is unique per registration, so it also applies to a row carried over as OUT from an earlier round. NO_OPPONENT is the neutral fallback for everything else (only one boat seeded, or the opponent row was eliminated): without a record no withdrawal is claimed.
+ */
+export type MatchByeCause = 'DEREGISTRATION' | 'NO_OPPONENT'
+
+/**
+ * The bye of a match. Display only - it changes nothing about the chain, the result lock or the automatic first place.
+ */
+export type MatchByeDto = {
+    cause: MatchByeCause
+    /**
+     * The withdrawn teams, comma separated when there are several - null for NO_OPPONENT.
+     */
+    teamName?: string | null
+    /**
+     * The stored withdrawal reason - only when exactly one row is deregistered, because with several the mapping name -> reason would be a guess.
+     */
+    reason?: string | null
+}
+
 export type MatchForRunningStatusDto = {
     id: string
     competitionId: string
@@ -2094,6 +2138,10 @@ export type MatchStatusDto = {
      * null = not collected in this view (schedule, public boards).
      */
     teamsInArena?: number
+    /**
+     * Set when this match is a bye. Like "overdue" and "partially scored" this is a reading, not a state of its own.
+     */
+    bye?: MatchByeDto | null
 }
 
 export type MatchTeamInfo = {
@@ -3226,6 +3274,14 @@ export type UpdateEventRequest = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
 }
 
 export type UpdateGlobalConfigurationsRequest = {
@@ -4272,7 +4328,7 @@ export type GetCompetitionExecutionProgressData = {
 
 export type GetCompetitionExecutionProgressResponse = CompetitionExecutionProgressDto
 
-export type GetCompetitionExecutionProgressError = BadRequestError | ApiError
+export type GetCompetitionExecutionProgressError = unknown | BadRequestError | ApiError
 
 export type DeleteCurrentCompetitionExecutionRoundData = {
     path: {

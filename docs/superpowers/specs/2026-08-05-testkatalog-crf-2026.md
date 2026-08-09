@@ -182,6 +182,31 @@ Lauf** (C16), und eine **Handeingabe gewinnt** immer gegen die Automatik (C21). 
 | C25 | Kein Dauer-Alarm | Solange eine Welle in RaceClocker noch nicht angelegt ist oder jedes Boot `In race…` zeigt, erscheint **keine** Warnung — das ist der Normalzustand. Das Live-Dashboard warnt erst, wenn der Abruf wirklich hängt | `b1d42612`, `89f31d1e` | |
 | C26 | Takt-Untergrenze und ETag | Takt auf `1` stellen: die Untergrenze greift, es geht kein Dauerfeuer an raceclocker.com raus, und das Formular sagt, was abgelehnt wurde. Parallel im Netzwerk-Tab: das Live-Dashboard liefert weiter `304`-Antworten — der Abrufzeitpunkt darf nicht in seinem ETag stecken | `5778a111`, `2628e50a` | |
 
+### C27–C34 — Neustart eines Rennens in RaceClocker
+
+Neu am 09.08. (`e1742e0a`). Setzt der Zeitnehmer eine Welle zurück, weil ein Start ungültig war,
+liefert der Feed danach `00:00:00.0` als Startzeit und `Not started` als Ergebnis — er behauptet
+also, dieser Lauf sei nie gefahren. ready2race übernimmt diese Aussage jetzt und löscht Zeiten,
+Plätze, Ausscheidungen, Strafzeiten und den Ist-Start. Vorher blieb der ungültige Lauf stehen,
+während RaceClocker längst neu maß.
+
+Der ganze Block hängt an **einer** Unterscheidung, und die ist der Grund, warum C28 direkt neben
+C27 steht: „keine Zeile trägt ein Ergebnis" ist auch der Zustand jedes laufenden Rennens, solange
+die Boote unterwegs sind. Nur die gemessene Startzeit trennt die beiden. Greift der Reset falsch,
+nimmt er einem laufenden Lauf die schon eingelaufenen Boote weg — der teuerste Fehler in diesem
+Block, und einer, den am Renntag niemand rückgängig machen kann.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| C27 | Neustart löscht | Gefahrener, gewerteter Lauf; in RaceClocker die Welle zurücksetzen. Innerhalb eines Takts sind Zeiten, Plätze, DNS/DNF/DQ und Strafzeiten der zugeordneten Boote weg und der Ist-Start ist leer. Der Lauf bleibt **aktiv** — die Automatik deaktiviert ihn nicht | `e1742e0a` | |
+| C28 | Boote auf dem Wasser | Gegenprobe zu C27: Welle gestartet, noch keine Zielzeit. Es wird **nichts** gelöscht, und es erscheint auch keine Warnung (zusammen mit C25 prüfen). Der Unterschied zu C27 ist allein die gemessene Startzeit im Feed | `e1742e0a` | |
+| C29 | Reset über den Knopf | „Ergebnisse eintragen → RaceClocker" auf einem zurückgesetzten Rennen löscht genauso wie die Automatik und meldet **Erfolg** — nicht mehr „keine Ergebnisse". Ungewohnt zu lesen, aber richtig: geschrieben wurde ja etwas | `e1742e0a` | |
+| C30 | Bahnen überleben | Startnummern und Bahnen bleiben nach dem Reset unverändert; die Zeilen stehen weiter im Feed, nur ohne Zeiten | `e1742e0a` | |
+| C31 | Zweiter Versuch | Nach dem Reset die Welle erneut starten: Aktivierung, Ist-Start und Zeiten kommen normal wieder. Besonders auf `started_at` achten — es war vorher gesetzt, wurde geleert und muss neu gestempelt werden | `e1742e0a` | |
+| C32 | Boot außerhalb des Feeds | Ein Boot, das RaceClocker nicht kennt und dessen Ergebnis von Hand steht, behält es beim Reset — angefasst werden nur Boote mit einer Zeile im Feed | `e1742e0a` | |
+| C33 | Gesperrte Runde | Ein Lauf, aus dessen Plätzen die nächste Runde bereits gesetzt ist, wird auch vom Reset nicht angefasst — weder über den Job noch über den Knopf. Dieselbe Sperre wie beim Schreiben; ohne sie würde ein Neustart in RaceClocker Plätze löschen, aus denen die Setzung längst abgeleitet ist | `e1742e0a` | |
+| C34 | Handeingabe und Reset | Automatik läuft, Ergebnis von Hand eingetragen: der Lauf ist pausiert (C21) und ein Neustart in RaceClocker fasst ihn **nicht** an. Nach „Automatik wieder aufnehmen" (C23) schlägt der Reset dagegen durch und nimmt den Handeintrag mit. Das ist gewollt — aber einmal gesehen haben, bevor es am Renntag passiert | `e1742e0a` | |
+
 ## D — Schiedsrichter-Dashboard
 
 | ID | Fall | Erwartung | testbar ab | Nachweis |
@@ -553,6 +578,12 @@ bleibende Nummer erwartet, siehe den offenen Punkt „Bootsnummer" unten.
   nachkonfiguriert werden muss. Damit kann sie aber jeder, der das Dashboard bedient. Am Testtag
   gegenprüfen, ob das der gewünschte Kreis ist; wenn nicht, braucht es doch ein eigenes Privileg —
   und dann muss es der Schiedsrichter-Rolle **vor** dem 14.08. zugewiesen werden.
+- **Reset gegen Handeintrag (C34).** Ein zurückgesetztes Rennen löscht die Ergebnisse der Boote,
+  die im Feed stehen — auch die, die jemand von Hand eingetragen hat. Die Automatik schützt sich
+  davor selbst (Handeingabe pausiert den Lauf), der Knopf und die wieder aufgenommene Automatik tun
+  es nicht. Am Testtag entscheiden, ob das reicht oder ob ein zurückgesetztes Rennen vor dem
+  Löschen nachfragen soll. Solange nichts nachfragt, gilt organisatorisch: nach einer Handeingabe
+  die Automatik erst wieder aufnehmen, wenn RaceClocker den Lauf tatsächlich neu gefahren hat.
 - **Löschen fehlt bewusst (K).** Ein falscher Eintrag wird korrigiert, nicht getilgt. Wenn am
   Testtag ein Fall auftaucht, in dem ein Eintrag ersatzlos weg muss (etwa eine komplett falsche
   Person), gibt es dafür heute keinen Weg außer SQL — vor der Regatta entscheiden, ob das reicht.

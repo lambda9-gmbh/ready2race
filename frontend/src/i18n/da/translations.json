@@ -653,6 +653,11 @@
       "RESULTS_COMPLETE": "Også fuldt bedømte løb",
       "hint": "Gælder for atletskærmen, kiosk-visningen og den offentlige resultatside. Som standard kun afsluttede løb: så længe et løb ikke er afsluttet, kan der stadig komme en tidsstraf, og et allerede offentliggjort resultat kan ikke trækkes tilbage."
     },
+    "executionAutoRefresh": {
+      "label": "Opdater gennemførelsessiden automatisk",
+      "seconds": "Interval i sekunder",
+      "hint": "Gennemførelsessiden henter tider, resultater, løb, rundeskift og check-ins i baggrunden i det indstillede interval — uden at genindlæse siden. Tilladt er 5 til 60 sekunder, standard er 5. Synkroniseringen hviler, mens en dialog er åben."
+    },
     "invoice": {
       "prefix": "Fakturapræfiks",
       "paymentDueBy": "Betalingsfrist for tilmeldingsgebyrer",
@@ -960,6 +965,10 @@
         "tabTitle": "Afvikling",
         "progress": {
           "error": "Kampene i konkurrencen kunne ikke indlæses."
+        },
+        "autoRefresh": {
+          "lastUpdated": "Data fra {{time}}",
+          "disconnected": "Ingen forbindelse"
         },
         "nextRound": {
           "create": "Opret næste runde",
