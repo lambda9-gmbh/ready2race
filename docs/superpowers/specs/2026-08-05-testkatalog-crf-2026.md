@@ -261,7 +261,7 @@ Bedienung.
 | G3 | Ohne Schrift-Upload | Fallback Helvetica, Urkunde bleibt druckbar | `4b98dd09` | |
 | G4 | Download je Wettkampf (PDF) | Plätze 1–3, sortiert nach Platz, Platzhalter gefüllt (Platz, Wettkampf, Verein, Renntage, Ort) | `4b98dd09` | |
 | G5 | Pro Athlet / pro Boot | „pro Athlet" eine Seite je Person inklusive Steuermann, „pro Boot" eine Seite je Boot; Vor-/Nachname bleiben im Boot-Modus leer, `FULL_NAME` trägt | `4b98dd09` | |
-| G6 | Renngemeinschaften | RG-Boote zeigen die RG-Bezeichnung, nicht einen der beteiligten Vereine | `4b98dd09` | |
+| G6 | Renngemeinschaften | ~~RG-Boote zeigen die RG-Bezeichnung~~ — **seit dem Vereinsketten-Umbau überholt.** RG-Boote zeigen jetzt die vollen Vereinsnamen aller Beteiligten, ohne jede Kürzung. Siehe J10 | `4b98dd09`, überholt 09.08. | |
 | G7 | Word-Download | Datei öffnet in Word, Rahmen sitzen an den Vorlagenkoordinaten, Text ist nachbearbeitbar, Seitenumbrüche stimmen | `4b98dd09` | |
 | G8 | Veranstaltungsebene | Ein Download über alle Wettkämpfe, sortiert nach Wettkampf und Platz | `4b98dd09` | |
 | G9 | Einzeldownload | Icon in der Ergebniszeile öffnet den Dialog und liefert danach genau diese Urkunde. Die Platzgrenze gilt hier **nicht** — ein Nachdruck für Platz 5 muss gehen, obwohl der Dialog auf 1–3 steht | `4b98dd09` | |
@@ -336,6 +336,40 @@ Berechtigungsprüfung. Entwurf und Plan unter
 | I6 | Ausgecheckt färbt nicht grün | Ein ausgechecktes Boot darf über `onWaterSeverity` nicht grün werden — es ist auf dem Wasser, das ist keine erfüllte Auflage | `b8848452` | |
 | I7 | Vorübergehend abgemeldete Auflage | Eine Auflage abmelden und wieder anmelden: der eingestellte Schweregrad ist noch da und nicht stillschweigend auf Standard zurückgefallen | `c70f18d7`, `4d3c8a24` | |
 | I8 | Zwei Bearbeiter gleichzeitig | **Bewusst offen gelassen, hier nur bestätigen:** `PUT /event/{eventId}/checkSeverity` hat kein optimistisches Sperren. Zwei gleichzeitig geöffnete Dialoge überschreiben sich kommentarlos. Vor der Regatta entscheiden, ob das reicht — im Zweifel heißt die Regel: einer pflegt | `93017cca` | |
+
+---
+
+## J — Vereinskette statt „Renngemeinschaft"
+
+Am 09.08. gebaut. Bis dahin trugen mehrere Boote desselben Laufs die identische Zeile
+„Renngemeinschaft" — im Produktivstand der CRF sind **42 von 100 Meldungen vereinsgemischt**, viele
+mit vier oder fünf verschiedenen Vereinen. Angezeigt wird jetzt der Verein, den die Athleten
+tragen; der meldende Verein taucht nirgends mehr auf. Entwurf:
+`docs/superpowers/specs/2026-08-09-vereinskette-statt-renngemeinschaft-design.md`.
+
+**Kein Agent hat die laufende Anwendung gesehen.** Alles unten ist compiliert und teils gegen echtes
+Postgres geprüft, aber nichts davon wurde je gerendert.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| J1 | Reine Vereinsboote unverändert | **Die zentrale Zusage.** Die 58 nicht gemischten Boote sehen aus wie vorher — ein Vereinsname, keine Kette, kein Trenner. Vorher/Nachher an derselben Karte vergleichen | `ae25377f` | |
+| J2 | Telefon: Kurzformen | Karte schmaler als 480 px: die Kette steht in Kurzformen und bricht auf zwei Zeilen um. Was dann nicht mehr passt, wird abgeschnitten — bewusst, nicht mit „+3" gekappt | `e8eb7559` | |
+| J3 | Tablet-Spalte: volle Namen | Karte ab 480 px: dieselbe Kette in vollen Vereinsnamen. Das Fenster ist **nicht** entscheidend, die Karte ist es — auf dem Tablet stehen zwei schmale Spalten nebeneinander | `e8eb7559` | |
+| J4 | Laptop: Crew je Person | Karte ab 700 px: zusätzlich je Person Nachname und Vereinskurzform. Rollenkürzel gegenlesen — „Sen." und „Ste." sind eine Setzung des Entwicklers, keine Vorgabe | `e8eb7559` | |
+| J5 | Fenster verbreitern | Von schmal auf breit ziehen: die Crew fehlt bis zum nächsten Poll im Datensatz. Die Karte muss dann Stufe 2 zeigen, **keine leere Fläche** | `e8eb7559` | |
+| J6 | Telefon bleibt sparsam | Netzwerk-Tab am Telefon: die Antwort enthält **kein** `crew`. Der Sekunden-Poll darf durch dieses Feature nicht schwerer werden | `8c63ee0b` | |
+| J7 | Overlay | Zeile antippen: die Mannschaft steht mit dem Verein **jeder einzelnen Person**, nicht mit einem pauschalen Teamverein | `8c63ee0b` | |
+| J8 | Crew-Reihenfolge stabil | Dieselbe Karte über mehrere Polls beobachten: die Kette darf ihre Reihenfolge nicht wechseln. Die Abfragen hatten vorher **gar keine** Sortierung — Postgres durfte bei jedem Poll anders liefern | `95d10153` | |
+| J9 | Ummeldung ändert die Kette | Eine Person durch jemanden aus einem anderen Verein ersetzen: die Kette übernimmt das. Sonderfall dahinter: eine Ersatzperson kann Vereinsmitglied sein, ohne in der Veranstaltung gemeldet zu sein — die darf nicht ohne Verein in der Kette landen | `8c63ee0b` | |
+| J10 | Urkunde mit fünf Vereinen | **Der wahrscheinlichste Überraschungspunkt.** Dieselbe Urkunde als PDF und als DOCX erzeugen: volle Vereinsnamen ohne jede Kürzung, Umbruch an den Vereinsgrenzen (nie mitten im Namen), keine Zeile über dem Rand, und beide Formate sehen gleich aus. Ohne den Umbruch lief der Text 1,7- bis 2,9-fach über die Seitenbreite | offen | |
+| J11 | Vorlagen-Editor lügt nicht | Im Editor eine lange Kette einsetzen: die Vorschau zeigt, was gedruckt wird. Vorher schnitt sie an der Kastenkante ab und verschwieg den Überlauf | offen | |
+| J12 | Kurzform pflegen | Auf der Pflegeseite eine Kurzform setzen: sie schlägt sofort die Automatik, auf dem Board und in der Anzeige. Feld leeren: zurück zur Automatik | `0bf3b74b` | |
+| J13 | Schreibvarianten zusammenführen | `ARV Kiel` und `Akademischer Ruderverein Kiel e.V.` dieselbe Kurzform geben: zwei Boote desselben Vereins sehen danach gleich aus. Automatisch geht das nicht, das ist die Grenze der Normalisierung | `0bf3b74b` | |
+| J14 | „auch:"-Zeilen | Bei einem zusammengefassten Eintrag stehen die weiteren Schreibweisen sichtbar darunter. Das ist die einzige Kontrolle dagegen, dass die Normalisierung zwei **verschiedene** Vereine verschmilzt — ohne diese Anzeige bliebe so ein Fehler unsichtbar | `0bf3b74b` | |
+| J15 | Regeln, Reihenfolge | Ein Wortpaar anlegen und die Reihenfolge prüfen: `Ruderverein → RV` muss vor `Verein → V` greifen, sonst bleibt `Ruder-V` stehen | offen | |
+| J16 | Regeln, Schalter | „Gründungsjahre entfernen" ausschalten: `Erster Kieler Ruder-Club von 1862` behält sein Jahr, überall. Wieder einschalten: weg | offen | |
+| J17 | Frische Installation | Eine Installation ohne den Ruder-Seed kürzt Vereinstypen **nicht** — nur Rechtsform, Jahreszahlen und Klammerzusätze fallen weg. Das ist Absicht: `Ruderclub → RC` ist Sportart-Wissen und gehört nicht in den Produktkern | offen | |
+| J18 | Meldeverein verschwunden | Auf Board, Athleten-Anzeige und Urkunde darf der meldende Verein nirgends mehr auftauchen, wenn er nicht zufällig auch ein getragener ist | `8c63ee0b`, `95d10153` | |
 
 ---
 
