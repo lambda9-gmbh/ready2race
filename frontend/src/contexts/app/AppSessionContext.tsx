@@ -31,6 +31,7 @@ export type AppView =
     | 'App_User'
     | 'App_Login'
     | 'APP_Forbidden'
+    | 'APP_Dashboard'
 
 const appViewPaths: Record<AppView, string> = {
     APP_Event_List: '/app',
@@ -41,6 +42,7 @@ const appViewPaths: Record<AppView, string> = {
     App_User: '/app/user',
     App_Login: '/app/login',
     APP_Forbidden: '/app/forbidden',
+    APP_Dashboard: '/app/dashboard',
 }
 
 export type AppViewState = {

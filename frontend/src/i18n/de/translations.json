@@ -2291,6 +2291,9 @@
       "title": "Nicht berechtigt",
       "message": "Du bist für diese Seite nicht berechtigt.",
       "backButton": "Zurück zum Login"
+    },
+    "dashboard": {
+      "noEvent": "Keine Veranstaltung gewählt."
     }
   },
   "caterer": {

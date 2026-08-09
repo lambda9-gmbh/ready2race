@@ -2291,6 +2291,9 @@
       "title": "Not authorized",
       "message": "You are not authorized for this page.",
       "backButton": "Back to login"
+    },
+    "dashboard": {
+      "noEvent": "No event selected."
     }
   },
   "caterer": {

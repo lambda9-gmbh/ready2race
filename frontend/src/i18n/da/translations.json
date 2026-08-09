@@ -2285,6 +2285,9 @@
       "title": "Ingen adgang",
       "message": "Du har ikke adgang til denne side.",
       "backButton": "Tilbage til login"
+    },
+    "dashboard": {
+      "noEvent": "Ingen begivenhed valgt."
     }
   },
   "caterer": {
