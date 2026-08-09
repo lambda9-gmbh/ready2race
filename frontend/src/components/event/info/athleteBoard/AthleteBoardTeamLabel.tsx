@@ -1,6 +1,6 @@
 import {Box, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {TeamWithClubs, teamLabel} from './common'
+import {TeamWithClubs, scaled, teamLabel} from './common'
 
 interface AthleteBoardTeamLabelProps {
     team: TeamWithClubs
@@ -28,7 +28,18 @@ const AthleteBoardTeamLabel = ({team, color}: AthleteBoardTeamLabelProps) => {
     const {t} = useTranslation()
 
     return (
-        <Typography sx={{fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)', fontWeight: 600}} color={color}>
+        <Typography
+            sx={{
+                fontSize: scaled('0.95rem', '1.6vw', '1.4rem'),
+                fontWeight: 600,
+                // Höchstens zwei Zeilen, danach Auslassungspunkte: ein sehr langer
+                // Renngemeinschafts-Name darf die Bootszeile nicht aufblähen.
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+            }}
+            color={color}>
             <Box component="span" sx={{display: {xs: 'inline', md: 'none'}}}>
                 {teamLabel(team, t, 'short')}
             </Box>
