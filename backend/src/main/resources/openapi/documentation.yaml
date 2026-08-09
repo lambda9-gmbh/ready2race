@@ -1680,6 +1680,53 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/roundProgression:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getRoundProgressionConfig
+      description: Whether this competition creates the pairings of following rounds automatically - its own setting, the event default it inherits from, and what actually applies.
+      responses:
+        200:
+          description: Round progression configuration successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundProgressionConfigDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateRoundProgressionConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoundProgressionConfigRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/from-raceclocker:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -9310,6 +9357,9 @@ components:
           type: boolean
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+        autoCreateFollowingRounds:
+          type: boolean
+          description: "Creates the pairings of the following round automatically once a round is fully finished"
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
@@ -9461,6 +9511,9 @@ components:
           type: boolean
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+        autoCreateFollowingRounds:
+          type: boolean
+          description: "Creates the pairings of the following round automatically once a round is fully finished"
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
@@ -9514,6 +9567,9 @@ components:
           type: boolean
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+        autoCreateFollowingRounds:
+          type: boolean
+          description: "Creates the pairings of the following round automatically once a round is fully finished"
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
@@ -12601,6 +12657,29 @@ components:
           format: uuid
           nullable: true
           description: Event-wide default race results import; inherited while the competition's own field is null.
+
+    RoundProgressionConfigDto:
+      type: object
+      required:
+        - eventAutoCreateFollowingRounds
+        - effective
+      properties:
+        autoCreateFollowingRounds:
+          type: boolean
+          nullable: true
+          description: "The competition's own choice. null means it follows the event setting."
+        eventAutoCreateFollowingRounds:
+          type: boolean
+        effective:
+          type: boolean
+          description: "What actually applies - computed by the backend so the inheritance rule lives in one place."
+
+    RoundProgressionConfigRequest:
+      type: object
+      properties:
+        autoCreateFollowingRounds:
+          type: boolean
+          nullable: true
 
     EventTimingConfigDto:
       type: object

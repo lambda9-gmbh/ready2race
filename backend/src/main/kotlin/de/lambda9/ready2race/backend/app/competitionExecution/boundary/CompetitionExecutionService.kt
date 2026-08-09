@@ -378,6 +378,42 @@ object CompetitionExecutionService {
             }
         }
 
+    /**
+     * Wie dieser Wettkampf zur Folgerunden-Automatik steht. Der wirksame Wert wird hier gerechnet
+     * und nicht im Frontend, damit die Vererbungsregel an genau einer Stelle steht.
+     */
+    fun getRoundProgressionConfig(
+        eventId: UUID,
+        competitionId: UUID,
+    ): App<ServiceError, ApiResponse.Dto<RoundProgressionConfigDto>> = KIO.comprehension {
+        val eventDefault = !EventRepo.getAutoCreateFollowingRounds(eventId).orDie()
+        val override = !CompetitionRepo.getAutoCreateFollowingRounds(competitionId).orDie()
+
+        KIO.ok(
+            ApiResponse.Dto(
+                RoundProgressionConfigDto(
+                    autoCreateFollowingRounds = override,
+                    eventAutoCreateFollowingRounds = eventDefault,
+                    effective = AutoRoundProgressionLogic.effectiveAutoCreate(eventDefault, override),
+                )
+            )
+        )
+    }
+
+    fun updateRoundProgressionConfig(
+        competitionId: UUID,
+        userId: UUID,
+        request: RoundProgressionConfigRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !CompetitionRepo.updateAutoCreateFollowingRounds(
+            competitionId,
+            request.autoCreateFollowingRounds,
+            userId,
+        ).orDie().onNullFail { CompetitionError.CompetitionNotFound }
+
+        noData
+    }
+
     fun sortRounds(
         setupRounds: List<CompetitionSetupRoundWithMatches>
     ): List<CompetitionSetupRoundWithMatches> {

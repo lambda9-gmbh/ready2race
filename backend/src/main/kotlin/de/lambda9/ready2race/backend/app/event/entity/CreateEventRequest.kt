@@ -29,6 +29,8 @@ data class CreateEventRequest(
     val allowParticipantSelfRegistration: Boolean,
     /** Steuert, wer Läufe beenden/aktivieren darf und ob die Kette dabei automatisch weiterzieht. */
     val chainProgressionMode: ChainProgressionMode,
+    /** Voreinstellung für die Folgerunden-Automatik; Wettkämpfe können sie einzeln übersteuern. */
+    val autoCreateFollowingRounds: Boolean,
     /** Zeigt Pausen/Programmpunkte aus dem Zeitplan auch auf Kiosk und Athleten-Anzeige. */
     val showBreaksOnPublicBoards: Boolean,
     /** Ab welchem Zustand ein Lauf als Ergebnis auf den öffentlichen Ansichten erscheint. */
@@ -73,6 +75,7 @@ data class CreateEventRequest(
                 submissionNeedsVerification = false,
                 allowParticipantSelfRegistration = false,
                 chainProgressionMode = ChainProgressionMode.DEAKTIVIERT,
+                autoCreateFollowingRounds = false,
                 showBreaksOnPublicBoards = false,
                 publicResultsVisibility = PublicResultsVisibility.FINISHED_ONLY,
             )
