@@ -1472,6 +1472,7 @@
         "refreshHint": "Den offentlige atletvisning opdateres i denne takt, men aldrig hurtigere end hvert 10. sekund.",
         "loadError": "Data kunne ikke indlæses. Kontrollér venligst forbindelsen.",
         "minutesUnit": "min",
+        "hoursUnit": "t",
         "secondsUnit": "sek"
       }
     },

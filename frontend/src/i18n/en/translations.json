@@ -1472,6 +1472,7 @@
         "refreshHint": "The public athlete board refreshes at this rate, but never faster than every 10 seconds.",
         "loadError": "Data could not be loaded. Please check the connection.",
         "minutesUnit": "min",
+        "hoursUnit": "h",
         "secondsUnit": "s"
       }
     },
