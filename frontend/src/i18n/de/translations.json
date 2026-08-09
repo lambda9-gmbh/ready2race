@@ -2379,7 +2379,6 @@
       "noResults": "Es existieren noch keine Ergebnisse für diesen Wettkampf."
     },
     "liveMatches": {
-      "liveMatches": "Läuft und steht an",
       "noMatches": "Zurzeit ist kein Lauf angesetzt.",
       "loadFailed": "Die Läufe konnten nicht geladen werden.",
       "stale": "Stand von {{time}}",

@@ -97,11 +97,16 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                                     match={match}
                                     selectMatch={onClickMatch}
                                     key={match.matchId}
-                                    statusChip={matchStatusChip(
-                                        match.status,
-                                        match.startTime,
-                                        now,
-                                    )}
+                                    // Ein Programmpunkt (FREE-Platzhalter, z.B. "Mittagspause") ist
+                                    // kein Lauf und hat keinen Laufzustand - er bekommt deshalb
+                                    // keinen Chip. Sonst zeigt matchStatusChip nach Ablauf seiner
+                                    // Slot-Zeit fälschlich "Überfällig", obwohl eine Pause nie
+                                    // überfällig sein kann.
+                                    statusChip={
+                                        match.name != null
+                                            ? undefined
+                                            : matchStatusChip(match.status, match.startTime, now)
+                                    }
                                     // Abgesagt, wartende Runde oder Programmpunkt: hinter der
                                     // Karte steht keine Aufstellung, die ein Dialog zeigen könnte.
                                     disabled={
@@ -109,6 +114,10 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                                         match.pendingRound === true ||
                                         match.name != null
                                     }
+                                    // Nur ein abgesagter Lauf wird durchgestrichen - eine wartende
+                                    // Runde oder ein Programmpunkt sind zwar auch `disabled`, aber
+                                    // nicht abgesagt.
+                                    cancelled={match.cancelled === true}
                                     // Wartende Runde: statt einer (nicht vorhandenen)
                                     // Mannschaftsliste steht hier der Hinweis darauf.
                                     note={

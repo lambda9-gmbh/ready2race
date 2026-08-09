@@ -2379,7 +2379,6 @@
       "noResults": "There are no results for this competition yet."
     },
     "liveMatches": {
-      "liveMatches": "Running and upcoming",
       "noMatches": "No match is scheduled right now.",
       "loadFailed": "The matches could not be loaded.",
       "stale": "As of {{time}}",

@@ -26,6 +26,14 @@ type Props<M extends ResultsMatchInfo> = {
      * nicht erzeugte Runde. Fehlt sie, ändert sich an der Karte nichts.
      */
     note?: string
+    /**
+     * Der Lauf ist abgesagt: Runde und Laufname bekommen zusätzlich zur Abblendung der ganzen
+     * Karte (siehe [disabled]) eine Durchstreichung, so wie `AthleteBoardMatchCard` es für
+     * denselben Fall tut. Eigene, schmalere Eigenschaft statt Wiederverwendung von [disabled]:
+     * eine wartende Runde oder ein Programmpunkt sind ebenfalls `disabled`, aber nicht abgesagt
+     * und sollen deshalb nicht durchgestrichen werden.
+     */
+    cancelled?: boolean
 }
 
 const ResultsMatchCard = <M extends ResultsMatchInfo>({
@@ -35,6 +43,7 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({
     statusChip,
     disabled = false,
     note,
+    cancelled = false,
 }: Props<M>) => {
     const {t} = useTranslation()
 
@@ -61,10 +70,19 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({
                             }
                         />
                     )}
-                    <Typography>{match.roundName}</Typography>
+                    {match.roundName && (
+                        <Typography
+                            sx={cancelled ? {textDecoration: 'line-through'} : undefined}>
+                            {match.roundName}
+                        </Typography>
+                    )}
                     <Box>
                         {match.matchName && (
-                            <Typography variant={'h6'}>{match.matchName}</Typography>
+                            <Typography
+                                variant={'h6'}
+                                sx={cancelled ? {textDecoration: 'line-through'} : undefined}>
+                                {match.matchName}
+                            </Typography>
                         )}
                     </Box>
                 </Box>

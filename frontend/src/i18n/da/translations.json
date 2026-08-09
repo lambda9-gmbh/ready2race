@@ -2373,7 +2373,6 @@
       "noResults": "Der findes endnu ingen resultater for denne konkurrence."
     },
     "liveMatches": {
-      "liveMatches": "I gang og kommende",
       "noMatches": "Der er ingen løb planlagt lige nu.",
       "loadFailed": "Løbene kunne ikke indlæses.",
       "stale": "Opdateret {{time}}",

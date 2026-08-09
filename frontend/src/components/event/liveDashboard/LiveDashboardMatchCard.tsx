@@ -106,7 +106,7 @@ const LiveDashboardMatchCard = ({
     }
     const statusChip = matchStatusChip(status, match.startTime, new Date())
     // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur — dasselbe Muster
-    // wie `StatusChip` in CompetitionExecutionRound.tsx.
+    // wie `StatusChip` in @components/event/match/StatusChip.tsx.
     const translate = t as (key: string, values?: Record<string, string | number>) => string
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
