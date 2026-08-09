@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.documentTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.GapDocumentTemplatePackage
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.GapDocumentTemplateService
 import de.lambda9.ready2race.backend.app.documentTemplate.control.GapDocumentTemplateFontRepo
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentPlaceholderRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentPlaceholderType
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateError
@@ -10,7 +11,11 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemp
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.GapDocumentTemplateFontRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.GAP_DOCUMENT_PLACEHOLDER
 import de.lambda9.ready2race.backend.database.generated.tables.references.GAP_DOCUMENT_TEMPLATE
+import de.lambda9.ready2race.backend.database.generated.tables.references.GAP_DOCUMENT_TEMPLATE_DATA
+import de.lambda9.ready2race.backend.database.generated.tables.references.GAP_DOCUMENT_TEMPLATE_FONT
+import de.lambda9.ready2race.backend.database.generated.tables.references.GAP_DOCUMENT_TEMPLATE_USAGE
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.text.TextAlign
 import de.lambda9.ready2race.testing.testComprehension
@@ -276,6 +281,46 @@ class GapDocumentTemplateServiceTest {
     fun exportingAnUnknownTemplateFails() = testComprehension {
         assertKIOFails(GapDocumentTemplateError.NotFound) {
             GapDocumentTemplateService.exportTemplate(UUID.randomUUID())
+        }
+    }
+
+    /**
+     * Löschen nimmt alles mit, was an der Vorlage hängt. Der Dienst löscht nur die Vorlagenzeile
+     * selbst und verlässt sich darauf, dass die Datenbank den Rest räumt — bei PDF, Schrift und
+     * Zuordnung tut sie das seit jeher, bei den Platzhaltern fehlte das `on delete cascade`.
+     * Weil jede eingerichtete Vorlage Platzhalter hat, war damit **keine** Vorlage mehr löschbar:
+     * der Aufruf endete in einer Fremdschlüsselverletzung und damit in einem 500er.
+     */
+    @Test
+    fun deletingATemplateTakesEverythingItHoldsWithIt() = testComprehension {
+        !GapDocumentTemplateService.addTemplate(File("urkunde.pdf", pdfBytes()), request(), null)
+        val id = !Jooq.query { selectFrom(GAP_DOCUMENT_TEMPLATE).fetchSingle().id!! }
+
+        !GapDocumentTemplateFontRepo.upsert(
+            GapDocumentTemplateFontRecord(
+                template = id,
+                fileName = "TheSansOffice.otf",
+                data = byteArrayOf(1, 2, 3),
+            )
+        )
+        !GapDocumentTemplateService.assignTemplate(
+            GapDocumentType.AWARD_CERTIFICATE,
+            AssignGapDocumentTemplateRequest(template = id),
+        )
+
+        !GapDocumentTemplateService.deleteTemplate(id)
+
+        assertEquals(0, !Jooq.query { fetchCount(GAP_DOCUMENT_TEMPLATE) })
+        assertEquals(0, !Jooq.query { fetchCount(GAP_DOCUMENT_PLACEHOLDER) })
+        assertEquals(0, !Jooq.query { fetchCount(GAP_DOCUMENT_TEMPLATE_DATA) })
+        assertEquals(0, !Jooq.query { fetchCount(GAP_DOCUMENT_TEMPLATE_FONT) })
+        assertEquals(0, !Jooq.query { fetchCount(GAP_DOCUMENT_TEMPLATE_USAGE) })
+    }
+
+    @Test
+    fun deletingAnUnknownTemplateFails() = testComprehension {
+        assertKIOFails(GapDocumentTemplateError.NotFound) {
+            GapDocumentTemplateService.deleteTemplate(UUID.randomUUID())
         }
     }
 
