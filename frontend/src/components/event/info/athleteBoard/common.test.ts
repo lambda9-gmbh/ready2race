@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {TFunction} from 'i18next'
-import {COUNTDOWN_MAX_SECONDS, formatRemaining, isSameDay, teamLabel} from './common'
+import {COUNTDOWN_MAX_SECONDS, formatRemaining, isSameDay, scaled, teamLabel} from './common'
 
 // Gibt den letzten Abschnitt des Schlüssels zurück, damit die Erwartungen unabhängig
 // von den echten Übersetzungen lesbar bleiben: "…hoursUnit" -> "hoursUnit".
@@ -89,5 +89,13 @@ describe('teamLabel', () => {
 describe('COUNTDOWN_MAX_SECONDS', () => {
     test('entspricht einem Tag', () => {
         expect(COUNTDOWN_MAX_SECONDS).toBe(86400)
+    })
+})
+
+describe('scaled', () => {
+    test('haengt die Groesse an die Dichte der Buehne', () => {
+        expect(scaled('1rem', '2vw', '3rem')).toBe(
+            'calc(var(--ab-scale, 1) * clamp(1rem, 2vw, 3rem))',
+        )
     })
 })
