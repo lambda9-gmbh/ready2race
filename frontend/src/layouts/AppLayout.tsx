@@ -2,8 +2,10 @@ import {Outlet} from '@tanstack/react-router'
 import {Container, Box} from '@mui/material'
 import {AppSessionProvider} from '@contexts/app/AppSessionContext.tsx'
 import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
+import {useRegisterAppSW} from '@pwa/registerAppSW.ts'
 
 const AppLayout = () => {
+    useRegisterAppSW()
     return (
         <Container
             className="mobile-optimized-layout"
