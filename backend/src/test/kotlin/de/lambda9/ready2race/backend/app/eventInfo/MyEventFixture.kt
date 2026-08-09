@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.eventInfo
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionDeregistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchTeamRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
@@ -23,6 +24,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.QrCodesRe
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_DEREGISTRATION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_TEAM
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
@@ -66,6 +68,9 @@ object MyEventFixture {
         val foreignMatchId: UUID,
         val unscheduledCompetitionId: UUID,
         val publicRequirementName: String,
+        val deregisteredTeamName: String,
+        val coxQrCode: String,
+        val coxRequirementName: String,
         val internalNote: String,
     )
 
@@ -97,8 +102,21 @@ object MyEventFixture {
             )
         ).execute()
 
+        // Zweite Rolle im selben Boot: nur so lässt sich prüfen, dass eine an sie gebundene
+        // Bedingung nicht bei allen anderen auch auftaucht.
+        val coxRoleId = UUID.randomUUID()
+        insertInto(NAMED_PARTICIPANT).set(
+            NamedParticipantRecord(
+                id = coxRoleId,
+                name = "Steuerfrau $tag",
+                createdAt = now,
+                updatedAt = now,
+            )
+        ).execute()
+
         val participantId = insertParticipant(clubId, "Mia", "Musterfrau $tag", now)
         val teamMateId = insertParticipant(clubId, "Lea", "Mitfahrerin $tag", now)
+        val coxId = insertParticipant(clubId, "Nele", "Steuerfrau $tag", now)
         val strangerId = insertParticipant(clubId, "Tom", "Fremd $tag", now)
 
         val eventRegistrationId = UUID.randomUUID()
@@ -118,11 +136,25 @@ object MyEventFixture {
             insertRegistration(eventRegistrationId, racedCompetitionId, clubId, "Boot B $tag", now)
         val unscheduledRegistrationId =
             insertRegistration(eventRegistrationId, unscheduledCompetitionId, clubId, "Boot C $tag", now)
+        // Vor der Auslosung zurückgezogen: kein Lauf, aber auch kein Warten mehr.
+        val deregisteredTeamName = "Boot D $tag"
+        val deregisteredRegistrationId =
+            insertRegistration(eventRegistrationId, unscheduledCompetitionId, clubId, deregisteredTeamName, now)
+        insertInto(COMPETITION_DEREGISTRATION).set(
+            CompetitionDeregistrationRecord(
+                competitionRegistration = deregisteredRegistrationId,
+                reason = "Krankheit",
+                createdAt = now,
+                updatedAt = now,
+            )
+        ).execute()
 
         insertCrew(ownRegistrationId, namedParticipantId, participantId)
         insertCrew(ownRegistrationId, namedParticipantId, teamMateId)
+        insertCrew(ownRegistrationId, coxRoleId, coxId)
         insertCrew(foreignRegistrationId, namedParticipantId, strangerId)
         insertCrew(unscheduledRegistrationId, namedParticipantId, participantId)
+        insertCrew(deregisteredRegistrationId, namedParticipantId, participantId)
 
         val participantQrCode = "teilnehmer-$tag"
         insertInto(QR_CODES).set(
@@ -130,6 +162,17 @@ object MyEventFixture {
                 id = UUID.randomUUID(),
                 qrCodeId = participantQrCode,
                 participant = participantId,
+                event = eventId,
+                createdAt = now,
+            )
+        ).execute()
+
+        val coxQrCode = "steuerfrau-$tag"
+        insertInto(QR_CODES).set(
+            QrCodesRecord(
+                id = UUID.randomUUID(),
+                qrCodeId = coxQrCode,
+                participant = coxId,
                 event = eventId,
                 createdAt = now,
             )
@@ -173,6 +216,16 @@ object MyEventFixture {
             insertRequirement(eventId, publicRequirementName, publiclyVisible = true, now = now)
         insertRequirement(eventId, "Interne Prüfung $tag", publiclyVisible = false, now = now)
 
+        // Freigegeben, aber nur für die Steuerfrau: darf bei der Ruderin nicht auftauchen.
+        val coxRequirementName = "Steuerprüfung $tag"
+        insertRequirement(
+            eventId,
+            coxRequirementName,
+            publiclyVisible = true,
+            now = now,
+            namedParticipantId = coxRoleId,
+        )
+
         val internalNote = "interne-notiz-$tag"
         insertInto(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT).set(
             ParticipantHasRequirementForEventRecord(
@@ -193,6 +246,9 @@ object MyEventFixture {
             foreignMatchId = foreignMatchId,
             unscheduledCompetitionId = unscheduledCompetitionId,
             publicRequirementName = publicRequirementName,
+            deregisteredTeamName = deregisteredTeamName,
+            coxQrCode = coxQrCode,
+            coxRequirementName = coxRequirementName,
             internalNote = internalNote,
         )
     }
@@ -351,11 +407,16 @@ object MyEventFixture {
         ).execute()
     }
 
+    /**
+     * Bedingung samt Zuordnung zur Veranstaltung. Ohne [namedParticipantId] gilt sie für alle,
+     * mit ihr nur für Personen in dieser Rolle.
+     */
     private fun org.jooq.DSLContext.insertRequirement(
         eventId: UUID,
         name: String,
         publiclyVisible: Boolean,
         now: LocalDateTime,
+        namedParticipantId: UUID? = null,
     ): UUID {
         val id = UUID.randomUUID()
         insertInto(PARTICIPANT_REQUIREMENT).set(
@@ -373,6 +434,7 @@ object MyEventFixture {
             EventHasParticipantRequirementRecord(
                 event = eventId,
                 participantRequirement = id,
+                namedParticipant = namedParticipantId,
                 createdAt = now,
             )
         ).execute()

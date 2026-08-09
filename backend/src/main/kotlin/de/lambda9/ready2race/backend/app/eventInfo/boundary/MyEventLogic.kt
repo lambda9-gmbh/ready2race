@@ -19,9 +19,6 @@ import java.util.UUID
  */
 object MyEventLogic {
 
-    /** Gleiche Frist wie [AthleteBoardLogic.CACHE_TTL_SECONDS], siehe Klassenkommentar. */
-    const val PARTICIPANT_CACHE_TTL_SECONDS = AthleteBoardLogic.CACHE_TTL_SECONDS
-
     /**
      * Ein Lauf der Person, wie ihn die Datenbank liefert — vor der Einordnung in
      * laufend/kommend/Ergebnis.

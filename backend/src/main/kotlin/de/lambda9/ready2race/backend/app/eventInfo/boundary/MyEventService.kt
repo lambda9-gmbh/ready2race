@@ -33,8 +33,16 @@ object MyEventService {
 
     // Zwischenspeicher je (Veranstaltung, Person). Bei einer Regatta hängt an jedem Armband ein
     // Telefon, das im selben Takt nachlädt; ohne ihn zahlt die Datenbank jeden dieser Abrufe mit
-    // vier Abfragen. Der Schlüssel enthält die Veranstaltung mit, weil dieselbe Person bei
+    // einer Handvoll Abfragen. Der Schlüssel enthält die Veranstaltung mit, weil dieselbe Person bei
     // mehreren Veranstaltungen starten kann und die Antworten sich unterscheiden.
+    //
+    // Anders als bei der Athleten-Anzeige (ein Eintrag je Veranstaltung) wächst die Karte hier mit
+    // der Zahl der Personen: jedes gescannte Armband legt einen eigenen Eintrag an, und abgelaufene
+    // Einträge verschwinden nicht von selbst, weil dieselbe Person nach dem Rennen einfach nicht
+    // mehr nachlädt. Deshalb wird beim Schreiben aufgeräumt, sobald die Karte die Schranke
+    // überschreitet - alles Abgelaufene fliegt dann in einem Rutsch heraus.
+    private const val CACHE_CLEANUP_THRESHOLD = 500
+
     private data class CachedMyEvent(val builtAt: LocalDateTime, val dto: MyEventDto)
 
     private val cache = ConcurrentHashMap<Pair<UUID, UUID>, CachedMyEvent>()
@@ -62,8 +70,14 @@ object MyEventService {
             val key = eventId to participantId!!
 
             // serverTime muss je Antwort frisch sein, sie ist die Bezugsgröße für den Countdown
-            // auf dem Gerät; der Rest darf aus dem Zwischenspeicher kommen. Gleiche Frist wie
-            // bei der Athleten-Anzeige, siehe MyEventLogic.PARTICIPANT_CACHE_TTL_SECONDS.
+            // auf dem Gerät; der Rest darf aus dem Zwischenspeicher kommen. Die Frist ist
+            // dieselbe wie bei der Athleten-Anzeige, weil sie über AthleteBoardLogic.isCacheFresh
+            // aus deren CACHE_TTL_SECONDS kommt.
+            //
+            // Damit ist die Antwort in sich minimal ungleichzeitig: startState und die Aufteilung
+            // in laufend/kommend/Ergebnis stammen vom Bauzeitpunkt, die Uhr daneben ist neu. Bei
+            // fünf Sekunden Frist fällt das in keiner Anzeige auf; eine Neuberechnung nur wegen
+            // der Uhr wäre der Zweck des Zwischenspeichers.
             val cached = cache[key]?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
             if (cached != null) {
                 return@comprehension KIO.ok(ApiResponse.Dto(cached.dto.copy(serverTime = now)))
@@ -79,6 +93,18 @@ object MyEventService {
             val registrationRecords = !MyEventRepo.findRegistrationsWithoutMatch(eventId, participantId).orDie()
             val requirementRecords = !ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie()
             val fulfilledRequirementIds = !MyEventRepo.findFulfilledRequirementIds(eventId, participantId).orDie()
+
+            // Welche Bedingungen für eine Person gelten, hängt an ihrer Rolle im Boot: eine
+            // Bedingung ohne Rollenbindung gilt für alle, eine rollengebundene nur für Personen
+            // in dieser Rolle. Ohne diese Einschränkung stünde eine fremde Bedingung bei jeder
+            // Person als "nicht erfüllt" - ein Fehlalarm, der Leute am Veranstaltungstag ohne
+            // Grund zur Meldestelle schickt. Die Regel kommt bewusst aus dem bestehenden Repo
+            // und wird hier nicht nachgebaut.
+            val namedParticipantIds =
+                !MyEventRepo.findNamedParticipantIdsForParticipant(eventId, participantId).orDie()
+            val applicableRequirementIds = !ParticipantRequirementForEventRepo
+                .getRequirementsForNamedParticipants(eventId, namedParticipantIds).orDie()
+                .map { records -> records.map { it.participantRequirement }.toSet() }
 
             val split = MyEventLogic.split(
                 entries = toRawMatches(matchRecords, participantId),
@@ -109,8 +135,10 @@ object MyEventService {
                 results = split.results,
                 unscheduled = toRegistrations(registrationRecords),
                 requirements = requirementRecords
-                    // Nur ausdrücklich freigegebene Bedingungen. Die Freitext-Notiz dazu wird
-                    // nicht einmal geladen, siehe MyEventRepo.findFulfilledRequirementIds.
+                    // Nur Bedingungen, die für diese Person überhaupt gelten, und davon nur die
+                    // ausdrücklich freigegebenen. Die Freitext-Notiz dazu wird nicht einmal
+                    // geladen, siehe MyEventRepo.findFulfilledRequirementIds.
+                    .filter { applicableRequirementIds.contains(it.id) }
                     .filter { it.publiclyVisible == true }
                     .map {
                         MyEventRequirementDto(
@@ -126,6 +154,9 @@ object MyEventService {
 
             // Rechnen zwei Abrufe gleichzeitig, gewinnt der letzte - bei Millisekunden Rechenzeit
             // kein Grund für ein Lock, genau wie beim Zwischenspeicher der Athleten-Anzeige.
+            if (cache.size >= CACHE_CLEANUP_THRESHOLD) {
+                cache.values.removeIf { !AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
+            }
             cache[key] = CachedMyEvent(now, dto)
 
             KIO.ok(ApiResponse.Dto(dto))
@@ -139,9 +170,12 @@ object MyEventService {
         records.groupBy { it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!! }
             .map { (matchId, rows) ->
                 val first = rows.first()
-                // Präzision je Lauf, damit alle Zeiten eines Laufs gleich fein dargestellt werden -
-                // dieselbe Regel wie auf der Athleten-Anzeige. Hier steht nur die eigene Zeit zur
-                // Verfügung; feiner als nötig wird sie dadurch nicht.
+                // Einschränkung: die Zeilen hier sind die Mitglieder des eigenen Bootes und tragen
+                // alle denselben Timecode. Die Funktion sieht also n-mal denselben Wert und
+                // liefert daher immer die gröbste Stufe. Die Athleten-Anzeige geht bei knappen
+                // Zeiten feiner auf, weil sie alle Boote des Laufs vor sich hat - dafür müssten
+                // hier auch die fremden Zeiten des Laufs geladen werden, was die Abfrage um eine
+                // Ebene aufbläht, die für "meine Zeit" niemand braucht.
                 val precision = Timecode.displayPrecision(rows.mapNotNull { it[TIMECODE.TIME] })
 
                 MyEventLogic.RawMatch(

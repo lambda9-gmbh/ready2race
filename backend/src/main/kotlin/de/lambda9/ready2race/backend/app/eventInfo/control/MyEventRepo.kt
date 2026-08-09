@@ -50,18 +50,24 @@ object MyEventRepo {
         // Wortgleich zu CompetitionMatchRepo.getMatchResults: abgemeldete und ausgeschiedene Boote
         // zählen nicht mit, für sie kommt kein Ergebnis mehr. Ob daraus ein öffentliches Ergebnis
         // wird, entscheidet AthleteBoardLogic.isPublicResult - hier wird nur der Rohwert geliefert.
+        //
+        // Die Unterabfrage bekommt einen eigenen Namen (`cmt`), weil COMPETITION_MATCH_TEAM auch
+        // im äußeren Verbund steht. Ohne ihn bindet Postgres jede Erwähnung an die innerste
+        // Ebene - heute das Gewollte, aber ein Alias am äußeren Vorkommen würde die Bedeutung
+        // lautlos umdrehen.
+        val innerTeam = COMPETITION_MATCH_TEAM.`as`("cmt")
         val allTeamsScored = notExists(
             selectOne()
-                .from(COMPETITION_MATCH_TEAM)
-                .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
-                .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
-                .and(COMPETITION_MATCH_TEAM.FAILED.isFalse)
+                .from(innerTeam)
+                .where(innerTeam.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
+                .and(innerTeam.PLACE.isNull)
+                .and(innerTeam.OUT.isFalse)
+                .and(innerTeam.FAILED.isFalse)
                 .and(
                     notExists(
                         selectOne()
                             .from(COMPETITION_DEREGISTRATION)
-                            .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                            .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(innerTeam.COMPETITION_REGISTRATION))
                             .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
                     )
                 )
@@ -134,6 +140,11 @@ object MyEventRepo {
      * Meldungen der Person, zu denen (noch) kein Lauf gesetzt ist. Bewusst ohne Bezug zur Runde:
      * solange die Mannschaft in gar keinem Lauf steht, ist für die Person offen, wann sie dran ist -
      * und genau das soll die Ansicht sagen können.
+     *
+     * Abgemeldete Meldungen fallen heraus: ein vor der Auslosung zurückgezogenes Boot wartet auf
+     * gar nichts mehr, es unter "gemeldet, noch kein Lauf" stehen zu lassen wäre eine falsche
+     * Ansage. Eine solche Abmeldung trägt noch keine Runde (`competition_setup_round` ist dann
+     * null), deshalb wird hier - anders als bei den Läufen - ohne Rundenbezug geprüft.
      */
     fun findRegistrationsWithoutMatch(eventId: UUID, participantId: UUID): JIO<List<Record>> = Jooq.query {
         select(
@@ -163,8 +174,32 @@ object MyEventRepo {
                         .where(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
                 )
             )
+            .and(
+                notExists(
+                    selectOne()
+                        .from(COMPETITION_DEREGISTRATION)
+                        .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+                )
+            )
             .orderBy(COMPETITION_PROPERTIES.IDENTIFIER.asc().nullsLast())
             .fetch()
+    }
+
+    /**
+     * Die Rollen, in denen die Person bei dieser Veranstaltung gemeldet ist (Steuerfrau, Ruderin,
+     * ...). Sie entscheiden mit, welche Bedingungen für sie überhaupt gelten - siehe
+     * [de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo.getRequirementsForNamedParticipants].
+     * Mehrfachnennungen fallen weg, eine Rolle zweimal zu tragen ändert nichts.
+     */
+    fun findNamedParticipantIdsForParticipant(eventId: UUID, participantId: UUID): JIO<List<UUID>> = Jooq.query {
+        selectDistinct(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT)
+            .from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
+            .join(COMPETITION_REGISTRATION)
+            .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            .join(COMPETITION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(participantId))
+            .fetch { it.value1()!! }
     }
 
     /** Name und Verein der Person - der Kopf der Ansicht, den es auch ohne einen einzigen Lauf gibt. */

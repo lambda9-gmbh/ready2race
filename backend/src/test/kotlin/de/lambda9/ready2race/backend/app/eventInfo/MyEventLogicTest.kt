@@ -139,11 +139,4 @@ class MyEventLogicTest {
         )
         assertEquals(listOf(timed.matchId, timeless.matchId), split.results.map { it.matchId })
     }
-
-    @Test
-    fun cacheTtlMatchesAthleteBoard() {
-        // Beide Ansichten zeigen dieselben Läufe. Eine kürzere TTL hier würde "Mein Event"
-        // vor der Anzeige aktualisieren und damit widersprüchliche Stände nebeneinander erzeugen.
-        assertEquals(5, MyEventLogic.PARTICIPANT_CACHE_TTL_SECONDS)
-    }
 }

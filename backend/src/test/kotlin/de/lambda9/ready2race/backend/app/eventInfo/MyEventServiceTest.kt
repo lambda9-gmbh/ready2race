@@ -13,8 +13,14 @@ import kotlin.test.assertTrue
  * Prüft die Zugriffsgrenzen des öffentlichen Endpunkts an einer echten Datenbank. Genau hier
  * entscheidet sich, ob ein fremder oder ein Helfer-Code an persönliche Daten kommt — das
  * lässt sich nicht sinnvoll mit Attrappen prüfen.
+ *
+ * Der Name endet auf `Test` und nicht auf `IT`: die Vorgabe von Surefire erfasst nur `Test*`,
+ * `*Test`, `*Tests` und `*TestCase`, und backend/pom.xml stellt nichts anderes ein. Unter dem
+ * alten Namen liefen ausgerechnet die Zugriffsprüfungen in keinem gewöhnlichen Testlauf mit.
+ * Inhaltlich passt `Test` ohnehin besser, denn hier wird über `testComprehension` gegen die
+ * Datenbank geprüft und nicht über `testApplicationComprehension` end-to-end.
  */
-class MyEventServiceIT {
+class MyEventServiceTest {
 
     @Test
     fun unknownCodeIsNotFound() = testComprehension {
@@ -60,6 +66,21 @@ class MyEventServiceIT {
     }
 
     @Test
+    fun roleBoundRequirementOnlyAppearsForThatRole() = testComprehension {
+        // Eine an eine Rolle gebundene Bedingung darf nicht bei allen anderen als "nicht erfüllt"
+        // stehen - das schickt Leute am Veranstaltungstag ohne Grund zur Meldestelle.
+        val fixture = !MyEventFixture.create()
+
+        val forCox = !MyEventService.getMyEvent(fixture.eventId, fixture.coxQrCode)
+        assertTrue(forCox.dto.requirements.map { it.name }.contains(fixture.coxRequirementName))
+        // Die rollenfreie Bedingung gilt daneben weiter für beide.
+        assertTrue(forCox.dto.requirements.map { it.name }.contains(fixture.publicRequirementName))
+
+        val forRower = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
+        assertFalse(forRower.dto.requirements.map { it.name }.contains(fixture.coxRequirementName))
+    }
+
+    @Test
     fun internalNoteNeverLeavesTheServer() = testComprehension {
         // Gegen die ausgelieferte JSON-Darstellung geprüft, nicht gegen die Datenklasse:
         // ein später ergänztes Feld oder eine eingebettete Struktur würde die Notiz sonst
@@ -75,5 +96,14 @@ class MyEventServiceIT {
         val fixture = !MyEventFixture.create()
         val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
         assertTrue(response.dto.unscheduled.any { it.competitionId == fixture.unscheduledCompetitionId })
+    }
+
+    @Test
+    fun deregisteredRegistrationIsNotUnscheduled() = testComprehension {
+        // Vor der Auslosung zurückgezogen: es kommt kein Lauf mehr, "gemeldet, noch kein Lauf"
+        // wäre eine falsche Ansage.
+        val fixture = !MyEventFixture.create()
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
+        assertFalse(response.dto.unscheduled.any { it.teamName == fixture.deregisteredTeamName })
     }
 }
