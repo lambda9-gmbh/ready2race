@@ -457,8 +457,12 @@ object LiveDashboardService {
             !LiveDashboardRepo.markOpenTeamsFailed(matchId, openResults.name, userId).orDie()
         }
 
-        !setRunning(matchId, false, userId)
         !CompetitionMatchRepo.update(matchId) {
+            // Beenden nimmt die Aktivierung zurück, lässt den Ist-Start aber stehen: Wann der Lauf
+            // losgegangen ist, bleibt auch danach eine Tatsache. Deshalb bewusst NICHT über
+            // `CompetitionExecutionService.setMatchActivation` — dessen Deaktivieren löscht
+            // `started_at` und pausiert den RaceClocker-Abruf, und beides wäre hier falsch.
+            activatedAt = null
             finishedAt = LocalDateTime.now()
             updatedBy = userId
             updatedAt = LocalDateTime.now()
@@ -494,11 +498,18 @@ object LiveDashboardService {
         KIO.unit
     }
 
-    /** Manuelles Übersteuern, falls zu viele oder zu wenige Läufe aktiv sind. */
-    fun setMatchRunning(
+    /**
+     * Ruft einen Lauf an den Start oder nimmt das zurück — manuelles Übersteuern, falls zu viele
+     * oder zu wenige Läufe am Start stehen.
+     *
+     * Was dabei geschrieben wird (und warum Deaktivieren die RaceClocker-Automatik pausiert), steht
+     * an der geteilten Stelle: [CompetitionExecutionService.setMatchActivation]. Das
+     * Durchführungs-Tab kommt über denselben Weg — sonst hinge dieselbe Regel an zwei Orten.
+     */
+    fun setMatchActivated(
         eventId: UUID,
         matchId: UUID,
-        running: Boolean,
+        activated: Boolean,
         userId: UUID,
     ): App<LiveDashboardError, ApiResponse.NoData> = KIO.comprehension {
         val exists = !EventRepo.exists(eventId).orDie()
@@ -506,7 +517,7 @@ object LiveDashboardService {
             return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
         }
 
-        !setRunning(matchId, running, userId)
+        !CompetitionExecutionService.setMatchActivation(matchId, activated, userId)
 
         noData
     }
@@ -514,7 +525,12 @@ object LiveDashboardService {
     /**
      * Markiert den echten Start eines Laufs — getrennt von der geplanten Startzeit. Idempotent:
      * ein zweiter Aufruf verschiebt den Zeitstempel nicht mehr, er ist nur beim ersten Mal gesetzt.
-     * Zugleich geht der Lauf auf "aktiv", da "gestartet" ohne "laufend" keinen Sinn ergibt.
+     * Zugleich geht der Lauf auf "aktiv", da "gestartet" ohne "am Start gerufen" keinen Sinn ergibt.
+     *
+     * Der Knopf heißt in der Oberfläche „Läuft" und nicht „Start": Er stellt fest, dass das Rennen
+     * unterwegs ist, er löst keine Zeitnahme aus. Wo RaceClocker abgerufen wird, meldet der Feed
+     * den Start ohnehin selbst — der Knopf bleibt für den Ausfall und für Zeitnahmen ohne
+     * Startstempel.
      */
     fun markMatchStarted(
         eventId: UUID,
@@ -877,16 +893,6 @@ object LiveDashboardService {
         )
     }
 
-    private fun setRunning(matchId: UUID, running: Boolean, userId: UUID): App<Nothing, Unit> =
-        CompetitionMatchRepo.update(matchId) {
-            // Setzt bewusst nur die Aktivierung; der Ist-Start bleibt, wo er ist. Ein erneutes
-            // Aktivieren rückt den Zeitpunkt nicht vor - "seit wann steht der Lauf am Start" soll
-            // nicht bei jedem Klick neu beginnen.
-            activatedAt = if (running) activatedAt ?: LocalDateTime.now() else null
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie().map { }
-
     private fun activateNext(candidates: List<Record>, userId: UUID): App<Nothing, Unit> =
         KIO.comprehension {
             val nextStart = candidates.firstOrNull()?.get(COMPETITION_MATCH.START_TIME)
@@ -895,7 +901,11 @@ object LiveDashboardService {
             // Alle Läufe derselben Startzeit gemeinsam aktivieren: parallele Starts gehören zusammen.
             !candidates
                 .filter { it[COMPETITION_MATCH.START_TIME] == nextStart }
-                .traverse { setRunning(it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!, true, userId) }
+                .traverse {
+                    CompetitionExecutionService.setMatchActivation(
+                        it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!, activated = true, userId = userId,
+                    )
+                }
 
             KIO.unit
         }

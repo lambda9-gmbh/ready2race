@@ -231,7 +231,7 @@ object EventScheduleService {
         }
         val matchExists = row.get("match_exists", Boolean::class.java) == true
         val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
-        val matchCurrentlyRunning = row[COMPETITION_MATCH.ACTIVATED_AT] != null
+        val matchActivated = row[COMPETITION_MATCH.ACTIVATED_AT] != null
         val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
         val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
 
@@ -246,7 +246,7 @@ object EventScheduleService {
             if (state == EventScheduleSlotState.OBSOLETE) {
                 return@comprehension KIO.fail(EventScheduleError.SlotNotSkippable(slotId))
             }
-            if (EventScheduleLogic.matchUnderway(matchStartedAt, matchCurrentlyRunning)) {
+            if (EventScheduleLogic.matchUnderway(matchStartedAt, matchActivated)) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
             }
 
@@ -390,7 +390,7 @@ object EventScheduleService {
 
     /**
      * Aktiviert den Lauf eines LINKED-Slots vom Zeitplan aus (C1) - Notfall-Override wie
-     * `LiveDashboardService.setMatchRunning`, nur vom Büro statt vom Schiedsrichter-Dashboard aus
+     * `LiveDashboardService.setMatchActivated`, nur vom Büro statt vom Schiedsrichter-Dashboard aus
      * und in JEDEM Modus erlaubt.
      */
     fun activateSlot(

@@ -164,6 +164,10 @@ object EventScheduleRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
             COMPETITION_MATCH.ACTIVATED_AT,
+            // Aktivierung und Ist-Start werden beide gebraucht: die eine entscheidet, ob ein Lauf
+            // noch aktivierbar ist, der andere, ob seine Startgruppe die Kette blockiert
+            // (ScheduleChain.decideNext).
+            COMPETITION_MATCH.STARTED_AT,
             roundMaterialized,
             matchOpen,
         )

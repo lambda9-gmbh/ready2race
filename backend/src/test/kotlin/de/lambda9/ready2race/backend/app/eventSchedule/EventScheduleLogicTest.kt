@@ -286,7 +286,7 @@ class EventScheduleLogicTest {
 
     @Test
     fun matchWithoutStartIsNotUnderway() {
-        assertFalse(EventScheduleLogic.matchUnderway(startedAt = null, currentlyRunning = false))
+        assertFalse(EventScheduleLogic.matchUnderway(startedAt = null, activated = false))
     }
 
     @Test
@@ -294,19 +294,19 @@ class EventScheduleLogicTest {
         // Befund B: das Fenster zwischen "Boote gehen an den Start" (Schiedsrichter aktiviert) und
         // "die Zeitnahme meldet den Start". Nur auf started_at zu schauen, ließ hier eine Absage zu -
         // der Lauf war danach abgesagt UND laufend zugleich.
-        assertTrue(EventScheduleLogic.matchUnderway(startedAt = null, currentlyRunning = true))
+        assertTrue(EventScheduleLogic.matchUnderway(startedAt = null, activated = true))
     }
 
     @Test
     fun recordedStartIsUnderwayEvenWhenNoLongerActive() {
         // Ein beendeter Lauf trägt started_at, aber currently_running = false - absagen lässt er
         // sich trotzdem nicht mehr.
-        assertTrue(EventScheduleLogic.matchUnderway(startedAt = slotNow, currentlyRunning = false))
+        assertTrue(EventScheduleLogic.matchUnderway(startedAt = slotNow, activated = false))
     }
 
     @Test
     fun runningMatchWithRecordedStartIsUnderway() {
-        assertTrue(EventScheduleLogic.matchUnderway(startedAt = slotNow, currentlyRunning = true))
+        assertTrue(EventScheduleLogic.matchUnderway(startedAt = slotNow, activated = true))
     }
 
     // --- computeShift ---

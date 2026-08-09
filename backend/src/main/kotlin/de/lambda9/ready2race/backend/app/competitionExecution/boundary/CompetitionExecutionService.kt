@@ -1179,26 +1179,73 @@ object CompetitionExecutionService {
         waveName: String?,
     ): List<RaceClockerFeedRow> = assignFeedRows(rows, teams, waveName).values.flatten()
 
-    fun updateMatchRunningState(
+    fun updateMatchActivation(
         matchId: UUID,
         userId: UUID,
-        request: UpdateCompetitionMatchRunningStateRequest,
+        request: UpdateCompetitionMatchActivationRequest,
         eventId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
-        !CompetitionMatchRepo.update(matchId) {
-            // Nur die Aktivierung; der Ist-Start bleibt unangetastet. Ein erneutes Aktivieren
-            // rückt den Zeitpunkt nicht vor.
-            activatedAt = if (request.currentlyRunning) activatedAt ?: LocalDateTime.now() else null
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie()
+        !setMatchActivation(matchId, request.activated, userId)
 
         noData
     }
+
+    /**
+     * Ruft einen Lauf an den Start oder nimmt das zurück — die eine Stelle für beide Wege dorthin
+     * (Durchführungs-Tab über [updateMatchActivation], Schiedsrichter-Dashboard über
+     * `LiveDashboardService.setMatchActivated`, dazu die Legacy-Aktivierung nach dem Beenden).
+     *
+     * Aktivieren setzt ausschließlich `activated_at`: Der Klick stellt fest, dass der Lauf
+     * drankommt, nicht dass er fährt. Der Ist-Start kommt aus der Zeitnahme oder aus
+     * `LiveDashboardService.markMatchStarted`. Ein erneutes Aktivieren rückt den Zeitpunkt nicht
+     * vor — "seit wann steht der Lauf am Start" soll nicht bei jedem Klick neu beginnen.
+     *
+     * Deaktivieren nimmt beides zurück und pausiert zugleich den automatischen RaceClocker-Abruf.
+     * Ohne die Pause wäre die Rücknahme wirkungslos: Der Lauf steht im Beobachtungsfenster, der Job
+     * findet die Startzeit im Feed und aktiviert ihn im nächsten Takt wieder — spätestens nach 60
+     * Sekunden. Freigegeben wird er über denselben Weg wie ein von Hand eingetragener Lauf
+     * ([resumeRaceClockerAutoPull]).
+     *
+     * Die Funktion steht hier und nicht im Live-Dashboard, weil dieser Service ohnehin die
+     * Schreibpfade auf `competition_match` hält (Ergebnisse, Pause, Freigabe) und
+     * [pauseRaceClockerAutoPull] samt seiner Bedingung schon hier liegt; das Dashboard importiert
+     * ihn längst. Die Alternative — die Logik im Dashboard und von hier aus aufrufen — hätte die
+     * Abhängigkeit nur umgedreht und die Pause von ihrer Bedingung getrennt.
+     *
+     * Beenden geht bewusst NICHT über diesen Weg: Dort fällt zwar auch die Aktivierung, aber der
+     * Ist-Start bleibt stehen (er ist eine Tatsache) und pausiert werden darf nichts.
+     */
+    fun setMatchActivation(matchId: UUID, activated: Boolean, userId: UUID): App<Nothing, Unit> =
+        KIO.comprehension {
+            val now = LocalDateTime.now()
+            !CompetitionMatchRepo.update(matchId) {
+                if (activated) {
+                    if (activatedAt == null) {
+                        activatedAt = now
+                    }
+                } else {
+                    activatedAt = null
+                    startedAt = null
+                }
+                updatedBy = userId
+                updatedAt = now
+            }.orDie()
+
+            if (!activated) {
+                !pauseRaceClockerAutoPull(matchId)
+
+                // Ohne das Vergessen des Merkpostens überspränge der nächste Takt die Änderung: Der
+                // Job hält je Lauf den zuletzt geschriebenen Stand, und der beschreibt nach der
+                // Rücknahme nicht mehr, was in der Datenbank steht.
+                RaceClockerPollService.forget(matchId)
+            }
+
+            unit
+        }
 
 
     fun deleteCurrentRound(
