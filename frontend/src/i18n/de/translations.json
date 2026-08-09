@@ -700,6 +700,8 @@
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
       "navigation": {
+        "modeCompetitions": "Rennen",
+        "modeSchedule": "Zeitplan",
         "backToEvent": "Zurück zur Veranstaltung",
         "filter": "Filtern",
         "showShortNames": "Kurznamen zeigen",

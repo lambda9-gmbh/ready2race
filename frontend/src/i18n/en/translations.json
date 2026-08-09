@@ -700,6 +700,8 @@
       "competition": "Competition",
       "competitions": "Competitions",
       "navigation": {
+        "modeCompetitions": "Races",
+        "modeSchedule": "Schedule",
         "backToEvent": "Back to the event",
         "filter": "Filter",
         "showShortNames": "Show short names",
