@@ -117,12 +117,38 @@ describe('raceClockerErrorText', () => {
     it.each([
         ['RACECLOCKER_URL_MISSING', 'urlMissing'],
         ['RACECLOCKER_URL_INVALID', 'urlInvalid'],
-        ['RACECLOCKER_MATCH_NOT_IN_FEED', 'matchNotInFeed'],
         ['RACECLOCKER_NO_RESULTS', 'noResults'],
         ['RACECLOCKER_MATCH_IS_BYE', 'matchIsBye'],
     ] as const)('bildet %s auf einen eigenen Text ab', (errorCode, leaf) => {
         expect(raceClockerErrorText(error({errorCode}))).toEqual({
             key: `event.competition.execution.results.raceclocker.error.${leaf}`,
+        })
+    })
+
+    it('nennt bei MatchNotInFeed die Rennen beim Namen', () => {
+        // Der Rennenname ist die Handlungsanweisung: „im Rennen Kurzstrecke nicht gefunden" sagt,
+        // wo nachzusehen ist. Eine nackte Adresse sagt es nicht.
+        expect(
+            raceClockerErrorText(
+                error({
+                    errorCode: 'RACECLOCKER_MATCH_NOT_IN_FEED',
+                    details: {races: ['Kurzstrecke', 'Timetrials']},
+                }),
+            ),
+        ).toEqual({
+            key: 'event.competition.execution.results.raceclocker.error.matchNotInFeed',
+            values: {races: 'Kurzstrecke, Timetrials'},
+        })
+    })
+
+    it('bleibt bei MatchNotInFeed ohne Rennennamen benutzbar', () => {
+        // Ein älterer Server schickt die Namen nicht mit; dann steht dort eben nichts, statt dass
+        // die Meldung ganz ausfällt.
+        expect(
+            raceClockerErrorText(error({errorCode: 'RACECLOCKER_MATCH_NOT_IN_FEED'})),
+        ).toEqual({
+            key: 'event.competition.execution.results.raceclocker.error.matchNotInFeed',
+            values: {races: ''},
         })
     })
 

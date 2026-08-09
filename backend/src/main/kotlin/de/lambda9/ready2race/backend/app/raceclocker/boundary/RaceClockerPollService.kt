@@ -171,6 +171,8 @@ object RaceClockerPollService {
         // achtmal je Takt gelesen - einmal je Wettkampf reicht, der Stand kann sich innerhalb eines
         // Taktes nicht ändern.
         val setupRoundsByCompetition = mutableMapOf<UUID, List<CompetitionSetupRoundWithMatches>>()
+        // Läufe, die diese Phase aussortiert, brauchen trotzdem ihren Stempel - siehe unten.
+        val skipped = mutableListOf<UUID>()
         val resolved = watched.mapNotNull { candidate ->
             val setupRounds = setupRoundsByCompetition.getOrPut(candidate.competitionId) {
                 // Ein Fehler der Turnierstruktur heißt für den Job dasselbe wie "Lauf nicht
@@ -193,7 +195,10 @@ object RaceClockerPollService {
             val match = runIsolated<CompetitionMatchWithTeams?>(candidate.matchId, null) {
                 CompetitionExecutionService.checkUpdateMatchResult(setupRounds, candidate.matchId)
                     .recoverDefault { null }
-            } ?: return@mapNotNull null
+            } ?: run {
+                skipped += candidate.matchId
+                return@mapNotNull null
+            }
 
             ResolvedMatch(candidate, match, match.teams.filter { !it.deregistered })
         }
@@ -206,8 +211,11 @@ object RaceClockerPollService {
 
         // Über die Lauf-Kennung verschlüsselt, nicht über das Objekt: `ResolvedMatch` trägt den
         // ganzen Lauf mitsamt Mannschaften, und dessen Gleichheit ist hier weder nötig noch billig.
-        val firstPass: Map<UUID, MatchFeed> =
-            resolved.associate { it.candidate.matchId to assign(it, feeds) }
+        val firstPass: Map<UUID, MatchFeed> = resolved.associate { entry ->
+            entry.candidate.matchId to runIsolated(entry.candidate.matchId, MatchFeed.NotInFeed) {
+                KIO.ok(assign(entry, feeds))
+            }
+        }
 
         // Phase 3: Runde 2 - der Rückfall, aber nur für das, was leer ausgegangen ist. Im gesunden
         // Betrieb ist diese Runde leer, und genau darin liegt die Ersparnis.
@@ -219,12 +227,29 @@ object RaceClockerPollService {
         }
 
         // Phase 4: Schreiben.
+        //
+        // Zuerst die still übersprungenen: Sie bekommen einen Abruf ohne Fehler eingetragen. Das ist
+        // keine Kosmetik. Ein Lauf, dessen Runde nicht mehr die aktuelle ist, wird hier absichtlich
+        // nicht mehr angefasst - trüge er noch den Fehlercode eines alten Netzaussetzers, bliebe der
+        // für immer stehen, weil ihn niemand mehr überschreibt. Durchführungs-Tab und
+        // Schiedsrichter-Board zeigten dann dauerhaft eine Störung an einem Lauf, den der Job
+        // bewusst in Ruhe lässt - genau die Dauerwarnung, gegen die dieser Job sonst argumentiert.
+        skipped.forEach { matchId ->
+            runIsolated(matchId, Unit) {
+                RaceClockerPollRepo.recordPoll(matchId, now, null).orDie().map { }
+            }
+        }
+
         var anyRunning = false
         resolved.forEach { entry ->
             // Wer in Runde 1 gefunden wurde, wird nicht erneut zugeordnet; für alle anderen sind
             // inzwischen die Rückfall-Rennen da.
             val first = firstPass.getValue(entry.candidate.matchId)
-            val feed = if (first is MatchFeed.Found) first else assign(entry, feeds)
+            val feed = if (first is MatchFeed.Found) {
+                first
+            } else {
+                runIsolated(entry.candidate.matchId, MatchFeed.NotInFeed) { KIO.ok(assign(entry, feeds)) }
+            }
 
             val outcome = runIsolated(
                 entry.candidate.matchId,

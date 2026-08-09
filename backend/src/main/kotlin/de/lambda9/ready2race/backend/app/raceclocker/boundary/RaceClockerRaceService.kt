@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.raceclocker.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerRaceRepo
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceDto
@@ -37,6 +39,10 @@ object RaceClockerRaceService {
         // zeigt, was der Abruf tatsächlich anfragt — dieselbe Behandlung wie zuvor an den beiden
         // Adressfeldern. Die Host-Allowlist darin ist zugleich das, was diesen Endpunkt davon
         // abhält, ein SSRF-Hebel zu sein: die Adresse kommt vom Bediener.
+        // Vor dem Einfuegen geprueft, damit eine unbekannte Veranstaltung als 404 endet und nicht
+        // als Fremdschluessel-Defekt, den die Oberflaeche nur als "Unerwarteter Fehler" zeigen kann.
+        !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
+
         val url = (!RaceClockerFeed.normalizeUrl(request.resultsUrl.trim())).toString()
         val name = request.name.trim()
 

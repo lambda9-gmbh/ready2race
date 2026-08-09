@@ -1113,10 +1113,10 @@
           "raceclocker": {
             "success": "Ergebnisse von RaceClocker übernommen",
             "error": {
-              "urlMissing": "Für diesen Wettkampf ist keine RaceClocker-Ergebnis-URL hinterlegt.",
+              "urlMissing": "Für diesen Wettkampf ist kein RaceClocker-Rennen angewählt.",
               "urlInvalid": "Die hinterlegte RaceClocker-URL ist ungültig. Erwartet wird eine Adresse auf raceclocker.com.",
               "unreachable": "Die Ergebnisse konnten nicht von RaceClocker geladen werden. Bitte URL und Verbindung prüfen.",
-              "matchNotInFeed": "Zu diesem Lauf gibt es in RaceClocker keine Einträge. Wurde die Startliste dort schon importiert? Stammt sie aus einer früheren Version der Runde, muss sie neu exportiert werden.",
+              "matchNotInFeed": "Der Lauf steht in {{races}} nicht im Feed. Wurde die Startliste dorthin importiert?",
               "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden ({{teams}}). Bitte dort bereinigen und erneut holen.",
               "noResults": "Für diesen Lauf liegen in RaceClocker noch keine Zeiten vor.",
               "matchIsBye": "Dieser Lauf ist ein Freilos: Das Team kommt ohne Rennen weiter, es gibt keine Ergebnisse zu holen."
@@ -1244,7 +1244,7 @@
           "raceQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es ist kein Zeitfahren-Rennen angewählt – ohne eines lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen."
         },
         "saved": "Zeitnahme-Einstellungen gespeichert",
-        "invalid": "Bitte geben Sie Adressen auf raceclocker.com an.",
+        "invalid": "Bitte wählen Sie ein Rennen dieser Veranstaltung aus.",
         "raceQualification": "Rennen für Qualifikationsrunden",
         "raceRounds": "Rennen für alle übrigen Runden"
       },
@@ -1442,7 +1442,7 @@
         "3": " angelegt und gelten für alle Veranstaltungen."
       },
       "saved": "Zeitnahme-Voreinstellung gespeichert",
-      "invalid": "Die Eingaben wurden abgelehnt: Adressen müssen auf raceclocker.com zeigen, die Takte mindestens 2 Sekunden betragen und die Beobachtungsfenster dürfen nicht negativ sein.",
+      "invalid": "Bitte wählen Sie ein Rennen dieser Veranstaltung aus.",
       "deviations": {
         "title": "Wettkämpfe mit eigener Zeitnahme",
         "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",

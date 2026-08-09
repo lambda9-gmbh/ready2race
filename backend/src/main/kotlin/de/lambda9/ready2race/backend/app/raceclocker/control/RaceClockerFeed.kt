@@ -70,9 +70,15 @@ object RaceClockerFeed {
             return KIO.fail(RaceClockerError.UrlInvalid(raw))
         }
 
-        if (url.host.lowercase() !in allowedHosts) return KIO.fail(RaceClockerError.UrlInvalid(raw))
+        val host = url.host.lowercase()
+        if (host !in allowedHosts) return KIO.fail(RaceClockerError.UrlInvalid(raw))
 
-        return KIO.ok(url)
+        // Auf den Apex vereinheitlicht. RaceClocker liefert unter beiden Hosts denselben Feed, aber
+        // als Zeichenkette sind sie verschieden -- und an dieser Zeichenkette hängen inzwischen die
+        // Eindeutigkeit eines Rennens je Veranstaltung und die Entdopplung im Abruf. Ohne diese
+        // Zeile wären www- und Apex-Form zwei Rennen mit einer Antwort: zwei Abrufe je Takt für
+        // dasselbe Ergebnis, also genau die Verschwendung, die abgestellt werden sollte.
+        return KIO.ok(URLBuilder(url).apply { this.host = host.removePrefix("www.") }.build())
     }
 
     /**

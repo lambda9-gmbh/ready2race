@@ -7,8 +7,9 @@ import EntityDialog from '@components/EntityDialog.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
+import {useFeedback} from '@utils/hooks.ts'
 import {addRaceClockerRace, updateRaceClockerRace} from '@api/sdk.gen.ts'
-import {RaceClockerRaceDto, RaceClockerStartMode} from '@api/types.gen.ts'
+import {ApiError, RaceClockerRaceDto, RaceClockerStartMode} from '@api/types.gen.ts'
 
 type Form = {
     name: string
@@ -50,7 +51,33 @@ const RaceClockerRaceDialog = (
     props: BaseEntityDialogProps<RaceClockerRaceDto> & {eventId: string},
 ) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
     const formContext = useForm<Form>()
+
+    /**
+     * Die drei Fehler, die beim Anlegen wirklich vorkommen, beim Namen nennen.
+     *
+     * Ohne das liefe jeder Fehlschlag in die Sammelmeldung von [EntityDialog] — und am Renntag ist
+     * der wahrscheinlichste Fehlgriff eine eingefügte Adresse, die gar nicht zu RaceClocker gehört.
+     * „Konnte nicht angelegt werden" hilft dann niemandem weiter.
+     *
+     * Rückgabewert `true` heißt: behandelt, die Sammelmeldung unterbleibt.
+     */
+    const showKnownError = (error: ApiError): boolean => {
+        switch (error.errorCode) {
+            case 'RACECLOCKER_RACE_NAME_TAKEN':
+                feedback.error(t('event.timing.races.nameTaken'))
+                return true
+            case 'RACECLOCKER_RACE_URL_TAKEN':
+                feedback.error(t('event.timing.races.urlTaken'))
+                return true
+            case 'RACECLOCKER_URL_INVALID':
+                feedback.error(t('event.timing.races.invalidUrl'))
+                return true
+            default:
+                return false
+        }
+    }
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
@@ -61,6 +88,8 @@ const RaceClockerRaceDialog = (
             {...props}
             formContext={formContext}
             onOpen={onOpen}
+            onAddError={showKnownError}
+            onEditError={showKnownError}
             addAction={formData =>
                 addRaceClockerRace({
                     path: {eventId: props.eventId},

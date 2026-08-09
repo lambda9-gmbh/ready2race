@@ -122,7 +122,23 @@ const EventTimingConfig = () => {
     const raceOptions = (races ?? []).map(race => ({id: race.id, label: race.name}))
 
     const removeRace = async (race: RaceClockerRaceDto) => {
-        if (!confirm(t('event.timing.races.deleteConfirm', {name: race.name}))) return
+        // Wer darauf zeigt, wird beim Namen genannt. „Wettkämpfe erben danach wieder" ist wahr,
+        // aber unbrauchbar, solange man nicht weiß, welche.
+        const affected = deviations
+            .filter(
+                d =>
+                    d.raceQualificationName === race.name || d.raceRoundsName === race.name,
+            )
+            .map(d => `${d.identifier} ${d.name}`)
+
+        const question = [
+            t('event.timing.races.deleteConfirm', {name: race.name}),
+            affected.length > 0 ? affected.join(', ') : null,
+        ]
+            .filter(line => line !== null)
+            .join('\n\n')
+
+        if (!confirm(question)) return
 
         const {error} = await deleteRaceClockerRace({
             path: {eventId, raceId: race.id},
@@ -131,10 +147,22 @@ const EventTimingConfig = () => {
             feedback.error(t('common.error.unexpected'))
         } else {
             feedback.success(t('event.timing.races.deleted'))
-            // Auch die Voreinstellung neu laden: Das gelöschte Rennen war vielleicht angewählt,
-            // und die Anwahl steht danach auf „nicht gesetzt".
             setRacesReloaded(Date.now())
-            setLastSaved(Date.now())
+            // Die Anwahl im Formular zeigt sonst auf ein Rennen, das es nicht mehr gibt. Gezielt
+            // geleert statt das ganze Formular neu zu laden: Ein Neuladen würde jede nicht
+            // gespeicherte Eingabe daneben stillschweigend verwerfen.
+            if (formContext.getValues('raceQualification')?.id === race.id) {
+                formContext.setValue('raceQualification', null)
+            }
+            if (formContext.getValues('raceRounds')?.id === race.id) {
+                formContext.setValue('raceRounds', null)
+            }
+            setDeviations(current =>
+                current.filter(
+                    d =>
+                        d.raceQualificationName !== race.name && d.raceRoundsName !== race.name,
+                ),
+            )
         }
     }
 
@@ -442,10 +470,7 @@ const EventTimingConfig = () => {
                 entityName={t('event.timing.races.title')}
                 dialogIsOpen={raceDialogOpen}
                 closeDialog={() => setRaceDialogOpen(false)}
-                reloadData={() => {
-                    setRacesReloaded(Date.now())
-                    setLastSaved(Date.now())
-                }}
+                reloadData={() => setRacesReloaded(Date.now())}
                 entity={editedRace}
             />
         </Box>

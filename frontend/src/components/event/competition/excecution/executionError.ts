@@ -181,8 +181,15 @@ export const raceClockerErrorText = (error: ExecutionApiError): ExecutionErrorTe
         case 'RACECLOCKER_MALFORMED_FEED':
             return {key: raceClockerKeys.unreachable}
 
-        case 'RACECLOCKER_MATCH_NOT_IN_FEED':
-            return {key: raceClockerKeys.matchNotInFeed}
+        case 'RACECLOCKER_MATCH_NOT_IN_FEED': {
+            // Der Rennenname statt der nackten Adresse: „im Rennen Kurzstrecke nicht gefunden" ist
+            // am Renntag eine Handlungsanweisung, eine URL ist es nicht.
+            const details = (error.details as Record<string, unknown> | undefined) ?? {}
+            return {
+                key: raceClockerKeys.matchNotInFeed,
+                values: {races: asStringArray(details.races).join(', ')},
+            }
+        }
 
         case 'RACECLOCKER_DUPLICATE_TEAMS': {
             const details = (error.details as Record<string, unknown> | undefined) ?? {}

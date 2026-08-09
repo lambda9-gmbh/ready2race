@@ -1113,10 +1113,10 @@
           "raceclocker": {
             "success": "Results taken over from RaceClocker",
             "error": {
-              "urlMissing": "No RaceClocker results URL is configured for this competition.",
+              "urlMissing": "No RaceClocker race is selected for this competition.",
               "urlInvalid": "The configured RaceClocker URL is invalid. An address on raceclocker.com is expected.",
               "unreachable": "The results could not be loaded from RaceClocker. Please check the URL and the connection.",
-              "matchNotInFeed": "There are no entries for this heat in RaceClocker. Has the start list been imported there yet? If it was exported from an earlier version of the round, it has to be exported again.",
+              "matchNotInFeed": "The heat does not appear in {{races}}. Has the start list been imported there?",
               "duplicateTeams": "RaceClocker contains duplicate crews ({{teams}}). Please clean them up there and pull again.",
               "noResults": "There are no times for this heat in RaceClocker yet.",
               "matchIsBye": "This heat is a bye: the team moves on without racing, so there are no results to pull."
@@ -1244,7 +1244,7 @@
           "raceQualification": "This competition has a qualification round, but no time trial race is selected – without one, no results can be pulled from RaceClocker for the qualification."
         },
         "saved": "Timing settings saved",
-        "invalid": "Please enter addresses on raceclocker.com.",
+        "invalid": "Please select a race belonging to this event.",
         "raceQualification": "Race for qualification rounds",
         "raceRounds": "Race for all other rounds"
       },
@@ -1442,7 +1442,7 @@
         "3": " and apply to all events."
       },
       "saved": "Timing defaults saved",
-      "invalid": "The input was rejected: addresses must point to raceclocker.com, the intervals must be at least 2 seconds, and the watch windows must not be negative.",
+      "invalid": "Please select a race belonging to this event.",
       "deviations": {
         "title": "Competitions with their own timing",
         "none": "No competition deviates – all of them follow these defaults.",
