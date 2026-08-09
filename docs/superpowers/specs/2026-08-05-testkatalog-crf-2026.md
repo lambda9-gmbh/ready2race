@@ -466,6 +466,15 @@ Zugangsdaten eingeben. L12 ging trotzdem, weil das Ergebnis-PDF auch ohne Anmeld
    zu den Wettkampf-Platzierungen, wo `CompetitionSetupPlacesOption.EQUAL` mehrere Boote gleich
    wertet — L6 ist entsprechend umgeschrieben.
 
+**Testdaten liegen bereit.** `docs/seeds/seed-block-l-wertungskategorien.sql` legt vier
+Kategorien an, ordnet sie der „Coastal-Regatta Flensburg 2026" in einer bewusst **nicht**
+alphabetischen Reihenfolge zu und verteilt sie auf die Boote des Wettkampfs 11. Am 09.08. war das
+in der Dev-Datenbank bereits eingespielt; wer auf einer frischen Datenbank testet, spielt es
+nach:
+```
+docker exec -i backend-db-1 psql -U developer -d ready2race < docs/seeds/seed-block-l-wertungskategorien.sql
+```
+
 **Voraussetzung für diesen Block:** eine Veranstaltung mit **mindestens zwei** zugeordneten
 Wertungskategorien, einem Lauf, in dem Boote **beider** Kategorien starten, **einem Boot ganz ohne
 Kategorie**, einem Gleichstand (zwei Boote mit demselben Platz) und einem abgemeldeten Boot.
