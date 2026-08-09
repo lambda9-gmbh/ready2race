@@ -6458,6 +6458,50 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/schedule/slot/{slotId}/advance:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: advanceAfterSkippedSlot
+      description: >-
+        Moves the schedule up into the time freed by a cancelled slot, up to and including
+        targetSlotId. The delta comes from the cancelled slot itself (its planned duration, else the
+        gap to the following slot on the same race day); the slot must be cancelled. dryRun=true
+        only computes the preview.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvanceScheduleRequest'
+      responses:
+        200:
+          description: Advance computed (and applied unless dryRun)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftPreviewDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/schedule/slot/{slotId}/unskip:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -8500,6 +8544,8 @@ components:
         - SCHEDULE_SHIFT_TARGET_INVALID
         - SCHEDULE_SHIFT_LEAVES_RACE_DAY
         - SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR
+        - SCHEDULE_ADVANCE_NO_DELTA
+        - SCHEDULE_SLOT_NOT_SKIPPED
         - SCHEDULE_IMPORT_DUPLICATE_ROWS
         - SCHEDULE_COMPRESSION_IMPOSSIBLE
         - SCHEDULE_SETUP_MATCH_ALREADY_PLANNED
@@ -14330,6 +14376,21 @@ components:
           type: string
           format: uuid
           nullable: true
+        dryRun:
+          type: boolean
+
+    AdvanceScheduleRequest:
+      type: object
+      description: >-
+        Only the target slot: start slot and delta are derived from the cancelled slot by the
+        server.
+      required:
+        - targetSlotId
+        - dryRun
+      properties:
+        targetSlotId:
+          type: string
+          format: uuid
         dryRun:
           type: boolean
 

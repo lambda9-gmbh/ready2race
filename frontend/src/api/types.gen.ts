@@ -14,6 +14,14 @@ export type ActionColors = {
     info: string
 }
 
+/**
+ * Only the target slot: start slot and delta are derived from the cancelled slot by the server.
+ */
+export type AdvanceScheduleRequest = {
+    targetSlotId: string
+    dryRun: boolean
+}
+
 export type ApiError = {
     status: {
         value: number
@@ -1137,6 +1145,8 @@ export type ErrorCode =
     | 'SCHEDULE_SHIFT_TARGET_INVALID'
     | 'SCHEDULE_SHIFT_LEAVES_RACE_DAY'
     | 'SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR'
+    | 'SCHEDULE_ADVANCE_NO_DELTA'
+    | 'SCHEDULE_SLOT_NOT_SKIPPED'
     | 'SCHEDULE_IMPORT_DUPLICATE_ROWS'
     | 'SCHEDULE_COMPRESSION_IMPOSSIBLE'
     | 'SCHEDULE_SETUP_MATCH_ALREADY_PLANNED'
@@ -6685,6 +6695,18 @@ export type SkipScheduleSlotData = {
 export type SkipScheduleSlotResponse = void
 
 export type SkipScheduleSlotError = ApiError
+
+export type AdvanceAfterSkippedSlotData = {
+    body: AdvanceScheduleRequest
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type AdvanceAfterSkippedSlotResponse = ShiftPreviewDto
+
+export type AdvanceAfterSkippedSlotError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type UnskipScheduleSlotData = {
     path: {
