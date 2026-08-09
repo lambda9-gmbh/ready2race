@@ -18,8 +18,14 @@
   export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
   ```
   `/usr/libexec/java_home -v 21` schlägt hier mit „Unable to locate a Java Runtime" fehl — nicht darauf ausweichen.
-- **Datenbanken müssen laufen**, sonst schlägt jede Generierung fehl: `cd backend && docker compose up -d`. Port 7652 ist die Build-Datenbank (jOOQ/Flyway), 7653 die Entwicklungsdatenbank.
-- **jOOQ-Klassen sind nicht eingecheckt.** Sie entstehen unter `backend/target/generated-sources/jooq` in der Maven-Phase `generate-sources`, nachdem Flyway die Build-Datenbank migriert hat. Nach jeder Migrationsänderung: `./mvnw generate-sources`.
+- **EIGENE Build-Datenbank auf Port 7655 benutzen — niemals die geteilte 7652.** Die 7652 wird von allen Worktrees geteilt und trägt derzeit `202608091500`/`202608091501` aus einem fremden Zweig, während dieser Zweig bei `202608091410` endet. Ein Build dagegen läuft grün durch, erzeugt aber jOOQ-Klassen mit fremden Spalten; zur Laufzeit wirft dann jeder Aufruf `column event.execution_auto_refresh does not exist`. Der Wegwerf-Container `r2r-rcrennen-builddb` läuft bereits (angelegt und geprüft am 2026-08-09). Fehlt er:
+  ```bash
+  docker run -d --name r2r-rcrennen-builddb -e POSTGRES_USER=developer -e POSTGRES_PASSWORD=sql -e POSTGRES_DB=ready2race-build -p 7655:5432 postgres:17
+  ```
+- **Jeder Maven-Aufruf trägt `-Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build`** — auch `test`, `package`, `verify` und `flyway:clean`, denn die Phase `generate-sources` hängt an jedem davon. Ein `flyway:clean` ohne diesen Schalter würde die Build-Datenbank anderer Worktrees leeren. Die Befehle in diesem Plan tragen ihn bereits; neu hinzugefügte müssen ihn ebenso tragen.
+- **Die DB-Tests brauchen den Schalter nicht für sich** — `testComprehension` startet sein eigenes Postgres über Testcontainers. Der Schalter betrifft allein Flyway und den jOOQ-Codegen.
+- Die Entwicklungsdatenbank auf 7653 (`cd backend && docker compose up -d`) wird hier nur gebraucht, wenn die Anwendung von Hand gestartet wird.
+- **jOOQ-Klassen sind nicht eingecheckt.** Sie entstehen unter `backend/target/generated-sources/jooq` in der Maven-Phase `generate-sources`, nachdem Flyway die Build-Datenbank migriert hat. Nach jeder Migrationsänderung: `./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build generate-sources`.
 - **Migrationsnummer:** `V202608091600`. Höchste im Zweig ist `V202608091410`; `V202608091500` ist auf einem parallelen Zweig vergeben. Vor dem Commit von Task 1 mit `ls backend/src/main/resources/db/migration | tail -5` erneut prüfen.
 - **Deutsche Texte immer mit echten Umlauten** (ä, ö, ü, ß), nie mit ae/oe/ue/ss. Gilt für Kommentare, Migrationstexte und i18n.
 - **Drei Sprachdateien**, alle drei pflegen: `frontend/src/i18n/de/translations.json`, `.../en/translations.json`, `.../da/translations.json`.
@@ -250,10 +256,10 @@ alter table competition
 - [ ] **Step 3: Datenbanken starten und migrieren**
 
 ```bash
-cd backend && docker compose up -d && export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && ./mvnw -q generate-sources
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q generate-sources
 ```
 
-Erwartet: Durchlauf ohne Fehler. Bei `Migration checksum mismatch` oder Resten früherer Versuche die Build-Datenbank zurücksetzen: `./mvnw flyway:clean && ./mvnw -q generate-sources`.
+Erwartet: Durchlauf ohne Fehler. Bei `Migration checksum mismatch` oder Resten früherer Versuche die Build-Datenbank zurücksetzen: `./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build flyway:clean && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q generate-sources`.
 
 - [ ] **Step 4: Generierte Klassen prüfen**
 
@@ -267,7 +273,7 @@ Erwartet: Der erste Befehl findet `RACECLOCKER_RACE`. Der zweite findet **nichts
 - [ ] **Step 5: Backfill an einem Beispiel prüfen**
 
 ```bash
-docker exec -i $(docker compose -f backend/docker-compose.yaml ps -q build-db) psql -U developer -d ready2race-build -c "set search_path to ready2race; select name, start_mode, position, results_url from raceclocker_race order by event, position;"
+docker exec r2r-rcrennen-builddb psql -U developer -d ready2race-build -c "set search_path to ready2race; select name, start_mode, position, results_url from raceclocker_race order by event, position;"
 ```
 
 Erwartet: Auf einer leeren Build-Datenbank null Zeilen — das ist in Ordnung und belegt nur, dass die Anweisungen syntaktisch laufen. Der echte Beleg folgt in Task 9 gegen den Prod-Abzug.
@@ -479,7 +485,7 @@ Falls `testComprehension` eine andere Signatur hat, `RaceClockerPollRepoTest.kt`
 - [ ] **Step 3: Test laufen lassen, Fehlschlag bestätigen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerRaceRepoTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test -Dtest=RaceClockerRaceRepoTest
 ```
 
 Erwartet: Übersetzungsfehler „Unresolved reference: RaceClockerRaceRepo".
@@ -555,7 +561,7 @@ object RaceClockerRaceRepo {
 - [ ] **Step 5: Test laufen lassen, Erfolg bestätigen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerRaceRepoTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test -Dtest=RaceClockerRaceRepoTest
 ```
 
 Erwartet: 4 Tests, alle grün.
@@ -992,7 +998,7 @@ Im `components.schemas`-Block neben `CompetitionTimingDeviationDto` (etwa Zeile 
 - [ ] **Step 7: Übersetzen und SDK erzeugen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q compile
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q compile
 ```
 
 Erwartet: Übersetzung ohne Fehler.
@@ -1114,7 +1120,7 @@ class RaceClockerMatchTargetTest {
 - [ ] **Step 2: Test laufen lassen, Fehlschlag bestätigen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerMatchTargetTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test -Dtest=RaceClockerMatchTargetTest
 ```
 
 Erwartet: Übersetzungsfehler „No value passed for parameter 'timeTrialUrl'" oder „Unresolved reference: qualificationRace".
@@ -1298,7 +1304,7 @@ Dieselbe Umstellung in `CompetitionMatchRepo.kt:54-82`: zwei `RACECLOCKER_RACE`-
 - [ ] **Step 7: Alles übersetzen und die Tests laufen lassen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test
 ```
 
 Erwartet: Alle Tests grün. `RaceClockerPollRepoTest` schlägt hier fehl, weil sein `seed` noch die alten Spalten setzt — das ist der nächste Schritt.
@@ -1326,7 +1332,7 @@ In `RaceClockerPollRepoTest.kt`:
 - [ ] **Step 9: Tests laufen lassen, Erfolg bestätigen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test
 ```
 
 Erwartet: alle grün.
@@ -1450,7 +1456,7 @@ class RaceClockerFetchPlanTest {
 - [ ] **Step 2: Test laufen lassen, Fehlschlag bestätigen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerFetchPlanTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test -Dtest=RaceClockerFetchPlanTest
 ```
 
 Erwartet: „Unresolved reference: RaceClockerFeedAssignment".
@@ -1496,7 +1502,7 @@ object RaceClockerFeedAssignment {
 - [ ] **Step 4: Test laufen lassen, Erfolg bestätigen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test -Dtest=RaceClockerFetchPlanTest
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test -Dtest=RaceClockerFetchPlanTest
 ```
 
 Erwartet: 6 Tests, alle grün.
@@ -1794,7 +1800,7 @@ Innerhalb von `RaceClockerPollService`, neben dem bestehenden `FeedResult`:
 - [ ] **Step 4: Übersetzen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q compile
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q compile
 ```
 
 Erwartet: keine Fehler.
@@ -1802,7 +1808,7 @@ Erwartet: keine Fehler.
 - [ ] **Step 5: Alle Tests laufen lassen**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test
 ```
 
 Erwartet: alle grün.
@@ -2005,7 +2011,7 @@ Erwartet: alles grün.
 - [ ] **Step 6: Backend-Tests**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -q test
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q test
 ```
 
 Erwartet: alles grün.
@@ -2031,7 +2037,7 @@ git commit -m "Wettkämpfe wählen ihr Rennen beim Namen an"
 - [ ] **Step 1: Vollständigen Lauf gegen eine frische Datenbank**
 
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw flyway:clean && ./mvnw -q verify
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home && cd backend && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build flyway:clean && ./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build -q verify
 ```
 
 Erwartet: Migrationen und alle Tests grün.
