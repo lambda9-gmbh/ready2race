@@ -464,6 +464,15 @@ import type {
     CheckInOutParticipantData,
     CheckInOutParticipantError,
     CheckInOutParticipantResponse,
+    GetParticipantTrackingHistoryData,
+    GetParticipantTrackingHistoryError,
+    GetParticipantTrackingHistoryResponse,
+    AddManualParticipantTrackingData,
+    AddManualParticipantTrackingError,
+    AddManualParticipantTrackingResponse,
+    CorrectParticipantTrackingData,
+    CorrectParticipantTrackingError,
+    CorrectParticipantTrackingResponse,
     UpdateParticipantRequirementData,
     UpdateParticipantRequirementError,
     UpdateParticipantRequirementResponse,
@@ -2800,6 +2809,45 @@ export const checkInOutParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/participant/{participantId}/checkInOut',
+    })
+}
+
+export const getParticipantTrackingHistory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantTrackingHistoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantTrackingHistoryResponse,
+        GetParticipantTrackingHistoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking',
+    })
+}
+
+export const addManualParticipantTracking = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddManualParticipantTrackingData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddManualParticipantTrackingResponse,
+        AddManualParticipantTrackingError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking',
+    })
+}
+
+export const correctParticipantTracking = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CorrectParticipantTrackingData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        CorrectParticipantTrackingResponse,
+        CorrectParticipantTrackingError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking/{trackingId}',
     })
 }
 

@@ -19,5 +19,11 @@ data class ParticipantTrackingDto(
     val externalClubName: String?,
     val scanType: ParticipantScanType?,
     val scannedAt: LocalDateTime?,
-    val lastScanBy: AppUserNameDto?
+    val lastScanBy: AppUserNameDto?,
+    /** Wie der Eintrag entstand - siehe [ParticipantTrackingSource]. */
+    val source: ParticipantTrackingSource,
+    /** Wie oft er seither von Hand berichtigt wurde; 0 heißt "unangetastet". */
+    val editCount: Int,
+    val lastEditedAt: LocalDateTime?,
+    val lastEditedBy: AppUserNameDto?,
 )
