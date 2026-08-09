@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {TFunction} from 'i18next'
-import {COUNTDOWN_MAX_SECONDS, formatRemaining, isSameDay} from './common'
+import {COUNTDOWN_MAX_SECONDS, formatRemaining, isSameDay, teamLabel} from './common'
 
 // Gibt den letzten Abschnitt des Schlüssels zurück, damit die Erwartungen unabhängig
 // von den echten Übersetzungen lesbar bleiben: "…hoursUnit" -> "hoursUnit".
@@ -47,6 +47,42 @@ describe('isSameDay', () => {
 
     test('gleicher Tag im anderen Jahr', () => {
         expect(isSameDay(new Date(2026, 7, 7), new Date(2025, 7, 7))).toBe(false)
+    })
+})
+
+// Welche der beiden Ketten sichtbar wird, entscheidet eine Media Query und ist in jsdom nicht
+// prüfbar. Prüfbar ist, was die Zeile für die jeweilige Stufe zusammensetzt.
+describe('teamLabel', () => {
+    const mixed = {
+        clubsShort: 'Mainzer RV / RK Flensburg',
+        clubsFull: 'Mainzer Ruder-Verein 1878 e.V. / Ruderklub Flensburg e.V.',
+        teamName: null,
+        teamNumber: 2,
+    }
+
+    test('grosser Schirm: volle Vereinsnamen', () => {
+        expect(teamLabel(mixed, t, 'full')).toBe(
+            'Mainzer Ruder-Verein 1878 e.V. / Ruderklub Flensburg e.V. | teamNumber',
+        )
+    })
+
+    test('schmaler Viewport: Kurzformen', () => {
+        expect(teamLabel(mixed, t, 'short')).toBe('Mainzer RV / RK Flensburg | teamNumber')
+    })
+
+    test('gepflegter Mannschaftsname verdraengt die Nummer', () => {
+        expect(teamLabel({...mixed, teamName: 'Mix Nord'}, t, 'short')).toBe(
+            'Mainzer RV / RK Flensburg | Mix Nord',
+        )
+    })
+
+    // Eine Zeile ohne jeden Verein waere schlechter als eine in der falschen Laenge.
+    test('fehlende Kurzform faellt auf die volle Kette zurueck', () => {
+        expect(teamLabel({clubsFull: 'Rostocker Ruderclub'}, t, 'short')).toBe('Rostocker Ruderclub')
+    })
+
+    test('ohne Verein bleibt der Mannschaftsname allein stehen', () => {
+        expect(teamLabel({teamName: 'Mix Nord'}, t, 'full')).toBe('Mix Nord')
     })
 })
 

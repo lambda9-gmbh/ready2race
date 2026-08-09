@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest'
 import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
     buildLiveDashboardTimeline,
+    competitionLabel,
     crewMemberLabel,
     dashboardCrew,
     dashboardEntryDomId,
@@ -481,5 +482,62 @@ describe('pendingSlotLabel', () => {
 
     it('lässt fehlende Teile weg', () => {
         expect(pendingSlotLabel(pendingSlot({competitionName: 'CM 1x'}))).toBe('CM 1x')
+    })
+
+    it('setzt in der Kurzform das Kürzel an die Stelle des Wettkampfnamens', () => {
+        expect(
+            pendingSlotLabel(
+                pendingSlot({
+                    competitionName: 'Coastal Männer Einer',
+                    competitionIdentifier: '12',
+                    competitionShortName: 'CM 1x',
+                    roundName: 'Achtelfinale',
+                    matchName: 'AF1',
+                }),
+                'short',
+            ),
+        ).toBe('12 CM 1x · Achtelfinale · AF1')
+    })
+
+    it('lässt den Namen des Programmpunkts auch in der Kurzform stehen', () => {
+        expect(pendingSlotLabel(pendingSlot({name: 'Mittagspause'}), 'short')).toBe('Mittagspause')
+    })
+})
+
+describe('competitionLabel', () => {
+    it('nimmt in der Kurzform Rennnummer und Kurznamen', () => {
+        expect(
+            competitionLabel(
+                {
+                    competitionName: 'Coastal Männer Doppelvierer mit Steuerfrau/mann',
+                    competitionIdentifier: '17',
+                    competitionShortName: 'CM 4x+',
+                },
+                'short',
+            ),
+        ).toBe('17 CM 4x+')
+    })
+
+    it('bleibt ohne Kürzel beim ausgeschriebenen Namen', () => {
+        expect(
+            competitionLabel(
+                {
+                    competitionName: 'Coastal Männer Einer',
+                    competitionIdentifier: null,
+                    competitionShortName: null,
+                },
+                'short',
+            ),
+        ).toBe('Coastal Männer Einer')
+    })
+
+    it('nimmt ohne Kurzform den ausgeschriebenen Namen', () => {
+        expect(
+            competitionLabel({
+                competitionName: 'Coastal Männer Einer',
+                competitionIdentifier: '12',
+                competitionShortName: 'CM 1x',
+            }),
+        ).toBe('Coastal Männer Einer')
     })
 })

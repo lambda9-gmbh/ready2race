@@ -191,6 +191,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                                 gender = p.gender!!,
                                 external = p.external,
                                 externalClubName = p.externalClubName,
+                                clubName = p.clubName,
                             )
                         },
                         deregistered = team.deregistered!!,

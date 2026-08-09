@@ -341,7 +341,8 @@ class AthleteBoardLogicTest {
                     teamNumber = 1,
                     startNumber = 1,
                     clubName = "RV Flensburg",
-                    actualClubName = null,
+                    clubsShort = null,
+                    clubsFull = null,
                     participants = emptyList(),
                 )
             ),

@@ -25,10 +25,13 @@ const TimelineEntryCard = ({
     entry,
     column,
     actions,
+    shortLabels,
 }: {
     entry: LiveDashboardTimelineEntry
     column: 'live' | 'list'
     actions: LiveDashboardActions
+    /** Rennen am Kürzel statt am ausgeschriebenen Namen - geteilt mit dem Zeitplan-Tab. */
+    shortLabels: boolean
 }) =>
     entry.kind === 'match' ? (
         <Box id={dashboardEntryDomId(entry.match.matchId, column)}>
@@ -37,11 +40,16 @@ const TimelineEntryCard = ({
                 onTeamClick={actions.onTeamClick}
                 onFinish={actions.onFinish}
                 onSetRunning={actions.onSetRunning}
+                shortLabels={shortLabels}
             />
         </Box>
     ) : (
         <Box id={dashboardEntryDomId(entry.slot.slotId, column)}>
-            <LiveDashboardPendingSlotCard slot={entry.slot} onSkip={actions.onSkipSlot} />
+            <LiveDashboardPendingSlotCard
+                slot={entry.slot}
+                onSkip={actions.onSkipSlot}
+                shortLabels={shortLabels}
+            />
         </Box>
     )
 
@@ -53,10 +61,17 @@ type LiveColumnProps = {
     /** Erst wenn Daten da sind, ist "es läuft nichts" eine Aussage und keine Ladephase. */
     loaded: boolean
     actions: LiveDashboardActions
+    shortLabels: boolean
 }
 
 /** Was jetzt eine Handlung verlangt: die laufenden Läufe, ersatzweise "Als Nächstes". */
-export const LiveColumn = ({currentMatches, nextEntry, loaded, actions}: LiveColumnProps) => {
+export const LiveColumn = ({
+    currentMatches,
+    nextEntry,
+    loaded,
+    actions,
+    shortLabels,
+}: LiveColumnProps) => {
     const {t} = useTranslation()
 
     return (
@@ -70,6 +85,7 @@ export const LiveColumn = ({currentMatches, nextEntry, loaded, actions}: LiveCol
                     entry={{kind: 'match', match}}
                     column="live"
                     actions={actions}
+                    shortLabels={shortLabels}
                 />
             ))}
             {currentMatches.length === 0 && nextEntry && (
@@ -77,7 +93,12 @@ export const LiveColumn = ({currentMatches, nextEntry, loaded, actions}: LiveCol
                     <Typography variant="subtitle2" color="text.secondary">
                         {t('event.liveDashboard.nextUp')}
                     </Typography>
-                    <TimelineEntryCard entry={nextEntry} column="live" actions={actions} />
+                    <TimelineEntryCard
+                        entry={nextEntry}
+                        column="live"
+                        actions={actions}
+                        shortLabels={shortLabels}
+                    />
                 </>
             )}
         </>
@@ -91,6 +112,7 @@ type MatchListColumnProps = {
     /** Es gibt weder Läufe noch wartende Slots — und die Daten sind da. */
     empty: boolean
     actions: LiveDashboardActions
+    shortLabels: boolean
 }
 
 /** Die vollständige Liste zum Selbstbedienen: Zeitplan zuerst, unplanmäßige Läufe darunter. */
@@ -99,6 +121,7 @@ export const MatchListColumn = ({
     unscheduledMatches,
     empty,
     actions,
+    shortLabels,
 }: MatchListColumnProps) => {
     const {t} = useTranslation()
 
@@ -110,6 +133,7 @@ export const MatchListColumn = ({
                     entry={entry}
                     column="list"
                     actions={actions}
+                    shortLabels={shortLabels}
                 />
             ))}
             {unscheduledMatches.length > 0 && (
@@ -123,6 +147,7 @@ export const MatchListColumn = ({
                             entry={{kind: 'match', match}}
                             column="list"
                             actions={actions}
+                            shortLabels={shortLabels}
                         />
                     ))}
                 </>

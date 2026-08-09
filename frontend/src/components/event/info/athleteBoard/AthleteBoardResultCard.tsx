@@ -2,7 +2,8 @@ import {Box, Card, CardContent, Chip, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardResult} from '@api/types.gen'
 import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
-import {formatClockTime, teamLabel} from './common'
+import AthleteBoardTeamLabel from './AthleteBoardTeamLabel'
+import {formatClockTime} from './common'
 
 interface AthleteBoardResultCardProps {
     result: AthleteBoardResult
@@ -91,11 +92,10 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                                 {team.place ?? '–'}
                             </Typography>
                             <Box sx={{flex: 1, minWidth: 0}}>
-                                <Typography
-                                    sx={{fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)', fontWeight: 600}}
-                                    color={team.deregistered ? 'text.secondary' : 'text.primary'}>
-                                    {teamLabel(team, t)}
-                                </Typography>
+                                <AthleteBoardTeamLabel
+                                    team={team}
+                                    color={team.deregistered ? 'text.secondary' : 'text.primary'}
+                                />
                                 <Typography
                                     sx={{fontSize: 'clamp(0.7rem, 1.1vw, 0.95rem)'}}
                                     color="text.secondary">

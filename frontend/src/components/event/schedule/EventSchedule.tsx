@@ -54,6 +54,7 @@ import {
     slotsInRound,
 } from './common.ts'
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
+import {useShortLabels} from '@components/event/shortLabels.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import {matchStatusChip, slotMatchStatus} from '@components/event/match/matchStatusChip.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
@@ -71,12 +72,6 @@ const useLocalClock = (intervalMs: number): Date => {
     }, [intervalMs])
     return now
 }
-
-/** Merkt sich, ob die Slot-Spalte am kurzen oder am ausgeschriebenen Wettkampfnamen hängt -
- * dieselbe Überlegung wie competition_nav_short_names in der Wettkampfliste. */
-const SHORT_LABELS_STORAGE_KEY = 'schedule_short_labels'
-
-const storedShortLabels = (): boolean => localStorage.getItem(SHORT_LABELS_STORAGE_KEY) === 'true'
 
 /** Einheitliche Breite eines Aktions-Platzes (IconButton size=small: 20px Icon + 2×5px Padding). */
 const actionSlotSx = {
@@ -154,13 +149,8 @@ const EventSchedule = () => {
 
     const [importDialogOpen, setImportDialogOpen] = useState(false)
 
-    const [shortLabels, setShortLabels] = useState(storedShortLabels)
-
-    const toggleShortLabels = () =>
-        setShortLabels(prev => {
-            localStorage.setItem(SHORT_LABELS_STORAGE_KEY, String(!prev))
-            return !prev
-        })
+    // Geteilt mit dem Schiedsrichter-Board (siehe shortLabels.ts).
+    const [shortLabels, toggleShortLabels] = useShortLabels()
 
     const now = useLocalClock(30_000)
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>())

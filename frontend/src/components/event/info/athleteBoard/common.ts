@@ -43,17 +43,39 @@ export const formatRemaining = (seconds: number, t: TFunction): string => {
 }
 
 /**
+ * Welche Form der Vereinskette in der Zeile steht. Die Entscheidung trifft die Breite des
+ * Bildschirms, nicht der Inhalt: am Steg hängt ein großer Schirm, in der Hand ein Telefon.
+ */
+export type ClubChainVariant = 'full' | 'short'
+
+export interface TeamWithClubs {
+    clubsShort?: string | null
+    clubsFull?: string | null
+    teamName?: string | null
+    teamNumber?: number | null
+}
+
+/**
  * Anzeigename einer Mannschaft. Fehlt der gepflegte Name, tritt die Nummer der Mannschaft
  * an seine Stelle — der Verein allein unterscheidet sonst zwei Boote desselben Vereins nicht.
+ *
+ * Vorangestellt sind die Vereine, die die Athleten tragen, als Kette in Bootsreihenfolge. Fehlt
+ * die angefragte Form, tritt die andere ein: eine Zeile ohne jeden Verein wäre schlechter als
+ * eine in der falschen Länge.
  */
 export const teamLabel = (
-    team: {clubName?: string | null; teamName?: string | null; teamNumber?: number | null},
+    team: TeamWithClubs,
     t: TFunction,
+    variant: ClubChainVariant,
 ): string => {
     const name =
         team.teamName ??
         (team.teamNumber != null
             ? t('event.info.athleteBoard.teamNumber', {number: team.teamNumber})
             : null)
-    return [team.clubName, name].filter(Boolean).join(' | ')
+    const clubs =
+        variant === 'short'
+            ? (team.clubsShort ?? team.clubsFull)
+            : (team.clubsFull ?? team.clubsShort)
+    return [clubs, name].filter(Boolean).join(' | ')
 }

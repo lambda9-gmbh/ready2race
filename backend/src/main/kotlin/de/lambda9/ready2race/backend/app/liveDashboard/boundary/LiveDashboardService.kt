@@ -233,6 +233,8 @@ object LiveDashboardService {
                         ),
                         competitionId = match.get("competition_id", UUID::class.java)!!,
                         competitionName = match.get("competition_name", String::class.java) ?: "",
+                        competitionIdentifier = match.get("competition_identifier", String::class.java),
+                        competitionShortName = match.get("competition_short_name", String::class.java),
                         categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
                         roundName = match.get("round_name", String::class.java),
                         matchName = match.get("match_name", String::class.java),
@@ -279,6 +281,9 @@ object LiveDashboardService {
      * echten Läufen gebraucht werden.
      */
     private fun getPendingSlots(slotRecords: List<Record>, matchIds: Set<UUID>): List<PendingSlotDto> {
+        // Die Rohzeile bleibt neben dem Platzhalter stehen: Rennnummer und Kurzname braucht nur das
+        // Dashboard, und PendingScheduleSlotInfo teilt sich die Athleten-Anzeige, die ohne sie
+        // auskommt.
         val waiting = slotRecords.mapNotNull { r ->
             EventScheduleLogic.pendingSlotOrNull(
                 slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
@@ -291,17 +296,19 @@ object LiveDashboardService {
                 skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
                 roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
                 matchExists = r.get("match_exists", Boolean::class.java) == true,
-            )
+            )?.let { r to it }
         }
             // Zwei getrennte Reads — wenn zwischen ihnen eine Runde entsteht oder gelöscht wird,
             // könnte derselbe Lauf doppelt auftauchen; echte Einträge gewinnen.
-            .filterNot { it.setupMatchId in matchIds }
-            .map { slot ->
+            .filterNot { (_, slot) -> slot.setupMatchId in matchIds }
+            .map { (r, slot) ->
                 PendingSlotDto(
                     slotId = slot.slotId,
                     startTime = slot.startTime,
                     name = null,
                     competitionName = slot.competitionName,
+                    competitionIdentifier = r.get("competition_identifier", String::class.java),
+                    competitionShortName = r.get("competition_short_name", String::class.java),
                     roundName = slot.roundName,
                     matchName = slot.matchName,
                 )
@@ -321,6 +328,8 @@ object LiveDashboardService {
                 startTime = slot.startTime,
                 name = slot.name,
                 competitionName = null,
+                competitionIdentifier = null,
+                competitionShortName = null,
                 roundName = null,
                 matchName = null,
             )
@@ -701,9 +710,9 @@ object LiveDashboardService {
     }
 
     /**
-     * Der Verein, den jede Person *trägt*, je Personen-Kennung: bei Gastruderern der Freitext aus
-     * der Meldung, sonst der Name ihres eigenen Vereins. Der meldende Verein steht bewusst nicht
-     * darin - er ist für die Durchführung bedeutungslos.
+     * Der Verein, den jede Person *trägt*, je Personen-Kennung - die Regel selbst steht in
+     * [ClubComposition.clubWorn], damit Board, Athleten-Anzeige und Urkunde nicht drei Fassungen
+     * davon pflegen.
      *
      * Zwei Quellen, weil eine nicht reicht: [teamRecords] deckt alle gemeldeten Personen ab, eine
      * Ummeldung darf aber ein Vereinsmitglied hereinholen, das für diese Veranstaltung nirgends
@@ -714,12 +723,9 @@ object LiveDashboardService {
         teamRecords: List<Record>,
         substitutionRecords: List<SubstitutionViewRecord>,
     ): App<Nothing, Map<UUID, String>> = KIO.comprehension {
-        fun wornClub(external: Boolean?, externalClubName: String?, ownClubName: String?) =
-            if (external == true) externalClubName else ownClubName
-
         val fromRegistrations = teamRecords.mapNotNull { row ->
             val id = row.get("participant_id", UUID::class.java) ?: return@mapNotNull null
-            wornClub(
+            ClubComposition.clubWorn(
                 external = row[PARTICIPANT.EXTERNAL],
                 externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
                 ownClubName = row.get("participant_club_name", String::class.java),
@@ -734,7 +740,7 @@ object LiveDashboardService {
         val fromSubstitutions = !LiveDashboardRepo.getParticipantClubs(missing).orDie().map { rows ->
             rows.mapNotNull { row ->
                 val id = row[PARTICIPANT.ID] ?: return@mapNotNull null
-                wornClub(
+                ClubComposition.clubWorn(
                     external = row[PARTICIPANT.EXTERNAL],
                     externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
                     ownClubName = row.get("participant_club_name", String::class.java),

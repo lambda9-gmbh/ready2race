@@ -56,11 +56,18 @@ fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant() = AthleteBoardParti
     role = namedRole,
 )
 
+/**
+ * Die Vereinskette der Athleten gewinnt; der meldende Verein tritt nur ein, wenn zum Boot noch
+ * gar keine Crew erfasst ist. Die Auflösung passiert hier statt in jeder Ansicht.
+ */
+private fun clubsOrRegistering(chain: String?, registeringClubName: String?) =
+    chain ?: registeringClubName
+
 fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
     lane = startNumber,
     teamNumber = teamNumber,
-    // Der tatsächliche Verein gewinnt; die Auflösung passiert hier statt in jeder Ansicht.
-    clubName = actualClubName ?: clubName,
+    clubsShort = clubsOrRegistering(clubsShort, clubName),
+    clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
     participants = participants.map { it.toAthleteBoardParticipant() },
     // Teilergebnis: gefüllt, sobald die Zeitnahme dieses Boot gewertet hat - der Lauf läuft
@@ -76,7 +83,8 @@ fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
 fun UpcomingMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
     lane = startNumber,
     teamNumber = teamNumber,
-    clubName = actualClubName ?: clubName,
+    clubsShort = clubsOrRegistering(clubsShort, clubName),
+    clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
     participants = participants.map { it.toAthleteBoardParticipant() },
 )
@@ -125,7 +133,8 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
             place = it.place,
             lane = it.startNumber,
             teamNumber = it.teamNumber,
-            clubName = it.actualClubName ?: it.clubName,
+            clubsShort = clubsOrRegistering(it.clubsShort, it.clubName),
+            clubsFull = clubsOrRegistering(it.clubsFull, it.clubName),
             teamName = it.teamName,
             timeString = it.timeString,
             penaltySeconds = it.penaltySeconds,

@@ -1,6 +1,6 @@
 import {Box, IconButton, Paper, Stack, Typography} from '@mui/material'
 import {Document, Page} from 'react-pdf'
-import {useCallback, useEffect, useRef, useState} from 'react'
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react'
 import {GapDocumentPlaceholderType, GapDocumentType, TextAlign} from '@api/types.gen.ts'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -8,7 +8,7 @@ import {Delete, DragIndicator} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import '@utils/pdfWorker'
 import {clampRect, MIN_EXTENT, nudgeRect, renderedFontSize} from './placeholderGeometry.ts'
-import {sampleTextFor} from './placeholderSample.ts'
+import {CHAIN_SEPARATOR, chainSegments, sampleTextFor} from './placeholderSample.ts'
 
 type PlaceholderData = {
     id: string
@@ -288,14 +288,30 @@ const PdfPlaceholderEditor = (props: Props) => {
                                 : 'rgba(0, 0, 0, 0.05)',
                             cursor: 'move',
                             boxSizing: 'border-box',
-                            overflow: 'hidden',
+                            // Sichtbar statt abgeschnitten: ein umgebrochener Text wächst über den
+                            // Kasten hinaus (nach oben wie nach unten, siehe GapTextMetrics), und
+                            // genau das soll man hier sehen, bevor es auf dem Papier steht.
+                            overflow: 'visible',
                             '&:hover': {
                                 backgroundColor: 'rgba(25, 118, 210, 0.15)',
                                 borderColor: '#1976d2',
                             },
                         }}>
                         {/* Beispieltext, in Ausrichtung/Größe/Schnitt/Schrift des Platzhalters,
-                            vertikal zentriert. Darf den Kasten nie sprengen. */}
+                            senkrecht zentriert.
+
+                            Bis zum 09.08.2026 stand hier `nowrap` samt `overflow: hidden`: ein zu
+                            langer Text endete sauber an der Kastenkante, während der Druck ihn über
+                            die Seite laufen ließ. Eine Vorschau, die das verschweigt, ist schlimmer
+                            als keine — seit die Vereinskette im Feld steht, trifft es das
+                            Vereinsfeld regelmäßig.
+
+                            Der Umbruch hier ist eine Annäherung: der Browser misst mit seinen
+                            eigenen Schriftmaßen und bricht an Wortgrenzen, der Renderer misst mit
+                            PDFBox und bricht an den Vereinsgrenzen der Kette (GapTextWrap). Die
+                            Zeilen können sich also unterscheiden — dass das Feld mehrzeilig wird
+                            und wie viel Platz es dafür braucht, sieht man trotzdem. Verbindlich
+                            bleibt die Vorschau als PDF. */}
                         <Box
                             sx={{
                                 position: 'absolute',
@@ -303,8 +319,7 @@ const PdfPlaceholderEditor = (props: Props) => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent,
-                                overflow: 'hidden',
-                                px: 0.5,
+                                overflow: 'visible',
                                 pointerEvents: 'none',
                             }}>
                             <Typography
@@ -314,16 +329,35 @@ const PdfPlaceholderEditor = (props: Props) => {
                                     fontWeight: placeholder.bold ? 'bold' : 'normal',
                                     fontStyle: placeholder.italic ? 'italic' : 'normal',
                                     fontFamily: props.fontFamily,
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
+                                    // pre-wrap statt nowrap: bricht um und hält dabei die
+                                    // Zeilenumbrüche, die der Beispieltext schon mitbringt.
+                                    whiteSpace: 'pre-wrap',
+                                    // Ohne Innenabstand bricht die Vorschau an derselben Kante um,
+                                    // an der auch der Renderer misst - der Kasten selbst.
+                                    maxWidth: '100%',
+                                    textAlign:
+                                        placeholder.textAlign === 'CENTER'
+                                            ? 'center'
+                                            : placeholder.textAlign === 'RIGHT'
+                                              ? 'right'
+                                              : 'left',
                                     userSelect: 'none',
-                                    lineHeight: 1,
+                                    lineHeight: 1.2,
                                 }}>
-                                {sampleTextFor(
-                                    placeholder.type,
-                                    placeholder.staticText,
-                                    t('gap.document.placeholder.staticText'),
-                                )}
+                                {chainSegments(
+                                    sampleTextFor(
+                                        placeholder.type,
+                                        placeholder.staticText,
+                                        t('gap.document.placeholder.staticText'),
+                                    ),
+                                ).map((segment, index) => (
+                                    <Fragment key={index}>
+                                        {index > 0 && CHAIN_SEPARATOR}
+                                        <Box component="span" sx={{whiteSpace: 'nowrap'}}>
+                                            {segment}
+                                        </Box>
+                                    </Fragment>
+                                ))}
                             </Typography>
                         </Box>
                         <Stack

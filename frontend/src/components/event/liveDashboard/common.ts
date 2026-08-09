@@ -321,8 +321,37 @@ export const nextUpEntry = (
 }
 
 /**
+ * Rennnummer und Kurzname eines Wettkampfs, z. B. "17 CM 4x+" — dieselbe Zusammensetzung wie
+ * `competitionTag` im Zeitplan-Tab, hier für die DTOs des Boards. Leer, wo beides fehlt: bei
+ * Programmpunkten und bei Wettkämpfen ohne gepflegten Kurznamen und ohne Nummer.
+ */
+export const competitionTag = (competition: {
+    competitionIdentifier?: string | null
+    competitionShortName?: string | null
+}): string =>
+    [competition.competitionIdentifier, competition.competitionShortName].filter(v => v).join(' ')
+
+/**
+ * Wie ein Lauf auf der Karte benannt wird: in der Langform der ausgeschriebene Wettkampfname,
+ * in der Kurzform ("17 CM 4x+") das Kürzel. Ohne Kürzel bleibt es beim Namen — eine Karte ohne
+ * jede Angabe zum Rennen wäre auf dem Board unbrauchbar.
+ */
+export const competitionLabel = (
+    competition: {
+        competitionName?: string | null
+        competitionIdentifier?: string | null
+        competitionShortName?: string | null
+    },
+    mode: 'full' | 'short' = 'full',
+): string | null | undefined =>
+    mode === 'short' && competitionTag(competition)
+        ? competitionTag(competition)
+        : competition.competitionName
+
+/**
  * Anzeige-Label eines Platzhalters — für Programmpunkte (FREE, `name` gesetzt) schlicht der Name,
  * für wartende Lauf-Slots dieselbe Zusammensetzung wie slotLabel im Zeitplan-Tab.
  */
-export const pendingSlotLabel = (slot: PendingSlotDto): string =>
-    slot.name ?? [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' · ')
+export const pendingSlotLabel = (slot: PendingSlotDto, mode: 'full' | 'short' = 'full'): string =>
+    slot.name ??
+    [competitionLabel(slot, mode), slot.roundName, slot.matchName].filter(Boolean).join(' · ')

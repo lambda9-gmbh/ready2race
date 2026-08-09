@@ -218,7 +218,14 @@ export type AthleteBoardResultTeam = {
      * the nth team of this club in the competition - only shown when teamName is missing
      */
     teamNumber?: number | null
-    clubName?: string | null
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form; falls back to the registering club when no crew is recorded
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     teamName?: string | null
     timeString?: string | null
     /**
@@ -243,7 +250,14 @@ export type AthleteBoardTeam = {
      * the nth team of this club in the competition - only shown when teamName is missing
      */
     teamNumber?: number | null
-    clubName?: string | null
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form; falls back to the registering club when no crew is recorded
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     teamName?: string | null
     participants: Array<AthleteBoardParticipant>
     /**
@@ -1750,6 +1764,14 @@ export type LiveDashboardMatchDto = {
     state: LiveDashboardMatchState
     competitionId: string
     competitionName: string
+    /**
+     * The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname, e.g. 'CM 4x+')
+     */
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -1919,7 +1941,14 @@ export type MatchResultTeamInfo = {
     teamName?: string | null
     teamNumber?: number | null
     clubName?: string | null
-    actualClubName?: string
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     place?: number
     timeString?: string
     failed: boolean
@@ -2313,6 +2342,14 @@ export type PendingSlotDto = {
     startTime: string
     name?: string | null
     competitionName?: string | null
+    /**
+     * The competition's race number (Rennnummer) - null for program items
+     */
+    competitionIdentifier?: string | null
+    /**
+     * The competition's short name (Kurzname) - null for program items
+     */
+    competitionShortName?: string | null
     roundName?: string | null
     matchName?: string | null
 }
@@ -2549,7 +2586,14 @@ export type RunningMatchTeamInfo = {
     teamNumber?: number | null
     startNumber?: number | null
     clubName?: string | null
-    actualClubName?: string
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     currentScore?: number | null
     currentPosition?: number | null
     /**
@@ -2943,7 +2987,14 @@ export type UpcomingMatchTeamInfo = {
     teamNumber?: number | null
     startNumber?: number | null
     clubName?: string | null
-    actualClubName?: string
+    /**
+     * the clubs the athletes of this boat wear, chained in boat order, in short form
+     */
+    clubsShort?: string | null
+    /**
+     * the same chain with the full club names
+     */
+    clubsFull?: string | null
     participants: Array<UpcomingMatchParticipantInfo>
 }
 

@@ -2,13 +2,13 @@ import {Box, Card, CardContent, Chip, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch} from '@api/types.gen'
 import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
+import AthleteBoardTeamLabel from './AthleteBoardTeamLabel'
 import {
     COUNTDOWN_MAX_SECONDS,
     formatClockTime,
     formatRemaining,
     formatShortDate,
     isSameDay,
-    teamLabel,
 } from './common'
 
 /**
@@ -240,13 +240,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                     {team.lane ?? '–'}
                                 </Typography>
                                 <Box sx={{flex: 1, minWidth: 0}}>
-                                    <Typography
-                                        sx={{
-                                            fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)',
-                                            fontWeight: 600,
-                                        }}>
-                                        {teamLabel(team, t)}
-                                    </Typography>
+                                    <AthleteBoardTeamLabel team={team} />
                                     {team.participants.length > 0 && (
                                         <Typography
                                             sx={{fontSize: 'clamp(0.7rem, 1.1vw, 0.95rem)'}}
