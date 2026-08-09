@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.awardCeremony.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonySelectionRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
+import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -19,8 +20,11 @@ fun Route.awardCeremony() {
             call.respondComprehension {
                 !authenticate(Privilege.ReadEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
+                // Von der Platzierungsseite eines Wettkampfs aus interessiert nur dieser eine.
+                // Ohne die Einschränkung berechnete ein Klick dort die Plätze aller Rennen.
+                val competitionId = !optionalQueryParam("competitionId", uuid)
 
-                AwardCeremonyService.listCeremonies(eventId)
+                AwardCeremonyService.listCeremonies(eventId, competitionId)
             }
         }
 

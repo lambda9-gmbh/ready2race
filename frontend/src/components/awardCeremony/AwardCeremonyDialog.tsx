@@ -52,19 +52,28 @@ const AwardCeremonyDialog = ({open, onClose, eventId, competitionId}: Props) => 
     const [errorKey, setErrorKey] = useState<AwardCeremonyErrorKey | null>(null)
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
-    const {data, pending} = useFetch(signal => getAwardCeremonies({signal, path: {eventId}}), {
-        // Die Ehrungen werden bei jedem Aufruf aus der Platzberechnung abgeleitet - bis zur
-        // Siegerehrung ändern sich Ergebnisse noch, deshalb wird bei jedem Öffnen neu geladen.
-        preCondition: () => open,
-        onResponse: ({error}) => {
-            if (error) {
-                setErrorKey(awardCeremonyErrorKey(error))
-            }
+    const {data, pending} = useFetch(
+        signal =>
+            // Der Wettkampf gehört in die Anfrage, nicht erst in den Filter unten: der Server
+            // berechnet je Ehrung die Plätze, und von der Platzierungsseite aus interessiert genau
+            // ein Rennen - sonst kostete ein Klick dort die ganze Regatta.
+            getAwardCeremonies({signal, path: {eventId}, query: {competitionId}}),
+        {
+            // Die Ehrungen werden bei jedem Aufruf aus der Platzberechnung abgeleitet - bis zur
+            // Siegerehrung ändern sich Ergebnisse noch, deshalb wird bei jedem Öffnen neu geladen.
+            preCondition: () => open,
+            onResponse: ({error}) => {
+                if (error) {
+                    setErrorKey(awardCeremonyErrorKey(error))
+                }
+            },
+            deps: [eventId, competitionId, open],
         },
-        deps: [eventId, open],
-    })
+    )
 
     const ceremonies = useMemo<Array<AwardCeremonyChoiceDto>>(
+        // Der Server liefert bereits nur diesen Wettkampf; der Filter bleibt als Netz, falls eine
+        // ältere Antwort noch im Zustand steht, während der Dialog schon zum nächsten Rennen gehört.
         () =>
             (data ?? []).filter(
                 choice => competitionId === undefined || choice.competitionId === competitionId,

@@ -7398,6 +7398,12 @@ export type GetAwardCeremoniesData = {
     path: {
         eventId: string
     }
+    query?: {
+        /**
+         * Nur die Ehrungen dieses Wettkampfs. Jede Ehrung kostet eine Platzberechnung, deshalb ist die Einschränkung mehr als ein Anzeigefilter.
+         */
+        competitionId?: string
+    }
 }
 
 export type GetAwardCeremoniesResponse = Array<AwardCeremonyChoiceDto>

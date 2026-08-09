@@ -67,6 +67,27 @@ class AwardCeremonyHttpIT {
         )
     }
 
+    /**
+     * Der Wettkampf aus dem Query-String muss den Service erreichen. Geprüft wird das über eine
+     * ID, die es in dieser Veranstaltung nicht gibt: der Service lehnt sie mit
+     * `COMPETITION_NOT_IN_EVENT` ab. Eine Route, die den Parameter nicht liest oder nicht
+     * durchreicht, antwortete stattdessen mit 200 und einer leeren Liste - und der Dialog holte
+     * weiter die Ehrungen der ganzen Regatta, um im Browser eine einzige davon zu behalten.
+     */
+    @Test
+    fun theCompetitionFromTheQueryStringReachesTheService() = testApplicationComprehension {
+
+        val eventId = seedEvent()
+        val foreignCompetitionId = UUID.randomUUID()
+
+        val response = client.get("/api/event/$eventId/awardCeremony?competitionId=$foreignCompetitionId") {
+            header("X-Api-Session", login())
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status, response.bodyAsText())
+        assertContains(response.bodyAsText(), "AWARD_CEREMONY_COMPETITION_NOT_IN_EVENT")
+    }
+
     @Test
     fun downloadingTheSheetNeedsASessionToo() = testApplicationComprehension {
 

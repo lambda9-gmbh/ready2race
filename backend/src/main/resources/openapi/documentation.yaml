@@ -8076,6 +8076,16 @@ paths:
         Alle Ehrungen der Veranstaltung, je Wettkampf und Wertung eine. Wird bei jedem Aufruf aus
         der Platzberechnung abgeleitet und nicht gespeichert - bis zur Ehrung ändern sich
         Ergebnisse noch.
+      parameters:
+        - in: query
+          name: competitionId
+          description: >-
+            Nur die Ehrungen dieses Wettkampfs. Jede Ehrung kostet eine Platzberechnung, deshalb
+            ist die Einschränkung mehr als ein Anzeigefilter.
+          required: false
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: Award ceremonies successfully retrieved

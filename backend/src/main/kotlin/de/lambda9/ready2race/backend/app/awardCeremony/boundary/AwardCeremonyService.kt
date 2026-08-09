@@ -45,12 +45,22 @@ object AwardCeremonyService {
         val candidates: List<AwardCeremonyCandidate>,
     )
 
-    fun listCeremonies(eventId: UUID): App<ServiceError, ApiResponse.ListDto<AwardCeremonyChoiceDto>> =
+    /**
+     * Die wählbaren Ehrungen, mit [competitionId] auf einen Wettkampf eingeschränkt.
+     *
+     * Die Einschränkung ist keine Bequemlichkeit für die Anzeige: jede Ehrung kostet eine
+     * Platzberechnung, und die Auswahl wird von der Platzierungsseite eines einzelnen Wettkampfs
+     * aus geöffnet. Ohne sie rechnete ein Klick dort die ganze Regatta durch.
+     */
+    fun listCeremonies(
+        eventId: UUID,
+        competitionId: UUID? = null,
+    ): App<ServiceError, ApiResponse.ListDto<AwardCeremonyChoiceDto>> =
         KIO.comprehension {
             // Steht bewusst vor allem anderen: siehe AwardCeremonyError.IsChallengeEvent.
             !EventService.checkIsChallengeEvent(eventId).onTrueFail { AwardCeremonyError.IsChallengeEvent }
 
-            val ceremonies = !collect(eventId, competitionIds = null)
+            val ceremonies = !collect(eventId, competitionIds = competitionId?.let { listOf(it) })
             KIO.ok(ApiResponse.ListDto(ceremonies.map { it.choice }))
         }
 

@@ -111,6 +111,40 @@ class AwardCeremonyServiceTest {
     }
 
     /**
+     * Von der Platzierungsseite eines Wettkampfs aus zählt nur dieses eine Rennen, und die
+     * Einschränkung gehört auf den Server: jede Ehrung kostet eine Platzberechnung, die teuerste
+     * Rechnung des Wettkampfbereichs. Ein Dienst, der weiter alles sammelt und erst die Antwort
+     * beschneidet, käme mit der ersten Zusicherung noch durch - die zweite fängt ihn: eine ID aus
+     * einer fremden Veranstaltung fiele beim nachträglichen Filtern still unter den Tisch.
+     */
+    @Test
+    fun theCeremonyListCanBeLimitedToOneCompetition() = testComprehension {
+        val seeded = seedCeremonies()
+
+        val ceremonies = (!AwardCeremonyService.listCeremonies(seeded.eventId, seeded.quadId)).data
+
+        assertEquals(
+            listOf("Masters A", "Masters B"),
+            ceremonies.map { it.ratingCategoryName },
+        )
+        assertTrue(
+            ceremonies.all { it.competitionId == seeded.quadId },
+            "Nur der gewählte Wettkampf gehört in die Antwort: $ceremonies",
+        )
+    }
+
+    @Test
+    fun theCeremonyListRejectsACompetitionOfAnotherEvent() = testComprehension {
+        val seeded = seedCeremonies()
+        val otherEventId = seedEvent("Fremdregatta")
+        val (foreignCompetitionId, _) = seedCompetition(otherEventId, identifier = "1", name = "Fremdlauf")
+
+        assertKIOFails(AwardCeremonyError.CompetitionNotInEvent) {
+            AwardCeremonyService.listCeremonies(seeded.eventId, foreignCompetitionId)
+        }
+    }
+
+    /**
      * Die Zahl neben der Ehrung ist das Versprechen an die Auswahl. „Masters A" hat vier platzierte
      * Boote, Medaillen gibt es drei - genannt und gedruckt werden muss dieselbe Zahl.
      */
