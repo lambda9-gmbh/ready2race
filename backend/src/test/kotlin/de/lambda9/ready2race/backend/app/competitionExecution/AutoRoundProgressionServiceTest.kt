@@ -242,16 +242,23 @@ class AutoRoundProgressionServiceTest {
     }
 
     /**
-     * Steht die Folgerunde bereits, ist die davor gesperrt — dieselbe Antwort wie vor der
-     * Automatik. Genau darauf beruht der Schutz gestarteter Läufe: Die Automatik kann eine
-     * bestehende Runde nicht überschreiben, weil an ihr Ergebnis gar nicht mehr heranzukommen ist.
+     * Steht die Folgerunde bereits, ist die Runde davor gesperrt — dieselbe Antwort wie vor der
+     * Automatik. Genau darauf beruht der Schutz gestarteter Läufe: Die Sperre hängt nicht am Start
+     * eines Laufs, sondern schon daran, DASS es die Folgerunde gibt. `getCurrentAndNextRound`
+     * erklärt jede Runde mit Läufen zur aktuellen, und an alles davor kommt niemand mehr heran.
+     *
+     * Ein gestarteter Lauf ist damit erst recht geschützt — er setzt die Existenz der Runde voraus.
+     * Der Zeitstempel unten steht trotzdem im Test, weil er den Fall aus der Anforderung
+     * ausbuchstabiert; tragend für den Ausgang ist er nicht.
      */
     @Test
-    fun aStartedFollowingRoundLocksTheRoundBefore() = testComprehension {
+    fun anExistingFollowingRoundLocksTheRoundBefore() = testComprehension {
         val seed = seedTwoRoundCompetition(eventAutoCreate = true)
         finishFirstRound(seed, at = LocalDateTime.of(2026, 8, 14, 10, 30))
         !AutoRoundProgressionService.progressIfRoundComplete(seed.eventId, seed.competitionId, seed.userId)
 
+        // Der Lauf ist unterwegs. Für den Ausgang unerheblich (siehe oben), aber so sieht der Fall
+        // aus, den die Anforderung meint.
         !COMPETITION_MATCH.update(
             f = { startedAt = LocalDateTime.of(2026, 8, 14, 11, 0) },
             condition = { COMPETITION_SETUP_MATCH.eq(seed.secondRoundSetupMatchId) },
