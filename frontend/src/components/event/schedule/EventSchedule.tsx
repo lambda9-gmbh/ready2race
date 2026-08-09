@@ -24,7 +24,9 @@ import {
     EventRepeat,
     OpenInNew,
     PlayArrow,
+    ShortText,
     Stop,
+    Subject,
 } from '@mui/icons-material'
 import {format} from 'date-fns'
 import {Link} from '@tanstack/react-router'
@@ -43,8 +45,16 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
-import {groupSlotsByDay, isCancellable, isEditable, slotLabel, slotsInRound} from './common.ts'
+import {
+    competitionTag,
+    groupSlotsByDay,
+    isCancellable,
+    isEditable,
+    slotLabel,
+    slotsInRound,
+} from './common.ts'
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
+import {useShortLabels} from '@components/event/shortLabels.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import {matchStatusChip, slotMatchStatus} from '@components/event/match/matchStatusChip.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
@@ -138,6 +148,9 @@ const EventSchedule = () => {
     const [shiftDaySlots, setShiftDaySlots] = useState<EventScheduleSlotDto[]>([])
 
     const [importDialogOpen, setImportDialogOpen] = useState(false)
+
+    // Geteilt mit dem Schiedsrichter-Board (siehe shortLabels.ts).
+    const [shortLabels, toggleShortLabels] = useShortLabels()
 
     const now = useLocalClock(30_000)
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
@@ -413,7 +426,34 @@ const EventSchedule = () => {
                             <TableHead>
                                 <TableRow>
                                     <TableCell width={'10%'}>{t('event.schedule.startTime')}</TableCell>
-                                    <TableCell width={'40%'}>{t('event.schedule.slot')}</TableCell>
+                                    <TableCell width={'40%'}>
+                                        {/* Der Umschalter sitzt an der Spalte, deren Inhalt er
+                                            ändert. Er steht in jeder Tagestabelle, wirkt aber auf
+                                            alle - wer oben umschaltet, will nicht am nächsten Tag
+                                            wieder den langen Namen lesen. */}
+                                        <Stack
+                                            direction={'row'}
+                                            spacing={0.5}
+                                            alignItems={'center'}>
+                                            <span>{t('event.schedule.slot')}</span>
+                                            <IconButton
+                                                size={'small'}
+                                                onClick={toggleShortLabels}
+                                                color={shortLabels ? 'primary' : 'default'}
+                                                aria-pressed={shortLabels}
+                                                title={t(
+                                                    shortLabels
+                                                        ? 'event.schedule.showFullNames'
+                                                        : 'event.schedule.showShortNames',
+                                                )}>
+                                                {shortLabels ? (
+                                                    <Subject fontSize={'small'} />
+                                                ) : (
+                                                    <ShortText fontSize={'small'} />
+                                                )}
+                                            </IconButton>
+                                        </Stack>
+                                    </TableCell>
                                     <TableCell width={'20%'}>{t('event.schedule.status')}</TableCell>
                                     <TableCell width={'15%'}>{t('event.schedule.duration')}</TableCell>
                                     {canEdit && <TableCell width={'15%'} />}
@@ -443,35 +483,63 @@ const EventSchedule = () => {
                                                 {format(new Date(slot.startTime), t('format.time'))}
                                             </TableCell>
                                             <TableCell>
+                                                {/* Der Sprung zur Durchführung sitzt immer am rechten
+                                                    Rand der Spalte - und zwar auf einem festen Platz,
+                                                    der auch dann bleibt, wenn eine Zeile keinen Lauf
+                                                    hat. Sonst wandert das Symbol mit der Textlänge
+                                                    jeder Zeile mit. */}
                                                 <Stack
                                                     direction={'row'}
-                                                    spacing={0.5}
-                                                    alignItems={'center'}>
-                                                    <span>{slotLabel(slot)}</span>
-                                                    {slot.matchId && (
-                                                        <Tooltip
-                                                            title={t('event.schedule.goToExecution')}>
-                                                            <Link
-                                                                to={
-                                                                    '/event/$eventId/competition/$competitionId'
-                                                                }
-                                                                params={{
-                                                                    eventId,
-                                                                    competitionId: slot.competitionId!,
-                                                                }}
-                                                                search={{tab: 'execution'}}
-                                                                style={{
-                                                                    display: 'inline-flex',
-                                                                    color: 'inherit',
+                                                    spacing={1}
+                                                    alignItems={'center'}
+                                                    justifyContent={'space-between'}>
+                                                    <Box component={'span'}>
+                                                        {competitionTag(slot) && (
+                                                            <Box
+                                                                component={'span'}
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    mr: 1,
                                                                 }}>
-                                                                <IconButton
-                                                                    size={'small'}
-                                                                    component={'span'}>
-                                                                    <OpenInNew fontSize={'small'} />
-                                                                </IconButton>
-                                                            </Link>
-                                                        </Tooltip>
-                                                    )}
+                                                                {competitionTag(slot)}
+                                                            </Box>
+                                                        )}
+                                                        {slotLabel(
+                                                            slot,
+                                                            shortLabels ? 'short' : 'full',
+                                                        )}
+                                                    </Box>
+                                                    <Box sx={{...actionSlotSx, flexShrink: 0}}>
+                                                        {slot.matchId && (
+                                                            <Tooltip
+                                                                title={t(
+                                                                    'event.schedule.goToExecution',
+                                                                )}>
+                                                                <Link
+                                                                    to={
+                                                                        '/event/$eventId/competition/$competitionId'
+                                                                    }
+                                                                    params={{
+                                                                        eventId,
+                                                                        competitionId:
+                                                                            slot.competitionId!,
+                                                                    }}
+                                                                    search={{tab: 'execution'}}
+                                                                    style={{
+                                                                        display: 'inline-flex',
+                                                                        color: 'inherit',
+                                                                    }}>
+                                                                    <IconButton
+                                                                        size={'small'}
+                                                                        component={'span'}>
+                                                                        <OpenInNew
+                                                                            fontSize={'small'}
+                                                                        />
+                                                                    </IconButton>
+                                                                </Link>
+                                                            </Tooltip>
+                                                        )}
+                                                    </Box>
                                                 </Stack>
                                             </TableCell>
                                             <TableCell>
@@ -620,7 +688,20 @@ const EventSchedule = () => {
                             <TableBody>
                                 {unplannedSetupMatches.map(match => (
                                     <TableRow key={match.setupMatchId}>
-                                        <TableCell>{match.competitionName}</TableCell>
+                                        <TableCell>
+                                            {competitionTag(match) && (
+                                                <Box
+                                                    component={'span'}
+                                                    sx={{color: 'text.secondary', mr: 1}}>
+                                                    {competitionTag(match)}
+                                                </Box>
+                                            )}
+                                            {/* Dieselbe Kürzung wie in der Slot-Spalte: mit
+                                                Kürzel davor sagt der ausgeschriebene Name nichts
+                                                Neues mehr. */}
+                                            {(!shortLabels || !competitionTag(match)) &&
+                                                match.competitionName}
+                                        </TableCell>
                                         <TableCell>{match.roundName}</TableCell>
                                         <TableCell>{match.matchName ?? '-'}</TableCell>
                                         {canEdit && (

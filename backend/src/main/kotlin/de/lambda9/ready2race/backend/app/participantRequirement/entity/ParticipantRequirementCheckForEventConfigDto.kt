@@ -14,7 +14,12 @@ data class ParticipantRequirementCheckForEventConfigDto(
     val clubColName: String?,
     val noHeader: Boolean,
     val requirementColName: String?,
-    val requirementIsValidValue: String?
+    /**
+     * Die Werte der Bedingungsspalte, die als erfüllt gelten. Mehrere sind erlaubt - die
+     * DRV-Aktivenpassliste etwa führt "ja" und "erweitert" nebeneinander, beides bedeutet
+     * startberechtigt. Leer oder nicht gesetzt heißt: jede Zeile zählt.
+     */
+    val requirementIsValidValues: List<String>?
 ) : Validatable {
 
     fun getColNames() = listOfNotNull(
@@ -39,7 +44,7 @@ data class ParticipantRequirementCheckForEventConfigDto(
                 clubColName = "club",
                 noHeader = false,
                 requirementColName = "active",
-                requirementIsValidValue = "true"
+                requirementIsValidValues = listOf("true", "yes")
             )
     }
 }

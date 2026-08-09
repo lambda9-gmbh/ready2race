@@ -6,11 +6,14 @@ import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
 import {
+    competitionLabel,
+    crewMemberLabel,
     formatMinutes,
     matchControls,
     openResultTeams,
     pendingSlotLabel,
-    shortClubName,
+    teamShowsClubLine,
+    teamShowsCrew,
 } from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
 import SeverityIcon from './SeverityIcon.tsx'
@@ -22,15 +25,32 @@ import SeverityIcon from './SeverityIcon.tsx'
  */
 const WIDE_CARD_PX = 480
 
+/**
+ * Ab hier trägt die Karte zusätzlich die Crew je Boot — Nachname, Vereinskurzform und Rolle. Auch
+ * das entscheidet die Kartenbreite und nicht das Fenster: auf dem Tablet stehen zwei Spalten
+ * nebeneinander, von denen keine so breit wird, obwohl das Fenster es wäre. Ob die Crew überhaupt
+ * geladen wurde, hängt dagegen am Fenster (`dashboardCrew`) — die Nutzlast wird je Abruf
+ * entschieden, nicht je Karte.
+ */
+const CREW_CARD_PX = 700
+
 type Props = {
     match: LiveDashboardMatchDto
     onTeamClick: (matchId: string, teamId: string) => void
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
     onSetRunning?: (matchId: string, running: boolean) => Promise<void>
+    /** Rennen am Kürzel statt am ausgeschriebenen Wettkampfnamen (geteilt mit dem Zeitplan-Tab). */
+    shortLabels: boolean
 }
 
-const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Props) => {
+const LiveDashboardMatchCard = ({
+    match,
+    onTeamClick,
+    onFinish,
+    onSetRunning,
+    shortLabels,
+}: Props) => {
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
@@ -77,7 +97,9 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         fontWeight={700}
                         noWrap
                         sx={{textDecoration: skipped ? 'line-through' : 'none'}}>
-                        {match.matchName ?? match.roundName ?? match.competitionName}
+                        {match.matchName ??
+                            match.roundName ??
+                            competitionLabel(match, shortLabels ? 'short' : 'full')}
                     </Typography>
                     <Box sx={{justifySelf: 'end', textAlign: 'right'}}>
                         <Typography
@@ -110,7 +132,11 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
                         }}>
-                        {[match.competitionName, match.categoryName, match.roundName]
+                        {[
+                            competitionLabel(match, shortLabels ? 'short' : 'full'),
+                            match.categoryName,
+                            match.roundName,
+                        ]
                             .filter(Boolean)
                             .join(' · ')}
                     </Typography>
@@ -193,16 +219,8 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                 <Divider sx={{mt: 1.5}} />
                 {match.teams.map((team, index) => {
                     const substituted = team.substituted
-                    // Kurzform in der Liste; der vollständige Name steht im Detail-Dialog
-                    const fullClub = team.actualClubName ?? team.clubName
-                    const clubLine = fullClub != null ? shortClubName(fullClub) : null
-                    // Team names often already contain the club — then drop the second line
-                    const showClubLine =
-                        team.teamName != null &&
-                        fullClub != null &&
-                        clubLine != null &&
-                        !team.teamName.includes(fullClub) &&
-                        !team.teamName.includes(clubLine)
+                    const showClubLine = teamShowsClubLine(team)
+                    const showCrew = teamShowsCrew(team)
 
                     return (
                         <Box
@@ -247,7 +265,7 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                             WebkitBoxOrient: 'vertical',
                                             overflow: 'hidden',
                                         }}>
-                                        {team.teamName ?? clubLine ?? ''}
+                                        {team.teamName ?? team.clubsShort}
                                     </Typography>
                                     {substituted && (
                                         <SwapHorizIcon
@@ -265,10 +283,53 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                 {showClubLine && (
                                     <Typography
                                         variant="body2"
-                                        noWrap
-                                        display="block"
-                                        sx={{color: 'grey.800'}}>
-                                        {clubLine}
+                                        aria-label={t('event.liveDashboard.team.clubs')}
+                                        sx={{
+                                            color: 'grey.800',
+                                            // Die Kette wird nicht gekappt, sie bricht auf zwei
+                                            // Zeilen um; ein sechster Verein fällt hinten heraus.
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                        }}>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                display: 'inline',
+                                                [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
+                                                    display: 'none',
+                                                },
+                                            }}>
+                                            {team.clubsShort}
+                                        </Box>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                display: 'none',
+                                                [`@container (min-width: ${WIDE_CARD_PX}px)`]: {
+                                                    display: 'inline',
+                                                },
+                                            }}>
+                                            {team.clubsFull}
+                                        </Box>
+                                    </Typography>
+                                )}
+                                {showCrew && (
+                                    <Typography
+                                        variant="caption"
+                                        aria-label={t('event.liveDashboard.team.crew')}
+                                        sx={{
+                                            color: 'grey.700',
+                                            display: 'none',
+                                            [`@container (min-width: ${CREW_CARD_PX}px)`]: {
+                                                display: '-webkit-box',
+                                            },
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                        }}>
+                                        {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
                                     </Typography>
                                 )}
                                 {team.onWaterRequired && team.onWaterAt && (
@@ -395,6 +456,7 @@ type PendingSlotCardProps = {
     slot: PendingSlotDto
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onSkip?: (slotId: string, label: string, time: string) => void
+    shortLabels: boolean
 }
 
 /**
@@ -402,10 +464,14 @@ type PendingSlotCardProps = {
  * ein wartender Lauf-Slot (Runde noch nicht gesetzt); `slot.name` unterscheidet die Fälle (siehe
  * `PendingSlotDto`). Bewusst ohne Teams oder Ergebnis-Spalten, die gibt es für beide Fälle nicht.
  */
-export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProps) => {
+export const LiveDashboardPendingSlotCard = ({
+    slot,
+    onSkip,
+    shortLabels,
+}: PendingSlotCardProps) => {
     const {t} = useTranslation()
     const isFree = slot.name != null
-    const label = pendingSlotLabel(slot)
+    const label = pendingSlotLabel(slot, shortLabels ? 'short' : 'full')
     const time = format(new Date(slot.startTime), t('format.time'))
     const stateLabel = t(isFree ? 'event.schedule.state.FREE' : 'event.schedule.state.WAITING')
 

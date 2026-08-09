@@ -1,5 +1,6 @@
 import {
     EffectiveSeverity,
+    LiveDashboardCrewMemberDto,
     LiveDashboardMatchDto,
     LiveDashboardTeamDto,
     PendingSlotDto,
@@ -30,6 +31,52 @@ export type LiveDashboardTab = 'live' | 'matches'
  */
 export const dashboardScope = (wide: boolean, tab: LiveDashboardTab): 'LIVE' | 'ALL' =>
     !wide && tab === 'live' ? 'LIVE' : 'ALL'
+
+/**
+ * Ab dieser Fensterbreite kann eine Karte breit genug werden, dass die Crew-Stufe überhaupt
+ * erscheint — das Board steht dann auf einem Laptop, nicht auf einem Telefon oder einer
+ * Tablet-Spalte.
+ */
+export const CREW_WINDOW_PX = 1440
+
+/**
+ * Ob der Abruf die Crew je Boot mitbestellt. Anders als die drei Anzeigestufen hängt das an der
+ * *Fenster*breite und nicht an der Kartenbreite: die Nutzlast wird einmal je Abruf entschieden,
+ * lange bevor eine Karte weiß, wie breit sie wird. Die Kartenbreite entscheidet danach nur noch,
+ * ob die bereits geladene Crew auch gezeigt wird — großzügig zu laden ist billiger als eine
+ * zweite Runde, sobald jemand das Fenster zieht.
+ */
+export const dashboardCrew = (windowWidth: number): boolean => windowWidth >= CREW_WINDOW_PX
+
+/**
+ * Ob die Karte überhaupt eine Crew-Zeile hat. Die Stufen selbst schaltet eine Container-Query, die
+ * in jsdom nicht greift — diese eine Entscheidung hängt aber an den Daten und gehört deshalb
+ * hierher: unmittelbar nach dem Verbreitern des Fensters ist die Karte schon breit genug, der
+ * nächste Abruf mit `crew=true` aber noch unterwegs. Dann rendert die Karte Stufe 2 weiter, statt
+ * eine leere Fläche aufzuziehen.
+ */
+export const teamShowsCrew = (team: Pick<LiveDashboardTeamDto, 'crew'>): boolean =>
+    team.crew != null && team.crew.length > 0
+
+/** Eine Person in der Crew-Zeile: `Meier · RC Bergedorf (Ste.)`, Rolle und Verein je optional. */
+export const crewMemberLabel = (member: LiveDashboardCrewMemberDto): string => {
+    const name = [member.lastName, member.clubShort].filter(Boolean).join(' · ')
+    return member.role ? `${name} (${member.role})` : name
+}
+
+/**
+ * Ob unter dem Mannschaftsnamen noch die Vereinskette steht. Trägt der Name den Verein bereits —
+ * bei reinen Vereinsbooten der Regelfall —, stünde er sonst zweimal untereinander. Geprüft wird
+ * gegen beide Fassungen der Kette, weil die Karte je nach Breite die eine oder die andere zeigt
+ * und die Entscheidung nur einmal fallen kann.
+ */
+export const teamShowsClubLine = (
+    team: Pick<LiveDashboardTeamDto, 'teamName' | 'clubsShort' | 'clubsFull'>,
+): boolean =>
+    team.teamName != null &&
+    team.clubsFull !== '' &&
+    !team.teamName.includes(team.clubsFull) &&
+    !team.teamName.includes(team.clubsShort)
 
 /**
  * DOM-Id der Karte eines Eintrags, geteilt zwischen den Render-Schleifen und dem
@@ -113,48 +160,6 @@ export const storedPollInterval = (): number => {
     return POLL_INTERVAL_OPTIONS_MS.some(o => o === stored) ? stored : DEFAULT_POLL_INTERVAL_MS
 }
 
-const CLUB_NAME_BALLAST = [
-    /\s*\be\.?\s?V\.?(?=\s|$)/gi, // Rechtsform "e.V." / "eV"
-    /\s*\([^)]*\d[^)]*\)/g, // Gründungsjahre in Klammern, z.B. "(1879/83)"
-    /\s*\bvon\s+\d{4}\b/gi, // "von 1889"
-    /\s+\d{4}\b/g, // nachgestellte Jahreszahl, z.B. "München 1972"
-]
-
-// Im Rudersport gängige Kürzel — Schiedsrichter lesen sie ohne Nachdenken.
-const CLUB_TYPE_ABBREVIATIONS: [RegExp, string][] = [
-    [/\bRudergesellschaft\b/gi, 'RG'],
-    [/\bRuder-?vereinigung\b/gi, 'RVg'],
-    [/\bRuder-?verein\b/gi, 'RV'],
-    [/\bRuder-?club\b/gi, 'RC'],
-    [/\bRuder-?klub\b/gi, 'RK'],
-    [/\bSegel-?verein\b/gi, 'SV'],
-    [/\bSegel-?club\b/gi, 'SC'],
-    [/\bSportvereinigung\b/gi, 'SVg'],
-    [/\bSportverein\b/gi, 'SV'],
-    [/\bTurnverein\b/gi, 'TV'],
-    [/\bAkademischer\b/gi, 'Akad.'],
-]
-
-/**
- * Kurzform eines Vereinsnamens für die Listenansicht: Rechtsform und
- * Gründungsjahre entfallen, gängige Vereinstypen werden abgekürzt.
- * Der vollständige Name bleibt im Detail-Dialog sichtbar.
- */
-export const shortClubName = (name: string): string => {
-    const withoutBallast = CLUB_NAME_BALLAST.reduce(
-        (acc, pattern) => acc.replace(pattern, ' '),
-        name,
-    )
-    const abbreviated = CLUB_TYPE_ABBREVIATIONS.reduce(
-        (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
-        withoutBallast,
-    )
-    return abbreviated
-        .replace(/\s{2,}/g, ' ')
-        .replace(/\s+,/g, ',')
-        .trim()
-}
-
 /**
  * Ein Eintrag im Referee-Dashboard: entweder ein wirklicher Lauf oder ein wartender Zeitplan-Slot,
  * dessen Runde noch nicht gesetzt ist (kein Match, keine Teams). Beide teilen sich eine Startzeit,
@@ -223,8 +228,37 @@ export const nextUpEntry = (
 }
 
 /**
+ * Rennnummer und Kurzname eines Wettkampfs, z. B. "17 CM 4x+" — dieselbe Zusammensetzung wie
+ * `competitionTag` im Zeitplan-Tab, hier für die DTOs des Boards. Leer, wo beides fehlt: bei
+ * Programmpunkten und bei Wettkämpfen ohne gepflegten Kurznamen und ohne Nummer.
+ */
+export const competitionTag = (competition: {
+    competitionIdentifier?: string | null
+    competitionShortName?: string | null
+}): string =>
+    [competition.competitionIdentifier, competition.competitionShortName].filter(v => v).join(' ')
+
+/**
+ * Wie ein Lauf auf der Karte benannt wird: in der Langform der ausgeschriebene Wettkampfname,
+ * in der Kurzform ("17 CM 4x+") das Kürzel. Ohne Kürzel bleibt es beim Namen — eine Karte ohne
+ * jede Angabe zum Rennen wäre auf dem Board unbrauchbar.
+ */
+export const competitionLabel = (
+    competition: {
+        competitionName?: string | null
+        competitionIdentifier?: string | null
+        competitionShortName?: string | null
+    },
+    mode: 'full' | 'short' = 'full',
+): string | null | undefined =>
+    mode === 'short' && competitionTag(competition)
+        ? competitionTag(competition)
+        : competition.competitionName
+
+/**
  * Anzeige-Label eines Platzhalters — für Programmpunkte (FREE, `name` gesetzt) schlicht der Name,
  * für wartende Lauf-Slots dieselbe Zusammensetzung wie slotLabel im Zeitplan-Tab.
  */
-export const pendingSlotLabel = (slot: PendingSlotDto): string =>
-    slot.name ?? [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' · ')
+export const pendingSlotLabel = (slot: PendingSlotDto, mode: 'full' | 'short' = 'full'): string =>
+    slot.name ??
+    [competitionLabel(slot, mode), slot.roundName, slot.matchName].filter(Boolean).join(' · ')

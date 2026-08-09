@@ -62,6 +62,8 @@ object EventScheduleService {
                     durationMinutes = r[EVENT_SCHEDULE_SLOT.DURATION_MINUTES],
                     competitionId = r.get("competition_id", UUID::class.java),
                     competitionName = r.get("competition_name", String::class.java),
+                    competitionIdentifier = r.get("competition_identifier", String::class.java),
+                    competitionShortName = r.get("competition_short_name", String::class.java),
                     roundName = r.get("round_name", String::class.java),
                     matchName = r.get("match_name", String::class.java),
                     matchId = if (matchExists) r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] else null,
@@ -80,6 +82,8 @@ object EventScheduleService {
                     setupMatchId = r[COMPETITION_SETUP_MATCH.ID]!!,
                     competitionId = r.get("competition_id", UUID::class.java)!!,
                     competitionName = r.get("competition_name", String::class.java) ?: "",
+                    competitionIdentifier = r.get("competition_identifier", String::class.java),
+                    competitionShortName = r.get("competition_short_name", String::class.java),
                     roundName = r.get("round_name", String::class.java) ?: "",
                     matchName = r.get("match_name", String::class.java),
                 )

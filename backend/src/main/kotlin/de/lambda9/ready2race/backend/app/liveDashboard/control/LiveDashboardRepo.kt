@@ -9,6 +9,14 @@ import java.util.UUID
 
 object LiveDashboardRepo {
 
+    /**
+     * Der Verein, den eine Person *trägt* - nicht der, der sie gemeldet hat. `CLUB` hängt in
+     * [getTeams] an `COMPETITION_REGISTRATION.CLUB` und beantwortet damit nur die
+     * Verwaltungsfrage "wer hat gemeldet"; für die Anzeige zählt der eigene Verein jeder Person.
+     * Beides in einer Abfrage geht nur über einen zweiten Namen für dieselbe Tabelle.
+     */
+    private val PARTICIPANT_CLUB = CLUB.`as`("participant_club")
+
     fun getMatches(eventId: UUID) = Jooq.query {
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
@@ -25,6 +33,11 @@ object LiveDashboardRepo {
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
+            // Rennnummer und Kurzname für die Kurzform der Karten - dieselben Spalten wie im
+            // Zeitplan (EventScheduleRepo.getSlots), hier aus COMPETITION_PROPERTIES, weil
+            // COMPETITION_VIEW sie nicht führt.
+            COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
+            COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
         )
             .from(COMPETITION_MATCH)
@@ -70,9 +83,9 @@ object LiveDashboardRepo {
             PARTICIPANT.GENDER,
             PARTICIPANT.EXTERNAL,
             PARTICIPANT.EXTERNAL_CLUB_NAME,
+            PARTICIPANT_CLUB.NAME.`as`("participant_club_name"),
             COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT.`as`("named_participant_id"),
             NAMED_PARTICIPANT.NAME.`as`("named_role"),
-            EVENT.MIXED_TEAM_TERM,
             TIMECODE.TIME,
             TIMECODE.BASE_UNIT,
             TIMECODE.MILLISECOND_PRECISION,
@@ -94,6 +107,7 @@ object LiveDashboardRepo {
             .leftJoin(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
             .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
             .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
+            .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
             .leftJoin(NAMED_PARTICIPANT)
             .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
             .leftJoin(COMPETITION_DEREGISTRATION)
@@ -101,13 +115,33 @@ object LiveDashboardRepo {
                 COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION)
                     .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
             )
-            .leftJoin(EVENT_REGISTRATION).on(EVENT_REGISTRATION.ID.eq(COMPETITION_REGISTRATION.EVENT_REGISTRATION))
-            .leftJoin(EVENT).on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID))
             .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
             .and(matchId?.let { COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(it) } ?: DSL.noCondition())
             .and(registrationId?.let { COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(it) } ?: DSL.noCondition())
+            .fetch()
+    }
+
+    /**
+     * Der getragene Verein einzelner Personen, nachgeschlagen über ihre Kennung.
+     *
+     * [getTeams] deckt alle *gemeldeten* Personen ab. Eine Ummeldung darf aber ein Vereinsmitglied
+     * hereinholen, das für diese Veranstaltung gar nicht gemeldet ist (siehe
+     * `SubstitutionService.getPossibleSubstitutionsHelper`, das über `ParticipantRepo.getByClubId`
+     * geht) - ohne diese Abfrage stünde so jemand ohne Verein in der Kette. Der Aufrufer ruft sie
+     * nur für die Personen auf, die in den Meldezeilen fehlen; im Regelfall ist das niemand.
+     */
+    fun getParticipantClubs(participantIds: Collection<UUID>) = Jooq.query {
+        select(
+            PARTICIPANT.ID,
+            PARTICIPANT.EXTERNAL,
+            PARTICIPANT.EXTERNAL_CLUB_NAME,
+            PARTICIPANT_CLUB.NAME.`as`("participant_club_name"),
+        )
+            .from(PARTICIPANT)
+            .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
+            .where(PARTICIPANT.ID.`in`(participantIds))
             .fetch()
     }
 

@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.queryParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
@@ -21,8 +22,15 @@ fun Route.liveDashboard() {
                 !authenticate(Privilege.ReadLiveDashboardGlobal)
                 val eventId = !pathParam("eventId", uuid)
                 val scope = !optionalQueryParam("scope", enum<LiveDashboardScope>())
+                // Zweiter Schalter neben `scope`: die Crew je Boot ist der größte Posten im Poll
+                // und wird nur von der breitesten Anzeigestufe gebraucht.
+                val crew = !optionalQueryParam("crew", boolean)
 
-                LiveDashboardService.getLiveDashboard(eventId, scope ?: LiveDashboardScope.ALL)
+                LiveDashboardService.getLiveDashboard(
+                    eventId,
+                    scope ?: LiveDashboardScope.ALL,
+                    crew == true,
+                )
             }
         }
 

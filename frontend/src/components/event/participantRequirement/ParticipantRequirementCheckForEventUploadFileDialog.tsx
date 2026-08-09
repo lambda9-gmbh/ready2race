@@ -111,9 +111,12 @@ const ParticipantRequirementCheckForEventUploadFileDialog = (props: Props) => {
         ],
         valueMappings: [
             {
-                key: 'requirementIsValidValue',
-                label: t('event.participantRequirement.requirementIsValidValue'),
+                key: 'requirementIsValidValues',
+                label: t('event.participantRequirement.requirementIsValidValues'),
                 required: false,
+                // Die Werte kommen aus der zugeordneten Bedingungsspalte selbst - beim DRV
+                // sind das "ja" und "erweitert", beide bedeuten startberechtigt.
+                valuesFromColumn: 'requirementColName',
             },
         ],
         defaultSeparator: ';',
@@ -131,9 +134,11 @@ const ParticipantRequirementCheckForEventUploadFileDialog = (props: Props) => {
             yearsColName: result.columnMappings.yearsColName as string | undefined,
             clubColName: result.columnMappings.clubColName as string | undefined,
             requirementColName: result.columnMappings.requirementColName as string | undefined,
-            requirementIsValidValue: result.valueMappings.requirementIsValidValue as
-                | string
-                | undefined,
+            requirementIsValidValues: Array.isArray(
+                result.valueMappings.requirementIsValidValues,
+            )
+                ? result.valueMappings.requirementIsValidValues
+                : undefined,
         }
 
         const {error} = await checkParticipantRequirementsForEvent({

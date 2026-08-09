@@ -405,6 +405,9 @@ import type {
     GetActiveParticipantRequirementsForEventData,
     GetActiveParticipantRequirementsForEventError,
     GetActiveParticipantRequirementsForEventResponse,
+    ExportOpenParticipantRequirementsData,
+    ExportOpenParticipantRequirementsError,
+    ExportOpenParticipantRequirementsResponse,
     ActivateParticipantRequirementForEventData,
     ActivateParticipantRequirementForEventError,
     ActivateParticipantRequirementForEventResponse,
@@ -2508,6 +2511,22 @@ export const getActiveParticipantRequirementsForEvent = <ThrowOnError extends bo
     >({
         ...options,
         url: '/event/{eventId}/participantRequirement/active',
+    })
+}
+
+/**
+ * Downloads an xlsx of the registered participants who are still missing requirements - the basis for notifying their clubs. Without requirementId every requirement active at the event counts. Requirements bound to a named participant only apply to that role, and participants with nothing open are left out.
+ */
+export const exportOpenParticipantRequirements = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ExportOpenParticipantRequirementsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        ExportOpenParticipantRequirementsResponse,
+        ExportOpenParticipantRequirementsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/open/export',
     })
 }
 

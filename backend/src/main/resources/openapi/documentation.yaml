@@ -3619,6 +3619,38 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/participantRequirement/open/export:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: exportOpenParticipantRequirements
+      description: >-
+        Downloads an xlsx of the registered participants who are still missing requirements -
+        the basis for notifying their clubs. Without requirementId every requirement active at
+        the event counts. Requirements bound to a named participant only apply to that role,
+        and participants with nothing open are left out.
+      parameters:
+        - name: requirementId
+          in: query
+          required: false
+          description: Limits the export to a single requirement.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/participantRequirement/{participantRequirementId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -5971,6 +6003,12 @@ paths:
           schema:
             type: string
             enum: [LIVE, ALL]
+        - name: crew
+          in: query
+          required: false
+          description: "Fills crew per team - last name, short club form and role. Only set from a window wide enough to show it; the payload of a phone stays unchanged. Defaults to false."
+          schema:
+            type: boolean
       responses:
         200:
           description: Live dashboard data retrieved successfully
@@ -10353,8 +10391,14 @@ components:
           type: boolean
         requirementColName:
           type: string
-        requirementIsValidValue:
-          type: string
+        requirementIsValidValues:
+          type: array
+          description: >-
+            Values of the requirement column that count as fulfilled. Several are allowed -
+            the DRV list carries both "ja" and "erweitert". Empty or absent means every row
+            counts, which is also what an unmapped requirement column does.
+          items:
+            type: string
 
     ParticipantRequirementCheckForEventUpsertDto:
       type: object
@@ -13329,9 +13373,10 @@ components:
         gender:
           type: string
           nullable: true
-        externalClubName:
+        clubName:
           type: string
           nullable: true
+          description: "The club this person wears - the free text of a guest rower, otherwise the name of their own club. Not the registering club, which is the same for the whole team"
         substitutedFor:
           type: string
           nullable: true
@@ -13344,10 +13389,28 @@ components:
           items:
             $ref: '#/components/schemas/LiveDashboardRequirementStatusDto'
 
+    LiveDashboardCrewMemberDto:
+      type: object
+      required:
+        - lastName
+      properties:
+        lastName:
+          type: string
+        clubShort:
+          type: string
+          nullable: true
+          description: "Short form of the club this person wears - the same rule as the chain in clubsShort"
+        role:
+          type: string
+          nullable: true
+          description: "Abbreviated role, e.g. Ste. for Steuerleute"
+
     LiveDashboardTeamDto:
       type: object
       required:
         - teamId
+        - clubsShort
+        - clubsFull
         - failed
         - deregistered
         - invoiceState
@@ -13366,9 +13429,19 @@ components:
         clubName:
           type: string
           nullable: true
-        actualClubName:
+          description: "The registering club. Kept because it carries the invoice; no display uses it any more"
+        clubsShort:
           type: string
+          description: "The clubs of the crew in boat order, short forms, joined by ' / '"
+        clubsFull:
+          type: string
+          description: "The same chain in full club names"
+        crew:
+          type: array
           nullable: true
+          description: "The crew in short form; only filled when the request asked for it with crew=true"
+          items:
+            $ref: '#/components/schemas/LiveDashboardCrewMemberDto'
         startNumber:
           type: integer
           nullable: true
@@ -13414,7 +13487,7 @@ components:
           type: string
           format: date-time
           nullable: true
-          description: "When the boat went on the water (latest check-out scan, only if the whole known crew is checked out); null while at least one crew member is not checked out or no crew is known"
+          description: "When the boat went on the water (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known"
 
     LiveDashboardTeamDetailDto:
       type: object
@@ -13451,6 +13524,14 @@ components:
           format: uuid
         competitionName:
           type: string
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels"
+        competitionShortName:
+          type: string
+          nullable: true
+          description: "The competition's short name (Kurzname, e.g. 'CM 4x+')"
         categoryName:
           type: string
           nullable: true
@@ -13509,6 +13590,14 @@ components:
         competitionName:
           type: string
           nullable: true
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer) - null for program items"
+        competitionShortName:
+          type: string
+          nullable: true
+          description: "The competition's short name (Kurzname) - null for program items"
         roundName:
           type: string
           nullable: true
@@ -13693,6 +13782,14 @@ components:
         competitionName:
           type: string
           nullable: true
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab"
+        competitionShortName:
+          type: string
+          nullable: true
+          description: "The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab"
         roundName:
           type: string
           nullable: true
@@ -13746,6 +13843,14 @@ components:
           format: uuid
         competitionName:
           type: string
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer)"
+        competitionShortName:
+          type: string
+          nullable: true
+          description: "The competition's short name (Kurzname)"
         roundName:
           type: string
         matchName:

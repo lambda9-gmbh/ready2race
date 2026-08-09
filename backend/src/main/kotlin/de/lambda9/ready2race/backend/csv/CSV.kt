@@ -1,13 +1,14 @@
 package de.lambda9.ready2race.backend.csv
 
 import com.opencsv.CSVParserBuilder
-import com.opencsv.CSVReader
 import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
+import com.opencsv.exceptions.CsvException
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import io.ktor.utils.io.charsets.forName
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
@@ -45,6 +46,41 @@ object CSV {
         }
     }
 
+    /**
+     * Ergebnis eines Parser-Durchlaufs. [Malformed] steht für einen Abbruch von OpenCSV -
+     * praktisch immer ein Anführungszeichen, das nie geschlossen wird.
+     */
+    private sealed interface Rows {
+        data class Ok(val rows: List<Array<String>>) : Rows
+        data class Malformed(val detail: String?) : Rows
+    }
+
+    /**
+     * Liest die ganze Datei mit einem frisch gebauten Parser. Frisch ist wichtig: der Parser
+     * merkt sich ein offenes Anführungszeichen über Zeilen hinweg, ein wiederverwendeter
+     * würde den zweiten Durchlauf bereits "in Anführungszeichen" beginnen.
+     */
+    private fun parseRows(
+        bytes: ByteArray,
+        cs: Charset,
+        separator: Char,
+        ignoreQuotations: Boolean,
+    ): Rows = try {
+        val parser = CSVParserBuilder()
+            .withSeparator(separator)
+            .withIgnoreQuotations(ignoreQuotations)
+            .build()
+
+        CSVReaderBuilder(bytes.inputStream().bufferedReader(cs))
+            .withCSVParser(parser)
+            .build()
+            .use { reader -> Rows.Ok(generateSequence { reader.readNext() }.toList()) }
+    } catch (e: CsvException) {
+        Rows.Malformed(e.message)
+    } catch (e: IOException) {
+        Rows.Malformed(e.message)
+    }
+
     fun <A> read(
         `in`: InputStream,
         noHeader: Boolean = false,
@@ -59,19 +95,39 @@ object CSV {
             Charsets.UTF_8
         }
 
-        val csvParser = CSVParserBuilder()
-            .withSeparator(separator)
-            .build()
+        // Einmal komplett einlesen: der zweite Versuch unten braucht denselben Inhalt, ein
+        // InputStream lässt sich aber nur einmal durchlaufen.
+        val bytes = try {
+            `in`.use { it.readBytes() }
+        } catch (e: IOException) {
+            return@comprehension KIO.fail(CSVReadError.FileError)
+        }
 
-        val reader = CSVReaderBuilder(`in`.bufferedReader(cs))
-            .withCSVParser(csvParser)
-            .build()
+        // Erst streng lesen, damit echtes Quoting erhalten bleibt - ein "a;b" schützt sein
+        // Semikolon und darf nicht zu zwei Feldern zerfallen.
+        //
+        // Scheitert das, wird ohne Anführungszeichen-Auswertung erneut gelesen. Auslöser dafür
+        // sind Exporte, die ein einzelnes gerades Anführungszeichen mitten im Feld führen -
+        // die DRV-Aktivenpassliste etwa enthält den Verein
+        // Berliner Ruder-Club „Welle-Poseidon" e.V. Für OpenCSV beginnt dort ein zitiertes
+        // Feld, das bis zum Dateiende offen bleibt. Eine Datei, die streng nicht lesbar ist,
+        // ist ohnehin nicht regelkonform; sie danach wörtlich zu lesen ist besser, als den
+        // ganzen Import scheitern zu lassen. Keine der beiden Einstellungen kann beide Fälle,
+        // deshalb die Reihenfolge und nicht eine einzelne Konfiguration.
+        val rows = when (val strict = parseRows(bytes, cs, separator, ignoreQuotations = false)) {
+            is Rows.Ok -> strict.rows
+            is Rows.Malformed -> when (val lenient = parseRows(bytes, cs, separator, true)) {
+                is Rows.Ok -> lenient.rows
+                is Rows.Malformed -> return@comprehension KIO.fail(
+                    CSVReadError.MalformedQuotes(lenient.detail ?: strict.detail)
+                )
+            }
+        }
 
         val result = mutableListOf<A>()
-        var rowNum = 0
 
         val columns = if (noHeader) {
-            val first = reader.peek()
+            val first = rows.firstOrNull()
 
             if (first == null) {
                 return@comprehension KIO.ok(result)
@@ -81,9 +137,7 @@ object CSV {
                 }.toMap()
             }
         } else {
-            val header = reader.readNext()
-
-            !KIO.failOnNull(header) { CSVReadError.NoHeaders }
+            !KIO.failOnNull(rows.firstOrNull()) { CSVReadError.NoHeaders }
                 .map {
                     it.mapIndexedNotNull { idx, item ->
                         item?.let { it to idx }
@@ -92,22 +146,18 @@ object CSV {
                 .failIf({ it.isEmpty() }) { CSVReadError.NoHeaders }
         }
 
-
         val maxIndex = columns.maxOf { it.value }
+        val dataRows = if (noHeader) rows else rows.drop(1)
 
-        do {
-            val row = reader.readNext()
-            if (row != null) {
-                if (row.size <= maxIndex) {
-                    return@comprehension KIO.fail(CSVReadError.MalformedData)
-                }
-                rowNum++
-                val value = !KIO.comprehension {
-                    KIO.ok(RowReader(this, columns, row.toList(), rowNum).reader())
-                }
-                result.add(value)
+        dataRows.forEachIndexed { idx, row ->
+            if (row.size <= maxIndex) {
+                return@comprehension KIO.fail(CSVReadError.MalformedData)
             }
-        } while (row != null)
+            val value = !KIO.comprehension {
+                KIO.ok(RowReader(this, columns, row.toList(), idx + 1).reader())
+            }
+            result.add(value)
+        }
 
         KIO.ok(result)
     }

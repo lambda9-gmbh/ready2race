@@ -27,24 +27,24 @@ class LiveDashboardLogicTest {
     // --- teamOnWaterAt ---
 
     @Test
-    fun onWaterWhenWholeCrewCheckedOut() {
+    fun onWaterWhenWholeCrewCheckedIn() {
         val scans = listOf(
-            "EXIT" to start.minusMinutes(10),
-            "EXIT" to start.minusMinutes(8),
-            "EXIT" to start.minusMinutes(12),
+            "ENTRY" to start.minusMinutes(10),
+            "ENTRY" to start.minusMinutes(8),
+            "ENTRY" to start.minusMinutes(12),
         )
         assertEquals(start.minusMinutes(8), LiveDashboardLogic.teamOnWaterAt(scans))
     }
 
     @Test
-    fun notOnWaterWhenAnyCrewMemberMissingOrCheckedIn() {
+    fun notOnWaterWhenAnyCrewMemberMissingOrCheckedOut() {
         // Eine Person nie gescannt
         assertNull(
-            LiveDashboardLogic.teamOnWaterAt(listOf("EXIT" to start, null))
+            LiveDashboardLogic.teamOnWaterAt(listOf("ENTRY" to start, null))
         )
-        // Eine Person wieder eingecheckt (letzter Scan ENTRY)
+        // Eine Person wieder ausgecheckt (letzter Scan EXIT) - zurück am Steg
         assertNull(
-            LiveDashboardLogic.teamOnWaterAt(listOf("EXIT" to start, "ENTRY" to start.plusMinutes(1)))
+            LiveDashboardLogic.teamOnWaterAt(listOf("ENTRY" to start, "EXIT" to start.plusMinutes(1)))
         )
     }
 
@@ -296,6 +296,8 @@ class LiveDashboardLogicTest {
         state = state,
         competitionId = UUID.randomUUID(),
         competitionName = "Coastal",
+        competitionIdentifier = null,
+        competitionShortName = null,
         categoryName = null,
         roundName = null,
         matchName = name,
@@ -905,5 +907,26 @@ class LiveDashboardLogicTest {
             persistedRequirementIds = emptySet(),
         )
         assertEquals(listOf(entryDto), result)
+    }
+
+    @Test
+    fun roleIsShortenedWithoutMakingTwoRolesLookAlike() {
+        // Die echten Rollennamen der CRF beginnen beide mit "S" - Anfangsbuchstaben wären hier
+        // wertlos, drei Buchstaben halten sie auseinander.
+        assertEquals("Ste.", LiveDashboardLogic.roleAbbreviation("Steuerleute"))
+        assertEquals("Sen.", LiveDashboardLogic.roleAbbreviation("Senior:in"))
+    }
+
+    @Test
+    fun aShortRoleKeepsItsName() {
+        // Ein Punkt hinter einem Wort, das nicht kürzer wird, wäre eine Lüge.
+        assertEquals("Cox", LiveDashboardLogic.roleAbbreviation("Cox"))
+        assertEquals("Bug", LiveDashboardLogic.roleAbbreviation(" Bug "))
+    }
+
+    @Test
+    fun aMissingRoleStaysMissing() {
+        assertEquals(null, LiveDashboardLogic.roleAbbreviation(null))
+        assertEquals(null, LiveDashboardLogic.roleAbbreviation("   "))
     }
 }

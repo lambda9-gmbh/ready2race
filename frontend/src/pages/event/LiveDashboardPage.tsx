@@ -6,6 +6,7 @@ import {
     BottomNavigationAction,
     Box,
     CircularProgress,
+    IconButton,
     Paper,
     Stack,
     Typography,
@@ -14,6 +15,7 @@ import {
 } from '@mui/material'
 import LiveTvIcon from '@mui/icons-material/LiveTv'
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered'
+import {ShortText, Subject} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
@@ -30,6 +32,7 @@ import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import {eventLiveDashboardRoute} from '@routes'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
+import {useShortLabels} from '@components/event/shortLabels.ts'
 import {
     LiveColumn,
     LiveDashboardActions,
@@ -37,6 +40,7 @@ import {
 } from '@components/event/liveDashboard/LiveDashboardColumns.tsx'
 import {
     buildLiveDashboardTimeline,
+    dashboardCrew,
     dashboardEntryDomIdCandidates,
     dashboardScope,
     LiveDashboardTab,
@@ -63,6 +67,22 @@ const useLocalClock = (intervalMs: number): Date => {
     return now
 }
 
+/**
+ * Ob der Abruf die Crew je Boot mitbestellen soll. Beobachtet wird die Fensterbreite, entschieden
+ * wird in `dashboardCrew` — die Schwelle steht als reine Funktion in `common.ts` und ist dort ohne
+ * Rendering geprüft. Gehalten wird nur der Schalter, nicht die Breite: ein Zustandswechsel je
+ * gezogenem Pixel würde die Seite grundlos neu bauen.
+ */
+const useCrewRequested = (): boolean => {
+    const [requested, setRequested] = useState(() => dashboardCrew(window.innerWidth))
+    useEffect(() => {
+        const onResize = () => setRequested(dashboardCrew(window.innerWidth))
+        window.addEventListener('resize', onResize)
+        return () => window.removeEventListener('resize', onResize)
+    }, [])
+    return requested
+}
+
 const LiveDashboardPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
@@ -78,6 +98,8 @@ const LiveDashboardPage = () => {
 
     const [tab, setTab] = useState<LiveDashboardTab>('live')
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
+    // Geteilt mit dem Zeitplan-Tab (siehe shortLabels.ts).
+    const [shortLabels, toggleShortLabels] = useShortLabels()
     const [dashboard, setDashboard] = useState<LiveDashboardDto | null>(null)
     // In REGATTABUERO läuft "Lauf beenden" ausschließlich über den Zeitplan-Tab (siehe
     // EventSchedule.tsx) - der Button verschwindet hier dafür, das Notfall-Override
@@ -97,6 +119,11 @@ const LiveDashboardPage = () => {
     const etagRef = useRef<string | null>(null)
 
     const scope = dashboardScope(wide, tab)
+    // Anders als `scope` räumt ein Wechsel hier nichts auf: der ETag ist der Fingerabdruck des
+    // serialisierten Datensatzes (siehe respondETagged), und mit der Crew darin ist er ein anderer —
+    // der nächste Abruf bringt den Rumpf von selbst. Bis er da ist, zeigen die Karten weiter
+    // Stufe 2 (siehe teamShowsCrew), statt für eine bloße Ergänzung leer zu werden.
+    const crew = useCrewRequested()
 
     // Der andere Umfang hat einen anderen Stand: ETag und Daten des bisherigen gelten für ihn
     // nicht, sonst stünde kurz die Live-Auswahl als Gesamtliste da. Am Umschalter hing das früher
@@ -120,7 +147,7 @@ const LiveDashboardPage = () => {
             getLiveDashboard({
                 signal,
                 path: {eventId},
-                query: {scope},
+                query: {scope, crew},
                 // Unverändert? Dann antwortet der Server mit 304 und ohne Rumpf. 'no-store' hält
                 // den Browser-Cache aus der Bedingung heraus, sonst beantwortet er sie selbst.
                 headers: etagRef.current ? {'If-None-Match': etagRef.current} : undefined,
@@ -128,7 +155,7 @@ const LiveDashboardPage = () => {
             }),
         {
             autoReloadInterval: pollIntervalMs,
-            deps: [eventId, pollIntervalMs, scope],
+            deps: [eventId, pollIntervalMs, scope, crew],
             onResponse: ({data, response}) => {
                 if (response.status === 304) {
                     setLastUpdated(new Date())
@@ -272,6 +299,7 @@ const LiveDashboardPage = () => {
             nextEntry={nextEntry}
             loaded={dashboard !== null}
             actions={actions}
+            shortLabels={shortLabels}
         />
     )
     const matchListColumn = (
@@ -282,6 +310,7 @@ const LiveDashboardPage = () => {
                 dashboard !== null && dashboard.matches.length === 0 && pendingSlots.length === 0
             }
             actions={actions}
+            shortLabels={shortLabels}
         />
     )
 
@@ -313,6 +342,24 @@ const LiveDashboardPage = () => {
                         {t('event.liveDashboard.title')}
                     </Typography>
                     <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
+                        {/* Dieselbe Wahl wie am Spaltenkopf "Slot" im Zeitplan-Tab: wer die Rennen
+                            am Kürzel liest, liest sie hier genauso. */}
+                        <IconButton
+                            size="small"
+                            onClick={toggleShortLabels}
+                            color={shortLabels ? 'primary' : 'default'}
+                            aria-pressed={shortLabels}
+                            title={t(
+                                shortLabels
+                                    ? 'event.schedule.showFullNames'
+                                    : 'event.schedule.showShortNames',
+                            )}>
+                            {shortLabels ? (
+                                <Subject fontSize="small" />
+                            ) : (
+                                <ShortText fontSize="small" />
+                            )}
+                        </IconButton>
                         {lastUpdated && (
                             <Typography variant="caption" noWrap sx={{color: 'grey.700'}}>
                                 {format(lastUpdated, t('format.timeWithSeconds'))}

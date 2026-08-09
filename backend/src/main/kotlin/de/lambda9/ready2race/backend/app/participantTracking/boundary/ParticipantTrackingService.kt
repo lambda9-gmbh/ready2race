@@ -45,8 +45,13 @@ object ParticipantTrackingService {
             .map { list ->
                 list.maxByOrNull { it.scannedAt!! }?.scanType
             }
+        // Ausgecheckt wird nur, wer eingecheckt ist. Der Vergleich läuft bewusst gegen ENTRY und
+        // nicht gegen EXIT: sonst käme eine nie gescannte Person (currentStatus == null) durch und
+        // das Protokoll bekäme eine Abmeldung ohne zugehörige Anmeldung - eine Rückkehr vom Wasser,
+        // auf dem die Person nie war. Seit ENTRY "auf dem Wasser" bedeutet, ist das die Regel, die
+        // das Log für sich lesbar hält.
         !KIO.failOn(currentStatus == ParticipantScanType.ENTRY.name && checkIn) { ParticipantTrackingError.TeamAlreadyCheckedIn }
-        !KIO.failOn(currentStatus == ParticipantScanType.EXIT.name && !checkIn) { ParticipantTrackingError.TeamNotCheckedIn }
+        !KIO.failOn(currentStatus != ParticipantScanType.ENTRY.name && !checkIn) { ParticipantTrackingError.TeamNotCheckedIn }
 
         val record = ParticipantTrackingRecord(
             id = UUID.randomUUID(),
