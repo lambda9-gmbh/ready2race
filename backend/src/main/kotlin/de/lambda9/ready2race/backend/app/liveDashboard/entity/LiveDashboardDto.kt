@@ -142,6 +142,12 @@ data class LiveDashboardTeamDetailDto(
 
 data class LiveDashboardMatchDto(
     val matchId: UUID,
+    /**
+     * Der abgeleitete Lauf-Zustand — die einzige Aussage der Karte darüber, wo der Lauf steht.
+     * Ein eigenes `currentlyRunning` stand hier bis zum 09.08.2026 daneben; seit „am Start" und
+     * „unterwegs" zwei Zustände sind ([LiveDashboardMatchState.PREPARING] und
+     * [LiveDashboardMatchState.RUNNING]), wäre ein zweites Feld nur eine zweite Wahrheit.
+     */
     val state: LiveDashboardMatchState,
     val competitionId: UUID,
     val competitionName: String,
@@ -155,7 +161,6 @@ data class LiveDashboardMatchDto(
     val executionOrder: Int,
     val startTime: LocalDateTime?,
     val startedAt: LocalDateTime?,
-    val currentlyRunning: Boolean,
     val elapsedMinutes: Long?,
     val teams: List<LiveDashboardTeamDto>,
     /**

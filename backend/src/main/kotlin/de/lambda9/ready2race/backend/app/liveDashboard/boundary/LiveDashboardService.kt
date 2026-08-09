@@ -247,7 +247,6 @@ object LiveDashboardService {
                         executionOrder = match[COMPETITION_SETUP_MATCH.EXECUTION_ORDER] ?: 0,
                         startTime = startTime,
                         startedAt = startedAt,
-                        currentlyRunning = running,
                         elapsedMinutes = startedAt?.let { Duration.between(it, now).toMinutes().coerceAtLeast(0) },
                         teams = teams,
                         raceClockerPollError = match[COMPETITION_MATCH.RACECLOCKER_POLL_ERROR],

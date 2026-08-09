@@ -89,7 +89,8 @@ object EventScheduleLogic {
      * Diese Regel bleibt bewusst an der Aktivierung, obwohl der Anzeigezustand seit dem
      * 09.08.2026 zwischen "in Vorbereitung" und "läuft" unterscheidet: Der Absage-Schutz greift
      * früher als die Anzeige, und genau das ist sein Zweck. Nur der Parametername ist mitgezogen
-     * worden, damit im Backend nirgends mehr `currentlyRunning` steht, wo Aktivierung gemeint ist.
+     * worden, damit im Backend nirgends mehr von "laufend" die Rede ist, wo Aktivierung gemeint
+     * ist.
      */
     fun matchUnderway(startedAt: LocalDateTime?, activated: Boolean): Boolean =
         startedAt != null || activated

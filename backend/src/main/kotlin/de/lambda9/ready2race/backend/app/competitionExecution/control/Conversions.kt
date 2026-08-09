@@ -101,7 +101,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                         executionOrder = match.second.executionOrder,
                         startTime = match.first.startTime,
                         startTimeOffset = match.second.startTimeOffset,
-                        currentlyRunning = match.first.activatedAt != null,
+                        activatedAt = match.first.activatedAt,
                         startedAt = match.first.startedAt,
                         finishedAt = match.first.finishedAt,
                         skipped = match.first.skipped,

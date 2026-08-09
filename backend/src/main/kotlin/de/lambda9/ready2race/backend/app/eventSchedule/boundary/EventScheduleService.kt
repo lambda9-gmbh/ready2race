@@ -71,7 +71,7 @@ object EventScheduleService {
                     setupRoundId = r.get("setup_round_id", UUID::class.java),
                     matchStartedAt = r.get("match_started_at", java.time.LocalDateTime::class.java),
                     matchFinishedAt = r.get("match_finished_at", java.time.LocalDateTime::class.java),
-                    matchCurrentlyRunning = r[COMPETITION_MATCH.ACTIVATED_AT] != null,
+                    matchActivatedAt = r[COMPETITION_MATCH.ACTIVATED_AT],
                     matchTeamsTotal = r.get("match_teams_total", Int::class.java) ?: 0,
                     matchTeamsScored = r.get("match_teams_scored", Int::class.java) ?: 0,
                 )

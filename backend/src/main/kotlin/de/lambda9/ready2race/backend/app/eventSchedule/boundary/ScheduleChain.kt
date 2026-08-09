@@ -30,8 +30,8 @@ data class ChainSlot(
     /**
      * Der Ist-Start (competition_match.started_at). NUR er blockiert das Vorrücken: Ein Lauf, den
      * die Kette an den Start gerufen hat, dessen Boote aber noch am Steg liegen, hält die nächste
-     * Startgruppe nicht auf. Vor der Trennung von Aktivierung und Ist-Start stand hier
-     * `currentlyRunning`, das beide Fälle zusammenwarf — und damit eine Startgruppe schon dann
+     * Startgruppe nicht auf. Vor der Trennung von Aktivierung und Ist-Start stand hier ein
+     * einzelnes Aktiv-Flag, das beide Fälle zusammenwarf — und damit eine Startgruppe schon dann
      * blockierte, wenn sie nur gerufen war.
      */
     val matchStartedAt: LocalDateTime? = null,

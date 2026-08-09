@@ -13,7 +13,8 @@ data class CompetitionMatchDto(
     /** Geplanter Start aus dem Zeitplan. */
     val startTime: LocalDateTime?,
     val startTimeOffset: Long?,
-    val currentlyRunning: Boolean,
+    /** Wann der Lauf an den Start gerufen wurde - null, solange ihn niemand aktiviert hat. */
+    val activatedAt: LocalDateTime?,
     /** Tatsächlicher Start - null, solange niemand gestartet hat. */
     val startedAt: LocalDateTime?,
     /** Persistiertes Ende. Gesetzt heißt ausschließlich: jemand hat den Lauf beendet. */
@@ -21,9 +22,10 @@ data class CompetitionMatchDto(
     /** Der Zeitstrahl-Slot dieses Laufs ist abgesagt. */
     val skipped: Boolean,
     /**
-     * Der abgeleitete Lauf-Zustand für den Status-Chip. [currentlyRunning] bleibt daneben stehen:
-     * an ihm hängt die Checkbox "Aktuell laufend" und der Rahmen der Karte, und die sind nicht
-     * Teil dieser Änderung.
+     * Der abgeleitete Lauf-Zustand für den Status-Chip — dieselbe Ableitung wie im
+     * Schiedsrichter-Dashboard und im Zeitplan. [activatedAt] bleibt daneben stehen, weil an ihm
+     * der Schalter "Am Start" hängt: er fragt, ob der Lauf aufgerufen ist, nicht in welchem
+     * Zustand er sich befindet.
      */
     val status: MatchStatusDto,
     /** Wann der automatische RaceClocker-Abruf diesen Lauf zuletzt versucht hat. */

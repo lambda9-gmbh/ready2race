@@ -299,7 +299,7 @@ class EventScheduleLogicTest {
 
     @Test
     fun recordedStartIsUnderwayEvenWhenNoLongerActive() {
-        // Ein beendeter Lauf trägt started_at, aber currently_running = false - absagen lässt er
+        // Ein beendeter Lauf trägt started_at, aber activated_at = null - absagen lässt er
         // sich trotzdem nicht mehr.
         assertTrue(EventScheduleLogic.matchUnderway(startedAt = slotNow, activated = false))
     }

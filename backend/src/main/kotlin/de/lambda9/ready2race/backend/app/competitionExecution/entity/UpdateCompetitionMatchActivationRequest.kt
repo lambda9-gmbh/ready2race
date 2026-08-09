@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 /**
  * Ruft einen Lauf an den Start ([activated] = true) oder nimmt das zurück.
  *
- * Bewusst `activated` und nicht mehr `currentlyRunning`: Der Klick stellt fest, dass der Lauf
+ * Bewusst `activated` und nicht mehr "laufend": Der Klick stellt fest, dass der Lauf
  * drankommt, nicht dass er fährt. Ob er fährt, entscheidet der Ist-Start (`started_at`).
  */
 data class UpdateCompetitionMatchActivationRequest(

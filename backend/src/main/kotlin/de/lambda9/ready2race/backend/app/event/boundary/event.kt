@@ -102,10 +102,12 @@ fun Route.event() {
                 call.respondComprehension {
                     !authenticate(Privilege.ReadEventGlobal)
                     val eventId = !pathParam("eventId", uuid)
-                    val currentlyRunning = !optionalQueryParam("currentlyRunning", boolean)
+                    // "activated" statt "currentlyRunning": gefragt wird, ob der Lauf an den Start
+                    // gerufen ist - ob er auch schon unterwegs ist, sagt der abgeleitete Zustand.
+                    val activated = !optionalQueryParam("activated", boolean)
                     val withoutPlaces = !optionalQueryParam("withoutPlaces", boolean)
 
-                    CompetitionExecutionService.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces)
+                    CompetitionExecutionService.getMatchesByEvent(eventId, activated, withoutPlaces)
                 }
             }
 

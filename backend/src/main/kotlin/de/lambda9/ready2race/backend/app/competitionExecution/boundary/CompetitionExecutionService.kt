@@ -98,12 +98,17 @@ object CompetitionExecutionService {
     /** Separates competition short name and rating category where both share one export column. */
     private const val RATING_SEPARATOR = "·"
 
+    /**
+     * Die Läufe der Veranstaltung, wahlweise gefiltert nach [activated]: true liefert die an den
+     * Start gerufenen, false die übrigen. Ob ein aufgerufener Lauf auch schon unterwegs ist, sagt
+     * dieser Filter bewusst nicht - dafür gibt es den abgeleiteten Zustand.
+     */
     fun getMatchesByEvent(
         eventId: UUID,
-        currentlyRunning: Boolean? = null,
+        activated: Boolean? = null,
         withoutPlaces: Boolean? = null
     ): App<ServiceError, ApiResponse.ListDto<MatchForRunningStatusDto>> = KIO.comprehension {
-        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces).orDie()
+        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, activated, withoutPlaces).orDie()
         KIO.ok(ApiResponse.ListDto(matches))
     }
 
@@ -567,7 +572,7 @@ object CompetitionExecutionService {
      * Setzt alle Plätze eines Laufs zurück, damit eine neue Ergebnis-Eingabe nicht auf alten
      * Werten aufsetzt.
      *
-     * Rührt `currently_running` NICHT MEHR an (C1): egal ob die Ergebnisse aus der manuellen
+     * Rührt `activated_at` NICHT MEHR an (C1): egal ob die Ergebnisse aus der manuellen
      * Eingabe, einem Datei-Upload oder dem RaceClocker-Pull vollständig sind, der Lauf bleibt
      * aktiv, bis ein aktives Beenden ihn stempelt (`LiveDashboardService.finishMatch` bzw.
      * `EventScheduleService.finishSlot`). Vorher deaktivierte diese Funktion einen Lauf mit

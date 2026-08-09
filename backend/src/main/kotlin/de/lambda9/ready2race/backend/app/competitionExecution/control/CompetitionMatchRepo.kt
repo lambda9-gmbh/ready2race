@@ -356,7 +356,7 @@ object CompetitionMatchRepo {
 
     fun getMatchesByEvent(
         eventId: UUID,
-        currentlyRunning: Boolean? = null,
+        activated: Boolean? = null,
         withoutPlaces: Boolean? = null
     ): JIO<List<MatchForRunningStatusDto>> = Jooq.query {
         val cm = COMPETITION_MATCH
@@ -401,8 +401,8 @@ object CompetitionMatchRepo {
             .join(c).on(cp.COMPETITION.eq(c.ID))
             .where(c.EVENT.eq(eventId))
 
-        if (currentlyRunning != null) {
-            query = query.and(if (currentlyRunning) cm.ACTIVATED_AT.isNotNull else cm.ACTIVATED_AT.isNull)
+        if (activated != null) {
+            query = query.and(if (activated) cm.ACTIVATED_AT.isNotNull else cm.ACTIVATED_AT.isNull)
         }
 
         if (withoutPlaces == true) {
@@ -426,7 +426,7 @@ object CompetitionMatchRepo {
                 matchNumber = record.value6()!!,
                 matchName = record.value7(),
                 hasPlacesSet = record.value8()!!,
-                currentlyRunning = record.value9() != null,
+                activatedAt = record.value9(),
                 startTime = record.value10()
             )
         }
