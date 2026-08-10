@@ -1762,6 +1762,7 @@
       "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
       "activateAnyway": "Aktiver alligevel",
       "finish": "Afslut løb",
+      "acknowledgeBye": "Kvittér oversidder",
       "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Hvis stævnet skifter automatisk videre, aktiveres de næste løb.",
       "finishAnyway": "Afslut alligevel",
       "refereeModeWarning": "Dommertilstand er aktiv: løb aktiveres og afsluttes normalt af en dommer via dommer-dashboardet. Et indgreb herfra omgår denne vej.",

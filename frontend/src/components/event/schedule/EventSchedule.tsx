@@ -604,7 +604,15 @@ const EventSchedule = () => {
                                                             )}
                                                         </Box>
                                                         <Box sx={actionSlotSx}>
+                                                            {/*
+                                                                Ein Freilos wird nicht gefahren: Aktivieren ergibt dort
+                                                                keinen Sinn, das Quittieren (= Beenden, setzt finished_at
+                                                                wie der Beenden-Klick im Dashboard) ist die einzige offene
+                                                                Handlung - und sie darf nicht an der Aktivierung hängen,
+                                                                die ein Freilos nie bekommt.
+                                                            */}
                                                             {slot.state === 'LINKED' &&
+                                                                !slot.bye &&
                                                                 !slot.matchFinishedAt &&
                                                                 slot.matchActivatedAt == null && (
                                                                     <Tooltip
@@ -623,10 +631,14 @@ const EventSchedule = () => {
                                                                     </Tooltip>
                                                                 )}
                                                             {slot.state === 'LINKED' &&
-                                                                slot.matchActivatedAt != null && (
+                                                                (slot.bye
+                                                                    ? !slot.matchFinishedAt
+                                                                    : slot.matchActivatedAt != null) && (
                                                                     <Tooltip
                                                                         title={t(
-                                                                            'event.schedule.finish',
+                                                                            slot.bye
+                                                                                ? 'event.schedule.acknowledgeBye'
+                                                                                : 'event.schedule.finish',
                                                                         )}>
                                                                         <IconButton
                                                                             size={'small'}
