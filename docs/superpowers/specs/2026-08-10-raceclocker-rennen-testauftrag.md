@@ -120,6 +120,15 @@ Für den abschließenden Review — hier sitzt das Risiko, nicht in der Breite.
   sein eigenes Rennen; Leerstring erzeugt nichts; fehlendes Kürzel fällt auf `identifier`;
   Namenskollision bekommt Suffix; Veranstaltung ohne Adressen bekommt nichts.
 
+**Abschlussreview (Fable, 10.08.):** „Merge nach Korrekturen". Ein wichtiger Befund, behoben — ein
+Defekt beim Auflösen eines Laufs stempelte einen *sauberen* Abruf, statt sichtbar zu werden. Das war
+ein Rückschritt aus der Korrektur des vorigen Reviews: Beim Trennen von „bewusst übersprungen" und
+„Fehler" fielen Defekte auf die falsche Seite. Jetzt unterscheidet `Resolution` zwischen `Skip`
+(sauberer Stempel) und `Defect` (`INTERNAL_ERROR` in der Spalte). Ebenso: eine Zuordnung, die
+unerwartet scheitert, endet nicht mehr als „Welle noch nicht da". Fünf kleinere Befunde ebenfalls
+behoben (www-Altbestand bei der Duplikatsprüfung, Abweichungsliste dünnte zu großzügig aus, drei
+veraltete Kommentare).
+
 **Bewusste Lücke:** `pollEvent` hat keinen End-to-End-Test — die Phasen sind einzeln gedeckt, aber
 nichts fährt 1→2→3→4 zusammen. Dafür müsste `fetchRows` injizierbar werden. Vier Tage vor der Regatta
 habe ich diesen Umbau nicht mehr angefasst; er gehört auf die Liste für danach.
