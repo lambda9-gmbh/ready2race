@@ -22,6 +22,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventRatingCategoryRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RatingCategoryRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.TimecodeRecord
@@ -36,6 +37,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.COMPET
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_RATING_CATEGORY
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
 import de.lambda9.ready2race.backend.database.generated.tables.references.RATING_CATEGORY
 import de.lambda9.ready2race.backend.database.generated.tables.references.TIMECODE
@@ -94,12 +96,13 @@ class AwardCeremonyServiceTest {
         val ceremonies = (!AwardCeremonyService.listCeremonies(seeded.eventId)).data
 
         // Rennnummer „2" vor „10": lexikografisch stünde die 10 vorn, die Sprecherin liest aber
-        // nach Rennnummer.
+        // nach Rennnummer. Innerhalb des Wettkampfs steht „Masters B" vor „Masters A", weil die
+        // Veranstaltung es so sortiert hat - siehe seedCeremonies.
         assertEquals(
             listOf(
                 Triple("2", null, 2),
-                Triple("10", "Masters A", 3),
                 Triple("10", "Masters B", 2),
+                Triple("10", "Masters A", 3),
             ),
             ceremonies.map { Triple(it.competitionIdentifier, it.ratingCategoryName, it.awardedTeams) },
         )
@@ -108,6 +111,37 @@ class AwardCeremonyServiceTest {
         assertEquals(seeded.quadId, quad.competitionId)
         assertEquals("Coastal Quad", quad.competitionName)
         assertEquals("CQ", quad.competitionShortName)
+    }
+
+    /**
+     * Die Reihenfolge der Wertungen kommt aus der gepflegten `sortOrder` der Veranstaltung, nicht
+     * mehr aus dem Alphabet - und der Dienst darf sie danach nicht umsortieren. Die Vorrichtung
+     * setzt „Masters B" bewusst vor „Masters A": mit alphabetisch sortierten Namen bewiese diese
+     * Zusicherung nichts.
+     */
+    @Test
+    fun theCategoriesFollowTheConfiguredSortOrderNotTheAlphabet() = testComprehension {
+        val seeded = seedCeremonies()
+
+        val ceremonies = (!AwardCeremonyService.listCeremonies(seeded.eventId, seeded.quadId)).data
+
+        assertEquals(listOf("Masters B", "Masters A"), ceremonies.map { it.ratingCategoryName })
+
+        // Noch einmal am Blatt gemessen: die Auswahlliste könnte richtig sortiert sein und der
+        // Druck trotzdem in der alten Reihenfolge herauskommen.
+        val file = !AwardCeremonyService.download(
+            seeded.eventId,
+            AwardCeremonySelectionRequest(
+                selection = listOf(
+                    AwardCeremonyKeyRequest(seeded.quadId, "Masters A"),
+                    AwardCeremonyKeyRequest(seeded.quadId, "Masters B"),
+                )
+            ),
+        )
+
+        assertEquals(2, pagesOf(file.bytes))
+        assertContains(textOfPage(file.bytes, 1), "Wertung: Masters B")
+        assertContains(textOfPage(file.bytes, 2), "Wertung: Masters A")
     }
 
     /**
@@ -124,7 +158,7 @@ class AwardCeremonyServiceTest {
         val ceremonies = (!AwardCeremonyService.listCeremonies(seeded.eventId, seeded.quadId)).data
 
         assertEquals(
-            listOf("Masters A", "Masters B"),
+            listOf("Masters B", "Masters A"),
             ceremonies.map { it.ratingCategoryName },
         )
         assertTrue(
@@ -433,13 +467,14 @@ class AwardCeremonyServiceTest {
 
     /**
      * Drei Blätter in der Reihenfolge der Rennnummern - die Zahl steht fest und stammt aus der
-     * Vorrichtung: Beachsprint ohne Wertung, dann die beiden Wertungen des Coastal Quad.
+     * Vorrichtung: Beachsprint ohne Wertung, dann die beiden Wertungen des Coastal Quad in ihrer
+     * gepflegten Reihenfolge.
      */
     private fun assertEveryCeremonyInOrder(bytes: ByteArray) {
         assertEquals(3, pagesOf(bytes))
         assertContains(textOfPage(bytes, 1), "Beachsprint")
-        assertContains(textOfPage(bytes, 2), "Wertung: Masters A")
-        assertContains(textOfPage(bytes, 3), "Wertung: Masters B")
+        assertContains(textOfPage(bytes, 2), "Wertung: Masters B")
+        assertContains(textOfPage(bytes, 3), "Wertung: Masters A")
     }
 
     // --- Vorrichtung ---------------------------------------------------------------------------
@@ -453,8 +488,11 @@ class AwardCeremonyServiceTest {
     private fun TestComprehensionScope<JEnv>.seedCeremonies(): SeededCeremonies {
         val eventId = seedEvent("Testregatta")
 
-        val mastersA = seedRatingCategory("Masters A")
-        val mastersB = seedRatingCategory("Masters B")
+        // Die gepflegte Reihenfolge widerspricht bewusst dem Alphabet: „Masters B" trägt die
+        // vordere Stelle. Nur so belegt die Reihenfolge der Ehrungen, dass sie aus der sortOrder
+        // stammt und nicht aus einer eigenen alphabetischen Sortierung des Bogens.
+        val mastersA = seedRatingCategory(eventId, "Masters A", sortOrder = 1)
+        val mastersB = seedRatingCategory(eventId, "Masters B", sortOrder = 0)
         val club = seedClub(REGISTERING_CLUB)
         // Ein Verein meldet einmal zur Veranstaltung an; daran hängen alle seine Boote.
         val registration = seedEventRegistration(eventId, club)
@@ -550,12 +588,31 @@ class AwardCeremonyServiceTest {
         return eventId
     }
 
-    private fun TestComprehensionScope<JEnv>.seedRatingCategory(name: String): UUID {
+    /**
+     * Eine Wertungskategorie samt ihrer Stelle in der Abschnittsreihenfolge dieser Veranstaltung.
+     * Die Zuordnung in `event_rating_category` ist kein Beiwerk: ohne sie trüge die Kategorie
+     * [de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef.UNCONFIGURED_SORT_ORDER]
+     * und sortierte sich wieder nach Namen.
+     */
+    private fun TestComprehensionScope<JEnv>.seedRatingCategory(
+        eventId: UUID,
+        name: String,
+        sortOrder: Int,
+    ): UUID {
         val id = UUID.randomUUID()
         !RATING_CATEGORY.insert(
             RatingCategoryRecord(
                 id = id,
                 name = name,
+                createdAt = CHAIN_SEED_TIME,
+                updatedAt = CHAIN_SEED_TIME,
+            )
+        )
+        !EVENT_RATING_CATEGORY.insert(
+            EventRatingCategoryRecord(
+                event = eventId,
+                ratingCategory = id,
+                sortOrder = sortOrder,
                 createdAt = CHAIN_SEED_TIME,
                 updatedAt = CHAIN_SEED_TIME,
             )

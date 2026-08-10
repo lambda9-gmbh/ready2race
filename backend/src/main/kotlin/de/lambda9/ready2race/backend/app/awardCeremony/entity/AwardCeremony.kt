@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.awardCeremony.entity
 
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import java.time.LocalDateTime
@@ -14,7 +15,12 @@ data class AwardCeremonyCandidate(
     /** Der von CompetitionExecutionService.computeCompetitionPlaces berechnete Platz im Gesamtfeld. */
     val competitionPlace: Int,
     val startNumber: Int,
-    val ratingCategoryName: String?,
+    /**
+     * Die Wertungskategorie der Mannschaft, `null` ohne Zuordnung. Der ganze Verweis statt nur des
+     * Namens, weil `RatingCategoryRanking.groupAndRank` über die Id gruppiert und über die
+     * Sortierstelle anordnet - dieselbe Rechnung wie in jeder anderen Ergebnisanzeige.
+     */
+    val ratingCategory: RatingCategoryRef?,
     /** Der meldende Verein der Mannschaft - reine Verwaltung, nicht der Verein der Personen. */
     val registeringClubName: String,
     val teamName: String?,

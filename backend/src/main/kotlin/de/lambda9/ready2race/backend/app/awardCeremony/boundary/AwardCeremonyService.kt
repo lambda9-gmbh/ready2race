@@ -17,6 +17,8 @@ import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RankedEntry
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionViewRecord
 import de.lambda9.ready2race.backend.kio.onTrueFail
@@ -42,7 +44,8 @@ object AwardCeremonyService {
     /** Eine Ehrung mitsamt ihren Booten - die Auswahlzeile allein trägt zu wenig für das Blatt. */
     private data class Ceremony(
         val choice: AwardCeremonyChoiceDto,
-        val candidates: List<AwardCeremonyCandidate>,
+        /** Die fertige Rangliste der Wertung, wie RatingCategoryRanking sie gezählt hat. */
+        val entries: List<RankedEntry<AwardCeremonyCandidate>>,
     )
 
     /**
@@ -103,7 +106,7 @@ object AwardCeremonyService {
                 competitionShortName = ceremony.choice.competitionShortName,
                 competitionName = ceremony.choice.competitionName,
                 ratingCategoryName = ceremony.choice.ratingCategoryName,
-                candidates = ceremony.candidates,
+                entries = ceremony.entries,
             )
         }
 
@@ -163,7 +166,7 @@ object AwardCeremonyService {
                     AwardCeremonyCandidate(
                         competitionPlace = place,
                         startNumber = team.startNumber,
-                        ratingCategoryName = team.ratingCategory,
+                        ratingCategory = team.ratingCategory,
                         registeringClubName = team.clubName,
                         teamName = team.registrationName,
                         time = team.timeString,
@@ -185,20 +188,31 @@ object AwardCeremonyService {
                     )
                 }
 
+            // Dieselbe Rechnung wie auf der öffentlichen Ergebnisseite, im Schiedsrichter-Dashboard
+            // und im Ergebnis-PDF - samt der Reihenfolge der Abschnitte aus der gepflegten
+            // sortOrder. Sie wird hier bewusst nicht mehr angetastet: die Sprecherin liest die
+            // Wertungen in derselben Folge, in der die Ergebnisse hängen.
+            val sections = RatingCategoryRanking.groupAndRank(
+                items = candidates,
+                category = { it.ratingCategory },
+                place = { it.competitionPlace },
+                tieBreak = { it.startNumber },
+            )
+
             KIO.ok(
-                AwardCeremonyLogic.groupByRatingCategory(candidates).map { (category, group) ->
+                sections.map { section ->
                     Ceremony(
                         choice = AwardCeremonyChoiceDto(
                             competitionId = competitionId,
                             competitionIdentifier = competition.identifier!!,
                             competitionShortName = competition.shortName,
                             competitionName = competition.name!!,
-                            ratingCategoryName = category,
+                            ratingCategoryName = section.category?.name,
                             // Nicht die Größe der Gruppe: gedruckt wird nur bis Rang drei, und die
                             // Auswahl soll die Zahl der Blöcke nennen, die daraus wirklich entstehen.
-                            awardedTeams = AwardCeremonyLogic.rank(group).size,
+                            awardedTeams = AwardCeremonyLogic.ranks(section.entries).size,
                         ),
-                        candidates = group,
+                        entries = section.entries,
                     )
                 }
             )

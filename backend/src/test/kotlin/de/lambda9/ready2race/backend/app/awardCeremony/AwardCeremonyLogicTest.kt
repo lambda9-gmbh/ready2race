@@ -3,12 +3,36 @@ package de.lambda9.ready2race.backend.app.awardCeremony
 import de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonyLogic
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyCandidate
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyCandidateParticipant
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RankedEntry
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class AwardCeremonyLogicTest {
+
+    private val mastersA = RatingCategoryRef(UUID.randomUUID(), "Masters A", 0)
+
+    /**
+     * Genau der Weg, den [de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonyService]
+     * geht: erst zählt `RatingCategoryRanking` die Wertung durch, dann schneidet der Bogen sie auf
+     * die Medaillenränge. Die Ränge hier direkt aus Kandidaten zu bauen, ließe genau die Fuge
+     * ungeprüft, um die es geht.
+     */
+    private fun ranks(candidates: List<AwardCeremonyCandidate>) =
+        AwardCeremonyLogic.ranks(sectionOf(candidates))
+
+    /** `single()` statt `flatMap`: ein Blatt trägt genau eine Wertung, und das soll auffallen. */
+    private fun sectionOf(candidates: List<AwardCeremonyCandidate>): List<RankedEntry<AwardCeremonyCandidate>> =
+        RatingCategoryRanking.groupAndRank(
+            items = candidates,
+            category = { it.ratingCategory },
+            place = { it.competitionPlace },
+            tieBreak = { it.startNumber },
+        ).let { sections -> if (sections.isEmpty()) emptyList() else sections.single().entries }
 
     private fun rower(
         firstName: String = "Anna",
@@ -29,7 +53,7 @@ class AwardCeremonyLogicTest {
     private fun candidate(
         place: Int,
         startNumber: Int = place,
-        ratingCategoryName: String? = null,
+        ratingCategory: RatingCategoryRef? = null,
         registeringClubName: String = "Ruderclub Nürtingen",
         teamName: String? = "RCN I",
         time: String? = "4:12,7",
@@ -41,7 +65,7 @@ class AwardCeremonyLogicTest {
     ) = AwardCeremonyCandidate(
         competitionPlace = place,
         startNumber = startNumber,
-        ratingCategoryName = ratingCategoryName,
+        ratingCategory = ratingCategory,
         registeringClubName = registeringClubName,
         teamName = teamName,
         time = time,
@@ -54,47 +78,61 @@ class AwardCeremonyLogicTest {
     )
 
     @Test
-    fun categoriesBecomeSeparateGroupsInAlphabeticalOrder() {
-        val groups = AwardCeremonyLogic.groupByRatingCategory(
-            listOf(
-                candidate(1, ratingCategoryName = "Masters B"),
-                candidate(2, ratingCategoryName = "Masters A"),
-                candidate(3, ratingCategoryName = "Masters B"),
-            )
+    fun categoriesBecomeSeparateSectionsInTheConfiguredOrder() {
+        // Bis zum 09.08.2026 sortierte der Bogen die Wertungen selbst und alphabetisch. Jetzt
+        // stammt die Reihenfolge aus der für die Veranstaltung gepflegten sortOrder - hier bewusst
+        // gegen das Alphabet gesetzt, sonst bewiese die Zusicherung nichts.
+        val zuerst = RatingCategoryRef(UUID.randomUUID(), "Masters B", 0)
+        val danach = RatingCategoryRef(UUID.randomUUID(), "Masters A", 1)
+
+        val sections = RatingCategoryRanking.groupAndRank(
+            items = listOf(
+                candidate(1, ratingCategory = danach),
+                candidate(2, ratingCategory = zuerst),
+                candidate(3, ratingCategory = danach),
+            ),
+            category = { it.ratingCategory },
+            place = { it.competitionPlace },
+            tieBreak = { it.startNumber },
         )
 
-        assertEquals(listOf("Masters A", "Masters B"), groups.map { it.first })
-        assertEquals(listOf(1, 2), groups.map { it.second.size })
+        assertEquals(listOf("Masters B", "Masters A"), sections.map { it.category?.name })
+        assertEquals(listOf(1, 2), sections.map { it.entries.size })
     }
 
     @Test
-    fun competitionWithoutCategoriesBecomesOneGroupWithNullKey() {
-        val groups = AwardCeremonyLogic.groupByRatingCategory(listOf(candidate(1), candidate(2)))
-
-        assertEquals(listOf(null), groups.map { it.first })
-        assertEquals(2, groups.single().second.size)
-    }
-
-    @Test
-    fun groupingAnEmptyListYieldsNoGroups() {
-        assertEquals(emptyList(), AwardCeremonyLogic.groupByRatingCategory(emptyList()))
-    }
-
-    @Test
-    fun theGroupWithoutCategoryComesLast() {
-        val groups = AwardCeremonyLogic.groupByRatingCategory(
-            listOf(
-                candidate(1, ratingCategoryName = null),
-                candidate(2, ratingCategoryName = "Masters A"),
-            )
+    fun competitionWithoutCategoriesBecomesOneSectionWithoutACategory() {
+        val sections = RatingCategoryRanking.groupAndRank(
+            items = listOf(candidate(1), candidate(2)),
+            category = { it.ratingCategory },
+            place = { it.competitionPlace },
+            tieBreak = { it.startNumber },
         )
 
-        assertEquals(listOf("Masters A", null), groups.map { it.first })
+        assertNull(sections.single().category)
+        assertEquals(2, sections.single().entries.size)
+    }
+
+    @Test
+    fun groupingAnEmptyListYieldsNoSections() {
+        assertEquals(emptyList(), sectionOf(emptyList()))
+    }
+
+    @Test
+    fun theSectionWithoutCategoryComesLast() {
+        val sections = RatingCategoryRanking.groupAndRank(
+            items = listOf(candidate(1, ratingCategory = null), candidate(2, ratingCategory = mastersA)),
+            category = { it.ratingCategory },
+            place = { it.competitionPlace },
+            tieBreak = { it.startNumber },
+        )
+
+        assertEquals(listOf("Masters A", null), sections.map { it.category?.name })
     }
 
     @Test
     fun ranksRestartAtOneWithinTheCategory() {
-        val ranks = AwardCeremonyLogic.rank(listOf(candidate(2), candidate(5), candidate(7), candidate(9)))
+        val ranks = ranks(listOf(candidate(2), candidate(5), candidate(7), candidate(9)))
 
         assertEquals(listOf(1, 2, 3), ranks.map { it.rank })
         assertEquals(listOf(false, false, false), ranks.map { it.shared })
@@ -102,7 +140,7 @@ class AwardCeremonyLogicTest {
 
     @Test
     fun aTieOnSecondLeavesNoThirdRank() {
-        val ranks = AwardCeremonyLogic.rank(
+        val ranks = ranks(
             listOf(candidate(1), candidate(2, startNumber = 4), candidate(2, startNumber = 9), candidate(5))
         )
 
@@ -113,7 +151,7 @@ class AwardCeremonyLogicTest {
 
     @Test
     fun aTieOnFirstKeepsTheThirdRank() {
-        val ranks = AwardCeremonyLogic.rank(
+        val ranks = ranks(
             listOf(candidate(1, startNumber = 2), candidate(1, startNumber = 6), candidate(3))
         )
 
@@ -123,7 +161,7 @@ class AwardCeremonyLogicTest {
 
     @Test
     fun aTieAtTheCutoffPrintsEveryEntitledBoat() {
-        val ranks = AwardCeremonyLogic.rank(
+        val ranks = ranks(
             listOf(candidate(1), candidate(2), candidate(4, startNumber = 3), candidate(4, startNumber = 8))
         )
 
@@ -132,7 +170,7 @@ class AwardCeremonyLogicTest {
 
     @Test
     fun tiedBoatsAreOrderedByStartNumber() {
-        val ranks = AwardCeremonyLogic.rank(
+        val ranks = ranks(
             listOf(candidate(1, startNumber = 9, teamName = "spät"), candidate(1, startNumber = 2, teamName = "früh"))
         )
 
@@ -141,21 +179,40 @@ class AwardCeremonyLogicTest {
 
     @Test
     fun onlyThreeRanksReachThePage() {
-        val ranks = AwardCeremonyLogic.rank((1..8).map { candidate(it) })
+        val ranks = ranks((1..8).map { candidate(it) })
 
         assertEquals(listOf(1, 2, 3), ranks.map { it.rank })
     }
 
     @Test
     fun rankingAnEmptyListYieldsNoRanks() {
-        assertEquals(emptyList(), AwardCeremonyLogic.rank(emptyList()))
+        assertEquals(emptyList(), ranks(emptyList()))
+    }
+
+    @Test
+    fun aBoatWithoutAPlaceDoesNotReachTheSheet() {
+        // Ungewertete Boote stehen in der Ergebnisliste weiterhin am Ende ihres Abschnitts - auf
+        // einem Siegerehrungsbogen haben sie nichts zu suchen. Ohne diese Zusicherung rutschte ein
+        // abgemeldetes Boot auf einen freien Medaillenrang.
+        val ranks = AwardCeremonyLogic.ranks(
+            listOf(
+                RankedEntry(candidate(1, teamName = "gewertet"), categoryPlace = 1),
+                RankedEntry(candidate(2, teamName = "abgemeldet"), categoryPlace = null),
+            )
+        )
+
+        assertEquals(listOf(1), ranks.map { it.rank })
+        assertEquals(
+            listOf("gewertet"),
+            ranks.map { it.team.boatLine.substringAfter("Boot „").substringBefore("“") },
+        )
     }
 
     @Test
     fun aTieOnFirstWithFourBoatsPrintsAllFourAtRankOne() {
-        // Beginnt der Gleichstand schon auf Rang 1, kommen laut KDoc an rank() *alle* Boote der
+        // Beginnt der Gleichstand schon auf Rang 1, kommen laut KDoc an ranks() *alle* Boote der
         // Gruppe aufs Blatt - auch wenn das mehr als drei Blöcke ergibt.
-        val ranks = AwardCeremonyLogic.rank(
+        val ranks = ranks(
             listOf(
                 candidate(1, startNumber = 1),
                 candidate(1, startNumber = 2),
@@ -349,7 +406,7 @@ class AwardCeremonyLogicTest {
             competitionShortName = "CM 4x+",
             competitionName = "Mixed-Coastal-Vierer mit Steuermann",
             ratingCategoryName = "Masters A",
-            candidates = listOf(candidate(1), candidate(2)),
+            entries = sectionOf(listOf(candidate(1), candidate(2))),
         )
 
         assertEquals("Masters A", sheet.ratingCategoryName)

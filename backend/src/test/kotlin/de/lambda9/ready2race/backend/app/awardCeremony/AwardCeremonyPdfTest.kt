@@ -5,6 +5,8 @@ import de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonyPdf
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyCandidate
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyCandidateParticipant
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonySheet
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RankedEntry
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
 import java.time.LocalDateTime
@@ -53,7 +55,7 @@ class AwardCeremonyPdfTest {
     ) = AwardCeremonyCandidate(
         competitionPlace = place,
         startNumber = startNumber,
-        ratingCategoryName = null,
+        ratingCategory = null,
         registeringClubName = registeringClubName,
         teamName = teamName,
         time = time,
@@ -64,6 +66,15 @@ class AwardCeremonyPdfTest {
         matchTime = null,
         participants = participants,
     )
+
+    /** Die Rangliste einer Wertung - derselbe Weg, den auch der Service nimmt. */
+    private fun sectionOf(candidates: List<AwardCeremonyCandidate>): List<RankedEntry<AwardCeremonyCandidate>> =
+        RatingCategoryRanking.groupAndRank(
+            items = candidates,
+            category = { it.ratingCategory },
+            place = { it.competitionPlace },
+            tieBreak = { it.startNumber },
+        ).let { sections -> if (sections.isEmpty()) emptyList() else sections.single().entries }
 
     private fun sheet(
         identifier: String,
@@ -80,7 +91,7 @@ class AwardCeremonyPdfTest {
         competitionShortName = competitionShortName,
         competitionName = "Mixed-Coastal-Vierer mit Steuermann",
         ratingCategoryName = ratingCategoryName,
-        candidates = candidates,
+        entries = sectionOf(candidates),
     )
 
     /**
@@ -418,7 +429,7 @@ class AwardCeremonyPdfTest {
             competitionName = "Mixed-Coastal-Vierer mit Steuermann",
             ratingCategoryName = "Masters A",
             ceremonyTime = LocalDateTime.of(2026, 8, 15, 16, 30),
-            ranks = AwardCeremonyLogic.rank(listOf(candidate(1))),
+            ranks = AwardCeremonyLogic.ranks(sectionOf(listOf(candidate(1)))),
         )
 
         assertContains(textOfPage(AwardCeremonyPdf.render(listOf(sheet)), 1), "Ehrung: 15.08.2026, 16:30")

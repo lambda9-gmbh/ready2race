@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.awardCeremony.boundary
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.*
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubNameKey
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RankedEntry
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -16,55 +17,38 @@ object AwardCeremonyLogic {
     // machte den Test von der Java-Version abhängig. Der Tag steht ohnehin im Datum.
     private val raceTimeFormat = DateTimeFormatter.ofPattern("dd.MM., HH:mm", Locale.GERMANY)
 
-    fun groupByRatingCategory(
-        candidates: List<AwardCeremonyCandidate>,
-    ): List<Pair<String?, List<AwardCeremonyCandidate>>> = candidates
-        .groupBy { it.ratingCategoryName }
-        .toList()
-        // Kategorien alphabetisch, die Gruppe ohne Kategorie zuletzt: sie ist bei gemischten
-        // Wettkämpfen der Rest, nicht der Anfang.
-        .sortedWith(compareBy(nullsLast<String>()) { it.first })
-
     /**
-     * Die Ränge einer Wertungskategorie, neu ab 1 gezählt.
+     * Die geehrten Boote einer Wertungskategorie, aus deren fertiger Rangliste.
      *
-     * Standard-Wettkampfranking: gleicher Platz im Gesamtfeld ⇒ gleicher Rang in der Kategorie,
-     * der nächste Rang überspringt entsprechend viele Stellen (1, 2, 2, 4). Bei einem Gleichstand
-     * auf zwei gibt es damit keine Bronze - das ist fachlich richtig und kein Fehler in der
-     * Ausgabe.
+     * Gezählt und sortiert hat `RatingCategoryRanking.groupAndRank` - dieselbe Rechnung wie auf der
+     * öffentlichen Ergebnisseite und im Ergebnis-PDF. Hier kommt nur dazu, was allein die
+     * Siegerehrung angeht: der Schnitt bei [MAX_RANK] und die Kennzeichen [AwardCeremonyRank.shared]
+     * und [AwardCeremonyRank.first].
      *
-     * Beginnt eine Gruppe von Gleichplatzierten noch innerhalb der ersten drei Ränge, kommen
-     * *alle* ihre Boote auf das Blatt, auch wenn dadurch mehr als drei Blöcke entstehen: geehrt
-     * wird, wer den Rang hat.
+     * Bei einem Gleichstand auf zwei gibt es keine Bronze - das ist fachlich richtig und kein Fehler
+     * in der Ausgabe. Beginnt eine Gruppe Gleichplatzierter dagegen noch innerhalb der ersten drei
+     * Ränge, kommen *alle* ihre Boote auf das Blatt, auch wenn dadurch mehr als drei Blöcke
+     * entstehen: geehrt wird, wer den Rang hat.
+     *
+     * Boote ohne Platz - abgemeldet, ausgeschieden, disqualifiziert oder noch nicht gewertet - haben
+     * auf einem Siegerehrungsbogen nichts zu suchen; in der Ergebnisliste stehen sie weiterhin.
      */
-    fun rank(candidates: List<AwardCeremonyCandidate>): List<AwardCeremonyRank> {
-        val sorted = candidates.sortedWith(compareBy({ it.competitionPlace }, { it.startNumber }))
-        val ranks = mutableListOf<AwardCeremonyRank>()
-
-        var index = 0
-        while (index < sorted.size) {
-            val rank = index + 1
-            if (rank > MAX_RANK) break
-
-            val place = sorted[index].competitionPlace
-            val tied = sorted.drop(index).takeWhile { it.competitionPlace == place }
-
-            tied.forEachIndexed { position, candidate ->
-                ranks.add(
-                    AwardCeremonyRank(
-                        rank = rank,
-                        shared = tied.size > 1,
-                        first = position == 0,
-                        team = team(candidate),
-                    )
+    fun ranks(entries: List<RankedEntry<AwardCeremonyCandidate>>): List<AwardCeremonyRank> = entries
+        .mapNotNull { entry -> entry.categoryPlace?.let { it to entry.item } }
+        .filter { (place, _) -> place <= MAX_RANK }
+        // groupBy hält die Reihenfolge der zuerst gesehenen Schlüssel, und die Einträge kommen
+        // bereits nach Platz und Startnummer sortiert an - die Blockfolge bleibt damit die des Blatts.
+        .groupBy { (place, _) -> place }
+        .flatMap { (place, tied) ->
+            tied.mapIndexed { position, (_, candidate) ->
+                AwardCeremonyRank(
+                    rank = place,
+                    shared = tied.size > 1,
+                    first = position == 0,
+                    team = team(candidate),
                 )
             }
-
-            index += tied.size
         }
-
-        return ranks
-    }
 
     internal fun team(candidate: AwardCeremonyCandidate): AwardCeremonyTeam {
         // Der Verein, den eine Person trägt - dieselbe Regel wie im Schiedsrichter-Board. Der
@@ -151,7 +135,7 @@ object AwardCeremonyLogic {
         competitionShortName: String?,
         competitionName: String,
         ratingCategoryName: String?,
-        candidates: List<AwardCeremonyCandidate>,
+        entries: List<RankedEntry<AwardCeremonyCandidate>>,
     ): AwardCeremonySheet =
         AwardCeremonySheet(
             eventName = eventName,
@@ -163,6 +147,6 @@ object AwardCeremonyLogic {
             ratingCategoryName = ratingCategoryName,
             // Siehe AwardCeremonySheet.ceremonyTime: der Zeitplan gibt den Termin (noch) nicht her.
             ceremonyTime = null,
-            ranks = rank(candidates),
+            ranks = ranks(entries),
         )
 }
