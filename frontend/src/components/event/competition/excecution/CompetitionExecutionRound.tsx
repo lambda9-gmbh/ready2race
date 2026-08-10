@@ -71,6 +71,8 @@ type Props = {
     resumeRaceClockerAutoPull: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListCSV: (competitionMatchId: string) => Promise<void>
+    /** Die ganze Runde als eine CSV (eine Kopfzeile, Wellen über die Wellenname-Spalte). */
+    handleDownloadRoundStartList: (setupRoundId: string) => Promise<void>
     /**
      * Das EFFEKTIVE Zeitnahmesystem des Wettkampfs (`effectiveTimingSystem`), also einschließlich
      * dessen, was er von der Veranstaltung erbt — nicht seine eigene Spalte. Daran hängt unter
@@ -91,6 +93,7 @@ const CompetitionExecutionRound = ({
     resumeRaceClockerAutoPull,
     handleDownloadStartListPDF,
     handleDownloadStartListCSV,
+    handleDownloadRoundStartList,
     timingSystem,
     ...props
 }: Props) => {
@@ -373,6 +376,16 @@ const CompetitionExecutionRound = ({
                             <StatusChip key={chip.labelKey} chip={chip} />
                         ))}
                     </Stack>
+                )}
+                {filteredMatches.length > 0 && (
+                    <Box>
+                        <LoadingButton
+                            pending={submitting}
+                            variant={'outlined'}
+                            onClick={() => handleDownloadRoundStartList(round.setupRoundId)}>
+                            {t('event.competition.execution.startList.downloadRound')}
+                        </LoadingButton>
+                    </Box>
                 )}
                 <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
                     {filteredMatches.map((match, matchIndex) => (

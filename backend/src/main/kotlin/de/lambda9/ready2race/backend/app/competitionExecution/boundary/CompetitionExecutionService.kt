@@ -2109,6 +2109,65 @@ object CompetitionExecutionService {
         )
     }
 
+    /**
+     * Die Startliste einer GANZEN Runde als eine CSV - ein Schwung für den Import ins
+     * Zeitnahme-System statt Lauf für Lauf. Die Wellen unterscheidet RaceClocker über die
+     * Wellenname-Spalte, die jede Zeile ohnehin trägt; die Kopfzeile schreibt nur die erste
+     * Partie. Bewusst nur CSV: Die PDF-Startliste ist ein Aushang je Lauf, kein Importformat.
+     *
+     * Läufe ohne Mannschaften werden übersprungen statt den Export zu reißen; ein Lauf ohne
+     * geplante Startzeit reißt ihn dagegen wie beim Einzel-Export - ohne Zeit gibt es keinen
+     * brauchbaren Wellennamen.
+     */
+    fun downloadRoundStartlist(
+        eventId: UUID,
+        competitionId: UUID,
+        setupRoundId: UUID,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        val round = setupRounds.find { it.setupRoundId == setupRoundId }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.RoundNotFound)
+
+        val matches = round.matches.sortedBy { it.startTime }
+        !KIO.failOn(matches.isEmpty()) { CompetitionExecutionError.MatchNotFound }
+
+        val out = ByteArrayOutputStream()
+        var first = true
+        var identifier = ""
+
+        !matches.traverse { m ->
+            KIO.comprehension {
+                val record = !CompetitionMatchRepo.getForStartList(m.competitionSetupMatch).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchNotFound }
+                if (record.teams!!.isEmpty()) return@comprehension unit
+                !KIO.failOn(record.startTime == null) { CompetitionExecutionError.StartTimeNotSet }
+
+                val data = !CompetitionMatchData.fromPersisted(record)
+                identifier = data.competition.identifier
+
+                val target = !CompetitionMatchRepo.getStartListConfigTarget(m.competitionSetupMatch).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchNotFound }
+                val configId = !KIO.failOnNull(target.configId) { StartListConfigError.NotConfigured }
+                val config = !StartListConfigRepo.get(configId).orDie()
+                    .onNullFail { StartListConfigError.NotFound }
+
+                out.write(buildCsv(data, config, includeHeader = first && config.noHeader != true))
+                first = false
+
+                unit
+            }
+        }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "startList-$identifier-${round.setupRoundName}.csv",
+                bytes = out.toByteArray(),
+            )
+        )
+    }
+
     fun getCompetitionPlaceCSV(
         competitionId: UUID,
     ): App<ServiceError, File> = KIO.comprehension {
@@ -2389,13 +2448,18 @@ object CompetitionExecutionService {
     fun buildCsv(
         data: CompetitionMatchData,
         config: StartlistExportConfigRecord,
+        /**
+         * Für den Runden-Export ([downloadRoundStartlist]): Nur die erste Partie schreibt die
+         * Kopfzeile, die folgenden hängen nur Zeilen an - eine Datei, ein Header.
+         */
+        includeHeader: Boolean = config.noHeader != true,
     ): ByteArray {
 
         val bytes = ByteArrayOutputStream().use { out ->
             CSV.write(
                 out,
                 data.teams.sortedBy { it.startNumber },
-                writeHeader = config.noHeader != true,
+                writeHeader = includeHeader,
             ) {
                 // Columns carrying the stable team identifier. They are the source of truth for
                 // re-matching results on import, independent of the (externally editable) start number.

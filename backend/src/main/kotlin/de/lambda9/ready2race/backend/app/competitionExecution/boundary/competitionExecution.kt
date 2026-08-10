@@ -50,6 +50,22 @@ fun Route.competitionExecution() {
                 }
             }
         }
+        // Statisches Segment VOR der {competitionMatchId}-Route: Ktor bevorzugt exakte Segmente,
+        // "round" wird also nie als Match-Id gelesen.
+        get("/round/{setupRoundId}/startList") {
+            call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val competitionId = !pathParam("competitionId", uuid)
+                val setupRoundId = !pathParam("setupRoundId", uuid)
+
+                CompetitionExecutionService.downloadRoundStartlist(
+                    eventId = eventId,
+                    competitionId = competitionId,
+                    setupRoundId = setupRoundId,
+                )
+            }
+        }
         route("/{competitionMatchId}") {
             route("/data") {
                 put {

@@ -4704,6 +4704,18 @@ export type UpdateMatchActivationResponse = void
 
 export type UpdateMatchActivationError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type DownloadRoundStartListData = {
+    path: {
+        competitionId: string
+        eventId: string
+        setupRoundId: string
+    }
+}
+
+export type DownloadRoundStartListResponse = Blob | File
+
+export type DownloadRoundStartListError = BadRequestError | ApiError
+
 export type MarkMatchStartedFromExecutionData = {
     path: {
         competitionId: string
@@ -6331,6 +6343,12 @@ export type ImportGapDocumentTemplateData = {
          * Austauschpaket (.r2rtpl.zip) einer Urkundenvorlage.
          */
         file: Blob | File
+    }
+    query?: {
+        /**
+         * Overrides the document type claimed by the package manifest. After the import, the template is auto-assigned as the active template of its type if none is assigned yet.
+         */
+        documentType?: GapDocumentType
     }
 }
 

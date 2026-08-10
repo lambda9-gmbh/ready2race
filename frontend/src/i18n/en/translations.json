@@ -276,7 +276,9 @@
         "export": "Export template",
         "exportHint": "The package contains the PDF, the placeholders and the stored font.",
         "import": "Import template",
-        "importSucceeded": "Template imported"
+        "importSucceeded": "Template imported",
+        "importTypeFromFile": "Take type from file",
+        "importAssignHint": "If no template is assigned for the type yet, the imported one is set as the active template automatically."
       },
       "placeholder": {
         "available": "Available Placeholders",
@@ -1219,7 +1221,8 @@
           "error": {
             "missingStartTime": "The start time for this match is not set.",
             "notConfigured": "No start list preset is configured for this competition. Please set one up in the \"Timing\" tab."
-          }
+          },
+          "downloadRound": "Download round start list (CSV)"
         },
         "substitution": {
           "substitutions": "Substitutions",

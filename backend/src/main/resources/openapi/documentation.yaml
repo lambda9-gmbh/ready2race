@@ -1561,6 +1561,39 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/round/{setupRoundId}/startList:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: setupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadRoundStartList
+      description: "The start list of a whole round as one CSV (single header, waves told apart by the wave-name column) - one import into the timing tooling instead of one per match"
+      responses:
+        200:
+          description: The start list file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/mark-started:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -4740,6 +4773,13 @@ paths:
   /gapDocumentTemplate/import:
     post:
       operationId: importGapDocumentTemplate
+      parameters:
+        - name: documentType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/GapDocumentType'
+          description: "Overrides the document type claimed by the package manifest. After the import, the template is auto-assigned as the active template of its type if none is assigned yet."
       requestBody:
         required: true
         content:

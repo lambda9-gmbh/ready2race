@@ -276,7 +276,9 @@
         "export": "Vorlage exportieren",
         "exportHint": "Das Paket enthält PDF, Platzhalter und die hinterlegte Schrift.",
         "import": "Vorlage importieren",
-        "importSucceeded": "Vorlage importiert"
+        "importSucceeded": "Vorlage importiert",
+        "importTypeFromFile": "Typ aus der Datei übernehmen",
+        "importAssignHint": "Ist für den Typ noch keine Vorlage hinterlegt, wird die importierte automatisch als aktive Vorlage gesetzt."
       },
       "placeholder": {
         "available": "Verfügbare Platzhalter",
@@ -1219,7 +1221,8 @@
           "error": {
             "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt.",
             "notConfigured": "Für diesen Wettkampf ist kein Startlisten-Preset hinterlegt. Bitte im Tab \"Zeitnahme\" eintragen."
-          }
+          },
+          "downloadRound": "Startliste der Runde herunterladen (CSV)"
         },
         "substitution": {
           "substitutions": "Ummeldungen",

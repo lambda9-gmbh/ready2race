@@ -148,10 +148,14 @@ fun Route.documentTemplate() {
             call.respondComprehension {
                 !authenticate(Privilege.UpdateEventGlobal)
 
+                // Der Typ aus dem Manifest ist nur eine Behauptung der Datei - wer importiert,
+                // darf ihn überstimmen (Wunsch vom 10.08.2026: beim Import anwählbar machen).
+                val typeOverride = !optionalQueryParam("documentType", enum<GapDocumentType>())
+
                 val multiPartData = call.receiveMultipart()
                 val pkg = readSingleFilePart(multiPartData)
 
-                GapDocumentTemplateService.importTemplate(pkg)
+                GapDocumentTemplateService.importTemplate(pkg, typeOverride)
             }
         }
 

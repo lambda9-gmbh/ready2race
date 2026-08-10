@@ -1,5 +1,6 @@
 import {
     createNextCompetitionRound,
+    downloadRoundStartList,
     downloadStartList,
     getTimingConfig,
     pullMatchResultsFromRaceClocker,
@@ -413,6 +414,37 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
             anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
             anchor.download =
                 getFilename(response) ?? `startList-${competitionMatchId}.${fileType.toLowerCase()}`
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
+    /** Die ganze Runde als eine CSV - ein Import ins Zeitnahme-System statt Lauf für Lauf. */
+    const handleDownloadRoundStartList = async (setupRoundId: string) => {
+        const {data, error, response} = await downloadRoundStartList({
+            path: {
+                eventId,
+                competitionId,
+                setupRoundId,
+            },
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            if (error.status.value === 409) {
+                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
+            } else if (
+                error.status.value === 400 &&
+                error.errorCode === 'STARTLIST_CONFIG_NOT_CONFIGURED'
+            ) {
+                feedback.error(t('event.competition.execution.startList.error.notConfigured'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(new Blob([data]))
+            anchor.download = getFilename(response) ?? `startList-round-${setupRoundId}.csv`
             anchor.click()
             anchor.href = ''
             anchor.download = ''
@@ -955,6 +987,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                         handleDownloadStartListCSV={matchId =>
                             handleDownloadStartList(matchId, 'CSV')
                         }
+                        handleDownloadRoundStartList={handleDownloadRoundStartList}
                         /* Das effektive System, nicht die eigene Spalte des Wettkampfs: Setzt die
                            Veranstaltung RaceClocker und erben ihre Wettkämpfe es, ist
                            `timingConfig.timingSystem` null — der Abruf-Status samt „Automatik wieder

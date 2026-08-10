@@ -177,6 +177,9 @@ import type {
     UpdateMatchActivationData,
     UpdateMatchActivationError,
     UpdateMatchActivationResponse,
+    DownloadRoundStartListData,
+    DownloadRoundStartListError,
+    DownloadRoundStartListResponse,
     MarkMatchStartedFromExecutionData,
     MarkMatchStartedFromExecutionError,
     MarkMatchStartedFromExecutionResponse,
@@ -1621,6 +1624,22 @@ export const updateMatchActivation = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/activation',
+    })
+}
+
+/**
+ * The start list of a whole round as one CSV (single header, waves told apart by the wave-name column) - one import into the timing tooling instead of one per match
+ */
+export const downloadRoundStartList = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadRoundStartListData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadRoundStartListResponse,
+        DownloadRoundStartListError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/round/{setupRoundId}/startList',
     })
 }
 

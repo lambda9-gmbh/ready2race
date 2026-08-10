@@ -276,7 +276,9 @@
         "export": "Eksportér skabelon",
         "exportHint": "Pakken indeholder PDF, pladsholdere og den gemte skrifttype.",
         "import": "Importér skabelon",
-        "importSucceeded": "Skabelon importeret"
+        "importSucceeded": "Skabelon importeret",
+        "importTypeFromFile": "Overtag type fra filen",
+        "importAssignHint": "Hvis der endnu ikke er tilknyttet en skabelon til typen, sættes den importerede automatisk som aktiv skabelon."
       },
       "placeholder": {
         "available": "Tilgængelige pladsholdere",
@@ -1219,7 +1221,8 @@
           "error": {
             "missingStartTime": "Der er endnu ikke sat en starttid for denne kamp.",
             "notConfigured": "Der er ikke registreret et startlistepreset for denne konkurrence. Angiv det venligst under fanen \"Tidtagning\"."
-          }
+          },
+          "downloadRound": "Hent rundens startliste (CSV)"
         },
         "substitution": {
           "substitutions": "Ombytninger",
