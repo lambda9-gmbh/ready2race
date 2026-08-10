@@ -103,6 +103,7 @@ class RaceClockerPollRepoTest {
                 competition = competitionId,
                 identifier = "1",
                 name = "Vierer",
+                shortName = "JM4x",
             )
         )
 
@@ -177,8 +178,10 @@ class RaceClockerPollRepoTest {
         assertEquals(matchId, candidate.matchId)
         assertNotNull(candidate.activatedAt)
         assertEquals(now, candidate.startTime)
-        // Die Wellenbezeichnung entsteht wie beim Startlisten-Export aus Startzeit und Laufname.
-        assertEquals("10:00 Lauf 1", candidate.target.waveName)
+        // Die Wellenbezeichnung entsteht wie beim Startlisten-Export aus Startzeit, Wettkampf
+        // (Rennnummer und Kürzel) und Laufname - hier zugleich der Beleg, dass die beiden
+        // Wettkampf-Spalten aus competition_properties in der Projektion ankommen.
+        assertEquals("10:00 | 1 JM4x | Lauf 1", candidate.target.waveName)
         assertEquals(eventHeatsUrl, candidate.target.heatsUrl)
         assertEquals(eventTimeTrialUrl, candidate.target.timeTrialUrl)
     }

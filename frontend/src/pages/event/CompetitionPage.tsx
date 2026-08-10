@@ -432,7 +432,12 @@ const CompetitionPage = () => {
                         )}
                         {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
                             <TabPanel index={'execution'} activeTab={activeTab}>
-                                <CompetitionExecution/>
+                                <CompetitionExecution
+                                    autoRefresh={{
+                                        enabled: eventData.executionAutoRefresh,
+                                        seconds: eventData.executionAutoRefreshSeconds,
+                                    }}
+                                />
                             </TabPanel>
                         )}
                         {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (

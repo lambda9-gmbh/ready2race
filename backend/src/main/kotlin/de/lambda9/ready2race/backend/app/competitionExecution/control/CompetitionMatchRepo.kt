@@ -39,8 +39,8 @@ object CompetitionMatchRepo {
     fun getForStartList(id: UUID) = STARTLIST_VIEW.selectOne { ID.eq(id) }
 
     /**
-     * Everything needed to pull this match's results from RaceClocker: the wave name (match name plus
-     * planned start time, see [WaveName] - MUST be formatted exactly like
+     * Everything needed to pull this match's results from RaceClocker: the wave name (planned start
+     * time, competition and match name, see [WaveName] - MUST be formatted exactly like
      * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.buildCsv]
      * builds it for the export, or the wave-name fallback filter in `assignFeedRows` never matches)
      * and the competition's two results URLs. Which of the two applies follows from the round: a
@@ -58,6 +58,8 @@ object CompetitionMatchRepo {
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_PROPERTIES.SHORT_NAME,
             timeTrialUrl,
             heatsUrl,
         )
@@ -73,7 +75,12 @@ object CompetitionMatchRepo {
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne {
                 RaceClockerMatchTarget(
-                    waveName = WaveName.format(it[COMPETITION_SETUP_MATCH.NAME], it[COMPETITION_MATCH.START_TIME]),
+                    waveName = WaveName.format(
+                        matchName = it[COMPETITION_SETUP_MATCH.NAME],
+                        startTime = it[COMPETITION_MATCH.START_TIME],
+                        competitionIdentifier = it[COMPETITION_PROPERTIES.IDENTIFIER],
+                        competitionShortName = it[COMPETITION_PROPERTIES.SHORT_NAME],
+                    ),
                     // Not null in the schema; the projection just loses that guarantee.
                     isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
                     timeTrialUrl = it[timeTrialUrl],

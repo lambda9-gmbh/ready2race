@@ -1437,13 +1437,20 @@ paths:
       - $ref: '#/components/parameters/competitionId'
     get:
       operationId: getCompetitionExecutionProgress
+      description: "Polled by the execution page in the interval configured on the event. Send the ETag of the previous answer as If-None-Match to get a 304 without a body while nothing changed."
       responses:
         200:
           description: Competition execution progress successfully retrieved
+          headers:
+            ETag:
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CompetitionExecutionProgressDto'
+        304:
+          description: Unchanged since the ETag sent as If-None-Match
         400:
           $ref: '#/components/responses/400'
         401:
@@ -4128,6 +4135,97 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participant/{participantId}/tracking:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getParticipantTrackingHistory
+      responses:
+        200:
+          description: Tracking entries and their change trail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantTrackingHistoryDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addManualParticipantTracking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualTrackingRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participant/{participantId}/tracking/{trackingId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: trackingId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: correctParticipantTracking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualTrackingRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /participantRequirement/{participantRequirementId}:
     parameters:
       - name: participantRequirementId
@@ -5288,6 +5386,33 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/ratingCategories/order:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    put:
+      operationId: updateRatingCategoryOrderForEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCategoryOrderRequest'
+      responses:
+        204:
+          description: Order successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/ratingCategories/{ratingCategoryId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6428,6 +6553,50 @@ paths:
           $ref: '#/components/responses/404'
         409:
           $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/slot/{slotId}/advance:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: advanceAfterSkippedSlot
+      description: >-
+        Moves the schedule up into the time freed by a cancelled slot, up to and including
+        targetSlotId. The delta comes from the cancelled slot itself (its planned duration, else the
+        gap to the following slot on the same race day); the slot must be cancelled. dryRun=true
+        only computes the preview.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvanceScheduleRequest'
+      responses:
+        200:
+          description: Advance computed (and applied unless dryRun)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftPreviewDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -8051,6 +8220,15 @@ paths:
           required: false
           schema:
             type: boolean
+        - name: ratingCategory
+          in: query
+          required: false
+          description: >-
+            Print the rating category on the certificate. Off by default; the template needs a
+            RATING_CATEGORY placeholder for it to show. The printed place stays the
+            competition-wide one either way.
+          schema:
+            type: boolean
       responses:
         200:
           $ref: '#/components/responses/file'
@@ -8094,6 +8272,15 @@ paths:
         - name: background
           in: query
           required: false
+          schema:
+            type: boolean
+        - name: ratingCategory
+          in: query
+          required: false
+          description: >-
+            Print the rating category on the certificate. Off by default; the template needs a
+            RATING_CATEGORY placeholder for it to show. The printed place stays the
+            competition-wide one either way.
           schema:
             type: boolean
       responses:
@@ -8145,6 +8332,15 @@ paths:
         - name: background
           in: query
           required: false
+          schema:
+            type: boolean
+        - name: ratingCategory
+          in: query
+          required: false
+          description: >-
+            Print the rating category on the certificate. Off by default; the template needs a
+            RATING_CATEGORY placeholder for it to show. The printed place stays the
+            competition-wide one either way.
           schema:
             type: boolean
       responses:
@@ -8446,6 +8642,8 @@ components:
         - SCHEDULE_SHIFT_TARGET_INVALID
         - SCHEDULE_SHIFT_LEAVES_RACE_DAY
         - SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR
+        - SCHEDULE_ADVANCE_NO_DELTA
+        - SCHEDULE_SLOT_NOT_SKIPPED
         - SCHEDULE_IMPORT_DUPLICATE_ROWS
         - SCHEDULE_COMPRESSION_IMPOSSIBLE
         - SCHEDULE_SETUP_MATCH_ALREADY_PLANNED
@@ -8497,6 +8695,9 @@ components:
         - TRACKING_TEAM_NOT_CHECKED_IN
         - TRACKING_QR_CODE_NOT_FOUND
         - TRACKING_QR_CODE_NOT_ASSOCIATED_WITH_PARTICIPANT
+        - TRACKING_ENTRY_NOT_FOUND
+        - TRACKING_SEQUENCE_CONFLICT
+        - TRACKING_TIMESTAMP_COLLISION
         - DEREGISTRATION_ALREADY_EXISTS
         - DEREGISTRATION_IS_LOCKED
         - DEREGISTRATION_RESULTS_ALREADY_EXIST
@@ -8574,6 +8775,7 @@ components:
         - 'COMPETITION_SHORT_NAME'
         - 'CLUB_NAME'
         - 'TEAM_NAME'
+        - 'RATING_CATEGORY'
         - 'EVENT_DATE'
         - 'EVENT_LOCATION'
         - 'FREE_TEXT'
@@ -9255,6 +9457,8 @@ components:
         - allowSelfSubmission
         - submissionNeedsVerification
         - allowParticipantSelfRegistration
+        - executionAutoRefresh
+        - executionAutoRefreshSeconds
       properties:
         id:
           type: string
@@ -9315,6 +9519,14 @@ components:
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
+        executionAutoRefresh:
+          type: boolean
+          description: "Whether the execution page keeps itself up to date in the background"
+        executionAutoRefreshSeconds:
+          type: integer
+          minimum: 5
+          maximum: 60
+          description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
         challengesFinished:
           type: boolean
 
@@ -9421,6 +9633,8 @@ components:
         - allowSelfSubmission
         - submissionNeedsVerification
         - allowParticipantSelfRegistration
+        - executionAutoRefresh
+        - executionAutoRefreshSeconds
       properties:
         name:
           type: string
@@ -9466,6 +9680,14 @@ components:
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
+        executionAutoRefresh:
+          type: boolean
+          description: "Whether the execution page keeps itself up to date in the background"
+        executionAutoRefreshSeconds:
+          type: integer
+          minimum: 5
+          maximum: 60
+          description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
 
     UpdateEventRequest:
       type: object
@@ -9476,6 +9698,8 @@ components:
         - allowSelfSubmission
         - submissionNeedsVerification
         - allowParticipantSelfRegistration
+        - executionAutoRefresh
+        - executionAutoRefreshSeconds
       properties:
         name:
           type: string
@@ -9519,6 +9743,14 @@ components:
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
+        executionAutoRefresh:
+          type: boolean
+          description: "Whether the execution page keeps itself up to date in the background"
+        executionAutoRefreshSeconds:
+          type: integer
+          minimum: 5
+          maximum: 60
+          description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
 
 
     # eventDay
@@ -11955,6 +12187,39 @@ components:
           items:
             $ref: '#/components/schemas/SubstitutionDto'
 
+    MatchByeCause:
+      type: string
+      description: >-
+        Why a match is a bye. DEREGISTRATION is only used when one of the non-racing rows of the
+        match carries a deregistration record - competition_deregistration is unique per
+        registration, so it also applies to a row carried over as OUT from an earlier round.
+        NO_OPPONENT is the neutral fallback for everything else (only one boat seeded, or the
+        opponent row was eliminated): without a record no withdrawal is claimed.
+      enum:
+        - DEREGISTRATION
+        - NO_OPPONENT
+
+    MatchByeDto:
+      type: object
+      description: >-
+        The bye of a match. Display only - it changes nothing about the chain, the result lock or
+        the automatic first place.
+      required:
+        - cause
+      properties:
+        cause:
+          $ref: '#/components/schemas/MatchByeCause'
+        teamName:
+          type: string
+          nullable: true
+          description: The withdrawn teams, comma separated when there are several - null for NO_OPPONENT.
+        reason:
+          type: string
+          nullable: true
+          description: >-
+            The stored withdrawal reason - only when exactly one row is deregistered, because with
+            several the mapping name -> reason would be a guess.
+
     MatchStatusDto:
       type: object
       description: >-
@@ -11988,6 +12253,13 @@ components:
         teamsInArena:
           type: integer
           description: null = not collected in this view (schedule, public boards).
+        bye:
+          allOf:
+            - $ref: '#/components/schemas/MatchByeDto'
+          nullable: true
+          description: >-
+            Set when this match is a bye. Like "overdue" and "partially scored" this is a reading,
+            not a state of its own.
 
     CompetitionMatchDto:
       type: object
@@ -12245,6 +12517,16 @@ components:
             $ref: '#/components/schemas/CompetitionTeamNamedParticipantDto'
         place:
           type: integer
+          description: "the competition-wide place from the round logic; still the one printed on the certificate"
+        ratingCategory:
+          allOf:
+            - $ref: '#/components/schemas/RatingCategoryRefDto'
+          nullable: true
+          description: "the rating category of this team; null when it has none"
+        categoryPlace:
+          type: integer
+          nullable: true
+          description: "the place within the rating category, counted from 1; null for excluded teams"
         deregistered:
           type: boolean
         deregistrationReason:
@@ -13235,6 +13517,15 @@ components:
           description: "the same chain with the full club names"
         place:
           type: integer
+        ratingCategory:
+          allOf:
+            - $ref: '#/components/schemas/RatingCategoryRefDto'
+          nullable: true
+          description: "the rating category of this boat; null when it has none"
+        categoryPlace:
+          type: integer
+          nullable: true
+          description: "the place within the rating category, counted from 1 - this is the number the result list shows"
         timeString:
           type: string
         failed:
@@ -13389,6 +13680,15 @@ components:
         place:
           type: integer
           nullable: true
+        ratingCategory:
+          allOf:
+            - $ref: '#/components/schemas/RatingCategoryRefDto'
+          nullable: true
+          description: "the rating category of this boat; null when it has none"
+        categoryPlace:
+          type: integer
+          nullable: true
+          description: "the place within the rating category, counted from 1"
         lane:
           type: integer
         teamNumber:
@@ -13694,6 +13994,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LiveDashboardRequirementStatusDto'
+        trackingStatus:
+          $ref: '#/components/schemas/ParticipantScanType'
+        trackingAt:
+          type: string
+          format: date-time
+          nullable: true
 
     LiveDashboardCrewMemberDto:
       type: object
@@ -13754,6 +14060,15 @@ components:
         place:
           type: integer
           nullable: true
+        ratingCategory:
+          allOf:
+            - $ref: '#/components/schemas/RatingCategoryRefDto'
+          nullable: true
+          description: "the rating category of this team; null when it has none"
+        categoryPlace:
+          type: integer
+          nullable: true
+          description: "the place within the rating category, counted from 1"
         time:
           type: string
           nullable: true
@@ -13829,6 +14144,11 @@ components:
             The derived match state - the card's only statement about where the match stands. A
             separate running flag stood next to it until 2026-08-09; since "at the start" and
             "under way" are two states, a second field would only be a second truth.
+        bye:
+          allOf:
+            - $ref: '#/components/schemas/MatchByeDto'
+          nullable: true
+          description: Set when this match is a bye - the referee dashboard shows the reason below the match.
         competitionId:
           type: string
           format: uuid
@@ -14134,6 +14454,11 @@ components:
         matchTeamsScored:
           type: integer
           description: "Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own"
+        bye:
+          allOf:
+            - $ref: '#/components/schemas/MatchByeDto'
+          nullable: true
+          description: Set when the linked match is a bye - null for free slots and slots whose round is not materialized yet.
 
     UnplannedSetupMatchDto:
       type: object
@@ -14238,6 +14563,21 @@ components:
           type: string
           format: uuid
           nullable: true
+        dryRun:
+          type: boolean
+
+    AdvanceScheduleRequest:
+      type: object
+      description: >-
+        Only the target slot: start slot and delta are derived from the cancelled slot by the
+        server.
+      required:
+        - targetSlotId
+        - dryRun
+      properties:
+        targetSlotId:
+          type: string
+          format: uuid
         dryRun:
           type: boolean
 
@@ -14448,12 +14788,49 @@ components:
       type: object
       required:
         - ratingCategory
+        - sortOrder
       properties:
         ratingCategory:
           $ref: '#/components/schemas/RatingCategoryDto'
         yearFrom:
           type: integer
         yearTo:
+          type: integer
+        sortOrder:
+          type: integer
+          description: >-
+            Stelle dieser Kategorie in den Ergebnisabschnitten der Veranstaltung, aufsteigend ab 0.
+
+    RatingCategoryOrderRequest:
+      type: object
+      required:
+        - ratingCategories
+      properties:
+        ratingCategories:
+          type: array
+          description: >-
+            Die vollständige Reihenfolge der Wertungskategorien von vorne nach hinten. Nicht
+            genannte, aber zugeordnete Kategorien rutschen dahinter.
+          items:
+            type: string
+            format: uuid
+
+    RatingCategoryRefDto:
+      type: object
+      description: >-
+        Die Wertungskategorie eines Bootes in einer Ergebnisliste - zum Gruppieren, Anzeigen und
+        Sortieren der Abschnitte.
+      required:
+        - id
+        - name
+        - sortOrder
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sortOrder:
           type: integer
 
     ResultChallengeClubDto:
@@ -14901,6 +15278,8 @@ components:
         - clubId
         - clubName
         - external
+        - source
+        - editCount
       properties:
         id:
           type: string
@@ -14935,8 +15314,120 @@ components:
           format: date-time
         lastScanBy:
           $ref: '#/components/schemas/AppUserNameDto'
+        source:
+          $ref: '#/components/schemas/ParticipantTrackingSource'
+        editCount:
+          type: integer
 
+    ParticipantTrackingSource:
+      type: string
+      enum:
+        - QR
+        - MANUAL
 
+    ParticipantTrackingChangeType:
+      type: string
+      enum:
+        - CREATE
+        - UPDATE
+
+    ManualTrackingRequest:
+      type: object
+      required:
+        - scanType
+        - scannedAt
+        - reason
+      properties:
+        scanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        scannedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+
+    ParticipantTrackingEntryDto:
+      type: object
+      required:
+        - id
+        - scanType
+        - scannedAt
+        - source
+        - editCount
+      properties:
+        id:
+          type: string
+          format: uuid
+        scanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        scannedAt:
+          type: string
+          format: date-time
+        source:
+          $ref: '#/components/schemas/ParticipantTrackingSource'
+        recordedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+        editCount:
+          type: integer
+        lastEditedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastEditedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
+    ParticipantTrackingChangeDto:
+      type: object
+      required:
+        - id
+        - changeType
+        - newScanType
+        - newScannedAt
+        - reason
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        trackingId:
+          type: string
+          format: uuid
+          nullable: true
+        changeType:
+          $ref: '#/components/schemas/ParticipantTrackingChangeType'
+        previousScanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        previousScannedAt:
+          type: string
+          format: date-time
+          nullable: true
+        newScanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        newScannedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
+    ParticipantTrackingHistoryDto:
+      type: object
+      required:
+        - entries
+        - changes
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantTrackingEntryDto'
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantTrackingChangeDto'
 
     ParticipantQrAssignmentDto:
       type: object

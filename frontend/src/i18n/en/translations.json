@@ -296,7 +296,8 @@
           "TEAM_NAME": "Team Name",
           "EVENT_DATE": "Event Date",
           "EVENT_LOCATION": "Event Location",
-          "FREE_TEXT": "Free Text"
+          "FREE_TEXT": "Free Text",
+          "RATING_CATEGORY": "Rating category"
         },
         "name": "Custom Label (optional)",
         "nameHelp": "A custom name to help you identify this placeholder",
@@ -391,9 +392,9 @@
   },
   "club": {
     "tabs": {
-        "clubs": "Clubs",
-        "shortNames": "Short names",
-        "settings": "Settings"
+      "clubs": "Clubs",
+      "shortNames": "Short names",
+      "settings": "Settings"
     },
     "shortName": {
       "names": "Club names",
@@ -576,7 +577,30 @@
           "alreadyCheckedIn": "This person is already checked in — there is nothing left to do.",
           "notCheckedIn": "This person is not checked in and therefore cannot be checked out.",
           "qrCodeNotAssociated": "This wristband does not belong to any participant. Please assign it to a person in the QR administration first.",
-          "qrCodeNotFound": "This wristband is unknown to the system. Please check the code or use a different wristband."
+          "qrCodeNotFound": "This wristband is unknown to the system. Please check the code or use a different wristband.",
+          "entryNotFound": "This entry no longer exists. Please reload the history.",
+          "sequenceConflict": "With this time the history would contradict itself: check-ins and check-outs must alternate and start with a check-in.",
+          "timestampCollision": "There is already an entry for this person at exactly that time. Please pick a different minute."
+        },
+        "manual": {
+          "title": "Check-in/out for {{name}}",
+          "hint": "The regular way is scanning the QR code at the pontoon. Entries created or corrected by hand here are the documented exception: they are recorded with a reason, the previous state and their author, and are marked as manual everywhere.",
+          "entries": "History",
+          "noEntries": "Nothing has been recorded for this person yet.",
+          "add": "Add entry by hand",
+          "correct": "Correct entry",
+          "reason": "Reason",
+          "reasonHint": "Why is this being entered by hand? The text stays in the log permanently.",
+          "trail": "Change history",
+          "changeCreated": "Added by hand: {{entry}}",
+          "sourceQr": "via QR",
+          "sourceQrCorrected": "via QR, corrected",
+          "sourceManual": "manual",
+          "source": "Recorded",
+          "saved": "Entry saved",
+          "saveError": "The entry could not be saved.",
+          "open": "Edit check-in/out",
+          "notTracked": "no scan"
         }
       },
       "certificate": {
@@ -628,6 +652,11 @@
       "FINISHED_ONLY": "Finished matches only",
       "RESULTS_COMPLETE": "Fully scored matches too",
       "hint": "Applies to the athlete board, the kiosk view and the public results page. Finished matches only by default: as long as a match is not finished a time penalty can still arrive, and a result that is already public cannot be taken back."
+    },
+    "executionAutoRefresh": {
+      "label": "Keep the execution page up to date automatically",
+      "seconds": "Interval in seconds",
+      "hint": "The execution page picks up times, results, matches, round changes and check-ins in the background at the configured interval — without reloading the page. Allowed are 5 to 60 seconds, 5 by default. The sync rests while a dialog is open."
     },
     "invoice": {
       "prefix": "Invoice prefix",
@@ -936,6 +965,10 @@
         "tabTitle": "Live",
         "progress": {
           "error": "The matches of the competition could not be loaded."
+        },
+        "autoRefresh": {
+          "lastUpdated": "Data from {{time}}",
+          "disconnected": "No connection"
         },
         "nextRound": {
           "create": "Create next round",
@@ -1702,6 +1735,20 @@
       "skipConfirm_other": "Only this single run is cancelled: \"{{label}}\" at {{time}}. The other {{count}} runs of round \"{{round}}\" stay unchanged.",
       "skipConfirmOnly": "The run \"{{label}}\" at {{time}} is cancelled and will be passed over by the chain.",
       "skipConfirmFree": "The programme item \"{{label}}\" at {{time}} is cancelled.",
+      "advance": {
+        "title": "Move schedule up",
+        "intro": "\"{{label}}\" at {{time}} has been cancelled. That frees up {{minutes}} minutes.",
+        "targetSlot": "Up to slot",
+        "help": "Every slot from the next one up to and including the selected slot moves {{minutes}} minutes earlier. Everything after it keeps its time — a buffer appears there.",
+        "apply": "Move up",
+        "decline": "Don't move up",
+        "success": "The schedule was moved up by {{minutes}} minutes.",
+        "error": {
+          "noDelta": "No freed-up time can be derived from this slot — it has no planned duration and no slot after it on the same race day. Use \"Adjust schedule\" to shift the timeline by hand.",
+          "slotNotSkipped": "This slot is not (or no longer) cancelled — the schedule only moves into time that a cancellation frees up. Please reload the schedule.",
+          "targetInvalid": "That slot is not among the ones that can move up. Please reload the schedule and pick a slot after the cancelled one."
+        }
+      },
       "unskipConfirm": "Undo cancellation for \"{{label}}\" at {{time}}? The slot will be considered normally again.",
       "activate": "Activate race",
       "activateConfirm": "Activate race \"{{label}}\" at {{time}} now?",
@@ -1822,6 +1869,12 @@
         "title": "Assign rating category",
         "success": "Rating category successfully added",
         "error": "An error has occurred when adding the rating category to the event"
+      },
+      "withoutCategory": "Without rating category",
+      "order": {
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "hint": "The order determines in which sequence the sections appear in result lists."
       }
     }
   },
@@ -2655,6 +2708,10 @@
         "competitionNotInEvent": "This competition does not belong to this event. Please reload the page.",
         "isChallengeEvent": "A challenge event has no award certificates — there are no runs and no placements. Certificates of participation can be downloaded from the participant list.",
         "unexpected": "The certificates could not be created. Please reload the page and try again."
+      },
+      "ratingCategory": {
+        "label": "Print rating category",
+        "hint": "Only visible if the template contains a placeholder for the rating category. The printed place stays the competition-wide one."
       }
     }
   }
