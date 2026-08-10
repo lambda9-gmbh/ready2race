@@ -234,3 +234,32 @@ und Zeitplanänderungen, Lageplan, Urkunden-Download.
 6. Bedingung im Editor freigeben → erscheint im Dashboard; Häkchen entfernen → verschwindet
 7. Offene Pflichtbedingung → Band oben; abhaken → Band weg, Liste bleibt
 8. Lauf beenden → Ergebnis erscheint im Dashboard zeitgleich mit der Athleten-Anzeige
+
+## 9. Nachträge nach der Umsetzung (10.08.2026)
+
+Beim Bauen und Prüfen entstanden Abweichungen und Erweiterungen, die hier festgehalten sind,
+damit der Entwurf nicht falsch weiterlebt:
+
+- **§6.3 „vergangene eingeklappt"** wurde nicht so gebaut. Der Block „Meine Läufe" zeigt nur
+  anstehende Läufe und erscheint erst ab zwei davon; vergangene erscheinen als Ergebnis. Grund:
+  beim letzten anstehenden Lauf bestand der Block sonst aus genau der Karte, die zwei Zentimeter
+  darüber schon groß steht.
+- **Nachfrist für überfällige Läufe.** `MyEventLogic.split` nutzt `AthleteBoardLogic.isStillUpcoming`
+  mit derselben 30-Minuten-Nachfrist wie die Athleten-Anzeige und sortiert Überfällige ans Ende
+  statt sie zu verwerfen — sonst hätte ein gefahrener, aber nie beendeter Lauf den echten nächsten
+  Lauf von der Karte oben verdrängt.
+- **Abmeldungen** stehen jetzt auch in `MyEventMatchDto` (`deregistered`, `deregisteredReason`).
+  Ohne das zählte ein zurückgezogenes Boot bis zum Beenden des Laufs mit Countdown herunter.
+- **Rollengebundene Bedingungen** werden über die bestehende Regel
+  (`ParticipantRequirementForEventRepo.getRequirementsForNamedParticipants`) aufgelöst; „Mein Event"
+  filtert deren Ergebnis nur zusätzlich auf `publicly_visible`.
+- **`localStorage`-Härtung**: Jeder Zugriff ist gekapselt. Im privaten Modus von Safari wirft schon
+  das Lesen, und das hätte die gesamte Ergebnisseite zerlegt, nicht nur den Reiter.
+- **`lastSeenAt`** trennt Auswahl von Reihenfolge: angezeigt wird der zuletzt gescannte Code, die
+  Knopfreihenfolge bleibt stabil.
+- **Helferbänder** (`type === 'User'`) werden nicht gemerkt und führen ohne Reiter auf die
+  Ergebnisseite.
+
+Offen und bewusst nicht gebaut: Ersatzleute (`substitution`) — siehe eigene Aufgabe. Die Frage
+„alles hinter eine Anmeldung" ist beantwortet und zurückgestellt in
+`2026-08-10-backlog-anmeldung-persoenliche-daten.md`.
