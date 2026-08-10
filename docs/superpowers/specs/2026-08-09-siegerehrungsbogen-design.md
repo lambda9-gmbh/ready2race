@@ -1,10 +1,11 @@
 # Design: Siegerehrungsbogen (druckbare Unterlage für die Sprecherin)
 
 **Stand:** 2026-08-10
-**Status:** Umgesetzt und geprüft. Zwei Annahmen des ersten Entwurfs wurden beim Bau
-widerlegt und sind in [Abschnitt 7](#7-seitenlayout) samt Messwerten ersetzt.
-[Abschnitt 11](#11-merge-voraussetzung-dopplung-mit-den-wertungskategorie-abschnitten) ist vor
-dem Merge abzuarbeiten. Der Handtest am Ausdruck steht aus.
+**Status:** Umgesetzt, geprüft und mit `feature/crf-2026` vereinheitlicht. Zwei Annahmen des
+ersten Entwurfs wurden beim Bau widerlegt und sind in [Abschnitt 7](#7-seitenlayout) samt
+Messwerten ersetzt; die Dopplung aus Abschnitt 11 ist am 10.08.2026 aufgelöst worden
+(`2caaf096`, `f566309b`). Offen ist allein der **Handtest am Ausdruck** — Block O im
+Testkatalog `2026-08-05-testkatalog-crf-2026.md`.
 **Branch:** `claude/ready2race-award-ceremony-sheet-210a37`
 
 ---
@@ -104,8 +105,10 @@ punkt ins Leere. Kommt der Zeitplan später, ist nur die Befüllung nachzutragen
    (`deregistered || out || failed` — dieselbe Regel wie im Urkundengenerator).
 3. Nach `ratingCategory` gruppieren. `null` ist eine eigene, gültige Gruppe.
 4. Gruppen ohne platziertes Boot entfallen.
-5. Reihenfolge: Wettkampf nach Rennnummer, innerhalb dessen Kategorien alphabetisch, die
-   Gruppe ohne Kategorie zuletzt.
+5. Reihenfolge: Wettkampf nach Rennnummer; innerhalb dessen ordnet
+   `RatingCategoryRanking.groupAndRank` die Kategorien nach der **gepflegten** Reihenfolge
+   (`event_rating_category.sort_order`), ungepflegte dahinter, die Gruppe ohne Kategorie zuletzt
+   — dieselbe Folge wie in jeder anderen Ergebnisanzeige.
 
 ### API
 
@@ -117,23 +120,30 @@ Unter `/event/{eventId}/awardCeremony`, Privileg `ReadEventGlobal` (wie der Urku
 {"data": [
   {"competitionId": "…", "competitionIdentifier": "17-NC", "competitionShortName": "CM 4x+",
    "competitionName": "Mixed-Coastal-Vierer mit Steuermann",
-   "ratingCategoryName": "Masters A", "awardedTeams": 3}
+   "ratingCategoryId": "…", "ratingCategoryName": "Masters A", "awardedTeams": 3}
 ]}
 ```
 
 **`POST /pdf`** — das PDF:
 
 ```json
-{"selection": [{"competitionId": "…", "ratingCategoryName": "Masters A"}]}
+{"selection": [{"competitionId": "…", "ratingCategoryId": "…"}]}
 ```
 
 Seiten in derselben Reihenfolge wie die Liste, unabhängig von der Reihenfolge in `selection`.
 Leere oder fehlende `selection` bedeutet **alle** Ehrungen. POST statt GET, weil die Auswahl
 bei einer Regatta mit 40 Rennen für einen Query-String zu lang wird.
 
-Der Schlüssel einer Ehrung ist `(competitionId, ratingCategoryName?)`. Bewusst der **Name**,
-nicht die ID: die Platzberechnung liefert nur ihn, und ein Nachladen der ID brächte nichts,
-was auf dem Blatt stünde.
+Der Schlüssel einer Ehrung ist `(competitionId, ratingCategoryId?)`. Der erste Entwurf nahm
+dafür den **Namen**, weil die Platzberechnung damals nur ihn lieferte. Seit der Vereinheitlichung
+mit `RatingCategoryRanking` liegt die Id vor, und sie ist der richtige Schlüssel: über sie
+gruppiert die zentrale Rechnung ohnehin, und zwei gleichnamige Kategorien wären über den Namen
+nicht auseinanderzuhalten. `ratingCategoryName` bleibt im DTO als Anzeigewert. `null` heißt
+weiterhin „der Wettkampf als Ganzes".
+
+`AwardCeremonyKeyRequest` trägt **nur** die Id, nicht zusätzlich den Namen: ein dort verbliebener
+Name würde nichts mehr auswählen, käme aber mit `ratingCategoryId = null` an und träfe still die
+Ehrung „der Wettkampf als Ganzes" — genau der Fehler, den die Umstellung verhindert.
 
 ### Fehlerfälle
 
@@ -325,36 +335,37 @@ Kategorien vermischen sich nicht.
 
 **`AwardCeremonyServiceTest`** — Testcontainers (`testComprehension`, siehe
 `GapDocumentTemplateServiceTest`): Auswahl und Sortierung der Ehrungen, Filterung auf einen
-Wettkampf, leere Auswahl = alle, `IsChallengeEvent` und `NoResults`.
+Wettkampf, leere Auswahl = alle, gepflegte Kategoriereihenfolge gegen das Alphabet, Lauf-Zuordnung
+über zwei Runden, Ausschluss abgemeldeter/ausgeschiedener/disqualifizierter Boote,
+`IsChallengeEvent` und `NoResults`. Dazu `AwardCeremonyHttpIT` für Erreichbarkeit und Berechtigung
+der Routen.
 
-## 11. Merge-Voraussetzung: Dopplung mit den Wertungskategorie-Abschnitten
+## 11. Vereinheitlicht mit den Wertungskategorie-Abschnitten (erledigt 10.08.2026)
 
-> **Das ist keine Nacharbeit, sondern Teil des Merges.** Die Schluss-Review hat den Punkt
-> ausdrücklich hochgestuft: bleibt er offen, ehrt die Sprecherin in einer anderen Reihenfolge,
-> als die Anzeigetafel sie zeigt — und zwei Rechnungen derselben Sache laufen nebeneinander.
-
-Dieser Branch zweigt von einem Stand ab, der die
-Wertungskategorie-Abschnitte noch nicht kennt. In `crf-2026` gibt es sie seit dem 09.08.2026:
-Ergebnisse werden dort bereits je Wertungskategorie getrennt und je Abschnitt ab 1 gezählt —
+Dieser Branch zweigte von einem Stand ab, der die Wertungskategorie-Abschnitte noch nicht kannte,
+und rechnete die Gruppierung deshalb zunächst selbst. Das war eine echte Dopplung: `crf-2026`
+trennt Ergebnisse seit dem 09.08.2026 überall je Kategorie und zählt je Abschnitt ab 1 —
 öffentliche Anzeige, Schiedsrichter-Dashboard, Athleten-Anzeige, Platzierungsansicht und
 Ergebnis-PDF —, gerechnet an genau einer Stelle: `RatingCategoryRanking.groupAndRank`.
 
-Weder diese Klasse noch die Migration mit `event_rating_category.sort_order` existieren hier
-(geprüft am 10.08.2026: 81 Migrationsdateien, letzte `V202608091410`). Daraus folgen zwei Punkte:
+**Aufgelöst am 10.08.2026** (`2caaf096`, `f566309b`), nachdem `feature/crf-2026` in diesen Branch
+gemergt wurde:
 
-1. **Dopplung.** `AwardCeremonyLogic.groupByRatingCategory` und `AwardCeremonyLogic.rank` machen
-   dasselbe wie `RatingCategoryRanking.groupAndRank`. Beim Merge gehört die Ehrung auf die
-   bestehende Stelle umgestellt, statt eine zweite Rechnung derselben Sache stehen zu lassen —
-   sonst laufen die Zahlen auf dem Siegerehrungsbogen früher oder später gegen die der
-   Ergebnisliste.
-2. **Reihenfolge der Kategorien.** Dieser Bogen sortiert Kategorien **alphabetisch** und die
-   Gruppe ohne Kategorie zuletzt, weil es hier nichts anderes gibt. `crf-2026` hat eine
-   **gepflegte** Reihenfolge (`sort_order`) mit `RatingCategoryRef.UNCONFIGURED_SORT_ORDER`
-   (`Int.MAX_VALUE`) für ungepflegte Kategorien. Für eine Siegerehrung ist die gepflegte
-   Reihenfolge die richtige — sie bestimmt, in welcher Folge geehrt wird. Beim Merge also darauf
-   umstellen.
+1. **Eine Rechnung statt zweier.** `AwardCeremonyLogic.groupByRatingCategory` und `.rank` sind
+   entfallen; der Bogen ruft `RatingCategoryRanking.groupAndRank` wie alle anderen Anzeigen. Die
+   Rangsemantik war nachweislich identisch (Gleichstand behält den Platz und reißt danach eine
+   Lücke: 1, 2, 2, 4). Beim Bogen bleibt nur, was ihm eigen ist: die Begrenzung auf die ersten
+   drei Ränge samt Gleichständen und die Kennzeichen für den geteilten Rang.
+2. **Gepflegte Reihenfolge statt Alphabet.** Die Kategorien folgen
+   `event_rating_category.sort_order`, ungepflegte dahinter
+   (`RatingCategoryRef.UNCONFIGURED_SORT_ORDER`), „ohne Kategorie" zuletzt. Für eine Siegerehrung
+   ist das die richtige Folge — sie bestimmt, in welcher Reihenfolge tatsächlich geehrt wird, und
+   sie stimmt jetzt mit der Anzeigetafel überein. Festgenagelt in
+   `AwardCeremonyServiceTest.theCategoriesFollowTheConfiguredSortOrderNotTheAlphabet`, wo die
+   gepflegte Reihenfolge der alphabetischen absichtlich widerspricht.
+3. **Schlüssel über die Id.** Siehe [Abschnitt 5](#api).
 
-Die Rangvergabe selbst bleibt davon unberührt: Gleichstände sind innerhalb eines Laufs durch
+Die Rangvergabe bleibt davon unberührt: Gleichstände sind innerhalb eines Laufs durch
 `place_unique_in_match` ausgeschlossen und entstehen nur über
 `CompetitionSetupPlacesOption.EQUAL` in den Wettkampf-Platzierungen — genau der Fall, den
 [Abschnitt 6](#6-platzvergabe-innerhalb-der-kategorie) behandelt.
