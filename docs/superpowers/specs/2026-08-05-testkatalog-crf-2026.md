@@ -679,6 +679,8 @@ Personenzeilen, während sieben Personen zufällig passten). Heute wird die Seit
 | O19 | Dateiname | Der Download heißt `siegerehrung_<Veranstaltung>.pdf`. Einmal mit einer Veranstaltung prüfen, deren Name Umlaute trägt | `f566309b` | |
 | O20 | Knopf gesperrt ohne Auswahl | Alle Häkchen entfernen: „Herunterladen" ist grau. Wichtig, weil eine leer verschickte Auswahl serverseitig „alle Ehrungen drucken" bedeutet | `f566309b` | |
 | O21 | Berechtigung | Ohne Anmeldung ist der Endpunkt nicht erreichbar (401). Durch `AwardCeremonyHttpIT` abgedeckt — die Klasse läuft mangels Failsafe-Konfiguration aber **nicht** im normalen Testlauf mit und muss gezielt gestartet werden: `./mvnw test -Dtest=AwardCeremonyHttpIT -DfailIfNoSpecifiedTests=false` | `f566309b` | |
+| O22 | Ganze Regatta in einem Rutsch | **Nie gemessen.** Den Dialog im Wettkämpfe-Tab auf der echten CRF-Datenmenge öffnen (~40 Rennen): das berechnet je Wettkampf die Platzierungen. Dann *alle* Ehrungen drucken — jeder Bogen wird bis zu fünfmal probeweise gesetzt. Dauer beider Schritte und Dateigröße notieren. Wird es zäh, ist die Auswahlliste der Hebel, nicht das Layout | `f566309b` | |
+| O23 | Gleichstand **auf** Rang 3 | Spiegelfall zu O10: teilen sich zwei Boote den dritten Platz, stehen **beide** auf dem Blatt — vier Blöcke statt drei. Das Blatt wird damit voller als erwartet; prüfen, dass es trotzdem passt und nichts abgeschnitten ist | `f566309b` | |
 
 **Offen, vom Test zu entscheiden:** Ob 8,5 pt als kleinste Stufe für ein Vorleseblatt trägt (O4).
 Trägt sie nicht, ist der Boden höher zu setzen — dann bekommen mehr Ehrungen eine
