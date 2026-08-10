@@ -7,6 +7,7 @@ import {
     dashboardCrew,
     dashboardEntryDomId,
     dashboardEntryDomIdCandidates,
+    dashboardMatchStatus,
     dashboardScope,
     isLiveMatch,
     liveMatches,
@@ -568,5 +569,44 @@ describe('competitionLabel', () => {
                 competitionShortName: 'CM 1x',
             }),
         ).toBe('Coastal Männer Einer')
+    })
+})
+
+describe('dashboardMatchStatus', () => {
+    const match = (overrides: Partial<LiveDashboardMatchDto>): LiveDashboardMatchDto =>
+        ({
+            matchId: 'm-1',
+            state: 'UPCOMING',
+            competitionId: 'c-1',
+            competitionName: 'Coastal Mixed 4x+',
+            executionOrder: 1,
+            teams: [],
+            ...overrides,
+        }) as LiveDashboardMatchDto
+
+    it('zählt die gewerteten Boote nach derselben Regel wie das Backend', () => {
+        const status = dashboardMatchStatus(
+            match({
+                teams: [
+                    {place: 1} as never,
+                    {failed: true} as never,
+                    {deregistered: true} as never,
+                    {} as never,
+                ],
+            }),
+        )
+        expect(status.teamsTotal).toBe(4)
+        expect(status.teamsScored).toBe(3)
+    })
+
+    it('trägt das Freilos in den Dashboard-Status', () => {
+        const status = dashboardMatchStatus(
+            match({state: 'AWAITING_FINISH', bye: {cause: 'DEREGISTRATION', teamName: 'RV Hansa'}}),
+        )
+        expect(status.bye).toEqual({cause: 'DEREGISTRATION', teamName: 'RV Hansa'})
+    })
+
+    it('lässt einen gewöhnlichen Lauf ohne Freilos', () => {
+        expect(dashboardMatchStatus(match({})).bye).toBeUndefined()
     })
 })

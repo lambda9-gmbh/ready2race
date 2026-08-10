@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.entity
 
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDateTime
 import java.util.UUID
@@ -170,6 +171,12 @@ data class LiveDashboardMatchDto(
      * [LiveDashboardMatchState.RUNNING]), wäre ein zweites Feld nur eine zweite Wahrheit.
      */
     val state: LiveDashboardMatchState,
+    /**
+     * Gesetzt, wenn dieser Lauf ein Freilos ist - siehe `MatchStatusLogic.deriveBye`. Kein eigener
+     * [LiveDashboardMatchState]: das Freilos sagt etwas über den Lauf, nicht über seinen Fortschritt,
+     * und ein aktivierter Lauf bleibt RUNNING.
+     */
+    val bye: MatchByeDto? = null,
     val competitionId: UUID,
     val competitionName: String,
     /** Rennnummer und Kurzname des Wettkampfs - das Board zeigt sie statt des ausgeschriebenen

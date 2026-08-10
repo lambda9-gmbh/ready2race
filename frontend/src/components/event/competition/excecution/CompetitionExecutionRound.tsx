@@ -41,6 +41,7 @@ import Checkbox from '@mui/material/Checkbox'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
 import {matchesOnDisplay} from '@components/event/competition/excecution/roundDeletion.ts'
+import {byeMatches} from '@components/event/competition/excecution/byeMatches.ts'
 import {roundSkipErrorText} from '@components/event/schedule/scheduleError.ts'
 import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
 import {raceClockerPollStatus} from './raceClockerPollStatus.ts'
@@ -137,6 +138,9 @@ const CompetitionExecutionRound = ({
     // Die Zählerleiste fasst zusammen, was die Chips darunter einzeln sagen — bei einer einzigen
     // Lauf-Karte wäre das bloße Wiederholung, deshalb bleibt sie dort leer (siehe roundCounterChips).
     const counterChips = roundCounterChips(filteredMatches.map(match => match.status))
+
+    // Die Freilose der Runde — dieselbe Frage wie überall sonst, gestellt an `status.bye`.
+    const byes = byeMatches(round)
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -270,65 +274,72 @@ const CompetitionExecutionRound = ({
                     <Typography>{t('event.competition.setup.round.required')}</Typography>
                 )}
                 <Box>
-                    {!round.required &&
-                        round.matches.filter(match => match.teams.length === 1).length > 0 && (
-                            <Accordion
-                                expanded={props.accordionsExpanded?.[0] ?? false}
-                                onChange={handleAccordionExpandedChange(0)}>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    aria-expanded={true}
-                                    aria-controls={`round-${roundIndex}-${round.name}-panel-teams-with-bye-content`}
-                                    id={`round-${roundIndex}-${round.name}-panel-teams-with-bye-header`}>
-                                    <Typography component="span">
-                                        {t('event.competition.execution.teamsWithBye')} (
-                                        {
-                                            round.matches.filter(match => match.teams.length === 1)
-                                                .length
-                                        }
-                                        )
-                                    </Typography>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <TableContainer>
-                                        <Table>
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell width="20%">
-                                                        {t(
-                                                            'event.competition.setup.match.outcome.outcome',
-                                                        )}
+                    {byes.length > 0 && (
+                        <Accordion
+                            expanded={props.accordionsExpanded?.[0] ?? false}
+                            onChange={handleAccordionExpandedChange(0)}>
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                aria-expanded={true}
+                                aria-controls={`round-${roundIndex}-${round.name}-panel-teams-with-bye-content`}
+                                id={`round-${roundIndex}-${round.name}-panel-teams-with-bye-header`}>
+                                <Typography component="span">
+                                    {t('event.competition.execution.teamsWithBye')} ({byes.length})
+                                </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <TableContainer>
+                                    <Table>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell width="15%">
+                                                    {t(
+                                                        'event.competition.setup.match.outcome.outcome',
+                                                    )}
+                                                </TableCell>
+                                                <TableCell width="60%">
+                                                    {t('event.competition.execution.match.team')}
+                                                </TableCell>
+                                                {/* Der Zustand des Laufs, aus derselben Ableitung
+                                                    wie auf jeder Lauf-Karte: ohne ihn war hier
+                                                    nicht zu sehen, ob das Freilos noch zu
+                                                    quittieren ist. */}
+                                                <TableCell width="25%">
+                                                    {t('event.competition.execution.match.status')}
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {byes.map(match => (
+                                                <TableRow key={match.id}>
+                                                    <TableCell width="15%">
+                                                        {match.weighting}
                                                     </TableCell>
-                                                    <TableCell width="80%">
-                                                        {t(
-                                                            'event.competition.execution.match.team',
-                                                        )}
+                                                    <TableCell width="60%">
+                                                        {match.teams[0]
+                                                            ? match.teams[0].clubName +
+                                                              (match.teams[0].name
+                                                                  ? ` ${match.teams[0].name}`
+                                                                  : '')
+                                                            : ''}
+                                                    </TableCell>
+                                                    <TableCell width="25%">
+                                                        <StatusChip
+                                                            chip={matchStatusChip(
+                                                                match.status,
+                                                                match.startTime,
+                                                                now,
+                                                            )}
+                                                        />
                                                     </TableCell>
                                                 </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {round.matches
-                                                    .filter(match => match.teams.length === 1)
-                                                    .sort((a, b) => a.weighting - b.weighting)
-                                                    .map(match => (
-                                                        <TableRow key={match.id}>
-                                                            <TableCell width="20%">
-                                                                {match.weighting}
-                                                            </TableCell>
-                                                            <TableCell width="80%">
-                                                                {match.teams[0].clubName +
-                                                                    (match.teams[0].name
-                                                                        ? ` ${match.teams[0].name}`
-                                                                        : '')}
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </AccordionDetails>
-                            </Accordion>
-                        )}
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </AccordionDetails>
+                        </Accordion>
+                    )}
                     <Accordion
                         expanded={props.accordionsExpanded?.[1] ?? false}
                         onChange={handleAccordionExpandedChange(1)}>

@@ -712,6 +712,8 @@
       "competition": "Konkurrence",
       "competitions": "Konkurrencer",
       "navigation": {
+        "modeCompetitions": "Løb",
+        "modeSchedule": "Tidsplan",
         "backToEvent": "Tilbage til arrangementet",
         "filter": "Filtrér",
         "showShortNames": "Vis korte navne",
@@ -1029,6 +1031,7 @@
         },
         "teamsWithBye": "Hold med frirunde",
         "match": {
+          "status": "Status",
           "startTime": "Starttid",
           "startTimeOffset": "Forskudt starttid",
           "startNumber": {
@@ -1605,6 +1608,11 @@
         "unscheduled": "Ikke planlagt",
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Gennemføres ikke",
+        "bye": {
+          "open": "Oversidder · åben",
+          "acknowledged": "Oversidder · kvitteret",
+          "cancelled": "Oversidder · aflyst"
+        },
         "counter": {
           "preparing": "{{n}} forbereder",
           "running": "{{n}} i gang",
@@ -1612,6 +1620,11 @@
           "finished": "{{n}} afsluttet",
           "cancelled": "{{n}} aflyst"
         }
+      },
+      "bye": {
+        "deregistration": "Oversidder efter afmelding – {{team}}",
+        "deregistrationWithReason": "Oversidder efter afmelding – {{team}} ({{reason}})",
+        "noOpponent": "Oversidder – ingen modstander i denne runde"
       }
     },
     "liveDashboard": {

@@ -58,6 +58,7 @@ import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './
 import {useShortLabels} from '@components/event/shortLabels.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import {matchStatusChip, slotMatchStatus} from '@components/event/match/matchStatusChip.ts'
+import {byeExplanation} from '@components/event/match/matchBye.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 import ScheduleAdvanceDialog from './ScheduleAdvanceDialog.tsx'
@@ -473,6 +474,13 @@ const EventSchedule = () => {
                             <TableBody>
                                 {section.slots.map(slot => {
                                     const chip = stateChipProps(slot, now, t)
+                                    // Der Schlüssel steht erst zur Laufzeit fest, deshalb die
+                                    // gelockerte Signatur — dasselbe Muster wie in stateChipProps.
+                                    const translate = t as (
+                                        key: string,
+                                        values?: Record<string, string>,
+                                    ) => string
+                                    const bye = byeExplanation(slot.bye)
                                     return (
                                         <TableRow
                                             key={slot.id}
@@ -552,6 +560,14 @@ const EventSchedule = () => {
                                                         )}
                                                     </Box>
                                                 </Stack>
+                                                {bye && (
+                                                    <Typography
+                                                        variant={'caption'}
+                                                        display={'block'}
+                                                        sx={{color: 'text.secondary'}}>
+                                                        {translate(bye.key, bye.values)}
+                                                    </Typography>
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <Chip

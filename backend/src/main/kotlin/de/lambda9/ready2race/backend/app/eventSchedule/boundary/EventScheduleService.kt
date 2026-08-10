@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.*
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
+import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchByeService
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventScheduleSlotRecord
@@ -46,6 +47,7 @@ object EventScheduleService {
             val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
             val unplanned = !EventScheduleRepo.getUnplannedSetupMatches(eventId).orDie()
             val chainProgressionMode = !EventRepo.getChainProgressionMode(eventId).orDie()
+            val byeByMatch = !MatchByeService.byeByMatch(eventId)
 
             val slots = slotRecords.map { r ->
                 val isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
@@ -75,6 +77,7 @@ object EventScheduleService {
                     matchActivatedAt = r[COMPETITION_MATCH.ACTIVATED_AT],
                     matchTeamsTotal = r.get("match_teams_total", Int::class.java) ?: 0,
                     matchTeamsScored = r.get("match_teams_scored", Int::class.java) ?: 0,
+                    bye = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]?.let { byeByMatch[it] },
                 )
             }
 

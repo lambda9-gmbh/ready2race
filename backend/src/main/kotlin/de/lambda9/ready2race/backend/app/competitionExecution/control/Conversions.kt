@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionLogic
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
@@ -47,10 +48,14 @@ private fun List<CompetitionMatchTeamParticipant>.toNamedParticipantsDto() =
  * anders als im Schiedsrichter-Dashboard, das sie über `buildParticipants` nachzieht. Der Fehler
  * geht in die harmlose Richtung: eine ummeldete Crew erscheint eher als "noch nicht draußen", der
  * Chip bleibt also länger stehen, statt einen Start zu behaupten, den es nicht gibt.
+ *
+ * [byeByMatch] kommt von außen, weil `getProgress` die `out`-Zeilen bereits herausgefiltert hat,
+ * bevor diese Umwandlung läuft - der abgemeldete Gegner ist hier also nicht mehr zu sehen.
  */
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
     mixedTeamTerm: String?,
     lastScanByParticipant: Map<UUID, Pair<String, LocalDateTime>> = emptyMap(),
+    byeByMatch: Map<UUID, MatchByeDto> = emptyMap(),
 ) = run {
     val matchPairs =
         matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
@@ -124,6 +129,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                                 )
                             },
                             teamsInArena = teamsInArenaPerMatch[index],
+                            bye = byeByMatch[match.second.id],
                         ),
                         raceClockerPolledAt = match.first.raceClockerPolledAt,
                         raceClockerPollError = match.first.raceClockerPollError,

@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.entity
 
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -49,6 +50,12 @@ data class EventScheduleSlotDto(
      * gewertet n/m" ab; ein eigener Zustand ist das ausdrücklich nicht.
      */
     val matchTeamsScored: Int,
+    /**
+     * Gesetzt, wenn der verknüpfte Lauf ein Freilos ist - siehe `MatchStatusLogic.deriveBye`. Null
+     * für freie Slots und für Slots ohne erzeugten Lauf: dort gibt es keine Mannschaften, aus denen
+     * sich etwas ableiten ließe.
+     */
+    val bye: MatchByeDto?,
 )
 
 data class UnplannedSetupMatchDto(
