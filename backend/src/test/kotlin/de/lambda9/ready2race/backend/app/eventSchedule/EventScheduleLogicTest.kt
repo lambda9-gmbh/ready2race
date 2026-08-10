@@ -367,6 +367,126 @@ class EventScheduleLogicTest {
         assertEquals(10L, impossible.maxReductionMinutes)
     }
 
+    // --- Vorziehen nach einem entfallenen Slot ---
+    // Der entfallene Slot steht in diesen Tests auf [base]; die Listen enthalten nur, was HINTER
+    // ihm liegt (so ruft der Service sie auf).
+
+    @Test
+    fun theFollowingSlotIsTheFirstOneThatIsTrulyLater() {
+        val slots = listOf(slot(10), slot(20))
+        assertEquals(0, EventScheduleLogic.firstFollowingIndex(slots, base))
+    }
+
+    @Test
+    fun slotsParallelToTheCancelledOneAreNotTheFollowingSlot() {
+        // Zwei Läufe starten mit dem entfallenen zusammen um 10:00 - nachrücken kann erst 10:20.
+        val slots = listOf(slot(0), slot(0), slot(20))
+        assertEquals(2, EventScheduleLogic.firstFollowingIndex(slots, base))
+    }
+
+    @Test
+    fun withoutAnyLaterSlotThereIsNoFollowingSlot() {
+        assertNull(EventScheduleLogic.firstFollowingIndex(listOf(slot(0)), base))
+        assertNull(EventScheduleLogic.firstFollowingIndex(emptyList(), base))
+    }
+
+    @Test
+    fun theDeltaIsThePlannedDurationWhenThereIsOne() {
+        // Dauer 12, Lücke 20 - die gepflegte Dauer gewinnt, der Puffer von 8 Minuten bleibt stehen.
+        assertEquals(
+            12L,
+            EventScheduleLogic.advanceDeltaMinutes(
+                durationMinutes = 12,
+                skippedStartTime = base,
+                nextStartTime = base.plusMinutes(20),
+            ),
+        )
+    }
+
+    @Test
+    fun thePlannedDurationWinsEvenWhenItExceedsTheGap() {
+        // Bewusst kein stilles Kappen auf die Lücke: die Vorgänger-Prüfung lehnt das Vorziehen
+        // danach mit einer konkreten Obergrenze ab.
+        assertEquals(
+            30L,
+            EventScheduleLogic.advanceDeltaMinutes(
+                durationMinutes = 30,
+                skippedStartTime = base,
+                nextStartTime = base.plusMinutes(20),
+            ),
+        )
+    }
+
+    @Test
+    fun withoutADurationTheGapToTheFollowingSlotIsTheDelta() {
+        assertEquals(
+            20L,
+            EventScheduleLogic.advanceDeltaMinutes(
+                durationMinutes = null,
+                skippedStartTime = base,
+                nextStartTime = base.plusMinutes(20),
+            ),
+        )
+    }
+
+    @Test
+    fun withoutADurationAndWithoutAFollowingSlotThereIsNoDelta() {
+        assertNull(
+            EventScheduleLogic.advanceDeltaMinutes(
+                durationMinutes = null,
+                skippedStartTime = base,
+                nextStartTime = null,
+            ),
+        )
+    }
+
+    @Test
+    fun aDurationOfZeroIsNoDelta() {
+        // 0 Minuten frei heißt: nichts rückt nach. Bewusst OHNE Rückfall auf die Lücke - sonst
+        // stünde plötzlich eine Zahl im Dialog, die niemand gepflegt hat.
+        assertNull(
+            EventScheduleLogic.advanceDeltaMinutes(
+                durationMinutes = 0,
+                skippedStartTime = base,
+                nextStartTime = base.plusMinutes(20),
+            ),
+        )
+    }
+
+    @Test
+    fun advanceMovesTheBlockUpToAndIncludingTheTarget() {
+        // 10:20, 10:40, 11:00 (Ziel), 11:30 - 20 Minuten vorziehen.
+        val block = listOf(slot(20), slot(40), slot(60), slot(90))
+        val entries = EventScheduleLogic.computeAdvance(block, advanceMinutes = 20, targetSlotId = block[2].id)
+        assertEquals(
+            listOf(0L, 20L, 40L, 90L),
+            entries.map { java.time.Duration.between(base, it.newStartTime).toMinutes() },
+        )
+    }
+
+    @Test
+    fun slotsBehindTheAdvanceTargetKeepTheirTimeAndGainABuffer() {
+        val block = listOf(slot(20), slot(40), slot(60))
+        val entries = EventScheduleLogic.computeAdvance(block, advanceMinutes = 10, targetSlotId = block[0].id)
+        // Nur der erste rückt vor; aus dem 20er-Abstand dahinter werden 30 Minuten Puffer.
+        assertEquals(
+            listOf(10L, 40L, 60L),
+            entries.map { java.time.Duration.between(base, it.newStartTime).toMinutes() },
+        )
+        assertEquals(listOf(true, false, false), entries.map { it.oldStartTime != it.newStartTime })
+    }
+
+    @Test
+    fun advanceKeepsTheDistancesInsideTheBlock() {
+        // Der gefahrene Rhythmus bleibt: der Block wandert, er staucht sich nicht.
+        val block = listOf(slot(20), slot(35), slot(60))
+        val entries = EventScheduleLogic.computeAdvance(block, advanceMinutes = 15, targetSlotId = block[2].id)
+        val gaps = entries.zipWithNext { a, b ->
+            java.time.Duration.between(a.newStartTime, b.newStartTime).toMinutes()
+        }
+        assertEquals(listOf(15L, 25L), gaps)
+    }
+
     // --- overtakesPredecessor ---
 
     private fun entry(minutesAfterBase: Long) =
@@ -581,6 +701,18 @@ class EventScheduleLogicTest {
             "NEGATIVE_DELAY",
             EventScheduleError.ShiftTargetInvalid(ShiftTargetProblem.NEGATIVE_DELAY).respond().details?.get("problem"),
         )
+    }
+
+    @Test
+    fun theAdvanceRejectionsHaveTheirOwnCodes() {
+        val slotId = UUID.randomUUID()
+        val notSkipped = EventScheduleError.SlotNotSkipped(slotId).respond()
+        val noDelta = EventScheduleError.AdvanceDeltaUndeterminable(slotId).respond()
+
+        assertEquals(ErrorCode.SCHEDULE_SLOT_NOT_SKIPPED, notSkipped.errorCode)
+        assertEquals(ErrorCode.SCHEDULE_ADVANCE_NO_DELTA, noDelta.errorCode)
+        // Zwei Gründe, zwei Sätze: "nicht abgesagt" verlangt etwas anderes als "kein Delta".
+        assertTrue(notSkipped.message != noDelta.message)
     }
 
     @Test

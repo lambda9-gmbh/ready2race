@@ -34,6 +34,10 @@ data class UpdateEventRequest(
     val showBreaksOnPublicBoards: Boolean,
     /** Ab welchem Zustand ein Lauf als Ergebnis auf den öffentlichen Ansichten erscheint. */
     val publicResultsVisibility: PublicResultsVisibility,
+    /** Ob die Durchführungsseite ihren Stand im Hintergrund nachzieht. */
+    val executionAutoRefresh: Boolean,
+    /** Takt dieses Abgleichs in Sekunden; Grenzen siehe [ExecutionAutoRefresh]. */
+    val executionAutoRefreshSeconds: Int,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -42,6 +46,7 @@ data class UpdateEventRequest(
             this::location validate notBlank,
             this::invoicePrefix validate notBlank,
             this::mixedTeamTerm validate notBlank,
+            ExecutionAutoRefresh.validateSeconds(executionAutoRefreshSeconds),
         )
 
     companion object {
@@ -66,6 +71,8 @@ data class UpdateEventRequest(
                 autoCreateFollowingRounds = false,
                 showBreaksOnPublicBoards = false,
                 publicResultsVisibility = PublicResultsVisibility.FINISHED_ONLY,
+                executionAutoRefresh = true,
+                executionAutoRefreshSeconds = ExecutionAutoRefresh.DEFAULT_SECONDS,
             )
     }
 }

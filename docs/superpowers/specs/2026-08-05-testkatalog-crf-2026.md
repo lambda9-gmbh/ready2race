@@ -4,7 +4,7 @@
 **Zweck:** Ein Katalog aller Fälle, die vor der Regatta am 14.08. auf **einem** gebauten Stand
 durchlaufen werden. Er sammelt die Fälle über alle Arbeitsstränge (Athleten-Anzeige, Zeitstrahl,
 RaceClocker, Schiedsrichter-Dashboard, Betrieb, Zeitnahme-Einstellungen, Urkunden, Lauf-Status,
-Prüfungsschweregrad), damit der große Test in der Woche vom 10.08. nicht aus dem Gedächtnis
+Prüfungsschweregrad, Vereinskette, Wertungskategorien), damit der große Test in der Woche vom 10.08. nicht aus dem Gedächtnis
 zusammengesucht werden muss.
 
 > **Am 07.08. dazugekommen.** An diesem Tag liefen sechs Worktrees parallel; sie sind alle in
@@ -45,7 +45,10 @@ nicht die Erwartung anpassen.
    `backend/` und `frontend/` sind gitignored und fehlen in frischen Worktrees.
 4. **Migrationen.** Wechselt die Dev-DB zwischen Branches, kann Flyway Lücken melden;
    `-Dflyway.outOfOrder=true` beim Maven-Aufruf lässt die fehlenden Migrationen nachlaufen.
-5. **Daten.** Veranstaltung mit Zeitplan, mindestens einem Wettkampf mit ≥ 4 Booten, davon eines
+5. **Daten.** Für **L** zusätzlich: mindestens zwei Wertungskategorien, einem Lauf mit Booten aus
+   beiden, einem Boot ganz ohne Kategorie, einem Gleichstand und einem Wettkampf ohne jede
+   Kategorie (Regressionsfall L5).
+   Veranstaltung mit Zeitplan, mindestens einem Wettkampf mit ≥ 4 Booten, davon eines
    abgemeldet, und einem Wettkampf mit gepflegten RaceClocker-URLs. Für den Bahn-Ablauf (C8) einen
    Lauf mit 6 Booten, davon eines ohne Zeit und eines gar nicht in RaceClocker. Für G eine
    Siegerurkunden-Vorlage, ein Mannschaftsboot und eine Renngemeinschaft; zusätzlich **ein Verein mit
@@ -138,7 +141,7 @@ nicht die Erwartung anpassen.
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
 | C1 | Startlisten-Export | Export trägt die R2R-UUID in „Extra info"; ohne dieses Mapping findet der Pull keine Boote | `dd8d67b8` | |
-| C2 | Wellenname | Wellenname enthält die Startzeit, Lauf wird im Feed gefunden | `09e6a642` | |
+| C2 | Wellenname | Wellenname lautet `10:30 \| 12 JM4x \| AF1` (Startzeit, Rennnummer und Kürzel, Laufname), Lauf wird im Feed gefunden | `09e6a642` | |
 | C3 | Ergebnisse ziehen | Zeiten und Plätze landen am richtigen Boot, Plätze aus den Zeiten abgeleitet | `dd8d67b8` | |
 | C4 | Teil-Pull | Ein Pull mit nur teilweise genommenen Zeiten ist wiederholbar, ohne die übrigen Boote zu beschädigen | `b1e2e238` | |
 | C5 | Echter Start | Früheste gemessene Startzeit überschreibt `started_at`, auch gegen einen manuellen Stempel | `f86665ae`, `e4cb8753` | |
@@ -178,6 +181,31 @@ Lauf** (C16), und eine **Handeingabe gewinnt** immer gegen die Automatik (C21). 
 | C24 | Fehler reißt nichts mit | Einen Lauf mit doppelten Crews in RaceClocker anlegen: nur dieser Lauf trägt den Fehler, die übrigen Läufe derselben Veranstaltung laufen weiter. Dasselbe mit einer unerreichbaren URL — dann tragen alle Läufe an dieser URL denselben Grund | `6f39d0f9` | |
 | C25 | Kein Dauer-Alarm | Solange eine Welle in RaceClocker noch nicht angelegt ist oder jedes Boot `In race…` zeigt, erscheint **keine** Warnung — das ist der Normalzustand. Das Live-Dashboard warnt erst, wenn der Abruf wirklich hängt | `b1d42612`, `89f31d1e` | |
 | C26 | Takt-Untergrenze und ETag | Takt auf `1` stellen: die Untergrenze greift, es geht kein Dauerfeuer an raceclocker.com raus, und das Formular sagt, was abgelehnt wurde. Parallel im Netzwerk-Tab: das Live-Dashboard liefert weiter `304`-Antworten — der Abrufzeitpunkt darf nicht in seinem ETag stecken | `5778a111`, `2628e50a` | |
+
+### C27–C34 — Neustart eines Rennens in RaceClocker
+
+Neu am 09.08. (`e1742e0a`). Setzt der Zeitnehmer eine Welle zurück, weil ein Start ungültig war,
+liefert der Feed danach `00:00:00.0` als Startzeit und `Not started` als Ergebnis — er behauptet
+also, dieser Lauf sei nie gefahren. ready2race übernimmt diese Aussage jetzt und löscht Zeiten,
+Plätze, Ausscheidungen, Strafzeiten und den Ist-Start. Vorher blieb der ungültige Lauf stehen,
+während RaceClocker längst neu maß.
+
+Der ganze Block hängt an **einer** Unterscheidung, und die ist der Grund, warum C28 direkt neben
+C27 steht: „keine Zeile trägt ein Ergebnis" ist auch der Zustand jedes laufenden Rennens, solange
+die Boote unterwegs sind. Nur die gemessene Startzeit trennt die beiden. Greift der Reset falsch,
+nimmt er einem laufenden Lauf die schon eingelaufenen Boote weg — der teuerste Fehler in diesem
+Block, und einer, den am Renntag niemand rückgängig machen kann.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| C27 | Neustart löscht | Gefahrener, gewerteter Lauf; in RaceClocker die Welle zurücksetzen. Innerhalb eines Takts sind Zeiten, Plätze, DNS/DNF/DQ und Strafzeiten der zugeordneten Boote weg und der Ist-Start ist leer. Der Lauf bleibt **aktiv** — die Automatik deaktiviert ihn nicht | `e1742e0a` | |
+| C28 | Boote auf dem Wasser | Gegenprobe zu C27: Welle gestartet, noch keine Zielzeit. Es wird **nichts** gelöscht, und es erscheint auch keine Warnung (zusammen mit C25 prüfen). Der Unterschied zu C27 ist allein die gemessene Startzeit im Feed | `e1742e0a` | |
+| C29 | Reset über den Knopf | „Ergebnisse eintragen → RaceClocker" auf einem zurückgesetzten Rennen löscht genauso wie die Automatik und meldet **Erfolg** — nicht mehr „keine Ergebnisse". Ungewohnt zu lesen, aber richtig: geschrieben wurde ja etwas | `e1742e0a` | |
+| C30 | Bahnen überleben | Startnummern und Bahnen bleiben nach dem Reset unverändert; die Zeilen stehen weiter im Feed, nur ohne Zeiten | `e1742e0a` | |
+| C31 | Zweiter Versuch | Nach dem Reset die Welle erneut starten: Aktivierung, Ist-Start und Zeiten kommen normal wieder. Besonders auf `started_at` achten — es war vorher gesetzt, wurde geleert und muss neu gestempelt werden | `e1742e0a` | |
+| C32 | Boot außerhalb des Feeds | Ein Boot, das RaceClocker nicht kennt und dessen Ergebnis von Hand steht, behält es beim Reset — angefasst werden nur Boote mit einer Zeile im Feed | `e1742e0a` | |
+| C33 | Gesperrte Runde | Ein Lauf, aus dessen Plätzen die nächste Runde bereits gesetzt ist, wird auch vom Reset nicht angefasst — weder über den Job noch über den Knopf. Dieselbe Sperre wie beim Schreiben; ohne sie würde ein Neustart in RaceClocker Plätze löschen, aus denen die Setzung längst abgeleitet ist | `e1742e0a` | |
+| C34 | Handeingabe und Reset | Automatik läuft, Ergebnis von Hand eingetragen: der Lauf ist pausiert (C21) und ein Neustart in RaceClocker fasst ihn **nicht** an. Nach „Automatik wieder aufnehmen" (C23) schlägt der Reset dagegen durch und nimmt den Handeintrag mit. Das ist gewollt — aber einmal gesehen haben, bevor es am Renntag passiert | `e1742e0a` | |
 
 ## D — Schiedsrichter-Dashboard
 
@@ -373,6 +401,112 @@ Postgres geprüft, aber nichts davon wurde je gerendert.
 
 ---
 
+## K — Manueller Check-in/-out je Athlet:in
+
+Am 09.08. gebaut. Der QR-Scan am Steg bleibt der reguläre Weg; für den Fall, dass ein Boot ohne
+Scan abgelegt hat und die Crew trotzdem auf dem Wasser ist, können Admin und Schiedsrichter
+Einträge von Hand ergänzen und bestehende berichtigen. Jede Änderung verlangt eine Begründung und
+hinterlässt Vorher-/Nachher-Stand samt Urheber in `participant_tracking_change`. Entwurf:
+`docs/superpowers/specs/2026-08-09-manueller-checkin-checkout-design.md`. Migration
+`V202608091600`.
+
+**Kein Agent hat die laufende Anwendung gesehen.** Backend-Suite (632) und Frontend (584) sind
+grün, ein HTTP-Test belegt die Rechteprüfung auf allen drei Endpunkten — gerendert wurde nichts
+davon je. Der wunde Punkt ist **K13**: ob ein von Hand nachgetragener Eintrag im
+Schiedsrichter-Dashboard dieselbe Wirkung hat wie ein Scan, ist nirgends geprüft.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| K1 | Rechte | Aktion und Dialog erscheinen **nur** für Admin und Schiedsrichter (`UPDATE LIVE_DASHBOARD` oder `UPDATE EVENT`). Mit einem Vereinsvertreter-Konto anmelden: weder Zeilenaktion noch Stift, und der direkte Aufruf von `GET /event/{eventId}/participant/{participantId}/tracking` liefert 403 — dort stehen Begründungen im Klartext | `f54cb98d` | |
+| K2 | Der Anlassfall | Ein Boot hat ohne Scan abgelegt. Für eine Person Check-in **und** Check-out von Hand nachtragen, Uhrzeiten frei setzen. Beide Einträge stehen danach im Verlauf und tragen den Chip „manuell" | `f54cb98d` | |
+| K3 | QR-Eintrag berichtigen | Eine Person regulär per QR einchecken, dann im Dialog die Uhrzeit korrigieren. Der Chip wechselt auf **„per QR, berichtigt"** — nicht auf „manuell": dass der Eintrag vom Scanner kam, wird durch die Korrektur nicht unwahr | `f54cb98d` | |
+| K4 | Begründung ist Pflicht | Speichern ohne Begründung ist nicht möglich (Knopf bleibt gesperrt). Gegenprobe über die API mit leerem Grund: 422, nicht 500. Die Datenbank hält zusätzlich dagegen (`check (length(btrim(reason)) > 0)`) | `f54cb98d` | |
+| K5 | Freie Zeitwahl | Ein Zeitpunkt Stunden in der Vergangenheit wird angenommen — das ist der Normalfall, nicht der Sonderfall. Auch ein Zeitpunkt in der Zukunft ist zugelassen; bewusst keine Sperre | `f54cb98d` | |
+| K6 | Widersprüchliche Reihenfolge | Ein Check-out ohne vorherigen Check-in, oder ein Eintrag, der eine spätere Zeile umdreht: die Meldung muss **auf Deutsch erklären, was zu tun ist** („An- und Abmeldungen müssen sich abwechseln und mit einer Anmeldung beginnen"), nicht nach Speicherfehler klingen | `f54cb98d` | |
+| K7 | Gleiche Sekunde | Zwei Einträge derselben Person auf exakt denselben Zeitpunkt werden abgelehnt. Sonst wäre nicht bestimmt, ob die Person am Ende auf dem Wasser ist | `f54cb98d` | |
+| K8 | Änderungsverlauf lesbar | Unten im Dialog steht je Änderung: Zeitpunkt, Name der Person, Vorher → Nachher und die Begründung. Nach zwei Korrekturen desselben Eintrags stehen **beide** da — die zweite überschreibt die erste nicht | `f54cb98d` | |
+| K9 | Schiedsrichter-Ansicht | Im Detail-Dialog einer Mannschaft trägt jede Person einen eigenen Steg-Chip („Drin 9:35" / „Draußen" / „kein Steg-Scan") und daneben den Stift. Bis hierher zeigte der Dialog gar nicht, an wem ein fehlender Scan hängt | `f54cb98d` | |
+| K10 | Protokoll-Spalte | Event-Seite, Tab Teilnehmende, Tabelle „Status Protokoll": die Spalte „Erfassung" unterscheidet die drei Fälle. Über die Zeilenaktion öffnet sich derselbe Dialog | `f54cb98d` | |
+| K11 | QR-App unverändert | **Regression.** Ein regulärer Scan in der QR-App muss weiterhin funktionieren und „per QR" erzeugen. Die alten Meldungen („ist bereits eingecheckt") dürfen sich nicht geändert haben | `f54cb98d` | |
+| K12 | Nichts nach außen | Öffentliche Anzeige und Athleten-Ansicht zeigen weder Bearbeitung noch Begründungen. Auch die Tabelle, die ein Vereinsvertreter über `/participantTracking` erreichen kann, nennt **keine Namen** von Bearbeitern und keinen Grund — nur Herkunft und Anzahl der Korrekturen | `f54cb98d` | |
+| K13 | Wirkung aufs Dashboard | **Der eigentliche Zweck, und der einzige Punkt ohne jeden Beleg.** Für die letzte fehlende Person eines Bootes den Check-in nachtragen: beim nächsten Poll muss die Mannschaft im Schiedsrichter-Dashboard „abgelegt um …" zeigen und der Arena-Chip grün werden — genau so, als wäre gescannt worden. Wenn irgendwo etwas klemmt, dann hier | `f54cb98d` | |
+| K14 | Bestand aus der Zeit davor | Eine Regatta mit alten Scans öffnen: die Einträge tragen alle „per QR", niemand ist als manuell markiert. Die Migration setzt den Bestand auf `QR` — schlägt das fehl, sieht die ganze Historie nach Handarbeit aus | `f54cb98d` | |
+
+---
+
+## L — Ergebnisse nach Wertungskategorien
+
+Am 09.08. gebaut. Bis dahin zeigte jede Ergebnisliste **eine** gemeinsame Rangliste; wer in der
+Breitensportwertung Erster war, fand sich dort als Sechster wieder und musste selbst
+zusammensuchen, welche der fünf Boote davor überhaupt in seiner Wertung fuhren. Öffentliche
+Anzeige, Schiedsrichter-Dashboard, Athleten-Anzeige und Platzierungsansicht trennen jetzt in
+Abschnitte je Kategorie und zählen in jedem Abschnitt ab 1. Entwurf:
+`docs/superpowers/specs/2026-08-09-ergebnisse-nach-wertungskategorien-design.md`.
+
+**Teilweise in der laufenden Anwendung gesehen** (09.08.2026, Agent im Browser, Dev-Stand auf
+`:5127`): L2, L3, L4, L5, L7, L8, L12 und L20 sind dort grün gewesen — das ist **kein** Ersatz für den
+Durchgang eines Menschen, aber die Abschnitte wurden gerendert und stimmten. Alles, was eine
+Anmeldung braucht (L1, L9–L11, L13–L19, L21), ist weiterhin unbelegt: ein Agent darf keine
+Zugangsdaten eingeben. L12 ging trotzdem, weil das Ergebnis-PDF auch ohne Anmeldung abrufbar ist
+(`GET /api/results/event/{eventId}`).
+
+**Zwei Befunde aus genau diesem Durchgang:**
+
+1. **Kategorien ohne Zuordnung zur Veranstaltung sind der Normalfall, nicht der Ausnahmefall.** Im
+   Bestand tragen 32 Boote „Internationale Wertung" und 55 „Deutsche Meisterschaft Wertung", ohne
+   dass diese Kategorien je einer Veranstaltung zugeordnet wurden. Bis `9fbe99ed` sortierten sie
+   auf Stelle 0 und drängten sich damit **vor** jede gepflegte Reihenfolge. Seither stehen sie
+   hinten und untereinander alphabetisch — siehe L22.
+2. **„gemeldet von … | undefined".** Ergebnisdialog und Platzierungsansicht hängten den
+   Mannschaftsnamen ohne Prüfung an, und der ist bei einem Einer meistens leer — in **jeder** Zeile
+   stand `undefined`. Älter als die Kategoriewertung, beim Durchgang aufgefallen und gleich
+   mitbehoben.
+3. **Ein Gleichstand im Lauf ist unmöglich.** `place_unique_in_match` (aus `V202507040930`) verbietet
+   zwei Boote mit demselben Platz im selben Lauf. Der Gleichstandsfall gehört damit ausschließlich
+   zu den Wettkampf-Platzierungen, wo `CompetitionSetupPlacesOption.EQUAL` mehrere Boote gleich
+   wertet — L6 ist entsprechend umgeschrieben.
+
+**Testdaten liegen bereit.** `docs/seeds/seed-block-l-wertungskategorien.sql` legt vier
+Kategorien an, ordnet sie der „Coastal-Regatta Flensburg 2026" in einer bewusst **nicht**
+alphabetischen Reihenfolge zu und verteilt sie auf die Boote des Wettkampfs 11. Am 09.08. war das
+in der Dev-Datenbank bereits eingespielt; wer auf einer frischen Datenbank testet, spielt es
+nach:
+```
+docker exec -i backend-db-1 psql -U developer -d ready2race < docs/seeds/seed-block-l-wertungskategorien.sql
+```
+
+**Voraussetzung für diesen Block:** eine Veranstaltung mit **mindestens zwei** zugeordneten
+Wertungskategorien, einem Lauf, in dem Boote **beider** Kategorien starten, **einem Boot ganz ohne
+Kategorie**, einem Gleichstand (zwei Boote mit demselben Platz) und einem abgemeldeten Boot.
+Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfall L5.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| L1 | Reihenfolge pflegen | Veranstaltung → Einstellungen → Wertungskategorien: Hoch/Runter verschiebt eine Kategorie. Nach dem Neuladen steht sie noch dort. Die Reihenfolge hängt an der **Veranstaltung**, nicht an der Kategorie — bei einer zweiten Regatta darf sie anders sein | `9fbe99ed` | |
+| L2 | Abschnitte folgen der Reihenfolge | Öffentliche Ergebnisanzeige, Lauf öffnen: die Abschnitte stehen in genau der unter L1 gesetzten Folge — nicht alphabetisch. Zum Prüfen die Reihenfolge unter L1 absichtlich **gegen** das Alphabet stellen | `9fbe99ed` |  `AGENT 09.08.` |
+| L3 | Zählung ab 1 je Abschnitt | Jeder Abschnitt beginnt bei 1. Ein Boot, das im Lauf Sechster ist, aber Erster seiner Kategorie, trägt die 1 | `9fbe99ed` |  `AGENT 09.08.` |
+| L4 | Ohne Wertungskategorie | Das Boot ohne Kategorie steht in einem eigenen Abschnitt „Ohne Wertungskategorie" — **immer am Ende**, auch wenn eine echte Kategorie weiter hinten einsortiert ist | `9fbe99ed` |  `AGENT 09.08.` |
+| L5 | Wettkampf ohne Kategorien unverändert | **Die zentrale Zusage.** Ein Wettkampf, in dem kein Boot eine Kategorie trägt, sieht aus wie vorher: eine durchgehende Liste, **keine** Überschrift „Ohne Wertungskategorie". Vorher/Nachher am selben Lauf vergleichen | `9fbe99ed` |  `AGENT 09.08.` |
+| L6 | Gleichstand — **nur in den Platzierungen** | Im Lauf nicht herstellbar: `place_unique_in_match` verbietet zwei Boote mit demselben Platz. Zu prüfen ist die Wettkampf-Platzierung einer Runde mit Platzvergabe „gleich" (`EQUAL`): alle Boote dieser Runde tragen innerhalb ihrer Kategorie dieselbe Zahl, das nächste Boot lässt die Lücke (1, 1, 3 — kein Zweiter) | `9fbe99ed` | |
+| L7 | Abgemeldet, DNF, DSQ | Solche Boote bekommen **keinen** Kategorieplatz und stehen am Ende **ihres eigenen** Abschnitts — sie verschwinden nicht. Eine Besatzung, die ihr Boot im Ergebnis nicht findet, hält das für einen Anzeigefehler | `9fbe99ed` |  `AGENT 09.08.` |
+| L8 | Athleten-Anzeige gleicht der öffentlichen | `/board/{eventId}`: derselbe Lauf zeigt dieselben Abschnitte in derselben Folge und **dieselben Zahlen** wie die öffentliche Seite. Nebeneinander auf zwei Schirmen vergleichen | `9fbe99ed` |  `AGENT 09.08.` |
+| L9 | Schiedsrichter: laufender Lauf bleibt Bahnliste | Solange kein Boot gewertet ist, zeigt die Karte **keine** Überschriften und sortiert nach Bahn. Am Steg wird sie gegen das Wasser gelesen — bewusste Abweichung von den anderen Ansichten | `9fbe99ed` | |
+| L10 | Schiedsrichter: gewerteter Lauf | Sobald das erste Boot gewertet ist, erscheinen die Abschnitte, und die Zahl im Kreis ist der **Kategorie**platz — dieselbe Zahl wie öffentlich | `9fbe99ed` | |
+| L11 | Platzierungsansicht | Wettkampf → Durchführung → Platzierungen: Abschnitte mit Überschrift, Kategorieplatz, ungewertete Boote mit „-" | `9fbe99ed` | |
+| L12 | Ergebnis-PDF | Veranstaltungsergebnisse herunterladen: je Wettkampf eine Überschrift pro Kategorie, darunter die Kategorieplätze. Ein Wettkampf ohne Kategorien behält seine bisherige Form | `9fbe99ed` | `AGENT 09.08.` |
+| L13 | Urkunde ohne die neue Option | **Regressionsfall.** Schalter „Wertungskategorie drucken" aus (Vorgabe): die Urkunde ist Zeichen für Zeichen die von vorher. Eine vor dem Update erzeugte danebenlegen | `9fbe99ed` | |
+| L14 | Option an, Vorlage ohne Platzhalter | **Die wahrscheinlichste Enttäuschung.** Schalter an, aber die Vorlage trägt keinen `RATING_CATEGORY`-Platzhalter: es ändert sich **nichts**. Das ist so gebaut und keine Störung — wer die Zeile will, muss sie einmal in der Vorlage setzen | `9fbe99ed` | |
+| L15 | Option an, Platzhalter gesetzt | Im Vorlagen-Editor einen `RATING_CATEGORY`-Platzhalter setzen, Urkunde mit Schalter erzeugen: die Kategorie steht als klar erkennbare eigene Zeile, PDF **und** DOCX | `9fbe99ed` | |
+| L16 | Urkundenplatz bleibt wettkampfweit | **Ausdrückliche Entscheidung, kein Fehler.** Ein Boot, das in seiner Kategorie Erster, im Wettkampf aber Dritter ist, trägt auf der Urkunde „3. Platz" — auch bei eingeschalteter Option. Begründung: eine Urkunde hängt jahrelang neben älteren, auf denen „3. Platz" den Platz im Rennen meinte | `9fbe99ed` | |
+| L17 | Platzgrenze der Urkunden | „Bis Platz 3" greift weiterhin auf den **wettkampfweiten** Platz. Es gibt also nicht je Kategorie drei Urkunden — beim Test bewusst gegenprüfen, ob das für die CRF so gewollt ist | `9fbe99ed` | |
+| L18 | Vorlagen-Editor | Der neue Platzhaltertyp ist in der Auswahl, heißt auf Deutsch „Wertungskategorie", und die Vorschau zeigt den Beispieltext „Meisterschaften" an der gesetzten Stelle | `9fbe99ed` | |
+| L19 | Neue Kategorie hängt hinten an | Einer Veranstaltung eine weitere Kategorie zuordnen: sie steht in Konfiguration und Ergebnisliste **am Ende**, nicht dazwischen | `9fbe99ed` | |
+| L20 | Kategorie ohne Boote | Eine zugeordnete Kategorie, in der niemand gemeldet ist, erzeugt in **keiner** Ergebnisliste einen leeren Abschnitt | `9fbe99ed` |  `AGENT 09.08.` |
+| L22 | Kategorie ohne Zuordnung zur Veranstaltung | Ein Boot trägt eine Kategorie, die der Veranstaltung nie zugeordnet wurde (im Bestand der Regelfall): ihr Abschnitt steht **hinter** allen konfigurierten, untereinander alphabetisch, und vor „Ohne Wertungskategorie". Am 09.08. im Browser bestätigt: „Deutsche Meisterschaft Wertung" vor „Internationale Wertung", beide hinter den gepflegten | `9fbe99ed` | `AGENT 09.08.` |
+| L21 | Altdaten nach der Migration | Eine Veranstaltung, die vor dem Update Kategorien hatte: die Reihenfolge ist nach dem Update die bisher gezeigte alphabetische. Die Migration allein darf keine Anzeige verändert haben | `9fbe99ed` | |
+
+---
+
 ## Detailablauf A6/C7 — Zeitstrafe während der Lauf läuft
 
 Der Kernfall: die Anzeige muss eine nachgetragene Strafe übernehmen, **bevor** der Lauf beendet ist.
@@ -458,9 +592,31 @@ bleibende Nummer erwartet, siehe den offenen Punkt „Bootsnummer" unten.
   langsam oder weg, steht in jedem Lauf ein Fehler. Wird sie ausgelassen, bleibt es beim Klicken pro
   Lauf. Vorschlag: am Testtag mit eingeschalteter Automatik fahren und die Rückfallregel („Schalter
   aus, weiter wie bisher") einmal geübt haben, damit sie am 14.08. niemand suchen muss.
+- **Platzgrenze der Urkunden bei Kategoriewertung (L17).** Der gedruckte Platz und die Grenze
+  „bis Platz 3" bleiben beide wettkampfweit — bewusst so entschieden. Für eine Regatta, in der die
+  Kategorien getrennte Wertungen *sind*, kann das falsch wirken: die Breitensportwertung bekommt
+  dann womöglich gar keine Urkunde, weil ihre besten Boote im Gesamtfeld hinter Platz 3 liegen. Vor
+  der Regatta entscheiden, sonst fehlen am Tag Urkunden.
+- **Laufender Lauf ohne Abschnitte (L9).** Die Schiedsrichter-Karte und der Live-Tab der
+  öffentlichen Seite gruppieren erst, wenn gewertet wird. Falls die Schiedsrichter die Trennung
+  schon während des Laufs erwarten, ist das eine Änderung — am Testtag ansehen und entscheiden.
 - **Wer pflegt den Prüfungsschweregrad? (I8).** Ohne optimistisches Sperren überschreiben zwei
   gleichzeitige Bearbeiter sich kommentarlos. Entweder es wird gesperrt oder es gilt organisatorisch:
   einer pflegt.
+- **Wer darf von Hand ein-/auschecken? (K1).** Die Funktion hängt an `UPDATE LIVE_DASHBOARD` **oder**
+  `UPDATE EVENT` — bewusst an vorhandenen Rechten, damit in der laufenden Veranstaltung nichts
+  nachkonfiguriert werden muss. Damit kann sie aber jeder, der das Dashboard bedient. Am Testtag
+  gegenprüfen, ob das der gewünschte Kreis ist; wenn nicht, braucht es doch ein eigenes Privileg —
+  und dann muss es der Schiedsrichter-Rolle **vor** dem 14.08. zugewiesen werden.
+- **Reset gegen Handeintrag (C34).** Ein zurückgesetztes Rennen löscht die Ergebnisse der Boote,
+  die im Feed stehen — auch die, die jemand von Hand eingetragen hat. Die Automatik schützt sich
+  davor selbst (Handeingabe pausiert den Lauf), der Knopf und die wieder aufgenommene Automatik tun
+  es nicht. Am Testtag entscheiden, ob das reicht oder ob ein zurückgesetztes Rennen vor dem
+  Löschen nachfragen soll. Solange nichts nachfragt, gilt organisatorisch: nach einer Handeingabe
+  die Automatik erst wieder aufnehmen, wenn RaceClocker den Lauf tatsächlich neu gefahren hat.
+- **Löschen fehlt bewusst (K).** Ein falscher Eintrag wird korrigiert, nicht getilgt. Wenn am
+  Testtag ein Fall auftaucht, in dem ein Eintrag ersatzlos weg muss (etwa eine komplett falsche
+  Person), gibt es dafür heute keinen Weg außer SQL — vor der Regatta entscheiden, ob das reicht.
 
 ## Nicht in diesem Katalog
 

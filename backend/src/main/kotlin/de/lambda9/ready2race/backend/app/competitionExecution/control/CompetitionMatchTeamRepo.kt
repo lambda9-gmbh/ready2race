@@ -23,6 +23,15 @@ object CompetitionMatchTeamRepo {
     /** Spaltenname, unter dem [PARTICIPANT_CLUB] in den Records der drei Anzeige-Abfragen steht. */
     const val PARTICIPANT_CLUB_NAME = "participant_club_name"
 
+    /**
+     * Spaltennamen der Wertungskategorie. Aliasiert, weil `RATING_CATEGORY.ID`/`NAME` in einem
+     * Record neben `CLUB.NAME` und `NAMED_PARTICIPANT.NAME` sonst nicht eindeutig anzusprechen
+     * wären.
+     */
+    const val RATING_CATEGORY_ID = "rating_category_id"
+    const val RATING_CATEGORY_NAME = "rating_category_name"
+    const val RATING_CATEGORY_SORT_ORDER = "rating_category_sort_order"
+
     fun get(matchIds: List<UUID>): JIO<List<CompetitionMatchTeamRecord>> = Jooq.query {
         with(COMPETITION_MATCH_TEAM) {
             selectFrom(this)
@@ -83,6 +92,9 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT_CLUB.NAME.`as`(PARTICIPANT_CLUB_NAME),
                 NAMED_PARTICIPANT.NAME.`as`("named_role"),
                 EVENT.MIXED_TEAM_TERM,
+                RATING_CATEGORY.ID.`as`(RATING_CATEGORY_ID),
+                RATING_CATEGORY.NAME.`as`(RATING_CATEGORY_NAME),
+                EVENT_RATING_CATEGORY.SORT_ORDER.`as`(RATING_CATEGORY_SORT_ORDER),
                 TIMECODE.TIME,
                 TIMECODE.BASE_UNIT,
                 TIMECODE.MILLISECOND_PRECISION
@@ -106,6 +118,14 @@ object CompetitionMatchTeamRepo {
                 )
                 .leftJoin(EVENT_REGISTRATION).on(EVENT_REGISTRATION.ID.eq(COMPETITION_REGISTRATION.EVENT_REGISTRATION))
                 .leftJoin(EVENT).on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID))
+                .leftJoin(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY))
+                // Die Reihenfolge der Ergebnisabschnitte haengt an der Zuordnung zur
+                // Veranstaltung, nicht an der Kategorie selbst - deshalb der zweite Join.
+                .leftJoin(EVENT_RATING_CATEGORY)
+                .on(
+                    EVENT_RATING_CATEGORY.EVENT.eq(EVENT_REGISTRATION.EVENT)
+                        .and(EVENT_RATING_CATEGORY.RATING_CATEGORY.eq(RATING_CATEGORY.ID))
+                )
                 .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
                 .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
                 .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())

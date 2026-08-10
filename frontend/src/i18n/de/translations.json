@@ -296,7 +296,8 @@
           "TEAM_NAME": "Mannschaftsname",
           "EVENT_DATE": "Veranstaltungsdatum",
           "EVENT_LOCATION": "Veranstaltungsort",
-          "FREE_TEXT": "Freier Text"
+          "FREE_TEXT": "Freier Text",
+          "RATING_CATEGORY": "Wertungskategorie"
         },
         "name": "Eigene Bezeichnung (optional)",
         "nameHelp": "Eine eigene Bezeichnung, um diesen Platzhalter zu identifizieren",
@@ -391,9 +392,9 @@
   },
   "club": {
     "tabs": {
-        "clubs": "Vereine",
-        "shortNames": "Kurzformen",
-        "settings": "Einstellungen"
+      "clubs": "Vereine",
+      "shortNames": "Kurzformen",
+      "settings": "Einstellungen"
     },
     "shortName": {
       "names": "Vereinsnamen",
@@ -576,7 +577,30 @@
           "alreadyCheckedIn": "Diese Person ist bereits eingecheckt — es ist nichts weiter zu tun.",
           "notCheckedIn": "Diese Person ist gar nicht eingecheckt und kann deshalb nicht ausgecheckt werden.",
           "qrCodeNotAssociated": "Dieses Bändchen gehört zu keinem Teilnehmer. Bitte es zuerst in der QR-Verwaltung einer Person zuweisen.",
-          "qrCodeNotFound": "Dieses Bändchen ist im System nicht bekannt. Bitte den Code prüfen oder ein anderes Bändchen nehmen."
+          "qrCodeNotFound": "Dieses Bändchen ist im System nicht bekannt. Bitte den Code prüfen oder ein anderes Bändchen nehmen.",
+          "entryNotFound": "Diesen Eintrag gibt es nicht (mehr). Bitte den Verlauf neu laden.",
+          "sequenceConflict": "Mit diesem Zeitpunkt widerspräche sich der Verlauf: An- und Abmeldungen müssen sich abwechseln und mit einer Anmeldung beginnen.",
+          "timestampCollision": "Für diese Person gibt es bereits einen Eintrag auf genau diesen Zeitpunkt. Bitte eine Minute abweichen."
+        },
+        "manual": {
+          "title": "Check-in/-out von {{name}}",
+          "hint": "Regulär wird am Steg der QR-Code gescannt. Einträge, die hier von Hand entstehen oder berichtigt werden, sind ausdrücklich der dokumentierte Ausnahmeweg: sie werden mit Begründung, Vorher-Stand und Urheber festgehalten und in allen Ansichten als manuell gekennzeichnet.",
+          "entries": "Verlauf",
+          "noEntries": "Für diese Person ist bisher nichts erfasst.",
+          "add": "Eintrag von Hand ergänzen",
+          "correct": "Eintrag berichtigen",
+          "reason": "Begründung",
+          "reasonHint": "Warum wird von Hand eingetragen? Der Text bleibt dauerhaft im Protokoll.",
+          "trail": "Änderungsverlauf",
+          "changeCreated": "Von Hand angelegt: {{entry}}",
+          "sourceQr": "per QR",
+          "sourceQrCorrected": "per QR, berichtigt",
+          "sourceManual": "manuell",
+          "source": "Erfassung",
+          "saved": "Eintrag gespeichert",
+          "saveError": "Der Eintrag konnte nicht gespeichert werden.",
+          "open": "Check-in/-out bearbeiten",
+          "notTracked": "kein Steg-Scan"
         }
       },
       "certificate": {
@@ -640,6 +664,11 @@
       "FINISHED_ONLY": "Nur beendete Läufe",
       "RESULTS_COMPLETE": "Auch vollständig gewertete Läufe",
       "hint": "Gilt für Athleten-Anzeige, Kiosk-Ansicht und die öffentliche Ergebnisseite. Standardmäßig nur beendete Läufe: solange ein Lauf nicht beendet ist, kann noch eine Zeitstrafe kommen, und ein bereits veröffentlichtes Ergebnis lässt sich nicht zurückholen."
+    },
+    "executionAutoRefresh": {
+      "label": "Durchführungsseite automatisch aktualisieren",
+      "seconds": "Takt in Sekunden",
+      "hint": "Die Durchführungsseite zieht Zeiten, Ergebnisse, Läufe, Rundenwechsel und Check-ins im eingestellten Takt im Hintergrund nach — ohne die Seite neu zu laden. Erlaubt sind 5 bis 60 Sekunden, voreingestellt sind 5. Während ein Dialog offen ist, ruht der Abgleich."
     },
     "invoice": {
       "prefix": "Rechnungspräfix",
@@ -949,6 +978,10 @@
         "pairingsRecalculated": "Paarung neu berechnet",
         "progress": {
           "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
+        },
+        "autoRefresh": {
+          "lastUpdated": "Daten von {{time}}",
+          "disconnected": "Keine Verbindung"
         },
         "nextRound": {
           "create": "Erstelle nächste Runde",
@@ -1720,6 +1753,20 @@
       "skipConfirm_other": "Nur dieser eine Lauf entfällt: „{{label}}“ um {{time}}. Die übrigen {{count}} Läufe der Runde „{{round}}“ bleiben unverändert.",
       "skipConfirmOnly": "Der Lauf „{{label}}“ um {{time}} entfällt und wird von der Kette ausgelassen.",
       "skipConfirmFree": "Der Programmpunkt „{{label}}“ um {{time}} entfällt.",
+      "advance": {
+        "title": "Zeitplan vorziehen",
+        "intro": "„{{label}}“ um {{time}} ist entfallen. Dadurch werden {{minutes}} Minuten frei.",
+        "targetSlot": "Bis-Slot",
+        "help": "Alle Slots vom nächsten bis einschließlich des gewählten Bis-Slots rücken um {{minutes}} Minuten nach vorn. Alles danach behält seine Zeit — dort entsteht ein Puffer.",
+        "apply": "Vorziehen",
+        "decline": "Nicht vorziehen",
+        "success": "Der Zeitplan wurde um {{minutes}} Minuten vorgezogen.",
+        "error": {
+          "noDelta": "Aus diesem Slot lässt sich keine frei gewordene Zeit ableiten — er hat keine gepflegte Dauer und keinen Slot hinter sich am selben Renntag. Der Zeitplan lässt sich über „Zeitplan anpassen“ von Hand verschieben.",
+          "slotNotSkipped": "Dieser Slot ist nicht (mehr) entfallen — vorgezogen wird nur in die Zeit, die eine Absage frei macht. Bitte den Zeitplan neu laden.",
+          "targetInvalid": "Der Bis-Slot gehört nicht zu den Slots, die nachrücken können. Bitte den Zeitplan neu laden und einen Slot hinter dem entfallenen wählen."
+        }
+      },
       "unskipConfirm": "Entfall für „{{label}}“ um {{time}} aufheben? Der Slot wird wieder normal berücksichtigt.",
       "activate": "Lauf aktivieren",
       "activateConfirm": "Lauf „{{label}}“ um {{time}} jetzt aktivieren?",
@@ -1840,6 +1887,12 @@
         "title": "Wertungskategorie zuweisen",
         "success": "Wertungskategorie erfolgreich hinzugefügt",
         "error": "Beim Hinzufügen der Wertungskategorie zu diesem Event ist ein Fehler aufgetreten"
+      },
+      "withoutCategory": "Ohne Wertungskategorie",
+      "order": {
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "hint": "Die Reihenfolge bestimmt, in welcher Folge die Abschnitte in Ergebnislisten erscheinen."
       }
     }
   },
@@ -2673,6 +2726,10 @@
         "competitionNotInEvent": "Dieser Wettkampf gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.",
         "isChallengeEvent": "Für eine Challenge-Veranstaltung gibt es keine Siegerurkunden — dort werden keine Läufe gefahren und keine Plätze vergeben. Teilnahmeurkunden lassen sich in der Teilnehmerliste herunterladen.",
         "unexpected": "Die Urkunden konnten nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
+      },
+      "ratingCategory": {
+        "label": "Wertungskategorie drucken",
+        "hint": "Nur sichtbar, wenn die Vorlage einen Platzhalter für die Wertungskategorie enthält. Die gedruckte Platzierung bleibt die des Wettkampfs."
       }
     }
   }

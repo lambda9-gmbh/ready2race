@@ -19,6 +19,13 @@ import {addEvent, updateEvent} from '@api/sdk.gen.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import FormInputDate from '@components/form/input/FormInputDate.tsx'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import {
+    AUTO_REFRESH_DEFAULT_SECONDS,
+    AUTO_REFRESH_MAX_SECONDS,
+    AUTO_REFRESH_MIN_SECONDS,
+    clampRefreshSeconds,
+} from '@components/event/competition/excecution/autoRefresh.ts'
 
 type EventForm = {
     name: string
@@ -41,6 +48,9 @@ type EventForm = {
     autoCreateFollowingRounds: boolean
     showBreaksOnPublicBoards: boolean
     publicResultsVisibility: PublicResultsVisibility
+    executionAutoRefresh: boolean
+    /** Als Text, weil FormInputNumber auf FormInputText sitzt; umgerechnet wird beim Absenden. */
+    executionAutoRefreshSeconds: string
 }
 
 const addAction = (formData: EventForm) => {
@@ -80,9 +90,14 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         autoCreateFollowingRounds: false,
         showBreaksOnPublicBoards: false,
         publicResultsVisibility: 'FINISHED_ONLY',
+        executionAutoRefresh: true,
+        executionAutoRefreshSeconds: String(AUTO_REFRESH_DEFAULT_SECONDS),
     }
 
     const formContext = useForm<EventForm>()
+
+    // Das Sekundenfeld hat nichts zu sagen, solange die Automatik aus ist.
+    const autoRefreshWatch = formContext.watch('executionAutoRefresh')
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
@@ -203,6 +218,22 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                 <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
                     {t('event.publicResultsVisibility.hint')}
                 </Typography>
+                <FormInputCheckbox
+                    name={'executionAutoRefresh'}
+                    label={t('event.executionAutoRefresh.label')}
+                />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.executionAutoRefresh.hint')}
+                </Typography>
+                <FormInputNumber
+                    name={'executionAutoRefreshSeconds'}
+                    label={t('event.executionAutoRefresh.seconds')}
+                    min={AUTO_REFRESH_MIN_SECONDS}
+                    max={AUTO_REFRESH_MAX_SECONDS}
+                    integer
+                    required={autoRefreshWatch}
+                    disabled={!autoRefreshWatch}
+                />
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate
@@ -236,6 +267,11 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         autoCreateFollowingRounds: formData.autoCreateFollowingRounds,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
+        executionAutoRefresh: formData.executionAutoRefresh,
+        // Der Takt bleibt auch bei abgeschalteter Automatik gespeichert — dann ist das Feld
+        // gesperrt und kann leer stehen. Begrenzt statt roh übernommen, damit ein leeres oder
+        // krummes Feld nicht als 0 beim Server ankommt, wo es nur abgelehnt würde.
+        executionAutoRefreshSeconds: clampRefreshSeconds(Number(formData.executionAutoRefreshSeconds)),
     }
 }
 
@@ -260,6 +296,11 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         autoCreateFollowingRounds: formData.autoCreateFollowingRounds,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
+        executionAutoRefresh: formData.executionAutoRefresh,
+        // Der Takt bleibt auch bei abgeschalteter Automatik gespeichert — dann ist das Feld
+        // gesperrt und kann leer stehen. Begrenzt statt roh übernommen, damit ein leeres oder
+        // krummes Feld nicht als 0 beim Server ankommt, wo es nur abgelehnt würde.
+        executionAutoRefreshSeconds: clampRefreshSeconds(Number(formData.executionAutoRefreshSeconds)),
     }
 }
 
@@ -285,6 +326,10 @@ function mapDtoToForm(dto: EventDto): EventForm {
         autoCreateFollowingRounds: dto.autoCreateFollowingRounds ?? false,
         showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards ?? false,
         publicResultsVisibility: dto.publicResultsVisibility ?? 'FINISHED_ONLY',
+        executionAutoRefresh: dto.executionAutoRefresh ?? true,
+        executionAutoRefreshSeconds: String(
+            clampRefreshSeconds(dto.executionAutoRefreshSeconds),
+        ),
     }
 }
 

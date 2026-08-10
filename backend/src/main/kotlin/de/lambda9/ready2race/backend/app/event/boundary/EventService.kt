@@ -99,6 +99,8 @@ object EventService {
             autoCreateFollowingRounds = request.autoCreateFollowingRounds
             showBreaksOnPublicBoards = request.showBreaksOnPublicBoards
             publicResultsVisibility = request.publicResultsVisibility.name
+            executionAutoRefresh = request.executionAutoRefresh
+            executionAutoRefreshSeconds = request.executionAutoRefreshSeconds
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

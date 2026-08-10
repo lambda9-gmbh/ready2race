@@ -46,6 +46,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
 import {
+    advanceOffer,
     competitionTag,
     groupSlotsByDay,
     isCancellable,
@@ -59,6 +60,7 @@ import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import {matchStatusChip, slotMatchStatus} from '@components/event/match/matchStatusChip.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
+import ScheduleAdvanceDialog from './ScheduleAdvanceDialog.tsx'
 import ScheduleImportDialog from './ScheduleImportDialog.tsx'
 import ScheduleTimelineIndicator from './ScheduleTimelineIndicator.tsx'
 
@@ -146,6 +148,10 @@ const EventSchedule = () => {
 
     const [shiftDialogOpen, setShiftDialogOpen] = useState(false)
     const [shiftDaySlots, setShiftDaySlots] = useState<EventScheduleSlotDto[]>([])
+
+    // Der eben entfallene Slot, solange das Vorziehen angeboten wird - undefined heißt "kein
+    // offenes Angebot".
+    const [advanceSlot, setAdvanceSlot] = useState<EventScheduleSlotDto | undefined>(undefined)
 
     const [importDialogOpen, setImportDialogOpen] = useState(false)
 
@@ -248,6 +254,11 @@ const EventSchedule = () => {
                 const {error} = await skipScheduleSlot({path: {eventId, slotId: slot.id}})
                 if (error) {
                     showSlotActionError(error)
+                } else if (advanceOffer(data?.slots ?? [], slot) !== null) {
+                    // Erst nach der bestätigten Absage, und nur, wenn es überhaupt etwas
+                    // vorzuziehen gibt: ein Dialog, der sich bloß öffnet, um "geht nicht" zu
+                    // sagen, ist am Renntag ein Klick zu viel.
+                    setAdvanceSlot(slot)
                 }
                 reload()
             },
@@ -739,6 +750,16 @@ const EventSchedule = () => {
                     onClose={closeShiftDialog}
                     reloadData={reload}
                     slots={shiftDaySlots}
+                />
+            )}
+            {canEdit && (
+                <ScheduleAdvanceDialog
+                    eventId={eventId}
+                    open={advanceSlot !== undefined}
+                    onClose={() => setAdvanceSlot(undefined)}
+                    reloadData={reload}
+                    skippedSlot={advanceSlot}
+                    slots={data?.slots ?? []}
                 />
             )}
             {canEdit && (

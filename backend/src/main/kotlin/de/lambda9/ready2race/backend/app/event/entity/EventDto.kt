@@ -35,5 +35,9 @@ data class EventDto(
     val showBreaksOnPublicBoards: Boolean,
     /** Ab welchem Zustand ein Lauf als Ergebnis auf den öffentlichen Ansichten erscheint. */
     val publicResultsVisibility: PublicResultsVisibility,
+    /** Ob die Durchführungsseite ihren Stand im Hintergrund nachzieht. */
+    val executionAutoRefresh: Boolean,
+    /** Takt dieses Abgleichs in Sekunden; nur wirksam, wenn [executionAutoRefresh] gesetzt ist. */
+    val executionAutoRefreshSeconds: Int,
     val challengesFinished: Boolean?,
 )

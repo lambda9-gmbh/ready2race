@@ -441,6 +441,58 @@ const CompetitionExecutionRound = ({
                                         />
                                         <StatusChip chip={arenaChip(match.status)} />
                                     </Stack>
+                                    <LoadingButton
+                                        onClick={() =>
+                                            props.openEditMatchDialog(roundIndex, matchIndex)
+                                        }
+                                        variant={'outlined'}
+                                        pending={submitting}>
+                                        {t('event.competition.execution.matchData.edit')}
+                                    </LoadingButton>
+
+                                    <SelectionMenu
+                                        anchor={{
+                                            button: {
+                                                vertical: 'bottom',
+                                                horizontal: 'right',
+                                            },
+                                            menu: {
+                                                vertical: 'top',
+                                                horizontal: 'right',
+                                            },
+                                        }}
+                                        buttonContent={t(
+                                            'event.competition.execution.startList.download',
+                                        )}
+                                        keyLabel={'competition-execution-startlist-download'}
+                                        onSelectItem={async (fileType: string) => {
+                                            const ft = fileType as StartListFileType
+                                            switch (ft) {
+                                                case 'PDF':
+                                                    await handleDownloadStartListPDF(match.id)
+                                                    break
+                                                case 'CSV':
+                                                    await handleDownloadStartListCSV(match.id)
+                                                    break
+                                            }
+                                        }}
+                                        items={
+                                            [
+                                                {
+                                                    id: 'PDF',
+                                                    label: t(
+                                                        'event.competition.execution.startList.type.PDF',
+                                                    ),
+                                                },
+                                                {
+                                                    id: 'CSV',
+                                                    label: t(
+                                                        'event.competition.execution.startList.type.CSV',
+                                                    ),
+                                                },
+                                            ] satisfies {id: StartListFileType; label: string}[]
+                                        }
+                                    />
                                     {roundIndex === 0 && (
                                         <SelectionMenu
                                             anchor={{
@@ -549,58 +601,6 @@ const CompetitionExecutionRound = ({
                                                 </Stack>
                                             )
                                         })()}
-                                    <LoadingButton
-                                        onClick={() =>
-                                            props.openEditMatchDialog(roundIndex, matchIndex)
-                                        }
-                                        variant={'outlined'}
-                                        pending={submitting}>
-                                        {t('event.competition.execution.matchData.edit')}
-                                    </LoadingButton>
-
-                                    <SelectionMenu
-                                        anchor={{
-                                            button: {
-                                                vertical: 'bottom',
-                                                horizontal: 'right',
-                                            },
-                                            menu: {
-                                                vertical: 'top',
-                                                horizontal: 'right',
-                                            },
-                                        }}
-                                        buttonContent={t(
-                                            'event.competition.execution.startList.download',
-                                        )}
-                                        keyLabel={'competition-execution-startlist-download'}
-                                        onSelectItem={async (fileType: string) => {
-                                            const ft = fileType as StartListFileType
-                                            switch (ft) {
-                                                case 'PDF':
-                                                    await handleDownloadStartListPDF(match.id)
-                                                    break
-                                                case 'CSV':
-                                                    await handleDownloadStartListCSV(match.id)
-                                                    break
-                                            }
-                                        }}
-                                        items={
-                                            [
-                                                {
-                                                    id: 'PDF',
-                                                    label: t(
-                                                        'event.competition.execution.startList.type.PDF',
-                                                    ),
-                                                },
-                                                {
-                                                    id: 'CSV',
-                                                    label: t(
-                                                        'event.competition.execution.startList.type.CSV',
-                                                    ),
-                                                },
-                                            ] satisfies {id: StartListFileType; label: string}[]
-                                        }
-                                    />
                                 </Stack>
                             </Stack>
                             <Divider sx={{my: 2}} />

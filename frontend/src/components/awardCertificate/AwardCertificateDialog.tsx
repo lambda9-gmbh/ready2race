@@ -1,4 +1,13 @@
-import {Alert, Button, DialogActions, DialogContent, DialogTitle, Link as MuiLink, Stack, Typography} from '@mui/material'
+import {
+    Alert,
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Link as MuiLink,
+    Stack,
+    Typography,
+} from '@mui/material'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import BaseDialog from '@components/BaseDialog.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
@@ -33,6 +42,7 @@ type AwardCertificateForm = {
     maxPlace: string
     mode: 'PER_ATHLETE' | 'PER_TEAM'
     background: boolean
+    ratingCategory: boolean
 }
 
 const defaultValues: AwardCertificateForm = {
@@ -40,6 +50,7 @@ const defaultValues: AwardCertificateForm = {
     maxPlace: '3',
     mode: 'PER_ATHLETE',
     background: false,
+    ratingCategory: false,
 }
 
 /**
@@ -80,6 +91,7 @@ const AwardCertificateDialog = ({open, onClose, eventId, competitionId, registra
             format: formData.format,
             mode: formData.mode,
             background: formData.background,
+            ratingCategory: formData.ratingCategory,
             // The single-certificate download ignores this on the backend anyway – a reprint of
             // e.g. a fifth place must work – so it is left out rather than sent for nothing.
             ...(isSingle ? {} : {maxPlace: Number(formData.maxPlace)}),
@@ -193,6 +205,17 @@ const AwardCertificateDialog = ({open, onClose, eventId, competitionId, registra
                             />
                             <Typography variant={'body2'} color={'text.secondary'}>
                                 {t('awardCertificate.download.background.hint')}
+                            </Typography>
+                        </Stack>
+                        <Stack spacing={1}>
+                            <FormInputSwitch
+                                name={'ratingCategory'}
+                                label={t('awardCertificate.download.ratingCategory.label')}
+                                horizontal
+                                reverse
+                            />
+                            <Typography variant={'body2'} color={'text.secondary'}>
+                                {t('awardCertificate.download.ratingCategory.hint')}
                             </Typography>
                         </Stack>
                     </Stack>
