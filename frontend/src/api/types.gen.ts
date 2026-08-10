@@ -2056,6 +2056,37 @@ export type LiveDashboardTeamDto = {
     inArenaAt?: string | null
 }
 
+/**
+ * A match in the "live" tab of the public results page - either activated or upcoming. The state is carried by `status` alone; there is deliberately no `activatedAt` or `finishedAt` next to it, so the display cannot derive a second truth of its own.
+ */
+export type LiveMatchInfo = {
+    matchId: string
+    /**
+     * Null for a programme placeholder (FREE slot), which belongs to no competition.
+     */
+    competitionId?: string | null
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    startTime?: string | null
+    status: MatchStatusDto
+    executionOrder: number
+    /**
+     * The match does not take place. It stays in the list on purpose - a match that vanishes without a trace is indistinguishable from a display error. `teams` is empty then.
+     */
+    cancelled?: boolean
+    /**
+     * Placeholder for a round that has not been created yet; `teams` is empty then.
+     */
+    pendingRound?: boolean
+    /**
+     * Name of a programme item (FREE slot such as "lunch break"), null for real matches.
+     */
+    name?: string | null
+    teams: Array<RunningMatchTeamInfo>
+}
+
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
@@ -6726,6 +6757,19 @@ export type GetRunningMatchesData = {
 export type GetRunningMatchesResponse = Array<RunningMatchInfo>
 
 export type GetRunningMatchesError = ApiError
+
+export type GetLiveMatchesData = {
+    path: {
+        eventId: string
+    }
+    query: {
+        limit: number
+    }
+}
+
+export type GetLiveMatchesResponse = Array<LiveMatchInfo>
+
+export type GetLiveMatchesError = ApiError
 
 export type GetAthleteBoardData = {
     path: {

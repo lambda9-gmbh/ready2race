@@ -1,6 +1,6 @@
 # Testkatalog `feature/crf-2026`
 
-**Stand:** 2026-08-10, Sammelbranch bei `87f85435` (Freilos-Anzeige als Block M, Siegerehrungsbogen als Block N dazugekommen)
+**Stand:** 2026-08-10, Sammelbranch bei `87f85435` (Freilos-Anzeige als Block M, Laufstatus als Block N, Siegerehrungsbogen als Block O dazugekommen)
 **Zweck:** Ein Katalog aller Fälle, die vor der Regatta am 14.08. auf **einem** gebauten Stand
 durchlaufen werden. Er sammelt die Fälle über alle Arbeitsstränge (Athleten-Anzeige, Zeitstrahl,
 RaceClocker, Schiedsrichter-Dashboard, Betrieb, Zeitnahme-Einstellungen, Urkunden, Lauf-Status,
@@ -586,7 +586,57 @@ durch die neue Anzeige nur sichtbar:**
 
 ---
 
-## N — Siegerehrungsbogen
+## N — Laufstatus in der öffentlichen Ergebnisanzeige
+
+Am 09./10.08. gebaut. Vier Oberflächen zeigten den Laufzustand schon aus **einer** Ableitung
+(`LiveDashboardLogic.deriveMatchState`): Durchführung, Schiedsrichter-Dashboard, Zeitplan und
+Athleten-Anzeige. Die fünfte kannte ihn nicht — der Tab „Live" der öffentlichen Ergebnisanzeige
+zeigte ausschließlich aktivierte Läufe, ohne jede Statusangabe, und lud genau einmal. Jetzt zeigt
+er auch die anstehenden, jeden mit Chip, und aktualisiert sich alle 15 Sekunden von selbst.
+Entwurf: `docs/superpowers/specs/2026-08-09-einheitlicher-laufstatus-oeffentlich-design.md`.
+
+**Nichts davon ist in der laufenden Anwendung gesehen worden.** Der ganze Block ist unbelegt —
+das ist der Grund, warum er hier steht. Backend (681) und Frontend (616) sind grün, aber
+Testcontainers und Vitest sagen nichts darüber, was ein Zuschauer am Ufer sieht.
+
+**Die drei Stellen, an denen ich mit einem Fehler rechne**, in dieser Reihenfolge:
+
+1. **M4/M5** — der Takt. Er ist neu gebaut (`frontend/src/utils/polling.ts`), gegen Faketimer
+   geprüft und noch nie gegen ein echtes Funkloch gelaufen.
+2. **M9** — die Ergebnisfreigabe. Der Schutz ist strukturell (SQL plus ein DTO ohne
+   Ergebnisfelder) und zweifach getestet, aber ein Leck hier wäre der einzige Fehler dieses
+   Vorhabens, der einer Regatta wirklich schadet.
+3. **M12** — der Zwischenspeicher. Fünf Sekunden Vorhaltezeit sind gesetzt; ob sich das im Feld
+   wie „live" anfühlt oder wie ein Hänger, entscheidet erst der Blick.
+
+**Voraussetzung für diesen Block:** eine Veranstaltung mit Zeitplan, mindestens drei Läufen
+desselben Wettkampfs, einem abgesagten Slot, einem Programmpunkt (z.B. „Mittagspause", nur
+sichtbar bei eingeschaltetem `showBreaksOnPublicBoards`) und einer Runde, die noch nicht erzeugt
+ist. Der Förde-Seed bringt das mit. Zwei Geräte oder zwei Fenster nebeneinander: links das
+Schiedsrichter-Dashboard oder die Durchführung, rechts `/results/{eventId}` im Tab „Live".
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| N1 | Anstehende Läufe erscheinen überhaupt | Tab „Live" öffnen, ohne dass irgendein Lauf aktiviert ist: die nächsten Läufe stehen da, jeder mit Chip „Anstehend". Vorher war der Tab in dieser Lage **leer** — genau das war der Anlass | `7f7d7398` | |
+| N2 | Die Kette der Zustände an einem Lauf | Einen Lauf aktivieren → Chip springt auf „In Vorbereitung" (blau). „Läuft" drücken → „Läuft · n min", die Minutenzahl zählt hoch. Beenden → der Lauf verschwindet aus „Live" und taucht unter „Ergebnisse" auf | `7f7d7398` | |
+| N3 | Dieselben Worte wie nebenan | Denselben Lauf gleichzeitig in Durchführung, Zeitplan, Dashboard und im Live-Tab ansehen: **gleicher Text, gleiche Farbe**. Das ist die eigentliche Zusage des Vorhabens — eine Abweichung hier ist ein Befund, auch wenn beide Seiten für sich plausibel aussehen | `7f7d7398` | |
+| N4 | Wechsel ohne Neuladen | **Der Kernfall.** Den Live-Tab offen liegen lassen und im anderen Fenster aktivieren: der Chip wechselt binnen ~20 Sekunden von selbst. Nicht neu laden, nicht wegklicken — nur warten | `7f7d7398` | |
+| N5 | Netz weg, Netz wieder da | WLAN am Gerät abschalten: die Karten **bleiben stehen**, darüber erscheint „Stand von hh:mm". WLAN wieder an: die Liste ist binnen Sekunden wieder frisch und die Zeile verschwindet. Eine leere Seite nach einem Funkloch wäre der schlechteste Ausgang | `c750e0fe` | |
+| N6 | Erster Abruf scheitert | Backend anhalten, **dann** den Tab öffnen: „Die Läufe konnten nicht geladen werden." — und **nicht** „Zurzeit ist kein Lauf angesetzt." Der Unterschied ist der ganze Grund für das Feld `initialLoad` | `7f7d7398` | |
+| N7 | Nichts angesetzt | Eine Veranstaltung ohne anstehende Läufe: „Zurzeit ist kein Lauf angesetzt." Nicht die Fehlermeldung aus M6 | `7f7d7398` | |
+| N8 | Abgesagter Lauf | Einen Slot im Zeitplan absagen: der Lauf **bleibt** im Live-Tab stehen, durchgestrichen und abgeblendet, Chip „Abgesagt", nicht anklickbar. Eine Besatzung, die ihren Lauf sucht, muss ihn finden und daran ablesen, dass er nicht stattfindet | `248871b0` | |
+| N9 | **Ergebnisfreigabe hält** | Veranstaltung auf „nur beendete Läufe" (`FINISHED_ONLY`) stellen. Einen Lauf vollständig werten, aber **nicht** beenden. Erwartung: er erscheint **weder** im Tab „Live" **noch** im Tab „Ergebnisse". Dann auf `RESULTS_COMPLETE` umstellen — jetzt steht er unter „Ergebnisse", weiterhin nicht unter „Live" | `d691ed6c` | |
+| N10 | Teilergebnisse eines laufenden Laufs | Ein aktivierter Lauf, bei dem die Zeitnahme schon einzelne Boote gewertet hat: der Lauf bleibt „Läuft", und im Dialog stehen **keine** Plätze und Zeiten (der Dialog zeigt sie nur für beendete Ergebnisse). Das ist unverändertes Verhalten des alten Tabs — hier geht es darum, dass es unverändert **geblieben** ist | `7f7d7398` | |
+| N11 | Wartende Runde und Programmpunkt | Eine noch nicht erzeugte Runde erscheint mit dem Hinweis „Aufstellung steht noch nicht fest" statt einer leeren Karte. Ein Programmpunkt („Mittagspause") erscheint **ohne** Chip — und wird auch eine halbe Stunde nach seiner Zeit **nicht** „Überfällig" genannt | `affc8ae5`, `248871b0` | |
+| N12 | Last und Frische | Den Tab auf mehreren Geräten gleichzeitig offen halten. Der Zwischenspeicher hält die Antwort 5 Sekunden vor — ein Zustandswechsel darf sich dadurch um höchstens diese 5 Sekunden verspäten. Fühlt sich das nach „hängt" an, ist die Vorhaltezeit zu lang | `7ae3ae67` | |
+| N13 | Hintergrund | Den Tab in den Hintergrund legen (anderer Browser-Tab), einige Minuten warten, zurückkommen: die Liste ist **sofort** frisch. Dazwischen wurde nicht getaktet — das lässt sich am Netzwerk-Reiter der Entwicklerwerkzeuge ablesen | `4d1cc3b9` | |
+| N14 | Überfällig | Ein anstehender Lauf, dessen geplante Zeit mehr als 5 Minuten zurückliegt, ohne dass ihn jemand aktiviert hat: Chip „Überfällig · n min" in Rot. Bei 2 Minuten Verzug **noch nicht** — Regattaalltag soll nicht leuchten | `7f7d7398` | |
+| N15 | Ohne Termin | Ein Lauf ohne geplante Startzeit trägt „Ungeplant" und wird **niemals** „Überfällig" | `7f7d7398` | |
+| N16 | Ergebnis-Tab unberührt | **Regressionsfall.** Der Tab „Ergebnisse" daneben benutzt dieselbe Karte. Er muss aussehen und sich verhalten wie vor dem Update: kein Statuschip, Klickfläche vorhanden, Dialog wie gehabt | `7f7d7398` | |
+
+---
+
+## O — Siegerehrungsbogen
 
 Am 09./10.08. gebaut. Bis dahin ging die Sprecherin mit dem Ergebnis-PDF der ganzen Veranstaltung
 oder dem Platzierungs-Tab ans Pult — beides listet **alle** Boote, kennzeichnet den meldenden
@@ -600,7 +650,7 @@ Entwurf: `docs/superpowers/specs/2026-08-09-siegerehrungsbogen-design.md`.
 > Code-Reviews. Hier zuerst hinsehen — und zwar mit einem echten Ausdruck, nicht am Bildschirm:
 > die zentrale Zusage („passt auf ein Blatt, ist vorlesbar") lässt sich nur auf Papier prüfen.
 
-Zwei Annahmen des Entwurfs sind beim Bau **widerlegt** worden und erklären, warum N4–N7 so genau
+Zwei Annahmen des Entwurfs sind beim Bau **widerlegt** worden und erklären, warum O4–O7 so genau
 hinsehen: `page { }` im PDF-Baukasten ist keine harte Seitengrenze (der Renderer legt bei Überlauf
 still eine **kopflose** Seite nach), und die Schriftgröße lässt sich nicht aus der Personenzahl
 ableiten (Vereinsketten brechen um — drei *Vierer* einer Renngemeinschaft sprengten A4 bei zwölf
@@ -608,29 +658,29 @@ Personenzeilen, während sieben Personen zufällig passten). Heute wird die Seit
 
 | Fall | Titel | Was zu tun und zu sehen ist | testbar ab | Nachweis |
 |---|---|---|---|---|
-| N1 | Auswahl öffnen | Veranstaltung → Wettkämpfe: Knopf „Siegerehrungsbogen". Der Dialog listet die Ehrungen nach Rennnummer, je Wettkampf eine Zeile pro Wertungskategorie, mit der Zahl der geehrten Boote. Alles ist vorausgewählt | `f566309b` | |
-| N2 | Auswahl vom einzelnen Rennen | Durchführung → Platzierungen eines Wettkampfs → „Siegerehrungsbogen": der Dialog zeigt **nur** dessen Ehrungen. Gegenprobe im Netzwerk-Tab: die Anfrage trägt `competitionId`, es wird nicht die ganze Regatta berechnet | `f566309b` | |
-| N3 | Eine Seite je Wertungskategorie | **Die zentrale Zusage.** Ein Rennen mit zwei Kategorien ergibt zwei Seiten. Keine Kategorie steht auf dem Blatt einer anderen, jede Seite trägt Veranstaltung, Rennnummer, Wettkampfname und Wertung | `f566309b` | |
-| N4 | **Ausdrucken und aus zwei Metern lesen** | Der wichtigste Fall. Ein Blatt auf Papier bringen und aus Pult-Entfernung vorlesen: Rangzahl (20 pt) und Vereinszeile (14 pt) müssen sicher greifbar sein, die Namenszeilen lesbar. Achtung: **jede Achter-Ehrung** landet auf der kleinsten Stufe (8,5 pt) — genau die ausdrucken, nicht einen Einer | `f566309b` | |
-| N5 | Renngemeinschaft mit ausgeschriebenen Vereinsnamen | Einmal als Vierer, einmal als Achter: Titelzeile ist die **Vereinskette** in Bootsreihenfolge (nicht „Renngemeinschaft"), darunter „Meldender Verein: …", hinter den Namen nur die **abweichenden** Vereine. Hier zerbrach die erste Fassung | `f566309b` | |
-| N6 | Fortsetzungsseite | Braucht ein sehr großes Feld (geteilter Rang mit vier Achtern als Renngemeinschaft) zwei Blätter, trägt **jedes** den vollständigen Kopf, und ab dem zweiten steht „Fortsetzung" darauf. Es darf **nie** ein Blatt ohne Kopf entstehen, und keine Mannschaft darf zerrissen werden | `f566309b` | |
-| N7 | Kein leerer Platzhalter | Ein Boot ohne Zeit, ein Boot ohne Bootsnamen, ein Wettkampf ohne Wertungskategorie: die jeweilige Angabe **entfällt ganz**. Nirgends ein „—", ein hängender Trenner oder ein Doppelpunkt ins Leere | `f566309b` | |
-| N8 | Reihenfolge der Kategorien | Die Seiten folgen der unter **L1** gepflegten Reihenfolge, nicht dem Alphabet — dieselbe Folge, in der auch geehrt wird. Zum Prüfen die Reihenfolge unter L1 absichtlich gegen das Alphabet stellen und beide Ausgaben nebeneinanderhalten | `f566309b` | |
-| N9 | Zählung ab 1 je Kategorie | Ein Boot, das im Wettkampf Sechster, in seiner Kategorie aber Erster ist, steht auf dem Bogen als **1.** Gleiche Regel wie L3 — der Bogen rechnet seit `2caaf096` an derselben Stelle | `f566309b` | |
-| N10 | Gleichstand ohne Bronze | Teilen sich zwei Boote den zweiten Platz, zeigt das Blatt 1., 2., 2. und **keinen** dritten Rang. Beide tragen den Vermerk „geteilt", die Rangzahl steht nur beim ersten. Herstellbar über eine Runde mit Platzvergabe „gleich" (`EQUAL`), siehe L6 | `f566309b` | |
-| N11 | Ausgeschlossene Boote | Ein abgemeldetes, ein ausgeschiedenes und ein disqualifiziertes Boot stehen **nicht** auf dem Bogen, und die Ränge der übrigen rücken entsprechend auf | `f566309b` | |
-| N12 | Zeit, Strafe, Lauf am richtigen Boot | Zeit rechts auf Höhe der Rangzahl, Zeitstrafe darunter („Zeitstrafe +10 s (Frühstart)") — beide beim Boot, zu dem sie gehören. Der Lauf steht im Kopf, wenn alle drei aus **demselben** stammen | `f566309b` | |
-| N13 | Zwei Läufe in einer Wertung | Kommen die Ränge aus verschiedenen Läufen (A-/B-Finale, Zeitläufe), steht **keine** Lauf-Angabe im Kopf, dafür je Rangblock eine eigene. Ein Sieger ohne Lauf darf die Angaben der anderen nicht verschlucken | `f566309b` | |
-| N14 | Meldender Verein verdichtet | Tragen alle Personen den meldenden Verein, steht er **einmal** als Titelzeile — keine Zeile „Meldender Verein", kein Vereinszusatz hinter den Namen. Startet die Crew für einen anderen Verein als den meldenden, stehen beide getrennt | `f566309b` | |
-| N15 | Schreibvarianten desselben Vereins | Zwei Personen mit „Rostocker Ruderclub" und „Rostocker Ruder-Club von 1885 e.V.": das ist **ein** Verein, eine Titelzeile, kein Vereinszusatz. Ein Vereinsboot darf nicht wie eine Renngemeinschaft aussehen | `f566309b` | |
-| N16 | Challenge-Veranstaltung | Bei einer Challenge-Veranstaltung erscheint der Knopf gar nicht erst; wird der Endpunkt direkt aufgerufen, kommt die Meldung „dort werden keine Läufe gefahren und keine Plätze vergeben" — nicht „keine Ergebnisse" | `f566309b` | |
-| N17 | Noch keine Platzierungen | Vor dem ersten gewerteten Lauf: der Dialog sagt „Es gibt noch keine Ehrungen", statt eine leere Liste oder einen Fehler zu zeigen | `f566309b` | |
-| N18 | Dialog zweimal öffnen | Zwischen zwei Öffnungen ein Ergebnis ändern: beim zweiten Öffnen stehen die neuen Zahlen da, die Vorauswahl ist wieder vollständig, und „Es gibt noch keine Ehrungen" blitzt nicht auf. Für diesen Fall gibt es hausüblich keinen Test | `f566309b` | |
-| N19 | Dateiname | Der Download heißt `siegerehrung_<Veranstaltung>.pdf`. Einmal mit einer Veranstaltung prüfen, deren Name Umlaute trägt | `f566309b` | |
-| N20 | Knopf gesperrt ohne Auswahl | Alle Häkchen entfernen: „Herunterladen" ist grau. Wichtig, weil eine leer verschickte Auswahl serverseitig „alle Ehrungen drucken" bedeutet | `f566309b` | |
-| N21 | Berechtigung | Ohne Anmeldung ist der Endpunkt nicht erreichbar (401). Durch `AwardCeremonyHttpIT` abgedeckt — die Klasse läuft mangels Failsafe-Konfiguration aber **nicht** im normalen Testlauf mit und muss gezielt gestartet werden: `./mvnw test -Dtest=AwardCeremonyHttpIT -DfailIfNoSpecifiedTests=false` | `f566309b` | |
+| O1 | Auswahl öffnen | Veranstaltung → Wettkämpfe: Knopf „Siegerehrungsbogen". Der Dialog listet die Ehrungen nach Rennnummer, je Wettkampf eine Zeile pro Wertungskategorie, mit der Zahl der geehrten Boote. Alles ist vorausgewählt | `f566309b` | |
+| O2 | Auswahl vom einzelnen Rennen | Durchführung → Platzierungen eines Wettkampfs → „Siegerehrungsbogen": der Dialog zeigt **nur** dessen Ehrungen. Gegenprobe im Netzwerk-Tab: die Anfrage trägt `competitionId`, es wird nicht die ganze Regatta berechnet | `f566309b` | |
+| O3 | Eine Seite je Wertungskategorie | **Die zentrale Zusage.** Ein Rennen mit zwei Kategorien ergibt zwei Seiten. Keine Kategorie steht auf dem Blatt einer anderen, jede Seite trägt Veranstaltung, Rennnummer, Wettkampfname und Wertung | `f566309b` | |
+| O4 | **Ausdrucken und aus zwei Metern lesen** | Der wichtigste Fall. Ein Blatt auf Papier bringen und aus Pult-Entfernung vorlesen: Rangzahl (20 pt) und Vereinszeile (14 pt) müssen sicher greifbar sein, die Namenszeilen lesbar. Achtung: **jede Achter-Ehrung** landet auf der kleinsten Stufe (8,5 pt) — genau die ausdrucken, nicht einen Einer | `f566309b` | |
+| O5 | Renngemeinschaft mit ausgeschriebenen Vereinsnamen | Einmal als Vierer, einmal als Achter: Titelzeile ist die **Vereinskette** in Bootsreihenfolge (nicht „Renngemeinschaft"), darunter „Meldender Verein: …", hinter den Namen nur die **abweichenden** Vereine. Hier zerbrach die erste Fassung | `f566309b` | |
+| O6 | Fortsetzungsseite | Braucht ein sehr großes Feld (geteilter Rang mit vier Achtern als Renngemeinschaft) zwei Blätter, trägt **jedes** den vollständigen Kopf, und ab dem zweiten steht „Fortsetzung" darauf. Es darf **nie** ein Blatt ohne Kopf entstehen, und keine Mannschaft darf zerrissen werden | `f566309b` | |
+| O7 | Kein leerer Platzhalter | Ein Boot ohne Zeit, ein Boot ohne Bootsnamen, ein Wettkampf ohne Wertungskategorie: die jeweilige Angabe **entfällt ganz**. Nirgends ein „—", ein hängender Trenner oder ein Doppelpunkt ins Leere | `f566309b` | |
+| O8 | Reihenfolge der Kategorien | Die Seiten folgen der unter **L1** gepflegten Reihenfolge, nicht dem Alphabet — dieselbe Folge, in der auch geehrt wird. Zum Prüfen die Reihenfolge unter L1 absichtlich gegen das Alphabet stellen und beide Ausgaben nebeneinanderhalten | `f566309b` | |
+| O9 | Zählung ab 1 je Kategorie | Ein Boot, das im Wettkampf Sechster, in seiner Kategorie aber Erster ist, steht auf dem Bogen als **1.** Gleiche Regel wie L3 — der Bogen rechnet seit `2caaf096` an derselben Stelle | `f566309b` | |
+| O10 | Gleichstand ohne Bronze | Teilen sich zwei Boote den zweiten Platz, zeigt das Blatt 1., 2., 2. und **keinen** dritten Rang. Beide tragen den Vermerk „geteilt", die Rangzahl steht nur beim ersten. Herstellbar über eine Runde mit Platzvergabe „gleich" (`EQUAL`), siehe L6 | `f566309b` | |
+| O11 | Ausgeschlossene Boote | Ein abgemeldetes, ein ausgeschiedenes und ein disqualifiziertes Boot stehen **nicht** auf dem Bogen, und die Ränge der übrigen rücken entsprechend auf | `f566309b` | |
+| O12 | Zeit, Strafe, Lauf am richtigen Boot | Zeit rechts auf Höhe der Rangzahl, Zeitstrafe darunter („Zeitstrafe +10 s (Frühstart)") — beide beim Boot, zu dem sie gehören. Der Lauf steht im Kopf, wenn alle drei aus **demselben** stammen | `f566309b` | |
+| O13 | Zwei Läufe in einer Wertung | Kommen die Ränge aus verschiedenen Läufen (A-/B-Finale, Zeitläufe), steht **keine** Lauf-Angabe im Kopf, dafür je Rangblock eine eigene. Ein Sieger ohne Lauf darf die Angaben der anderen nicht verschlucken | `f566309b` | |
+| O14 | Meldender Verein verdichtet | Tragen alle Personen den meldenden Verein, steht er **einmal** als Titelzeile — keine Zeile „Meldender Verein", kein Vereinszusatz hinter den Namen. Startet die Crew für einen anderen Verein als den meldenden, stehen beide getrennt | `f566309b` | |
+| O15 | Schreibvarianten desselben Vereins | Zwei Personen mit „Rostocker Ruderclub" und „Rostocker Ruder-Club von 1885 e.V.": das ist **ein** Verein, eine Titelzeile, kein Vereinszusatz. Ein Vereinsboot darf nicht wie eine Renngemeinschaft aussehen | `f566309b` | |
+| O16 | Challenge-Veranstaltung | Bei einer Challenge-Veranstaltung erscheint der Knopf gar nicht erst; wird der Endpunkt direkt aufgerufen, kommt die Meldung „dort werden keine Läufe gefahren und keine Plätze vergeben" — nicht „keine Ergebnisse" | `f566309b` | |
+| O17 | Noch keine Platzierungen | Vor dem ersten gewerteten Lauf: der Dialog sagt „Es gibt noch keine Ehrungen", statt eine leere Liste oder einen Fehler zu zeigen | `f566309b` | |
+| O18 | Dialog zweimal öffnen | Zwischen zwei Öffnungen ein Ergebnis ändern: beim zweiten Öffnen stehen die neuen Zahlen da, die Vorauswahl ist wieder vollständig, und „Es gibt noch keine Ehrungen" blitzt nicht auf. Für diesen Fall gibt es hausüblich keinen Test | `f566309b` | |
+| O19 | Dateiname | Der Download heißt `siegerehrung_<Veranstaltung>.pdf`. Einmal mit einer Veranstaltung prüfen, deren Name Umlaute trägt | `f566309b` | |
+| O20 | Knopf gesperrt ohne Auswahl | Alle Häkchen entfernen: „Herunterladen" ist grau. Wichtig, weil eine leer verschickte Auswahl serverseitig „alle Ehrungen drucken" bedeutet | `f566309b` | |
+| O21 | Berechtigung | Ohne Anmeldung ist der Endpunkt nicht erreichbar (401). Durch `AwardCeremonyHttpIT` abgedeckt — die Klasse läuft mangels Failsafe-Konfiguration aber **nicht** im normalen Testlauf mit und muss gezielt gestartet werden: `./mvnw test -Dtest=AwardCeremonyHttpIT -DfailIfNoSpecifiedTests=false` | `f566309b` | |
 
-**Offen, vom Test zu entscheiden:** Ob 8,5 pt als kleinste Stufe für ein Vorleseblatt trägt (N4).
+**Offen, vom Test zu entscheiden:** Ob 8,5 pt als kleinste Stufe für ein Vorleseblatt trägt (O4).
 Trägt sie nicht, ist der Boden höher zu setzen — dann bekommen mehr Ehrungen eine
 Fortsetzungsseite, was der bewussten Abwägung „lieber zwei lesbare Blätter als eines mit
 Kleingedrucktem" entspricht.

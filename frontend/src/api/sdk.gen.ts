@@ -685,6 +685,9 @@ import type {
     GetRunningMatchesData,
     GetRunningMatchesError,
     GetRunningMatchesResponse,
+    GetLiveMatchesData,
+    GetLiveMatchesError,
+    GetLiveMatchesResponse,
     GetAthleteBoardData,
     GetAthleteBoardError,
     GetAthleteBoardResponse,
@@ -3789,6 +3792,22 @@ export const getRunningMatches = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/running-matches',
+    })
+}
+
+/**
+ * The "live" tab of the public results page: activated matches (PREPARING, RUNNING) together with the upcoming ones, each carrying its derived state. Finished matches and matches whose boats are all scored are deliberately absent - those are results and are governed by Event.publicResultsVisibility through /latest-match-results.
+ */
+export const getLiveMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetLiveMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetLiveMatchesResponse,
+        GetLiveMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/live-matches',
     })
 }
 

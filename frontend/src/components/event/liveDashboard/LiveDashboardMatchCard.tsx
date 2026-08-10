@@ -106,7 +106,7 @@ const LiveDashboardMatchCard = ({
     const status = dashboardMatchStatus(match)
     const statusChip = matchStatusChip(status, match.startTime, new Date())
     // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur — dasselbe Muster
-    // wie `StatusChip` in CompetitionExecutionRound.tsx.
+    // wie `StatusChip` in @components/event/match/StatusChip.tsx.
     const translate = t as (key: string, values?: Record<string, string | number>) => string
     // Einmal je Karte statt dreimal im JSX — dieselbe Stelle wie im Zeitplan-Tab.
     const bye = byeExplanation(match.bye)
