@@ -525,6 +525,19 @@ Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfa
 | L22 | Kategorie ohne Zuordnung zur Veranstaltung | Ein Boot trägt eine Kategorie, die der Veranstaltung nie zugeordnet wurde (im Bestand der Regelfall): ihr Abschnitt steht **hinter** allen konfigurierten, untereinander alphabetisch, und vor „Ohne Wertungskategorie". Am 09.08. im Browser bestätigt: „Deutsche Meisterschaft Wertung" vor „Internationale Wertung", beide hinter den gepflegten | `9fbe99ed` | `AGENT 09.08.` |
 | L21 | Altdaten nach der Migration | Eine Veranstaltung, die vor dem Update Kategorien hatte: die Reihenfolge ist nach dem Update die bisher gezeigte alphabetische. Die Migration allein darf keine Anzeige verändert haben | `9fbe99ed` | |
 
+**Aus dem Review (10.08., Fable):** keine Fehler gefunden. Zwei Punkte, die beim Handtest ein
+zweiter Blick wert sind, weil sie im Code nicht abgesichert, sondern nur faktisch richtig sind:
+
+- Die drei Lauf-Ansichten übernehmen den Platz **roh** aus der Datenbank, statt abgemeldete,
+  ausgeschiedene und disqualifizierte Boote ausdrücklich als ungewertet zu behandeln (das tut nur
+  die Platzierungsansicht). Heute folgenlos, weil ein solches Boot nie einen Platz trägt — beim
+  Test also gezielt ein **gescheitertes Boot mit gesetztem Platz** suchen, falls es so eines je
+  gibt. Es dürfte dann keinen Kategorieplatz bekommen.
+- `getCompetitionPlaces` liefert seine flache Liste jetzt in **Abschnittsreihenfolge** statt streng
+  nach Platz. Die Oberfläche gruppiert selbst neu, ist also unberührt; ein Fremdkonsument, der sich
+  auf „Index = Platz − 1" verlässt, bräche. Ein solcher ist nicht bekannt.
+
+
 ---
 
 ## Detailablauf A6/C7 — Zeitstrafe während der Lauf läuft
