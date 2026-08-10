@@ -13603,6 +13603,7 @@ components:
         - MATCH_LIST
         - CLOCK
         - TEXT
+        - AWARD_CEREMONY
 
     BoardListMode:
       type: string
@@ -13610,6 +13611,7 @@ components:
         - UPCOMING
         - RESULTS
         - RUNNING
+        - SCHEDULE
 
     BoardElement:
       type: object
@@ -13639,6 +13641,18 @@ components:
         autoFit:
           type: boolean
           nullable: true
+        showCrewDetails:
+          type: boolean
+          nullable: true
+        showBirthYears:
+          type: boolean
+          nullable: true
+        showAdvancement:
+          type: boolean
+          nullable: true
+        showRegisteringClub:
+          type: boolean
+          nullable: true
         listMode:
           $ref: '#/components/schemas/BoardListMode'
         limit:
@@ -13648,6 +13662,14 @@ components:
           nullable: true
         useShortNames:
           type: boolean
+          nullable: true
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+        ratingCategoryId:
+          type: string
+          format: uuid
           nullable: true
         showEventName:
           type: boolean
@@ -13692,7 +13714,7 @@ components:
           nullable: true
         refreshIntervalSeconds:
           type: integer
-          minimum: 10
+          minimum: 3
         tiles:
           type: array
           items:
@@ -14052,6 +14074,12 @@ components:
         role:
           type: string
           nullable: true
+        year:
+          type: integer
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
 
     AthleteBoardTeam:
       type: object
@@ -14102,6 +14130,10 @@ components:
         failedReason:
           type: string
           nullable: true
+        registeringClub:
+          type: string
+          nullable: true
+          description: "registering club - only filled when a board element requests showRegisteringClub"
 
     AthleteBoardMatch:
       type: object
@@ -14161,6 +14193,14 @@ components:
         cancelled:
           type: boolean
           description: "the match is cancelled ('does not take place'). It stays at its planned position in the upcoming block anyway - a crew waiting at the pontoon cannot tell a match that vanished without a trace from a display error. teams is then always empty"
+        nextRoundName:
+          type: string
+          nullable: true
+          description: "name of the following round - only filled when a board element requests showAdvancement"
+        advancingSeats:
+          type: integer
+          nullable: true
+          description: "number of seats in the following round; null when the following round is an open field"
 
     AthleteBoardResultTeam:
       type: object
@@ -14294,6 +14334,137 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardResult'
+        program:
+          type: array
+          description: "only filled for mode SCHEDULE: the whole day program from the timeline"
+          items:
+            $ref: '#/components/schemas/BoardProgramEntry'
+
+    BoardProgramState:
+      type: string
+      enum:
+        - FINISHED
+        - RUNNING
+        - UPCOMING
+
+    BoardProgramEntry:
+      type: object
+      required:
+        - state
+      properties:
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        name:
+          type: string
+          nullable: true
+          description: "schedule item (break) name; null for real matches"
+        competitionName:
+          type: string
+          nullable: true
+        competitionShortName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        state:
+          $ref: '#/components/schemas/BoardProgramState'
+
+    AwardCeremonyAthlete:
+      type: object
+      required:
+        - name
+        - role
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        club:
+          type: string
+          nullable: true
+          description: "home club - only set when it differs from the boat's title line"
+
+    AwardCeremonyTeam:
+      type: object
+      required:
+        - clubLine
+        - boatLine
+        - athletes
+      properties:
+        clubLine:
+          type: string
+        registeringClub:
+          type: string
+          nullable: true
+        boatLine:
+          type: string
+        time:
+          type: string
+          nullable: true
+        penalty:
+          type: string
+          nullable: true
+        raceLine:
+          type: string
+          nullable: true
+        athletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwardCeremonyAthlete'
+
+    AwardCeremonyRank:
+      type: object
+      required:
+        - rank
+        - shared
+        - first
+        - team
+      properties:
+        rank:
+          type: integer
+        shared:
+          type: boolean
+        first:
+          type: boolean
+        team:
+          $ref: '#/components/schemas/AwardCeremonyTeam'
+
+    BoardCeremonyDto:
+      type: object
+      description: "the podium of one award ceremony - the same ranks the printed sheet carries"
+      required:
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+        - ranks
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        ratingCategoryId:
+          type: string
+          format: uuid
+          nullable: true
+        competitionIdentifier:
+          type: string
+        competitionShortName:
+          type: string
+          nullable: true
+        competitionName:
+          type: string
+        ratingCategoryName:
+          type: string
+          nullable: true
+        ranks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwardCeremonyRank'
 
     BoardViewDto:
       type: object
@@ -14326,6 +14497,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BoardListDto'
+        ceremonies:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardCeremonyDto'
 
     MyEventTeamMemberDto:
       type: object

@@ -76,10 +76,14 @@ fun BoardRequest.toRecord(eventId: UUID): BoardRecord {
 
 private fun participantName(firstName: String, lastName: String) = "$firstName $lastName"
 
-fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant() = AthleteBoardParticipant(
-    name = participantName(firstName, lastName),
-    role = namedRole,
-)
+fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant(includeDetails: Boolean = false) =
+    AthleteBoardParticipant(
+        name = participantName(firstName, lastName),
+        role = namedRole,
+        // Nur auf Anforderung (Sprecherinnen-Kacheln): sonst bleibt die Antwort schlank.
+        year = if (includeDetails) year else null,
+        clubName = if (includeDetails) wornClubName else null,
+    )
 
 /**
  * Die Vereinskette der Athleten gewinnt; der meldende Verein tritt nur ein, wenn zum Boot noch
@@ -88,13 +92,14 @@ fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant() = AthleteBoardParti
 private fun clubsOrRegistering(chain: String?, registeringClubName: String?) =
     chain ?: registeringClubName
 
-fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
+fun RunningMatchTeamInfo.toAthleteBoardTeam(includeDetails: Boolean = false) = AthleteBoardTeam(
     startNumber = startNumber,
     teamNumber = teamNumber,
     clubsShort = clubsOrRegistering(clubsShort, clubName),
     clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
-    participants = participants.map { it.toAthleteBoardParticipant() },
+    registeringClub = if (includeDetails) clubName else null,
+    participants = participants.map { it.toAthleteBoardParticipant(includeDetails) },
     // Teilergebnis: gefüllt, sobald die Zeitnahme dieses Boot gewertet hat - der Lauf läuft
     // dabei weiter, bis die Organisation ihn beendet.
     place = currentPosition,
@@ -105,16 +110,21 @@ fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
     failedReason = failedReason,
 )
 
-fun UpcomingMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
+fun UpcomingMatchTeamInfo.toAthleteBoardTeam(includeDetails: Boolean = false) = AthleteBoardTeam(
     startNumber = startNumber,
     teamNumber = teamNumber,
     clubsShort = clubsOrRegistering(clubsShort, clubName),
     clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
-    participants = participants.map { it.toAthleteBoardParticipant() },
+    registeringClub = if (includeDetails) clubName else null,
+    participants = participants.map { it.toAthleteBoardParticipant(includeDetails) },
 )
 
-fun RunningMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCountdown: Boolean) =
+fun RunningMatchInfo.toAthleteBoardMatch(
+    now: LocalDateTime,
+    showCountdown: Boolean,
+    includeDetails: Boolean = false,
+) =
     AthleteBoardMatch(
         matchId = matchId,
         competitionName = competitionName,
@@ -139,10 +149,14 @@ fun RunningMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCountdown: Bool
             },
         ),
         startState = AthleteBoardLogic.startState(startTime, now, showCountdown),
-        teams = teams.map { it.toAthleteBoardTeam() },
+        teams = teams.map { it.toAthleteBoardTeam(includeDetails) },
     )
 
-fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCountdown: Boolean) =
+fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(
+    now: LocalDateTime,
+    showCountdown: Boolean,
+    includeDetails: Boolean = false,
+) =
     AthleteBoardMatch(
         matchId = matchId,
         competitionName = competitionName,
@@ -163,7 +177,7 @@ fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCou
             skipped = cancelled,
         ),
         startState = AthleteBoardLogic.startState(scheduledStartTime, now, showCountdown),
-        teams = teams.map { it.toAthleteBoardTeam() },
+        teams = teams.map { it.toAthleteBoardTeam(includeDetails) },
         pendingRound = pendingRound,
         name = name,
         cancelled = cancelled,

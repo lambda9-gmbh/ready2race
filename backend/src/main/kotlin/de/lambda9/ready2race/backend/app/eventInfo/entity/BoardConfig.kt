@@ -1,11 +1,17 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import java.util.UUID
+
 /** Grenzen der Board-Konfiguration — eine Stelle für Backend-Validierung und Editor-Hinweise. */
 object BoardLimits {
     const val MAX_OFFSET = 6
     const val MIN_LIST_LIMIT = 1
     const val MAX_LIST_LIMIT = 20
-    const val MIN_REFRESH_INTERVAL_SECONDS = 10
+    // 3 statt anfangs 10: Rückmeldung der Sprecherinnen vom 10.08.2026 („max. 5 s
+    // Aktualisierung", danach „bis 3 s"). Der serverseitige Zwischenspeicher
+    // (BoardLogic.CACHE_TTL_SECONDS, passend darunter) deckelt die Datenbanklast
+    // unabhängig vom Takt und von der Zahl der Bildschirme.
+    const val MIN_REFRESH_INTERVAL_SECONDS = 3
     const val DEFAULT_REFRESH_INTERVAL_SECONDS = 15
     const val MIN_ROTATION_INTERVAL_SECONDS = 3
     const val DEFAULT_ROTATION_INTERVAL_SECONDS = 10
@@ -28,9 +34,10 @@ enum class BoardLayout(val tileCount: Int, val columns: Int) {
     SIX_TILES(6, 3),
 }
 
-enum class BoardElementType { MATCH, MATCH_LIST, CLOCK, TEXT }
+enum class BoardElementType { MATCH, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY }
 
-enum class BoardListMode { UPCOMING, RESULTS, RUNNING }
+/** SCHEDULE = Tagesprogramm: alle Slots des Zeitplans mit Status, für Sprecherinnen und Aushänge. */
+enum class BoardListMode { UPCOMING, RESULTS, RUNNING, SCHEDULE }
 
 /**
  * Ein Element einer Kachel. Bewusst flach statt sealed: das Schema geht 1:1 durch das
@@ -47,11 +54,24 @@ data class BoardElement(
     val showTimes: Boolean? = null,
     val contrastColors: Boolean? = null,
     val autoFit: Boolean? = null,
+    // Sprecherinnen-Optionen: Zusatzdaten, die der Server nur liefert, wenn irgendein
+    // Element sie anfordert — die Sparsamkeitsregel der öffentlichen Anzeige bleibt.
+    /** Jede Athletin einzeln mit Rolle und Heimatverein statt der einzeiligen Namensliste. */
+    val showCrewDetails: Boolean? = null,
+    /** Geburtsjahr je Athletin (nur zusammen mit [showCrewDetails] sichtbar). */
+    val showBirthYears: Boolean? = null,
+    /** „Weiter kommen N Boote → Finale" aus der Rundenkonfiguration. */
+    val showAdvancement: Boolean? = null,
+    /** Der meldende Verein des Bootes (Verwaltungsinfo, sonst bewusst weggelassen). */
+    val showRegisteringClub: Boolean? = null,
     // MATCH_LIST
     val listMode: BoardListMode? = null,
     val limit: Int? = null,
     /** Wettkampf-Kürzel (short_name) statt des vollen Namens — für schmale Listen. */
     val useShortNames: Boolean? = null,
+    // AWARD_CEREMONY: die Ehrung (Wettkampf + optionale Wertung), deren Podium die Kachel zeigt.
+    val competitionId: UUID? = null,
+    val ratingCategoryId: UUID? = null,
     // CLOCK
     val showEventName: Boolean? = null,
     // TEXT

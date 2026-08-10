@@ -568,7 +568,12 @@ object EventInfoService {
                                 namedRole = record.get("named_role", String::class.java),
                                 year = record[PARTICIPANT.YEAR],
                                 gender = record[PARTICIPANT.GENDER]?.name,
-                                externalClubName = record[PARTICIPANT.EXTERNAL_CLUB_NAME]
+                                externalClubName = record[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                                wornClubName = ClubComposition.clubWorn(
+                                    external = record[PARTICIPANT.EXTERNAL],
+                                    externalClubName = record[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                                    ownClubName = record.get(CompetitionMatchTeamRepo.PARTICIPANT_CLUB_NAME, String::class.java),
+                                ),
                             )
                         }
                     }
@@ -615,7 +620,12 @@ object EventInfoService {
                                 namedRole = record.get("named_role", String::class.java),
                                 year = record[PARTICIPANT.YEAR],
                                 gender = record[PARTICIPANT.GENDER]?.name,
-                                externalClubName = record[PARTICIPANT.EXTERNAL_CLUB_NAME]
+                                externalClubName = record[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                                wornClubName = ClubComposition.clubWorn(
+                                    external = record[PARTICIPANT.EXTERNAL],
+                                    externalClubName = record[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                                    ownClubName = record.get(CompetitionMatchTeamRepo.PARTICIPANT_CLUB_NAME, String::class.java),
+                                ),
                             )
                         }
                     }

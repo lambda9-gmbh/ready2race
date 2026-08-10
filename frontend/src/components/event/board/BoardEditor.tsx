@@ -24,6 +24,8 @@ import {
     Delete as DeleteIcon,
 } from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
+import {useFetch} from '@utils/hooks'
+import {getAwardCeremonies} from '@api/sdk.gen'
 import {
     BoardConfig,
     BoardDto,
@@ -38,7 +40,7 @@ import {gridPlacement} from './boardView'
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
 const MIN_ROTATION_SECONDS = 3
-const MIN_REFRESH_SECONDS = 10
+const MIN_REFRESH_SECONDS = 3
 const MAX_COLUMNS = 4
 const MAX_TILES = 12
 const MAX_ROW_SPAN = 3
@@ -71,10 +73,14 @@ const elementForType = (type: BoardElementType): BoardElement => {
             return {type, showEventName: true}
         case 'TEXT':
             return {type, text: ''}
+        case 'AWARD_CEREMONY':
+            // Die Ehrung wählt das Formular; ohne Auswahl lehnt der Server das Board ab.
+            return {type}
     }
 }
 
 interface BoardEditorProps {
+    eventId: string
     board: BoardDto | null
     onSubmit: (request: BoardRequest) => void
     onCancel: () => void
@@ -87,10 +93,16 @@ interface BoardEditorProps {
  * Anordnung. Bewusst kontrollierter State statt react-hook-form: die Struktur ist
  * verschachtelt und dynamisch, gespeichert wird immer das ganze Board.
  */
-const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
+const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => {
     const {t} = useTranslation()
 
     const [name, setName] = useState(board?.name ?? '')
+
+    // Die wählbaren Ehrungen (je Wettkampf und Wertung eine) — nur im Editor geladen,
+    // die öffentliche Anzeige bekommt die aufgelösten Podien über die Board-Antwort.
+    const {data: ceremonies} = useFetch(signal => getAwardCeremonies({signal, path: {eventId}}), {
+        deps: [eventId],
+    })
     const [config, setConfig] = useState<BoardConfig>(
         board?.config ?? {
             columns: 3,
@@ -164,14 +176,26 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
         tileIndex: number,
         elementIndex: number,
         element: BoardElement,
-        field: 'showCrew' | 'showCountdown' | 'showTimes' | 'contrastColors' | 'autoFit',
+        field:
+            | 'showCrew'
+            | 'showCountdown'
+            | 'showTimes'
+            | 'contrastColors'
+            | 'autoFit'
+            | 'showCrewDetails'
+            | 'showBirthYears'
+            | 'showAdvancement'
+            | 'showRegisteringClub',
+        // Die Sprecherinnen-Optionen sind bewusst standardmäßig aus (Zusatzdaten nur auf
+        // Anforderung); die Anzeige-Optionen standardmäßig an.
+        defaultOn: boolean = true,
     ) => (
         <FormControlLabel
             key={field}
             control={
                 <Checkbox
                     size="small"
-                    checked={element[field] !== false}
+                    checked={defaultOn ? element[field] !== false : element[field] === true}
                     onChange={e =>
                         updateElement(tileIndex, elementIndex, {
                             ...element,
@@ -208,6 +232,9 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                     </MenuItem>
                     <MenuItem value="CLOCK">{t('event.boards.element.type.clock')}</MenuItem>
                     <MenuItem value="TEXT">{t('event.boards.element.type.text')}</MenuItem>
+                    <MenuItem value="AWARD_CEREMONY">
+                        {t('event.boards.element.type.awardCeremony')}
+                    </MenuItem>
                 </TextField>
                 <Box sx={{flex: 1}} />
                 <IconButton
@@ -262,6 +289,23 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                             ] as const
                         ).map(field => booleanOption(tileIndex, elementIndex, element, field))}
                     </Box>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary">
+                            {t('event.boards.element.announcerSection')}
+                        </Typography>
+                        <Box>
+                            {(
+                                [
+                                    'showCrewDetails',
+                                    'showBirthYears',
+                                    'showAdvancement',
+                                    'showRegisteringClub',
+                                ] as const
+                            ).map(field =>
+                                booleanOption(tileIndex, elementIndex, element, field, false),
+                            )}
+                        </Box>
+                    </Box>
                 </Stack>
             )}
 
@@ -286,6 +330,9 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                         </MenuItem>
                         <MenuItem value="RUNNING">
                             {t('event.boards.element.listMode.running')}
+                        </MenuItem>
+                        <MenuItem value="SCHEDULE">
+                            {t('event.boards.element.listMode.schedule')}
                         </MenuItem>
                     </TextField>
                     <FormControlLabel
@@ -321,6 +368,41 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                         />
                     </Box>
                 </Stack>
+            )}
+
+            {element.type === 'AWARD_CEREMONY' && (
+                <TextField
+                    select
+                    size="small"
+                    fullWidth
+                    label={t('event.boards.element.ceremonyPick')}
+                    value={
+                        element.competitionId
+                            ? `${element.competitionId}|${element.ratingCategoryId ?? ''}`
+                            : ''
+                    }
+                    onChange={e => {
+                        const [competitionId, ratingCategoryId] = e.target.value.split('|')
+                        updateElement(tileIndex, elementIndex, {
+                            ...element,
+                            competitionId,
+                            ratingCategoryId: ratingCategoryId || undefined,
+                        })
+                    }}>
+                    {(ceremonies ?? []).map(choice => (
+                        <MenuItem
+                            key={`${choice.competitionId}|${choice.ratingCategoryId ?? ''}`}
+                            value={`${choice.competitionId}|${choice.ratingCategoryId ?? ''}`}>
+                            {[
+                                choice.competitionIdentifier,
+                                choice.competitionShortName ?? choice.competitionName,
+                                choice.ratingCategoryName,
+                            ]
+                                .filter(Boolean)
+                                .join(' · ')}
+                        </MenuItem>
+                    ))}
+                </TextField>
             )}
 
             {element.type === 'CLOCK' && (

@@ -172,6 +172,7 @@ const BoardsPanel = ({eventId}: BoardsPanelProps) => {
                     zweites Öffnen die Konfiguration des ersten. */}
                 <BoardEditor
                     key={editingBoard?.id ?? 'new'}
+                    eventId={eventId}
                     board={editingBoard}
                     onSubmit={handleSubmit}
                     onCancel={() => {

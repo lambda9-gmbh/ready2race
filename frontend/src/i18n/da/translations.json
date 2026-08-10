@@ -1568,7 +1568,12 @@
         "minutesUnit": "min",
         "hoursUnit": "t",
         "secondsUnit": "sek",
-        "place": "{{count}}."
+        "place": "{{count}}.",
+        "advancing": "{{count}} både går videre → {{round}}",
+        "advancing_one": "1 båd går videre → {{round}}",
+        "advancingUnsized": "Videre: {{round}}",
+        "birthYear": "årg. {{year}}",
+        "registeringClub": "Tilmeldt af: {{club}}"
       }
     },
     "match": {
@@ -1911,7 +1916,8 @@
           "match": "Løb",
           "matchList": "Løbsliste",
           "clock": "Ur",
-          "text": "Infotekst"
+          "text": "Infotekst",
+          "awardCeremony": "Præmieoverrækkelse"
         },
         "offset": "Position",
         "offsetCurrent": "Aktuelt løb",
@@ -1929,7 +1935,8 @@
           "label": "Indhold",
           "upcoming": "Kommende løb",
           "results": "Seneste resultater",
-          "running": "Igangværende løb"
+          "running": "Igangværende løb",
+          "schedule": "Dagsprogram"
         },
         "titleCurrent": "I løb nu",
         "titleNext": "Næste løb",
@@ -1939,7 +1946,17 @@
         "emptyCurrent": "Intet løb i gang",
         "emptyUpcoming": "Ingen flere planlagte løb",
         "emptyPast": "Endnu intet resultat",
-        "useShortNames": "Brug løbsforkortelser"
+        "useShortNames": "Brug løbsforkortelser",
+        "ceremonyTitle": "Præmieoverrækkelse",
+        "ceremonyPick": "Overrækkelse",
+        "ceremonyEmpty": "Endnu ingen resultater klar til præmiering",
+        "sharedRank": "delt",
+        "emptySchedule": "Intet program tilgængeligt",
+        "announcerSection": "Til speakere",
+        "showCrewDetails": "Besætning i detaljer (én linje pr. person)",
+        "showBirthYears": "Vis årgange",
+        "showAdvancement": "Vis oprykningsregel",
+        "showRegisteringClub": "Vis tilmeldende klub"
       },
       "columns": "Kolonner",
       "columnCount": "{{count}} kolonner",

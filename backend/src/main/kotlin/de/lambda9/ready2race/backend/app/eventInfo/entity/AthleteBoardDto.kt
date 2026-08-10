@@ -50,6 +50,13 @@ data class AthleteBoardMatch(
      * immer leer - an einem abgesagten Lauf hängt keine Aufstellung mehr.
      */
     val cancelled: Boolean = false,
+    /**
+     * „Weiter kommen [advancingSeats] Boote → [nextRoundName]" — aus der Rundenkonfiguration,
+     * nur befüllt, wenn ein Element showAdvancement anfordert. [advancingSeats] bleibt null,
+     * wenn die Folgerunde ein Massenfeld ist (Platzzahl nicht festgelegt).
+     */
+    val nextRoundName: String? = null,
+    val advancingSeats: Int? = null,
 )
 
 data class AthleteBoardTeam(
@@ -87,11 +94,20 @@ data class AthleteBoardTeam(
     val penaltyNote: String? = null,
     val failed: Boolean = false,
     val failedReason: String? = null,
+    /** Meldender Verein — nur befüllt, wenn ein Element showRegisteringClub anfordert. */
+    val registeringClub: String? = null,
 )
 
 data class AthleteBoardParticipant(
     val name: String,
     val role: String?,
+    /**
+     * Geburtsjahr und getragener Verein — nur befüllt, wenn ein Board-Element die
+     * Sprecherinnen-Details anfordert (BoardElement.showCrewDetails/showBirthYears);
+     * sonst gilt die Sparsamkeitsregel der öffentlichen Anzeige.
+     */
+    val year: Int? = null,
+    val clubName: String? = null,
 )
 
 data class AthleteBoardResult(

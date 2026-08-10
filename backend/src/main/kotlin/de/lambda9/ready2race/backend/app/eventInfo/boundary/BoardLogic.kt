@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyKeyRequest
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 
 /**
@@ -14,7 +15,14 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.*
  */
 object BoardLogic {
 
-    const val CACHE_TTL_SECONDS = AthleteBoardLogic.CACHE_TTL_SECONDS
+    // Kürzer als die alten 5 s der Athleten-Anzeige: der Abfragetakt darf bis 3 s
+    // hinunter (Sprecherinnen-Wunsch), und ein Zwischenspeicher, der länger hält als der
+    // Takt, machte den schnellen Takt wirkungslos.
+    const val CACHE_TTL_SECONDS = 2
+
+    /** Wie [AthleteBoardLogic.isCacheFresh], nur gegen die kürzere Board-TTL. */
+    fun isCacheFresh(builtAt: java.time.LocalDateTime, now: java.time.LocalDateTime): Boolean =
+        builtAt.plusSeconds(CACHE_TTL_SECONDS.toLong()).isAfter(now)
 
     data class BoardDataNeeds(
         val runningLimit: Int,
@@ -22,6 +30,14 @@ object BoardLogic {
         val resultsLimit: Int,
         val offsets: Set<Int>,
         val listLimits: Map<BoardListMode, Int>,
+        /** Sprecherinnen-Details (Crew einzeln, Jahrgänge, meldender Verein) angefordert. */
+        val crewDetails: Boolean = false,
+        /** Weiterkommens-Regel („N Boote → Finale") angefordert. */
+        val advancement: Boolean = false,
+        /** Tagesprogramm (Listenmodus SCHEDULE) angefordert. */
+        val schedule: Boolean = false,
+        /** Die Ehrungen aller Siegerehrungs-Elemente, dedupliziert. */
+        val ceremonies: List<AwardCeremonyKeyRequest> = emptyList(),
     )
 
     /**
@@ -42,6 +58,16 @@ object BoardLogic {
         val maxNegative = offsets.filter { it < 0 }.minOrNull()?.let { -it } ?: 0
         val maxPositive = offsets.filter { it > 0 }.maxOrNull() ?: 0
 
+        val matchElements = elements.filter { it.type == BoardElementType.MATCH }
+        val crewDetails = matchElements.any {
+            it.showCrewDetails == true || it.showBirthYears == true || it.showRegisteringClub == true
+        }
+        val advancement = matchElements.any { it.showAdvancement == true }
+        val ceremonies = elements
+            .filter { it.type == BoardElementType.AWARD_CEREMONY && it.competitionId != null }
+            .map { AwardCeremonyKeyRequest(competitionId = it.competitionId!!, ratingCategoryId = it.ratingCategoryId) }
+            .distinct()
+
         // Negative Offsets können parallel laufende Läufe treffen, bevor sie die
         // Ergebnisse erreichen — deshalb |min|+1 laufende Läufe abrufen, nie unter 1,
         // damit „läuft gerade nichts" von „nichts abgefragt" unterscheidbar bleibt.
@@ -51,6 +77,10 @@ object BoardLogic {
             resultsLimit = maxOf(1, maxNegative, listLimits[BoardListMode.RESULTS] ?: 0),
             offsets = offsets,
             listLimits = listLimits,
+            crewDetails = crewDetails,
+            advancement = advancement,
+            schedule = BoardListMode.SCHEDULE in listLimits,
+            ceremonies = ceremonies,
         )
     }
 

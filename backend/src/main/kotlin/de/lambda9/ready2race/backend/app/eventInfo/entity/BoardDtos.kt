@@ -81,6 +81,10 @@ data class BoardRequest(
                         if (element.text.isNullOrBlank()) errors += "$at: TEXT needs text"
                     }
 
+                    BoardElementType.AWARD_CEREMONY -> {
+                        if (element.competitionId == null) errors += "$at: AWARD_CEREMONY needs competitionId"
+                    }
+
                     BoardElementType.CLOCK -> {}
                 }
             }
