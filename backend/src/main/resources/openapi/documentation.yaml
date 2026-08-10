@@ -10748,6 +10748,7 @@ components:
     ParticipantRequirementDto:
       type: object
       required:
+        - publiclyVisible
         - id
         - name
         - optional
@@ -10765,6 +10766,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true
@@ -10788,6 +10792,7 @@ components:
     ParticipantRequirementForEventDto:
       type: object
       required:
+        - publiclyVisible
         - id
         - name
         - optional
@@ -10808,6 +10813,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         requirements:
           type: array
           items:
@@ -10842,6 +10850,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true

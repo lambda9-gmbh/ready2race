@@ -2515,6 +2515,10 @@ export type ParticipantRequirementDto = {
      */
     checkInApp: boolean
     /**
+     * Im oeffentlichen Dashboard Mein Event sichtbar
+     */
+    publiclyVisible: boolean
+    /**
      * Check must be at most this many minutes before match start
      */
     checkEarliestMinutesBefore?: number | null
@@ -2534,6 +2538,10 @@ export type ParticipantRequirementForEventDto = {
      * Per App prüfbar
      */
     checkInApp: boolean
+    /**
+     * Im oeffentlichen Dashboard Mein Event sichtbar
+     */
+    publiclyVisible: boolean
     requirements?: Array<NamedParticipantRequirementForEventDto>
 }
 
@@ -2545,6 +2553,10 @@ export type ParticipantRequirementUpsertDto = {
      * Per App prüfbar
      */
     checkInApp?: boolean
+    /**
+     * Im oeffentlichen Dashboard Mein Event sichtbar
+     */
+    publiclyVisible?: boolean
     /**
      * Check must be at most this many minutes before match start
      */
