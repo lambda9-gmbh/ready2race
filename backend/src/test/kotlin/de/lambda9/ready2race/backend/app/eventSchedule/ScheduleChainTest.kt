@@ -97,9 +97,9 @@ class ScheduleChainTest {
 
     // --- parallele Startgruppen müssen als Ganzes fertig sein (Thomas' Vorgabe) ---
     //
-    // getChainSlots liefert seit dem Fix (>= statt > auf start_time) die eigene Gruppe des gerade
-    // beendeten Laufs mit in den Walk - decideNext muss deshalb einen noch laufenden Sibling-Lauf
-    // derselben Startzeit erkennen und darf dann NICHT zur nächsten Gruppe vorrücken.
+    // getChainSlots liefert den ganzen Zeitplan, also auch die eigene Gruppe des gerade beendeten
+    // Laufs - decideNext muss deshalb einen noch laufenden Sibling-Lauf derselben Startzeit
+    // erkennen und darf dann NICHT zur nächsten Gruppe vorrücken.
 
     @Test
     fun blocksAdvanceWhileASiblingOfTheSameStartIsStillRunning() {
@@ -186,9 +186,11 @@ class ScheduleChainTest {
 
     @Test
     fun anActivatedButUnstartedSiblingDoesNotBlockTheGroup() {
-        // Der einzige Slot ist bereits aktiviert und damit nicht mehr aktivierbar - NothingToDo ist
-        // hier richtig. Geprüft wird, dass die Entscheidung NICHT schon an siblingStillRunning
-        // hängen bleibt, sondern die Suche in der nächsten Gruppe fortsetzen würde.
+        // Der einzige Slot ist bereits an den Start gerufen: Es gibt nichts mehr zu rufen, und
+        // weiter hinten hat die Kette nichts zu suchen - NothingToDo. Dass die Entscheidung dabei
+        // NICHT schon an "läuft noch" hängen bleibt, zeigt
+        // [aPreparedNeighbourStillLetsItsOwnGroupBeCompleted]: Der zweite Lauf derselben Startzeit
+        // wird weiterhin dazugeholt.
         val decision = ScheduleChain.decideNext(
             listOf(slot(10, LINKED, UUID.randomUUID(), activatedAt = base.plusMinutes(5))),
         )
@@ -211,13 +213,58 @@ class ScheduleChainTest {
         assertIs<ChainDecision.NothingToDo>(ScheduleChain.decideNext(listOf(running, activatable)))
     }
 
+    /**
+     * Der Vorfall vom 10.08.2026 auf der Coastal-Regatta, als reine Funktion: Steht die vordere
+     * Gruppe schon am Start, ist dort Schluss - die dahinter wird NICHT mitgerufen.
+     *
+     * Bis dahin galt hier das Gegenteil ("nichts mehr zu aktivieren, also weiter"). Das ging so
+     * lange gut, wie die Kette je Beenden genau einmal lief; ein Beenden stößt sie aber zweimal an,
+     * weil die Folgerunden-Automatik am Ende von `createNewRound` selbst noch einmal zieht. Der
+     * zweite Durchlauf fand die eben gerufene Gruppe "nicht mehr aktivierbar" und holte die
+     * übernächste dazu. Dasselbe passiert ohne jede Nebenläufigkeit, sobald der nächste Lauf schon
+     * von Hand an den Start gerufen wurde.
+     */
     @Test
-    fun theChainAdvancesWhenTheGroupHoldsOnlyPreparedMatches() {
+    fun aGroupAlreadyCalledToTheStartIsNotOvertaken() {
         val prepared = slot(10, LINKED, UUID.randomUUID(), activatedAt = base.plusMinutes(5))
-        val m = UUID.randomUUID()
-        val next = slot(20, LINKED, m)
+        val next = slot(20, LINKED, UUID.randomUUID())
 
-        assertEquals(ChainDecision.Activate(listOf(m)), ScheduleChain.decideNext(listOf(prepared, next)))
+        assertIs<ChainDecision.NothingToDo>(ScheduleChain.decideNext(listOf(prepared, next)))
+    }
+
+    /**
+     * Innerhalb der Gruppe bleibt es beim gemeinsamen Start: Ein bereits gerufener Nachbar hindert
+     * die Kette nicht daran, den zweiten Lauf derselben Startzeit dazuzuholen. Gestoppt wird erst,
+     * wenn in der Gruppe nichts mehr zu rufen ist.
+     */
+    @Test
+    fun aPreparedNeighbourStillLetsItsOwnGroupBeCompleted() {
+        val t = base.plusMinutes(10)
+        val prepared = ChainSlot(
+            UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
+            matchFinished = false, matchOpen = true, matchActivatedAt = t.minusMinutes(5),
+        )
+        val m = UUID.randomUUID()
+        val stillToCall = ChainSlot(UUID.randomUUID(), t, LINKED, m, matchFinished = false, matchOpen = true)
+
+        assertEquals(
+            ChainDecision.Activate(listOf(m)),
+            ScheduleChain.decideNext(listOf(prepared, stillToCall)),
+        )
+    }
+
+    /**
+     * Thomas' Vorgabe vom 10.08.2026: Es gibt keinen Grund, einen Lauf am nächsten Tag zu starten,
+     * solange davor noch Rennen stehen. Die Kette arbeitet den Zeitplan der Reihe nach ab - hier
+     * also den offenen Lauf des ersten Tages, nicht den des zweiten.
+     */
+    @Test
+    fun anOpenRaceEarlierInTheScheduleComesFirst() {
+        val m = UUID.randomUUID()
+        val openToday = slot(10, LINKED, m)
+        val nextDay = slot(24 * 60, LINKED, UUID.randomUUID())
+
+        assertEquals(ChainDecision.Activate(listOf(m)), ScheduleChain.decideNext(listOf(openToday, nextDay)))
     }
 
     @Test

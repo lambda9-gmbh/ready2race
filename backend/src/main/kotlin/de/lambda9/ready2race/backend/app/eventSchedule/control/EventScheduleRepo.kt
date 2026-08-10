@@ -117,18 +117,20 @@ object EventScheduleRepo {
     }
 
     /**
-     * Slots ab (einschließlich) [after] für die Aktivierungskette (Task 9). Gleiche Joins/Aliase wie
+     * ALLE Slots der Veranstaltung für die Aktivierungskette (Task 9). Gleiche Joins/Aliase wie
      * [getSlots], zusätzlich `match_open` — mindestens eine Mannschaft ohne Ergebnis, wortgleiches
      * Prädikat zu `LiveDashboardRepo.getActivationCandidates` — und `ACTIVATED_AT`, damit
      * [ScheduleChain.decideNext] einen bereits an den Start gerufenen Sibling-Lauf derselben
      * Startzeit von einem frisch aktivierbaren unterscheiden kann.
      *
-     * Bewusst `>=` statt `>`: [after] ist die Startzeit des gerade beendeten Slots selbst, und dessen
-     * Gruppe (parallele Starts derselben Startzeit) muss mit in den Walk - sonst würde ein noch
-     * offener Parallel-Lauf derselben Gruppe stillschweigend übergangen und die Kette bereits auf die
-     * nächste Gruppe vorrücken, obwohl die aktuelle noch nicht fertig ist (siehe ScheduleChainTest).
+     * Bewusst ohne Untergrenze: Bis zum 10.08.2026 stand hier die Startzeit des gerade beendeten
+     * Slots (`>= after`), und alles davor war für die Kette unsichtbar. Ein Beenden am zweiten
+     * Regattatag hat damit den offenen Rest des ersten Tages übersprungen. Welche Gruppe an der
+     * Reihe ist, entscheidet jetzt allein [ScheduleChain.decideNext] — an einer Stelle, mit dem
+     * ganzen Zeitplan vor sich. Ein Renntag hat einige hundert Slots; das ist eine Abfrage, die die
+     * Kette ohnehin nur beim Beenden, beim Setzen einer Runde und beim Absagen stellt.
      */
-    fun getChainSlots(eventId: UUID, after: LocalDateTime) = Jooq.query {
+    fun getChainSlots(eventId: UUID) = Jooq.query {
         val sibling = COMPETITION_SETUP_MATCH.`as`("sibling")
         val siblingMatch = COMPETITION_MATCH.`as`("sibling_match")
 
@@ -177,7 +179,6 @@ object EventScheduleRepo {
             .leftJoin(COMPETITION_MATCH)
             .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH))
             .where(EVENT_SCHEDULE_SLOT.EVENT.eq(eventId))
-            .and(EVENT_SCHEDULE_SLOT.START_TIME.ge(after))
             .orderBy(
                 EVENT_SCHEDULE_SLOT.START_TIME.asc(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc(),
@@ -194,30 +195,16 @@ object EventScheduleRepo {
             .fetchOne(EVENT_SCHEDULE_SLOT.START_TIME)
     }
 
-    /** Ob irgendein Lauf des Events gerade läuft — Gate für [de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService.resumeIfParked]. */
-    fun hasRunningMatch(eventId: UUID) = Jooq.query {
-        fetchExists(
-            COMPETITION_MATCH
-                .join(COMPETITION_SETUP_MATCH)
-                .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
-                .join(COMPETITION_SETUP_ROUND)
-                .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
-                .join(COMPETITION_PROPERTIES)
-                .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
-                .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-                .where(
-                    COMPETITION.EVENT.eq(eventId)
-                        .and(COMPETITION_MATCH.ACTIVATED_AT.isNotNull)
-                )
-        )
-    }
-
     /**
      * Größte Startzeit unter allen Slots des Events, deren verknüpfter Lauf bereits beendet ist —
-     * Referenzpunkt für den zweiten Auslöser der Kette nach Rundenerzeugung. Bewusst `max(start_time)`
-     * statt "Slot des zuletzt (nach finished_at) beendeten Laufs": Läufe werden nicht zwingend in
-     * Startzeit-Reihenfolge beendet, `max(start_time)` liefert dagegen eine monotone Front, die nie
-     * zurückspringt. null, wenn im Zeitstrahl des Events noch nichts beendet ist.
+     * null, wenn im Zeitstrahl des Events noch nichts beendet ist. Genau diese Unterscheidung
+     * braucht `ScheduleChainService.resumeIfParked`: Solange nichts beendet ist, hat die Regatta
+     * noch nicht begonnen, und den allerersten Lauf ruft der Schiedsrichter selbst an den Start.
+     *
+     * Der Wert selbst ist seit dem 10.08.2026 kein Startpunkt der Kette mehr. Als monotone Front
+     * ("springt nie zurück") hat er genau das getan, was er sollte — und damit den offenen Rest des
+     * ersten Regattatags übersprungen, sobald am zweiten Tag ein Lauf beendet war. Wo die Kette
+     * ansetzt, entscheidet jetzt der Zeitplan selbst (siehe [getChainSlots]).
      */
     fun getLastFinishedSlotTime(eventId: UUID) = Jooq.query {
         val maxStartTime = DSL.max(EVENT_SCHEDULE_SLOT.START_TIME)

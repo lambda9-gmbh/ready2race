@@ -531,9 +531,11 @@ object LiveDashboardService {
             updatedAt = LocalDateTime.now()
         }.orDie()
 
-        // Die Kette läuft vorwärts: aktiviert werden nur Läufe, die später starten als der eben
-        // beendete. Sonst würde ein ohne vollständige Ergebnisse freigegebener Lauf sich selbst
-        // wieder einreihen — zurückholen geht bewusst nur von Hand.
+        // Der beendete Lauf ist der Anlass, nicht der Startpunkt: Die Kette sucht im ganzen
+        // Zeitplan die vorderste Gruppe, die noch etwas offen hat, und handelt dort. Ein zweiter
+        // Anstoß (die Folgerunden-Automatik unten ruft sie erneut) findet dieselbe Front vor und
+        // tut deshalb nichts mehr — bis zum 10.08.2026 ist er über die eben gerufene Gruppe hinweg
+        // zur übernächsten gelaufen und hat eine Startgruppe zu viel an den Start geholt.
         //
         // Steht die Veranstaltung auf DEAKTIVIERT, beendet der Aufruf nur diesen Lauf. Das ist die
         // sichere Wahl, solange der Zeitplan Lücken hat: Startzeiten stehen erst fest, wenn die
@@ -545,7 +547,7 @@ object LiveDashboardService {
             if (slotTime != null) {
                 // Zeitstrahl-Modus: der Kette entlang der Slots folgen, an wartenden Slots geduldig
                 // sein (createNewRound stößt die Kette dann später wieder an).
-                !ScheduleChainService.decideAndActivate(eventId, after = slotTime, userId)
+                !ScheduleChainService.decideAndActivate(eventId, userId)
             } else {
                 // Legacy: Events ohne Zeitstrahl behalten das bisherige Verhalten.
                 val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
