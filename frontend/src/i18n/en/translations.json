@@ -1638,6 +1638,7 @@
       },
       "lastUpdated": "Updated: {{time}}",
       "staleWarning": "Connection lost — data may be outdated.",
+      "staleSince": "As of {{time}} — no actions are possible while offline.",
       "loadError": "Could not load data.",
       "noRunning": "No match is currently running.",
       "nextUp": "Up next",
@@ -2409,7 +2410,8 @@
         "qrManagement": "QR Code Management",
         "competitionCheck": "Competition Check",
         "eventRequirement": "Event Requirements",
-        "caterer": "Catering"
+        "caterer": "Catering",
+        "liveDashboard": "Referee dashboard"
       },
       "switchEvent": "Switch Event"
     },
@@ -2417,6 +2419,17 @@
       "title": "Not authorized",
       "message": "You are not authorized for this page.",
       "backButton": "Back to login"
+    },
+    "dashboard": {
+      "noEvent": "No event selected."
+    },
+    "update": {
+      "available": "New version available",
+      "reload": "Reload now"
+    },
+    "reset": {
+      "button": "Reset app",
+      "confirm": "Resets the app on this device and reloads it. You stay signed in."
     }
   },
   "caterer": {
