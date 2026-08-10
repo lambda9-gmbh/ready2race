@@ -87,6 +87,9 @@ class AwardCeremonyServiceTest {
         val sprintId: UUID,
         /** Rennnummer „3" - gemeldet, aber nie gefahren. */
         val unracedId: UUID,
+        /** Die gepflegte Reihenfolge sagt: „Masters B" zuerst - siehe [seedCeremonies]. */
+        val mastersAId: UUID,
+        val mastersBId: UUID,
     )
 
     @Test
@@ -105,6 +108,13 @@ class AwardCeremonyServiceTest {
                 Triple("10", "Masters A", 3),
             ),
             ceremonies.map { Triple(it.competitionIdentifier, it.ratingCategoryName, it.awardedTeams) },
+        )
+
+        // Ausgewählt wird über die Id, nicht über den Namen: zwei gleichnamige Kategorien wären
+        // sonst dieselbe Ehrung.
+        assertEquals(
+            listOf(null, seeded.mastersBId, seeded.mastersAId),
+            ceremonies.map { it.ratingCategoryId },
         )
 
         val quad = ceremonies.first { it.competitionIdentifier == "10" }
@@ -133,8 +143,8 @@ class AwardCeremonyServiceTest {
             seeded.eventId,
             AwardCeremonySelectionRequest(
                 selection = listOf(
-                    AwardCeremonyKeyRequest(seeded.quadId, "Masters A"),
-                    AwardCeremonyKeyRequest(seeded.quadId, "Masters B"),
+                    AwardCeremonyKeyRequest(seeded.quadId, seeded.mastersAId),
+                    AwardCeremonyKeyRequest(seeded.quadId, seeded.mastersBId),
                 )
             ),
         )
@@ -187,12 +197,12 @@ class AwardCeremonyServiceTest {
         val seeded = seedCeremonies()
 
         val mastersA = (!AwardCeremonyService.listCeremonies(seeded.eventId)).data
-            .single { it.competitionIdentifier == "10" && it.ratingCategoryName == "Masters A" }
+            .single { it.competitionIdentifier == "10" && it.ratingCategoryId == seeded.mastersAId }
         assertEquals(3, mastersA.awardedTeams, "Vier platzierte Boote, aber nur drei Ränge")
 
         val file = !AwardCeremonyService.download(
             seeded.eventId,
-            AwardCeremonySelectionRequest(listOf(AwardCeremonyKeyRequest(seeded.quadId, "Masters A"))),
+            AwardCeremonySelectionRequest(listOf(AwardCeremonyKeyRequest(seeded.quadId, seeded.mastersAId))),
         )
 
         // Dieselbe Zahl noch einmal am Blatt gemessen: das vierte Boot der Wertung (Startnummer 6)
@@ -253,7 +263,7 @@ class AwardCeremonyServiceTest {
         val file = !AwardCeremonyService.download(
             seeded.eventId,
             AwardCeremonySelectionRequest(
-                selection = listOf(AwardCeremonyKeyRequest(seeded.quadId, "Masters A"))
+                selection = listOf(AwardCeremonyKeyRequest(seeded.quadId, seeded.mastersAId))
             ),
         )
 
@@ -280,7 +290,7 @@ class AwardCeremonyServiceTest {
         val file = !AwardCeremonyService.download(
             seeded.eventId,
             AwardCeremonySelectionRequest(
-                selection = listOf(AwardCeremonyKeyRequest(seeded.sprintId, ratingCategoryName = null))
+                selection = listOf(AwardCeremonyKeyRequest(seeded.sprintId, ratingCategoryId = null))
             ),
         )
 
@@ -305,7 +315,7 @@ class AwardCeremonyServiceTest {
         val file = !AwardCeremonyService.download(
             seeded.eventId,
             AwardCeremonySelectionRequest(
-                selection = listOf(AwardCeremonyKeyRequest(seeded.quadId, "Masters A"))
+                selection = listOf(AwardCeremonyKeyRequest(seeded.quadId, seeded.mastersAId))
             ),
         )
 
@@ -329,7 +339,7 @@ class AwardCeremonyServiceTest {
         val file = !AwardCeremonyService.download(
             seeded.eventId,
             AwardCeremonySelectionRequest(
-                selection = listOf(AwardCeremonyKeyRequest(seeded.sprintId, ratingCategoryName = null))
+                selection = listOf(AwardCeremonyKeyRequest(seeded.sprintId, ratingCategoryId = null))
             ),
         )
 
@@ -350,7 +360,7 @@ class AwardCeremonyServiceTest {
         val file = !AwardCeremonyService.download(
             seeded.eventId,
             AwardCeremonySelectionRequest(
-                selection = listOf(AwardCeremonyKeyRequest(seeded.quadId, "Masters A"))
+                selection = listOf(AwardCeremonyKeyRequest(seeded.quadId, seeded.mastersAId))
             ),
         )
 
@@ -380,7 +390,7 @@ class AwardCeremonyServiceTest {
             AwardCeremonyService.download(
                 seeded.eventId,
                 AwardCeremonySelectionRequest(
-                    selection = listOf(AwardCeremonyKeyRequest(foreignCompetitionId, ratingCategoryName = null))
+                    selection = listOf(AwardCeremonyKeyRequest(foreignCompetitionId, ratingCategoryId = null))
                 ),
             )
         }
@@ -394,7 +404,7 @@ class AwardCeremonyServiceTest {
             AwardCeremonyService.download(
                 seeded.eventId,
                 AwardCeremonySelectionRequest(
-                    selection = listOf(AwardCeremonyKeyRequest(seeded.quadId, "Masters Z"))
+                    selection = listOf(AwardCeremonyKeyRequest(seeded.quadId, UUID.randomUUID()))
                 ),
             )
         }
@@ -412,7 +422,7 @@ class AwardCeremonyServiceTest {
             AwardCeremonyService.download(
                 seeded.eventId,
                 AwardCeremonySelectionRequest(
-                    selection = listOf(AwardCeremonyKeyRequest(seeded.unracedId, ratingCategoryName = null))
+                    selection = listOf(AwardCeremonyKeyRequest(seeded.unracedId, ratingCategoryId = null))
                 ),
             )
         }
@@ -558,7 +568,7 @@ class AwardCeremonyServiceTest {
         // Gemeldet, aber nie gefahren: kein Lauf, keine Plätze.
         val (unracedId, _) = seedCompetition(eventId, "3", "Nicht gefahren")
 
-        return SeededCeremonies(eventId, quadId, sprintId, unracedId)
+        return SeededCeremonies(eventId, quadId, sprintId, unracedId, mastersA, mastersB)
     }
 
     private fun TestComprehensionScope<JEnv>.seedEvent(

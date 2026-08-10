@@ -20,22 +20,30 @@ describe('ceremonyKey', () => {
         // Der Server lässt null-Felder weg (JsonInclude.NON_ABSENT), eine selbst gebaute Auswahl
         // setzt dagegen leicht null. Unterschieden die beiden sich hier, fände der Dialog seine
         // eigene Vorauswahl nicht wieder und der Haken erschiene nie.
-        expect(ceremonyKey(choice({}))).toBe(ceremonyKey(choice({ratingCategoryName: null})))
-        expect(ceremonyKey(choice({ratingCategoryName: undefined}))).toBe(
-            ceremonyKey(choice({ratingCategoryName: null})),
+        expect(ceremonyKey(choice({}))).toBe(ceremonyKey(choice({ratingCategoryId: null})))
+        expect(ceremonyKey(choice({ratingCategoryId: undefined}))).toBe(
+            ceremonyKey(choice({ratingCategoryId: null})),
         )
     })
 
     it('hält die Ehrung ohne Wertung von einer benannten auseinander', () => {
         expect(ceremonyKey(choice({}))).not.toBe(
-            ceremonyKey(choice({ratingCategoryName: 'Masters'})),
+            ceremonyKey(choice({ratingCategoryId: 'r1', ratingCategoryName: 'Masters'})),
         )
     })
 
     it('hält gleichnamige Wertungen verschiedener Wettkämpfe auseinander', () => {
-        expect(ceremonyKey(choice({competitionId: 'c1', ratingCategoryName: 'Masters'}))).not.toBe(
-            ceremonyKey(choice({competitionId: 'c2', ratingCategoryName: 'Masters'})),
-        )
+        expect(
+            ceremonyKey(choice({competitionId: 'c1', ratingCategoryId: 'r1'})),
+        ).not.toBe(ceremonyKey(choice({competitionId: 'c2', ratingCategoryId: 'r2'})))
+    })
+
+    it('hält zwei gleichnamige Wertungen desselben Wettkampfs auseinander', () => {
+        // Der Grund für den Schlüsselwechsel vom Namen auf die Id: über den Namen wären diese
+        // beiden Ehrungen dieselbe, und ein Haken setzte beide Blätter auf einmal.
+        expect(
+            ceremonyKey(choice({ratingCategoryId: 'r1', ratingCategoryName: 'Masters'})),
+        ).not.toBe(ceremonyKey(choice({ratingCategoryId: 'r2', ratingCategoryName: 'Masters'})))
     })
 })
 
@@ -43,8 +51,14 @@ describe('ceremonyRequestKey', () => {
     it('schickt die fehlende Wertung als null, nicht als undefined', () => {
         expect(ceremonyRequestKey(choice({}))).toEqual({
             competitionId: 'c1',
-            ratingCategoryName: null,
+            ratingCategoryId: null,
         })
+    })
+
+    it('schickt die Id der Wertung, nicht ihren Namen', () => {
+        expect(
+            ceremonyRequestKey(choice({ratingCategoryId: 'r1', ratingCategoryName: 'Masters'})),
+        ).toEqual({competitionId: 'c1', ratingCategoryId: 'r1'})
     })
 })
 
@@ -52,8 +66,8 @@ describe('groupByCompetition', () => {
     it('behält die Reihenfolge des Servers bei - sie ist die Reihenfolge der Ehrungen', () => {
         const groups = groupByCompetition([
             choice({competitionId: 'c2', competitionIdentifier: '2'}),
-            choice({competitionId: 'c1', competitionIdentifier: '1', ratingCategoryName: 'A'}),
-            choice({competitionId: 'c2', competitionIdentifier: '2', ratingCategoryName: 'B'}),
+            choice({competitionId: 'c1', competitionIdentifier: '1', ratingCategoryId: 'r1'}),
+            choice({competitionId: 'c2', competitionIdentifier: '2', ratingCategoryId: 'r2'}),
         ])
 
         expect(groups.map(it => it.competitionId)).toEqual(['c2', 'c1'])
@@ -68,13 +82,17 @@ describe('isSingleUncategorized', () => {
 
     it('erkennt ihn auch, wenn die Wertung als null statt als undefined ankommt', () => {
         expect(
-            isSingleUncategorized(groupByCompetition([choice({ratingCategoryName: null})])[0]),
+            isSingleUncategorized(groupByCompetition([choice({ratingCategoryId: null})])[0]),
         ).toBe(true)
     })
 
     it('lässt eine benannte Wertung ihre eigene Zeile behalten', () => {
         expect(
-            isSingleUncategorized(groupByCompetition([choice({ratingCategoryName: 'Masters'})])[0]),
+            isSingleUncategorized(
+                groupByCompetition([
+                    choice({ratingCategoryId: 'r1', ratingCategoryName: 'Masters'}),
+                ])[0],
+            ),
         ).toBe(false)
     })
 })

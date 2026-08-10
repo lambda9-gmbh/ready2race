@@ -207,6 +207,7 @@ object AwardCeremonyService {
                             competitionIdentifier = competition.identifier!!,
                             competitionShortName = competition.shortName,
                             competitionName = competition.name!!,
+                            ratingCategoryId = section.category?.id,
                             ratingCategoryName = section.category?.name,
                             // Nicht die Größe der Gruppe: gedruckt wird nur bis Rang drei, und die
                             // Auswahl soll die Zahl der Blöcke nennen, die daraus wirklich entstehen.
@@ -236,7 +237,12 @@ object AwardCeremonyService {
         return Triple(round.setupRoundName, name, match.startedAt ?: match.startTime)
     }
 
-    /** Die Einheit einer Ehrung ist (Wettkampf, Wertung) - `null` als Wertung inbegriffen. */
+    /**
+     * Die Einheit einer Ehrung ist (Wettkampf, Wertung) - `null` als Wertung inbegriffen.
+     *
+     * Verglichen wird die Id der Wertung, nicht ihr Name: zwei gleichnamige Kategorien wären sonst
+     * ununterscheidbar, und eine Auswahl träfe beide Blätter oder das falsche.
+     */
     private fun Ceremony.matches(key: AwardCeremonyKeyRequest): Boolean =
-        choice.competitionId == key.competitionId && choice.ratingCategoryName == key.ratingCategoryName
+        choice.competitionId == key.competitionId && choice.ratingCategoryId == key.ratingCategoryId
 }

@@ -48,6 +48,12 @@ data class AwardCeremonyChoiceDto(
     val competitionIdentifier: String,
     val competitionShortName: String?,
     val competitionName: String,
+    /**
+     * Der Schlüssel der Wertung - `null` heißt „der Wettkampf als Ganzes". Die Id statt des Namens,
+     * weil zwei gleichnamige Kategorien sonst dieselbe Ehrung bezeichneten.
+     */
+    val ratingCategoryId: UUID?,
+    /** Reiner Anzeigewert; ausgewählt wird über [ratingCategoryId]. */
     val ratingCategoryName: String?,
     /**
      * Die Zahl der Boote, die auf dem Blatt stehen: Ränge bis drei, Gleichstände eingeschlossen.
@@ -59,10 +65,15 @@ data class AwardCeremonyChoiceDto(
     val awardedTeams: Int,
 )
 
-/** Die Einheit einer Seite. `null` als Kategorie ist ein gültiger Wert, kein „unbekannt". */
+/**
+ * Die Einheit einer Seite. `null` als Kategorie ist ein gültiger Wert, kein „unbekannt".
+ *
+ * Der Name der Wertung steht bewusst nicht mehr darin: er würde hier nichts auswählen, aber eine
+ * Auswahl, die nur ihn schickte, träfe still die Ehrung ohne Wertung.
+ */
 data class AwardCeremonyKeyRequest(
     val competitionId: UUID,
-    val ratingCategoryName: String?,
+    val ratingCategoryId: UUID?,
 )
 
 /**
@@ -81,7 +92,7 @@ data class AwardCeremonySelectionRequest(
                 selection = listOf(
                     AwardCeremonyKeyRequest(
                         competitionId = UUID.randomUUID(),
-                        ratingCategoryName = "Masters A",
+                        ratingCategoryId = UUID.randomUUID(),
                     )
                 )
             )

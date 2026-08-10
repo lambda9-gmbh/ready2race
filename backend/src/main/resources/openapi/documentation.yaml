@@ -16382,10 +16382,17 @@ components:
           nullable: true
         competitionName:
           type: string
+        ratingCategoryId:
+          description: >-
+            Der Schlüssel der Wertung, in der geehrt wird - darüber wird ausgewählt. `null` ist ein
+            gültiger Wert und heißt "der Wettkampf wird als Ganzes geehrt", nicht "unbekannt".
+          type: string
+          format: uuid
+          nullable: true
         ratingCategoryName:
           description: >-
-            Die Wertung, in der geehrt wird. `null` ist ein gültiger Wert und heißt "der Wettkampf
-            wird als Ganzes geehrt", nicht "unbekannt".
+            Der Name der Wertung, reiner Anzeigewert. `null`, wenn der Wettkampf als Ganzes geehrt
+            wird.
           type: string
           nullable: true
         awardedTeams:
@@ -16403,11 +16410,12 @@ components:
         competitionId:
           type: string
           format: uuid
-        ratingCategoryName:
+        ratingCategoryId:
           description: >-
-            Muss dem Wert der gewünschten Ehrung entsprechen - `null` trifft die Ehrung ohne
-            Wertung und ist kein Platzhalter für "alle".
+            Muss der `ratingCategoryId` der gewünschten Ehrung entsprechen - `null` trifft die
+            Ehrung ohne Wertung und ist kein Platzhalter für "alle".
           type: string
+          format: uuid
           nullable: true
 
     AwardCeremonySelectionRequest:

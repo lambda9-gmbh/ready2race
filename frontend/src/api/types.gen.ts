@@ -312,7 +312,11 @@ export type AwardCeremonyChoiceDto = {
     competitionShortName?: string | null
     competitionName: string
     /**
-     * Die Wertung, in der geehrt wird. `null` ist ein gültiger Wert und heißt "der Wettkampf wird als Ganzes geehrt", nicht "unbekannt".
+     * Der Schlüssel der Wertung, in der geehrt wird - darüber wird ausgewählt. `null` ist ein gültiger Wert und heißt "der Wettkampf wird als Ganzes geehrt", nicht "unbekannt".
+     */
+    ratingCategoryId?: string | null
+    /**
+     * Der Name der Wertung, reiner Anzeigewert. `null`, wenn der Wettkampf als Ganzes geehrt wird.
      */
     ratingCategoryName?: string | null
     /**
@@ -327,9 +331,9 @@ export type AwardCeremonyChoiceDto = {
 export type AwardCeremonyKeyRequest = {
     competitionId: string
     /**
-     * Muss dem Wert der gewünschten Ehrung entsprechen - `null` trifft die Ehrung ohne Wertung und ist kein Platzhalter für "alle".
+     * Muss der `ratingCategoryId` der gewünschten Ehrung entsprechen - `null` trifft die Ehrung ohne Wertung und ist kein Platzhalter für "alle".
      */
-    ratingCategoryName?: string | null
+    ratingCategoryId?: string | null
 }
 
 export type AwardCeremonySelectionRequest = {
