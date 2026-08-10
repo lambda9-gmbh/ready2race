@@ -329,6 +329,32 @@ class AwardCeremonyPdfTest {
         }
     }
 
+    /**
+     * Eine Fortsetzungsseite kann mitten in einem geteilten Rang beginnen; ihr erster Block ist dann
+     * nicht der erste seines Rangs. Ohne die Zusatzregel stünde der Platz auf genau dem Blatt, das
+     * den vollen Kopf wiederholt, um für sich allein zu taugen, nur noch im kleinen Vermerk.
+     */
+    @Test
+    fun aContinuationPageOpeningInsideASharedRankStillCarriesTheBigNumber() {
+        val bytes = AwardCeremonyPdf.render(listOf(sharedSecondWithFourMixedEights()))
+
+        assertTrue(pageCount(bytes) > 1, "Der Aufbau sprengt auch die unterste Stufe")
+
+        val first = linesOfPage(bytes, 1)
+        val second = linesOfPage(bytes, 2)
+
+        // Die Lage, um die es geht, wird zugesichert statt angenommen: steht auf beiden Blättern ein
+        // Boot des geteilten zweiten Rangs, läuft der Rang über den Umbruch - und das erste Boot des
+        // zweiten Blatts ist nicht das erste seines Rangs.
+        assertTrue(first.contains("geteilter 2. Platz"), "Voraussetzung: der geteilte Rang beginnt auf Seite 1")
+        assertTrue(second.contains("geteilter 2. Platz"), "Voraussetzung: er läuft auf Seite 2 weiter")
+
+        assertTrue(
+            second.any { it.startsWith("2.") },
+            "Die Fortsetzungsseite nennt den Platz nur im 8-pt-Vermerk statt in großer Zahl",
+        )
+    }
+
     @Test
     fun aCeremonyThatFitsCarriesNoContinuationMark() {
         val bytes = AwardCeremonyPdf.render(listOf(mixedSheet(crewSize = 9)))

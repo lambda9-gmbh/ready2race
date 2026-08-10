@@ -27,9 +27,10 @@ import java.util.Locale
  * Die Stufenleiter hat einen lesbaren Boden: unterhalb der letzten Stufe wird nicht weiter
  * geschrumpft, weil man kleinere Namenszeilen vom Pult aus nicht mehr abliest. Passt eine Ehrung
  * auch auf dieser Stufe nicht auf ein Blatt, bekommt sie mehrere. Der Umbruch läuft zwischen zwei
- * Rangblöcken - kein Boot wird von seiner Mannschaft getrennt -, jede Seite trägt den vollen Kopf,
- * und jede ab der zweiten zusätzlich [CONTINUATION_MARK], damit die Sprecherin sieht, dass das
- * Blatt zur selben Ehrung gehört. Auch diese Aufteilung wird gemessen, nicht geschätzt.
+ * Rangblöcken - kein Boot wird von seiner Mannschaft getrennt -, jede Seite trägt den vollen Kopf
+ * und die Rangzahl ihres ersten Blocks, und jede ab der zweiten zusätzlich [CONTINUATION_MARK],
+ * damit die Sprecherin sieht, dass das Blatt zur selben Ehrung gehört. Auch diese Aufteilung wird
+ * gemessen, nicht geschätzt.
  */
 object AwardCeremonyPdf {
 
@@ -179,7 +180,9 @@ object AwardCeremonyPdf {
         val commonRaceLine = sheet.ranks.map { it.team.raceLine }.distinct().singleOrNull()
 
         header(sheet, commonRaceLine, continued)
-        ranks.forEach { rankBlock(it, scale, ownRaceLine = commonRaceLine == null) }
+        ranks.forEachIndexed { index, rank ->
+            rankBlock(rank, scale, ownRaceLine = commonRaceLine == null, firstOnPage = index == 0)
+        }
     }
 
     private fun BlockBuilder.header(sheet: AwardCeremonySheet, commonRaceLine: String?, continued: Boolean) {
@@ -238,8 +241,14 @@ object AwardCeremonyPdf {
     /**
      * @param ownRaceLine trägt der Kopf keine gemeinsame Lauf-Angabe, nennt jeder Block seine
      * eigene. Ränge ohne Angabe bleiben dabei ohne - ein Platzhalter wäre schlimmer als nichts.
+     * @param firstOnPage dieser Block eröffnet das Blatt.
      */
-    private fun BlockBuilder.rankBlock(entry: AwardCeremonyRank, scale: Scale, ownRaceLine: Boolean) {
+    private fun BlockBuilder.rankBlock(
+        entry: AwardCeremonyRank,
+        scale: Scale,
+        ownRaceLine: Boolean,
+        firstOnPage: Boolean,
+    ) {
         block(keepTogether = true, padding = Padding(bottom = scale.gap)) {
             table {
                 column(0.12f)
@@ -250,7 +259,13 @@ object AwardCeremonyPdf {
                     cell {
                         // Bei geteiltem Rang trägt nur das erste Boot die Zahl - zweimal
                         // dieselbe Zahl untereinander liest sich wie ein Fehler.
-                        if (entry.first) {
+                        //
+                        // Beginnt ein Blatt jedoch mitten in einem geteilten Rang, stünde der Rang
+                        // dort nur noch im kleinen Vermerk. Ausgerechnet die Fortsetzungsseite, die
+                        // den vollen Kopf wiederholt, um für sich allein zu taugen, hätte dann die
+                        // eine Angabe nicht mehr, die vom Pult aus lesbar sein muss - deshalb
+                        // eröffnet jedes Blatt mit seiner Rangzahl.
+                        if (entry.first || firstOnPage) {
                             text(fontStyle = FontStyle.BOLD, fontSize = 20f) { "${entry.rank}." }
                         }
                     }

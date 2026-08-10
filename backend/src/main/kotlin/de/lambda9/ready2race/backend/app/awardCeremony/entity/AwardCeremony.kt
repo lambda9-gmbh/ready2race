@@ -125,7 +125,11 @@ data class AwardCeremonyRank(
     val rank: Int,
     /** Mehrere Boote teilen sich diesen Rang. */
     val shared: Boolean,
-    /** Das erste Boot des Rangs - nur dort wird die Rangzahl gedruckt. */
+    /**
+     * Das erste Boot des Rangs - innerhalb eines Blatts trägt nur dieses die große Rangzahl.
+     * Eröffnet ein weiteres Boot desselben Rangs eine Fortsetzungsseite, druckt AwardCeremonyPdf
+     * die Zahl dort zusätzlich; sonst stünde der Rang auf jenem Blatt nur im kleinen Vermerk.
+     */
     val first: Boolean,
     val team: AwardCeremonyTeam,
 )
