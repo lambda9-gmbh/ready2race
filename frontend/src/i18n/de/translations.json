@@ -363,7 +363,7 @@
       "events": "Veranstaltungen",
       "competitionConfig": "Wettkampf Einstellungen",
       "roles": "Rollen",
-      "users": "Benutzer",
+      "users": "Benutzer:innen",
       "config": "Konfigurationen",
       "clubs": "Vereine",
       "myClub": "Mein Verein",
@@ -1011,8 +1011,8 @@
           "delete": "Runde löschen",
           "confirmation": {
             "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?",
-            "onDisplay_one": "Achtung: {{count}} Lauf dieser Runde ist bereits auf den Anzeigen zu sehen. Beim Löschen verschwindet er dort — auch für Schiedsrichter, Athleten und Publikum. Wirklich löschen?",
-            "onDisplay_other": "Achtung: {{count}} Läufe dieser Runde sind bereits auf den Anzeigen zu sehen. Beim Löschen verschwinden sie dort — auch für Schiedsrichter, Athleten und Publikum. Wirklich löschen?"
+            "onDisplay_one": "Achtung: {{count}} Lauf dieser Runde ist bereits auf den Anzeigen zu sehen. Beim Löschen verschwindet er dort — auch für Schiedsrichter:innen, Athlet:innen und Publikum. Wirklich löschen?",
+            "onDisplay_other": "Achtung: {{count}} Läufe dieser Runde sind bereits auf den Anzeigen zu sehen. Beim Löschen verschwinden sie dort — auch für Schiedsrichter:innen, Athlet:innen und Publikum. Wirklich löschen?"
           },
           "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
           "success": "Runde erfolgreich gelöscht"
@@ -1227,7 +1227,7 @@
         "substitution": {
           "substitutions": "Ummeldungen",
           "inFor": "ersetzt durch",
-          "participant": "Teilnehmer",
+          "participant": "Teilnehmer:in",
           "substituteFor": {
             "substituteFor": "Ersetzen durch",
             "currentlyParticipating": "Im selben Wettkampf (Teams tauschen)",
@@ -1287,9 +1287,9 @@
           "title": "Dateiformate",
           "hint": "Welche Spalten exportiert und importiert werden. Abweichend nur nötig, wenn dieser Wettkampf in ein anderes Rennen im Zeitnahme-System läuft."
         },
-        "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und wählen Sie darunter aus, welches für Qualifikationsrunden und welches für alle übrigen Runden gilt. Wettkämpfe erben diese Anwahl und können gezielt abweichen.",
+        "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und wählen Sie darunter aus, welches für die Qualifikation und welches für die Läufe gilt. Wettkämpfe erben diese Anwahl und können gezielt abweichen.",
         "startlistQualification": "Startlisten Export Qualifikation",
-        "startlistRounds": "Startlisten Export übrige Runden",
+        "startlistRounds": "Startlisten Export Läufe",
         "startlist": "Startlisten Export",
         "resultImport": "Rennergebnisse Import",
         "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
@@ -1309,7 +1309,7 @@
         "saved": "Zeitnahme-Einstellungen gespeichert",
         "invalid": "Bitte wählen Sie ein Rennen dieser Veranstaltung aus.",
         "raceQualification": "Rennen für Qualifikationsrunden",
-        "raceRounds": "Rennen für alle übrigen Runden"
+        "raceRounds": "Rennen für die Läufe"
       },
       "places": {
         "places": "Platzierungen",
@@ -1486,7 +1486,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und wählen Sie darunter aus, welches für Qualifikationsrunden und welches für alle übrigen Runden gilt. Wettkämpfe erben diese Anwahl und können gezielt abweichen.",
+      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und wählen Sie darunter aus, welches für die Qualifikation und welches für die Läufe gilt. Wettkämpfe erben diese Anwahl und können gezielt abweichen.",
       "autoPull": {
         "enabled": "Ergebnisse automatisch abrufen",
         "hint": "Läuft ein Lauf, holt der Server die Ergebnisse im schnellen Takt. Bevorstehende Läufe werden im langsamen Takt beobachtet, um ihren Start zu erkennen; beendete Läufe gar nicht.",
@@ -1496,7 +1496,7 @@
         "watchAfter": "Beobachten bis (Minuten nach der geplanten Startzeit)"
       },
       "startlistQualification": "Startlisten Export Qualifikation",
-      "startlistRounds": "Startlisten Export übrige Runden",
+      "startlistRounds": "Startlisten Export Läufe",
       "startlist": "Startlisten Export",
       "resultImport": "Rennergebnisse Import",
       "formatsHint": {
@@ -1517,7 +1517,7 @@
         "raceRounds": "eigenes Rennen: {{name}}"
       },
       "raceQualification": "Rennen für Qualifikationsrunden",
-      "raceRounds": "Rennen für alle übrigen Runden",
+      "raceRounds": "Rennen für die Läufe",
       "races": {
         "title": "RaceClocker-Rennen",
         "hint": "Jedes Rennen trägt seine Ergebnis-Adresse genau einmal. Der automatische Abruf holt je Takt nur die Rennen, die gerade gefahren werden.",
@@ -1609,7 +1609,7 @@
       "bye": {
         "deregistration": "Freilos wegen Abmeldung – {{team}}",
         "deregistrationWithReason": "Freilos wegen Abmeldung – {{team}} ({{reason}})",
-        "noOpponent": "Freilos – kein Gegner in dieser Runde"
+        "noOpponent": "Freilos – keine Gegner:in in dieser Runde"
       }
     },
     "liveDashboard": {
@@ -1681,7 +1681,9 @@
         "notInArena": "Nicht in der Arena",
         "clubs": "Vereine",
         "crew": "Mannschaft",
-        "startedAt": "gestartet {{time}}"
+        "startedAt": "gestartet {{time}}",
+        "startNumberLabel": "Startnummer {{number}}",
+        "boatLabel": "Boot {{number}}"
       },
       "requirement": {
         "checkedAt": "Erfüllt am {{time}}",
@@ -2049,8 +2051,8 @@
     }
   },
   "user": {
-    "user": "Benutzer",
-    "users": "Benutzer",
+    "user": "Benutzer:in",
+    "users": "Benutzer:innen",
     "email": {
       "email": "E-Mail",
       "inUse": {
@@ -2395,11 +2397,11 @@
   },
   "qrAssign": {
     "title": "QR-Code zuweisen",
-    "participant": "Teilnehmer",
-    "user": "Benutzer",
+    "participant": "Teilnehmer:in",
+    "user": "Benutzer:in",
     "clubs": "Vereine",
-    "participants": "Teilnehmer",
-    "users": "Benutzer",
+    "participants": "Teilnehmer:innen",
+    "users": "Benutzer:innen",
     "noData": "Keine Daten",
     "team": "Team",
     "scanSystemUser": "Benutzer aus System scannen",
@@ -2444,7 +2446,7 @@
     "assignmentInfo": "Zuordnungsinformationen"
   },
   "qrParticipant": {
-    "title": "Teilnehmer",
+    "title": "Teilnehmer:innen",
     "noRight": "Sie haben für diesen QR-Code-Typ keine Berechtigung.",
     "loading": "Lade...",
     "noRequirements": "Keine Bedingungen mit CheckInApp vorhanden.",
@@ -2573,8 +2575,8 @@
         "documents": "Veranstaltungsdokumente",
         "results": "Ergebnisse",
         "startLists": "Startlisten",
-        "users": "Benutzer",
-        "participants": "Teilnehmer",
+        "users": "Benutzer:innen",
+        "participants": "Teilnehmer:innen",
         "bankAccounts": "Bankkonten",
         "contactInformation": "Kontaktinformationen",
         "emailIndividualTemplates": "Individuelle E-Mail-Vorlagen",
@@ -2586,7 +2588,7 @@
         "ratingCategories": "Wertungskategorien",
         "competitionCategories": "Wettkampfkategorien",
         "fees": "Gebühren",
-        "namedParticipants": "Benannte Teilnehmer",
+        "namedParticipants": "Benannte Teilnehmer:innen",
         "competitionSetupTemplates": "Wettkampf-Setup-Vorlagen",
         "competitionTemplates": "Wettkampfvorlagen",
         "event": "Veranstaltungsdaten",
@@ -2799,7 +2801,7 @@
       },
       "mode": {
         "label": "Gruppierung",
-        "perAthlete": "Pro Athlet",
+        "perAthlete": "Pro Athlet:in",
         "perTeam": "Pro Boot"
       },
       "background": {

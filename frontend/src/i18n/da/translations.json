@@ -1681,7 +1681,9 @@
         "notInArena": "Ikke i arenaen",
         "clubs": "Klubber",
         "crew": "Besætning",
-        "startedAt": "startet {{time}}"
+        "startedAt": "startet {{time}}",
+        "startNumberLabel": "Startnummer {{number}}",
+        "boatLabel": "Båd {{number}}"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",

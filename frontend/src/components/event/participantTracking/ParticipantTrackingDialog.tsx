@@ -18,6 +18,8 @@ import {
     ToggleButton,
     ToggleButtonGroup,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material'
 import {Close, Edit} from '@mui/icons-material'
 import {DateTimePicker} from '@mui/x-date-pickers'
@@ -67,6 +69,10 @@ const ParticipantTrackingDialog = ({
 }: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const theme = useTheme()
+    // Am Telefon Vollbild: der Warnkasten und das Formular teilten sich sonst eine halbe Höhe,
+    // und das Datumsfeld rutschte unter die Faltkante (beobachtet am 10.08.2026).
+    const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<ParticipantTrackingEntryDto | null>(null)
@@ -92,11 +98,13 @@ const ParticipantTrackingDialog = ({
 
     const openAdd = () => {
         setEditing(null)
-        // Die Gegenrichtung zum letzten Eintrag ist fast immer die gesuchte - die Uhrzeit bleibt
-        // bewusst leer, damit niemand versehentlich "jetzt" stehen lässt.
+        // Die Gegenrichtung zum letzten Eintrag ist fast immer die gesuchte.
         const last = data?.entries[data.entries.length - 1]
         setScanType(last?.scanType === 'ENTRY' ? 'EXIT' : 'ENTRY')
-        setScannedAt(null)
+        // Mit „jetzt" vorbelegt: Der häufigste Fall ist „die Person steht gerade vor mir"
+        // (Wunsch vom 10.08.2026). Korrigierbar bleibt es; das leere Feld erzwang vorher
+        // unnötiges Datumstippen - und der Platzhalter kam in US-Form (MM/DD/YYYY).
+        setScannedAt(new Date())
         setReason('')
         setFormOpen(true)
     }
@@ -188,7 +196,7 @@ const ParticipantTrackingDialog = ({
     }
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen}>
             <DialogTitle sx={{pr: 6}}>
                 {t('club.participant.tracking.manual.title', {name: participantName})}
                 <IconButton onClick={onClose} sx={{position: 'absolute', right: 8, top: 8}}>
@@ -196,8 +204,16 @@ const ParticipantTrackingDialog = ({
                 </IconButton>
             </DialogTitle>
             <DialogContent>
-                <Stack spacing={2}>
-                    <Alert severity="warning">{t('club.participant.tracking.manual.hint')}</Alert>
+                <Stack spacing={2} sx={{pt: 1}}>
+                    {/*
+                        Der Hinweis war auf dem beigen Grund schwer zu lesen und drückte das
+                        Formular nach unten. Jetzt kompakt und einklappbar: die Regel steht einmal
+                        da, nimmt aber nicht die halbe Höhe (Rückmeldung vom 10.08.2026). `filled`
+                        trägt sichtbar mehr Kontrast als die getönte Standardvariante.
+                    */}
+                    <Alert severity="warning" variant="filled" sx={{'& a': {color: 'inherit'}}}>
+                        {t('club.participant.tracking.manual.hint')}
+                    </Alert>
 
                     {error ? (
                         <Typography color="error">
@@ -319,8 +335,12 @@ const ParticipantTrackingDialog = ({
                                 </Box>
                             ) : (
                                 <Box>
+                                    {/* Kontrast: der zurückhaltende Umriss-Knopf war auf hellem
+                                        Grund kaum vom Text zu unterscheiden. Gefüllt bleibt er der
+                                        bewusst nicht als Primärweg gestaltete Notbehelf, ist aber
+                                        klar als Knopf erkennbar. */}
                                     <Button
-                                        variant="outlined"
+                                        variant="contained"
                                         color="warning"
                                         onClick={openAdd}
                                         disabled={pending}>

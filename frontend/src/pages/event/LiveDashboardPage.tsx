@@ -515,8 +515,28 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
                             </Typography>
                             {liveColumn}
                         </Stack>
-                        <Stack spacing={2} sx={{minWidth: 0}}>
-                            <Typography variant="subtitle1" fontWeight={700}>
+                        {/* „Läufe" scrollt in sich selbst, statt die ganze Seite in die Länge zu
+                            ziehen (Rückmeldung vom 10.08.2026) - der Überlauf greift erst, wenn die
+                            Liste höher ist als das Fenster, kurze Listen stehen also ruhig. Die
+                            Kopfzeile bleibt beim Scrollen oben. */}
+                        <Stack
+                            spacing={2}
+                            sx={{
+                                minWidth: 0,
+                                position: 'sticky',
+                                top: 16,
+                                maxHeight: 'calc(100vh - 32px)',
+                                overflowY: 'auto',
+                            }}>
+                            <Typography
+                                variant="subtitle1"
+                                fontWeight={700}
+                                sx={{
+                                    position: 'sticky',
+                                    top: 0,
+                                    bgcolor: 'background.default',
+                                    zIndex: 1,
+                                }}>
                                 {t('event.liveDashboard.tabs.matches')}
                             </Typography>
                             {matchListColumn}

@@ -1681,7 +1681,9 @@
         "notInArena": "Not in the arena",
         "clubs": "Clubs",
         "crew": "Crew",
-        "startedAt": "started {{time}}"
+        "startedAt": "started {{time}}",
+        "startNumberLabel": "Bib {{number}}",
+        "boatLabel": "Boat {{number}}"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",

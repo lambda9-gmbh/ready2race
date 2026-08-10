@@ -588,64 +588,68 @@ const LiveDashboardMatchCard = ({
                     )
                 })}
                 {(showFinish || showActivationToggle || showMarkStarted) && (
-                    <Stack
-                        direction="row"
-                        spacing={1}
-                        flexWrap="wrap"
-                        justifyContent="flex-end"
-                        alignItems="center"
-                        sx={{pt: 1.5}}>
+                    /*
+                        Fußzeile aufgeräumt (Rückmeldung vom 10.08.2026): Hinweistexte stehen
+                        gedämpft ZEILEN­WEISE oben, die Knöpfe darunter in EINER rechtsbündigen
+                        Reihe in fester Reihenfolge (deaktivieren · Läuft · Beenden). Vorher
+                        mischten sich Texte und Knöpfe im selben umbrechenden Flexraum und
+                        landeten am Telefon in vier verschiedenen Ausrichtungen.
+                    */
+                    <Stack spacing={1} sx={{pt: 1.5}}>
                         {running && !resultsComplete && (
-                            <Typography variant="caption" sx={{color: 'grey.700', mr: 'auto'}}>
+                            <Typography variant="caption" sx={{color: 'grey.700'}}>
                                 {t('event.liveDashboard.control.incompleteWarning')}
                             </Typography>
                         )}
                         {(awaitingFinish || (running && resultsComplete)) && (
-                            <Typography variant="caption" sx={{color: 'success.dark', mr: 'auto'}}>
+                            <Typography variant="caption" sx={{color: 'success.dark'}}>
                                 {t('event.liveDashboard.resultsCompleteWaiting')}
                             </Typography>
                         )}
-                        {showActivationToggle && onSetActivated && (
-                            <Button
-                                size="small"
-                                variant="text"
-                                onClick={() =>
-                                    onSetActivated(match.matchId, !(running || preparing))
-                                }>
-                                {running || preparing
-                                    ? t('event.liveDashboard.control.deactivate')
-                                    : t('event.liveDashboard.control.activate')}
-                            </Button>
+                        {showMarkStarted && onMarkStarted && raceClockerAutoPull && (
+                            <Typography variant="caption" sx={{color: 'grey.700'}}>
+                                {t('event.liveDashboard.control.markStartedAutoHint')}
+                            </Typography>
                         )}
-                        {/*
-                            „Läuft" statt „Start": der Klick löst keine Zeitnahme aus, er stellt
-                            fest, dass das Rennen unterwegs ist. Bei eingeschaltetem RaceClocker-
-                            Abruf bleibt er trotzdem bedienbar — der Feed kann ausfallen, und
-                            manche Zeitnahme meldet gar keinen Startstempel.
-                        */}
-                        {showMarkStarted && onMarkStarted && (
-                            <Stack alignItems="flex-end">
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            flexWrap="wrap"
+                            justifyContent="flex-end"
+                            alignItems="center">
+                            {showActivationToggle && onSetActivated && (
+                                <Button
+                                    size="small"
+                                    variant="text"
+                                    onClick={() =>
+                                        onSetActivated(match.matchId, !(running || preparing))
+                                    }>
+                                    {running || preparing
+                                        ? t('event.liveDashboard.control.deactivate')
+                                        : t('event.liveDashboard.control.activate')}
+                                </Button>
+                            )}
+                            {/*
+                                „Läuft" statt „Start": der Klick löst keine Zeitnahme aus, er stellt
+                                fest, dass das Rennen unterwegs ist. Bei eingeschaltetem RaceClocker-
+                                Abruf bleibt er trotzdem bedienbar — der Feed kann ausfallen, und
+                                manche Zeitnahme meldet gar keinen Startstempel.
+                            */}
+                            {showMarkStarted && onMarkStarted && (
                                 <Button
                                     size="small"
                                     variant="outlined"
                                     onClick={() => onMarkStarted(match.matchId)}>
                                     {t('event.liveDashboard.control.markStarted')}
                                 </Button>
-                                {raceClockerAutoPull && (
-                                    <Typography
-                                        variant="caption"
-                                        sx={{color: 'grey.700', textAlign: 'right'}}>
-                                        {t('event.liveDashboard.control.markStartedAutoHint')}
-                                    </Typography>
-                                )}
-                            </Stack>
-                        )}
-                        {showFinish && onFinish && (
-                            <FinishMatchButton
-                                openTeamCount={openTeams.length}
-                                onFinish={openResults => onFinish(match.matchId, openResults)}
-                            />
-                        )}
+                            )}
+                            {showFinish && onFinish && (
+                                <FinishMatchButton
+                                    openTeamCount={openTeams.length}
+                                    onFinish={openResults => onFinish(match.matchId, openResults)}
+                                />
+                            )}
+                        </Stack>
                     </Stack>
                 )}
             </CardContent>
