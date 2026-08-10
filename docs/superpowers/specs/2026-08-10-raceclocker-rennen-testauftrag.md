@@ -128,10 +128,18 @@ habe ich diesen Umbau nicht mehr angefasst; er gehört auf die Liste für danach
 
 ## 6. Offener Merge-Schritt
 
-Der Zweig hat `feature/crf-2026` eingemergt und ist grün. Das Vorziehen von `feature/crf-2026` auf
-diesen Stand steht **noch aus**: Der Hauptcheckout war zum Zeitpunkt der Fertigstellung mit 44
-offenen Dateien einer anderen Sitzung belegt, und ein fremder Arbeitsstand ist nichts, was man
-nebenbei anfasst.
+Der Zweig hat `feature/crf-2026` **zweimal** eingemergt (der Integrationszweig zog während der
+Arbeit weiter: Wellenname mit Wettkampf, Regie-Ansicht, PWA) und ist danach grün. Das Vorziehen von
+`feature/crf-2026` auf diesen Stand steht **noch aus**: Der Hauptcheckout war zum Zeitpunkt der
+Fertigstellung mit 44 offenen Dateien einer anderen Sitzung belegt, und ein fremder Arbeitsstand ist
+nichts, was man nebenbei anfasst.
+
+**Beim Merge zusammengeführt:** Der parallele Zweig hat `WaveName.format` um Rennnummer und Kürzel
+erweitert (`10:00 | 1 JM4x | Lauf 1`). Beide Repo-Abfragen projizieren jetzt zusätzlich
+`competition_properties.identifier` und `.short_name` **neben** den sechs Rennen-Spalten. Das ist die
+Stelle, an der ein Merge-Fehler stumm bliebe: Bauen die beiden Abfragen den Wellennamen
+unterschiedlich, findet der Knopf-Weg die Welle und der Job nicht (oder umgekehrt). Ein Test nagelt
+das jetzt fest.
 
 Sobald er frei ist:
 
