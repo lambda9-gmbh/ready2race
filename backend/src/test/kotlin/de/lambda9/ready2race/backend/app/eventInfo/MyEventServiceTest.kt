@@ -2,8 +2,10 @@ package de.lambda9.ready2race.backend.app.eventInfo
 
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.MyEventService
 import de.lambda9.ready2race.backend.app.eventInfo.entity.EventInfoProblem
+import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventDto
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.testing.testComprehension
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -97,6 +99,117 @@ class MyEventServiceTest {
         val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
         assertTrue(response.dto.unscheduled.any { it.competitionId == fixture.unscheduledCompetitionId })
     }
+
+    @Test
+    fun substitutedInParticipantSeesTheMatch() = testComprehension {
+        // Wer für eine Runde einrückt, hat an dem Tag einen Lauf - auch ohne eigene Meldung.
+        val fixture = !MyEventFixture.create()
+        !MyEventFixture.substitute(
+            registrationId = fixture.ownRegistrationId,
+            roundId = fixture.racedRoundId,
+            namedParticipantId = fixture.rowerRoleId,
+            participantOut = fixture.participantId,
+            participantIn = fixture.reserveId,
+            orderForRound = 1,
+        )
+
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.reserveQrCode)
+        assertTrue(matchIds(response.dto).contains(fixture.ownMatchId))
+    }
+
+    @Test
+    fun substitutedOutParticipantNoLongerSeesTheMatch() = testComprehension {
+        // Die Kehrseite: sonst steht der Lauf weiter auf dem Telefon von jemandem, der nicht
+        // mehr im Boot sitzt.
+        val fixture = !MyEventFixture.create()
+        !MyEventFixture.substitute(
+            registrationId = fixture.ownRegistrationId,
+            roundId = fixture.racedRoundId,
+            namedParticipantId = fixture.rowerRoleId,
+            participantOut = fixture.participantId,
+            participantIn = fixture.reserveId,
+            orderForRound = 1,
+        )
+
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
+        assertFalse(matchIds(response.dto).contains(fixture.ownMatchId))
+    }
+
+    @Test
+    fun teamListShowsTheSubstituteInsteadOfTheSubstitutedOut() = testComprehension {
+        // Aus der Sicht einer unbeteiligten Mitfahrerin geprüft: die Aufstellung ist die des
+        // Laufs, nicht die der Meldung.
+        val fixture = !MyEventFixture.create()
+        !MyEventFixture.substitute(
+            registrationId = fixture.ownRegistrationId,
+            roundId = fixture.racedRoundId,
+            namedParticipantId = fixture.rowerRoleId,
+            participantOut = fixture.participantId,
+            participantIn = fixture.reserveId,
+            orderForRound = 1,
+        )
+
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.teamMateQrCode)
+        val match = (response.dto.running + response.dto.upcoming).first { it.matchId == fixture.ownMatchId }
+        val names = match.teamMembers.map { it.name }
+        assertTrue(names.contains(fixture.reserveName), "Ersatzfrau fehlt in der Aufstellung: $names")
+        assertFalse(names.contains(fixture.participantName), "Ausgewechselte steht noch drin: $names")
+    }
+
+    @Test
+    fun swapMovesBothPersonsToTheOtherBoat() = testComprehension {
+        // Ein Tausch sind zwei Zeilen mit aufeinanderfolgender Reihenfolge - je eine pro Boot.
+        // Beide Personen wechseln den Lauf, keine verliert ihren.
+        val fixture = !MyEventFixture.create()
+        !MyEventFixture.substitute(
+            registrationId = fixture.ownRegistrationId,
+            roundId = fixture.racedRoundId,
+            namedParticipantId = fixture.rowerRoleId,
+            participantOut = fixture.participantId,
+            participantIn = fixture.strangerId,
+            orderForRound = 1,
+        )
+        !MyEventFixture.substitute(
+            registrationId = fixture.foreignRegistrationId,
+            roundId = fixture.racedRoundId,
+            namedParticipantId = fixture.rowerRoleId,
+            participantOut = fixture.strangerId,
+            participantIn = fixture.participantId,
+            orderForRound = 2,
+        )
+
+        val forOwn = matchIds((!MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)).dto)
+        assertTrue(forOwn.contains(fixture.foreignMatchId))
+        assertFalse(forOwn.contains(fixture.ownMatchId))
+
+        val forStranger = matchIds((!MyEventService.getMyEvent(fixture.eventId, fixture.strangerQrCode)).dto)
+        assertTrue(forStranger.contains(fixture.ownMatchId))
+        assertFalse(forStranger.contains(fixture.foreignMatchId))
+    }
+
+    @Test
+    fun substitutionOfAnotherRoundDoesNotChangeTheLineup() = testComprehension {
+        // Auswechslungen sind rundenscharf. Eine, die zu einer anderen Runde gehört, darf den
+        // Lauf hier nicht anfassen - der zweite Wettkampf im Aufbau hat seine eigene Runde.
+        val fixture = !MyEventFixture.create()
+        !MyEventFixture.substitute(
+            registrationId = fixture.ownRegistrationId,
+            roundId = fixture.unscheduledRoundId,
+            namedParticipantId = fixture.rowerRoleId,
+            participantOut = fixture.participantId,
+            participantIn = fixture.reserveId,
+            orderForRound = 1,
+        )
+
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
+        assertTrue(matchIds(response.dto).contains(fixture.ownMatchId))
+
+        val forReserve = !MyEventService.getMyEvent(fixture.eventId, fixture.reserveQrCode)
+        assertFalse(matchIds(forReserve.dto).contains(fixture.ownMatchId))
+    }
+
+    private fun matchIds(dto: MyEventDto): List<UUID> =
+        (dto.running + dto.upcoming).map { it.matchId } + dto.results.map { it.matchId }
 
     @Test
     fun deregisteredRegistrationIsNotUnscheduled() = testComprehension {

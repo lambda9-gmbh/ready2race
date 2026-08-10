@@ -21,6 +21,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Participa
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.QrCodesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
@@ -41,6 +42,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.PARTIC
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_REQUIREMENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.QR_CODES
+import de.lambda9.ready2race.backend.database.generated.tables.references.SUBSTITUTION
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime
@@ -62,6 +64,7 @@ object MyEventFixture {
     data class Fixture(
         val eventId: UUID,
         val participantId: UUID,
+        val participantName: String,
         val participantQrCode: String,
         val appUserQrCode: String,
         val ownMatchId: UUID,
@@ -72,6 +75,22 @@ object MyEventFixture {
         val coxQrCode: String,
         val coxRequirementName: String,
         val internalNote: String,
+        // Ab hier alles, was für Ersatzleute gebraucht wird: eine Auswechslung hängt an
+        // (Meldung, Runde, Rolle), und geprüft wird sie aus der Sicht mehrerer Personen.
+        val ownRegistrationId: UUID,
+        val foreignRegistrationId: UUID,
+        val racedRoundId: UUID,
+        /** Die Runde des zweiten Wettkampfs - nur da, um "rundenscharf" prüfen zu können. */
+        val unscheduledRoundId: UUID,
+        val rowerRoleId: UUID,
+        val teamMateQrCode: String,
+        /** Vereinsmitglied ohne eigene Meldung - nur über eine Einwechslung kommt sie in ein Boot. */
+        val reserveId: UUID,
+        val reserveName: String,
+        val reserveQrCode: String,
+        val strangerId: UUID,
+        val strangerName: String,
+        val strangerQrCode: String,
     )
 
     fun create(): JIO<Fixture> = Jooq.query {
@@ -114,10 +133,15 @@ object MyEventFixture {
             )
         ).execute()
 
+        val participantName = "Mia Musterfrau $tag"
         val participantId = insertParticipant(clubId, "Mia", "Musterfrau $tag", now)
         val teamMateId = insertParticipant(clubId, "Lea", "Mitfahrerin $tag", now)
         val coxId = insertParticipant(clubId, "Nele", "Steuerfrau $tag", now)
+        val strangerName = "Tom Fremd $tag"
         val strangerId = insertParticipant(clubId, "Tom", "Fremd $tag", now)
+        // Nirgends gemeldet: sie steht nur dann in einem Boot, wenn sie eingewechselt wird.
+        val reserveName = "Ida Ersatz $tag"
+        val reserveId = insertParticipant(clubId, "Ida", "Ersatz $tag", now)
 
         val eventRegistrationId = UUID.randomUUID()
         insertInto(EVENT_REGISTRATION).set(
@@ -156,27 +180,11 @@ object MyEventFixture {
         insertCrew(unscheduledRegistrationId, namedParticipantId, participantId)
         insertCrew(deregisteredRegistrationId, namedParticipantId, participantId)
 
-        val participantQrCode = "teilnehmer-$tag"
-        insertInto(QR_CODES).set(
-            QrCodesRecord(
-                id = UUID.randomUUID(),
-                qrCodeId = participantQrCode,
-                participant = participantId,
-                event = eventId,
-                createdAt = now,
-            )
-        ).execute()
-
-        val coxQrCode = "steuerfrau-$tag"
-        insertInto(QR_CODES).set(
-            QrCodesRecord(
-                id = UUID.randomUUID(),
-                qrCodeId = coxQrCode,
-                participant = coxId,
-                event = eventId,
-                createdAt = now,
-            )
-        ).execute()
+        val participantQrCode = insertParticipantQrCode(eventId, participantId, "teilnehmer-$tag", now)
+        val coxQrCode = insertParticipantQrCode(eventId, coxId, "steuerfrau-$tag", now)
+        val teamMateQrCode = insertParticipantQrCode(eventId, teamMateId, "mitfahrerin-$tag", now)
+        val strangerQrCode = insertParticipantQrCode(eventId, strangerId, "fremd-$tag", now)
+        val reserveQrCode = insertParticipantQrCode(eventId, reserveId, "ersatz-$tag", now)
 
         // Helfer-Code: derselbe Aufbau, nur zeigt er auf einen app_user. Er muss genauso ins
         // Leere laufen wie ein erfundener Code.
@@ -240,6 +248,7 @@ object MyEventFixture {
         Fixture(
             eventId = eventId,
             participantId = participantId,
+            participantName = participantName,
             participantQrCode = participantQrCode,
             appUserQrCode = appUserQrCode,
             ownMatchId = ownMatchId,
@@ -250,8 +259,79 @@ object MyEventFixture {
             coxQrCode = coxQrCode,
             coxRequirementName = coxRequirementName,
             internalNote = internalNote,
+            ownRegistrationId = ownRegistrationId,
+            foreignRegistrationId = foreignRegistrationId,
+            racedRoundId = findRoundId(racedCompetitionId),
+            unscheduledRoundId = findRoundId(unscheduledCompetitionId),
+            rowerRoleId = namedParticipantId,
+            teamMateQrCode = teamMateQrCode,
+            reserveId = reserveId,
+            reserveName = reserveName,
+            reserveQrCode = reserveQrCode,
+            strangerId = strangerId,
+            strangerName = strangerName,
+            strangerQrCode = strangerQrCode,
         )
     }
+
+    /**
+     * Eine Auswechslung in der Runde [roundId]: [participantOut] verlässt die Meldung
+     * [registrationId], [participantIn] rückt in derselben Rolle nach.
+     *
+     * Ein Tausch zwischen zwei Booten sind zwei Aufrufe mit aufeinanderfolgendem
+     * [orderForRound] - genau so legt [de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.addSubstitution]
+     * ihn ab, und nur dann erkennt ihn die Auflösung wieder als Tausch. Die Reihenfolge ist je
+     * Runde eindeutig, nicht je Meldung.
+     */
+    fun substitute(
+        registrationId: UUID,
+        roundId: UUID,
+        namedParticipantId: UUID,
+        participantOut: UUID,
+        participantIn: UUID,
+        orderForRound: Long,
+    ): JIO<Unit> = Jooq.query {
+        val now = LocalDateTime.now()
+        insertInto(SUBSTITUTION).set(
+            SubstitutionRecord(
+                id = UUID.randomUUID(),
+                competitionRegistration = registrationId,
+                competitionSetupRound = roundId,
+                participantOut = participantOut,
+                participantIn = participantIn,
+                namedParticipant = namedParticipantId,
+                orderForRound = orderForRound,
+                createdAt = now,
+                updatedAt = now,
+            )
+        ).execute()
+    }
+
+    private fun org.jooq.DSLContext.insertParticipantQrCode(
+        eventId: UUID,
+        participantId: UUID,
+        code: String,
+        now: LocalDateTime,
+    ): String {
+        insertInto(QR_CODES).set(
+            QrCodesRecord(
+                id = UUID.randomUUID(),
+                qrCodeId = code,
+                participant = participantId,
+                event = eventId,
+                createdAt = now,
+            )
+        ).execute()
+        return code
+    }
+
+    /** Die einzige Runde eines Wettkampfs - der Aufbau legt je Wettkampf genau eine an. */
+    private fun org.jooq.DSLContext.findRoundId(competitionId: UUID): UUID =
+        select(COMPETITION_SETUP_ROUND.ID)
+            .from(COMPETITION_SETUP_ROUND)
+            .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.ID.eq(COMPETITION_SETUP_ROUND.COMPETITION_SETUP))
+            .where(COMPETITION_PROPERTIES.COMPETITION.eq(competitionId))
+            .fetchOne(COMPETITION_SETUP_ROUND.ID)!!
 
     /**
      * Wettkampf samt Eigenschaften und Ablauf. Der Ablauf (`competition_setup` + eine Runde) muss
@@ -361,11 +441,7 @@ object MyEventFixture {
         executionOrder: Int,
         now: LocalDateTime,
     ): UUID {
-        val roundId = select(COMPETITION_SETUP_ROUND.ID)
-            .from(COMPETITION_SETUP_ROUND)
-            .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.ID.eq(COMPETITION_SETUP_ROUND.COMPETITION_SETUP))
-            .where(COMPETITION_PROPERTIES.COMPETITION.eq(competitionId))
-            .fetchOne(COMPETITION_SETUP_ROUND.ID)!!
+        val roundId = findRoundId(competitionId)
 
         val matchId = UUID.randomUUID()
         insertInto(COMPETITION_SETUP_MATCH).set(

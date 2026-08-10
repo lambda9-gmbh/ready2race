@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.MyEventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.EventInfoProblem
@@ -10,8 +11,11 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventRequirementDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventTeamMemberDto
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
+import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.data.Timecode
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
+import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_TEAM
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
@@ -19,6 +23,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.PARTIC
 import de.lambda9.ready2race.backend.database.generated.tables.references.TIMECODE
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import org.jooq.Record
 import java.time.LocalDateTime
 import java.util.UUID
@@ -95,6 +100,11 @@ object MyEventService {
 
             val person = !MyEventRepo.findParticipant(participantId).orDie()
             val matchRecords = !MyEventRepo.findMatchesForParticipant(eventId, participantId).orDie()
+            // Die Auswechslungen zu genau den Booten und Runden, die oben herausgekommen sind.
+            // Sie stehen nicht in derselben Abfrage, weil sie eine eigene Zeilenmenge sind - die
+            // Sicht `startlist_team` trennt sie aus demselben Grund von `participants`.
+            val substitutionRecords = !MyEventRepo
+                .findSubstitutionsForRegistrationRounds(registrationRounds(matchRecords)).orDie()
             val registrationRecords = !MyEventRepo.findRegistrationsWithoutMatch(eventId, participantId).orDie()
             val requirementRecords = !ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie()
             val fulfilledRequirementIds = !MyEventRepo.findFulfilledRequirementIds(eventId, participantId).orDie()
@@ -112,7 +122,7 @@ object MyEventService {
                 .map { records -> records.map { it.participantRequirement }.toSet() }
 
             val split = MyEventLogic.split(
-                entries = toRawMatches(matchRecords, participantId),
+                entries = !toRawMatches(matchRecords, substitutionRecords, participantId),
                 now = now,
                 visibility = visibility,
                 // Das persönliche Dashboard zeigt immer einen Countdown. Die Athleten-Anzeige darf
@@ -165,62 +175,153 @@ object MyEventService {
             KIO.ok(ApiResponse.Dto(dto))
         }
 
+    /** Die Paare aus Meldung und Runde, zu denen Auswechslungen geladen werden müssen. */
+    private fun registrationRounds(records: List<Record>): List<Pair<UUID, UUID>> =
+        records.mapNotNull { record ->
+            val registrationId = record.get("registration_id", UUID::class.java)
+            val roundId = record.get("round_id", UUID::class.java)
+            if (registrationId != null && roundId != null) registrationId to roundId else null
+        }.distinct()
+
     /**
      * Die Zeilen aus [MyEventRepo.findMatchesForParticipant] kommen je Lauf mehrfach - einmal pro
-     * Mitglied der eigenen Mannschaft. Hier werden sie wieder zu einem Lauf mit Aufstellung.
+     * Mitglied der **gemeldeten** Mannschaft. Hier werden sie wieder zu einem Lauf, die
+     * Auswechslungen der Runde werden darauf angewandt, und was übrig bleibt, ist die Aufstellung
+     * dieses Laufs.
+     *
+     * Läufe, in denen die Person danach nicht mehr steht, fallen weg: sie ist ausgewechselt
+     * worden, und der Lauf gehört ihr nicht mehr. Umgekehrt bleiben Läufe stehen, in denen sie gar
+     * nicht gemeldet, aber eingewechselt ist.
      */
-    private fun toRawMatches(records: List<Record>, participantId: UUID): List<MyEventLogic.RawMatch> =
-        records.groupBy { it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!! }
-            .map { (matchId, rows) ->
-                val first = rows.first()
-                // Einschränkung: die Zeilen hier sind die Mitglieder des eigenen Bootes und tragen
-                // alle denselben Timecode. Die Funktion sieht also n-mal denselben Wert und
-                // liefert daher immer die gröbste Stufe. Die Athleten-Anzeige geht bei knappen
-                // Zeiten feiner auf, weil sie alle Boote des Laufs vor sich hat - dafür müssten
-                // hier auch die fremden Zeiten des Laufs geladen werden, was die Abfrage um eine
-                // Ebene aufbläht, die für "meine Zeit" niemand braucht.
-                val precision = Timecode.displayPrecision(rows.mapNotNull { it[TIMECODE.TIME] })
-
-                MyEventLogic.RawMatch(
-                    matchId = matchId,
-                    competitionName = first.get("competition_name", String::class.java) ?: "",
-                    categoryName = first.get("category_name", String::class.java),
-                    roundName = first.get("round_name", String::class.java),
-                    matchName = first.get("match_name", String::class.java),
-                    startTime = first[COMPETITION_MATCH.START_TIME],
-                    actualStartTime = first[COMPETITION_MATCH.STARTED_AT],
-                    finishedAt = first[COMPETITION_MATCH.FINISHED_AT],
-                    allTeamsScored = first.get("all_teams_scored", Boolean::class.java) == true,
-                    currentlyRunning = first[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
-                    lane = first[COMPETITION_MATCH_TEAM.START_NUMBER],
-                    teamName = first.get("team_name", String::class.java),
-                    clubName = first.get("club_name", String::class.java),
-                    teamMembers = rows.mapNotNull { row ->
-                        row.get("participant_id", UUID::class.java)?.let { memberId ->
-                            MyEventTeamMemberDto(
-                                name = listOfNotNull(row[PARTICIPANT.FIRSTNAME], row[PARTICIPANT.LASTNAME])
-                                    .joinToString(" "),
-                                role = row.get("named_role", String::class.java),
-                                self = memberId == participantId,
-                            )
-                        }
-                    }.distinct(),
-                    place = first[COMPETITION_MATCH_TEAM.PLACE],
-                    timeString = first[TIMECODE.TIME]?.let {
-                        Timecode(
-                            millis = it,
-                            baseUnit = Timecode.BaseUnit.valueOf(first[TIMECODE.BASE_UNIT]!!),
-                            millisecondPrecision = precision,
-                        ).toString()
-                    },
-                    penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
-                    penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
-                    failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
-                    failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
-                    deregistered = first.get("deregistered", Boolean::class.java) == true,
-                    deregisteredReason = first.get("deregistration_reason", String::class.java),
-                )
+    private fun toRawMatches(
+        records: List<Record>,
+        substitutions: List<SubstitutionViewRecord>,
+        participantId: UUID,
+    ): App<Nothing, List<MyEventLogic.RawMatch>> = KIO.comprehension {
+        val matches = !records.groupBy { it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!! }
+            .toList()
+            .traverse { (matchId, rows) ->
+                toRawMatchOrNull(matchId, rows, substitutions, participantId)
             }
+        KIO.ok(matches.filterNotNull())
+    }
+
+    private fun toRawMatchOrNull(
+        matchId: UUID,
+        rows: List<Record>,
+        substitutions: List<SubstitutionViewRecord>,
+        participantId: UUID,
+    ): App<Nothing, MyEventLogic.RawMatch?> = KIO.comprehension {
+        val first = rows.first()
+        val registrationId = first.get("registration_id", UUID::class.java)
+        val roundId = first.get("round_id", UUID::class.java)
+
+        // Dieselbe Auflösung wie in Durchführung, Startliste und Scan-Übersicht. Die Ketten und
+        // der Tausch über zwei Boote sind heikel genug, dass ein zweiter Nachbau hier über kurz
+        // oder lang eine andere Aufstellung zeigen würde als die Startliste.
+        val lineup = !CompetitionExecutionService.getActuallyParticipatingParticipants(
+            teamParticipants = registeredCrew(rows),
+            // Auf dieses Boot und diese Runde eingeschränkt - so wie es auch
+            // SubstitutionService und ParticipantTrackingService tun. Ein Tausch besteht aus zwei
+            // Zeilen, je einer pro Boot; jede Seite sieht nur ihre eigene und darf die andere
+            // Person deshalb folgerichtig als gegangen führen.
+            substitutionsForRegistration = substitutions.filter {
+                it.competitionRegistrationId == registrationId && it.competitionSetupRoundId == roundId
+            },
+        )
+
+        if (lineup.none { it.id == participantId }) {
+            return@comprehension KIO.ok(null)
+        }
+
+        KIO.ok(toRawMatch(matchId, first, rows, lineup, participantId))
+    }
+
+    private fun toRawMatch(
+        matchId: UUID,
+        first: Record,
+        rows: List<Record>,
+        lineup: List<ParticipantForExecutionDto>,
+        participantId: UUID,
+    ): MyEventLogic.RawMatch {
+        // Einschränkung: die Zeilen hier sind die Mitglieder des eigenen Bootes und tragen
+        // alle denselben Timecode. Die Funktion sieht also n-mal denselben Wert und
+        // liefert daher immer die gröbste Stufe. Die Athleten-Anzeige geht bei knappen
+        // Zeiten feiner auf, weil sie alle Boote des Laufs vor sich hat - dafür müssten
+        // hier auch die fremden Zeiten des Laufs geladen werden, was die Abfrage um eine
+        // Ebene aufbläht, die für "meine Zeit" niemand braucht.
+        val precision = Timecode.displayPrecision(rows.mapNotNull { it[TIMECODE.TIME] })
+
+        return MyEventLogic.RawMatch(
+            matchId = matchId,
+            competitionName = first.get("competition_name", String::class.java) ?: "",
+            categoryName = first.get("category_name", String::class.java),
+            roundName = first.get("round_name", String::class.java),
+            matchName = first.get("match_name", String::class.java),
+            startTime = first[COMPETITION_MATCH.START_TIME],
+            actualStartTime = first[COMPETITION_MATCH.STARTED_AT],
+            finishedAt = first[COMPETITION_MATCH.FINISHED_AT],
+            allTeamsScored = first.get("all_teams_scored", Boolean::class.java) == true,
+            currentlyRunning = first[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
+            lane = first[COMPETITION_MATCH_TEAM.START_NUMBER],
+            teamName = first.get("team_name", String::class.java),
+            clubName = first.get("club_name", String::class.java),
+            // Nach Nachnamen sortiert wie zuvor - die Reihenfolge kam bis hierher aus dem
+            // `order by` der Abfrage, die Eingewechselten stehen dort aber nicht drin.
+            teamMembers = lineup
+                .sortedWith(compareBy({ it.lastName }, { it.firstName }))
+                .map {
+                    MyEventTeamMemberDto(
+                        name = "${it.firstName} ${it.lastName}",
+                        role = it.namedParticipantName,
+                        self = it.id == participantId,
+                    )
+                },
+            place = first[COMPETITION_MATCH_TEAM.PLACE],
+            timeString = first[TIMECODE.TIME]?.let {
+                Timecode(
+                    millis = it,
+                    baseUnit = Timecode.BaseUnit.valueOf(first[TIMECODE.BASE_UNIT]!!),
+                    millisecondPrecision = precision,
+                ).toString()
+            },
+            penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
+            penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
+            failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
+            failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
+            deregistered = first.get("deregistered", Boolean::class.java) == true,
+            deregisteredReason = first.get("deregistration_reason", String::class.java),
+        )
+    }
+
+    /**
+     * Die gemeldete Mannschaft eines Bootes aus den Zeilen eines Laufs - der Ausgangspunkt, auf
+     * den die Auswechslungen angewandt werden.
+     *
+     * Jahrgang, Geschlecht und Verein trägt der Dto nur mit, weil die geteilte Auflösung sie
+     * verlangt; in der Antwort landet nichts davon. Zeilen ohne Person entstehen durch die
+     * äußeren Verbunde der Abfrage und fallen hier weg.
+     */
+    private fun registeredCrew(rows: List<Record>): List<ParticipantForExecutionDto> =
+        rows.mapNotNull { row ->
+            val memberId = row.get("participant_id", UUID::class.java) ?: return@mapNotNull null
+            val roleId = row.get("named_role_id", UUID::class.java) ?: return@mapNotNull null
+            ParticipantForExecutionDto(
+                id = memberId,
+                namedParticipantId = roleId,
+                namedParticipantName = row.get("named_role", String::class.java) ?: "",
+                firstName = row[PARTICIPANT.FIRSTNAME] ?: "",
+                lastName = row[PARTICIPANT.LASTNAME] ?: "",
+                year = row[PARTICIPANT.YEAR] ?: 0,
+                gender = row[PARTICIPANT.GENDER] ?: Gender.D,
+                clubId = row.get("registration_club_id", UUID::class.java)!!,
+                clubName = row.get("club_name", String::class.java) ?: "",
+                competitionRegistrationId = row.get("registration_id", UUID::class.java)!!,
+                competitionRegistrationName = row.get("team_name", String::class.java),
+                external = row[PARTICIPANT.EXTERNAL],
+                externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
+            )
+        }.distinctBy { it.id to it.namedParticipantId }
 
     private fun toRegistrations(records: List<Record>): List<MyEventRegistrationDto> =
         records.mapNotNull { record ->

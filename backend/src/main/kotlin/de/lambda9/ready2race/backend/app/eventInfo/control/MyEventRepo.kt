@@ -14,7 +14,11 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.COMPET
 import de.lambda9.ready2race.backend.database.generated.tables.references.NAMED_PARTICIPANT
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.SUBSTITUTION
+import de.lambda9.ready2race.backend.database.generated.tables.references.SUBSTITUTION_VIEW
 import de.lambda9.ready2race.backend.database.generated.tables.references.TIMECODE
+import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Record
@@ -35,15 +39,27 @@ import java.util.UUID
 object MyEventRepo {
 
     /**
-     * Alle Läufe, in denen die Person aufgestellt ist - je Lauf eine Zeile pro Mitglied ihrer
-     * Mannschaft, damit die Aufstellung ohne zweite Abfrage mitkommt. Der Verbundweg vom Lauf zur
-     * Person ist derselbe wie in `CompetitionMatchTeamRepo.getTeamsForUpcomingMatch`:
+     * Alle Läufe, für die die Person in Frage kommt - je Lauf eine Zeile pro Mitglied ihrer
+     * **gemeldeten** Mannschaft, damit die Aufstellung ohne zweite Abfrage mitkommt. Der Verbundweg
+     * vom Lauf zur Person ist derselbe wie in `CompetitionMatchTeamRepo.getTeamsForUpcomingMatch`:
      * COMPETITION_MATCH -> COMPETITION_MATCH_TEAM -> COMPETITION_REGISTRATION ->
      * COMPETITION_REGISTRATION_NAMED_PARTICIPANT -> PARTICIPANT.
      *
      * Die Auswahl der eigenen Läufe passiert über ein `exists` auf der Meldung und nicht über den
      * Verbund mit PARTICIPANT: sonst fielen die Mitfahrenden aus der Zeilenmenge heraus, und die
      * Aufstellung bestünde nur noch aus der Person selbst.
+     *
+     * **Absichtlich zu weit gefasst.** Ausgewechselte stehen weiter in der Meldung, Eingewechselte
+     * nie - wer wirklich im Boot sitzt, steht erst fest, wenn die Auswechslungen der Runde
+     * angewandt sind, und deren Auflösung (Ketten, Tausch über zwei Boote) ist keine Bedingung,
+     * die sich in ein `where` schreiben lässt. Deshalb liefert die Abfrage jeden Lauf, in dem die
+     * Person gemeldet **oder** für diese Runde eingewechselt ist; die letzte Entscheidung fällt in
+     * [de.lambda9.ready2race.backend.app.eventInfo.boundary.MyEventService] über
+     * `CompetitionExecutionService.getActuallyParticipatingParticipants` - dieselbe Funktion, mit
+     * der auch Durchführung und Startliste rechnen.
+     *
+     * Vorbild ist die Sicht `startlist_team`, die `substitutions` ebenfalls getrennt neben
+     * `participants` führt, statt sie in die Meldung hineinzurechnen.
      */
     fun findMatchesForParticipant(eventId: UUID, participantId: UUID): JIO<List<Record>> = Jooq.query {
 
@@ -89,6 +105,9 @@ object MyEventRepo {
             COMPETITION_MATCH_TEAM.FAILED_REASON,
             COMPETITION_MATCH_TEAM.PENALTY_SECONDS,
             COMPETITION_MATCH_TEAM.PENALTY_NOTE,
+            COMPETITION_REGISTRATION.ID.`as`("registration_id"),
+            COMPETITION_REGISTRATION.CLUB.`as`("registration_club_id"),
+            COMPETITION_SETUP_ROUND.ID.`as`("round_id"),
             COMPETITION_REGISTRATION.NAME.`as`("team_name"),
             CLUB.NAME.`as`("club_name"),
             COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
@@ -97,6 +116,14 @@ object MyEventRepo {
             PARTICIPANT.ID.`as`("participant_id"),
             PARTICIPANT.FIRSTNAME,
             PARTICIPANT.LASTNAME,
+            // Jahrgang, Geschlecht und Gaststarter-Angaben landen in keiner Antwort: sie stehen
+            // hier nur, weil die geteilte Auflösung der Auswechslungen einen vollständigen
+            // ParticipantForExecutionDto verlangt. Siehe MyEventDto zu dem, was bewusst fehlt.
+            PARTICIPANT.YEAR,
+            PARTICIPANT.GENDER,
+            PARTICIPANT.EXTERNAL,
+            PARTICIPANT.EXTERNAL_CLUB_NAME,
+            NAMED_PARTICIPANT.ID.`as`("named_role_id"),
             NAMED_PARTICIPANT.NAME.`as`("named_role"),
             TIMECODE.TIME,
             TIMECODE.BASE_UNIT,
@@ -127,7 +154,7 @@ object MyEventRepo {
             .leftJoin(NAMED_PARTICIPANT)
             .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
             .where(COMPETITION.EVENT.eq(eventId))
-            .and(ownRegistration(participantId))
+            .and(DSL.or(ownRegistration(participantId), substitutedInForRound(participantId)))
             .orderBy(
                 COMPETITION_MATCH.START_TIME.asc().nullsLast(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc().nullsLast(),
@@ -229,11 +256,46 @@ object MyEventRepo {
             .fetch { it.value1()!! }
     }
 
+    /**
+     * Die Auswechslungen zu den angegebenen Paaren aus Meldung und Runde - mehr nicht. Beide
+     * Hälften des Schlüssels müssen mit: eine Auswechslung gilt genau in ihrer Runde, und die
+     * Zeilen der Folgerunde sind eigene Kopien (siehe `SubstitutionRecord.applyNewRound`). Nur
+     * über die Meldung zu filtern trüge die Aufstellung einer anderen Runde in den Lauf.
+     *
+     * Die Paare stammen aus dem Ergebnis von [findMatchesForParticipant]; ohne Läufe gibt es
+     * nichts zu holen.
+     */
+    fun findSubstitutionsForRegistrationRounds(
+        registrationRounds: List<Pair<UUID, UUID>>,
+    ): JIO<List<SubstitutionViewRecord>> = SUBSTITUTION_VIEW.select {
+        if (registrationRounds.isEmpty()) {
+            DSL.falseCondition()
+        } else {
+            DSL.or(
+                registrationRounds.map { (registrationId, roundId) ->
+                    COMPETITION_REGISTRATION_ID.eq(registrationId).and(COMPETITION_SETUP_ROUND_ID.eq(roundId))
+                }
+            )
+        }
+    }
+
     /** Gehört die gerade betrachtete Meldung zu dieser Person? */
     private fun ownRegistration(participantId: UUID) = DSL.exists(
         selectOne()
             .from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
             .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
             .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(participantId))
+    )
+
+    /**
+     * Ist die Person in dieser Runde in dieses Boot eingewechselt worden? Beantwortet nur die
+     * Vorauswahl - ob sie am Ende der Kette noch drinsitzt, entscheidet der Dienst.
+     */
+    private fun substitutedInForRound(participantId: UUID) = DSL.exists(
+        selectOne()
+            .from(SUBSTITUTION)
+            .where(SUBSTITUTION.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            .and(SUBSTITUTION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+            .and(SUBSTITUTION.PARTICIPANT_IN.eq(participantId))
     )
 }
