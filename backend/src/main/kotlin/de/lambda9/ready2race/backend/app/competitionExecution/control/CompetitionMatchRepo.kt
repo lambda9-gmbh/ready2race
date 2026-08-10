@@ -40,8 +40,8 @@ object CompetitionMatchRepo {
     fun getForStartList(id: UUID) = STARTLIST_VIEW.selectOne { ID.eq(id) }
 
     /**
-     * Everything needed to pull this match's results from RaceClocker: the wave name (match name plus
-     * planned start time, see [WaveName] - MUST be formatted exactly like
+     * Everything needed to pull this match's results from RaceClocker: the wave name (planned start
+     * time, competition and match name, see [WaveName] - MUST be formatted exactly like
      * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.buildCsv]
      * builds it for the export, or the wave-name fallback filter in `assignFeedRows` never matches)
      * and the two RaceClocker races it selected. Which of the two applies follows from the round: a
@@ -67,6 +67,10 @@ object CompetitionMatchRepo {
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
+            // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die sechs
+            // Rennen-Spalten die Anwahl.
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_PROPERTIES.SHORT_NAME,
             qualiRace.ID,
             qualiRace.NAME,
             qualiRace.RESULTS_URL,
@@ -89,8 +93,10 @@ object CompetitionMatchRepo {
             .fetchOne { record ->
                 RaceClockerMatchTarget(
                     waveName = WaveName.format(
-                        record[COMPETITION_SETUP_MATCH.NAME],
-                        record[COMPETITION_MATCH.START_TIME],
+                        matchName = record[COMPETITION_SETUP_MATCH.NAME],
+                        startTime = record[COMPETITION_MATCH.START_TIME],
+                        competitionIdentifier = record[COMPETITION_PROPERTIES.IDENTIFIER],
+                        competitionShortName = record[COMPETITION_PROPERTIES.SHORT_NAME],
                     ),
                     // Not null in the schema; the projection just loses that guarantee.
                     isQualification = record[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,

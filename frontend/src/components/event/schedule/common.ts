@@ -77,6 +77,44 @@ export const slotsAfter = (slots: EventScheduleSlotDto[], fromSlotId: string): E
     return idx === -1 ? [] : slots.slice(idx + 1)
 }
 
+export type AdvanceOffer = {
+    deltaMinutes: number
+    targets: EventScheduleSlotDto[]
+}
+
+// Spiegelt die Server-Regel aus EventScheduleService.advanceAfterSkippedSlot: Welche Zeit gibt ein
+// entfallener Slot frei, und bis wohin lässt sie sich vorziehen? Der Server rechnet es selbst noch
+// einmal und ist die Instanz, die entscheidet - hier geht es nur um die Frage, ob das Angebot nach
+// der Absage überhaupt erscheint. Ein Dialog, der sich nur öffnet, um "geht nicht" zu sagen, ist am
+// Renntag ein Klick zu viel.
+//
+// Betroffen sind ausschließlich Slots desselben Renntags, die ECHT später beginnen: parallele Slots
+// (gleiche Startzeit wie der entfallene) rücken nicht nach, sie bleiben mit ihm stehen.
+// Das Delta ist die gepflegte Dauer, sonst der Abstand zum ersten dieser Slots; ohne beides - und
+// bei 0 oder weniger Minuten - gibt es kein Angebot.
+export const advanceOffer = (
+    slots: EventScheduleSlotDto[],
+    skippedSlot: EventScheduleSlotDto,
+): AdvanceOffer | null => {
+    const day = skippedSlot.startTime.slice(0, 10)
+    const targets = slots
+        .filter(s => s.startTime.slice(0, 10) === day && s.startTime > skippedSlot.startTime)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+
+    if (targets.length === 0) {
+        return null
+    }
+
+    const deltaMinutes =
+        skippedSlot.durationMinutes ??
+        Math.floor(
+            (new Date(targets[0].startTime).getTime() - new Date(skippedSlot.startTime).getTime()) /
+                60_000,
+        )
+
+    return deltaMinutes > 0 ? {deltaMinutes, targets} : null
+}
+
 // Zählt die Slots derselben Setup-Runde (client-seitig, ohne Zusatzrequest) - für die Bestätigung
 // vor "Runde überspringen" (siehe EventScheduleService.setRoundSkipped): wie viele Slots wären
 // betroffen, damit der Dialog das nicht nur behauptet, sondern konkret nennt.

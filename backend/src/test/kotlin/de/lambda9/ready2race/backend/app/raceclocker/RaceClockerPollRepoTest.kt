@@ -150,6 +150,7 @@ class RaceClockerPollRepoTest {
                 competition = competitionId,
                 identifier = "1",
                 name = "Vierer",
+                shortName = "JM4x",
             )
         )
 
@@ -224,8 +225,10 @@ class RaceClockerPollRepoTest {
         assertEquals(matchId, candidate.matchId)
         assertNotNull(candidate.activatedAt)
         assertEquals(now, candidate.startTime)
-        // Die Wellenbezeichnung entsteht wie beim Startlisten-Export aus Startzeit und Laufname.
-        assertEquals("10:00 Lauf 1", candidate.target.waveName)
+        // Die Wellenbezeichnung entsteht wie beim Startlisten-Export aus Startzeit, Wettkampf
+        // (Rennnummer und Kürzel) und Laufname - hier zugleich der Beleg, dass die beiden
+        // Wettkampf-Spalten aus competition_properties in der Projektion ankommen.
+        assertEquals("10:00 | 1 JM4x | Lauf 1", candidate.target.waveName)
         assertEquals(eventHeatsUrl, candidate.target.roundsRace?.resultsUrl)
         assertEquals(eventTimeTrialUrl, candidate.target.qualificationRace?.resultsUrl)
     }
@@ -379,7 +382,9 @@ class RaceClockerPollRepoTest {
         val target = !CompetitionMatchRepo.getForRaceClockerPull(matchId)
 
         assertNotNull(target)
-        assertEquals("10:00 Lauf 1", target.waveName)
+        // Derselbe Wellenname wie beim Job - beide Abfragen muessen ihn gleich bauen, sonst findet
+        // der eine Weg die Welle und der andere nicht.
+        assertEquals("10:00 | 1 JM4x | Lauf 1", target.waveName)
         // Anwahl des Wettkampfs schlägt die Voreinstellung, das andere Rennen erbt weiter.
         assertEquals(ownHeats, target.roundsRace?.resultsUrl)
         assertEquals(eventTimeTrialUrl, target.qualificationRace?.resultsUrl)

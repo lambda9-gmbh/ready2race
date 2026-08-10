@@ -13,7 +13,7 @@ package de.lambda9.ready2race.backend.app.raceclocker.entity
  */
 data class RaceClockerMatchTarget(
     /**
-     * Der Laufname plus die geplante Startzeit (siehe
+     * Die geplante Startzeit, der Wettkampf (Nummer und Kürzel) und der Laufname (siehe
      * [de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName]), exportiert als
      * RaceClocker-Wellenname. Nur für Startlisten ohne Lauf-Kennung nötig.
      */

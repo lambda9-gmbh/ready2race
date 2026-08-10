@@ -19,5 +19,17 @@ data class ParticipantTrackingDto(
     val externalClubName: String?,
     val scanType: ParticipantScanType?,
     val scannedAt: LocalDateTime?,
-    val lastScanBy: AppUserNameDto?
+    val lastScanBy: AppUserNameDto?,
+    /** Wie der Eintrag entstand - siehe [ParticipantTrackingSource]. */
+    val source: ParticipantTrackingSource,
+    /**
+     * Wie oft er seither von Hand berichtigt wurde; 0 heißt "unangetastet". Zusammen mit [source]
+     * ergibt das die Kennzeichnung im Protokoll.
+     *
+     * Wer und wann berichtigt hat und aus welchem Grund, steht hier bewusst *nicht*: dieser
+     * Endpunkt hängt an READ EVENT und ist mit Scope OWN auch für Vereinsvertreter erreichbar.
+     * Die vollständige Spur liefert ausschließlich der Verlauf hinter
+     * [ParticipantTrackingService.history], und der ist Admin und Schiedsrichtern vorbehalten.
+     */
+    val editCount: Int,
 )

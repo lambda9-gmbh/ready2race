@@ -476,6 +476,15 @@ import type {
     CheckInOutParticipantData,
     CheckInOutParticipantError,
     CheckInOutParticipantResponse,
+    GetParticipantTrackingHistoryData,
+    GetParticipantTrackingHistoryError,
+    GetParticipantTrackingHistoryResponse,
+    AddManualParticipantTrackingData,
+    AddManualParticipantTrackingError,
+    AddManualParticipantTrackingResponse,
+    CorrectParticipantTrackingData,
+    CorrectParticipantTrackingError,
+    CorrectParticipantTrackingResponse,
     UpdateParticipantRequirementData,
     UpdateParticipantRequirementError,
     UpdateParticipantRequirementResponse,
@@ -601,6 +610,9 @@ import type {
     GetRatingCategoriesForEventData,
     GetRatingCategoriesForEventError,
     GetRatingCategoriesForEventResponse,
+    UpdateRatingCategoryOrderForEventData,
+    UpdateRatingCategoryOrderForEventError,
+    UpdateRatingCategoryOrderForEventResponse,
     RemoveRatingCategoryFromEventData,
     RemoveRatingCategoryFromEventError,
     RemoveRatingCategoryFromEventResponse,
@@ -724,6 +736,9 @@ import type {
     SkipScheduleSlotData,
     SkipScheduleSlotError,
     SkipScheduleSlotResponse,
+    AdvanceAfterSkippedSlotData,
+    AdvanceAfterSkippedSlotError,
+    AdvanceAfterSkippedSlotResponse,
     UnskipScheduleSlotData,
     UnskipScheduleSlotError,
     UnskipScheduleSlotResponse,
@@ -1514,6 +1529,9 @@ export const getCompetitionSetup = <ThrowOnError extends boolean = false>(
     })
 }
 
+/**
+ * Polled by the execution page in the interval configured on the event. Send the ETag of the previous answer as If-None-Match to get a 304 without a body while nothing changed.
+ */
 export const getCompetitionExecutionProgress = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetCompetitionExecutionProgressData, ThrowOnError>,
 ) => {
@@ -2870,6 +2888,45 @@ export const checkInOutParticipant = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getParticipantTrackingHistory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantTrackingHistoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantTrackingHistoryResponse,
+        GetParticipantTrackingHistoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking',
+    })
+}
+
+export const addManualParticipantTracking = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddManualParticipantTrackingData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddManualParticipantTrackingResponse,
+        AddManualParticipantTrackingError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking',
+    })
+}
+
+export const correctParticipantTracking = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CorrectParticipantTrackingData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        CorrectParticipantTrackingResponse,
+        CorrectParticipantTrackingError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking/{trackingId}',
+    })
+}
+
 export const updateParticipantRequirement = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<UpdateParticipantRequirementData, ThrowOnError>,
 ) => {
@@ -3433,6 +3490,19 @@ export const getRatingCategoriesForEvent = <ThrowOnError extends boolean = false
     })
 }
 
+export const updateRatingCategoryOrderForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRatingCategoryOrderForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRatingCategoryOrderForEventResponse,
+        UpdateRatingCategoryOrderForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/ratingCategories/order',
+    })
+}
+
 export const removeRatingCategoryFromEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<RemoveRatingCategoryFromEventData, ThrowOnError>,
 ) => {
@@ -3982,6 +4052,22 @@ export const skipScheduleSlot = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule/slot/{slotId}/skip',
+    })
+}
+
+/**
+ * Moves the schedule up into the time freed by a cancelled slot, up to and including targetSlotId. The delta comes from the cancelled slot itself (its planned duration, else the gap to the following slot on the same race day); the slot must be cancelled. dryRun=true only computes the preview.
+ */
+export const advanceAfterSkippedSlot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AdvanceAfterSkippedSlotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AdvanceAfterSkippedSlotResponse,
+        AdvanceAfterSkippedSlotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/slot/{slotId}/advance',
     })
 }
 

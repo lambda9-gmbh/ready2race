@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.control
 
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -92,6 +93,9 @@ object LiveDashboardRepo {
             COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.`as`("round_id"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_PROPERTIES.CHECK_IN_OUT_REQUIRED,
+            RATING_CATEGORY.ID.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_ID),
+            RATING_CATEGORY.NAME.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_NAME),
+            EVENT_RATING_CATEGORY.SORT_ORDER.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER),
         )
             .from(COMPETITION_MATCH_TEAM)
             .join(COMPETITION_SETUP_MATCH)
@@ -116,6 +120,14 @@ object LiveDashboardRepo {
                     .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
             )
             .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
+            .leftJoin(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY))
+            // Die Abschnittsreihenfolge haengt an der Zuordnung zur Veranstaltung, nicht an der
+            // Kategorie selbst - hier ueber COMPETITION.EVENT, das die Abfrage ohnehin einschraenkt.
+            .leftJoin(EVENT_RATING_CATEGORY)
+            .on(
+                EVENT_RATING_CATEGORY.EVENT.eq(COMPETITION.EVENT)
+                    .and(EVENT_RATING_CATEGORY.RATING_CATEGORY.eq(RATING_CATEGORY.ID))
+            )
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
             .and(matchId?.let { COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(it) } ?: DSL.noCondition())
