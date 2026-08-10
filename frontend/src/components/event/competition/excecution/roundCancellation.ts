@@ -7,8 +7,8 @@ import {CompetitionMatchDto} from '@api/types.gen.ts'
 const isRacingTeam = (team: CompetitionMatchDto['teams'][number]): boolean => !team.deregistered
 
 // Ein Lauf mit weniger als zwei fahrenden Mannschaften ist ein Freilos (vgl. das
-// "Teams mit Freilos"-Panel, das genau match.teams.length === 1 als Freilos zählt) oder komplett
-// leer - in beiden Fällen gibt es nichts zu fahren.
+// "Teams mit Freilos"-Panel, das dafür status.bye != null prüft, siehe byeMatches.ts) oder
+// komplett leer - in beiden Fällen gibt es nichts zu fahren.
 const matchHasNothingToRace = (match: CompetitionMatchDto): boolean =>
     match.teams.filter(isRacingTeam).length < 2
 

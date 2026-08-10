@@ -1011,6 +1011,7 @@
         },
         "teamsWithBye": "Teams with a bye",
         "match": {
+          "status": "Status",
           "startTime": "Start time",
           "startTimeOffset": "Start time offset",
           "startNumber": {
@@ -1587,6 +1588,11 @@
         "unscheduled": "Unscheduled",
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Does not take place",
+        "bye": {
+          "open": "Bye · open",
+          "acknowledged": "Bye · acknowledged",
+          "cancelled": "Bye · cancelled"
+        },
         "counter": {
           "preparing": "{{n}} preparing",
           "running": "{{n}} running",
@@ -1594,6 +1600,11 @@
           "finished": "{{n}} finished",
           "cancelled": "{{n}} cancelled"
         }
+      },
+      "bye": {
+        "deregistration": "Bye after withdrawal — {{team}}",
+        "deregistrationWithReason": "Bye after withdrawal — {{team}} ({{reason}})",
+        "noOpponent": "Bye — no opponent in this round"
       }
     },
     "liveDashboard": {

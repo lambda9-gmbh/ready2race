@@ -27,6 +27,7 @@ import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainSer
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
+import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchByeService
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollLogic
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollService
@@ -379,9 +380,13 @@ object CompetitionExecutionService {
                         }
                 }
 
+            // Vor dem out-Filter unten geholt: die abgemeldete Gegnerzeile fällt dort heraus, und
+            // genau sie trägt die Ursache des Freiloses.
+            val byeByMatch = !MatchByeService.byeByMatch(eventId, competitionId)
+
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
                 round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
-                    .toCompetitionRoundDto(event.mixedTeamTerm, lastScanByParticipant)
+                    .toCompetitionRoundDto(event.mixedTeamTerm, lastScanByParticipant, byeByMatch)
             }.map {
                 ApiResponse.ETagged(
                     CompetitionExecutionProgressDto(

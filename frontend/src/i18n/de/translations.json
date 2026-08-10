@@ -1011,6 +1011,7 @@
         },
         "teamsWithBye": "Teams mit Freilos",
         "match": {
+          "status": "Status",
           "startTime": "Startzeit",
           "startTimeOffset": "Versetzte Startzeit",
           "startNumber": {
@@ -1587,6 +1588,11 @@
         "unscheduled": "Ungeplant",
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Findet nicht statt",
+        "bye": {
+          "open": "Freilos · offen",
+          "acknowledged": "Freilos · quittiert",
+          "cancelled": "Freilos · entfallen"
+        },
         "counter": {
           "preparing": "{{n}} in Vorbereitung",
           "running": "{{n}} läuft",
@@ -1594,6 +1600,11 @@
           "finished": "{{n}} beendet",
           "cancelled": "{{n}} abgesagt"
         }
+      },
+      "bye": {
+        "deregistration": "Freilos wegen Abmeldung – {{team}}",
+        "deregistrationWithReason": "Freilos wegen Abmeldung – {{team}} ({{reason}})",
+        "noOpponent": "Freilos – kein Gegner in dieser Runde"
       }
     },
     "liveDashboard": {
