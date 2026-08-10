@@ -207,6 +207,26 @@ Block, und einer, den am Renntag niemand rückgängig machen kann.
 | C33 | Gesperrte Runde | Ein Lauf, aus dessen Plätzen die nächste Runde bereits gesetzt ist, wird auch vom Reset nicht angefasst — weder über den Job noch über den Knopf. Dieselbe Sperre wie beim Schreiben; ohne sie würde ein Neustart in RaceClocker Plätze löschen, aus denen die Setzung längst abgeleitet ist | `e1742e0a` | |
 | C34 | Handeingabe und Reset | Automatik läuft, Ergebnis von Hand eingetragen: der Lauf ist pausiert (C21) und ein Neustart in RaceClocker fasst ihn **nicht** an. Nach „Automatik wieder aufnehmen" (C23) schlägt der Reset dagegen durch und nimmt den Handeintrag mit. Das ist gewollt — aber einmal gesehen haben, bevor es am Renntag passiert | `e1742e0a` | |
 
+### C35–C39 — Wellenname mit Wettkampf
+
+Neu am 10.08. (`acd5004d`). Der Wellenname trägt jetzt auch Rennnummer und Kürzel:
+`10:30 | 12 JM4x | AF1` statt `10:30 AF1`. Grund ist die Wellenliste in RaceClocker — sie hält
+alle Wettkämpfe einer Veranstaltung nebeneinander, und „AF1" allein sagt dort nicht, um welches
+Rennen es geht.
+
+Belegt sind bisher nur die Backend-Tests (664 grün, darunter `WaveNameTest` und der
+Datenbank-Test `RaceClockerPollRepoTest`). In der laufenden App und gegen echtes RaceClocker ist
+davon nichts gesehen worden — deshalb dieser Block. C39 ist der einzige Fall mit echtem
+Schadenspotenzial am Renntag; die übrigen vier sind Sichtprüfungen.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| C35 | Name im Export | Startliste eines Laufs exportieren: die Wellen-Spalte lautet `10:30 \| 12 JM4x \| AF1`. Nach dem Import in RaceClocker steht derselbe Name in der Wellenliste und auf dem Timer-Gerät | `acd5004d` | |
+| C36 | Wettkampf ohne Kürzel | Ein Wettkampf ohne Kürzel ergibt `10:30 \| 12 \| AF1` — kein doppelter Trennstrich, kein hängendes Leerzeichen. Gegenprobe für einen Lauf ohne geplante Startzeit: `12 JM4x \| AF1` | `acd5004d` | |
+| C37 | Liste bleibt chronologisch | Mehrere Wettkämpfe in ein RaceClocker-Rennen exportieren: die alphabetisch sortierte Wellenliste steht trotzdem in Startreihenfolge, weil die Uhrzeit vorn bleibt | `acd5004d` | |
+| C38 | Ergebnis-Pull findet den Lauf | Knopf **und** Automatik ziehen die Ergebnisse einer unter dem neuen Namen angelegten Welle. Zusammen mit C2 zu lesen: Export und Pull leiten den Namen aus derselben Funktion ab, weichen sie voneinander ab, greift der Notnagel-Filter nicht mehr | `acd5004d` | |
+| C39 | Altwelle aus früherem Export | Eine vor der Umstellung angelegte Welle heißt in RaceClocker weiter `10:30 AF1`. Der Pull findet die Boote trotzdem — über die Match-Team-ID in „Extra info" (C1). Nur eine Startliste **ohne** diese Spalte hängt am Wellennamen und findet dann nichts: in dem Fall die Startliste neu exportieren. Vor dem Renntag einmal geprüft haben, welche Wellen schon in RaceClocker stehen | `acd5004d` | |
+
 ## D — Schiedsrichter-Dashboard
 
 | ID | Fall | Erwartung | testbar ab | Nachweis |
