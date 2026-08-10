@@ -150,7 +150,7 @@ const CompetitionExecutionRound = ({
     // Wie viele Läufe dieser Runde draußen schon zu sehen sind. Löschen bleibt erlaubt — das
     // Regattabüro muss auch eine gefahrene Runde zurücknehmen können —, aber es soll wissen, dass
     // es damit etwas wegräumt, das am Steg oder in den Ergebnissen bereits jemand gesehen hat.
-    const onDisplay = matchesOnDisplay(round.matches, round.required)
+    const onDisplay = matchesOnDisplay(round.matches)
 
     const deleteCurrentRound = async () => {
         confirmAction(
