@@ -700,6 +700,8 @@
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
       "navigation": {
+        "modeCompetitions": "Rennen",
+        "modeSchedule": "Zeitplan",
         "backToEvent": "Zurück zur Veranstaltung",
         "filter": "Filtern",
         "showShortNames": "Kurznamen zeigen",
@@ -1011,6 +1013,7 @@
         },
         "teamsWithBye": "Teams mit Freilos",
         "match": {
+          "status": "Status",
           "startTime": "Startzeit",
           "startTimeOffset": "Versetzte Startzeit",
           "startNumber": {
@@ -1608,6 +1611,11 @@
         "unscheduled": "Ungeplant",
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Findet nicht statt",
+        "bye": {
+          "open": "Freilos · offen",
+          "acknowledged": "Freilos · quittiert",
+          "cancelled": "Freilos · entfallen"
+        },
         "counter": {
           "preparing": "{{n}} in Vorbereitung",
           "running": "{{n}} läuft",
@@ -1615,6 +1623,11 @@
           "finished": "{{n}} beendet",
           "cancelled": "{{n}} abgesagt"
         }
+      },
+      "bye": {
+        "deregistration": "Freilos wegen Abmeldung – {{team}}",
+        "deregistrationWithReason": "Freilos wegen Abmeldung – {{team}} ({{reason}})",
+        "noOpponent": "Freilos – kein Gegner in dieser Runde"
       }
     },
     "liveDashboard": {
@@ -1628,6 +1641,7 @@
       },
       "lastUpdated": "Stand: {{time}}",
       "staleWarning": "Verbindung gestört — Anzeige ist möglicherweise nicht aktuell.",
+      "staleSince": "Stand von {{time}} — ohne Verbindung sind keine Aktionen möglich.",
       "loadError": "Daten konnten nicht geladen werden.",
       "noRunning": "Aktuell läuft kein Rennen.",
       "nextUp": "Als Nächstes",
@@ -2399,7 +2413,8 @@
         "qrManagement": "QR-Code Verwaltung",
         "competitionCheck": "Wettkampf-Check",
         "eventRequirement": "Bedingungen prüfen",
-        "caterer": "Verpflegung"
+        "caterer": "Verpflegung",
+        "liveDashboard": "Schiedsrichter-Dashboard"
       },
       "switchEvent": "Event wechseln"
     },
@@ -2407,6 +2422,17 @@
       "title": "Nicht berechtigt",
       "message": "Du bist für diese Seite nicht berechtigt.",
       "backButton": "Zurück zum Login"
+    },
+    "dashboard": {
+      "noEvent": "Keine Veranstaltung gewählt."
+    },
+    "update": {
+      "available": "Neue Version verfügbar",
+      "reload": "Jetzt laden"
+    },
+    "reset": {
+      "button": "App zurücksetzen",
+      "confirm": "Setzt die App auf dem Gerät zurück und lädt sie neu. Angemeldet bleibst du."
     }
   },
   "caterer": {

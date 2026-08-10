@@ -3,22 +3,23 @@ import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/m
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
-import {LiveDashboardMatchDto, MatchStatusDto, PendingSlotDto} from '@api/types.gen.ts'
+import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
 import {matchStatusChip} from '@components/event/match/matchStatusChip.ts'
+import {byeExplanation} from '@components/event/match/matchBye.ts'
 import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 import {
     CLUB_CHAIN_NARROW_CHARS,
     CLUB_CHAIN_NARROW_RESULT_CHARS,
     competitionLabel,
     crewMemberLabel,
+    dashboardMatchStatus,
     matchControls,
     matchHasResults,
     openResultTeams,
     pendingSlotLabel,
     shortenClubChain,
-    teamHasResult,
     teamShowsClubLine,
     teamShowsCrew,
     teamsInDisplayOrder,
@@ -99,17 +100,16 @@ const LiveDashboardMatchCard = ({
      * als dort. Die Uhr ist die des Browsers: die Seite rendert bei jedem Abruf und mindestens alle
      * 30 Sekunden neu (siehe `useLocalClock` in LiveDashboardPage), die Minutenangabe zählt also
      * zwischen zwei Abrufen weiter.
+     *
+     * Die Zusammensetzung selbst liegt in `common.ts`, damit sie ohne Rendering prüfbar bleibt.
      */
-    const status: MatchStatusDto = {
-        state: match.state,
-        startedAt: match.startedAt ?? undefined,
-        teamsTotal: match.teams.length,
-        teamsScored: match.teams.filter(teamHasResult).length,
-    }
+    const status = dashboardMatchStatus(match)
     const statusChip = matchStatusChip(status, match.startTime, new Date())
     // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur — dasselbe Muster
     // wie `StatusChip` in CompetitionExecutionRound.tsx.
     const translate = t as (key: string, values?: Record<string, string | number>) => string
+    // Einmal je Karte statt dreimal im JSX — dieselbe Stelle wie im Zeitplan-Tab.
+    const bye = byeExplanation(match.bye)
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = matchHasResults(match.teams)
@@ -246,6 +246,20 @@ const LiveDashboardMatchCard = ({
                             {translate(statusChip.labelKey, statusChip.values)}
                         </Box>
                     </Box>
+                    {/*
+                        Muss der letzte Kind-Knoten dieses Grids bleiben: die vier Kinder davor
+                        füllen Zeile 1 und 2 exakt wie vor der Freilos-Anzeige, erst danach bleibt
+                        für dieses volle-Breite-Element nur die eigene Zeile 3 übrig. Stünde es
+                        früher, würde die Statuskennzeichnung in Zeile 2 keinen Platz mehr finden
+                        und in Zeile 4 an die Spaltenkante statt an die Kartenkante rutschen.
+                    */}
+                    {bye && (
+                        <Box sx={{gridColumn: '1 / -1'}}>
+                            <Typography variant="caption" sx={{color: 'grey.700'}}>
+                                {translate(bye.key, bye.values)}
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
                 {(() => {
                     const pollStatus = raceClockerPollStatus(match)

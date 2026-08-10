@@ -3,6 +3,7 @@ import {
     LiveDashboardCrewMemberDto,
     LiveDashboardMatchDto,
     LiveDashboardTeamDto,
+    MatchStatusDto,
     PendingSlotDto,
 } from '@api/types.gen.ts'
 
@@ -184,6 +185,22 @@ export const matchControls = (
  */
 export const teamHasResult = (team: LiveDashboardTeamDto): boolean =>
     team.deregistered || team.failed || team.place != null || team.time != null
+
+/**
+ * Der Zustand eines Dashboard-Laufs als [MatchStatusDto] — dieselbe Form, die Durchführung und
+ * Zeitplan lesen. Stand bis hierher inline im JSX der Karte und war damit nicht prüfbar; die
+ * Ableitung selbst bleibt unverändert.
+ *
+ * `teamsScored` zählt nach derselben Regel wie `MatchStatusLogic.scoredCount` im Backend (Platz,
+ * ausgeschieden oder abgemeldet), damit „Teilweise gewertet" hier nichts anderes sagt als dort.
+ */
+export const dashboardMatchStatus = (match: LiveDashboardMatchDto): MatchStatusDto => ({
+    state: match.state,
+    startedAt: match.startedAt ?? undefined,
+    teamsTotal: match.teams.length,
+    teamsScored: match.teams.filter(teamHasResult).length,
+    bye: match.bye,
+})
 
 /**
  * Ob der Lauf überhaupt schon etwas gewertet hat — dieselbe Bedingung, unter der die Karte ihre

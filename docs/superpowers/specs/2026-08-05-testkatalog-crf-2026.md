@@ -1,6 +1,6 @@
 # Testkatalog `feature/crf-2026`
 
-**Stand:** 2026-08-07, Sammelbranch bei `4149d7de` (alle Worktrees des Tages zusammengeführt)
+**Stand:** 2026-08-10, Sammelbranch bei `87f85435` (Freilos-Anzeige als Block M dazugekommen)
 **Zweck:** Ein Katalog aller Fälle, die vor der Regatta am 14.08. auf **einem** gebauten Stand
 durchlaufen werden. Er sammelt die Fälle über alle Arbeitsstränge (Athleten-Anzeige, Zeitstrahl,
 RaceClocker, Schiedsrichter-Dashboard, Betrieb, Zeitnahme-Einstellungen, Urkunden, Lauf-Status,
@@ -206,6 +206,26 @@ Block, und einer, den am Renntag niemand rückgängig machen kann.
 | C32 | Boot außerhalb des Feeds | Ein Boot, das RaceClocker nicht kennt und dessen Ergebnis von Hand steht, behält es beim Reset — angefasst werden nur Boote mit einer Zeile im Feed | `e1742e0a` | |
 | C33 | Gesperrte Runde | Ein Lauf, aus dessen Plätzen die nächste Runde bereits gesetzt ist, wird auch vom Reset nicht angefasst — weder über den Job noch über den Knopf. Dieselbe Sperre wie beim Schreiben; ohne sie würde ein Neustart in RaceClocker Plätze löschen, aus denen die Setzung längst abgeleitet ist | `e1742e0a` | |
 | C34 | Handeingabe und Reset | Automatik läuft, Ergebnis von Hand eingetragen: der Lauf ist pausiert (C21) und ein Neustart in RaceClocker fasst ihn **nicht** an. Nach „Automatik wieder aufnehmen" (C23) schlägt der Reset dagegen durch und nimmt den Handeintrag mit. Das ist gewollt — aber einmal gesehen haben, bevor es am Renntag passiert | `e1742e0a` | |
+
+### C35–C39 — Wellenname mit Wettkampf
+
+Neu am 10.08. (`acd5004d`). Der Wellenname trägt jetzt auch Rennnummer und Kürzel:
+`10:30 | 12 JM4x | AF1` statt `10:30 AF1`. Grund ist die Wellenliste in RaceClocker — sie hält
+alle Wettkämpfe einer Veranstaltung nebeneinander, und „AF1" allein sagt dort nicht, um welches
+Rennen es geht.
+
+Belegt sind bisher nur die Backend-Tests (664 grün, darunter `WaveNameTest` und der
+Datenbank-Test `RaceClockerPollRepoTest`). In der laufenden App und gegen echtes RaceClocker ist
+davon nichts gesehen worden — deshalb dieser Block. C39 ist der einzige Fall mit echtem
+Schadenspotenzial am Renntag; die übrigen vier sind Sichtprüfungen.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| C35 | Name im Export | Startliste eines Laufs exportieren: die Wellen-Spalte lautet `10:30 \| 12 JM4x \| AF1`. Nach dem Import in RaceClocker steht derselbe Name in der Wellenliste und auf dem Timer-Gerät | `acd5004d` | |
+| C36 | Wettkampf ohne Kürzel | Ein Wettkampf ohne Kürzel ergibt `10:30 \| 12 \| AF1` — kein doppelter Trennstrich, kein hängendes Leerzeichen. Gegenprobe für einen Lauf ohne geplante Startzeit: `12 JM4x \| AF1` | `acd5004d` | |
+| C37 | Liste bleibt chronologisch | Mehrere Wettkämpfe in ein RaceClocker-Rennen exportieren: die alphabetisch sortierte Wellenliste steht trotzdem in Startreihenfolge, weil die Uhrzeit vorn bleibt | `acd5004d` | |
+| C38 | Ergebnis-Pull findet den Lauf | Knopf **und** Automatik ziehen die Ergebnisse einer unter dem neuen Namen angelegten Welle. Zusammen mit C2 zu lesen: Export und Pull leiten den Namen aus derselben Funktion ab, weichen sie voneinander ab, greift der Notnagel-Filter nicht mehr | `acd5004d` | |
+| C39 | Altwelle aus früherem Export | Eine vor der Umstellung angelegte Welle heißt in RaceClocker weiter `10:30 AF1`. Der Pull findet die Boote trotzdem — über die Match-Team-ID in „Extra info" (C1). Nur eine Startliste **ohne** diese Spalte hängt am Wellennamen und findet dann nichts: in dem Fall die Startliste neu exportieren. Vor dem Renntag einmal geprüft haben, welche Wellen schon in RaceClocker stehen | `acd5004d` | |
 
 ## D — Schiedsrichter-Dashboard
 
@@ -528,6 +548,65 @@ Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfa
 | L20 | Kategorie ohne Boote | Eine zugeordnete Kategorie, in der niemand gemeldet ist, erzeugt in **keiner** Ergebnisliste einen leeren Abschnitt | `9fbe99ed` |  `AGENT 09.08.` |
 | L22 | Kategorie ohne Zuordnung zur Veranstaltung | Ein Boot trägt eine Kategorie, die der Veranstaltung nie zugeordnet wurde (im Bestand der Regelfall): ihr Abschnitt steht **hinter** allen konfigurierten, untereinander alphabetisch, und vor „Ohne Wertungskategorie". Am 09.08. im Browser bestätigt: „Deutsche Meisterschaft Wertung" vor „Internationale Wertung", beide hinter den gepflegten | `9fbe99ed` | `AGENT 09.08.` |
 | L21 | Altdaten nach der Migration | Eine Veranstaltung, die vor dem Update Kategorien hatte: die Reihenfolge ist nach dem Update die bisher gezeigte alphabetische. Die Migration allein darf keine Anzeige verändert haben | `9fbe99ed` | |
+
+**Aus dem Review (10.08., Fable):** keine Fehler gefunden. Zwei Punkte, die beim Handtest ein
+zweiter Blick wert sind, weil sie im Code nicht abgesichert, sondern nur faktisch richtig sind:
+
+- Die drei Lauf-Ansichten übernehmen den Platz **roh** aus der Datenbank, statt abgemeldete,
+  ausgeschiedene und disqualifizierte Boote ausdrücklich als ungewertet zu behandeln (das tut nur
+  die Platzierungsansicht). Heute folgenlos, weil ein solches Boot nie einen Platz trägt — beim
+  Test also gezielt ein **gescheitertes Boot mit gesetztem Platz** suchen, falls es so eines je
+  gibt. Es dürfte dann keinen Kategorieplatz bekommen.
+- `getCompetitionPlaces` liefert seine flache Liste jetzt in **Abschnittsreihenfolge** statt streng
+  nach Platz. Die Oberfläche gruppiert selbst neu, ist also unberührt; ein Fremdkonsument, der sich
+  auf „Index = Platz − 1" verlässt, bräche. Ein solcher ist nicht bekannt.
+
+
+---
+
+## M — Freilos als Freilos erkennbar
+
+Neu am 10.08. Ein Freilos sah in Zeitplan, Schiedsrichter-Dashboard und Durchführung aus wie ein
+gewöhnlicher Lauf, für den noch Zeiten kommen: „Anstehend", nach fünf Minuten „Überfällig". Am Steg
+war weder zu sehen, dass es dort nichts zu holen gibt, noch ob das Freilos schon quittiert ist.
+
+**Die Leitplanke ist wieder die Anzeige:** kein neuer Zustand, kein geänderter Übergang, kein
+Eingriff in Knöpfe, Rechte oder die Quittierung. Wer M durchgeht, prüft in erster Linie, dass H
+(Lauf-Status) und B8–B11 (Kette) sich **nicht** anders verhalten als vorher. Die Freilos-Regel selbst
+ist unverändert die des bisherigen Panels „Teams mit Freilos" — Runde nicht verpflichtend, genau eine
+nicht als `out` mitgeführte Mannschaft. Entwurf:
+`docs/superpowers/specs/2026-08-09-freilos-anzeige-design.md`.
+
+Der Grund erscheint nur, wenn er belegt ist: „wegen Abmeldung" ausschließlich bei vorhandenem
+`competition_deregistration`-Datensatz, der Freitext-Grund nur bei genau einer Abmeldung im Lauf.
+Alles andere bekommt den neutralen Satz. **M5 und M6 sind deshalb die wichtigsten Fälle des Blocks** —
+sie prüfen, dass die Anzeige nichts behauptet, was sie nicht weiß.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| M1 | Ein Vokabular, drei Oberflächen | Derselbe Freilos-Lauf trägt in Durchführung, Zeitplan und Schiedsrichter-Dashboard dieselbe Aussage. Alle drei lesen `status.bye` aus **einer** Ableitung (`MatchStatusLogic.deriveBye`) — sie können nicht auseinanderlaufen, aber sie können falsch abgeleitet sein | `87f85435` | |
+| M2 | Strukturelles Freilos | Ein Lauf, in den von vornherein nur ein Boot gesetzt wurde: Chip „Freilos · offen", in Zeitplan und Dashboard darunter „Freilos – kein Gegner in dieser Runde". **Kein** „Anstehend", **kein** „Überfällig". In der Durchführung steht bewusst nur der Chip im Panel — dort keinen Erklärungssatz suchen | `87f85435` | |
+| M3 | Freilos nach Abmeldung, mit Grund | Der Gegner ist mit gespeichertem Grund abgemeldet: „Freilos wegen Abmeldung – ⟨Verein⟩ (⟨Grund⟩)" in Zeitplan und Dashboard. Auch dann, wenn die Abmeldung in einer **früheren** Runde geschah und das Boot nur noch als `out`-Zeile mitläuft — genau dafür ist der Fall da | `87f85435` | |
+| M4 | Freilos nach Abmeldung, ohne Grund | Abmeldung ohne Freitext: derselbe Satz ohne Klammer, der Verein steht trotzdem da | `87f85435` | |
+| M5 | Zwei Abmeldungen im selben Lauf | Beide Vereine werden genannt, **der Grund entfällt** — die Zuordnung Name zu Grund wäre sonst geraten | `87f85435` | |
+| M6 | Ausgeschiedener Gegner ist keine Abmeldung | Der Gegner ist `out`, weil er ausgeschieden ist (DSQ/DNF) oder den Platz nicht geschafft hat: neutraler Satz „kein Gegner in dieser Runde". Es darf **keine** Abmeldung behauptet werden | `87f85435` | |
+| M7 | Noch zu quittieren | Solange niemand beendet hat: „Freilos · offen" (blau) | `87f85435` | |
+| M8 | Quittiert | Nach „Lauf beenden": „Freilos · quittiert" (grün). Der Weg dorthin ist unverändert der bisherige Knopf | `87f85435` | |
+| M9 | Entfallen | Runde abgesagt: „Freilos · entfallen", durchgestrichen — und der Lauf bleibt in Zeitplan und Dashboard **sichtbar**. Ein still verschwundener Lauf ist am Steg nicht von einem Anzeigefehler zu unterscheiden | `87f85435` | |
+| M10 | Aktivierung schlägt das Freilos | Ein Freilos, das jemand an den Start ruft, zeigt „In Vorbereitung" bzw. „Läuft" — nicht „Freilos". Was tatsächlich passiert, schlägt weiterhin alles | `87f85435` | |
+| M11 | Arena-Chip schweigt | Bei einem Freilos erscheint **kein** „Arena 0/1" — ein Boot, das nicht fährt, muss nicht draußen sein | `87f85435` | |
+| M12 | Durchführung: Panel statt Karte | Das Freilos steht im Panel „Teams mit Freilos", jetzt mit Statuschip in einer dritten Spalte, und **nicht** zusätzlich als Lauf-Karte. Gegenprobe: kein Lauf taucht doppelt auf, keiner verschwindet ganz | `87f85435` | |
+| M13 | Bedienung unverändert | Aktivier-Haken, „Ergebnisse eintragen", „Lauf beenden", „Runde entfällt", Startlisten und alle Rechte verhalten sich wie vor der Änderung — auch am Freilos | `87f85435` | |
+| M14 | Board-Poll bleibt ruhig | Bei einem Lauf mit zwei Abmeldungen darf die Namensreihenfolge zwischen zwei Abrufen nicht wechseln (fester `ORDER BY`); sonst kippt der ETag des Dashboards bei jedem Poll und die volle Nutzlast fließt neu | `87f85435` | |
+| M17 | Gegenprobe: kein Freilos, wo keins ist | Eine **verpflichtende** Runde mit einem einzigen Boot (Zeitrennen-Konstellation) trägt **keinen** Freilos-Chip und keinen Erklärungssatz — sie bleibt ein gewöhnlicher Lauf. Der billigste Handgriff, um eine falsch gespeiste Ableitung zu finden (etwa ein falsch gelesenes `round_required`) | `87f85435` | |
+
+**Zwei bekannte Abweichungen, die der Test bestätigen soll — beide bestanden schon vorher und werden
+durch die neue Anzeige nur sichtbar:**
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| M15 | Erste Runde, Freilos durch Abmeldung | `automaticFirstPlace` zählt in der **ersten** Runde Setzplätze und vergibt hier keinen Platz 1. Der Lauf steht deshalb auf „Freilos · offen" und braucht die Platzvergabe von Hand, bevor die nächste Runde gesetzt werden kann. Am Testtag entscheiden, ob das so bleiben soll | `87f85435` | |
+| M16 | Ergebnissperre greift beim `out`-Gegner nicht | Ein Lauf mit einem fahrenden Boot und einem mitgeführten `out`-Gegner wird als Freilos angezeigt, `checkUpdateMatchResult` nimmt dort aber weiter Ergebnisse an (die Sperre prüft die **ungefilterte** Teamliste). Prüfen, ob das im Betrieb stört; wenn ja, ist das eine eigene Änderung an der Sperre, nicht an der Anzeige | `87f85435` | |
 
 ---
 
