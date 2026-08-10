@@ -28,6 +28,7 @@ import {CompetitionTab} from './components/event/competition/common.ts'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import EventInfoPage from './pages/event/EventInfoPage.tsx'
 import AthleteBoardPage from './pages/event/AthleteBoardPage.tsx'
+import BoardDisplayPage from './pages/event/BoardDisplayPage.tsx'
 import LiveDashboardPage from './pages/event/LiveDashboardPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
@@ -515,10 +516,18 @@ export const challengeRoute = createRoute({
 
 // Öffentliche Route ohne App-Layout: fest montierte Athletenbildschirme und
 // Athleten-Handys brauchen weder Kopfleiste noch Seitenleiste noch Anmeldung.
+// Bestands-URL der alten Athleten-Anzeige — leitet auf das erste Board um.
 export const athleteBoardRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'board/$eventId',
     component: () => <AthleteBoardPage />,
+})
+
+// Die Anzeige eines konkreten Boards, ebenfalls öffentlich und ohne App-Layout.
+export const boardDisplayRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'board/$eventId/$boardId',
+    component: () => <BoardDisplayPage />,
 })
 
 const routeTree = rootRoute.addChildren([
@@ -562,6 +571,7 @@ const routeTree = rootRoute.addChildren([
     resultsRoute.addChildren([resultsIndexRoute, resultsQRCodeRoute, resultsEventRoute]),
     mobileRoute.addChildren([challengeRoute]),
     athleteBoardRoute,
+    boardDisplayRoute,
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
