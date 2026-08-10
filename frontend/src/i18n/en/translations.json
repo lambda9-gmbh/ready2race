@@ -2476,8 +2476,10 @@
       "noResults": "There are no results for this competition yet."
     },
     "liveMatches": {
-      "liveMatches": "Currently running matches",
-      "noMatches": "There are no matches currently taking place."
+      "noMatches": "No match is scheduled right now.",
+      "loadFailed": "The matches could not be loaded.",
+      "stale": "As of {{time}}",
+      "pendingRound": "Line-up not decided yet"
     },
     "clubRanking": {
       "error": "Error loading club rankings"
