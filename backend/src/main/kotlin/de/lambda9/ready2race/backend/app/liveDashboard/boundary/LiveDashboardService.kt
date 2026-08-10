@@ -14,6 +14,7 @@ import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.control.CheckSeverityRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.*
+import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchByeService
 import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
@@ -71,6 +72,7 @@ object LiveDashboardService {
             // Einmal gelesen und zweifach genutzt: für die Platzhalter (getPendingSlots) und für die
             // Absagen, die an echten Läufen hängen. Zwei Reads würden hier auseinanderlaufen können.
             val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
+            val byeByMatch = !MatchByeService.byeByMatch(eventId)
 
             val skippedMatchIds = slotRecords.mapNotNull { r ->
                 EventScheduleLogic.skippedMatchIdOrNull(
@@ -260,6 +262,7 @@ object LiveDashboardService {
                             teamResults = teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) },
                             skipped = matchId in skippedMatchIds,
                         ),
+                        bye = byeByMatch[matchId],
                         competitionId = match.get("competition_id", UUID::class.java)!!,
                         competitionName = match.get("competition_name", String::class.java) ?: "",
                         competitionIdentifier = match.get("competition_identifier", String::class.java),

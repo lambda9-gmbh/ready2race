@@ -28,6 +28,7 @@
       "@components/*": ["components/*"],
       "@contexts/*": ["contexts/*"],
       "@i18n/*": ["i18n/*"],
+      "@pwa/*": ["pwa/*"],
       "@routes":  ["routes.tsx"],
       "@utils/*": ["utils/*"]
     }

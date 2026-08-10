@@ -8,6 +8,15 @@ import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
 import i18next from 'i18next'
 import {Language} from '@i18n/config.ts'
 import PanicPage from '../../pages/PanicPage.tsx'
+import {
+    clearSessionToken,
+    readSessionToken,
+    readSessionUser,
+    touchSessionToken,
+    writeSessionToken,
+    writeSessionUser,
+} from './sessionToken.ts'
+import {clearCachedReads} from '@pwa/readCache.ts'
 
 type Session = {
     token: string
@@ -41,10 +50,11 @@ type UserData =
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [language, setLanguage] = useState(i18nLanguage())
+    const initialIsInApp = router.state.resolvedLocation.pathname.startsWith('/app')
     const [userData, setUserData] = useState<UserData>({
         userInfo: undefined,
-        token: sessionStorage.getItem('session'),
-        isInApp: router.state.resolvedLocation.pathname.startsWith('/app'),
+        token: readSessionToken(initialIsInApp),
+        isInApp: initialIsInApp,
         authStatus: 'initial',
     })
     const [error, setError] = useState<string | null>(null)
@@ -56,6 +66,12 @@ const UserProvider = ({children}: PropsWithChildren) => {
             if (res.status === 401 && userData.authStatus === 'authenticated') {
                 const isInApp = router.state.resolvedLocation.pathname.startsWith('/app')
                 await logout(isInApp)
+            } else if (res.ok && router.state.resolvedLocation.pathname.startsWith('/app')) {
+                // Nur aus der Helfer-App heraus: Sonst hielte jede Nutzung der
+                // Verwaltungsoberfläche im selben Browserprofil einen abgelegten Helfer-Token
+                // unbegrenzt am Leben, und die Sechs-Stunden-Grenze - die Abfederung für die
+                // Ablage auf dem Gerät - liefe ins Leere.
+                touchSessionToken()
             }
             return res
         }
@@ -116,7 +132,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
             if (response.status === 200 && data !== undefined) {
                 setAuth(data, undefined, userData.isInApp)
             } else {
-                sessionStorage.removeItem('session')
+                clearSessionToken(userData.isInApp)
                 setUserData(prevState => ({
                     userInfo: undefined,
                     token: null,
@@ -126,6 +142,27 @@ const UserProvider = ({children}: PropsWithChildren) => {
             }
         },
         onPanic: error => {
+            // Kaltstart ohne Netz: Der Aufruf wirft, bevor eine Antwort kommt. Mit gültigem
+            // Token und abgelegten Nutzerangaben läuft die App aus dem Bestand weiter, statt
+            // die Panikseite zu zeigen - am Steg ist das der Unterschied zwischen brauchbar und
+            // unbrauchbar. Außerhalb von /app bleibt es beim bisherigen Verhalten.
+            //
+            // Nur bei einem TypeError: So und nicht anders meldet fetch einen Fehlschlag auf
+            // der Netzebene. Ein Server, der mit Status 200 etwas Kaputtes liefert, wirft einen
+            // SyntaxError, und ein Serverfehler kommt gar nicht hier an, sondern als Antwort mit
+            // Fehlerstatus. Beides soll weiterhin die Panikseite zeigen - sonst verdeckt der
+            // Bestand aus dem Gerät einen echten Defekt.
+            const offlineError = error instanceof TypeError
+            const offlineUser = offlineError && userData.isInApp ? readSessionUser(true) : null
+            if (offlineUser !== null && userData.token) {
+                setUserData({
+                    userInfo: offlineUser,
+                    token: userData.token,
+                    isInApp: true,
+                    authStatus: 'pending',
+                })
+                return
+            }
             setError(`${error}`)
         },
     })
@@ -139,11 +176,12 @@ const UserProvider = ({children}: PropsWithChildren) => {
                 throw Error('Missing header on login response')
             }
             token = (JSON.parse(sessionHeader) as Session).token
-            sessionStorage.setItem('session', token)
+            writeSessionToken(token, isInApp)
         }
         if (!token) {
             throw Error('Missing session token on login')
         }
+        writeSessionUser(data, isInApp)
         setUserData({
             userInfo: data,
             token,
@@ -153,16 +191,31 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }
 
     const logout = async (isInApp: boolean = false) => {
-        const {error} = await userLogout()
-        if (error === undefined) {
-            sessionStorage.removeItem('session')
-            setUserData({
-                userInfo: undefined,
-                isInApp,
-                token: null,
-                authStatus: 'pending',
-            })
+        // Erst das Gerät räumen, dann den Server benachrichtigen. Ohne Netz wirft `userLogout`,
+        // und in der umgekehrten Reihenfolge bliebe auf einem geteilten Tablet alles liegen:
+        // ein sechs Stunden gültiger Token, der ganze Privilegiensatz und bis zu zwölf Stunden
+        // Dashboard-Daten mit Klarnamen. Ein Abmelden im Funkloch am Steg ist genau der Fall,
+        // in dem das passiert.
+        clearSessionToken(isInApp)
+        clearCachedReads()
+        if (isInApp) {
+            // Auswahl der Veranstaltung und der Aufgabe liegen seit dem Kaltstart-Fix ebenfalls
+            // dauerhaft auf dem Gerät. Auf einem geteilten Tablet soll der Nächste nicht die
+            // Auswahl des Vorherigen vorfinden.
+            localStorage.removeItem('eventId')
+            localStorage.removeItem('appFunction')
         }
+        try {
+            await userLogout()
+        } catch {
+            // Die Sitzung läuft serverseitig von selbst ab. Auf dem Gerät ist sie schon weg.
+        }
+        setUserData({
+            userInfo: undefined,
+            isInApp,
+            token: null,
+            authStatus: 'pending',
+        })
     }
 
     const changeLanguage = async (language: Language) => {

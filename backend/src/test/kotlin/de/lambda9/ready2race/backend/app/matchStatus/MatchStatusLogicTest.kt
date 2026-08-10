@@ -1,6 +1,9 @@
 package de.lambda9.ready2race.backend.app.matchStatus
 
 import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeCause
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeTeam
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
@@ -348,5 +351,121 @@ class MatchStatusLogicTest {
         )
         assertEquals(2, counters.open)
         assertEquals(0, counters.finished)
+    }
+
+    // --- deriveBye ---
+
+    private fun racing(name: String = "RC Bergedorf") =
+        MatchByeTeam(racing = true, name = name, deregistered = false, deregistrationReason = null)
+
+    /** Aus der Vorrunde mitgeführt, aber nicht abgemeldet: ausgeschieden oder nicht weitergekommen. */
+    private fun eliminated(name: String = "RV Hansa") =
+        MatchByeTeam(racing = false, name = name, deregistered = false, deregistrationReason = null)
+
+    private fun withdrawn(name: String = "RV Hansa", reason: String? = null) =
+        MatchByeTeam(racing = false, name = name, deregistered = true, deregistrationReason = reason)
+
+    @Test
+    fun requiredRoundIsNeverABye() {
+        assertNull(MatchStatusLogic.deriveBye(roundRequired = true, teams = listOf(racing())))
+    }
+
+    @Test
+    fun twoRacingTeamsAreNoBye() {
+        assertNull(MatchStatusLogic.deriveBye(false, listOf(racing("A"), racing("B"))))
+    }
+
+    @Test
+    fun aMatchWithoutTeamsIsNoBye() {
+        assertNull(MatchStatusLogic.deriveBye(false, emptyList()))
+    }
+
+    @Test
+    fun aSingleSeededTeamIsAStructuralBye() {
+        assertEquals(
+            MatchByeDto(MatchByeCause.NO_OPPONENT, null, null),
+            MatchStatusLogic.deriveBye(false, listOf(racing())),
+        )
+    }
+
+    /** Ausgeschieden ist keine Abmeldung - ohne Datensatz wird auch keine behauptet. */
+    @Test
+    fun anEliminatedOpponentStaysNeutral() {
+        assertEquals(
+            MatchByeDto(MatchByeCause.NO_OPPONENT, null, null),
+            MatchStatusLogic.deriveBye(false, listOf(racing(), eliminated())),
+        )
+    }
+
+    @Test
+    fun aWithdrawnOpponentNamesTeamAndReason() {
+        assertEquals(
+            MatchByeDto(MatchByeCause.DEREGISTRATION, "RV Hansa", "Krankheit"),
+            MatchStatusLogic.deriveBye(false, listOf(racing(), withdrawn("RV Hansa", "Krankheit"))),
+        )
+    }
+
+    @Test
+    fun aWithdrawnOpponentWithoutAStoredReasonStillNamesTheTeam() {
+        assertEquals(
+            MatchByeDto(MatchByeCause.DEREGISTRATION, "RV Hansa", null),
+            MatchStatusLogic.deriveBye(false, listOf(racing(), withdrawn("RV Hansa"))),
+        )
+    }
+
+    /** Bei mehreren Abmeldungen wäre die Zuordnung Name -> Grund geraten. */
+    @Test
+    fun severalWithdrawalsDropTheReason() {
+        assertEquals(
+            MatchByeDto(MatchByeCause.DEREGISTRATION, "RV Hansa, RC Favorite", null),
+            MatchStatusLogic.deriveBye(
+                false,
+                listOf(
+                    racing(),
+                    withdrawn("RV Hansa", "Krankheit"),
+                    withdrawn("RC Favorite", "Materialschaden"),
+                ),
+            ),
+        )
+    }
+
+    /** Eine Abmeldung neben einer Ausscheidung reicht für die Ursache - und für den Grund. */
+    @Test
+    fun aWithdrawalNextToAnEliminationStillCarriesTheReason() {
+        assertEquals(
+            MatchByeDto(MatchByeCause.DEREGISTRATION, "RV Hansa", "Krankheit"),
+            MatchStatusLogic.deriveBye(
+                false,
+                listOf(racing(), eliminated("RG Wandsbek"), withdrawn("RV Hansa", "Krankheit")),
+            ),
+        )
+    }
+
+    @Test
+    fun matchStatusCarriesTheBye() {
+        val bye = MatchByeDto(MatchByeCause.NO_OPPONENT, null, null)
+        val status = MatchStatusLogic.matchStatus(
+            activatedAt = null,
+            startTime = start,
+            startedAt = null,
+            finishedAt = null,
+            skipped = false,
+            teams = listOf(placed(1)),
+            bye = bye,
+        )
+        assertEquals(bye, status.bye)
+    }
+
+    @Test
+    fun matchStatusWithoutAByeSaysSo() {
+        val status = MatchStatusLogic.matchStatus(
+            activatedAt = null,
+            startTime = start,
+            startedAt = null,
+            finishedAt = null,
+            skipped = false,
+            teams = listOf(open(), open()),
+        )
+        assertNull(status.bye)
     }
 }
