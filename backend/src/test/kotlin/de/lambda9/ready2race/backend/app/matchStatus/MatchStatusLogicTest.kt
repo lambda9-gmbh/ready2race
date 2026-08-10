@@ -254,22 +254,24 @@ class MatchStatusLogicTest {
         assertEquals(listOf(1, 0), MatchStatusLogic.teamsInArenaPerMatch(round))
     }
 
-    /** Genau die Regel des Dashboards: nur wenn JEDE bekannte Person zuletzt ENTRY ist. */
+    /** Genau die Regel des Dashboards: mindestens eine Person zuletzt ENTRY genügt. */
     @Test
-    fun onlyFullyCheckedInCrewsCount() {
+    fun aSingleCheckedInPersonCountsTheCrew() {
         val round = listOf(
             listOf(
                 // vollständig draußen
                 listOf(entry(1), entry(3)),
-                // eine Person wieder ausgecheckt
+                // eine Person wieder ausgecheckt - die andere trägt das Boot
                 listOf(entry(1), exit(4)),
-                // eine Person nie gescannt
+                // eine Person nie gescannt - die andere trägt das Boot
                 listOf(entry(1), null),
+                // niemand (mehr) eingecheckt
+                listOf(exit(2), null),
                 // keine Crew bekannt - lässt sich nichts belegen
                 emptyList(),
             )
         )
-        assertEquals(listOf(1), MatchStatusLogic.teamsInArenaPerMatch(round))
+        assertEquals(listOf(3), MatchStatusLogic.teamsInArenaPerMatch(round))
     }
 
     /** Ein einziger Scan irgendwo in der Runde macht die ganze Runde erhoben. */
