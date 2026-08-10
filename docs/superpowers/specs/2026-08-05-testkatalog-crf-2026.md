@@ -141,7 +141,7 @@ nicht die Erwartung anpassen.
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
 | C1 | Startlisten-Export | Export trägt die R2R-UUID in „Extra info"; ohne dieses Mapping findet der Pull keine Boote | `dd8d67b8` | |
-| C2 | Wellenname | Wellenname enthält die Startzeit, Lauf wird im Feed gefunden | `09e6a642` | |
+| C2 | Wellenname | Wellenname lautet `10:30 \| 12 JM4x \| AF1` (Startzeit, Rennnummer und Kürzel, Laufname), Lauf wird im Feed gefunden | `09e6a642` | |
 | C3 | Ergebnisse ziehen | Zeiten und Plätze landen am richtigen Boot, Plätze aus den Zeiten abgeleitet | `dd8d67b8` | |
 | C4 | Teil-Pull | Ein Pull mit nur teilweise genommenen Zeiten ist wiederholbar, ohne die übrigen Boote zu beschädigen | `b1e2e238` | |
 | C5 | Echter Start | Früheste gemessene Startzeit überschreibt `started_at`, auch gegen einen manuellen Stempel | `f86665ae`, `e4cb8753` | |
@@ -206,6 +206,26 @@ Block, und einer, den am Renntag niemand rückgängig machen kann.
 | C32 | Boot außerhalb des Feeds | Ein Boot, das RaceClocker nicht kennt und dessen Ergebnis von Hand steht, behält es beim Reset — angefasst werden nur Boote mit einer Zeile im Feed | `e1742e0a` | |
 | C33 | Gesperrte Runde | Ein Lauf, aus dessen Plätzen die nächste Runde bereits gesetzt ist, wird auch vom Reset nicht angefasst — weder über den Job noch über den Knopf. Dieselbe Sperre wie beim Schreiben; ohne sie würde ein Neustart in RaceClocker Plätze löschen, aus denen die Setzung längst abgeleitet ist | `e1742e0a` | |
 | C34 | Handeingabe und Reset | Automatik läuft, Ergebnis von Hand eingetragen: der Lauf ist pausiert (C21) und ein Neustart in RaceClocker fasst ihn **nicht** an. Nach „Automatik wieder aufnehmen" (C23) schlägt der Reset dagegen durch und nimmt den Handeintrag mit. Das ist gewollt — aber einmal gesehen haben, bevor es am Renntag passiert | `e1742e0a` | |
+
+### C35–C39 — Wellenname mit Wettkampf
+
+Neu am 10.08. (`acd5004d`). Der Wellenname trägt jetzt auch Rennnummer und Kürzel:
+`10:30 | 12 JM4x | AF1` statt `10:30 AF1`. Grund ist die Wellenliste in RaceClocker — sie hält
+alle Wettkämpfe einer Veranstaltung nebeneinander, und „AF1" allein sagt dort nicht, um welches
+Rennen es geht.
+
+Belegt sind bisher nur die Backend-Tests (664 grün, darunter `WaveNameTest` und der
+Datenbank-Test `RaceClockerPollRepoTest`). In der laufenden App und gegen echtes RaceClocker ist
+davon nichts gesehen worden — deshalb dieser Block. C39 ist der einzige Fall mit echtem
+Schadenspotenzial am Renntag; die übrigen vier sind Sichtprüfungen.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| C35 | Name im Export | Startliste eines Laufs exportieren: die Wellen-Spalte lautet `10:30 \| 12 JM4x \| AF1`. Nach dem Import in RaceClocker steht derselbe Name in der Wellenliste und auf dem Timer-Gerät | `acd5004d` | |
+| C36 | Wettkampf ohne Kürzel | Ein Wettkampf ohne Kürzel ergibt `10:30 \| 12 \| AF1` — kein doppelter Trennstrich, kein hängendes Leerzeichen. Gegenprobe für einen Lauf ohne geplante Startzeit: `12 JM4x \| AF1` | `acd5004d` | |
+| C37 | Liste bleibt chronologisch | Mehrere Wettkämpfe in ein RaceClocker-Rennen exportieren: die alphabetisch sortierte Wellenliste steht trotzdem in Startreihenfolge, weil die Uhrzeit vorn bleibt | `acd5004d` | |
+| C38 | Ergebnis-Pull findet den Lauf | Knopf **und** Automatik ziehen die Ergebnisse einer unter dem neuen Namen angelegten Welle. Zusammen mit C2 zu lesen: Export und Pull leiten den Namen aus derselben Funktion ab, weichen sie voneinander ab, greift der Notnagel-Filter nicht mehr | `acd5004d` | |
+| C39 | Altwelle aus früherem Export | Eine vor der Umstellung angelegte Welle heißt in RaceClocker weiter `10:30 AF1`. Der Pull findet die Boote trotzdem — über die Match-Team-ID in „Extra info" (C1). Nur eine Startliste **ohne** diese Spalte hängt am Wellennamen und findet dann nichts: in dem Fall die Startliste neu exportieren. Vor dem Renntag einmal geprüft haben, welche Wellen schon in RaceClocker stehen | `acd5004d` | |
 
 ## D — Schiedsrichter-Dashboard
 
@@ -443,8 +463,37 @@ Anzeige, Schiedsrichter-Dashboard, Athleten-Anzeige und Platzierungsansicht tren
 Abschnitte je Kategorie und zählen in jedem Abschnitt ab 1. Entwurf:
 `docs/superpowers/specs/2026-08-09-ergebnisse-nach-wertungskategorien-design.md`.
 
-**Kein Agent hat die laufende Anwendung gesehen.** Die Rechenlogik steckt an einer Stelle
-(`RatingCategoryRanking`) und ist durch Unit-Tests gedeckt; gerendert wurde nichts davon je.
+**Teilweise in der laufenden Anwendung gesehen** (09.08.2026, Agent im Browser, Dev-Stand auf
+`:5127`): L2, L3, L4, L5, L7, L8, L12 und L20 sind dort grün gewesen — das ist **kein** Ersatz für den
+Durchgang eines Menschen, aber die Abschnitte wurden gerendert und stimmten. Alles, was eine
+Anmeldung braucht (L1, L9–L11, L13–L19, L21), ist weiterhin unbelegt: ein Agent darf keine
+Zugangsdaten eingeben. L12 ging trotzdem, weil das Ergebnis-PDF auch ohne Anmeldung abrufbar ist
+(`GET /api/results/event/{eventId}`).
+
+**Zwei Befunde aus genau diesem Durchgang:**
+
+1. **Kategorien ohne Zuordnung zur Veranstaltung sind der Normalfall, nicht der Ausnahmefall.** Im
+   Bestand tragen 32 Boote „Internationale Wertung" und 55 „Deutsche Meisterschaft Wertung", ohne
+   dass diese Kategorien je einer Veranstaltung zugeordnet wurden. Bis `9fbe99ed` sortierten sie
+   auf Stelle 0 und drängten sich damit **vor** jede gepflegte Reihenfolge. Seither stehen sie
+   hinten und untereinander alphabetisch — siehe L22.
+2. **„gemeldet von … | undefined".** Ergebnisdialog und Platzierungsansicht hängten den
+   Mannschaftsnamen ohne Prüfung an, und der ist bei einem Einer meistens leer — in **jeder** Zeile
+   stand `undefined`. Älter als die Kategoriewertung, beim Durchgang aufgefallen und gleich
+   mitbehoben.
+3. **Ein Gleichstand im Lauf ist unmöglich.** `place_unique_in_match` (aus `V202507040930`) verbietet
+   zwei Boote mit demselben Platz im selben Lauf. Der Gleichstandsfall gehört damit ausschließlich
+   zu den Wettkampf-Platzierungen, wo `CompetitionSetupPlacesOption.EQUAL` mehrere Boote gleich
+   wertet — L6 ist entsprechend umgeschrieben.
+
+**Testdaten liegen bereit.** `docs/seeds/seed-block-l-wertungskategorien.sql` legt vier
+Kategorien an, ordnet sie der „Coastal-Regatta Flensburg 2026" in einer bewusst **nicht**
+alphabetischen Reihenfolge zu und verteilt sie auf die Boote des Wettkampfs 11. Am 09.08. war das
+in der Dev-Datenbank bereits eingespielt; wer auf einer frischen Datenbank testet, spielt es
+nach:
+```
+docker exec -i backend-db-1 psql -U developer -d ready2race < docs/seeds/seed-block-l-wertungskategorien.sql
+```
 
 **Voraussetzung für diesen Block:** eine Veranstaltung mit **mindestens zwei** zugeordneten
 Wertungskategorien, einem Lauf, in dem Boote **beider** Kategorien starten, **einem Boot ganz ohne
@@ -454,17 +503,17 @@ Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfa
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
 | L1 | Reihenfolge pflegen | Veranstaltung → Einstellungen → Wertungskategorien: Hoch/Runter verschiebt eine Kategorie. Nach dem Neuladen steht sie noch dort. Die Reihenfolge hängt an der **Veranstaltung**, nicht an der Kategorie — bei einer zweiten Regatta darf sie anders sein | `9fbe99ed` | |
-| L2 | Abschnitte folgen der Reihenfolge | Öffentliche Ergebnisanzeige, Lauf öffnen: die Abschnitte stehen in genau der unter L1 gesetzten Folge — nicht alphabetisch. Zum Prüfen die Reihenfolge unter L1 absichtlich **gegen** das Alphabet stellen | `9fbe99ed` | |
-| L3 | Zählung ab 1 je Abschnitt | Jeder Abschnitt beginnt bei 1. Ein Boot, das im Lauf Sechster ist, aber Erster seiner Kategorie, trägt die 1 | `9fbe99ed` | |
-| L4 | Ohne Wertungskategorie | Das Boot ohne Kategorie steht in einem eigenen Abschnitt „Ohne Wertungskategorie" — **immer am Ende**, auch wenn eine echte Kategorie weiter hinten einsortiert ist | `9fbe99ed` | |
-| L5 | Wettkampf ohne Kategorien unverändert | **Die zentrale Zusage.** Ein Wettkampf, in dem kein Boot eine Kategorie trägt, sieht aus wie vorher: eine durchgehende Liste, **keine** Überschrift „Ohne Wertungskategorie". Vorher/Nachher am selben Lauf vergleichen | `9fbe99ed` | |
-| L6 | Gleichstand | Zwei Boote mit demselben Platz in derselben Kategorie: beide tragen dieselbe Zahl, das nächste Boot lässt die Lücke (1, 1, 3 — kein Zweiter) | `9fbe99ed` | |
-| L7 | Abgemeldet, DNF, DSQ | Solche Boote bekommen **keinen** Kategorieplatz und stehen am Ende **ihres eigenen** Abschnitts — sie verschwinden nicht. Eine Besatzung, die ihr Boot im Ergebnis nicht findet, hält das für einen Anzeigefehler | `9fbe99ed` | |
-| L8 | Athleten-Anzeige gleicht der öffentlichen | `/board/{eventId}`: derselbe Lauf zeigt dieselben Abschnitte in derselben Folge und **dieselben Zahlen** wie die öffentliche Seite. Nebeneinander auf zwei Schirmen vergleichen | `9fbe99ed` | |
+| L2 | Abschnitte folgen der Reihenfolge | Öffentliche Ergebnisanzeige, Lauf öffnen: die Abschnitte stehen in genau der unter L1 gesetzten Folge — nicht alphabetisch. Zum Prüfen die Reihenfolge unter L1 absichtlich **gegen** das Alphabet stellen | `9fbe99ed` |  `AGENT 09.08.` |
+| L3 | Zählung ab 1 je Abschnitt | Jeder Abschnitt beginnt bei 1. Ein Boot, das im Lauf Sechster ist, aber Erster seiner Kategorie, trägt die 1 | `9fbe99ed` |  `AGENT 09.08.` |
+| L4 | Ohne Wertungskategorie | Das Boot ohne Kategorie steht in einem eigenen Abschnitt „Ohne Wertungskategorie" — **immer am Ende**, auch wenn eine echte Kategorie weiter hinten einsortiert ist | `9fbe99ed` |  `AGENT 09.08.` |
+| L5 | Wettkampf ohne Kategorien unverändert | **Die zentrale Zusage.** Ein Wettkampf, in dem kein Boot eine Kategorie trägt, sieht aus wie vorher: eine durchgehende Liste, **keine** Überschrift „Ohne Wertungskategorie". Vorher/Nachher am selben Lauf vergleichen | `9fbe99ed` |  `AGENT 09.08.` |
+| L6 | Gleichstand — **nur in den Platzierungen** | Im Lauf nicht herstellbar: `place_unique_in_match` verbietet zwei Boote mit demselben Platz. Zu prüfen ist die Wettkampf-Platzierung einer Runde mit Platzvergabe „gleich" (`EQUAL`): alle Boote dieser Runde tragen innerhalb ihrer Kategorie dieselbe Zahl, das nächste Boot lässt die Lücke (1, 1, 3 — kein Zweiter) | `9fbe99ed` | |
+| L7 | Abgemeldet, DNF, DSQ | Solche Boote bekommen **keinen** Kategorieplatz und stehen am Ende **ihres eigenen** Abschnitts — sie verschwinden nicht. Eine Besatzung, die ihr Boot im Ergebnis nicht findet, hält das für einen Anzeigefehler | `9fbe99ed` |  `AGENT 09.08.` |
+| L8 | Athleten-Anzeige gleicht der öffentlichen | `/board/{eventId}`: derselbe Lauf zeigt dieselben Abschnitte in derselben Folge und **dieselben Zahlen** wie die öffentliche Seite. Nebeneinander auf zwei Schirmen vergleichen | `9fbe99ed` |  `AGENT 09.08.` |
 | L9 | Schiedsrichter: laufender Lauf bleibt Bahnliste | Solange kein Boot gewertet ist, zeigt die Karte **keine** Überschriften und sortiert nach Bahn. Am Steg wird sie gegen das Wasser gelesen — bewusste Abweichung von den anderen Ansichten | `9fbe99ed` | |
 | L10 | Schiedsrichter: gewerteter Lauf | Sobald das erste Boot gewertet ist, erscheinen die Abschnitte, und die Zahl im Kreis ist der **Kategorie**platz — dieselbe Zahl wie öffentlich | `9fbe99ed` | |
 | L11 | Platzierungsansicht | Wettkampf → Durchführung → Platzierungen: Abschnitte mit Überschrift, Kategorieplatz, ungewertete Boote mit „-" | `9fbe99ed` | |
-| L12 | Ergebnis-PDF | Veranstaltungsergebnisse herunterladen: je Wettkampf eine Überschrift pro Kategorie, darunter die Kategorieplätze. Ein Wettkampf ohne Kategorien behält seine bisherige Form | `9fbe99ed` | |
+| L12 | Ergebnis-PDF | Veranstaltungsergebnisse herunterladen: je Wettkampf eine Überschrift pro Kategorie, darunter die Kategorieplätze. Ein Wettkampf ohne Kategorien behält seine bisherige Form | `9fbe99ed` | `AGENT 09.08.` |
 | L13 | Urkunde ohne die neue Option | **Regressionsfall.** Schalter „Wertungskategorie drucken" aus (Vorgabe): die Urkunde ist Zeichen für Zeichen die von vorher. Eine vor dem Update erzeugte danebenlegen | `9fbe99ed` | |
 | L14 | Option an, Vorlage ohne Platzhalter | **Die wahrscheinlichste Enttäuschung.** Schalter an, aber die Vorlage trägt keinen `RATING_CATEGORY`-Platzhalter: es ändert sich **nichts**. Das ist so gebaut und keine Störung — wer die Zeile will, muss sie einmal in der Vorlage setzen | `9fbe99ed` | |
 | L15 | Option an, Platzhalter gesetzt | Im Vorlagen-Editor einen `RATING_CATEGORY`-Platzhalter setzen, Urkunde mit Schalter erzeugen: die Kategorie steht als klar erkennbare eigene Zeile, PDF **und** DOCX | `9fbe99ed` | |
@@ -472,7 +521,8 @@ Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfa
 | L17 | Platzgrenze der Urkunden | „Bis Platz 3" greift weiterhin auf den **wettkampfweiten** Platz. Es gibt also nicht je Kategorie drei Urkunden — beim Test bewusst gegenprüfen, ob das für die CRF so gewollt ist | `9fbe99ed` | |
 | L18 | Vorlagen-Editor | Der neue Platzhaltertyp ist in der Auswahl, heißt auf Deutsch „Wertungskategorie", und die Vorschau zeigt den Beispieltext „Meisterschaften" an der gesetzten Stelle | `9fbe99ed` | |
 | L19 | Neue Kategorie hängt hinten an | Einer Veranstaltung eine weitere Kategorie zuordnen: sie steht in Konfiguration und Ergebnisliste **am Ende**, nicht dazwischen | `9fbe99ed` | |
-| L20 | Kategorie ohne Boote | Eine zugeordnete Kategorie, in der niemand gemeldet ist, erzeugt in **keiner** Ergebnisliste einen leeren Abschnitt | `9fbe99ed` | |
+| L20 | Kategorie ohne Boote | Eine zugeordnete Kategorie, in der niemand gemeldet ist, erzeugt in **keiner** Ergebnisliste einen leeren Abschnitt | `9fbe99ed` |  `AGENT 09.08.` |
+| L22 | Kategorie ohne Zuordnung zur Veranstaltung | Ein Boot trägt eine Kategorie, die der Veranstaltung nie zugeordnet wurde (im Bestand der Regelfall): ihr Abschnitt steht **hinter** allen konfigurierten, untereinander alphabetisch, und vor „Ohne Wertungskategorie". Am 09.08. im Browser bestätigt: „Deutsche Meisterschaft Wertung" vor „Internationale Wertung", beide hinter den gepflegten | `9fbe99ed` | `AGENT 09.08.` |
 | L21 | Altdaten nach der Migration | Eine Veranstaltung, die vor dem Update Kategorien hatte: die Reihenfolge ist nach dem Update die bisher gezeigte alphabetische. Die Migration allein darf keine Anzeige verändert haben | `9fbe99ed` | |
 
 ---

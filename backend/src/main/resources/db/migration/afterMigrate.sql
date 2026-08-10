@@ -819,9 +819,10 @@ select cmt.id,
        rc.id                                                                   as rating_category_id,
        rc.name                                                                 as rating_category_name,
        -- Die Reihenfolge der Ergebnisabschnitte haengt an der Zuordnung zur Veranstaltung. Fehlt
-       -- sie, gilt 0: die Kategorie bekommt ihren Abschnitt vorne und wird alphabetisch
-       -- einsortiert, statt die ganze Zeile fallen zu lassen.
-       coalesce(erc.sort_order, 0)                                             as rating_category_sort_order,
+       -- sie, sortiert die Kategorie ganz hinten (RatingCategoryRef.UNCONFIGURED_SORT_ORDER) und
+       -- untereinander nach Namen - eine nie konfigurierte Kategorie darf sich nicht vor die
+       -- gepflegte Reihenfolge draengen.
+       coalesce(erc.sort_order, 2147483647)                                    as rating_category_sort_order,
        e.mixed_team_term                                                       as mixed_team_term
 from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id

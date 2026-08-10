@@ -188,7 +188,7 @@ object LiveDashboardService {
                                     sortOrder = first.get(
                                         CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER,
                                         Int::class.java
-                                    ) ?: 0,
+                                    ) ?: RatingCategoryRef.UNCONFIGURED_SORT_ORDER,
                                 )
                             },
                         // Erst wenn das ganze Feld des Laufs steht, siehe buildMatchDto.
