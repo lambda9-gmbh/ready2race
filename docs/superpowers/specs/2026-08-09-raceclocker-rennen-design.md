@@ -93,7 +93,7 @@ Gelesen wird wie heute `coalesce(competition.…, event.…)`: Die Veranstaltung
 
 ---
 
-## 4. Migration (`V202608091600__raceclocker_races.sql`)
+## 4. Migration (`V202608101000__raceclocker_races.sql`)
 
 Ziel: Für CRF 2026 ändert sich im laufenden Betrieb nichts.
 
@@ -108,7 +108,7 @@ Ziel: Für CRF 2026 ändert sich im laufenden Betrieb nichts.
 6. `captures_laps` bleibt überall `false`. Die Langstrecke wird nach der Migration von Hand gekennzeichnet — die Migration kann nicht wissen, welches der erzeugten Rennen die Langstrecke ist.
 7. Die vier alten Spalten löschen.
 
-**Migrationsnummer.** `V202608091600` ist frei — die höchste im Zweig ist `V202608091410`, und `V202608091500` ist auf einem parallelen Zweig (Auto-Abgleich Durchführung) bereits vergeben. Vor dem Merge erneut prüfen.
+**Migrationsnummer.** `V202608101000` ist frei — die höchste im Zweig ist `V202608091410`, und `V202608091500` ist auf einem parallelen Zweig (Auto-Abgleich Durchführung) bereits vergeben. Vor dem Merge erneut prüfen.
 
 **Vor dem Merge** wird die Migration gegen einen Prod-Abzug von CRF 2026 durchgespielt. Das ist keine Kür: Schritt 2 und 3 hängen an echten Daten, und die Regatta ist am 14.08. — in fünf Tagen.
 

@@ -164,7 +164,7 @@ where r.event = c.event
   and r.results_url = c.raceclocker_heats_results_url;
 
 -- Die vier alten Spalten bleiben hier absichtlich stehen; sie fallen erst in
--- V202608091700, wenn kein Code sie mehr liest.
+-- V202608101010, wenn kein Code sie mehr liest.
 --
 -- Der Grund ist nicht Vorsicht, sondern Übersetzbarkeit: Kotlin übersetzt alle Hauptquellen als
 -- eine Einheit, und jOOQ erzeugt seine Klassen aus genau diesem Schema. Fielen die Spalten schon

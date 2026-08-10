@@ -26,7 +26,7 @@
 - **Die DB-Tests brauchen den Schalter nicht für sich** — `testComprehension` startet sein eigenes Postgres über Testcontainers. Der Schalter betrifft allein Flyway und den jOOQ-Codegen.
 - Die Entwicklungsdatenbank auf 7653 (`cd backend && docker compose up -d`) wird hier nur gebraucht, wenn die Anwendung von Hand gestartet wird.
 - **jOOQ-Klassen sind nicht eingecheckt.** Sie entstehen unter `backend/target/generated-sources/jooq` in der Maven-Phase `generate-sources`, nachdem Flyway die Build-Datenbank migriert hat. Nach jeder Migrationsänderung: `./mvnw -Ddatabase.url=jdbc:postgresql://localhost:7655/ready2race-build generate-sources`.
-- **Migrationsnummer:** `V202608091600`. Höchste im Zweig ist `V202608091410`; `V202608091500` ist auf einem parallelen Zweig vergeben. Vor dem Commit von Task 1 mit `ls backend/src/main/resources/db/migration | tail -5` erneut prüfen.
+- **Migrationsnummer:** `V202608101000`. Höchste im Zweig ist `V202608091410`; `V202608091500` ist auf einem parallelen Zweig vergeben. Vor dem Commit von Task 1 mit `ls backend/src/main/resources/db/migration | tail -5` erneut prüfen.
 - **Deutsche Texte immer mit echten Umlauten** (ä, ö, ü, ß), nie mit ae/oe/ue/ss. Gilt für Kommentare, Migrationstexte und i18n.
 - **Drei Sprachdateien**, alle drei pflegen: `frontend/src/i18n/de/translations.json`, `.../en/translations.json`, `.../da/translations.json`.
 - **Kommentare erklären das Warum**, nicht das Was — der Bestand in `app/raceclocker/` ist der Maßstab. Keine Kommentare, die nur den Code nacherzählen.
@@ -42,8 +42,8 @@
 
 | Datei | Verantwortung |
 |---|---|
-| `backend/src/main/resources/db/migration/V202608091600__raceclocker_races.sql` | Tabelle, Anwahl-Spalten, Backfill (Ausbau) |
-| `backend/src/main/resources/db/migration/V202608091700__drop_raceclocker_urls.sql` | Abbau der vier alten Adress-Spalten (Task 10) |
+| `backend/src/main/resources/db/migration/V202608101000__raceclocker_races.sql` | Tabelle, Anwahl-Spalten, Backfill (Ausbau) |
+| `backend/src/main/resources/db/migration/V202608101010__drop_raceclocker_urls.sql` | Abbau der vier alten Adress-Spalten (Task 10) |
 | `.../app/raceclocker/entity/RaceClockerRace.kt` | `RaceClockerRaceDto`, `RaceClockerRaceRequest`, `RaceClockerStartMode`, `RaceClockerRaceRef` |
 | `.../app/raceclocker/entity/RaceClockerRaceError.kt` | Fehler der Rennen-Verwaltung |
 | `.../app/raceclocker/control/RaceClockerRaceRepo.kt` | Lesen/Schreiben der Rennen |
@@ -68,7 +68,7 @@
 ## Task 1: Migration und jOOQ-Neugenerierung
 
 **Files:**
-- Create: `backend/src/main/resources/db/migration/V202608091600__raceclocker_races.sql`
+- Create: `backend/src/main/resources/db/migration/V202608101000__raceclocker_races.sql`
 
 **Interfaces:**
 - Consumes: nichts
@@ -84,7 +84,7 @@ Erwartet: höchste Nummer ist `V202608091410__check_type_not_in_arena.sql`. Ist 
 
 - [ ] **Step 2: Migration schreiben**
 
-Datei `backend/src/main/resources/db/migration/V202608091600__raceclocker_races.sql`:
+Datei `backend/src/main/resources/db/migration/V202608101000__raceclocker_races.sql`:
 
 ```sql
 set search_path to ready2race, pg_catalog, public;
@@ -249,7 +249,7 @@ where r.event = c.event
   and r.results_url = c.raceclocker_heats_results_url;
 
 -- Die vier alten Spalten bleiben hier absichtlich stehen; sie fallen erst in
--- V202608091700 (Task 10), wenn kein Code sie mehr liest.
+-- V202608101010 (Task 10), wenn kein Code sie mehr liest.
 --
 -- Der Grund ist nicht Vorsicht, sondern Übersetzbarkeit: Kotlin übersetzt alle Hauptquellen als
 -- eine Einheit, und jOOQ erzeugt seine Klassen aus genau diesem Schema. Fielen die Spalten schon
@@ -292,7 +292,7 @@ Erwartet: Auf einer leeren Build-Datenbank null Zeilen — das ist in Ordnung un
 - [ ] **Step 6: Commit**
 
 ```bash
-git add backend/src/main/resources/db/migration/V202608091600__raceclocker_races.sql
+git add backend/src/main/resources/db/migration/V202608101000__raceclocker_races.sql
 git commit -m "Rennen als eigene Zeile statt zweier fester Adressen"
 ```
 
@@ -2102,7 +2102,7 @@ git commit -m "Handtests für die Rennen-Anwahl aufnehmen"
 ## Task 10: Die alten Adress-Spalten abbauen
 
 **Files:**
-- Create: `backend/src/main/resources/db/migration/V202608091700__drop_raceclocker_urls.sql`
+- Create: `backend/src/main/resources/db/migration/V202608101010__drop_raceclocker_urls.sql`
 
 **Interfaces:**
 - Consumes: Tasks 1–8. Voraussetzung ist, dass **kein** Kotlin- und kein SQL-Code die vier Spalten mehr liest.
@@ -2113,19 +2113,19 @@ Der Gegenschritt zu Task 1. Getrennt, weil Kotlin alle Hauptquellen als eine Ein
 - [ ] **Step 1: Prüfen, dass niemand die Spalten mehr liest**
 
 ```bash
-grep -rn "raceclockerTtResultsUrl\|raceclockerHeatsResultsUrl\|RACECLOCKER_TT_RESULTS_URL\|RACECLOCKER_HEATS_RESULTS_URL\|raceclocker_tt_results_url\|raceclocker_heats_results_url" backend/src frontend/src --include="*.kt" --include="*.ts" --include="*.tsx" --include="*.sql" --include="*.yaml" | grep -v "db/migration/V202608091600"
+grep -rn "raceclockerTtResultsUrl\|raceclockerHeatsResultsUrl\|RACECLOCKER_TT_RESULTS_URL\|RACECLOCKER_HEATS_RESULTS_URL\|raceclocker_tt_results_url\|raceclocker_heats_results_url" backend/src frontend/src --include="*.kt" --include="*.ts" --include="*.tsx" --include="*.sql" --include="*.yaml" | grep -v "db/migration/V202608101000"
 ```
 
-Erwartet: **keine Treffer**. Jeder Treffer außerhalb der Migration V202608091600 ist eine Aufrufstelle, die eine frühere Task übersehen hat — die gehört dort behoben, nicht hier umgangen.
+Erwartet: **keine Treffer**. Jeder Treffer außerhalb der Migration V202608101000 ist eine Aufrufstelle, die eine frühere Task übersehen hat — die gehört dort behoben, nicht hier umgangen.
 
 - [ ] **Step 2: Migration schreiben**
 
-Datei `backend/src/main/resources/db/migration/V202608091700__drop_raceclocker_urls.sql`:
+Datei `backend/src/main/resources/db/migration/V202608101010__drop_raceclocker_urls.sql`:
 
 ```sql
 set search_path to ready2race, pg_catalog, public;
 
--- Der Abbau zu V202608091600: Die vier Adress-Spalten, die von den benannten Rennen abgelöst
+-- Der Abbau zu V202608101000: Die vier Adress-Spalten, die von den benannten Rennen abgelöst
 -- wurden, verschwinden.
 --
 -- Bewusst eine eigene Migration und nicht der Schluss der vorigen. Kotlin übersetzt alle
@@ -2134,7 +2134,7 @@ set search_path to ready2race, pg_catalog, public;
 -- umgestellten Aufrufer nicht mehr übersetzt -- kein Test wäre lauffähig gewesen, auch keiner, der
 -- mit der Zeitnahme nichts zu tun hat. Getrennt bleibt jeder Zwischenstand prüfbar.
 --
--- Der Backfill in V202608091600 hat die Anwahl-Spalten bereits gefüllt; hier geht keine Zuordnung
+-- Der Backfill in V202608101000 hat die Anwahl-Spalten bereits gefüllt; hier geht keine Zuordnung
 -- verloren, nur die abgelöste Schreibweise.
 alter table event
     drop column raceclocker_tt_results_url,
@@ -2156,7 +2156,7 @@ Erwartet: Migrationen laufen durch, alles übersetzt, alle Tests grün. Ein Übe
 - [ ] **Step 4: Commit**
 
 ```bash
-git add backend/src/main/resources/db/migration/V202608091700__drop_raceclocker_urls.sql
+git add backend/src/main/resources/db/migration/V202608101010__drop_raceclocker_urls.sql
 git commit -m "Die abgelösten Adress-Spalten entfernen"
 ```
 
