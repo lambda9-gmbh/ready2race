@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRoundProgressionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
@@ -261,6 +262,14 @@ object EventScheduleService {
             // Überspringen kann genau den Slot betreffen, an dem die Kette wartet — danach prüfen,
             // ob sie weiterlaufen kann.
             !ScheduleChainService.resumeIfParked(eventId, userId)
+
+            // Ein abgesagter Lauf kann der letzte fehlende der Runde sein. Ein freier Slot oder ein
+            // Programmpunkt trägt keinen Lauf (competition_setup_match ist null) und kann die
+            // Automatik dann auch nicht auslösen.
+            val setupMatchId = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
+            if (setupMatchId != null) {
+                !AutoRoundProgressionService.progressAfterMatch(eventId, setupMatchId, userId)
+            }
         } else {
             if (matchStartedAt != null) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
@@ -321,6 +330,9 @@ object EventScheduleService {
         val rows = !EventScheduleRepo.getSlots(eventId, setupRoundId).orDie()
 
         val toSkip = mutableListOf<UUID>()
+        // Irgendein Setup-Lauf der Runde reicht der Automatik, um von dort zum Wettkampf zu finden
+        // (siehe unten) - alle Slots dieser Runde gehören zum selben Wettkampf.
+        var someSetupMatchId: UUID? = null
         for (row in rows) {
             val slotId = row[EVENT_SCHEDULE_SLOT.ID]!!
             val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
@@ -328,7 +340,11 @@ object EventScheduleService {
                 continue
             }
 
-            val isFree = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+            val setupMatchId = row[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
+            val isFree = setupMatchId == null
+            if (setupMatchId != null) {
+                someSetupMatchId = setupMatchId
+            }
             val matchExists = row.get("match_exists", Boolean::class.java) == true
             val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
             val state = EventScheduleLogic.deriveSlotState(
@@ -361,6 +377,13 @@ object EventScheduleService {
         // Wie beim Einzel-Skip: die Kette könnte an einem der jetzt übersprungenen Slots geparkt
         // gewesen sein.
         !ScheduleChainService.resumeIfParked(eventId, userId)
+
+        // Wie in setSlotSkipped: eine ganze abgesagte Runde kann die laufende Runde des Wettkampfs
+        // fertigstellen (matchIsSettled zählt skipped-Läufe als erledigt) und damit die Folgerunde
+        // auslösen. Ein einziger Setup-Lauf der Runde genügt, um von dort zum Wettkampf zu finden.
+        if (someSetupMatchId != null) {
+            !AutoRoundProgressionService.progressAfterMatch(eventId, someSetupMatchId, userId)
+        }
 
         noData
     }

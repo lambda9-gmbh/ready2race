@@ -39,6 +39,7 @@ import {format} from 'date-fns'
 import Checkbox from '@mui/material/Checkbox'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
+import {matchesOnDisplay} from '@components/event/competition/excecution/roundDeletion.ts'
 import {byeMatches} from '@components/event/competition/excecution/byeMatches.ts'
 import {roundSkipErrorText} from '@components/event/schedule/scheduleError.ts'
 import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
@@ -109,6 +110,11 @@ const CompetitionExecutionRound = ({
 
     const {confirmAction} = useConfirmation()
 
+    // Wie viele Läufe dieser Runde draußen schon zu sehen sind. Löschen bleibt erlaubt — das
+    // Regattabüro muss auch eine gefahrene Runde zurücknehmen können —, aber es soll wissen, dass
+    // es damit etwas wegräumt, das am Steg oder in den Ergebnissen bereits jemand gesehen hat.
+    const onDisplay = matchesOnDisplay(round.matches)
+
     const deleteCurrentRound = async () => {
         confirmAction(
             async () => {
@@ -128,7 +134,13 @@ const CompetitionExecutionRound = ({
                 props.reloadRoundDto()
             },
             {
-                content: t('event.competition.execution.deleteRound.confirmation.content'),
+                // Gewarnt wird über `round.matches` und nicht über `filteredMatches`: Gelöscht wird
+                // die ganze Runde, nicht der gerade angezeigte Ausschnitt.
+                content: onDisplay
+                    ? t('event.competition.execution.deleteRound.confirmation.onDisplay', {
+                          count: onDisplay,
+                      })
+                    : t('event.competition.execution.deleteRound.confirmation.content'),
                 okText: t('common.delete'),
             },
         )
@@ -498,6 +510,11 @@ const CompetitionExecutionRound = ({
                                                     },
                                             )}
                                         />
+                                    )}
+                                    {match.pairingsRecalculatedAt && (
+                                        <Typography variant={'caption'} color={'warning.main'}>
+                                            {t('event.competition.execution.pairingsRecalculated')}
+                                        </Typography>
                                     )}
                                     {timingSystem === 'RACECLOCKER' &&
                                         (() => {

@@ -192,6 +192,12 @@ import type {
     UpdateTimingConfigData,
     UpdateTimingConfigError,
     UpdateTimingConfigResponse,
+    GetRoundProgressionConfigData,
+    GetRoundProgressionConfigError,
+    GetRoundProgressionConfigResponse,
+    UpdateRoundProgressionConfigData,
+    UpdateRoundProgressionConfigError,
+    UpdateRoundProgressionConfigResponse,
     PullMatchResultsFromRaceClockerData,
     PullMatchResultsFromRaceClockerError,
     PullMatchResultsFromRaceClockerResponse,
@@ -691,6 +697,9 @@ import type {
     GetAthleteBoardData,
     GetAthleteBoardError,
     GetAthleteBoardResponse,
+    GetMyEventData,
+    GetMyEventError,
+    GetMyEventResponse,
     FinishLiveDashboardMatchData,
     FinishLiveDashboardMatchError,
     FinishLiveDashboardMatchResponse,
@@ -1662,6 +1671,35 @@ export const updateTimingConfig = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/timing-config',
+    })
+}
+
+/**
+ * Whether this competition creates the pairings of following rounds automatically - its own setting, the event default it inherits from, and what actually applies.
+ */
+export const getRoundProgressionConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRoundProgressionConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRoundProgressionConfigResponse,
+        GetRoundProgressionConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/roundProgression',
+    })
+}
+
+export const updateRoundProgressionConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRoundProgressionConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRoundProgressionConfigResponse,
+        UpdateRoundProgressionConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/roundProgression',
     })
 }
 
@@ -3824,6 +3862,18 @@ export const getAthleteBoard = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/athlete-board',
+    })
+}
+
+/**
+ * Personal dashboard of one participant, reachable without login through the QR code on the wristband
+ */
+export const getMyEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetMyEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetMyEventResponse, GetMyEventError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/info/my-event/{qrCode}',
     })
 }
 

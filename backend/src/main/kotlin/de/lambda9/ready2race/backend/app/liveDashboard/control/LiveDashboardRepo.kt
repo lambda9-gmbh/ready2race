@@ -29,6 +29,7 @@ object LiveDashboardRepo {
             // alle fünf Sekunden und würde den ETag des Dashboards bei jedem Abruf umwerfen.
             COMPETITION_MATCH.RACECLOCKER_POLL_ERROR,
             COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT,
+            COMPETITION_MATCH.PAIRINGS_RECALCULATED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),

@@ -645,6 +645,18 @@
       "DEAKTIVIERT": "Schiedsrichter beenden im Dashboard — nächster Lauf wird von Hand aktiviert",
       "hint": "Die Organisatoren können Läufe über den Zeitplan in jedem Fall beenden, unabhängig von dieser Einstellung."
     },
+    "autoCreateFollowingRounds": {
+      "label": "Folgerunden automatisch erzeugen",
+      "hint": "Sobald alle Läufe einer Runde beendet und gewertet sind, werden die Paarungen der nächsten Runde von selbst gesetzt. Aktiviert wird dadurch nichts - das bleibt beim Zeitplan.",
+      "INHERIT": "Veranstaltung folgen",
+      "ENABLED": "Ein",
+      "DISABLED": "Aus",
+      "inherited": "Veranstaltung: {{value}}",
+      "effective": {
+        "ENABLED": "Es gilt: Folgerunden werden automatisch erzeugt.",
+        "DISABLED": "Es gilt: Folgerunden werden nicht automatisch erzeugt."
+      }
+    },
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
     "publicResultsVisibility": {
@@ -965,6 +977,7 @@
       },
       "execution": {
         "tabTitle": "Durchführung",
+        "pairingsRecalculated": "Paarung neu berechnet",
         "progress": {
           "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
         },
@@ -989,10 +1002,15 @@
             "notAllPlacesSet": "Es fehlen Ergebnisse. Bitte geben Sie alle Plätze für die Partien an."
           }
         },
+        "roundProgression": {
+          "saved": "Automatik gespeichert"
+        },
         "deleteRound": {
           "delete": "Runde löschen",
           "confirmation": {
-            "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?"
+            "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?",
+            "onDisplay_one": "Achtung: {{count}} Lauf dieser Runde ist bereits auf den Anzeigen zu sehen. Beim Löschen verschwindet er dort — auch für Schiedsrichter, Athleten und Publikum. Wirklich löschen?",
+            "onDisplay_other": "Achtung: {{count}} Läufe dieser Runde sind bereits auf den Anzeigen zu sehen. Beim Löschen verschwinden sie dort — auch für Schiedsrichter, Athleten und Publikum. Wirklich löschen?"
           },
           "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
           "success": "Runde erfolgreich gelöscht"
@@ -1551,7 +1569,7 @@
         "noRunning": "Zurzeit kein Lauf in der Arena",
         "noUpcoming": "Kein weiterer Lauf gesetzt",
         "noResults": "Noch kein Ergebnis",
-        "lane": "Bahn",
+        "startNumber": "Nr.",
         "expected": "erwartet",
         "unscheduled": "Zeit offen",
         "failed": "nicht gewertet",
@@ -1563,11 +1581,12 @@
         "startsIn": "in {{time}}",
         "asOf": "Stand {{time}}",
         "stale": "Verbindung unterbrochen",
+        "moreRunning_one": "+{{count}} weiterer Lauf in der Arena",
+        "moreRunning_other": "+{{count}} weitere Läufe in der Arena",
         "eventNotFound": "Veranstaltung nicht gefunden",
         "settingsTitle": "Athleten-Anzeige",
         "limitRunning": "Anzahl laufender Läufe",
-        "limitUpcoming": "Anzahl nächster Läufe",
-        "limitResults": "Anzahl Ergebnisse",
+        "limitRunningHint": "Die Bühne zeigt höchstens zwei Läufe gleichzeitig in der Arena und meldet weitere Läufe, statt sie auszublenden.",
         "showCountdown": "Countdown bis zum Start anzeigen",
         "refreshHint": "Die öffentliche Athleten-Anzeige aktualisiert sich in diesem Takt, aber nie schneller als alle 10 Sekunden.",
         "loadError": "Daten konnten nicht geladen werden. Bitte Verbindung prüfen.",
@@ -1957,6 +1976,7 @@
     "removedGlobal": "Globale Zuordnung entfernt",
     "checkRequirements": "Bedingungen prüfen",
     "checkInApp": "Per App prüfbar",
+    "publiclyVisible": "Für Teilnehmende sichtbar (Mein Event)",
     "checkEarliestMinutesBefore": "Frühestens (Minuten vor Start)",
     "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
     "namedParticipantRequirements": {
@@ -2763,5 +2783,27 @@
         "unexpected": "Der Siegerehrungsbogen konnte nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
       }
     }
+  },
+  "myEvent": {
+    "tab": "Mein Event",
+    "hint": "Scanne den QR-Code auf deinem Band, um deine Läufe und Ergebnisse zu sehen.",
+    "notFound": "Zu diesem Code gibt es keine Teilnahme bei dieser Veranstaltung.",
+    "next": "Dein nächster Lauf",
+    "running": "Läuft gerade",
+    "matches": "Meine Läufe",
+    "results": "Meine Ergebnisse",
+    "unscheduled": "Gemeldet, noch nicht terminiert",
+    "requirements": "Meine Bedingungen",
+    "requirementsOpen": "Es fehlt noch etwas",
+    "requirementsAllDone": "Alles erledigt",
+    "requirementsOfficeHint": "Bitte kläre das vor deinem ersten Lauf in der Meldestelle.",
+    "requirementFulfilled": "erledigt",
+    "requirementOpen": "offen",
+    "requirementOptional": "freiwillig",
+    "remove": "Eintrag entfernen",
+    "lane": "Startposition",
+    "team": "Mannschaft",
+    "deregistered": "Abgemeldet",
+    "noMatches": "Für dich ist noch kein Lauf eingetragen."
   }
 }

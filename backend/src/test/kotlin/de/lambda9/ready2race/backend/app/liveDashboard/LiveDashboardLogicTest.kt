@@ -354,6 +354,7 @@ class LiveDashboardLogicTest {
         teams = emptyList(),
         raceClockerPollError = null,
         raceClockerAutoPausedAt = null,
+        pairingsRecalculatedAt = null,
     )
 
     @Test

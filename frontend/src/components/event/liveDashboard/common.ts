@@ -221,12 +221,15 @@ const teamOrderGroup = (team: LiveDashboardTeamDto): number =>
     team.place != null ? 0 : team.deregistered ? 3 : team.failed ? 2 : 1
 
 /**
- * Die Boote eines Laufs in Anzeigereihenfolge: nach Bahn, solange nichts gewertet ist — und nach
- * Platz, sobald es etwas zu sehen gibt. Der Erste steht dann oben, so wie ihn der Schiedsrichter
- * ins Ziel kommen sieht; ohne das musste er die Plätze in der Bahnliste zusammensuchen.
+ * Die Boote eines Laufs in Anzeigereihenfolge: nach Startnummer, solange nichts gewertet ist — und
+ * nach Platz, sobald es etwas zu sehen gibt. Der Erste steht dann oben, so wie ihn der
+ * Schiedsrichter ins Ziel kommen sieht; ohne das musste er die Plätze in der Startliste
+ * zusammensuchen.
  *
- * **Die Zahl links bleibt die Bahn** und wird nie zur Zählnummer der Liste — sie ist die einzige
- * Verbindung zwischen der Karte und dem, was in der Arena steht.
+ * **Die Zahl links bleibt die Startnummer** und wird nie zur Zählnummer der Liste — sie ist die
+ * einzige Verbindung zwischen der Karte und dem, was in der Arena steht. („Bahn" stand hier bis
+ * zum 10.08.2026; es gibt im Datenmodell nur eine Zahl je Boot und Lauf,
+ * `competition_match_team.start_number`, und die gesamte übrige Anwendung nennt sie Startnummer.)
  *
  * Solange kein einziges Boot ein Ergebnis hat, bleibt die Reihenfolge des Backends stehen (dort
  * nach Startnummer sortiert): ein Umsortieren, das nichts aussagt, verwirrt nur.
@@ -237,8 +240,9 @@ export const teamsInDisplayOrder = (teams: LiveDashboardTeamDto[]): LiveDashboar
     return [...teams].sort((a, b) => {
         const group = teamOrderGroup(a) - teamOrderGroup(b)
         if (group !== 0) return group
-        // Innerhalb der gewerteten Boote entscheidet der Platz, in allen anderen Gruppen die Bahn.
-        // Boote ohne Bahn fallen ans Ende ihrer Gruppe, statt die Sortierung zu stören.
+        // Innerhalb der gewerteten Boote entscheidet der Platz, in allen anderen Gruppen die
+        // Startnummer. Boote ohne Startnummer fallen ans Ende ihrer Gruppe, statt die Sortierung
+        // zu stören.
         if (a.place != null && b.place != null) return a.place - b.place
         if (a.startNumber == null) return b.startNumber == null ? 0 : 1
         if (b.startNumber == null) return -1

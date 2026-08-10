@@ -496,6 +496,9 @@ export const resultsEventRoute = createRoute({
     getParentRoute: () => resultsRoute,
     path: '/event/$eventId',
     component: () => <ResultsPage />,
+    validateSearch: (search: {tab?: string} & SearchSchemaInput) => ({
+        tab: search.tab === 'my-event' ? ('my-event' as const) : undefined,
+    }),
 })
 
 export const resultsQRCodeRoute = createRoute({

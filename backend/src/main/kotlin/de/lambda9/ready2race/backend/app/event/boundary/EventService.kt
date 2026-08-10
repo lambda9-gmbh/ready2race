@@ -96,6 +96,7 @@ object EventService {
             submissionNeedsVerification = request.submissionNeedsVerification
             participantSelfRegistration = request.allowParticipantSelfRegistration
             chainProgressionMode = request.chainProgressionMode.name
+            autoCreateFollowingRounds = request.autoCreateFollowingRounds
             showBreaksOnPublicBoards = request.showBreaksOnPublicBoards
             publicResultsVisibility = request.publicResultsVisibility.name
             executionAutoRefresh = request.executionAutoRefresh

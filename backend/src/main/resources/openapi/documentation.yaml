@@ -1687,6 +1687,53 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/roundProgression:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getRoundProgressionConfig
+      description: Whether this competition creates the pairings of following rounds automatically - its own setting, the event default it inherits from, and what actually applies.
+      responses:
+        200:
+          description: Round progression configuration successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundProgressionConfigDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateRoundProgressionConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoundProgressionConfigRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/from-raceclocker:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6261,6 +6308,30 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/info/my-event/{qrCode}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: qrCode
+        in: path
+        required: true
+        description: "Code from the wristband. Unknown codes, codes of another event and codes belonging to a helper account all answer 404 alike."
+        schema:
+          type: string
+    get:
+      operationId: getMyEvent
+      description: "Personal dashboard of one participant, reachable without login through the QR code on the wristband"
+      responses:
+        200:
+          description: Personal dashboard retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyEventDto'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/liveDashboard/match/{matchId}/finish:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -9628,6 +9699,9 @@ components:
           type: boolean
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+        autoCreateFollowingRounds:
+          type: boolean
+          description: "Creates the pairings of the following round automatically once a round is fully finished"
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
@@ -9789,6 +9863,9 @@ components:
           type: boolean
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+        autoCreateFollowingRounds:
+          type: boolean
+          description: "Creates the pairings of the following round automatically once a round is fully finished"
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
@@ -9852,6 +9929,9 @@ components:
           type: boolean
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+        autoCreateFollowingRounds:
+          type: boolean
+          description: "Creates the pairings of the following round automatically once a round is fully finished"
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
@@ -10805,6 +10885,7 @@ components:
     ParticipantRequirementDto:
       type: object
       required:
+        - publiclyVisible
         - id
         - name
         - optional
@@ -10822,6 +10903,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true
@@ -10845,6 +10929,7 @@ components:
     ParticipantRequirementForEventDto:
       type: object
       required:
+        - publiclyVisible
         - id
         - name
         - optional
@@ -10865,6 +10950,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         requirements:
           type: array
           items:
@@ -10899,6 +10987,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true
@@ -12438,6 +12529,11 @@ components:
           format: date-time
           nullable: true
           description: Set while the automatic pull leaves this match alone because results were entered by hand.
+        pairingsRecalculatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Set while this match's pairing comes from a recalculation and the match has not been called to the start yet"
 
     CompetitionMatchTeamDto:
       type: object
@@ -12998,6 +13094,29 @@ components:
           nullable: true
           description: Event-wide default race results import; inherited while the competition's own field is null.
 
+    RoundProgressionConfigDto:
+      type: object
+      required:
+        - eventAutoCreateFollowingRounds
+        - effective
+      properties:
+        autoCreateFollowingRounds:
+          type: boolean
+          nullable: true
+          description: "The competition's own choice. null means it follows the event setting."
+        eventAutoCreateFollowingRounds:
+          type: boolean
+        effective:
+          type: boolean
+          description: "What actually applies - computed by the backend so the inheritance rule lives in one place."
+
+    RoundProgressionConfigRequest:
+      type: object
+      properties:
+        autoCreateFollowingRounds:
+          type: boolean
+          nullable: true
+
     EventTimingConfigDto:
       type: object
       description: >
@@ -13499,6 +13618,7 @@ components:
       type: object
       required:
         - teamId
+        - startNumber
         - participants
       properties:
         teamId:
@@ -13512,7 +13632,7 @@ components:
           nullable: true
         startNumber:
           type: integer
-          nullable: true
+          description: "starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)"
         clubName:
           type: string
           nullable: true
@@ -13682,12 +13802,13 @@ components:
     AthleteBoardTeam:
       type: object
       required:
+        - startNumber
         - participants
         - failed
       properties:
-        lane:
+        startNumber:
           type: integer
-          nullable: true
+          description: "starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)"
         teamNumber:
           type: integer
           nullable: true
@@ -13787,7 +13908,7 @@ components:
     AthleteBoardResultTeam:
       type: object
       required:
-        - lane
+        - startNumber
         - failed
         - deregistered
       properties:
@@ -13803,8 +13924,9 @@ components:
           type: integer
           nullable: true
           description: "the place within the rating category, counted from 1"
-        lane:
+        startNumber:
           type: integer
+          description: "starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)"
         teamNumber:
           type: integer
           nullable: true
@@ -13910,6 +14032,220 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardResult'
+
+    MyEventTeamMemberDto:
+      type: object
+      required:
+        - name
+        - self
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          nullable: true
+        self:
+          type: boolean
+          description: "true for the person this QR code belongs to"
+
+    MyEventMatchDto:
+      type: object
+      required:
+        - matchId
+        - competitionName
+        - startState
+        - teamMembers
+        - deregistered
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "scheduled start"
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start, if stamped"
+        startState:
+          $ref: '#/components/schemas/AthleteBoardStartState'
+        lane:
+          type: integer
+          nullable: true
+        teamName:
+          type: string
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
+        teamMembers:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventTeamMemberDto'
+        deregistered:
+          type: boolean
+          description: "withdrawn - shown without countdown, even before the match becomes a public result"
+        deregisteredReason:
+          type: string
+          nullable: true
+
+    MyEventResultDto:
+      type: object
+      required:
+        - matchId
+        - competitionName
+        - failed
+        - deregistered
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+        place:
+          type: integer
+          nullable: true
+        timeString:
+          type: string
+          nullable: true
+        penaltySeconds:
+          type: integer
+          nullable: true
+        penaltyNote:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+          nullable: true
+        deregistered:
+          type: boolean
+        deregisteredReason:
+          type: string
+          nullable: true
+
+    MyEventRegistrationDto:
+      type: object
+      required:
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        teamName:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+
+    MyEventRequirementDto:
+      type: object
+      required:
+        - id
+        - name
+        - optional
+        - fulfilled
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        optional:
+          type: boolean
+        fulfilled:
+          type: boolean
+
+    MyEventDto:
+      type: object
+      required:
+        - displayName
+        - eventName
+        - serverTime
+        - refreshIntervalSeconds
+        - running
+        - upcoming
+        - results
+        - unscheduled
+        - requirements
+      properties:
+        displayName:
+          type: string
+        clubName:
+          type: string
+          nullable: true
+        eventName:
+          type: string
+        serverTime:
+          type: string
+          format: date-time
+        refreshIntervalSeconds:
+          type: integer
+        running:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventMatchDto'
+        upcoming:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventMatchDto'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventResultDto'
+        unscheduled:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventRegistrationDto'
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventRequirementDto'
 
     LiveMatchInfo:
       type: object
@@ -14371,6 +14707,11 @@ components:
           format: date-time
           nullable: true
           description: Set while the automatic pull leaves this match alone because results were entered by hand.
+        pairingsRecalculatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Set while this match's pairing comes from a recalculation and the match has not been called to the start yet"
 
     PendingSlotDto:
       type: object
@@ -14845,6 +15186,7 @@ components:
       type: object
       required:
         - teamId
+        - startNumber
         - participants
         - failed
       properties:
@@ -14859,7 +15201,7 @@ components:
           nullable: true
         startNumber:
           type: integer
-          nullable: true
+          description: "starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)"
         clubName:
           type: string
           nullable: true

@@ -645,6 +645,18 @@
       "DEAKTIVIERT": "Referees finish in the dashboard — the next race is activated by hand",
       "hint": "The organisers can always finish races via the schedule, regardless of this setting."
     },
+    "autoCreateFollowingRounds": {
+      "label": "Create following rounds automatically",
+      "hint": "As soon as every race of a round is finished and scored, the pairings of the next round are set on their own. This does not activate anything - that still follows the schedule.",
+      "INHERIT": "Follow the event",
+      "ENABLED": "On",
+      "DISABLED": "Off",
+      "inherited": "Event: {{value}}",
+      "effective": {
+        "ENABLED": "Currently in effect: following rounds are created automatically.",
+        "DISABLED": "Currently in effect: following rounds are not created automatically."
+      }
+    },
     "showBreaksOnPublicBoards": "Show breaks on public boards",
     "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
     "publicResultsVisibility": {
@@ -965,6 +977,7 @@
       },
       "execution": {
         "tabTitle": "Live",
+        "pairingsRecalculated": "Pairing recalculated",
         "progress": {
           "error": "The matches of the competition could not be loaded."
         },
@@ -989,10 +1002,15 @@
             "notAllPlacesSet": "Match results are missing. Please enter all places in the match results."
           }
         },
+        "roundProgression": {
+          "saved": "Automation saved"
+        },
         "deleteRound": {
           "delete": "Delete round",
           "confirmation": {
-            "content": "Are you sure you want to delete the latest round?"
+            "content": "Are you sure you want to delete the latest round?",
+            "onDisplay_one": "Careful: {{count}} race of this round is already showing on the displays. Deleting it makes it disappear there — for referees, athletes and spectators alike. Delete anyway?",
+            "onDisplay_other": "Careful: {{count}} races of this round are already showing on the displays. Deleting them makes them disappear there — for referees, athletes and spectators alike. Delete anyway?"
           },
           "error": "An error has occurred when deleting the round",
           "success": "Round successfully deleted"
@@ -1551,7 +1569,7 @@
         "noRunning": "No race in the arena right now",
         "noUpcoming": "No further race scheduled",
         "noResults": "No result yet",
-        "lane": "Lane",
+        "startNumber": "No.",
         "expected": "expected",
         "unscheduled": "Time open",
         "failed": "not classified",
@@ -1563,11 +1581,12 @@
         "startsIn": "in {{time}}",
         "asOf": "As of {{time}}",
         "stale": "Connection lost",
+        "moreRunning_one": "+{{count}} more race in the arena",
+        "moreRunning_other": "+{{count}} more races in the arena",
         "eventNotFound": "Event not found",
         "settingsTitle": "Athlete board",
         "limitRunning": "Number of running races",
-        "limitUpcoming": "Number of next races",
-        "limitResults": "Number of results",
+        "limitRunningHint": "The board shows at most two races in the arena at once and reports any beyond that instead of hiding them.",
         "showCountdown": "Show countdown to start",
         "refreshHint": "The public athlete board refreshes at this rate, but never faster than every 10 seconds.",
         "loadError": "Data could not be loaded. Please check the connection.",
@@ -1957,6 +1976,7 @@
     "removedGlobal": "Global assignment removed",
     "checkRequirements": "Check requirements",
     "checkInApp": "Checkable in app",
+    "publiclyVisible": "Visible to participants (My Event)",
     "checkEarliestMinutesBefore": "Earliest (minutes before start)",
     "checkLatestMinutesBefore": "Latest (minutes before start)",
     "namedParticipantRequirements": {
@@ -2763,5 +2783,27 @@
         "unexpected": "The award ceremony sheet could not be created. Please reload the page and try again."
       }
     }
+  },
+  "myEvent": {
+    "tab": "My Event",
+    "hint": "Scan the QR code on your wristband to see your races and results.",
+    "notFound": "There is no entry for this code at this event.",
+    "next": "Your next race",
+    "running": "Running now",
+    "matches": "My races",
+    "results": "My results",
+    "unscheduled": "Entered, not scheduled yet",
+    "requirements": "My requirements",
+    "requirementsOpen": "Something is still missing",
+    "requirementsAllDone": "All done",
+    "requirementsOfficeHint": "Please sort this out at the registration desk before your first race.",
+    "requirementFulfilled": "done",
+    "requirementOpen": "open",
+    "requirementOptional": "optional",
+    "remove": "Remove entry",
+    "lane": "Start position",
+    "team": "Team",
+    "deregistered": "Withdrawn",
+    "noMatches": "No race has been scheduled for you yet."
   }
 }

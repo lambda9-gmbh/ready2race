@@ -233,7 +233,10 @@ export type AthleteBoardResultTeam = {
      * the place within the rating category, counted from 1
      */
     categoryPlace?: number | null
-    lane: number
+    /**
+     * starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)
+     */
+    startNumber: number
     /**
      * the nth team of this club in the competition - only shown when teamName is missing
      */
@@ -265,7 +268,10 @@ export type AthleteBoardResultTeam = {
 export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
 
 export type AthleteBoardTeam = {
-    lane?: number | null
+    /**
+     * starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)
+     */
+    startNumber: number
     /**
      * the nth team of this club in the competition - only shown when teamName is missing
      */
@@ -666,6 +672,10 @@ export type CompetitionMatchDto = {
      * Set while the automatic pull leaves this match alone because results were entered by hand.
      */
     raceClockerAutoPausedAt?: string | null
+    /**
+     * Set while this match's pairing comes from a recalculation and the match has not been called to the start yet
+     */
+    pairingsRecalculatedAt?: string | null
 }
 
 export type CompetitionMatchTeamDto = {
@@ -1054,6 +1064,10 @@ export type CreateEventRequest = {
     allowParticipantSelfRegistration: boolean
     chainProgressionMode?: ChainProgressionMode
     /**
+     * Creates the pairings of the following round automatically once a round is fully finished
+     */
+    autoCreateFollowingRounds?: boolean
+    /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
@@ -1332,6 +1346,10 @@ export type EventDto = {
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
     chainProgressionMode?: ChainProgressionMode
+    /**
+     * Creates the pairings of the following round automatically once a round is fully finished
+     */
+    autoCreateFollowingRounds?: boolean
     /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
@@ -1940,6 +1958,10 @@ export type LiveDashboardMatchDto = {
      * Set while the automatic pull leaves this match alone because results were entered by hand.
      */
     raceClockerAutoPausedAt?: string | null
+    /**
+     * Set while this match's pairing comes from a recalculation and the match has not been called to the start yet
+     */
+    pairingsRecalculatedAt?: string | null
 }
 
 /**
@@ -2234,6 +2256,89 @@ export type MatchTeamInfo = {
     rank?: number | null
 }
 
+export type MyEventDto = {
+    displayName: string
+    clubName?: string | null
+    eventName: string
+    serverTime: string
+    refreshIntervalSeconds: number
+    running: Array<MyEventMatchDto>
+    upcoming: Array<MyEventMatchDto>
+    results: Array<MyEventResultDto>
+    unscheduled: Array<MyEventRegistrationDto>
+    requirements: Array<MyEventRequirementDto>
+}
+
+export type MyEventMatchDto = {
+    matchId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    /**
+     * scheduled start
+     */
+    startTime?: string | null
+    /**
+     * real start, if stamped
+     */
+    actualStartTime?: string | null
+    startState: AthleteBoardStartState
+    lane?: number | null
+    teamName?: string | null
+    clubName?: string | null
+    teamMembers: Array<MyEventTeamMemberDto>
+    /**
+     * withdrawn - shown without countdown, even before the match becomes a public result
+     */
+    deregistered: boolean
+    deregisteredReason?: string | null
+}
+
+export type MyEventRegistrationDto = {
+    competitionId: string
+    competitionIdentifier: string
+    competitionName: string
+    categoryName?: string | null
+    teamName?: string | null
+    role?: string | null
+}
+
+export type MyEventRequirementDto = {
+    id: string
+    name: string
+    description?: string | null
+    optional: boolean
+    fulfilled: boolean
+}
+
+export type MyEventResultDto = {
+    matchId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    startTime?: string | null
+    actualStartTime?: string | null
+    place?: number | null
+    timeString?: string | null
+    penaltySeconds?: number | null
+    penaltyNote?: string | null
+    failed: boolean
+    failedReason?: string | null
+    deregistered: boolean
+    deregisteredReason?: string | null
+}
+
+export type MyEventTeamMemberDto = {
+    name: string
+    role?: string | null
+    /**
+     * true for the person this QR code belongs to
+     */
+    self: boolean
+}
+
 export type NamedParticipantDto = {
     id: string
     name: string
@@ -2482,6 +2587,10 @@ export type ParticipantRequirementDto = {
      */
     checkInApp: boolean
     /**
+     * Im oeffentlichen Dashboard Mein Event sichtbar
+     */
+    publiclyVisible: boolean
+    /**
      * Check must be at most this many minutes before match start
      */
     checkEarliestMinutesBefore?: number | null
@@ -2501,6 +2610,10 @@ export type ParticipantRequirementForEventDto = {
      * Per App prüfbar
      */
     checkInApp: boolean
+    /**
+     * Im oeffentlichen Dashboard Mein Event sichtbar
+     */
+    publiclyVisible: boolean
     requirements?: Array<NamedParticipantRequirementForEventDto>
 }
 
@@ -2512,6 +2625,10 @@ export type ParticipantRequirementUpsertDto = {
      * Per App prüfbar
      */
     checkInApp?: boolean
+    /**
+     * Im oeffentlichen Dashboard Mein Event sichtbar
+     */
+    publiclyVisible?: boolean
     /**
      * Check must be at most this many minutes before match start
      */
@@ -2851,6 +2968,22 @@ export type RoleRequest = {
     privileges: Array<string>
 }
 
+export type RoundProgressionConfigDto = {
+    /**
+     * The competition's own choice. null means it follows the event setting.
+     */
+    autoCreateFollowingRounds?: boolean | null
+    eventAutoCreateFollowingRounds: boolean
+    /**
+     * What actually applies - computed by the backend so the inheritance rule lives in one place.
+     */
+    effective: boolean
+}
+
+export type RoundProgressionConfigRequest = {
+    autoCreateFollowingRounds?: boolean | null
+}
+
 export type RunningMatchInfo = {
     matchId: string
     matchNumber?: number | null
@@ -2875,7 +3008,10 @@ export type RunningMatchTeamInfo = {
     teamId: string
     teamName?: string | null
     teamNumber?: number | null
-    startNumber?: number | null
+    /**
+     * starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)
+     */
+    startNumber: number
     clubName?: string | null
     /**
      * the clubs the athletes of this boat wear, chained in boat order, in short form
@@ -3276,7 +3412,10 @@ export type UpcomingMatchTeamInfo = {
     teamId: string
     teamName?: string | null
     teamNumber?: number | null
-    startNumber?: number | null
+    /**
+     * starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)
+     */
+    startNumber: number
     clubName?: string | null
     /**
      * the clubs the athletes of this boat wear, chained in boat order, in short form
@@ -3350,6 +3489,10 @@ export type UpdateEventRequest = {
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
     chainProgressionMode?: ChainProgressionMode
+    /**
+     * Creates the pairings of the following round automatically once a round is fully finished
+     */
+    autoCreateFollowingRounds?: boolean
     /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
@@ -4515,6 +4658,32 @@ export type UpdateTimingConfigData = {
 export type UpdateTimingConfigResponse = void
 
 export type UpdateTimingConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRoundProgressionConfigData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetRoundProgressionConfigResponse = RoundProgressionConfigDto
+
+export type GetRoundProgressionConfigError = BadRequestError | ApiError
+
+export type UpdateRoundProgressionConfigData = {
+    body: RoundProgressionConfigRequest
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type UpdateRoundProgressionConfigResponse = void
+
+export type UpdateRoundProgressionConfigError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
 
 export type PullMatchResultsFromRaceClockerData = {
     path: {
@@ -6780,6 +6949,20 @@ export type GetAthleteBoardData = {
 export type GetAthleteBoardResponse = AthleteBoardDto
 
 export type GetAthleteBoardError = ApiError
+
+export type GetMyEventData = {
+    path: {
+        eventId: string
+        /**
+         * Code from the wristband. Unknown codes, codes of another event and codes belonging to a helper account all answer 404 alike.
+         */
+        qrCode: string
+    }
+}
+
+export type GetMyEventResponse = MyEventDto
+
+export type GetMyEventError = ApiError
 
 export type FinishLiveDashboardMatchData = {
     path: {

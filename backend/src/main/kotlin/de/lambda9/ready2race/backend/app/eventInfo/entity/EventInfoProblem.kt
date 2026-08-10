@@ -10,6 +10,7 @@ sealed interface EventInfoProblem : ServiceError {
     data class EventNotFound(val eventId: UUID) : EventInfoProblem
     data class InvalidFilter(val filterMessage: String) : EventInfoProblem
     data class InvalidViewConfiguration(val configMessage: String) : EventInfoProblem
+    data class QrCodeNotFound(val qrCode: String) : EventInfoProblem
 
     override fun respond(): ApiError = when (this) {
         is InfoViewConfigurationNotFound -> ApiError(
@@ -30,6 +31,14 @@ sealed interface EventInfoProblem : ServiceError {
         is InvalidViewConfiguration -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Invalid view configuration: $configMessage"
+        )
+
+        is QrCodeNotFound -> ApiError(
+            status = HttpStatusCode.NotFound,
+            // Bewusst dieselbe Antwort für "gibt es nicht", "gehört zu einer anderen
+            // Veranstaltung" und "gehört zu einer Helferrolle": eine unterscheidbare
+            // Meldung würde verraten, welche Codes existieren.
+            message = "No participant found for this code"
         )
     }
 }

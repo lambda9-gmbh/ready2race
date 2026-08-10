@@ -41,6 +41,7 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 submissionNeedsVerification = submissionNeedsVerification,
                 participantSelfRegistration = allowParticipantSelfRegistration,
                 chainProgressionMode = chainProgressionMode.name,
+                autoCreateFollowingRounds = autoCreateFollowingRounds,
                 showBreaksOnPublicBoards = showBreaksOnPublicBoards,
                 publicResultsVisibility = publicResultsVisibility.name,
                 executionAutoRefresh = executionAutoRefresh,
@@ -83,6 +84,7 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         allowParticipantSelfRegistration = participantSelfRegistration!!,
         chainProgressionMode = chainProgressionMode?.let { ChainProgressionMode.valueOf(it) }
             ?: ChainProgressionMode.DEAKTIVIERT,
+        autoCreateFollowingRounds = autoCreateFollowingRounds ?: false,
         showBreaksOnPublicBoards = showBreaksOnPublicBoards ?: false,
         publicResultsVisibility = publicResultsVisibility?.let { PublicResultsVisibility.valueOf(it) }
             ?: PublicResultsVisibility.FINISHED_ONLY,

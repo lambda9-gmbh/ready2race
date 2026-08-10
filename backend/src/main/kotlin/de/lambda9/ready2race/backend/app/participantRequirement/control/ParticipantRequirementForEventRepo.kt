@@ -63,12 +63,28 @@ object ParticipantRequirementForEventRepo {
     fun getRequirementsForNamedParticipant(
         eventId: UUID,
         namedParticipantId: UUID
+    ): JIO<List<EventHasParticipantRequirementRecord>> =
+        getRequirementsForNamedParticipants(eventId, listOf(namedParticipantId))
+
+    /**
+     * Dieselbe Regel wie [getRequirementsForNamedParticipant], nur für mehrere Rollen auf einmal:
+     * eine Bedingung ohne Rollenbindung gilt für alle, eine rollengebundene nur für die genannten
+     * Rollen. Eine Person kann bei einer Veranstaltung in mehreren Rollen gemeldet sein; damit
+     * dafür keine zweite, womöglich abweichende Regel entsteht, ruft die Einzelfassung hier durch.
+     *
+     * Ohne Rolle bleiben die rollenfreien Bedingungen übrig - deshalb wird die leere Liste
+     * ausdrücklich zu einer falschen Bedingung und nicht zu einem `in ()`.
+     */
+    fun getRequirementsForNamedParticipants(
+        eventId: UUID,
+        namedParticipantIds: List<UUID>
     ): JIO<List<EventHasParticipantRequirementRecord>> = Jooq.query {
         selectFrom(EVENT_HAS_PARTICIPANT_REQUIREMENT)
             .where(
                 EVENT_HAS_PARTICIPANT_REQUIREMENT.EVENT.eq(eventId)
                     .and(
-                        EVENT_HAS_PARTICIPANT_REQUIREMENT.NAMED_PARTICIPANT.eq(namedParticipantId)
+                        (if (namedParticipantIds.isEmpty()) DSL.falseCondition()
+                        else EVENT_HAS_PARTICIPANT_REQUIREMENT.NAMED_PARTICIPANT.`in`(namedParticipantIds))
                             .or(EVENT_HAS_PARTICIPANT_REQUIREMENT.NAMED_PARTICIPANT.isNull)
                     )
             )

@@ -31,6 +31,14 @@ object EventRepo {
             ?.let { ChainProgressionMode.valueOf(it) } ?: ChainProgressionMode.DEAKTIVIERT
     }
 
+    /** Nie null: die Spalte ist not-null mit Default, ein fehlendes Event fällt sicher auf "aus" zurück. */
+    fun getAutoCreateFollowingRounds(eventId: UUID) = Jooq.query {
+        select(EVENT.AUTO_CREATE_FOLLOWING_ROUNDS)
+            .from(EVENT)
+            .where(EVENT.ID.eq(eventId))
+            .fetchOne(EVENT.AUTO_CREATE_FOLLOWING_ROUNDS) ?: false
+    }
+
     /** Nie null: die Spalte ist not-null mit Default, ein fehlendes Event fällt auf die sichere Stufe zurück. */
     fun getPublicResultsVisibility(eventId: UUID) = Jooq.query {
         select(EVENT.PUBLIC_RESULTS_VISIBILITY)

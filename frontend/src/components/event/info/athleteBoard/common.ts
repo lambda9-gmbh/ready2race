@@ -26,6 +26,9 @@ export const COUNTDOWN_MAX_SECONDS = 24 * 60 * 60
  * Ohne Stundenstufe entstand für einen Lauf in einer Woche die Anzeige "in 9886 min" —
  * formal richtig, praktisch unlesbar. Aufrufer prüfen zusätzlich COUNTDOWN_MAX_SECONDS
  * und zeigen jenseits davon das Datum statt einer Restzeit.
+ *
+ * Wird auch von „Mein Event" genutzt: die Restzeit auf dem Telefon und die auf der
+ * Wandanzeige müssen dieselbe Formulierung tragen.
  */
 export const formatRemaining = (seconds: number, t: TFunction): string => {
     const total = Math.max(0, Math.floor(seconds))
@@ -79,3 +82,13 @@ export const teamLabel = (
             : (team.clubsFull ?? team.clubsShort)
     return [clubs, name].filter(Boolean).join(' | ')
 }
+
+/**
+ * Eine Größe, die mit der Dichte der Bühne mitskaliert.
+ *
+ * `--ab-scale` setzt die Bühne einmal aus [densityScale]; jede Schriftgröße und jeder Abstand der
+ * Karten hängt daran. Der Vorgabewert 1 hält die Karten auch außerhalb der Bühne benutzbar
+ * (Kiosk-Rotation, künftige Einzelansichten).
+ */
+export const scaled = (min: string, preferred: string, max: string): string =>
+    `calc(var(--ab-scale, 1) * clamp(${min}, ${preferred}, ${max}))`

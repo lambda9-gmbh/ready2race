@@ -645,6 +645,18 @@
       "DEAKTIVIERT": "Dommere afslutter i dashboardet — næste løb aktiveres manuelt",
       "hint": "Arrangørerne kan altid afslutte løb via tidsplanen, uanset denne indstilling."
     },
+    "autoCreateFollowingRounds": {
+      "label": "Opret automatisk følgende runder",
+      "hint": "Så snart alle løb i en runde er afsluttet og bedømt, sættes parringerne til den næste runde af sig selv. Det aktiverer ikke noget - det afhænger stadig af tidsplanen.",
+      "INHERIT": "Følg arrangementet",
+      "ENABLED": "Til",
+      "DISABLED": "Fra",
+      "inherited": "Arrangement: {{value}}",
+      "effective": {
+        "ENABLED": "Der gælder: Følgende runder oprettes automatisk.",
+        "DISABLED": "Der gælder: Følgende runder oprettes ikke automatisk."
+      }
+    },
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
     "publicResultsVisibility": {
@@ -965,6 +977,7 @@
       },
       "execution": {
         "tabTitle": "Afvikling",
+        "pairingsRecalculated": "Parring genberegnet",
         "progress": {
           "error": "Kampene i konkurrencen kunne ikke indlæses."
         },
@@ -989,10 +1002,15 @@
             "notAllPlacesSet": "Der mangler resultater. Indtast venligst alle placeringer for kampene."
           }
         },
+        "roundProgression": {
+          "saved": "Automatik gemt"
+        },
         "deleteRound": {
           "delete": "Slet runde",
           "confirmation": {
-            "content": "Er du sikker på, at den sidste runde skal slettes?"
+            "content": "Er du sikker på, at den sidste runde skal slettes?",
+            "onDisplay_one": "Bemærk: {{count}} løb i denne runde vises allerede på skærmene. Sletter du runden, forsvinder det der — også for dommere, atleter og publikum. Vil du slette alligevel?",
+            "onDisplay_other": "Bemærk: {{count}} løb i denne runde vises allerede på skærmene. Sletter du runden, forsvinder de der — også for dommere, atleter og publikum. Vil du slette alligevel?"
           },
           "error": "Der opstod en fejl ved sletning af runden",
           "success": "Runden blev slettet"
@@ -1551,7 +1569,7 @@
         "noRunning": "Intet løb i arenaen lige nu",
         "noUpcoming": "Ingen flere løb planlagt",
         "noResults": "Endnu intet resultat",
-        "lane": "Bane",
+        "startNumber": "Nr.",
         "expected": "forventet",
         "unscheduled": "Tid ikke fastsat",
         "failed": "ikke placeret",
@@ -1563,11 +1581,12 @@
         "startsIn": "om {{time}}",
         "asOf": "Opdateret {{time}}",
         "stale": "Forbindelsen afbrudt",
+        "moreRunning_one": "+{{count}} løb mere i arenaen",
+        "moreRunning_other": "+{{count}} løb mere i arenaen",
         "eventNotFound": "Arrangementet blev ikke fundet",
         "settingsTitle": "Atletvisning",
         "limitRunning": "Antal igangværende løb",
-        "limitUpcoming": "Antal kommende løb",
-        "limitResults": "Antal resultater",
+        "limitRunningHint": "Tavlen viser højst to løb i arenaen ad gangen og rapporterer eventuelle yderligere i stedet for at skjule dem.",
         "showCountdown": "Vis nedtælling til start",
         "refreshHint": "Den offentlige atletvisning opdateres i denne takt, men aldrig hurtigere end hvert 10. sekund.",
         "loadError": "Data kunne ikke indlæses. Kontrollér venligst forbindelsen.",
@@ -1951,6 +1970,7 @@
     "removedGlobal": "Global tildeling fjernet",
     "checkRequirements": "Kontrollér betingelser",
     "checkInApp": "Kan kontrolleres i app",
+    "publiclyVisible": "Synlig for deltagere (Min begivenhed)",
     "checkEarliestMinutesBefore": "Tidligst (minutter før start)",
     "checkLatestMinutesBefore": "Senest (minutter før start)",
     "namedParticipantRequirements": {
@@ -2757,5 +2777,27 @@
         "unexpected": "Præmieoverrækkelsesarket kunne ikke oprettes. Genindlæs siden, og prøv igen."
       }
     }
+  },
+  "myEvent": {
+    "tab": "Min begivenhed",
+    "hint": "Scan QR-koden på dit armbånd for at se dine løb og resultater.",
+    "notFound": "Der findes ingen deltagelse med denne kode ved dette stævne.",
+    "next": "Dit næste løb",
+    "running": "I gang nu",
+    "matches": "Mine løb",
+    "results": "Mine resultater",
+    "unscheduled": "Tilmeldt, endnu ikke planlagt",
+    "requirements": "Mine betingelser",
+    "requirementsOpen": "Der mangler noget",
+    "requirementsAllDone": "Alt er klaret",
+    "requirementsOfficeHint": "Ordn det venligst i sekretariatet inden dit første løb.",
+    "requirementFulfilled": "klaret",
+    "requirementOpen": "mangler",
+    "requirementOptional": "frivillig",
+    "remove": "Fjern post",
+    "lane": "Startposition",
+    "team": "Hold",
+    "deregistered": "Afmeldt",
+    "noMatches": "Der er endnu ikke planlagt noget løb for dig."
   }
 }
