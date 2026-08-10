@@ -6387,19 +6387,45 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  /event/{eventId}/info/athlete-board:
+  /event/{eventId}/info/boards:
     parameters:
       - $ref: '#/components/parameters/eventId'
     get:
-      operationId: getAthleteBoard
-      description: "Public board for athletes at start and finish: running, next and last finished matches in one response"
+      operationId: getPublicBoards
+      description: "Public list of the event's boards (id and name only); carries the redirect of the legacy athlete board url"
       responses:
         200:
-          description: Athlete board retrieved successfully
+          description: Boards retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AthleteBoardDto'
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoardNameDto'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/info/board/{boardId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: boardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getBoardView
+      description: "Everything one board needs in a single response: resolved configuration, timeline slots and lists"
+      responses:
+        200:
+          description: Board view retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoardViewDto'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -7011,20 +7037,20 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  /event/{eventId}/info-views:
+  /event/{eventId}/boards:
     parameters:
       - $ref: '#/components/parameters/eventId'
     get:
-      operationId: getInfoViews
+      operationId: getBoards
       responses:
         200:
-          description: Info view configurations retrieved successfully
+          description: Boards retrieved successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/InfoViewConfigurationDto'
+                  $ref: '#/components/schemas/BoardDto'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -7034,20 +7060,20 @@ paths:
         500:
           $ref: '#/components/responses/500'
     post:
-      operationId: createInfoView
+      operationId: createBoard
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InfoViewConfigurationRequest'
+              $ref: '#/components/schemas/BoardRequest'
       responses:
         200:
-          description: Info view configuration created successfully
+          description: Board created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InfoViewConfigurationDto'
+                $ref: '#/components/schemas/BoardDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -7061,30 +7087,26 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  /event/{eventId}/info-views/{viewId}:
+  /event/{eventId}/boards/{boardId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
-      - name: viewId
+      - name: boardId
         in: path
         required: true
         schema:
           type: string
           format: uuid
     put:
-      operationId: updateInfoView
+      operationId: updateBoard
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InfoViewConfigurationRequest'
+              $ref: '#/components/schemas/BoardRequest'
       responses:
-        200:
-          description: Info view configuration updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InfoViewConfigurationDto'
+        204:
+          description: Board updated successfully
         400:
           $ref: '#/components/responses/400'
         401:
@@ -7098,10 +7120,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteInfoView
+      operationId: deleteBoard
       responses:
         204:
-          description: Info view configuration deleted successfully
+          description: Board deleted successfully
         401:
           $ref: '#/components/responses/401'
         403:
@@ -13574,24 +13596,107 @@ components:
         appendRatingToShortName:
           type: boolean
 
-    InfoViewType:
+    BoardLayout:
       type: string
       enum:
-        - UPCOMING_MATCHES
-        - LATEST_MATCH_RESULTS
-        - RUNNING_MATCHES
-        - ATHLETE_BOARD
+        - ONE_COLUMN
+        - TWO_COLUMNS
+        - THREE_COLUMNS
+        - SIX_TILES
 
-    InfoViewConfigurationDto:
+    BoardElementType:
+      type: string
+      enum:
+        - MATCH
+        - MATCH_LIST
+        - CLOCK
+        - TEXT
+
+    BoardListMode:
+      type: string
+      enum:
+        - UPCOMING
+        - RESULTS
+        - RUNNING
+
+    BoardElement:
+      type: object
+      description: "One element of a tile. Deliberately flat: which fields are required per type is enforced by the backend validation"
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/BoardElementType'
+        offset:
+          type: integer
+          minimum: -6
+          maximum: 6
+          nullable: true
+        showCrew:
+          type: boolean
+          nullable: true
+        showCountdown:
+          type: boolean
+          nullable: true
+        showTimes:
+          type: boolean
+          nullable: true
+        contrastColors:
+          type: boolean
+          nullable: true
+        autoFit:
+          type: boolean
+          nullable: true
+        listMode:
+          $ref: '#/components/schemas/BoardListMode'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 20
+          nullable: true
+        showEventName:
+          type: boolean
+          nullable: true
+        text:
+          type: string
+          nullable: true
+
+    BoardTile:
+      type: object
+      required:
+        - elements
+      properties:
+        rotationIntervalSeconds:
+          type: integer
+          minimum: 3
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardElement'
+
+    BoardConfig:
+      type: object
+      required:
+        - layout
+        - tiles
+      properties:
+        layout:
+          $ref: '#/components/schemas/BoardLayout'
+        refreshIntervalSeconds:
+          type: integer
+          minimum: 10
+        tiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardTile'
+
+    BoardDto:
       type: object
       required:
         - id
         - eventId
-        - viewType
-        - displayDurationSeconds
-        - dataLimit
-        - sortOrder
-        - isActive
+        - name
+        - config
         - createdAt
         - updatedAt
       properties:
@@ -13601,21 +13706,10 @@ components:
         eventId:
           type: string
           format: uuid
-        viewType:
-          $ref: '#/components/schemas/InfoViewType'
-        displayDurationSeconds:
-          type: integer
-          minimum: 1
-        dataLimit:
-          type: integer
-          minimum: 1
-          maximum: 100
-        filters:
-          type: object
-        sortOrder:
-          type: integer
-        isActive:
-          type: boolean
+        name:
+          type: string
+        config:
+          $ref: '#/components/schemas/BoardConfig'
         createdAt:
           type: string
           format: date-time
@@ -13623,32 +13717,28 @@ components:
           type: string
           format: date-time
 
-    InfoViewConfigurationRequest:
+    BoardNameDto:
       type: object
       required:
-        - viewType
-        - displayDurationSeconds
-        - dataLimit
-        - sortOrder
-        - isActive
+        - id
+        - name
       properties:
-        viewType:
-          $ref: '#/components/schemas/InfoViewType'
-        displayDurationSeconds:
-          type: integer
-          minimum: 1
-        dataLimit:
-          type: integer
-          minimum: 1
-          maximum: 100
-        filters:
-          type: object
-        sortOrder:
-          type: integer
-        isActive:
-          type: boolean
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
 
-
+    BoardRequest:
+      type: object
+      required:
+        - name
+        - config
+      properties:
+        name:
+          type: string
+        config:
+          $ref: '#/components/schemas/BoardConfig'
 
     ParticipantInfo:
       type: object
@@ -14150,31 +14240,33 @@ components:
           items:
             $ref: '#/components/schemas/AthleteBoardResultTeam'
 
-    AthleteBoardDto:
+    BoardMatchSlotDto:
+      type: object
+      description: "One place on the day's timeline. At most one of match and result is set; both empty means the slot exists but is unoccupied"
+      required:
+        - offset
+      properties:
+        offset:
+          type: integer
+        match:
+          allOf:
+            - $ref: '#/components/schemas/AthleteBoardMatch'
+          nullable: true
+        result:
+          allOf:
+            - $ref: '#/components/schemas/AthleteBoardResult'
+          nullable: true
+
+    BoardListDto:
       type: object
       required:
-        - eventName
-        - serverTime
-        - refreshIntervalSeconds
-        - showCountdown
-        - running
-        - upcoming
+        - mode
+        - matches
         - results
       properties:
-        eventName:
-          type: string
-        serverTime:
-          type: string
-          format: date-time
-        refreshIntervalSeconds:
-          type: integer
-        showCountdown:
-          type: boolean
-        running:
-          type: array
-          items:
-            $ref: '#/components/schemas/AthleteBoardMatch'
-        upcoming:
+        mode:
+          $ref: '#/components/schemas/BoardListMode'
+        matches:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardMatch'
@@ -14182,6 +14274,38 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardResult'
+
+    BoardViewDto:
+      type: object
+      required:
+        - boardId
+        - eventName
+        - serverTime
+        - refreshIntervalSeconds
+        - config
+        - slots
+        - lists
+      properties:
+        boardId:
+          type: string
+          format: uuid
+        eventName:
+          type: string
+        serverTime:
+          type: string
+          format: date-time
+        refreshIntervalSeconds:
+          type: integer
+        config:
+          $ref: '#/components/schemas/BoardConfig'
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardMatchSlotDto'
+        lists:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardListDto'
 
     MyEventTeamMemberDto:
       type: object

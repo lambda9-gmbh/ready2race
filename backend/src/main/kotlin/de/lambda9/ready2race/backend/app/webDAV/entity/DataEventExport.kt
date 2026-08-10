@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.app.bankAccount.control.PayeeBankAccountRep
 import de.lambda9.ready2race.backend.app.contactInformation.control.ContactInformationUsageRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
-import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfigurationRepo
+import de.lambda9.ready2race.backend.app.eventInfo.control.BoardRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.EventHasParticipantRequirementRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
@@ -24,7 +24,10 @@ data class DataEventExport(
     val payeeBankAccount: JsonNode,
     val eventDays: JsonNode,
     val eventHasParticipantRequirements: JsonNode,
-    val infoViewConfigurations: JsonNode,
+    // Nullable: Exporte von vor dem Board-Umbau (10.08.2026) tragen stattdessen
+    // `infoViewConfigurations` — das Konzept ist obsolet, solche Daten werden beim
+    // Import stillschweigend ausgelassen statt den ganzen Import scheitern zu lassen.
+    val boards: JsonNode?,
 ) : WebDAVExportData {
     companion object {
         fun createExportFile(
@@ -46,7 +49,7 @@ data class DataEventExport(
 
             val eventHasParticipantRequirements = !EventHasParticipantRequirementRepo.getAsJson(eventId).orDie()
 
-            val infoViewConfigurations = !InfoViewConfigurationRepo.getAsJson(eventId).orDie()
+            val boards = !BoardRepo.getAsJson(eventId).orDie()
 
             val json = !WebDAVExportService.serializeDataExportNew(
                 record,
@@ -56,7 +59,7 @@ data class DataEventExport(
                     "payeeBankAccount" to payeeBankAccount,
                     "eventDays" to eventDays,
                     "eventHasParticipantRequirements" to eventHasParticipantRequirements,
-                    "infoViewConfigurations" to infoViewConfigurations
+                    "boards" to boards
                 )
             )
 
@@ -75,7 +78,7 @@ data class DataEventExport(
 
             !EventHasParticipantRequirementRepo.insertJsonData(data.eventHasParticipantRequirements.toString()).orDie()
 
-            !InfoViewConfigurationRepo.insertJsonData(data.infoViewConfigurations.toString()).orDie()
+            data.boards?.let { !BoardRepo.insertJsonData(it.toString()).orDie() }
 
             unit
         }

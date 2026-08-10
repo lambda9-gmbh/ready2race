@@ -13,7 +13,8 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentPlac
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentPlaceholderType
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
-import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventInfoService
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.BoardService
+import de.lambda9.ready2race.backend.app.eventInfo.entity.BoardRequest
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubNameRuleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubShortNameRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB_NAME_RULE
@@ -97,8 +98,12 @@ class ClubChainInDisplaysTest {
             )
         )
 
-        val board = (!EventInfoService.getAthleteBoard(seeded.eventId)).dto
-        val team = board.running.single().teams.single()
+        // Seit dem Board-Umbau (10.08.2026) führt der Weg der Anzeige über ein Board:
+        // das Default-Board (Lauf 0 / +1 / −1) entspricht der alten Bühne, Slot 0 ist
+        // der laufende Lauf.
+        val board = (!BoardService.createBoard(seeded.eventId, BoardRequest.example)).dto
+        val view = (!BoardService.getBoardView(seeded.eventId, board.id)).dto
+        val team = view.slots.single { it.offset == 0 }.match!!.teams.single()
 
         assertEquals(EXPECTED_FULL, team.clubsFull)
         assertEquals(

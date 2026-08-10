@@ -1,14 +1,17 @@
 package de.lambda9.ready2race.backend.app.eventInfo.control
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardMatch
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardParticipant
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardResultTeam
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardTeam
-import de.lambda9.ready2race.backend.app.eventInfo.entity.InfoViewConfigurationDto
-import de.lambda9.ready2race.backend.app.eventInfo.entity.InfoViewConfigurationRequest
+import de.lambda9.ready2race.backend.app.eventInfo.entity.BoardConfig
+import de.lambda9.ready2race.backend.app.eventInfo.entity.BoardDto
+import de.lambda9.ready2race.backend.app.eventInfo.entity.BoardNameDto
+import de.lambda9.ready2race.backend.app.eventInfo.entity.BoardRequest
 import de.lambda9.ready2race.backend.app.eventInfo.entity.LatestMatchResultInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.LiveMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchInfo
@@ -19,38 +22,44 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchTeamInfo
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
 import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
-import de.lambda9.ready2race.backend.database.generated.tables.records.InfoViewConfigurationRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.INFO_VIEW_CONFIGURATION
+import de.lambda9.ready2race.backend.database.generated.tables.records.BoardRecord
 import org.jooq.JSONB
 import java.time.LocalDateTime
 import java.util.*
 
-fun InfoViewConfigurationRecord.toDto() = InfoViewConfigurationDto(
-    id = id!!,
-    eventId = eventId!!,
-    viewType = viewType!!,
-    displayDurationSeconds = displayDurationSeconds!!,
-    dataLimit = dataLimit!!,
-    filters = filters?.let { ObjectMapper().readTree(it.data()) },
-    sortOrder = sortOrder!!,
-    isActive = isActive!!,
-    createdAt = createdAt!!,
-    updatedAt = updatedAt!!
+/**
+ * Ein eigener Mapper mit Kotlin-Modul: [BoardConfig] ist eine Kotlin-Datenklasse mit
+ * Vorgabewerten, die der nackte [ObjectMapper] der Nachbar-Konvertierungen nicht
+ * konstruieren kann.
+ */
+private val boardConfigMapper = ObjectMapper().registerKotlinModule()
+
+fun BoardRecord.toDto() = BoardDto(
+    id = id,
+    eventId = eventId,
+    name = name,
+    config = boardConfigMapper.readValue(config.data(), BoardConfig::class.java),
+    createdAt = createdAt,
+    updatedAt = updatedAt,
 )
 
-fun InfoViewConfigurationRequest.toRecord(eventId: UUID): InfoViewConfigurationRecord {
-    val record = INFO_VIEW_CONFIGURATION.newRecord()
-    record.id = UUID.randomUUID()
-    record.eventId = eventId
-    record.viewType = this.viewType
-    record.displayDurationSeconds = this.displayDurationSeconds
-    record.dataLimit = this.dataLimit
-    record.filters = this.filters?.let { JSONB.jsonb(it.toString()) }
-    record.sortOrder = this.sortOrder
-    record.isActive = this.isActive
-    record.createdAt = LocalDateTime.now()
-    record.updatedAt = LocalDateTime.now()
-    return record
+fun BoardRecord.toNameDto() = BoardNameDto(
+    id = id,
+    name = name,
+)
+
+fun BoardConfig.toJsonb(): JSONB = JSONB.jsonb(boardConfigMapper.writeValueAsString(this))
+
+fun BoardRequest.toRecord(eventId: UUID): BoardRecord {
+    val now = LocalDateTime.now()
+    return BoardRecord(
+        id = UUID.randomUUID(),
+        eventId = eventId,
+        name = name,
+        config = config.toJsonb(),
+        createdAt = now,
+        updatedAt = now,
+    )
 }
 
 private fun participantName(firstName: String, lastName: String) = "$firstName $lastName"

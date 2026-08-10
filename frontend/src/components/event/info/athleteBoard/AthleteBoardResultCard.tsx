@@ -17,9 +17,13 @@ import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategoryS
 
 interface AthleteBoardResultCardProps {
     result: AthleteBoardResult
+    // Gefahrene Zeiten rechts am Boot — je Board-Element abschaltbar; Plätze und die
+    // Gründe ausgeschiedener/abgemeldeter Boote bleiben stehen, sonst wirkte die Zeile
+    // wie ein unerklärtes Loch.
+    showTimes?: boolean
 }
 
-const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
+const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCardProps) => {
     const {t} = useTranslation()
 
     const teams = [...result.teams].sort((a, b) => {
@@ -112,32 +116,36 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                                 // klein darunter, damit die Zeile dem Boot zuzuordnen bleibt.
                                 leadNumber={team.categoryPlace ?? '–'}
                                 trailing={
-                                    <>
-                                        <AthleteBoardBoatStatus
-                                            muted={team.failed || team.deregistered}
-                                            label={
-                                                team.deregistered
-                                                    ? [
-                                                          t(
-                                                              'event.info.athleteBoard.deregistered',
-                                                          ),
-                                                          team.deregisteredReason,
-                                                      ]
-                                                          .filter(Boolean)
-                                                          .join(' · ')
-                                                    : team.failed
-                                                      ? (team.failedReason ??
-                                                        t('event.info.athleteBoard.failed'))
-                                                      : (team.timeString ?? '')
-                                            }
-                                        />
-                                        {!team.deregistered && (
-                                            <AthleteBoardPenaltyNote
-                                                penaltySeconds={team.penaltySeconds}
-                                                penaltyNote={team.penaltyNote}
+                                    // Ohne Zeiten bleibt die rechte Spalte den Booten
+                                    // vorbehalten, die eine Erklärung brauchen.
+                                    !showTimes && !team.failed && !team.deregistered ? undefined : (
+                                        <>
+                                            <AthleteBoardBoatStatus
+                                                muted={team.failed || team.deregistered}
+                                                label={
+                                                    team.deregistered
+                                                        ? [
+                                                              t(
+                                                                  'event.info.athleteBoard.deregistered',
+                                                              ),
+                                                              team.deregisteredReason,
+                                                          ]
+                                                              .filter(Boolean)
+                                                              .join(' · ')
+                                                        : team.failed
+                                                          ? (team.failedReason ??
+                                                            t('event.info.athleteBoard.failed'))
+                                                          : (team.timeString ?? '')
+                                                }
                                             />
-                                        )}
-                                    </>
+                                            {!team.deregistered && showTimes && (
+                                                <AthleteBoardPenaltyNote
+                                                    penaltySeconds={team.penaltySeconds}
+                                                    penaltyNote={team.penaltyNote}
+                                                />
+                                            )}
+                                        </>
+                                    )
                                 }>
                                 <AthleteBoardTeamLabel
                                     team={team}

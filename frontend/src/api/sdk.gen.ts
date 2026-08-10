@@ -706,9 +706,12 @@ import type {
     GetLiveMatchesData,
     GetLiveMatchesError,
     GetLiveMatchesResponse,
-    GetAthleteBoardData,
-    GetAthleteBoardError,
-    GetAthleteBoardResponse,
+    GetPublicBoardsData,
+    GetPublicBoardsError,
+    GetPublicBoardsResponse,
+    GetBoardViewData,
+    GetBoardViewError,
+    GetBoardViewResponse,
     GetMyEventData,
     GetMyEventError,
     GetMyEventResponse,
@@ -772,18 +775,18 @@ import type {
     DownloadEventScheduleImportTemplateData,
     DownloadEventScheduleImportTemplateError,
     DownloadEventScheduleImportTemplateResponse,
-    GetInfoViewsData,
-    GetInfoViewsError,
-    GetInfoViewsResponse,
-    CreateInfoViewData,
-    CreateInfoViewError,
-    CreateInfoViewResponse,
-    UpdateInfoViewData,
-    UpdateInfoViewError,
-    UpdateInfoViewResponse,
-    DeleteInfoViewData,
-    DeleteInfoViewError,
-    DeleteInfoViewResponse,
+    GetBoardsData,
+    GetBoardsError,
+    GetBoardsResponse,
+    CreateBoardData,
+    CreateBoardError,
+    CreateBoardResponse,
+    UpdateBoardData,
+    UpdateBoardError,
+    UpdateBoardResponse,
+    DeleteBoardData,
+    DeleteBoardError,
+    DeleteBoardResponse,
     AddRatingCategoryData,
     AddRatingCategoryError,
     AddRatingCategoryResponse,
@@ -3917,18 +3920,30 @@ export const getLiveMatches = <ThrowOnError extends boolean = false>(
 }
 
 /**
- * Public board for athletes at start and finish: running, next and last finished matches in one response
+ * Public list of the event's boards (id and name only); carries the redirect of the legacy athlete board url
  */
-export const getAthleteBoard = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetAthleteBoardData, ThrowOnError>,
+export const getPublicBoards = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetPublicBoardsData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetAthleteBoardResponse,
-        GetAthleteBoardError,
+        GetPublicBoardsResponse,
+        GetPublicBoardsError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/info/athlete-board',
+        url: '/event/{eventId}/info/boards',
+    })
+}
+
+/**
+ * Everything one board needs in a single response: resolved configuration, timeline slots and lists
+ */
+export const getBoardView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetBoardViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetBoardViewResponse, GetBoardViewError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/info/board/{boardId}',
     })
 }
 
@@ -4260,51 +4275,39 @@ export const downloadEventScheduleImportTemplate = <ThrowOnError extends boolean
     })
 }
 
-export const getInfoViews = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetInfoViewsData, ThrowOnError>,
+export const getBoards = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetBoardsData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).get<GetInfoViewsResponse, GetInfoViewsError, ThrowOnError>({
+    return (options?.client ?? client).get<GetBoardsResponse, GetBoardsError, ThrowOnError>({
         ...options,
-        url: '/event/{eventId}/info-views',
+        url: '/event/{eventId}/boards',
     })
 }
 
-export const createInfoView = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<CreateInfoViewData, ThrowOnError>,
+export const createBoard = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateBoardData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).post<
-        CreateInfoViewResponse,
-        CreateInfoViewError,
-        ThrowOnError
-    >({
+    return (options?.client ?? client).post<CreateBoardResponse, CreateBoardError, ThrowOnError>({
         ...options,
-        url: '/event/{eventId}/info-views',
+        url: '/event/{eventId}/boards',
     })
 }
 
-export const updateInfoView = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateInfoViewData, ThrowOnError>,
+export const updateBoard = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateBoardData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).put<
-        UpdateInfoViewResponse,
-        UpdateInfoViewError,
-        ThrowOnError
-    >({
+    return (options?.client ?? client).put<UpdateBoardResponse, UpdateBoardError, ThrowOnError>({
         ...options,
-        url: '/event/{eventId}/info-views/{viewId}',
+        url: '/event/{eventId}/boards/{boardId}',
     })
 }
 
-export const deleteInfoView = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteInfoViewData, ThrowOnError>,
+export const deleteBoard = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteBoardData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).delete<
-        DeleteInfoViewResponse,
-        DeleteInfoViewError,
-        ThrowOnError
-    >({
+    return (options?.client ?? client).delete<DeleteBoardResponse, DeleteBoardError, ThrowOnError>({
         ...options,
-        url: '/event/{eventId}/info-views/{viewId}',
+        url: '/event/{eventId}/boards/{boardId}',
     })
 }
 
