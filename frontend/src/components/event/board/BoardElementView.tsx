@@ -9,13 +9,22 @@ interface BoardElementViewProps {
     view: BoardViewDto
     now: Date
     columns: number
+    rows: number
 }
 
 /** Die Weiche über die Elementtypen — jede Kachel rendert ihr aktives Element hierüber. */
-const BoardElementView = ({element, view, now, columns}: BoardElementViewProps) => {
+const BoardElementView = ({element, view, now, columns, rows}: BoardElementViewProps) => {
     switch (element.type) {
         case 'MATCH':
-            return <BoardMatchSlotElement element={element} view={view} now={now} columns={columns} />
+            return (
+                <BoardMatchSlotElement
+                    element={element}
+                    view={view}
+                    now={now}
+                    columns={columns}
+                    rows={rows}
+                />
+            )
         case 'MATCH_LIST':
             return <BoardMatchListElement element={element} view={view} />
         case 'CLOCK':

@@ -10,6 +10,7 @@ interface BoardTileViewProps {
     view: BoardViewDto
     now: Date
     columns: number
+    rows: number
 }
 
 /**
@@ -17,7 +18,7 @@ interface BoardTileViewProps {
  * — der Server weiß von der Rotation nichts, er liefert die Daten aller Elemente in
  * jeder Antwort mit.
  */
-const BoardTileView = ({tile, view, now, columns}: BoardTileViewProps) => {
+const BoardTileView = ({tile, view, now, columns, rows}: BoardTileViewProps) => {
     const [index, setIndex] = useState(0)
 
     const count = tile.elements.length
@@ -43,7 +44,7 @@ const BoardTileView = ({tile, view, now, columns}: BoardTileViewProps) => {
         <Box sx={{minHeight: 0, position: 'relative'}}>
             <Fade key={index % count} in timeout={600}>
                 <Box sx={{height: '100%', minHeight: 0}}>
-                    <BoardElementView element={element} view={view} now={now} columns={columns} />
+                    <BoardElementView element={element} view={view} now={now} columns={columns} rows={rows} />
                 </Box>
             </Fade>
         </Box>

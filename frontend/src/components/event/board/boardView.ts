@@ -1,5 +1,5 @@
 import {BoardElement, BoardLayout, BoardMatchSlotDto, BoardViewDto} from '@api/types.gen'
-import {BoardContent, contentScale} from '../info/athleteBoard/boardLayout'
+import {BoardContent, contentScale, MIN_DENSITY_SCALE} from '../info/athleteBoard/boardLayout'
 
 /**
  * Pure Zuordnungslogik der Board-Anzeige: welches Element bekommt welchen Teil der
@@ -52,6 +52,13 @@ export const listForElement = (view: BoardViewDto, element: BoardElement) => {
 }
 
 /**
+ * Die Dichteformel stammt von der einzeiligen Bühne; im 3×2-Raster hat eine Kachel nur
+ * die halbe Höhe. Der Faktor ist am Sichttest vom 10.08.2026 abgelesen: ohne ihn
+ * überlappten sich die Bootszeilen eines Dreierfelds in der oberen Kachelreihe.
+ */
+const HALF_HEIGHT_FACTOR = 0.7
+
+/**
  * Der Schriftfaktor eines Lauf-Elements: die Dichteformel der alten Bühne, je Kachel
  * angewandt. `autoFit === false` schaltet sie ab — dann bleibt die volle Größe stehen
  * und die Kachel darf scrollen bzw. abschneiden.
@@ -60,7 +67,9 @@ export const elementScale = (
     element: BoardElement,
     content: BoardContent | null,
     columns: number,
+    rows: number = 1,
 ): number => {
     if (element.autoFit === false) return 1
-    return contentScale(content ? [content] : [], columns)
+    const base = contentScale(content ? [content] : [], columns)
+    return rows > 1 ? Math.max(MIN_DENSITY_SCALE, base * HALF_HEIGHT_FACTOR) : base
 }

@@ -29,7 +29,7 @@ const BoardRenderer = ({view, now}: BoardRendererProps) => {
                 overflow: {xs: 'auto', lg: 'hidden'},
             }}>
             {view.config.tiles.map((tile, index) => (
-                <BoardTileView key={index} tile={tile} view={view} now={now} columns={columns} />
+                <BoardTileView key={index} tile={tile} view={view} now={now} columns={columns} rows={rows} />
             ))}
         </Box>
     )
