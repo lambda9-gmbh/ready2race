@@ -14,22 +14,38 @@ Precache-Einträgen, die alle auf vorhandene Dateien zeigen.
 
 ## 1. Was vor dem Zusammenführen ansteht
 
-### 1.1 Der Branch hängt 65 Commits hinter `feature/crf-2026`
+### 1.1 `feature/crf-2026` ist aufgenommen, der Rückmerge steht aus
 
-Das ist der wichtigste Punkt. Der Plan wurde teilweise gegen den Hauptcheckout geschrieben, der
-auf `crf-2026` steht — gebaut wurde auf dem älteren Abzweig. Der Merge wurde in der Sitzung
-versucht und vom Berechtigungs-Klassifikator blockiert.
+**Erledigt am 10.08. vormittags:** `feature/crf-2026` (Stand `cc78980a`) ist in diesen Branch
+gemergt (`a0930846`). Ein Konflikt in `LiveDashboardPage.tsx` wurde von Hand aufgelöst: Der
+Zustand für die Kurzbezeichnungen aus `crf-2026` und der Startwert aus dem Lese-Cache stehen
+jetzt nebeneinander. Die Offline-Sperre ist auf **alle fünf** schreibenden Aktionen erweitert
+(`onFinish`, `onSetActivated`, `onMarkStarted`, `onResumeAutoPull`, `onSkipSlot`); das Kennzeichen
+`raceClockerAutoPull` ist keine Handlung und bleibt unberührt. Danach: 637 Tests grün, `tsc`
+sauber, Build mit Exit-Code 0.
 
 Sicherungstag vor dem Merge: `vor-crf-merge-pwa`.
 
-Überschneidende Dateien, nur diese fünf brauchen Aufmerksamkeit:
-`frontend/src/pages/event/LiveDashboardPage.tsx`, `frontend/src/routes.tsx` und die drei
-`translations.json`.
+**Was noch fehlt: der Rückmerge nach `feature/crf-2026`.** Ich habe ihn bewusst nicht ausgeführt.
+Zwei Gründe, beide unabhängig voneinander ausreichend:
 
-**Nach dem Merge zwingend nachziehen:** `LiveDashboardPage` hat auf `crf-2026` fünf schreibende
-Aktionen (`onFinish`, `onSetActivated`, `onMarkStarted`, `onResumeAutoPull`, `onSkipSlot`), auf
-diesem Branch nur drei. Die Offline-Sperre `&& !staleState.actionsLocked` muss auf die
-zusätzlichen zwei erweitert werden, sonst bleiben sie auf veralteten Daten bedienbar.
+1. Im Hauptcheckout `/Users/thomas/Developer/privat/ready2race` liegt **fremde, nicht committete
+   Arbeit** einer anderen Sitzung — das „Mein Event"-Dashboard samt Migration
+   `V202608101000__participant_requirement_publicly_visible.sql`. Ein Merge dort hätte in einen
+   laufenden fremden Arbeitsstand hineingegriffen.
+2. `feature/crf-2026` hat um 08:22 Uhr einen weiteren Commit bekommen (`155ae39a`), während
+   dieser Branch gebaut wurde. Dort arbeitet gerade jemand.
+
+Sobald der Hauptcheckout frei ist, ist es ein Zweizeiler — der zweite Merge holt nur die
+Commits, die inzwischen dazugekommen sind:
+
+```bash
+git -C /Users/thomas/Developer/privat/ready2race merge --no-ff claude/pwa-app-git-project-c4fa2a
+```
+
+Vorher `git rev-list --count feature/crf-2026 ^claude/pwa-app-git-project-c4fa2a` prüfen: Bei `0`
+ist es ein Fast-Forward, sonst kommt ein weiterer Merge dazwischen und `LiveDashboardPage.tsx`
+kann erneut kollidieren.
 
 ### 1.2 Eine Entscheidung, die ich nicht getroffen habe
 
