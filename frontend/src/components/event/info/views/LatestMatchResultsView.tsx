@@ -22,7 +22,7 @@ import {useFetch} from '@utils/hooks'
 import {getLatestMatchResults} from '@api/sdk.gen'
 import {EmojiEvents} from '@mui/icons-material'
 import SinglePlaceColored from '@components/event/info/views/SinglePlaceColored.tsx'
-import {sortByPlaces} from '@utils/helpers.ts'
+import {sortByPlaces, teamNameSuffix} from '@utils/helpers.ts'
 
 interface LatestMatchResultsViewProps {
     eventId: string
@@ -151,7 +151,7 @@ export const LatestMatchResultsView: React.FC<LatestMatchResultsViewProps> = ({e
                                                         color="text.secondary">
                                                         {`${t('club.registeredBy')} ` +
                                                             team.clubName +
-                                                            ` | ${team.teamName}`}
+                                                            teamNameSuffix(team.teamName)}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>

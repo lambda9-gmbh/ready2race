@@ -26,6 +26,7 @@ import Substitutions from '@components/event/competition/excecution/Substitution
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
+import {teamNameSuffix} from '@utils/helpers.ts'
 import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
@@ -619,7 +620,7 @@ const CompetitionExecutionRound = ({
                                                             color="textSecondary">
                                                             {`${t('club.registeredBy')} ` +
                                                                 team.clubName +
-                                                                ` | ${team.name}`}
+                                                                teamNameSuffix(team.name)}
                                                         </Typography>
                                                         <Typography
                                                             variant="body2"

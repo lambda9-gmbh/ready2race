@@ -41,7 +41,7 @@ import LoadingButton from '@components/form/LoadingButton.tsx'
 import {Controller, FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {getFilename, groupBy, shuffle} from '@utils/helpers.ts'
+import {getFilename, groupBy, shuffle, teamNameSuffix} from '@utils/helpers.ts'
 import {
     formatFailedReason,
     MatchResultStatus,
@@ -1054,7 +1054,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                                                                         variant={'body2'}>
                                                                         {`${t('club.registeredBy')} ` +
                                                                             team.clubName +
-                                                                            ` | ${team.name}`}
+                                                                            teamNameSuffix(team.name)}
                                                                     </Typography>
                                                                     <Typography
                                                                         color={'textSecondary'}
@@ -1375,7 +1375,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                                                                     variant={'body2'}>
                                                                     {`${t('club.registeredBy')} ` +
                                                                         team.clubName +
-                                                                        ` | ${team.name}`}
+                                                                        teamNameSuffix(team.name)}
                                                                 </Typography>
                                                                 <Typography
                                                                     color={'textSecondary'}
