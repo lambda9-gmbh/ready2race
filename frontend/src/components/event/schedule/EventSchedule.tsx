@@ -19,14 +19,17 @@ import {
 import {
     Add,
     Delete,
+    DirectionsRun,
     Edit,
     EventBusy,
     EventRepeat,
     OpenInNew,
     PlayArrow,
+    Replay,
     ShortText,
     Stop,
     Subject,
+    Undo,
 } from '@mui/icons-material'
 import {format} from 'date-fns'
 import {Link} from '@tanstack/react-router'
@@ -36,8 +39,11 @@ import {
     deleteScheduleSlot,
     finishScheduleSlot,
     getEventSchedule,
+    markMatchStartedFromExecution,
+    reopenMatch,
     skipScheduleSlot,
     unskipScheduleSlot,
+    updateMatchActivation,
 } from '@api/sdk.gen.ts'
 import {EventScheduleSlotDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -385,6 +391,77 @@ const EventSchedule = () => {
         )
     }
 
+    /** Ist-Start aus dem Büro — dasselbe „Läuft" wie im Schiedsrichter-Dashboard, ohne Dialog. */
+    const handleMarkStarted = async (slot: EventScheduleSlotDto) => {
+        if (!slot.matchId || !slot.competitionId) return
+        const {error} = await markMatchStartedFromExecution({
+            path: {
+                eventId,
+                competitionId: slot.competitionId,
+                competitionMatchId: slot.matchId,
+            },
+        })
+        if (error) {
+            showSlotActionError(error)
+        }
+        reload()
+    }
+
+    /** Nimmt die Aktivierung zurück — löscht auch den Ist-Start und pausiert den Abruf (Backend). */
+    const handleDeactivate = (slot: EventScheduleSlotDto) => {
+        if (!slot.matchId || !slot.competitionId) return
+        confirmAction(
+            async () => {
+                const {error} = await updateMatchActivation({
+                    path: {
+                        eventId,
+                        competitionId: slot.competitionId!,
+                        competitionMatchId: slot.matchId!,
+                    },
+                    body: {activated: false},
+                })
+                if (error) {
+                    showSlotActionError(error)
+                }
+                reload()
+            },
+            {
+                content: t('event.schedule.deactivateConfirm', {
+                    label: slotLabel(slot),
+                    time: format(new Date(slot.startTime), t('format.time')),
+                }),
+                okText: t('event.schedule.deactivate'),
+            },
+        )
+    }
+
+    /** Beenden zurücknehmen — der Server erlaubt es nur in der jüngsten Runde des Wettkampfs. */
+    const handleReopen = (slot: EventScheduleSlotDto) => {
+        if (!slot.matchId || !slot.competitionId) return
+        confirmAction(
+            async () => {
+                const {error} = await reopenMatch({
+                    path: {
+                        eventId,
+                        competitionId: slot.competitionId!,
+                        competitionMatchId: slot.matchId!,
+                    },
+                })
+                if (error) {
+                    showSlotActionError(error)
+                }
+                reload()
+            },
+            {
+                content: t('event.schedule.reopenConfirm', {
+                    label: slotLabel(slot),
+                    time: format(new Date(slot.startTime), t('format.time')),
+                }),
+                okText: t('event.schedule.reopen'),
+            },
+        )
+    }
+
     const daySections = groupSlotsByDay(data?.slots ?? [])
     const unplannedSetupMatches = data?.unplannedSetupMatches ?? []
 
@@ -631,6 +708,42 @@ const EventSchedule = () => {
                                                                     </Tooltip>
                                                                 )}
                                                             {slot.state === 'LINKED' &&
+                                                                !slot.bye &&
+                                                                !slot.matchFinishedAt &&
+                                                                slot.matchActivatedAt != null &&
+                                                                !slot.matchStartedAt && (
+                                                                    <Tooltip
+                                                                        title={t(
+                                                                            'event.schedule.markStarted',
+                                                                        )}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            onClick={() =>
+                                                                                handleMarkStarted(slot)
+                                                                            }>
+                                                                            <DirectionsRun
+                                                                                fontSize={'small'}
+                                                                            />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+                                                            {slot.state === 'LINKED' &&
+                                                                !slot.matchFinishedAt &&
+                                                                slot.matchActivatedAt != null && (
+                                                                    <Tooltip
+                                                                        title={t(
+                                                                            'event.schedule.deactivate',
+                                                                        )}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            onClick={() =>
+                                                                                handleDeactivate(slot)
+                                                                            }>
+                                                                            <Undo fontSize={'small'} />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+                                                            {slot.state === 'LINKED' &&
                                                                 (slot.bye
                                                                     ? !slot.matchFinishedAt
                                                                     : slot.matchActivatedAt != null) && (
@@ -646,6 +759,21 @@ const EventSchedule = () => {
                                                                                 handleFinishSlot(slot)
                                                                             }>
                                                                             <Stop fontSize={'small'} />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+                                                            {slot.state === 'LINKED' &&
+                                                                !!slot.matchFinishedAt && (
+                                                                    <Tooltip
+                                                                        title={t(
+                                                                            'event.schedule.reopen',
+                                                                        )}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            onClick={() =>
+                                                                                handleReopen(slot)
+                                                                            }>
+                                                                            <Replay fontSize={'small'} />
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}

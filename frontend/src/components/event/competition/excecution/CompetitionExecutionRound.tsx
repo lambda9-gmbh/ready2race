@@ -10,7 +10,6 @@ import {
     Box,
     Card,
     Divider,
-    FormControlLabel,
     Stack,
     Table,
     TableBody,
@@ -30,6 +29,8 @@ import {teamNameSuffix} from '@utils/helpers.ts'
 import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
+    markMatchStartedFromExecution,
+    reopenMatch,
     skipScheduleRound,
     updateMatchActivation,
 } from '@api/sdk.gen.ts'
@@ -37,7 +38,6 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
-import Checkbox from '@mui/material/Checkbox'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
 import {matchesOnDisplay} from '@components/event/competition/excecution/roundDeletion.ts'
@@ -192,6 +192,46 @@ const CompetitionExecutionRound = ({
      * er setzt `activated_at`, der Ist-Start kommt aus der Zeitnahme oder aus dem „Läuft"-Knopf im
      * Schiedsrichter-Dashboard.
      */
+    /** Ist-Start aus dem Büro — idempotent, aktiviert nebenbei (siehe Backend-KDoc). */
+    const handleMarkStarted = async (match: CompetitionMatchDto) => {
+        props.setSubmitting(true)
+        const {error} = await markMatchStartedFromExecution({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+        })
+        props.setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('event.competition.execution.running.error.update'))
+        } else {
+            feedback.success(t('event.competition.execution.running.success'))
+            props.reloadRoundDto()
+        }
+    }
+
+    /** Beenden zurücknehmen — nur in der jüngsten Runde, der Server prüft das nochmal. */
+    const handleReopen = async (match: CompetitionMatchDto) => {
+        props.setSubmitting(true)
+        const {error} = await reopenMatch({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+        })
+        props.setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('event.competition.execution.running.error.update'))
+        } else {
+            feedback.success(t('event.competition.execution.running.success'))
+            props.reloadRoundDto()
+        }
+    }
+
     const handleToggleActivation = async (match: CompetitionMatchDto) => {
         // Check if match has no places set
         const hasPlacesSet = match.teams.some(
@@ -379,23 +419,77 @@ const CompetitionExecutionRound = ({
                                             {match.startTimeOffset} {t('common.form.seconds')}
                                         </Typography>
                                     )}
-                                    {/* Only show toggle if match has no places set */}
-                                    {!match.teams.some(
-                                        team => team.place !== null && team.place !== undefined,
-                                    ) && (
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={match.activatedAt != null}
-                                                    onChange={() => handleToggleActivation(match)}
-                                                    disabled={submitting}
-                                                />
-                                            }
-                                            label={t(
-                                                'event.competition.execution.match.activated',
+                                    {/*
+                                        Status-Verwaltung statt des früheren „Am Start"-Hakens: Das
+                                        Regattabüro kann jeden Übergang von hier setzen — an den
+                                        Start rufen, zurücknehmen, den Ist-Start feststellen und
+                                        ein versehentliches Beenden zurücknehmen —, ohne den Umweg
+                                        über das Schiedsrichter-Dashboard. Die Knöpfe zeigen nur
+                                        die Übergänge, die der aktuelle Zustand hergibt.
+                                    */}
+                                    <Stack
+                                        direction={'row'}
+                                        spacing={1}
+                                        useFlexGap
+                                        sx={{flexWrap: 'wrap'}}>
+                                        {match.finishedAt == null &&
+                                            match.activatedAt == null &&
+                                            !match.teams.some(
+                                                team =>
+                                                    team.place !== null &&
+                                                    team.place !== undefined,
+                                            ) && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    pending={submitting}
+                                                    onClick={() =>
+                                                        handleToggleActivation(match)
+                                                    }>
+                                                    {t(
+                                                        'event.competition.execution.match.control.activate',
+                                                    )}
+                                                </LoadingButton>
                                             )}
-                                        />
-                                    )}
+                                        {match.finishedAt == null &&
+                                            match.activatedAt != null && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    pending={submitting}
+                                                    onClick={() =>
+                                                        handleToggleActivation(match)
+                                                    }>
+                                                    {t(
+                                                        'event.competition.execution.match.control.deactivate',
+                                                    )}
+                                                </LoadingButton>
+                                            )}
+                                        {match.finishedAt == null &&
+                                            match.activatedAt != null &&
+                                            match.startedAt == null && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    pending={submitting}
+                                                    onClick={() => handleMarkStarted(match)}>
+                                                    {t(
+                                                        'event.competition.execution.match.control.markStarted',
+                                                    )}
+                                                </LoadingButton>
+                                            )}
+                                        {match.finishedAt != null && roundIndex === 0 && (
+                                            <LoadingButton
+                                                size={'small'}
+                                                variant={'outlined'}
+                                                pending={submitting}
+                                                onClick={() => handleReopen(match)}>
+                                                {t(
+                                                    'event.competition.execution.match.control.reopen',
+                                                )}
+                                            </LoadingButton>
+                                        )}
+                                    </Stack>
                                 </Stack>
                                 <Stack direction={'column'} spacing={1}>
                                     {/* Status oben rechts: Checkbox und farbiger Rahmen bleiben,

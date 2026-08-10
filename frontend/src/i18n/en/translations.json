@@ -1049,7 +1049,13 @@
           "activated": "At the start",
           "availableMatches": "Available Matches",
           "noRunningMatches": "No matches are currently running",
-          "noAvailableMatches": "No matches available to start"
+          "noAvailableMatches": "No matches available to start",
+          "control": {
+            "activate": "Activate race",
+            "deactivate": "Deactivate race",
+            "markStarted": "Running",
+            "reopen": "Undo finish"
+          }
         },
         "running": {
           "error": {
@@ -1854,7 +1860,12 @@
         "slotNotLinked": "There is no run for this slot yet. Create the round under Competition → Execution first, then the run can be activated and finished.",
         "setupMatchAlreadyPlanned": "This run is already planned in another slot. Please reload the schedule and pick a run that has not been planned yet.",
         "unexpected": "The action could not be carried out. Please reload the schedule and try again."
-      }
+      },
+      "markStarted": "Running — record real start",
+      "deactivate": "Deactivate race",
+      "deactivateConfirm": "Deactivate race \"{{label}}\" at {{time}}? This clears the real start and pauses the automatic pull.",
+      "reopen": "Undo finish",
+      "reopenConfirm": "Undo finishing \"{{label}}\" at {{time}}? Activation, real start and results stay; a follow-up round that was already created may need to be deleted first."
     },
     "results": {
       "download": "Download previous results",

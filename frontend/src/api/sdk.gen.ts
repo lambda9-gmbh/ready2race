@@ -177,6 +177,12 @@ import type {
     UpdateMatchActivationData,
     UpdateMatchActivationError,
     UpdateMatchActivationResponse,
+    MarkMatchStartedFromExecutionData,
+    MarkMatchStartedFromExecutionError,
+    MarkMatchStartedFromExecutionResponse,
+    ReopenMatchData,
+    ReopenMatchError,
+    ReopenMatchResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -1615,6 +1621,34 @@ export const updateMatchActivation = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/activation',
+    })
+}
+
+/**
+ * Records the real start of the match (idempotent) and activates it if it was not - the office-side counterpart of the referee dashboard's 'running' button
+ */
+export const markMatchStartedFromExecution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<MarkMatchStartedFromExecutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        MarkMatchStartedFromExecutionResponse,
+        MarkMatchStartedFromExecutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/mark-started',
+    })
+}
+
+/**
+ * Takes back the finish stamp of a finished match in the latest round - activation, real start and results stay untouched
+ */
+export const reopenMatch = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ReopenMatchData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<ReopenMatchResponse, ReopenMatchError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reopen',
     })
 }
 

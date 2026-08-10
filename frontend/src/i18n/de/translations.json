@@ -1049,7 +1049,13 @@
           "activated": "Am Start",
           "availableMatches": "Verfügbare Partien",
           "noRunningMatches": "Keine Partien laufen gerade",
-          "noAvailableMatches": "Keine Partien zum Starten verfügbar"
+          "noAvailableMatches": "Keine Partien zum Starten verfügbar",
+          "control": {
+            "activate": "Lauf aktivieren",
+            "deactivate": "Lauf deaktivieren",
+            "markStarted": "Läuft",
+            "reopen": "Beenden zurücknehmen"
+          }
         },
         "running": {
           "error": {
@@ -1854,7 +1860,12 @@
         "slotNotLinked": "Für diesen Slot gibt es noch keinen Lauf. Bitte die Runde zuerst unter Wettkampf → Durchführung setzen, danach lässt sich der Lauf aktivieren und beenden.",
         "setupMatchAlreadyPlanned": "Dieser Lauf ist bereits in einem anderen Slot eingeplant. Bitte den Zeitplan neu laden und einen noch nicht verplanten Lauf wählen.",
         "unexpected": "Die Aktion konnte nicht ausgeführt werden. Bitte den Zeitplan neu laden und es erneut versuchen."
-      }
+      },
+      "markStarted": "Läuft — Ist-Start festhalten",
+      "deactivate": "Lauf deaktivieren",
+      "deactivateConfirm": "Lauf „{{label}}“ um {{time}} deaktivieren? Der Ist-Start wird dabei gelöscht und der automatische Abruf pausiert.",
+      "reopen": "Beenden zurücknehmen",
+      "reopenConfirm": "Beenden von „{{label}}“ um {{time}} zurücknehmen? Aktivierung, Ist-Start und Ergebnisse bleiben stehen; eine bereits erzeugte Folgerunde muss ggf. zuerst gelöscht werden."
     },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",

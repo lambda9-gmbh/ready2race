@@ -4697,6 +4697,30 @@ export type UpdateMatchActivationResponse = void
 
 export type UpdateMatchActivationError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type MarkMatchStartedFromExecutionData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type MarkMatchStartedFromExecutionResponse = void
+
+export type MarkMatchStartedFromExecutionError = BadRequestError | ApiError
+
+export type ReopenMatchData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type ReopenMatchResponse = void
+
+export type ReopenMatchError = BadRequestError | ApiError
+
 export type UpdateMatchResultsData = {
     body: UpdateCompetitionMatchResultRequest
     path: {

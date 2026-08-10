@@ -1488,6 +1488,77 @@ object CompetitionExecutionService {
         waveName: String?,
     ): List<RaceClockerFeedRow> = assignFeedRows(rows, teams, waveName).values.flatten()
 
+    /**
+     * Der „Läuft"-Klick des Regattabüros: hält den Ist-Start fest, identisch zu
+     * `LiveDashboardService.markMatchStarted` (idempotent, aktiviert nebenbei). Er liegt zusätzlich
+     * auf der Durchführungs-Route, weil der Ist-Start keine Schiedsrichter-Exklusivität ist —
+     * das Büro stellt denselben Sachverhalt fest, nur von seinem Arbeitsplatz aus.
+     */
+    fun markMatchStarted(
+        eventId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+        !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        !CompetitionMatchRepo.update(matchId) {
+            if (startedAt == null) {
+                startedAt = LocalDateTime.now()
+            }
+            if (activatedAt == null) {
+                activatedAt = LocalDateTime.now()
+            }
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
+    }
+
+    /**
+     * Nimmt das Beenden eines Laufs zurück (`finished_at` weg) — der Weg zurück aus einem
+     * versehentlichen Beenden-Klick, auch für ein versehentlich quittiertes Freilos.
+     *
+     * Erlaubt nur in der jüngsten Runde: dieselbe Sperre wie bei Ergebniskorrekturen. Ist aus dem
+     * Beenden bereits eine Folgerunde entstanden, muss die wie bei jeder Korrektur zuerst gelöscht
+     * werden — die Rücknahme rollt bewusst nichts davon zurück, sie nimmt nur den Stempel.
+     * Aktivierung und Ist-Start bleiben ebenfalls stehen: Was tatsächlich passiert ist, bleibt
+     * festgehalten; der Lauf kehrt in den Zustand „läuft/wartet auf Beenden" zurück.
+     */
+    fun reopenMatch(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }.none { it.id == matchId }) {
+            CompetitionExecutionError.MatchNotFound
+        }
+
+        // Nicht checkUpdateMatchResult: Das würde Freilose abweisen, und gerade deren Quittierung
+        // soll rücknehmbar sein. Die Rundensperre selbst ist dieselbe.
+        val currentRound = getCurrentAndNextRound(setupRounds).first
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
+        val match = currentRound.matches.find { it.competitionSetupMatch == matchId }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
+
+        !KIO.failOn(match.finishedAt == null) { CompetitionExecutionError.MatchNotFinished }
+
+        !CompetitionMatchRepo.update(matchId) {
+            finishedAt = null
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        logger.info { "Beenden von Lauf $matchId zurückgenommen." }
+
+        noData
+    }
+
     fun updateMatchActivation(
         matchId: UUID,
         userId: UUID,

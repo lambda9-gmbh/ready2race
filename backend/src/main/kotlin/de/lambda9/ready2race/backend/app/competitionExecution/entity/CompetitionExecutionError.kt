@@ -28,6 +28,9 @@ sealed interface CompetitionExecutionError : ServiceError {
      * (RaceClockerError.MatchIsBye), die Ergebniserfassung zieht hier nach.
      */
     data object MatchIsBye : CompetitionExecutionError
+
+    /** Beenden zurücknehmen setzt einen beendeten Lauf voraus - sonst gibt es nichts zurückzunehmen. */
+    data object MatchNotFinished : CompetitionExecutionError
     data object StartTimeNotSet : CompetitionExecutionError
     data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
     data object IsChallengeEvent : CompetitionExecutionError
@@ -139,6 +142,11 @@ sealed interface CompetitionExecutionError : ServiceError {
             status = HttpStatusCode.BadRequest,
             message = "This match is a bye - the team moves on without racing, there is no result to record.",
             errorCode = ErrorCode.EXECUTION_MATCH_IS_BYE,
+        )
+
+        MatchNotFinished -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "This match is not finished - there is nothing to reopen.",
         )
 
         StartTimeNotSet -> ApiError(

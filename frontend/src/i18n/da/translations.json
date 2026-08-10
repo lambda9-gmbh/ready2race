@@ -1049,7 +1049,13 @@
           "activated": "Ved start",
           "availableMatches": "Tilgængelige kampe",
           "noRunningMatches": "Ingen kampe kører i øjeblikket",
-          "noAvailableMatches": "Ingen kampe klar til start"
+          "noAvailableMatches": "Ingen kampe klar til start",
+          "control": {
+            "activate": "Aktiver løb",
+            "deactivate": "Deaktiver løb",
+            "markStarted": "I gang",
+            "reopen": "Fortryd afslutning"
+          }
         },
         "running": {
           "error": {
@@ -1848,7 +1854,12 @@
         "slotNotLinked": "Der findes endnu ikke et løb til denne slot. Opret først runden under Konkurrence → Afvikling, derefter kan løbet aktiveres og afsluttes.",
         "setupMatchAlreadyPlanned": "Dette løb er allerede planlagt i en anden slot. Genindlæs tidsplanen, og vælg et løb, der endnu ikke er planlagt.",
         "unexpected": "Handlingen kunne ikke udføres. Genindlæs tidsplanen, og prøv igen."
-      }
+      },
+      "markStarted": "I gang — registrér reel start",
+      "deactivate": "Deaktiver løb",
+      "deactivateConfirm": "Deaktiver løb „{{label}}“ kl. {{time}}? Den reelle start slettes, og den automatiske hentning sættes på pause.",
+      "reopen": "Fortryd afslutning",
+      "reopenConfirm": "Fortryd afslutningen af „{{label}}“ kl. {{time}}? Aktivering, reel start og resultater bevares; en allerede oprettet efterfølgende runde skal muligvis slettes først."
     },
     "results": {
       "download": "Download tidligere resultater",

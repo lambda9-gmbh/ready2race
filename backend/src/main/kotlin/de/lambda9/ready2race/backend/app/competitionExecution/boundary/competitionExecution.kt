@@ -87,6 +87,38 @@ fun Route.competitionExecution() {
                     }
                 }
             }
+
+            // Ist-Start aus dem Büro — dasselbe „Läuft" wie im Schiedsrichter-Dashboard.
+            put("/mark-started") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    CompetitionExecutionService.markMatchStarted(
+                        eventId = eventId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                    )
+                }
+            }
+
+            // Beenden zurücknehmen — nur in der jüngsten Runde, siehe Service-KDoc.
+            put("/reopen") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    CompetitionExecutionService.reopenMatch(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                    )
+                }
+            }
             route("/results") {
                 put {
                     call.respondComprehension {
