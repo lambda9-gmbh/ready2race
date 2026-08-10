@@ -4,6 +4,12 @@ import {AthleteBoardMatch} from '@api/types.gen'
 import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
 import AthleteBoardTeamLabel from './AthleteBoardTeamLabel'
 import {
+    AthleteBoardBoatList,
+    AthleteBoardBoatRow,
+    AthleteBoardBoatStatus,
+    AthleteBoardBoatSubline,
+} from './AthleteBoardBoatRow'
+import {
     COUNTDOWN_MAX_SECONDS,
     formatClockTime,
     formatRemaining,
@@ -250,92 +256,49 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     {t('event.info.pendingRound')}
                 </Typography>
             ) : (
-                // Ab lg teilen sich die Bootszeilen die verbleibende Höhe zu gleichen Teilen. Damit
-                // kann die Karte nicht überlaufen, ganz gleich wie voll das Feld ist — an die Stelle
-                // eines Scrollbalkens tritt die kleinere Schrift aus densityScale(). Darunter bleibt
-                // die gestapelte Darstellung: die Zeilen behalten ihre natürliche Höhe und die Seite
-                // scrollt, statt Zeilen ineinander zu quetschen.
-                <Box
-                    sx={{
-                        minHeight: 0,
-                        display: 'grid',
-                        gridTemplateRows: {
-                            // Math.max gegen ein leeres Feld: `repeat(0, …)` ist ungültiges CSS
-                            // und ließe die ganze Deklaration ins Leere laufen.
-                            xs: `repeat(${Math.max(boats, 1)}, auto)`,
-                            lg: `repeat(${Math.max(boats, 1)}, minmax(0, 1fr))`,
-                        },
-                    }}>
+                <AthleteBoardBoatList boats={boats}>
                     {match.teams.map((team, index) => (
-                        <Stack
+                        <AthleteBoardBoatRow
                             // Die Startnummer ist je Lauf eindeutig (Index
                             // `starting_position_unique_in_match`) und nie leer, trägt den
                             // Schlüssel also allein.
                             key={`${match.matchId}-${team.startNumber}`}
-                            direction="row"
-                            alignItems="center"
-                            gap={1.5}
-                            sx={{
-                                minWidth: 0,
-                                minHeight: 0,
-                                overflow: {xs: 'visible', lg: 'hidden'},
-                                borderTop: index > 0 ? '1px solid' : 'none',
-                                borderColor: 'divider',
-                            }}>
-                            <Typography
-                                sx={{
-                                    fontSize: scaled('1.4rem', '2.8vw', '4.5rem'),
-                                    fontWeight: 800,
-                                    lineHeight: 1,
-                                    minWidth: '1.4em',
-                                    textAlign: 'center',
-                                    flexShrink: 0,
-                                }}>
-                                {team.startNumber}
-                            </Typography>
-                            <Box sx={{flex: 1, minWidth: 0}}>
-                                <AthleteBoardTeamLabel team={team} />
-                                {team.participants.length > 0 && (
-                                    // Einzeilig mit Auslassungspunkten: erst dadurch hat eine
-                                    // Bootszeile eine berechenbare Höhe. Mit umbrechender Crew
-                                    // hinge die Kartenhöhe an der Länge der Nachnamen.
-                                    <Typography
-                                        noWrap
-                                        sx={{fontSize: scaled('0.7rem', '1.1vw', '1.5rem')}}
-                                        color="text.secondary">
-                                        {team.participants
-                                            .map(p => (p.role ? `${p.name} (${p.role})` : p.name))
-                                            .join(', ')}
-                                    </Typography>
-                                )}
-                            </Box>
-                            {/* Teilergebnis: sobald die Zeitnahme dieses Boot gewertet hat,
-                                steht die Zeit hier — der Lauf läuft dabei weiter, bis die
-                                Organisation ihn beendet, und eine später ergänzte Zeitstrafe
-                                ändert die Zeile beim nächsten Abruf noch. */}
-                            {showLiveResult && (team.failed || team.timeString) && (
-                                <Stack alignItems="flex-end" sx={{flexShrink: 0, maxWidth: '45%'}}>
-                                    <Typography
-                                        sx={{
-                                            fontSize: scaled('0.9rem', '1.5vw', '2.2rem'),
-                                            fontWeight: 600,
-                                            textAlign: 'right',
-                                        }}
-                                        color={team.failed ? 'text.secondary' : 'text.primary'}>
-                                        {team.failed
-                                            ? (team.failedReason ??
-                                              t('event.info.athleteBoard.failed'))
-                                            : `${team.place != null ? `${team.place}. ` : ''}${team.timeString}`}
-                                    </Typography>
-                                    <AthleteBoardPenaltyNote
-                                        penaltySeconds={team.penaltySeconds}
-                                        penaltyNote={team.penaltyNote}
-                                    />
-                                </Stack>
+                            index={index}
+                            leadNumber={team.startNumber}
+                            trailing={
+                                // Teilergebnis: sobald die Zeitnahme dieses Boot gewertet hat,
+                                // steht die Zeit hier — der Lauf läuft dabei weiter, bis die
+                                // Organisation ihn beendet, und eine später ergänzte Zeitstrafe
+                                // ändert die Zeile beim nächsten Abruf noch.
+                                showLiveResult && (team.failed || team.timeString) ? (
+                                    <>
+                                        <AthleteBoardBoatStatus
+                                            muted={team.failed}
+                                            label={
+                                                team.failed
+                                                    ? (team.failedReason ??
+                                                      t('event.info.athleteBoard.failed'))
+                                                    : `${team.place != null ? `${team.place}. ` : ''}${team.timeString}`
+                                            }
+                                        />
+                                        <AthleteBoardPenaltyNote
+                                            penaltySeconds={team.penaltySeconds}
+                                            penaltyNote={team.penaltyNote}
+                                        />
+                                    </>
+                                ) : undefined
+                            }>
+                            <AthleteBoardTeamLabel team={team} />
+                            {team.participants.length > 0 && (
+                                <AthleteBoardBoatSubline>
+                                    {team.participants
+                                        .map(p => (p.role ? `${p.name} (${p.role})` : p.name))
+                                        .join(', ')}
+                                </AthleteBoardBoatSubline>
                             )}
-                        </Stack>
+                        </AthleteBoardBoatRow>
                     ))}
-                </Box>
+                </AthleteBoardBoatList>
             )}
         </>
     )

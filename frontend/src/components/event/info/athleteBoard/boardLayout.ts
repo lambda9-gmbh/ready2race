@@ -84,6 +84,51 @@ const boatsInCard = (card: BoardCard): number =>
 export const maxBoats = (cards: BoardCard[]): number =>
     cards.reduce((max, card) => Math.max(max, boatsInCard(card)), 0)
 
+const teamsInCard = (card: BoardCard): {clubsFull?: string | null; teamName?: string | null}[] =>
+    card.match?.teams ?? card.result?.teams ?? []
+
+/**
+ * Die längste Mannschaftszeile auf der Bühne, in Zeichen.
+ *
+ * Gezählt wird die ausgeschriebene Vereinskette samt Mannschaftsname — die Form, die ab `md` in
+ * der Zeile steht (siehe `AthleteBoardTeamLabel`). Die Kurzform darunter ist unkritisch, dort
+ * scrollt die Seite ohnehin.
+ */
+export const longestTeamLabel = (cards: BoardCard[]): number =>
+    cards.reduce(
+        (max, card) =>
+            teamsInCard(card).reduce(
+                (inner, team) =>
+                    Math.max(inner, (team.clubsFull?.length ?? 0) + (team.teamName?.length ?? 0)),
+                max,
+            ),
+        0,
+    )
+
+/**
+ * Wie viele Zeichen eine Spalte bei drei Spalten in eine Textzeile bekommt. Grober Richtwert, am
+ * Sichttest vom 10.08.2026 abgelesen: bei drei Spalten auf 2560 px passte „Ruderverein Flensburg
+ * von 1910 e.V." (35 Zeichen) in eine Zeile, bei vier Spalten brach schon „Ruderverein Flensburg"
+ * um.
+ */
+const LABEL_CHARS_PER_LINE_AT_FULL_SIZE = 34
+
+/**
+ * Wie viele Textzeilen eine Bootszeile höchstens trägt.
+ *
+ * Zwei im Normalfall: Vereinskette plus die kleine Zeile darunter (Crew bzw. Startnummer). Passt
+ * die Kette nicht in eine Zeile, klammert `AthleteBoardTeamLabel` sie auf zwei — dann sind es
+ * drei. Mehr kann es nicht werden, die Klammer deckelt bei zwei Zeilen und die kleine Zeile
+ * bricht nie um.
+ */
+export const rowTextLines = (longestLabel: number, columns: number): number => {
+    const perLine = Math.max(
+        1,
+        Math.round((LABEL_CHARS_PER_LINE_AT_FULL_SIZE * COLUMNS_AT_FULL_SIZE) / Math.max(columns, 1)),
+    )
+    return longestLabel > perLine ? 3 : 2
+}
+
 /** Unterhalb dieser Größe wäre der Text aus fünf Metern nicht mehr zu lesen. */
 export const MIN_DENSITY_SCALE = 0.55
 
@@ -100,6 +145,10 @@ const COLUMNS_AT_FULL_SIZE = 3
 const BOAT_STEP = 0.06
 const COLUMN_STEP = 0.09
 
+/** Zeilen, die eine Bootszeile im Normalfall trägt: Vereinskette plus die kleine Zeile darunter. */
+const LINES_AT_FULL_SIZE = 2
+const LINE_STEP = 0.08
+
 /**
  * Der Faktor, mit dem alle Schriftgrößen der Bühne multipliziert werden.
  *
@@ -113,22 +162,39 @@ const COLUMN_STEP = 0.09
  * höchstens hinunter zu MIN_DENSITY_SCALE. Bewusst ohne Messung im Browser: ein Bildschirm, der
  * tagelang unbeaufsichtigt läuft, soll bei einer Größenänderung nichts neu entscheiden müssen.
  */
-export const densityScale = (boats: number, columns: number): number => {
+export const densityScale = (
+    boats: number,
+    columns: number,
+    textLines: number = LINES_AT_FULL_SIZE,
+): number => {
     // Ohne die Untergrenze bei 0 wirkt ein kleines Feld hier auch negativ und hebt den Faktor an
     // — das ist beabsichtigt (siehe MAX_DENSITY_SCALE oben). Bei den Spalten gibt es diesen Fall
     // nicht: die Bühne zeigt immer mindestens drei Statusspalten, also bleibt es bei der reinen
     // Verkleinerung ab COLUMNS_AT_FULL_SIZE.
     const forBoats = BOAT_STEP * (boats - BOATS_AT_FULL_SIZE)
     const forColumns = COLUMN_STEP * Math.max(0, columns - COLUMNS_AT_FULL_SIZE)
-    return Math.min(MAX_DENSITY_SCALE, Math.max(MIN_DENSITY_SCALE, 1 - forBoats - forColumns))
+    // Umbrechende Vereinsketten machen jede Bootszeile eine Textzeile höher. Nur nach unten: eine
+    // kurze Kette spart keine Höhe, sie lässt nur Luft.
+    const forLines = LINE_STEP * Math.max(0, textLines - LINES_AT_FULL_SIZE)
+    return Math.min(
+        MAX_DENSITY_SCALE,
+        Math.max(MIN_DENSITY_SCALE, 1 - forBoats - forColumns - forLines),
+    )
 }
 
 /**
  * Der Skalierungsfaktor der Bühne, aus ihrem eigenen Layout abgeleitet.
  *
- * [maxBoats] und [densityScale] sind bewusst pur und einzeln testbar; ihre Verdrahtung
- * (welches Feld bestimmt die Dichte, welche Spaltenzahl zählt) ist die einzige Stelle, an der
- * beide falsch zusammengesteckt werden könnten — deshalb steht sie hier statt in der Ansicht.
+ * [maxBoats], [longestTeamLabel], [rowTextLines] und [densityScale] sind bewusst pur und einzeln
+ * testbar; ihre Verdrahtung (welches Feld bestimmt die Dichte, welche Spaltenzahl zählt, wann eine
+ * Vereinskette umbricht) ist die einzige Stelle, an der sie falsch zusammengesteckt werden könnten
+ * — deshalb steht sie hier statt in der Ansicht.
  */
-export const boardScale = (layout: BoardLayout): number =>
-    densityScale(maxBoats(layout.cards), layout.cards.length)
+export const boardScale = (layout: BoardLayout): number => {
+    const columns = layout.cards.length
+    return densityScale(
+        maxBoats(layout.cards),
+        columns,
+        rowTextLines(longestTeamLabel(layout.cards), columns),
+    )
+}

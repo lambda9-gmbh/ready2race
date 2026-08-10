@@ -56,7 +56,7 @@ describe('teamsInDisplayOrder', () => {
     const lanes = (teams: LiveDashboardTeamDto[]): (number | null | undefined)[] =>
         teamsInDisplayOrder(teams).map(t => t.startNumber)
 
-    it('lässt die Reihenfolge nach Bahn stehen, solange nichts gewertet ist', () => {
+    it('lässt die Reihenfolge nach Startnummer stehen, solange nichts gewertet ist', () => {
         const teams = [team({startNumber: 1}), team({startNumber: 2}), team({startNumber: 3})]
 
         expect(lanes(teams)).toEqual([1, 2, 3])
@@ -95,8 +95,8 @@ describe('teamsInDisplayOrder', () => {
         expect(lanes(teams)).toEqual([5, 4, 3, 2, 1])
     })
 
-    // Der Fall von Thomas' Bildschirm: Bahn 1 Platz 1, Bahn 2 Platz 3, Bahn 3 DSQ, Bahn 4 Platz 2,
-    // Bahn 5 DNF.
+    // Der Fall von Thomas' Bildschirm: Nr. 1 Platz 1, Nr. 2 Platz 3, Nr. 3 DSQ, Nr. 4 Platz 2,
+    // Nr. 5 DNF.
     it('bringt den echten Lauf in die Reihenfolge 1, 4, 2, 3, 5', () => {
         const teams = [
             team({startNumber: 1, place: 1}),

@@ -111,7 +111,7 @@ const LiveDashboardMatchCard = ({
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = matchHasResults(match.teams)
-    // Sobald gewertet wird, steht der Erste oben — die Zahl links bleibt dabei die Bahn.
+    // Sobald gewertet wird, steht der Erste oben — die Zahl links bleibt dabei die Startnummer.
     const teams = teamsInDisplayOrder(match.teams)
     const openTeams = openResultTeams(match)
     const resultsComplete = match.teams.length > 0 && openTeams.length === 0

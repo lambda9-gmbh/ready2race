@@ -6,11 +6,18 @@ import {
     MIN_DENSITY_SCALE,
     boardScale,
     densityScale,
+    longestTeamLabel,
     maxBoats,
+    rowTextLines,
     selectBoardCards,
 } from './boardLayout'
 
-const match = (id: string, boats = 4, extra: Partial<AthleteBoardMatch> = {}): AthleteBoardMatch =>
+const match = (
+    id: string,
+    boats = 4,
+    extra: Partial<AthleteBoardMatch> = {},
+    clubsFull: string | null = null,
+): AthleteBoardMatch =>
     ({
         matchId: id,
         competitionName: 'CM 4x+',
@@ -27,6 +34,7 @@ const match = (id: string, boats = 4, extra: Partial<AthleteBoardMatch> = {}): A
             startNumber: i + 1,
             participants: [],
             failed: false,
+            clubsFull,
         })),
         ...extra,
     }) as unknown as AthleteBoardMatch
@@ -207,6 +215,19 @@ describe('densityScale', () => {
     test('leere Bühne', () => {
         expect(densityScale(0, 3)).toBe(1.24)
     })
+
+    test('eine dritte Textzeile verkleinert zusätzlich', () => {
+        expect(densityScale(6, 3, 3)).toBeLessThan(densityScale(6, 3, 2))
+    })
+
+    // Eine kurze Kette spart keine Höhe, sie lässt nur Luft — der Faktor darf davon nicht steigen.
+    test('weniger als zwei Textzeilen vergrössern nicht', () => {
+        expect(densityScale(6, 3, 1)).toBe(densityScale(6, 3, 2))
+    })
+
+    test('die Untergrenze gilt auch mit dritter Zeile', () => {
+        expect(densityScale(40, 4, 3)).toBe(MIN_DENSITY_SCALE)
+    })
 })
 
 describe('boardScale', () => {
@@ -222,5 +243,62 @@ describe('boardScale', () => {
 
     test('leere Bühne ergibt densityScale(0, 3)', () => {
         expect(boardScale(selectBoardCards(null))).toBe(densityScale(0, 3))
+    })
+
+    // Der eigentliche Zweck der Zeilenzählung: eine umbrechende Vereinskette macht jede
+    // Bootszeile höher, also muss die Schrift eine Stufe kleiner werden.
+    test('lange Vereinsketten drücken den Faktor unter den kurzer Ketten', () => {
+        const kurz = selectBoardCards(board({running: [match('r1', 6, {}, 'RV Kiel')]}))
+        const lang = selectBoardCards(
+            board({
+                running: [
+                    match(
+                        'r1',
+                        6,
+                        {},
+                        'Rudergemeinschaft Flensburg-Glücksburg-Eckernförde-Kappeln von 1893 e.V.',
+                    ),
+                ],
+            }),
+        )
+        expect(boardScale(lang)).toBeLessThan(boardScale(kurz))
+    })
+})
+
+describe('longestTeamLabel', () => {
+    test('nimmt die längste Kette über alle Spalten', () => {
+        const {cards} = selectBoardCards(
+            board({
+                running: [match('r1', 2, {}, 'RV Kiel')],
+                upcoming: [match('u1', 2, {}, 'Rudergemeinschaft Schlei-Ostsee e.V.')],
+            }),
+        )
+        expect(longestTeamLabel(cards)).toBe('Rudergemeinschaft Schlei-Ostsee e.V.'.length)
+    })
+
+    test('ohne Vereinsangabe null Zeichen', () => {
+        expect(longestTeamLabel(selectBoardCards(null).cards)).toBe(0)
+    })
+})
+
+describe('rowTextLines', () => {
+    // Zwei Zeilen im Normalfall: Vereinskette plus die kleine Zeile darunter.
+    test('kurze Kette bleibt bei zwei Zeilen', () => {
+        expect(rowTextLines(10, 3)).toBe(2)
+    })
+
+    test('lange Kette bringt eine dritte Zeile', () => {
+        expect(rowTextLines(120, 3)).toBe(3)
+    })
+
+    // Vier Spalten sind schmaler, dieselbe Kette bricht dort früher um.
+    test('bei vier Spalten bricht dieselbe Kette früher um', () => {
+        const kette = 30
+        expect(rowTextLines(kette, 3)).toBe(2)
+        expect(rowTextLines(kette, 4)).toBe(3)
+    })
+
+    test('mehr als drei Zeilen kann es nicht geben', () => {
+        expect(rowTextLines(10_000, 4)).toBe(3)
     })
 })
