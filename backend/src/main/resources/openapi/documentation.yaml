@@ -14969,6 +14969,11 @@ components:
         time:
           type: string
           nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "The measured start of this boat from the timing tooling - answers 'who is already under way?' in individual-start time trials while no finish time exists yet"
         failed:
           type: boolean
         failedReason:

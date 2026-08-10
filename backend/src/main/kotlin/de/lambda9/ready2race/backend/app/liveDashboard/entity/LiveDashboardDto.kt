@@ -124,6 +124,12 @@ data class LiveDashboardTeamDto(
      */
     val categoryPlace: Int?,
     val time: String?,
+    /**
+     * Der gemessene Start dieses Boots aus der Zeitnahme - beim Zeitfahren (Einzelstarts) die
+     * Antwort auf "wer ist schon unterwegs?", solange noch keine Zielzeit da ist. Bei
+     * Wellenstarts trägt weiterhin der Lauf-Start; dieses Feld ist dort meist gleichzeitig.
+     */
+    val startedAt: java.time.LocalDateTime?,
     val failed: Boolean,
     val failedReason: String?,
     /** Zeitstrafe in Sekunden; die Ergebniszeit enthält sie bereits. */

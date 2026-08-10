@@ -1680,7 +1680,8 @@
         "inArenaAt": "in die Arena {{time}}",
         "notInArena": "Nicht in der Arena",
         "clubs": "Vereine",
-        "crew": "Mannschaft"
+        "crew": "Mannschaft",
+        "startedAt": "gestartet {{time}}"
       },
       "requirement": {
         "checkedAt": "Erfüllt am {{time}}",

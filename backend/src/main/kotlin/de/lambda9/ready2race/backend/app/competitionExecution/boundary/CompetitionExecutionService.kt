@@ -1340,6 +1340,7 @@ object CompetitionExecutionService {
                     timecode = null
                     penaltySeconds = null
                     penaltyNote = null
+                    startedAt = null
                     updatedBy = userId
                     updatedAt = now
                 }.orDie()
@@ -1369,17 +1370,18 @@ object CompetitionExecutionService {
      * keep a unique number after the highest imported one.
      */
     /**
-     * Schreibt die Zwischenzeiten (Split-Spalten) aus dem Feed auf die Boote eines Laufs.
+     * Schreibt den gemessenen Start des einzelnen Boots und seine Zwischenzeiten (Split-Spalten)
+     * aus dem Feed.
      *
-     * Gespeichert wird je Marke die kumulierte Fahrzeit seit dem gemessenen Start der ZEILE - bei
-     * Wellenstarts ist das der Wellenstart, bei Einzelstarts der eigene. Ohne Startstempel in der
-     * Zeile gibt es keine Basis für eine Fahrzeit; die Runden des Boots bleiben dann unangetastet,
-     * statt geraten zu werden. Läuft eine Marke über Mitternacht, korrigiert ein Tagessprung die
-     * Differenz - dieselbe Überlegung wie bei `RaceClockerPollLogic.stampOnNearestDay`.
+     * Der Boot-Start trägt die "wer ist schon unterwegs?"-Anzeige beim Zeitfahren (Einzelstarts):
+     * dort startet jedes Boot einzeln, und `competition_match.started_at` sagt nur, dass IRGENDWER
+     * gestartet ist. Zwischenzeiten werden je Marke als kumulierte Fahrzeit seit dem gemessenen
+     * Start der ZEILE gespeichert - bei Wellenstarts ist das der Wellenstart, bei Einzelstarts der
+     * eigene. Läuft eine Marke über Mitternacht, korrigiert ein Tagessprung die Differenz -
+     * dieselbe Datumsregel wie `RaceClockerPollLogic.stampOnNearestDay`.
      *
-     * Ersetzt wird vollständig (Löschen + Einfügen): Der Feed ist die Quelle der Wahrheit, und
-     * eine in RaceClocker entfernte oder umbenannte Marke soll auch hier verschwinden bzw. den
-     * neuen Namen tragen.
+     * Beides wird je Takt vollständig aus dem Feed ersetzt: eine in RaceClocker zurückgenommene
+     * Startzeit oder Marke verschwindet auch hier wieder.
      */
     private fun applyLapsFromFeed(
         matchId: UUID,
@@ -1394,25 +1396,35 @@ object CompetitionExecutionService {
                 val row = rowByRegistration[team.competitionRegistration]
                     ?: return@comprehension KIO.unit
                 val start = row.start
-                    ?: return@comprehension KIO.unit
+
+                val newStartedAt = start?.let { RaceClockerPollLogic.stampOnNearestDay(it, now) }
+                if (team.startedAt != newStartedAt) {
+                    !CompetitionMatchTeamRepo.update(team) {
+                        startedAt = newStartedAt
+                        updatedBy = userId
+                        updatedAt = now
+                    }.orDie()
+                }
 
                 !CompetitionMatchTeamLapRepo.deleteByTeam(team.id!!).orDie()
 
-                val records = row.laps.mapIndexed { index, lap ->
-                    var millis = java.time.Duration.between(start, lap.time).toMillis()
-                    if (millis < 0) millis += java.time.Duration.ofDays(1).toMillis()
-                    CompetitionMatchTeamLapRecord(
-                        id = UUID.randomUUID(),
-                        competitionMatchTeam = team.id!!,
-                        position = index + 1,
-                        name = lap.name,
-                        lapMillis = millis,
-                        createdAt = now,
-                        createdBy = userId,
-                    )
-                }
-                if (records.isNotEmpty()) {
-                    !CompetitionMatchTeamLapRepo.create(records).orDie()
+                if (start != null) {
+                    val records = row.laps.mapIndexed { index, lap ->
+                        var millis = java.time.Duration.between(start, lap.time).toMillis()
+                        if (millis < 0) millis += java.time.Duration.ofDays(1).toMillis()
+                        CompetitionMatchTeamLapRecord(
+                            id = UUID.randomUUID(),
+                            competitionMatchTeam = team.id!!,
+                            position = index + 1,
+                            name = lap.name,
+                            lapMillis = millis,
+                            createdAt = now,
+                            createdBy = userId,
+                        )
+                    }
+                    if (records.isNotEmpty()) {
+                        !CompetitionMatchTeamLapRepo.create(records).orDie()
+                    }
                 }
 
                 KIO.unit

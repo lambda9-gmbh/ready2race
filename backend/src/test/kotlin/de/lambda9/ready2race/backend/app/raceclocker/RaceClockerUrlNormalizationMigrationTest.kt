@@ -41,8 +41,12 @@ class RaceClockerUrlNormalizationMigrationTest {
         postgres.start()
         try {
             // Bis einschließlich V202608101110 migrieren — der Stand, auf dem die alten
-            // Datenbanken vor der Normalisierung wirklich stehen.
-            flyway(postgres).target("202608101110").load().migrate()
+            // Datenbanken vor der Normalisierung wirklich stehen. Ohne afterMigrate: Das
+            // Skript baut die Views des ENDSTANDS und referenziert Tabellen späterer
+            // Migrationen (z. B. competition_match_team_lap aus V202608110100) — auf dem
+            // Zwischenstand existieren die nicht. Der zweite, vollständige Lauf unten zieht
+            // die Views dann regulär hoch.
+            flyway(postgres).target("202608101110").skipDefaultCallbacks(true).load().migrate()
 
             connect(postgres).use { seedLegacyState(it) }
 

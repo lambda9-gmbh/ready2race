@@ -2108,6 +2108,10 @@ export type LiveDashboardTeamDto = {
      */
     categoryPlace?: number | null
     time?: string | null
+    /**
+     * The measured start of this boat from the timing tooling - answers 'who is already under way?' in individual-start time trials while no finish time exists yet
+     */
+    startedAt?: string | null
     failed: boolean
     failedReason?: string | null
     penaltySeconds?: number | null

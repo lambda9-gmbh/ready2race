@@ -1680,7 +1680,8 @@
         "inArenaAt": "i arenaen {{time}}",
         "notInArena": "Ikke i arenaen",
         "clubs": "Klubber",
-        "crew": "Besætning"
+        "crew": "Besætning",
+        "startedAt": "startet {{time}}"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",

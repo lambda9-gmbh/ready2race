@@ -68,6 +68,13 @@ class RaceClockerLapWriteTest {
             listOf("Runde 1" to 38_100L, "Runde 2" to 65_500L),
             laps.sortedBy { it.position }.map { it.name to it.lapMillis },
         )
+
+        // Der Boot-Start kommt mit: beim Zeitfahren beantwortet er "wer ist schon unterwegs?".
+        val team = (!CompetitionMatchTeamRepo.getByMatch(seeded.matchId)).single()
+        assertEquals(
+            LocalTime.of(22, 32, 9, 600_000_000),
+            team.startedAt?.toLocalTime(),
+        )
     }
 
     @Test

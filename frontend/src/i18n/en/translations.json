@@ -1680,7 +1680,8 @@
         "inArenaAt": "in arena {{time}}",
         "notInArena": "Not in the arena",
         "clubs": "Clubs",
-        "crew": "Crew"
+        "crew": "Crew",
+        "startedAt": "started {{time}}"
       },
       "requirement": {
         "checkedAt": "Fulfilled at {{time}}",

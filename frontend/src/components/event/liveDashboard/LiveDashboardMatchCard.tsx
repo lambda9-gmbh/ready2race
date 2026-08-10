@@ -478,6 +478,30 @@ const LiveDashboardMatchCard = ({
                                             {team.ratingCategory.name}
                                         </Typography>
                                     )}
+                                    {/*
+                                        Beim Zeitfahren startet jedes Boot einzeln - "wer ist schon
+                                        unterwegs?" beantwortet der gemessene Boot-Start aus der
+                                        Zeitnahme, solange weder Zielzeit noch Ausscheidung da ist.
+                                    */}
+                                    {running &&
+                                        team.startedAt &&
+                                        !team.time &&
+                                        !team.failed && (
+                                            <Typography
+                                                variant="caption"
+                                                display="block"
+                                                sx={{
+                                                    color: 'primary.main',
+                                                    fontVariantNumeric: 'tabular-nums',
+                                                }}>
+                                                {t('event.liveDashboard.team.startedAt', {
+                                                    time: format(
+                                                        new Date(team.startedAt),
+                                                        t('format.timeWithSeconds'),
+                                                    ),
+                                                })}
+                                            </Typography>
+                                        )}
                                     {team.inArenaRequired && team.inArenaAt && (
                                         <Typography
                                             variant="caption"

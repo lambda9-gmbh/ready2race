@@ -73,6 +73,7 @@ object LiveDashboardRepo {
             COMPETITION_MATCH_TEAM.FAILED_REASON,
             COMPETITION_MATCH_TEAM.PENALTY_SECONDS,
             COMPETITION_MATCH_TEAM.PENALTY_NOTE,
+            COMPETITION_MATCH_TEAM.STARTED_AT.`as`("team_started_at"),
             COMPETITION_REGISTRATION.NAME.`as`("team_name"),
             COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
             COMPETITION_DEREGISTRATION.REASON.`as`("deregistration_reason"),
