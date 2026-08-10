@@ -93,6 +93,7 @@ object AwardCeremonyLogic {
                 )
                 AwardCeremonyAthlete(
                     name = "${participant.firstName} ${participant.lastName}",
+                    year = participant.year,
                     role = participant.role,
                     club = club?.takeIf { it.isNotBlank() && !sameAsClubLine(it) },
                 )

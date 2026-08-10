@@ -2596,6 +2596,10 @@ export type ParticipantInfo = {
     participantId: string
     firstName: string
     lastName: string
+    /**
+     * Year of birth, shown behind the name in result displays
+     */
+    year?: number | null
     namedRole?: string | null
     externalClubName?: string
 }

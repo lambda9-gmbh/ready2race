@@ -36,6 +36,8 @@ data class AwardCeremonyCandidate(
 data class AwardCeremonyCandidateParticipant(
     val firstName: String,
     val lastName: String,
+    /** Jahrgang - die Sprecherin liest ihn bei der Ehrung mit vor (Wunsch von Lea, 10.08.2026). */
+    val year: Int,
     val role: String,
     val external: Boolean?,
     val externalClubName: String?,
@@ -151,6 +153,8 @@ data class AwardCeremonyTeam(
 
 data class AwardCeremonyAthlete(
     val name: String,
+    /** Jahrgang, auf dem Blatt hinter dem Namen. */
+    val year: Int,
     val role: String,
     /** Heimatverein - nur gesetzt, wenn er von der Titelzeile des Bootes abweicht. */
     val club: String?,

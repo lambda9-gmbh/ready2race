@@ -370,8 +370,9 @@ class AwardCeremonyServiceTest {
         // irgendwohin auf das Blatt.
         assertContains(lines, "1. $REGISTERING_CLUB 4:12.7")
         assertContains(lines, "Boot „Boot 1“ · Startnummer 1")
-        assertContains(lines, "Test Boot1Bug (1. Ruderer)")
-        assertContains(lines, "Test Boot1Schlag (2. Ruderer)")
+        // Jahrgang hinter dem Namen: die Sprecherin liest ihn bei der Ehrung mit vor.
+        assertContains(lines, "Test Boot1Bug (1990, 1. Ruderer)")
+        assertContains(lines, "Test Boot1Schlag (1990, 2. Ruderer)")
 
         // Die Strafe trägt das zweitplatzierte Boot (Startnummer 3) - stünde sie am Sieger, wäre
         // die Zuordnung vertauscht. Der Grund bricht in der schmalen Spalte um; gedruckt wird er.

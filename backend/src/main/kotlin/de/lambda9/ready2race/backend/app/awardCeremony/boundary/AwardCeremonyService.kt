@@ -179,6 +179,7 @@ object AwardCeremonyService {
                             AwardCeremonyCandidateParticipant(
                                 firstName = it.firstName,
                                 lastName = it.lastName,
+                                year = it.year,
                                 role = it.namedParticipantName,
                                 external = it.external,
                                 externalClubName = it.externalClubName,

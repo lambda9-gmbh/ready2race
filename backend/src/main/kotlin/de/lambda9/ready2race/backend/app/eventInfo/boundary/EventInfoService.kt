@@ -492,6 +492,7 @@ object EventInfoService {
                                 participantId = it,
                                 firstName = record[PARTICIPANT.FIRSTNAME] ?: "",
                                 lastName = record[PARTICIPANT.LASTNAME] ?: "",
+                                year = record[PARTICIPANT.YEAR],
                                 namedRole = record.get("named_role", String::class.java),
                                 externalClubName = record[PARTICIPANT.EXTERNAL_CLUB_NAME]
                             )

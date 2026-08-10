@@ -227,10 +227,12 @@ const TeamDialog = ({
                                 useFlexGap>
                                 <Typography variant="subtitle1">
                                     {p.firstName} {p.lastName}
-                                    {p.namedRole && (
+                                    {/* Jahrgang und Rolle hinter dem Namen - der Jahrgang gehört
+                                        zur Ansage (Wunsch von Lea, 10.08.2026). */}
+                                    {(p.year != null || p.namedRole) && (
                                         <Typography component="span" variant="body2" color="text.secondary">
                                             {' '}
-                                            ({p.namedRole})
+                                            ({[p.year, p.namedRole].filter(Boolean).join(', ')})
                                         </Typography>
                                     )}
                                 </Typography>

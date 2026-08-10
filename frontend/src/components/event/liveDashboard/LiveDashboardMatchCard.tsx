@@ -463,6 +463,21 @@ const LiveDashboardMatchCard = ({
                                             {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
                                         </Typography>
                                     )}
+                                    {/*
+                                        Vor dem ersten Ergebnis gibt es keine Kategorie-Abschnitte
+                                        (die Karte bleibt Startnummernliste, siehe oben) - die
+                                        Wertungskategorie soll aber trotzdem lesbar sein, BEVOR das
+                                        erste Boot einläuft. Deshalb hier klein je Boot; sobald die
+                                        Abschnitte übernehmen, entfällt sie, sonst stünde sie doppelt.
+                                    */}
+                                    {!hasResults && team.ratingCategory?.name && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{color: 'grey.600'}}>
+                                            {team.ratingCategory.name}
+                                        </Typography>
+                                    )}
                                     {team.inArenaRequired && team.inArenaAt && (
                                         <Typography
                                             variant="caption"
