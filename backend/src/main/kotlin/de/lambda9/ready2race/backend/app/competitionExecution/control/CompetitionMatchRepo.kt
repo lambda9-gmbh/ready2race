@@ -230,6 +230,7 @@ object CompetitionMatchRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
+            COMPETITION_VIEW.SHORT_NAME,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -281,6 +282,7 @@ object CompetitionMatchRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
+            COMPETITION_VIEW.SHORT_NAME,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -316,6 +318,7 @@ object CompetitionMatchRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
+            COMPETITION_VIEW.SHORT_NAME,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -360,6 +363,7 @@ object CompetitionMatchRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
+            COMPETITION_VIEW.SHORT_NAME,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)

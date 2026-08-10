@@ -160,6 +160,7 @@ export type AssignRequirementToNamedParticipantDto = {
 export type AthleteBoardMatch = {
     matchId: string
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -199,6 +200,7 @@ export type AthleteBoardParticipant = {
 export type AthleteBoardResult = {
     matchId: string
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -302,11 +304,11 @@ export type AwardCeremonyChoiceDto = {
      * Die Rennnummer des Wettkampfs, z. B. "17-NC".
      */
     competitionIdentifier: string
+    competitionName: string
     /**
      * Der Kurzname des Wettkampfs, z. B. "CM 4x+".
      */
     competitionShortName?: string | null
-    competitionName: string
     /**
      * Der Schlüssel der Wertung, in der geehrt wird - darüber wird ausgewählt. `null` ist ein gültiger Wert und heißt "der Wettkampf wird als Ganzes geehrt", nicht "unbekannt".
      */
@@ -361,7 +363,8 @@ export type BankAccountRequest = {
 }
 
 export type BoardConfig = {
-    layout: BoardLayout
+    columns: number
+    showHeader?: boolean | null
     refreshIntervalSeconds?: number
     tiles: Array<BoardTile>
 }
@@ -388,13 +391,12 @@ export type BoardElement = {
     autoFit?: boolean | null
     listMode?: BoardListMode
     limit?: number | null
+    useShortNames?: boolean | null
     showEventName?: boolean | null
     text?: string | null
 }
 
 export type BoardElementType = 'MATCH' | 'MATCH_LIST' | 'CLOCK' | 'TEXT'
-
-export type BoardLayout = 'ONE_COLUMN' | 'TWO_COLUMNS' | 'THREE_COLUMNS' | 'SIX_TILES'
 
 export type BoardListDto = {
     mode: BoardListMode
@@ -425,6 +427,8 @@ export type BoardRequest = {
 
 export type BoardTile = {
     rotationIntervalSeconds?: number
+    colSpan?: number
+    rowSpan?: number
     elements: Array<BoardElement>
 }
 
@@ -1612,13 +1616,13 @@ export type EventScheduleSlotDto = {
     competitionId?: string | null
     competitionName?: string | null
     /**
-     * The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab
-     */
-    competitionIdentifier?: string | null
-    /**
      * The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab
      */
     competitionShortName?: string | null
+    /**
+     * The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab
+     */
+    competitionIdentifier?: string | null
     roundName?: string | null
     matchName?: string | null
     matchId?: string | null
@@ -1942,6 +1946,7 @@ export type LatestMatchResultInfo = {
     matchId: string
     competitionId: string
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -1991,13 +1996,13 @@ export type LiveDashboardMatchDto = {
     competitionId: string
     competitionName: string
     /**
-     * The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels
-     */
-    competitionIdentifier?: string | null
-    /**
      * The competition's short name (Kurzname, e.g. 'CM 4x+')
      */
     competitionShortName?: string | null
+    /**
+     * The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels
+     */
+    competitionIdentifier?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -2787,13 +2792,13 @@ export type PendingSlotDto = {
     name?: string | null
     competitionName?: string | null
     /**
-     * The competition's race number (Rennnummer) - null for program items
-     */
-    competitionIdentifier?: string | null
-    /**
      * The competition's short name (Kurzname) - null for program items
      */
     competitionShortName?: string | null
+    /**
+     * The competition's race number (Rennnummer) - null for program items
+     */
+    competitionIdentifier?: string | null
     roundName?: string | null
     matchName?: string | null
 }
@@ -3063,6 +3068,7 @@ export type RunningMatchInfo = {
     matchNumber?: number | null
     competitionId: string
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     startTime?: string | null
     /**
@@ -3423,13 +3429,13 @@ export type UnplannedSetupMatchDto = {
     competitionId: string
     competitionName: string
     /**
-     * The competition's race number (Rennnummer)
-     */
-    competitionIdentifier?: string | null
-    /**
      * The competition's short name (Kurzname)
      */
     competitionShortName?: string | null
+    /**
+     * The competition's race number (Rennnummer)
+     */
+    competitionIdentifier?: string | null
     roundName: string
     matchName?: string | null
 }
@@ -3456,6 +3462,7 @@ export type UpcomingCompetitionMatchInfo = {
      */
     competitionId?: string | null
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     scheduledStartTime?: string | null
     placeName?: string | null

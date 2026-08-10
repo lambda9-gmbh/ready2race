@@ -30,15 +30,27 @@ import java.util.*
 /**
  * Ein eigener Mapper mit Kotlin-Modul: [BoardConfig] ist eine Kotlin-Datenklasse mit
  * Vorgabewerten, die der nackte [ObjectMapper] der Nachbar-Konvertierungen nicht
- * konstruieren kann.
+ * konstruieren kann. NON_NULL, damit die Alt-Lesart `layout` nie als `null` in neue
+ * JSONB-Stände geschrieben wird.
  */
-private val boardConfigMapper = ObjectMapper().registerKotlinModule()
+private val boardConfigMapper = ObjectMapper()
+    .registerKotlinModule()
+    .setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+
+/**
+ * Konfigurationen der ersten Board-Fassung (festes `layout` statt `columns`) werden beim
+ * Lesen normalisiert: nach außen trägt jede Antwort `columns`, `layout` verschwindet.
+ * Gespeichert wird die neue Form erst mit dem nächsten Speichern des Editors.
+ */
+private fun BoardConfig.normalized(): BoardConfig =
+    if (columns != null) this
+    else copy(layout = null, columns = resolvedColumns())
 
 fun BoardRecord.toDto() = BoardDto(
     id = id,
     eventId = eventId,
     name = name,
-    config = boardConfigMapper.readValue(config.data(), BoardConfig::class.java),
+    config = boardConfigMapper.readValue(config.data(), BoardConfig::class.java).normalized(),
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
@@ -106,6 +118,7 @@ fun RunningMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCountdown: Bool
     AthleteBoardMatch(
         matchId = matchId,
         competitionName = competitionName,
+        competitionShortName = competitionShortName,
         categoryName = categoryName,
         roundName = roundName,
         matchName = matchName,
@@ -133,6 +146,7 @@ fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCou
     AthleteBoardMatch(
         matchId = matchId,
         competitionName = competitionName,
+        competitionShortName = competitionShortName,
         categoryName = categoryName,
         roundName = roundName,
         matchName = matchName,
@@ -158,6 +172,7 @@ fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCou
 fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
     matchId = matchId,
     competitionName = competitionName,
+    competitionShortName = competitionShortName,
     categoryName = categoryName,
     roundName = roundName,
     matchName = matchName,

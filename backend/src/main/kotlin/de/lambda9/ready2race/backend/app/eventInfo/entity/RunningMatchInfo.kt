@@ -9,6 +9,8 @@ data class RunningMatchInfo(
     val matchNumber: Int?,
     val competitionId: UUID,
     val competitionName: String,
+    /** Wettkampf-Kürzel (short_name) für kompakte Anzeigen; null, wenn keins gepflegt ist. */
+    val competitionShortName: String? = null,
     val categoryName: String?,
     val startTime: LocalDateTime?,
     /**

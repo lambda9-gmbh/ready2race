@@ -28,27 +28,30 @@ interface AthleteBoardBoatListProps {
 /**
  * Der Rahmen um die Bootszeilen.
  *
- * Ab `lg` teilen sich die Bootszeilen die verbleibende Höhe zu gleichen Teilen — damit kann die
- * Karte nicht überlaufen, ganz gleich wie voll das Feld ist; an die Stelle eines Scrollbalkens
- * tritt die kleinere Schrift aus `densityScale()`. Darunter behalten die Zeilen ihre natürliche
- * Höhe und die Seite scrollt, statt sie ineinander zu quetschen.
+ * Die Zeilen behalten ihre natürliche Höhe und docken oben an — bis zum 10.08.2026
+ * teilten sie sich ab `lg` die verbleibende Höhe als `1fr`, und ein Dreierfeld auf einem
+ * hohen Bildschirm zerfiel in drei Zeilen mit riesigen Lücken dazwischen (Sichttest am
+ * Prod-Abzug). Gegen ein volles Feld steht weiterhin die kleinere Schrift aus
+ * `densityScale()`; läuft eine Kachel trotzdem über, schneidet sie ab `lg` unten ab,
+ * statt die Zeilen ineinanderzuquetschen.
  *
- * Überschriften und Boote liegen bewusst in **einem** Raster: eine Wertungskategorie in einem
- * eigenen Kasten hätte ihre eigene Höhe, und die Summe der Kästen könnte die Karte wieder
- * sprengen.
+ * Überschriften und Boote liegen bewusst in **einem** Raster: eine Wertungskategorie in
+ * einem eigenen Kasten hätte ihre eigene Höhe und eigene Abstände.
  */
 export const AthleteBoardBoatList = ({rows, children}: AthleteBoardBoatListProps) => {
-    // Ein leeres Feld ergäbe eine leere Rasterangabe und damit ungültiges CSS, das die ganze
-    // Deklaration ins Leere laufen ließe.
-    const template = (boat: string) =>
-        rows.map(row => (row === 'heading' ? 'auto' : boat)).join(' ') || 'auto'
+    // `rows` trägt seit dem Wechsel auf natürliche Zeilenhöhen keine Rasterinformation
+    // mehr, bleibt aber in der Schnittstelle: die Karten kennen ihre Zeilenarten ohnehin,
+    // und ein künftiges Höhen-Feintuning je Zeilenart braucht sie wieder.
+    void rows
 
     return (
         <Box
             sx={{
                 minHeight: 0,
                 display: 'grid',
-                gridTemplateRows: {xs: template('auto'), lg: template('minmax(0, 1fr)')},
+                gridAutoRows: 'auto',
+                alignContent: 'start',
+                overflow: {xs: 'visible', lg: 'hidden'},
             }}>
             {children}
         </Box>
@@ -90,8 +93,11 @@ export const AthleteBoardBoatRow = ({
             minWidth: 0,
             minHeight: 0,
             overflow: {xs: 'visible', lg: 'hidden'},
+            // Seit die Zeilen ihre natürliche Höhe haben, trägt das Polster den Abstand,
+            // den vorher die 1fr-Verteilung erzeugte.
+            py: scaled('0.3rem', '0.5vw', '0.8rem'),
             // Die Trennlinie hängt an der Zeile statt am `divider`-Prop des Stack: dessen
-            // eingeschobene Elemente wären eigene Rasterzeilen und würden das repeat(n, …)
+            // eingeschobene Elemente wären eigene Rasterzeilen und würden das Raster
             // der Liste verschieben.
             borderTop: index > 0 ? '1px solid' : 'none',
             borderColor: 'divider',

@@ -114,6 +114,7 @@ object AthleteBoardLogic {
                 matchNumber = null,
                 competitionId = slot.competitionId,
                 competitionName = slot.competitionName,
+                competitionShortName = slot.competitionShortName,
                 categoryName = null,
                 scheduledStartTime = slot.startTime,
                 placeName = null,

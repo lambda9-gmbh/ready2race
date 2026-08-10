@@ -26,6 +26,12 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
               ? t('event.boards.element.listMode.running')
               : t('event.boards.element.listMode.upcoming')
 
+    // Kurzform: das Wettkampf-Kürzel (short_name) statt des vollen Namens — für schmale
+    // Kacheln, in denen "Mixed-Doppelvierer mit Steuerfrau/-mann" jede Zeile sprengt.
+    // Ohne gepflegtes Kürzel bleibt der volle Name stehen, eine leere Zeile wäre schlimmer.
+    const competitionLabel = (name: string, shortName?: string | null) =>
+        element.useShortNames === true ? (shortName ?? name) : name
+
     const rows: {key: string; time: string | null; label: string; detail: string | null}[] =
         list == null
             ? []
@@ -35,7 +41,11 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                     return {
                         key: result.matchId,
                         time: result.startTime ? formatClockTime(result.startTime) : null,
-                        label: [result.competitionName, result.roundName, result.matchName]
+                        label: [
+                            competitionLabel(result.competitionName, result.competitionShortName),
+                            result.roundName,
+                            result.matchName,
+                        ]
                             .filter(Boolean)
                             .join(' · '),
                         detail: winner
@@ -48,7 +58,11 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                     time: match.startTime ? formatClockTime(match.startTime) : null,
                     label:
                         match.name ??
-                        [match.competitionName, match.roundName, match.matchName]
+                        [
+                            competitionLabel(match.competitionName, match.competitionShortName),
+                            match.roundName,
+                            match.matchName,
+                        ]
                             .filter(Boolean)
                             .join(' · '),
                     detail: null,

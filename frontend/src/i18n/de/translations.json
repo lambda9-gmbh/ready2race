@@ -1902,17 +1902,13 @@
       "tileCount_one": "1 Kachel",
       "tileCount_other": "{{count}} Kacheln",
       "refreshInterval": "Abfragetakt",
-      "layout": {
-        "label": "Anordnung",
-        "oneColumn": "1 Spalte",
-        "twoColumns": "2 Spalten",
-        "threeColumns": "3 Spalten",
-        "sixTiles": "6 Kacheln"
-      },
       "tile": {
         "title": "Kachel {{index}}",
         "rotationInterval": "Rotation (Sekunden)",
-        "addElement": "Element hinzufügen"
+        "addElement": "Element hinzufügen",
+        "width": "Breite (Spalten)",
+        "height": "Höhe (Zeilen)",
+        "add": "Kachel hinzufügen"
       },
       "element": {
         "type": {
@@ -1947,8 +1943,13 @@
         "titlePast": "{{count}} Läufe zurück",
         "emptyCurrent": "Kein Lauf im Rennen",
         "emptyUpcoming": "Kein weiterer Lauf geplant",
-        "emptyPast": "Noch kein Ergebnis"
-      }
+        "emptyPast": "Noch kein Ergebnis",
+        "useShortNames": "Wettkampf-Kürzel verwenden"
+      },
+      "columns": "Spalten",
+      "columnCount": "{{count}} Spalten",
+      "columnCount_one": "1 Spalte",
+      "showHeader": "Kopfzeile mit Name und Uhr"
     }
   },
   "task": {

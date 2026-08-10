@@ -1896,17 +1896,13 @@
       "tileCount_one": "1 felt",
       "tileCount_other": "{{count}} felter",
       "refreshInterval": "Opdateringsinterval",
-      "layout": {
-        "label": "Layout",
-        "oneColumn": "1 kolonne",
-        "twoColumns": "2 kolonner",
-        "threeColumns": "3 kolonner",
-        "sixTiles": "6 felter"
-      },
       "tile": {
         "title": "Felt {{index}}",
         "rotationInterval": "Rotation (sekunder)",
-        "addElement": "Tilføj element"
+        "addElement": "Tilføj element",
+        "width": "Bredde (kolonner)",
+        "height": "Højde (rækker)",
+        "add": "Tilføj felt"
       },
       "element": {
         "type": {
@@ -1941,8 +1937,13 @@
         "titlePast": "{{count}} løb tilbage",
         "emptyCurrent": "Intet løb i gang",
         "emptyUpcoming": "Ingen flere planlagte løb",
-        "emptyPast": "Endnu intet resultat"
-      }
+        "emptyPast": "Endnu intet resultat",
+        "useShortNames": "Brug løbsforkortelser"
+      },
+      "columns": "Kolonner",
+      "columnCount": "{{count}} kolonner",
+      "columnCount_one": "1 kolonne",
+      "showHeader": "Sidehoved med navn og ur"
     }
   },
   "task": {
