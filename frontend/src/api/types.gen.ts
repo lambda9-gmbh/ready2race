@@ -1554,7 +1554,7 @@ export type EventTimingConfigDto = {
 }
 
 /**
- * The RaceClocker fields are optional, like the per-competition config. The URLs must be https Both race ids must belong to this event. The five auto-pull fields are not optional - the database always has a value for them, and null here would ambiguously mean "leave unchanged".
+ * The RaceClocker fields are optional, like the per-competition config. Both race ids must belong to this event. The five auto-pull fields are not optional - the database always has a value for them, and null here would ambiguously mean "leave unchanged".
  *
  */
 export type EventTimingConfigRequest = {
@@ -3105,7 +3105,7 @@ export type TimingConfigDto = {
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
     /**
-     * Whether this competition's setup contains a qualification round. Read-only; it comes along with the timing config because both the timing tab and the execution tab already load it, and both need to know whether the qualification start list preset and the time trial results URL are required at all.
+     * Whether this competition's setup contains a qualification round. Read-only; it comes along with the timing config because both the timing tab and the execution tab already load it, and both need to know whether the qualification start list preset and the qualification race are required at all.
      *
      */
     hasQualificationRound?: boolean

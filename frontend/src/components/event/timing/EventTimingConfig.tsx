@@ -31,7 +31,11 @@ import {
 /**
  * Was an einem Wettkampf abweicht — jedes gesetzte Feld einzeln, weil ein Teil-Override („erbt das
  * System, hat aber ein eigenes Läufe-Rennen") die häufigste und die am leichtesten zu übersehende
- * Abweichung ist. Ausgeschriebene Schlüssel, damit i18n typgeprüft bleibt.
+ * Abweichung ist.
+ *
+ * Liefert fertige Texte statt Schlüssel, weil zwei davon den Rennennamen einsetzen müssen. Die
+ * `as never`-Casts sind der Preis dafür: Die Schlüssel stehen hier nicht mehr als Literale, die der
+ * i18n-Typ prüfen könnte.
  */
 const describeDeviation = (
     deviation: CompetitionTimingDeviationDto,
@@ -157,11 +161,21 @@ const EventTimingConfig = () => {
             if (formContext.getValues('raceRounds')?.id === race.id) {
                 formContext.setValue('raceRounds', null)
             }
+            // Nur die Rennen-Anwahl aus dem Eintrag nehmen, nicht den ganzen Eintrag: Ein
+            // Wettkampf mit zusätzlich eigenem System oder Preset weicht weiterhin ab und darf
+            // nicht aus der Liste verschwinden.
             setDeviations(current =>
-                current.filter(
-                    d =>
-                        d.raceQualificationName !== race.name && d.raceRoundsName !== race.name,
-                ),
+                current
+                    .map(d => ({
+                        ...d,
+                        raceQualificationName:
+                            d.raceQualificationName === race.name
+                                ? undefined
+                                : d.raceQualificationName,
+                        raceRoundsName:
+                            d.raceRoundsName === race.name ? undefined : d.raceRoundsName,
+                    }))
+                    .filter(d => describeDeviation(d, t).length > 0),
             )
         }
     }

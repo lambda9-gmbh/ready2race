@@ -17,6 +17,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.RACECL
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
+import de.lambda9.tailwind.core.extensions.exit.getOrNull
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
@@ -121,7 +123,14 @@ object RaceClockerRaceService {
         if (others.any { it.name.equals(name, ignoreCase = true) }) {
             return@comprehension KIO.fail(RaceClockerRaceError.NameTaken)
         }
-        if (others.any { it.resultsUrl == url }) {
+        // Beide Seiten normalisiert verglichen: Der Backfill hat die Altadressen wörtlich
+        // übernommen, und die trugen durchweg `www.`. Neue Adressen faltet `normalizeUrl` auf den
+        // Apex. Ohne diesen Schritt entstünden aus „derselben" Adresse zwei Rennen mit einer
+        // Antwort — zwei Abrufe je Takt für dasselbe Ergebnis.
+        val existing = others.mapNotNull { race ->
+            RaceClockerFeed.normalizeUrl(race.resultsUrl).unsafeRunSync().getOrNull()?.toString()
+        }
+        if (url in existing) {
             return@comprehension KIO.fail(RaceClockerRaceError.UrlTaken)
         }
         KIO.ok(Unit)

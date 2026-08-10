@@ -118,6 +118,24 @@ object RaceClockerPollService {
     )
 
     /**
+     * Wie das Auflösen eines Laufs ausgegangen ist.
+     *
+     * [Skip] und [Defect] auf denselben Wert abzubilden wäre die teuerste Vereinfachung dieser
+     * Datei: „Der Job lässt den Lauf bewusst in Ruhe" und „es ist etwas unerwartet kaputtgegangen"
+     * sehen in der Datenbank sonst gleich aus. Ein Defekt bekäme Takt für Takt einen sauberen
+     * Stempel, der Lauf nie ein Ergebnis, und in der Oberfläche stünde nichts — der Fehler wäre nur
+     * im Server-Protokoll, wo ihn am Renntag niemand sucht.
+     */
+    private sealed interface Resolution {
+        data class Ok(val match: CompetitionMatchWithTeams) : Resolution
+
+        /** Gesperrt, Freilos, leere Struktur — kein Abruf-Fehler, den die Oberfläche zeigen müsste. */
+        data object Skip : Resolution
+
+        data object Defect : Resolution
+    }
+
+    /**
      * Was die bisher geholten Rennen über einen Lauf hergeben.
      *
      * Die drei Fälle sind bewusst getrennt, weil sie am Renntag drei verschiedene Dinge bedeuten:
@@ -173,6 +191,8 @@ object RaceClockerPollService {
         val setupRoundsByCompetition = mutableMapOf<UUID, List<CompetitionSetupRoundWithMatches>>()
         // Läufe, die diese Phase aussortiert, brauchen trotzdem ihren Stempel - siehe unten.
         val skipped = mutableListOf<UUID>()
+        // Und die, bei denen etwas unerwartet gescheitert ist - die gehören als Fehler sichtbar.
+        val defective = mutableListOf<UUID>()
         val resolved = watched.mapNotNull { candidate ->
             val setupRounds = setupRoundsByCompetition.getOrPut(candidate.competitionId) {
                 // Ein Fehler der Turnierstruktur heißt für den Job dasselbe wie "Lauf nicht
@@ -192,12 +212,22 @@ object RaceClockerPollService {
             // überschreiben, aus denen die Setzung der nächsten Runde längst abgeleitet ist.
             // Scheitert die Prüfung (gesperrt, Freilos, Struktur leer), überspringt der Job den
             // Lauf still: das ist kein Abruf-Fehler, den die Oberfläche anzeigen müsste.
-            val match = runIsolated<CompetitionMatchWithTeams?>(candidate.matchId, null) {
+            val resolution = runIsolated<Resolution>(candidate.matchId, Resolution.Defect) {
                 CompetitionExecutionService.checkUpdateMatchResult(setupRounds, candidate.matchId)
-                    .recoverDefault { null }
-            } ?: run {
-                skipped += candidate.matchId
-                return@mapNotNull null
+                    .map { match -> Resolution.Ok(match) as Resolution }
+                    .recoverDefault { Resolution.Skip }
+            }
+
+            val match = when (resolution) {
+                is Resolution.Ok -> resolution.match
+                Resolution.Skip -> {
+                    skipped += candidate.matchId
+                    return@mapNotNull null
+                }
+                Resolution.Defect -> {
+                    defective += candidate.matchId
+                    return@mapNotNull null
+                }
             }
 
             ResolvedMatch(candidate, match, match.teams.filter { !it.deregistered })
@@ -212,7 +242,12 @@ object RaceClockerPollService {
         // Über die Lauf-Kennung verschlüsselt, nicht über das Objekt: `ResolvedMatch` trägt den
         // ganzen Lauf mitsamt Mannschaften, und dessen Gleichheit ist hier weder nötig noch billig.
         val firstPass: Map<UUID, MatchFeed> = resolved.associate { entry ->
-            entry.candidate.matchId to runIsolated(entry.candidate.matchId, MatchFeed.NotInFeed) {
+            // Defekt-Vorgabe ist Failed, nicht NotInFeed: NotInFeed heißt „vor dem Start normal"
+            // und würde einen Defekt als gesunden Abruf durchgehen lassen.
+            entry.candidate.matchId to runIsolated<MatchFeed>(
+                entry.candidate.matchId,
+                MatchFeed.Failed(ErrorCode.INTERNAL_ERROR.name),
+            ) {
                 KIO.ok(assign(entry, feeds))
             }
         }
@@ -240,6 +275,13 @@ object RaceClockerPollService {
             }
         }
 
+        // Die defekten dagegen sichtbar: Sie hätten abgerufen werden sollen.
+        defective.forEach { matchId ->
+            runIsolated(matchId, Unit) {
+                RaceClockerPollRepo.recordPoll(matchId, now, ErrorCode.INTERNAL_ERROR.name).orDie().map { }
+            }
+        }
+
         var anyRunning = false
         resolved.forEach { entry ->
             // Wer in Runde 1 gefunden wurde, wird nicht erneut zugeordnet; für alle anderen sind
@@ -248,7 +290,10 @@ object RaceClockerPollService {
             val feed = if (first is MatchFeed.Found) {
                 first
             } else {
-                runIsolated(entry.candidate.matchId, MatchFeed.NotInFeed) { KIO.ok(assign(entry, feeds)) }
+                runIsolated<MatchFeed>(
+                    entry.candidate.matchId,
+                    MatchFeed.Failed(ErrorCode.INTERNAL_ERROR.name),
+                ) { KIO.ok(assign(entry, feeds)) }
             }
 
             val outcome = runIsolated(
