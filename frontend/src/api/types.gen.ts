@@ -157,16 +157,6 @@ export type AssignRequirementToNamedParticipantDto = {
     qrCodeRequired: boolean
 }
 
-export type AthleteBoardDto = {
-    eventName: string
-    serverTime: string
-    refreshIntervalSeconds: number
-    showCountdown: boolean
-    running: Array<AthleteBoardMatch>
-    upcoming: Array<AthleteBoardMatch>
-    results: Array<AthleteBoardResult>
-}
-
 export type AthleteBoardMatch = {
     matchId: string
     competitionName: string
@@ -368,6 +358,84 @@ export type BankAccountRequest = {
     iban: string
     bic: string
     bank: string
+}
+
+export type BoardConfig = {
+    layout: BoardLayout
+    refreshIntervalSeconds?: number
+    tiles: Array<BoardTile>
+}
+
+export type BoardDto = {
+    id: string
+    eventId: string
+    name: string
+    config: BoardConfig
+    createdAt: string
+    updatedAt: string
+}
+
+/**
+ * One element of a tile. Deliberately flat: which fields are required per type is enforced by the backend validation
+ */
+export type BoardElement = {
+    type: BoardElementType
+    offset?: number | null
+    showCrew?: boolean | null
+    showCountdown?: boolean | null
+    showTimes?: boolean | null
+    contrastColors?: boolean | null
+    autoFit?: boolean | null
+    listMode?: BoardListMode
+    limit?: number | null
+    showEventName?: boolean | null
+    text?: string | null
+}
+
+export type BoardElementType = 'MATCH' | 'MATCH_LIST' | 'CLOCK' | 'TEXT'
+
+export type BoardLayout = 'ONE_COLUMN' | 'TWO_COLUMNS' | 'THREE_COLUMNS' | 'SIX_TILES'
+
+export type BoardListDto = {
+    mode: BoardListMode
+    matches: Array<AthleteBoardMatch>
+    results: Array<AthleteBoardResult>
+}
+
+export type BoardListMode = 'UPCOMING' | 'RESULTS' | 'RUNNING'
+
+/**
+ * One place on the day's timeline. At most one of match and result is set; both empty means the slot exists but is unoccupied
+ */
+export type BoardMatchSlotDto = {
+    offset: number
+    match?: AthleteBoardMatch | null
+    result?: AthleteBoardResult | null
+}
+
+export type BoardNameDto = {
+    id: string
+    name: string
+}
+
+export type BoardRequest = {
+    name: string
+    config: BoardConfig
+}
+
+export type BoardTile = {
+    rotationIntervalSeconds?: number
+    elements: Array<BoardElement>
+}
+
+export type BoardViewDto = {
+    boardId: string
+    eventName: string
+    serverTime: string
+    refreshIntervalSeconds: number
+    config: BoardConfig
+    slots: Array<BoardMatchSlotDto>
+    lists: Array<BoardListDto>
 }
 
 export type CaptchaDto = {
@@ -1813,38 +1881,6 @@ export type ImportRowStatus =
     | 'MATCH_NOT_FOUND'
     | 'AMBIGUOUS'
     | 'DUPLICATE'
-
-export type InfoViewConfigurationDto = {
-    id: string
-    eventId: string
-    viewType: InfoViewType
-    displayDurationSeconds: number
-    dataLimit: number
-    filters?: {
-        [key: string]: unknown
-    }
-    sortOrder: number
-    isActive: boolean
-    createdAt: string
-    updatedAt: string
-}
-
-export type InfoViewConfigurationRequest = {
-    viewType: InfoViewType
-    displayDurationSeconds: number
-    dataLimit: number
-    filters?: {
-        [key: string]: unknown
-    }
-    sortOrder: number
-    isActive: boolean
-}
-
-export type InfoViewType =
-    | 'UPCOMING_MATCHES'
-    | 'LATEST_MATCH_RESULTS'
-    | 'RUNNING_MATCHES'
-    | 'ATHLETE_BOARD'
 
 export type Invalid =
     | string
@@ -7028,15 +7064,26 @@ export type GetLiveMatchesResponse = Array<LiveMatchInfo>
 
 export type GetLiveMatchesError = ApiError
 
-export type GetAthleteBoardData = {
+export type GetPublicBoardsData = {
     path: {
         eventId: string
     }
 }
 
-export type GetAthleteBoardResponse = AthleteBoardDto
+export type GetPublicBoardsResponse = Array<BoardNameDto>
 
-export type GetAthleteBoardError = ApiError
+export type GetPublicBoardsError = ApiError
+
+export type GetBoardViewData = {
+    path: {
+        boardId: string
+        eventId: string
+    }
+}
+
+export type GetBoardViewResponse = BoardViewDto
+
+export type GetBoardViewError = ApiError
 
 export type GetMyEventData = {
     path: {
@@ -7305,49 +7352,49 @@ export type DownloadEventScheduleImportTemplateResponse = Blob | File
 
 export type DownloadEventScheduleImportTemplateError = BadRequestError | ApiError
 
-export type GetInfoViewsData = {
+export type GetBoardsData = {
     path: {
         eventId: string
     }
 }
 
-export type GetInfoViewsResponse = Array<InfoViewConfigurationDto>
+export type GetBoardsResponse = Array<BoardDto>
 
-export type GetInfoViewsError = ApiError
+export type GetBoardsError = ApiError
 
-export type CreateInfoViewData = {
-    body: InfoViewConfigurationRequest
+export type CreateBoardData = {
+    body: BoardRequest
     path: {
         eventId: string
     }
 }
 
-export type CreateInfoViewResponse = InfoViewConfigurationDto
+export type CreateBoardResponse = BoardDto
 
-export type CreateInfoViewError = BadRequestError | ApiError | UnprocessableEntityError
+export type CreateBoardError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type UpdateInfoViewData = {
-    body: InfoViewConfigurationRequest
+export type UpdateBoardData = {
+    body: BoardRequest
     path: {
+        boardId: string
         eventId: string
-        viewId: string
     }
 }
 
-export type UpdateInfoViewResponse = InfoViewConfigurationDto
+export type UpdateBoardResponse = void
 
-export type UpdateInfoViewError = BadRequestError | ApiError | UnprocessableEntityError
+export type UpdateBoardError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type DeleteInfoViewData = {
+export type DeleteBoardData = {
     path: {
+        boardId: string
         eventId: string
-        viewId: string
     }
 }
 
-export type DeleteInfoViewResponse = void
+export type DeleteBoardResponse = void
 
-export type DeleteInfoViewError = ApiError
+export type DeleteBoardError = ApiError
 
 export type AddRatingCategoryData = {
     body: RatingCategoryRequest
