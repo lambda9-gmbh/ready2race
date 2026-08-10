@@ -67,5 +67,23 @@ data class ClubComposition(
 
             return ClubComposition(full = full, short = short)
         }
+
+        /**
+         * Die Vereinszeile eines Bootes auf Papier - Urkunde wie Siegerehrungsbogen.
+         *
+         * [clubsWorn] ist die Crew in Bootsreihenfolge, je Person das Ergebnis von [clubWorn].
+         * Trägt niemand einen Verein, tritt [registeringClubName] ein: der meldende Verein ist
+         * zwar reine Verwaltung, aber besser als eine leere Zeile.
+         *
+         * Gedruckt wird in voller Länge und ohne jede Kürzung - auch ohne heuristische (deshalb
+         * [ClubShortNameSettings.none], ohne jede gepflegte Kurzform und ohne Regel). Die Urkunde
+         * geht in die Hand des Ruderers und hängt danach im Bootshaus, da hat "RC Nürtingen"
+         * nichts verloren; der Siegerehrungsbogen wird vorgelesen, und die Kurzform spricht sich
+         * schlechter als der ausgeschriebene Name. Aus demselben Grund lädt keiner der beiden die
+         * Einstellungen überhaupt. Bis zum 09.08.2026 stand auf der Urkunde bei gemischter Crew
+         * das pauschale "Renngemeinschaft".
+         */
+        fun printedLine(clubsWorn: List<String?>, registeringClubName: String): String =
+            of(clubsWorn, ClubShortNameSettings.none).full.ifEmpty { registeringClubName }
     }
 }

@@ -2763,6 +2763,27 @@
       }
     }
   },
+  "awardCeremony": {
+    "download": {
+      "button": "Award ceremony sheet",
+      "title": "Download award ceremony sheet",
+      "action": "Download",
+      "hint": "One page per rating category, with places 1 to 3.",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all",
+      "withoutCategory": "Without rating category",
+      "boats_one": "{{count}} boat",
+      "boats_other": "{{count}} boats",
+      "empty": "There are no ceremonies yet — the placements are missing.",
+      "error": {
+        "noResults": "There are no placements for the selected ceremonies.",
+        "competitionNotInEvent": "This competition does not belong to this event. Please reload the page.",
+        "unknownRatingCategory": "One of the selected ceremonies is not available — the rating category is gone, or the competition has no placements yet. Please reload the page.",
+        "isChallengeEvent": "A challenge event has no award ceremony sheets — there are no runs and no placements.",
+        "unexpected": "The award ceremony sheet could not be created. Please reload the page and try again."
+      }
+    }
+  },
   "myEvent": {
     "tab": "My Event",
     "hint": "Scan the QR code on your wristband to see your races and results.",

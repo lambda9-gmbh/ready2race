@@ -22,7 +22,9 @@ import {useRef, useState} from 'react'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {readEventGlobal} from '@authorization/privileges.ts'
 import WorkspacePremium from '@mui/icons-material/WorkspacePremium'
+import EmojiEvents from '@mui/icons-material/EmojiEvents'
 import AwardCertificateDialog from '@components/awardCertificate/AwardCertificateDialog.tsx'
+import AwardCeremonyDialog from '@components/awardCeremony/AwardCeremonyDialog.tsx'
 import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 
 const CompetitionPlaces = () => {
@@ -61,6 +63,8 @@ const CompetitionPlaces = () => {
         setAwardCertificateRegistrationId(registrationId)
         setAwardCertificateDialogOpen(true)
     }
+
+    const [awardCeremonyDialogOpen, setAwardCeremonyDialogOpen] = useState(false)
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
     const handleDownloadCompetitionPlacesCSV = async () => {
@@ -110,6 +114,14 @@ const CompetitionPlaces = () => {
                                 startIcon={<WorkspacePremium />}
                                 onClick={() => openAwardCertificateDialog()}>
                                 {t('awardCertificate.download.button')}
+                            </Button>
+                        )}
+                        {user.checkPrivilege(readEventGlobal) && (
+                            <Button
+                                variant="contained"
+                                startIcon={<EmojiEvents />}
+                                onClick={() => setAwardCeremonyDialogOpen(true)}>
+                                {t('awardCeremony.download.button')}
                             </Button>
                         )}
                         {user.loggedIn && (
@@ -242,6 +254,12 @@ const CompetitionPlaces = () => {
                     eventId={eventId}
                     competitionId={competitionId}
                     registrationId={awardCertificateRegistrationId}
+                />
+                <AwardCeremonyDialog
+                    open={awardCeremonyDialogOpen}
+                    onClose={() => setAwardCeremonyDialogOpen(false)}
+                    eventId={eventId}
+                    competitionId={competitionId}
                 />
             </>
         ) : (
