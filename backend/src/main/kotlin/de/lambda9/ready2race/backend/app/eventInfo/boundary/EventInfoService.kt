@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfiguration
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
+import de.lambda9.ready2race.backend.app.eventInfo.control.toLiveMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
@@ -46,6 +47,18 @@ object EventInfoService {
     private data class CachedBoard(val builtAt: LocalDateTime, val dto: AthleteBoardDto)
 
     private val athleteBoardCache = ConcurrentHashMap<UUID, CachedBoard>()
+
+    // Zwischenspeicher der Live-Liste je Veranstaltung UND [limit]. Derselbe Grund wie beim
+    // Athleten-Board: der Endpoint ist öffentlich, verlangt keine Anmeldung und wird vom
+    // Frontend im 15-Sekunden-Takt abgerufen (usePolledFetch in ResultsLiveMatches.tsx) - bei
+    // 200 Telefonen am Ufer sonst mehrere hundert Abrufe je Sekunde, jeder davon mit
+    // clubShortNames(), zwei Lauf-Abfragen, je EINER Mannschaftsabfrage PRO LAUF sowie
+    // getShowBreaksOnPublicBoards und EventScheduleRepo.getSlots. Der Schlüssel trägt [limit]
+    // mit, weil verschiedene Aufrufer (künftig oder heute schon mit abweichender Seitengröße)
+    // sonst den falsch bemessenen Stand eines anderen bekämen.
+    private data class CachedLiveMatches(val builtAt: LocalDateTime, val dto: ApiResponse.ListDto<LiveMatchInfo>)
+
+    private val liveMatchesCache = ConcurrentHashMap<Pair<UUID, Int>, CachedLiveMatches>()
 
     // Info View Configuration Methods
 
@@ -413,6 +426,69 @@ object EventInfoService {
         }
 
         KIO.ok(ApiResponse.ListDto(result))
+    }
+
+    /**
+     * Der Tab „Live" der öffentlichen Ergebnisanzeige: was gerade läuft UND was als nächstes
+     * dran ist, jeder Lauf mit seinem Zustand.
+     *
+     * Zwei bereits erprobte Quellen, keine dritte Abfrage:
+     * - [getRunningMatches] liefert die aktivierten Läufe (PREPARING, RUNNING) samt
+     *   Teilergebnissen - unverändert das, was dieser Tab schon immer zeigte.
+     * - [getUpcomingMatchesForBoard] liefert die anstehenden (UPCOMING, UNSCHEDULED) und bringt
+     *   die 30-Minuten-Nachfrist, die Absage-Markierung, die wartenden Runden und die Einstellung
+     *   `showBreaksOnPublicBoards` unverändert mit. Eine Regel, ein Ort.
+     *
+     * Warum ein eigener Endpoint und kein Schalter an `/running-matches`: der bedient auch den
+     * Block `running` der Athleten-Anzeige. Anstehende Läufe dort hineinzumischen zerstörte die
+     * Blocktrennung, auf der ihre ganze Darstellung aufbaut.
+     *
+     * Die Ergebnisfreigabe bleibt unberührt, und zwar ohne zusätzliche Prüfung: die zweite
+     * Abfrage schließt beendete und vollständig gewertete Läufe per SQL aus und liefert
+     * Mannschaften ohne Platz und ohne Zeit. Ein Lauf, den `PublicResultsVisibility` zurückhalten
+     * soll, kann hier gar nicht entstehen - der Schutz sitzt in dieser SQL-Auswahl
+     * (`CompetitionMatchRepo.getUpcomingMatchesForBoard`) und im ergebnisfeldlosen
+     * `UpcomingMatchTeamInfo`. Der Filter in [LiveMatchesLogic.merge] ist nur noch eine
+     * Zusicherung über das Ergebnis, kein zusätzlicher Riegel (siehe dortiges KDoc).
+     *
+     * Beide Quellen bekommen [limit] einzeln; gedeckelt wird erst nach dem Zusammenführen.
+     */
+    fun getLiveMatches(
+        eventId: UUID,
+        limit: Int,
+    ): App<Nothing, ApiResponse.ListDto<LiveMatchInfo>> = KIO.comprehension {
+        val now = LocalDateTime.now()
+        val key = eventId to limit
+
+        // Anders als beim Athleten-Board gibt es hier kein je Antwort frisches Feld wie
+        // serverTime - der zwischengespeicherte Stand kann unverändert zurückgehen.
+        val cached = liveMatchesCache[key]
+            ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
+
+        if (cached != null) {
+            KIO.ok(cached.dto)
+        } else {
+            // Einmal je Aufbau, nicht je Mannschaft - beide Blöcke lösen zusammen leicht hundert
+            // Vereinsnamen auf, und dieser Endpoint läuft im Viertelminutentakt.
+            val clubShortNames = !clubShortNames()
+
+            val activated = !getRunningMatches(eventId, limit, clubShortNames)
+            val upcoming = !getUpcomingMatchesForBoard(eventId, limit, clubShortNames)
+
+            val dto = ApiResponse.ListDto(
+                LiveMatchesLogic.merge(
+                    activated = activated.data.map { it.toLiveMatchInfo() },
+                    upcoming = upcoming.data.map { it.toLiveMatchInfo() },
+                    limit = limit,
+                )
+            )
+
+            // Laufen mehrere Abrufe gleichzeitig in dieses Fenster, rechnen sie doppelt und der
+            // letzte gewinnt - bei Millisekunden Rechenzeit je Eintrag kein Grund für ein Lock.
+            liveMatchesCache[key] = CachedLiveMatches(now, dto)
+
+            KIO.ok(dto)
+        }
     }
 
     fun getAthleteBoard(eventId: UUID): App<EventInfoProblem, ApiResponse.Dto<AthleteBoardDto>> =

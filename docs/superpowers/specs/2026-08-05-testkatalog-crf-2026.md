@@ -586,6 +586,56 @@ durch die neue Anzeige nur sichtbar:**
 
 ---
 
+## M — Laufstatus in der öffentlichen Ergebnisanzeige
+
+Am 09./10.08. gebaut. Vier Oberflächen zeigten den Laufzustand schon aus **einer** Ableitung
+(`LiveDashboardLogic.deriveMatchState`): Durchführung, Schiedsrichter-Dashboard, Zeitplan und
+Athleten-Anzeige. Die fünfte kannte ihn nicht — der Tab „Live" der öffentlichen Ergebnisanzeige
+zeigte ausschließlich aktivierte Läufe, ohne jede Statusangabe, und lud genau einmal. Jetzt zeigt
+er auch die anstehenden, jeden mit Chip, und aktualisiert sich alle 15 Sekunden von selbst.
+Entwurf: `docs/superpowers/specs/2026-08-09-einheitlicher-laufstatus-oeffentlich-design.md`.
+
+**Nichts davon ist in der laufenden Anwendung gesehen worden.** Der ganze Block ist unbelegt —
+das ist der Grund, warum er hier steht. Backend (681) und Frontend (616) sind grün, aber
+Testcontainers und Vitest sagen nichts darüber, was ein Zuschauer am Ufer sieht.
+
+**Die drei Stellen, an denen ich mit einem Fehler rechne**, in dieser Reihenfolge:
+
+1. **M4/M5** — der Takt. Er ist neu gebaut (`frontend/src/utils/polling.ts`), gegen Faketimer
+   geprüft und noch nie gegen ein echtes Funkloch gelaufen.
+2. **M9** — die Ergebnisfreigabe. Der Schutz ist strukturell (SQL plus ein DTO ohne
+   Ergebnisfelder) und zweifach getestet, aber ein Leck hier wäre der einzige Fehler dieses
+   Vorhabens, der einer Regatta wirklich schadet.
+3. **M12** — der Zwischenspeicher. Fünf Sekunden Vorhaltezeit sind gesetzt; ob sich das im Feld
+   wie „live" anfühlt oder wie ein Hänger, entscheidet erst der Blick.
+
+**Voraussetzung für diesen Block:** eine Veranstaltung mit Zeitplan, mindestens drei Läufen
+desselben Wettkampfs, einem abgesagten Slot, einem Programmpunkt (z.B. „Mittagspause", nur
+sichtbar bei eingeschaltetem `showBreaksOnPublicBoards`) und einer Runde, die noch nicht erzeugt
+ist. Der Förde-Seed bringt das mit. Zwei Geräte oder zwei Fenster nebeneinander: links das
+Schiedsrichter-Dashboard oder die Durchführung, rechts `/results/{eventId}` im Tab „Live".
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| M1 | Anstehende Läufe erscheinen überhaupt | Tab „Live" öffnen, ohne dass irgendein Lauf aktiviert ist: die nächsten Läufe stehen da, jeder mit Chip „Anstehend". Vorher war der Tab in dieser Lage **leer** — genau das war der Anlass | `7f7d7398` | |
+| M2 | Die Kette der Zustände an einem Lauf | Einen Lauf aktivieren → Chip springt auf „In Vorbereitung" (blau). „Läuft" drücken → „Läuft · n min", die Minutenzahl zählt hoch. Beenden → der Lauf verschwindet aus „Live" und taucht unter „Ergebnisse" auf | `7f7d7398` | |
+| M3 | Dieselben Worte wie nebenan | Denselben Lauf gleichzeitig in Durchführung, Zeitplan, Dashboard und im Live-Tab ansehen: **gleicher Text, gleiche Farbe**. Das ist die eigentliche Zusage des Vorhabens — eine Abweichung hier ist ein Befund, auch wenn beide Seiten für sich plausibel aussehen | `7f7d7398` | |
+| M4 | Wechsel ohne Neuladen | **Der Kernfall.** Den Live-Tab offen liegen lassen und im anderen Fenster aktivieren: der Chip wechselt binnen ~20 Sekunden von selbst. Nicht neu laden, nicht wegklicken — nur warten | `7f7d7398` | |
+| M5 | Netz weg, Netz wieder da | WLAN am Gerät abschalten: die Karten **bleiben stehen**, darüber erscheint „Stand von hh:mm". WLAN wieder an: die Liste ist binnen Sekunden wieder frisch und die Zeile verschwindet. Eine leere Seite nach einem Funkloch wäre der schlechteste Ausgang | `c750e0fe` | |
+| M6 | Erster Abruf scheitert | Backend anhalten, **dann** den Tab öffnen: „Die Läufe konnten nicht geladen werden." — und **nicht** „Zurzeit ist kein Lauf angesetzt." Der Unterschied ist der ganze Grund für das Feld `initialLoad` | `7f7d7398` | |
+| M7 | Nichts angesetzt | Eine Veranstaltung ohne anstehende Läufe: „Zurzeit ist kein Lauf angesetzt." Nicht die Fehlermeldung aus M6 | `7f7d7398` | |
+| M8 | Abgesagter Lauf | Einen Slot im Zeitplan absagen: der Lauf **bleibt** im Live-Tab stehen, durchgestrichen und abgeblendet, Chip „Abgesagt", nicht anklickbar. Eine Besatzung, die ihren Lauf sucht, muss ihn finden und daran ablesen, dass er nicht stattfindet | `248871b0` | |
+| M9 | **Ergebnisfreigabe hält** | Veranstaltung auf „nur beendete Läufe" (`FINISHED_ONLY`) stellen. Einen Lauf vollständig werten, aber **nicht** beenden. Erwartung: er erscheint **weder** im Tab „Live" **noch** im Tab „Ergebnisse". Dann auf `RESULTS_COMPLETE` umstellen — jetzt steht er unter „Ergebnisse", weiterhin nicht unter „Live" | `d691ed6c` | |
+| M10 | Teilergebnisse eines laufenden Laufs | Ein aktivierter Lauf, bei dem die Zeitnahme schon einzelne Boote gewertet hat: der Lauf bleibt „Läuft", und im Dialog stehen **keine** Plätze und Zeiten (der Dialog zeigt sie nur für beendete Ergebnisse). Das ist unverändertes Verhalten des alten Tabs — hier geht es darum, dass es unverändert **geblieben** ist | `7f7d7398` | |
+| M11 | Wartende Runde und Programmpunkt | Eine noch nicht erzeugte Runde erscheint mit dem Hinweis „Aufstellung steht noch nicht fest" statt einer leeren Karte. Ein Programmpunkt („Mittagspause") erscheint **ohne** Chip — und wird auch eine halbe Stunde nach seiner Zeit **nicht** „Überfällig" genannt | `affc8ae5`, `248871b0` | |
+| M12 | Last und Frische | Den Tab auf mehreren Geräten gleichzeitig offen halten. Der Zwischenspeicher hält die Antwort 5 Sekunden vor — ein Zustandswechsel darf sich dadurch um höchstens diese 5 Sekunden verspäten. Fühlt sich das nach „hängt" an, ist die Vorhaltezeit zu lang | `7ae3ae67` | |
+| M13 | Hintergrund | Den Tab in den Hintergrund legen (anderer Browser-Tab), einige Minuten warten, zurückkommen: die Liste ist **sofort** frisch. Dazwischen wurde nicht getaktet — das lässt sich am Netzwerk-Reiter der Entwicklerwerkzeuge ablesen | `4d1cc3b9` | |
+| M14 | Überfällig | Ein anstehender Lauf, dessen geplante Zeit mehr als 5 Minuten zurückliegt, ohne dass ihn jemand aktiviert hat: Chip „Überfällig · n min" in Rot. Bei 2 Minuten Verzug **noch nicht** — Regattaalltag soll nicht leuchten | `7f7d7398` | |
+| M15 | Ohne Termin | Ein Lauf ohne geplante Startzeit trägt „Ungeplant" und wird **niemals** „Überfällig" | `7f7d7398` | |
+| M16 | Ergebnis-Tab unberührt | **Regressionsfall.** Der Tab „Ergebnisse" daneben benutzt dieselbe Karte. Er muss aussehen und sich verhalten wie vor dem Update: kein Statuschip, Klickfläche vorhanden, Dialog wie gehabt | `7f7d7398` | |
+
+---
+
 ## Detailablauf A6/C7 — Zeitstrafe während der Lauf läuft
 
 Der Kernfall: die Anzeige muss eine nachgetragene Strafe übernehmen, **bevor** der Lauf beendet ist.

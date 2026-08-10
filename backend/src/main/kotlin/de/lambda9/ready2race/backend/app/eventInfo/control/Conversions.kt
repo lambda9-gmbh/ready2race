@@ -10,12 +10,15 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardTeam
 import de.lambda9.ready2race.backend.app.eventInfo.entity.InfoViewConfigurationDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.InfoViewConfigurationRequest
 import de.lambda9.ready2race.backend.app.eventInfo.entity.LatestMatchResultInfo
+import de.lambda9.ready2race.backend.app.eventInfo.entity.LiveMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchTeamInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchParticipantInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchTeamInfo
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
+import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
 import de.lambda9.ready2race.backend.database.generated.tables.records.InfoViewConfigurationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.INFO_VIEW_CONFIGURATION
 import org.jooq.JSONB
@@ -173,4 +176,96 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
             deregisteredReason = it.deregisteredReason,
         )
     },
+)
+
+/**
+ * Ein anstehendes Boot hat noch kein Ergebnis - die Quellabfrage
+ * (`CompetitionMatchTeamRepo.getTeamsForUpcomingMatch`) fragt Platz und Zeit gar nicht erst ab.
+ * Die Ergebnisfelder bleiben deshalb leer, statt aus einer zweiten Abfrage gefüllt zu werden:
+ * genau daran hängt, dass der ANSTEHENDE Zweig der Live-Liste keine Ergebnisse veröffentlichen
+ * kann, die `PublicResultsVisibility` zurückhalten soll.
+ *
+ * Das gilt ausdrücklich NICHT für den aktivierten Zweig ([RunningMatchInfo.toLiveMatchInfo]
+ * unten): der reicht die Teilergebnisse eines laufenden Laufs unverändert durch - genau wie der
+ * vorbestehende Endpoint `/running-matches`, den dieser Tab schon vor dem 09.08.2026 abrief. Das
+ * ist gewollt und keine Aufweichung: ein Boot, das die Zeitnahme schon während des Laufs wertet,
+ * durfte diesen Tab schon immer erreichen - Live-Zwischenzeiten sind kein zurückgehaltenes
+ * Endergebnis.
+ */
+fun UpcomingMatchTeamInfo.toRunningMatchTeamInfo() = RunningMatchTeamInfo(
+    teamId = teamId,
+    teamName = teamName,
+    teamNumber = teamNumber,
+    startNumber = startNumber,
+    clubName = clubName,
+    clubsShort = clubsShort,
+    clubsFull = clubsFull,
+    currentScore = null,
+    currentPosition = null,
+    timeString = null,
+    penaltySeconds = null,
+    penaltyNote = null,
+    failed = false,
+    failedReason = null,
+    participants = participants,
+)
+
+/**
+ * Ein aktivierter Lauf für die öffentliche Live-Liste. `finishedAt` und `skipped` sind hier
+ * immer aus dem Spiel: die Quellabfrage führt ausschließlich Läufe mit `activated_at`, und
+ * Beenden nimmt die Aktivierung zurück. Der Zustand entsteht trotzdem über
+ * [MatchStatusLogic.matchStatus] statt aus einem `if` - es gibt genau eine Ableitung.
+ */
+fun RunningMatchInfo.toLiveMatchInfo() = LiveMatchInfo(
+    matchId = matchId,
+    competitionId = competitionId,
+    competitionName = competitionName,
+    categoryName = categoryName,
+    roundName = roundName,
+    matchName = matchName,
+    startTime = startTime,
+    status = MatchStatusLogic.matchStatus(
+        activatedAt = activatedAt,
+        startTime = startTime,
+        startedAt = startedAt,
+        finishedAt = null,
+        skipped = false,
+        teams = teams.map {
+            MatchStatusTeam(place = it.currentPosition, failed = it.failed, deregistered = false)
+        },
+    ),
+    executionOrder = executionOrder,
+    teams = teams,
+)
+
+/**
+ * Ein anstehender Lauf für die öffentliche Live-Liste. Die Quellabfrage schließt aktivierte,
+ * beendete und vollständig gewertete Läufe aus; die Ableitung entscheidet damit nur noch
+ * zwischen abgesagt, ungeplant und anstehend. Sie steht trotzdem hier und nicht als eigenes `if`,
+ * damit die Anzeige dieselbe Aufzählung liest wie jede andere Oberfläche.
+ *
+ * Alle Boote gehen als „noch offen" in die Ableitung - für einen anstehenden Lauf liegt kein
+ * Ergebnis vor, und die Quellabfrage könnte auch keins liefern.
+ */
+fun UpcomingCompetitionMatchInfo.toLiveMatchInfo() = LiveMatchInfo(
+    matchId = matchId,
+    competitionId = competitionId,
+    competitionName = competitionName,
+    categoryName = categoryName,
+    roundName = roundName,
+    matchName = matchName,
+    startTime = scheduledStartTime,
+    status = MatchStatusLogic.matchStatus(
+        activatedAt = null,
+        startTime = scheduledStartTime,
+        startedAt = null,
+        finishedAt = null,
+        skipped = cancelled,
+        teams = teams.map { MatchStatusTeam(place = null, failed = false, deregistered = false) },
+    ),
+    executionOrder = executionOrder,
+    cancelled = cancelled,
+    pendingRound = pendingRound,
+    name = name,
+    teams = teams.map { it.toRunningMatchTeamInfo() },
 )
