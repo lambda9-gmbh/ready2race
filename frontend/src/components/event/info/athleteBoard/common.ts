@@ -46,6 +46,15 @@ export const formatRemaining = (seconds: number, t: TFunction): string => {
 }
 
 /**
+ * Ein Platz als Ordnungszahl („1." / "1st" / „1."), sprachrichtig über die
+ * Ordinal-Pluralregeln von i18next. Überall, wo ein Platz neben einer Startnummer
+ * stehen kann, muss er als Ordnungszahl erscheinen — eine nackte „1" ist von der
+ * Startnummer 1 nicht zu unterscheiden (Wunsch vom 10.08.2026, Handtest am Prod-Abzug).
+ */
+export const formatPlace = (place: number, t: TFunction): string =>
+    t('event.info.athleteBoard.place', {count: place, ordinal: true})
+
+/**
  * Welche Form der Vereinskette in der Zeile steht. Die Entscheidung trifft die Breite des
  * Bildschirms, nicht der Inhalt: am Steg hängt ein großer Schirm, in der Hand ein Telefon.
  */

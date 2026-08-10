@@ -1567,7 +1567,12 @@
         "loadError": "Data could not be loaded. Please check the connection.",
         "minutesUnit": "min",
         "hoursUnit": "h",
-        "secondsUnit": "s"
+        "secondsUnit": "s",
+        "place": "{{count}}th",
+        "place_ordinal_one": "{{count}}st",
+        "place_ordinal_two": "{{count}}nd",
+        "place_ordinal_few": "{{count}}rd",
+        "place_ordinal_other": "{{count}}th"
       }
     },
     "match": {
