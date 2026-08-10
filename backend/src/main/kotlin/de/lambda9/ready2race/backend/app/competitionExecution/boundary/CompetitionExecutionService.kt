@@ -1168,6 +1168,18 @@ object CompetitionExecutionService {
             return@comprehension resetRaceClockerResults(matchId, rowsByTeam.keys, userId)
         }
 
+        // Einzelne Rücknahme: Die Welle läuft weiter (Start erkannt), aber eine zugeordnete Zeile
+        // hat kein verwertbares Ergebnis mehr, obwohl bei uns eines steht - der Zeitnehmer hat eine
+        // versehentlich genommene Zeit in RaceClocker wieder entfernt (beobachtet am 10.08.2026).
+        // Solange der Abruf läuft, ist RaceClocker die Quelle der Wahrheit - die Zeit geht mit.
+        //
+        // Ausgeschiedene Boote ([failed]) bleiben ausdrücklich stehen: Eine vom Schiedsrichter von
+        // Hand eingetragene Ausscheidung hat im Feed nie ein Ergebnis, und genau sie schützt der
+        // Riegel weiter unten seit jeher. Der Preis: Eine in RaceClocker zurückgenommene DNF-Wertung
+        // muss auch bei uns von Hand zurückgenommen werden.
+        val removedResults = rowsByTeam.filterValues { !it.single().hasResult }.keys
+        !retractRemovedResults(matchId, removedResults, userId)
+
         // Crews without a usable result are skipped rather than treated as an error, so the pull can
         // be repeated as the heat progresses. "Ohne Ergebnis" heißt hier: weder Zeit noch echte
         // Ausscheidung - RaceClocker schreibt in dieselbe Spalte auch Verlaufszustände (`Not started`,
@@ -1190,11 +1202,13 @@ object CompetitionExecutionService {
         // Startzeit unter den zugeordneten Booten überschreibt started_at bedingungslos, auch wenn
         // dort schon ein manueller Stempel steht (z. B. von LiveDashboardService.markMatchStarted) -
         // gleiche Regel wie beim Penalty-Überschreiben oben.
+        // Der Tag kommt NICHT vom geplanten Renntag: läuft ein Rennen an einem anderen Tag als
+        // geplant, stünde der Stempel Tage daneben (siehe RaceClockerPollLogic.stampOnNearestDay -
+        // dieselbe Regel wie beim vorgezogenen Stempel im Poll-Job).
         val earliestStart = RaceClockerFeedRow.earliestStart(rowsByTeam.values.flatten())
         if (earliestStart != null) {
-            val raceDay = match.startTime?.toLocalDate() ?: LocalDate.now()
             !CompetitionMatchRepo.update(matchId) {
-                startedAt = raceDay.atTime(earliestStart)
+                startedAt = RaceClockerPollLogic.stampOnNearestDay(earliestStart, LocalDateTime.now())
                 updatedBy = userId
                 updatedAt = LocalDateTime.now()
             }.orDie()
@@ -1245,6 +1259,55 @@ object CompetitionExecutionService {
      * bleibt ebenfalls unangetastet - ein Schiedsrichter hat den Lauf an den Start gerufen, und dass
      * die Zeitnahme neu aufsetzt, nimmt ihm diese Entscheidung nicht ab.
      */
+    /**
+     * Nimmt Zeiten und Plätze einzelner Boote zurück, deren Feed-Zeile kein verwertbares Ergebnis
+     * mehr trägt - das Gegenstück zu [resetRaceClockerResults] für den Fall, dass nur EINE Zeit in
+     * RaceClocker entfernt wurde, während die Welle weiterläuft.
+     *
+     * Ausgeschiedene Boote ([CompetitionMatchTeamRecord.failed]) bleiben unangetastet - eine von
+     * Hand eingetragene Ausscheidung hat im Feed nie ein Ergebnis und wäre sonst bei jedem Abruf
+     * wieder weg. Boote ohne gespeicherte Zeit und ohne Platz sind der Normalfall "noch auf dem
+     * Wasser" und werden gar nicht erst angefasst.
+     */
+    private fun retractRemovedResults(
+        matchId: UUID,
+        registrationIds: Set<UUID>,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        val now = LocalDateTime.now()
+
+        !registrationIds.toList().traverse { registrationId ->
+            KIO.comprehension {
+                val record = !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(matchId, registrationId).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+
+                val hasStoredResult =
+                    record.timecode != null || record.place != null || record.penaltySeconds != null
+                if (record.failed == true || !hasStoredResult) return@comprehension noData
+
+                !TimecodeRepo.delete(record.id).orDie()
+
+                logger.info {
+                    "RaceClocker hat das Ergebnis von Boot $registrationId in Lauf $matchId zurückgenommen."
+                }
+
+                !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
+                    place = null
+                    placesCalculated = false
+                    timecode = null
+                    penaltySeconds = null
+                    penaltyNote = null
+                    updatedBy = userId
+                    updatedAt = now
+                }.orDie()
+
+                noData
+            }
+        }
+
+        noData
+    }
+
     private fun resetRaceClockerResults(
         matchId: UUID,
         registrationIds: Set<UUID>,

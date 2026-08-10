@@ -103,12 +103,18 @@ object RaceClockerPollLogic {
         now: LocalDateTime,
     ): LocalDateTime? = when {
         existingStartedAt != null -> null
-        else -> RaceClockerFeedRow.earliestStart(rows)?.let { time ->
-            listOf(-1L, 0L, 1L)
-                .map { time.atDate(now.toLocalDate().plusDays(it)) }
-                .minBy { java.time.Duration.between(it, now).abs() }
-        }
+        else -> RaceClockerFeedRow.earliestStart(rows)?.let { stampOnNearestDay(it, now) }
     }
+
+    /**
+     * Hängt an eine Feed-Uhrzeit das Datum (gestern, heute oder morgen), das sie am nächsten an
+     * [now] heranrückt — die eine Datumsregel für alle Stellen, die aus dem Feed einen Ist-Start
+     * ableiten ([measuredStartFor] und das Überschreiben in `applyRaceClockerRows`).
+     */
+    fun stampOnNearestDay(time: java.time.LocalTime, now: LocalDateTime): LocalDateTime =
+        listOf(-1L, 0L, 1L)
+            .map { time.atDate(now.toLocalDate().plusDays(it)) }
+            .minBy { java.time.Duration.between(it, now).abs() }
 
     /**
      * Ein Kurzwert über alles, was aus diesen Zeilen in die Datenbank wandert. Ist er seit dem
