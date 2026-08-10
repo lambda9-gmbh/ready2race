@@ -12,6 +12,7 @@ import {
 import {
     COUNTDOWN_MAX_SECONDS,
     formatClockTime,
+    formatPlace,
     formatRemaining,
     formatShortDate,
     isSameDay,
@@ -289,7 +290,9 @@ const AthleteBoardMatchCard = ({
                                                 team.failed
                                                     ? (team.failedReason ??
                                                       t('event.info.athleteBoard.failed'))
-                                                    : `${team.place != null ? `${team.place}. ` : ''}${team.timeString}`
+                                                    // Als Ordnungszahl, damit der Zwischenstand
+                                                    // nicht wie eine zweite Startnummer liest.
+                                                    : `${team.place != null ? `${formatPlace(team.place, t)} ` : ''}${team.timeString}`
                                             }
                                         />
                                         <AthleteBoardPenaltyNote

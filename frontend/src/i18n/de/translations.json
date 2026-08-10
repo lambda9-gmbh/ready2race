@@ -1567,7 +1567,8 @@
         "loadError": "Daten konnten nicht geladen werden. Bitte Verbindung prüfen.",
         "minutesUnit": "min",
         "hoursUnit": "Std.",
-        "secondsUnit": "s"
+        "secondsUnit": "s",
+        "place": "{{count}}."
       }
     },
     "match": {

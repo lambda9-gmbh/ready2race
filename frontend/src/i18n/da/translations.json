@@ -1567,7 +1567,8 @@
         "loadError": "Data kunne ikke indlæses. Kontrollér venligst forbindelsen.",
         "minutesUnit": "min",
         "hoursUnit": "t",
-        "secondsUnit": "sek"
+        "secondsUnit": "sek",
+        "place": "{{count}}."
       }
     },
     "match": {
