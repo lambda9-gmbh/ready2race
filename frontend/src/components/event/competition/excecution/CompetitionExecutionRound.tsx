@@ -656,6 +656,24 @@ const CompetitionExecutionRound = ({
                                                     </TableCell>
                                                     <TableCell width="20%">
                                                         {team.timeString}
+                                                        {/*
+                                                            Zwischenzeiten unter der Endzeit statt in eigenen
+                                                            Spalten: die Zahl der Marken ist je Rennen frei
+                                                            (0-4) und die Namen vergibt der Zeitnehmer - eine
+                                                            feste Spaltenstruktur gäbe es nicht.
+                                                        */}
+                                                        {(team.laps ?? []).length > 0 && (
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="textSecondary">
+                                                                {(team.laps ?? [])
+                                                                    .map(
+                                                                        lap =>
+                                                                            `${lap.name} ${lap.timeString}`,
+                                                                    )
+                                                                    .join(' · ')}
+                                                            </Typography>
+                                                        )}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

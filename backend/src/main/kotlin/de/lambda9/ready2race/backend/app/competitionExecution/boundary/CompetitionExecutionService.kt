@@ -1154,6 +1154,11 @@ object CompetitionExecutionService {
         // aus dem Feed geschrieben sind sie bei unveränderter Reihenfolge dieselben.
         !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, matchedRows) -> matchedRows.single() }, userId)
 
+        // Zwischenzeiten stehen wie die Bahnen vor beiden Riegeln: Sie kommen, während die Boote
+        // noch fahren, und eine in RaceClocker korrigierte Marke soll ankommen, ohne dass ein Boot
+        // erst im Ziel sein muss. Je Takt werden die Runden eines Boots vollständig ersetzt.
+        !applyLapsFromFeed(matchId, rowsByTeam.mapValues { (_, matchedRows) -> matchedRows.single() }, userId)
+
         // Neustart in RaceClocker: keine Zeile trägt mehr eine gemessene Startzeit oder ein Ergebnis.
         // Der Zeitnehmer setzt eine Welle zurück, wenn ein Start ungültig war; der Feed sagt danach,
         // dieser Lauf sei nie gefahren, und ready2race übernimmt diese Aussage - sonst stünden Zeiten
@@ -1324,6 +1329,9 @@ object CompetitionExecutionService {
                 // ausdrücklich geleert, damit hier nicht zwei Stellen dasselbe zusagen müssen.
                 !TimecodeRepo.delete(record.id).orDie()
 
+                // Ein Lauf, der laut Feed nie gefahren ist, hat auch keine Zwischenzeiten mehr.
+                !CompetitionMatchTeamLapRepo.deleteByTeam(record.id!!).orDie()
+
                 CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
                     place = null
                     placesCalculated = false
@@ -1360,6 +1368,60 @@ object CompetitionExecutionService {
      * (competition_match, start_number) index while reassigning; teams that the feed does not cover
      * keep a unique number after the highest imported one.
      */
+    /**
+     * Schreibt die Zwischenzeiten (Split-Spalten) aus dem Feed auf die Boote eines Laufs.
+     *
+     * Gespeichert wird je Marke die kumulierte Fahrzeit seit dem gemessenen Start der ZEILE - bei
+     * Wellenstarts ist das der Wellenstart, bei Einzelstarts der eigene. Ohne Startstempel in der
+     * Zeile gibt es keine Basis für eine Fahrzeit; die Runden des Boots bleiben dann unangetastet,
+     * statt geraten zu werden. Läuft eine Marke über Mitternacht, korrigiert ein Tagessprung die
+     * Differenz - dieselbe Überlegung wie bei `RaceClockerPollLogic.stampOnNearestDay`.
+     *
+     * Ersetzt wird vollständig (Löschen + Einfügen): Der Feed ist die Quelle der Wahrheit, und
+     * eine in RaceClocker entfernte oder umbenannte Marke soll auch hier verschwinden bzw. den
+     * neuen Namen tragen.
+     */
+    private fun applyLapsFromFeed(
+        matchId: UUID,
+        rowByRegistration: Map<UUID, RaceClockerFeedRow>,
+        userId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+        val allMatchTeamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+        val now = LocalDateTime.now()
+
+        !allMatchTeamRecords.traverse { team ->
+            KIO.comprehension {
+                val row = rowByRegistration[team.competitionRegistration]
+                    ?: return@comprehension KIO.unit
+                val start = row.start
+                    ?: return@comprehension KIO.unit
+
+                !CompetitionMatchTeamLapRepo.deleteByTeam(team.id!!).orDie()
+
+                val records = row.laps.mapIndexed { index, lap ->
+                    var millis = java.time.Duration.between(start, lap.time).toMillis()
+                    if (millis < 0) millis += java.time.Duration.ofDays(1).toMillis()
+                    CompetitionMatchTeamLapRecord(
+                        id = UUID.randomUUID(),
+                        competitionMatchTeam = team.id!!,
+                        position = index + 1,
+                        name = lap.name,
+                        lapMillis = millis,
+                        createdAt = now,
+                        createdBy = userId,
+                    )
+                }
+                if (records.isNotEmpty()) {
+                    !CompetitionMatchTeamLapRepo.create(records).orDie()
+                }
+
+                KIO.unit
+            }
+        }
+
+        KIO.unit
+    }
+
     private fun applyLanesFromFeed(
         matchId: UUID,
         rowByRegistration: Map<UUID, RaceClockerFeedRow>,

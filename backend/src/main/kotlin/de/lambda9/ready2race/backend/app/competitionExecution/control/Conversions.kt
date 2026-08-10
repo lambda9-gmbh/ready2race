@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionServi
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
 import de.lambda9.ready2race.backend.app.timecode.control.toTimecode
+import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.tailwind.core.KIO
@@ -102,6 +103,20 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                                 failedReason = team.failedReason,
                                 penaltySeconds = team.penaltySeconds,
                                 penaltyNote = team.penaltyNote,
+                                laps = team.laps.map { lap ->
+                                    MatchTeamLapDto(
+                                        name = lap.name,
+                                        timeString = Timecode(
+                                            millis = lap.lapMillis,
+                                            // Über einer Stunde braucht die Anzeige die Stunden-
+                                            // stelle, darunter genügt m:ss - dieselbe Fahrzeit-
+                                            // Lesart wie bei der Ergebniszeit.
+                                            baseUnit = if (lap.lapMillis >= 3_600_000) Timecode.BaseUnit.HOURS
+                                                       else Timecode.BaseUnit.MINUTES,
+                                            millisecondPrecision = Timecode.MillisecondPrecision.ONE,
+                                        ).toString(),
+                                    )
+                                },
                             )
                         },
                         weighting = match.second.weighting,
@@ -229,6 +244,9 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                             )
                         },
                         mixedTeamTerm = mixedTeamTerm,
+                        laps = team.laps.orEmpty().filterNotNull()
+                            .sortedBy { it.position }
+                            .map { lap -> MatchTeamLap(name = lap.name!!, lapMillis = lap.lapMillis!!) },
                     )
                 }
             )

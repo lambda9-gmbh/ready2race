@@ -135,6 +135,9 @@ object RaceClockerPollLogic {
                 row.start?.toString() ?: "",
                 row.penaltySeconds?.toString() ?: "",
                 row.penaltyNote ?: "",
+                // Auch eine neue oder korrigierte Zwischenzeit ist eine Änderung, die geschrieben
+                // werden muss - ohne sie hier bliebe der Takt in der Abkürzung hängen.
+                row.laps.joinToString("/") { "${it.name}=${it.time}" },
             ).joinToString("|")
         }.sorted().joinToString(";")
 }

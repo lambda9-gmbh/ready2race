@@ -12707,6 +12707,24 @@ components:
           description: "Time penalty in seconds; the result time already includes it"
         penaltyNote:
           type: string
+        laps:
+          type: array
+          description: "Intermediate marks from RaceClocker, in on-course order; empty for races without split columns"
+          items:
+            $ref: '#/components/schemas/MatchTeamLapDto'
+
+    MatchTeamLapDto:
+      type: object
+      required:
+        - name
+        - timeString
+      properties:
+        name:
+          type: string
+          description: "The split column's name as the timekeeper labelled it in RaceClocker (e.g. 'Runde 1')"
+        timeString:
+          type: string
+          description: "Cumulative race time at this mark, formatted for display (e.g. '1:05.5')"
 
     UpdateCompetitionMatchRequest:
       type: object

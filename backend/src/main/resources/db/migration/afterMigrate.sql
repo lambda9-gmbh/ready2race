@@ -819,6 +819,11 @@ select cmt.id,
        cd.reason                                                               as deregistration_reason,
        rc.id                                                                   as rating_category_id,
        rc.name                                                                 as rating_category_name,
+       -- Zwischenzeiten als Skalar-Subselect statt als Join: ein weiterer 1:n-Join wuerde die
+       -- Teilnehmerzeilen vervielfachen (array_agg ohne distinct), das Subselect nicht.
+       coalesce((select array_agg(l order by l.position)
+                 from competition_match_team_lap l
+                 where l.competition_match_team = cmt.id), '{}')               as laps,
        -- Die Reihenfolge der Ergebnisabschnitte haengt an der Zuordnung zur Veranstaltung. Fehlt
        -- sie, sortiert die Kategorie ganz hinten (RatingCategoryRef.UNCONFIGURED_SORT_ORDER) und
        -- untereinander nach Namen - eine nie konfigurierte Kategorie darf sich nicht vor die

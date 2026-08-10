@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.raceclocker.control
 import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerLapMark
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
@@ -200,8 +201,38 @@ object RaceClockerFeed {
             // field. Both are display-only here; the time already contains the penalty.
             penaltySeconds = path("Penalty").asText("").trim().toIntOrNull()?.takeIf { it > 0 },
             penaltyNote = path("Penalty note").asText("").trim().takeIf { it.isNotBlank() },
+            laps = extractLaps(),
         )
     }
+
+    /**
+     * Every key the feed is known to carry besides the split columns, lowercased. The split
+     * columns are the only keys the timekeeper names freely ("Runde 1", "Split 3", ...), so laps
+     * are recognised by exclusion: an unknown key whose value parses as a time of day is a lap
+     * mark. The explicit list matters for the keys whose values ARE times (start, finish) and for
+     * free-text fields that could accidentally hold one (custom, wave) - everything else falls
+     * out of the time parse on its own.
+     */
+    private val nonLapKeys = startKeys + setOf(
+        "name", "rank", "bib number", "club", "category", "categorydistance", "wave",
+        "wavedistance", "age", "gender", "custom", "handicap", "extrainfo",
+        "finish", "ziel", "result", "result in seconds", "handicap result in seconds",
+        "penalty", "penalty note",
+    )
+
+    /**
+     * The split columns of a row, in feed order. `00:00:00.0` is RaceClocker's placeholder for a
+     * mark not taken and is dropped by [parseTimeOfDay]'s midnight rule - a regatta never rounds a
+     * mark at midnight.
+     */
+    private fun JsonNode.extractLaps(): List<RaceClockerLapMark> =
+        fieldNames().asSequence()
+            .filter { it.lowercase() !in nonLapKeys }
+            .mapNotNull { key ->
+                parseTimeOfDay(path(key).asText("").trim())
+                    ?.let { RaceClockerLapMark(name = key.trim(), time = it) }
+            }
+            .toList()
 
     /**
      * The r2r identifiers ride along in RaceClocker's "Extra info", which the feed returns as a list of

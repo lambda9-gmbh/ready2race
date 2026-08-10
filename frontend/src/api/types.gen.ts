@@ -767,6 +767,10 @@ export type CompetitionMatchTeamDto = {
      */
     penaltySeconds?: number
     penaltyNote?: string
+    /**
+     * Intermediate marks from RaceClocker, in on-course order; empty for races without split columns
+     */
+    laps?: Array<MatchTeamLapDto>
 }
 
 export type CompetitionPropertiesDto = {
@@ -2310,6 +2314,17 @@ export type MatchTeamInfo = {
     clubName?: string | null
     result?: string | null
     rank?: number | null
+}
+
+export type MatchTeamLapDto = {
+    /**
+     * The split column's name as the timekeeper labelled it in RaceClocker (e.g. 'Runde 1')
+     */
+    name: string
+    /**
+     * Cumulative race time at this mark, formatted for display (e.g. '1:05.5')
+     */
+    timeString: string
 }
 
 export type MyEventDto = {
