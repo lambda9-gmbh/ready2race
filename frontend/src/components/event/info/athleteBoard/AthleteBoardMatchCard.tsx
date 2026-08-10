@@ -191,7 +191,6 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
         )
     }
 
-    const boats = match.teams.length
     // Nur im laufenden Lauf steht rechts eine Zeit. Im Block "Nächster Lauf" liefert der Server
     // Platz, Zeit und Strafe ohnehin nie — die Spalte entfällt dort strukturell, statt leer
     // mitzulaufen und Breite zu verbrauchen.
@@ -256,7 +255,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                     {t('event.info.pendingRound')}
                 </Typography>
             ) : (
-                <AthleteBoardBoatList boats={boats}>
+                <AthleteBoardBoatList rows={match.teams.map(() => 'boat')}>
                     {match.teams.map((team, index) => (
                         <AthleteBoardBoatRow
                             // Die Startnummer ist je Lauf eindeutig (Index

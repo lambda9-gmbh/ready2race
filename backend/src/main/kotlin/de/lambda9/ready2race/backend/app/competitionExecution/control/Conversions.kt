@@ -3,7 +3,9 @@ package de.lambda9.ready2race.backend.app.competitionExecution.control
 import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
@@ -45,10 +47,14 @@ private fun List<CompetitionMatchTeamParticipant>.toNamedParticipantsDto() =
  * anders als im Schiedsrichter-Dashboard, das sie über `buildParticipants` nachzieht. Der Fehler
  * geht in die harmlose Richtung: eine ummeldete Crew erscheint eher als "noch nicht draußen", der
  * Chip bleibt also länger stehen, statt einen Start zu behaupten, den es nicht gibt.
+ *
+ * [byeByMatch] kommt von außen, weil `getProgress` die `out`-Zeilen bereits herausgefiltert hat,
+ * bevor diese Umwandlung läuft - der abgemeldete Gegner ist hier also nicht mehr zu sehen.
  */
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
     mixedTeamTerm: String?,
     lastScanByParticipant: Map<UUID, Pair<String, LocalDateTime>> = emptyMap(),
+    byeByMatch: Map<UUID, MatchByeDto> = emptyMap(),
 ) = run {
     val matchPairs =
         matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
@@ -122,6 +128,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                                 )
                             },
                             teamsInArena = teamsInArenaPerMatch[index],
+                            bye = byeByMatch[match.second.id],
                         ),
                         raceClockerPolledAt = match.first.raceClockerPolledAt,
                         raceClockerPollError = match.first.raceClockerPollError,
@@ -201,7 +208,14 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                         failedReason = team.failedReason,
                         penaltySeconds = team.penaltySeconds,
                         penaltyNote = team.penaltyNote,
-                        ratingCategory = team.ratingCategoryName,
+                        ratingCategory = team.ratingCategoryId?.let {
+                            RatingCategoryRef(
+                                id = it,
+                                name = team.ratingCategoryName!!,
+                                sortOrder = team.ratingCategorySortOrder
+                                    ?: RatingCategoryRef.UNCONFIGURED_SORT_ORDER,
+                            )
+                        },
                         mixedTeamTerm = mixedTeamTerm,
                     )
                 }
@@ -230,8 +244,10 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
 )
 
 
-fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) = KIO.ok(
+fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int, categoryPlace: Int?) = KIO.ok(
     CompetitionTeamPlaceDto(
+        ratingCategory = ratingCategory,
+        categoryPlace = categoryPlace,
         competitionRegistrationId = competitionRegistration,
         teamNumber = teamNumber!!, // This should not be null because competition_match_teams are not created if the registration teamNumber is missing
         teamName = registrationName,

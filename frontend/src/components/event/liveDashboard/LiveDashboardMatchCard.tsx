@@ -1,22 +1,25 @@
+import {Fragment} from 'react'
 import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
-import {LiveDashboardMatchDto, MatchStatusDto, PendingSlotDto} from '@api/types.gen.ts'
+import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
 import {matchStatusChip} from '@components/event/match/matchStatusChip.ts'
+import {byeExplanation} from '@components/event/match/matchBye.ts'
+import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 import {
     CLUB_CHAIN_NARROW_CHARS,
     CLUB_CHAIN_NARROW_RESULT_CHARS,
     competitionLabel,
     crewMemberLabel,
+    dashboardMatchStatus,
     matchControls,
     matchHasResults,
     openResultTeams,
     pendingSlotLabel,
     shortenClubChain,
-    teamHasResult,
     teamShowsClubLine,
     teamShowsCrew,
     teamsInDisplayOrder,
@@ -97,27 +100,43 @@ const LiveDashboardMatchCard = ({
      * als dort. Die Uhr ist die des Browsers: die Seite rendert bei jedem Abruf und mindestens alle
      * 30 Sekunden neu (siehe `useLocalClock` in LiveDashboardPage), die Minutenangabe zählt also
      * zwischen zwei Abrufen weiter.
+     *
+     * Die Zusammensetzung selbst liegt in `common.ts`, damit sie ohne Rendering prüfbar bleibt.
      */
-    const status: MatchStatusDto = {
-        state: match.state,
-        startedAt: match.startedAt ?? undefined,
-        teamsTotal: match.teams.length,
-        teamsScored: match.teams.filter(teamHasResult).length,
-    }
+    const status = dashboardMatchStatus(match)
     const statusChip = matchStatusChip(status, match.startTime, new Date())
     // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur — dasselbe Muster
     // wie `StatusChip` in CompetitionExecutionRound.tsx.
     const translate = t as (key: string, values?: Record<string, string | number>) => string
+    // Einmal je Karte statt dreimal im JSX — dieselbe Stelle wie im Zeitplan-Tab.
+    const bye = byeExplanation(match.bye)
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = matchHasResults(match.teams)
     // Sobald gewertet wird, steht der Erste oben — die Zahl links bleibt dabei die Startnummer.
-    const teams = teamsInDisplayOrder(match.teams)
+    const orderedTeams = teamsInDisplayOrder(match.teams)
+    // Gewertet wird je Wertungskategorie. Solange kein Boot ein Ergebnis hat, bleibt die Karte
+    // eine durchgehende Startnummernliste: am Steg wird sie gegen das Wasser gelesen, und
+    // Zwischenüberschriften zerschnitten dort nur den Blick auf das Feld.
+    const sections = hasResults
+        ? groupByRatingCategory(orderedTeams, team => team.ratingCategory)
+        : []
+    const showSectionHeadings = hasResults && hasRatingCategories(sections)
+    const teams = hasResults ? sections.flatMap(section => section.entries) : orderedTeams
+    // Vor welchem Boot eine Kategorieüberschrift steht: dem jeweils ersten seines Abschnitts.
+    const headingBeforeTeam = new Map(
+        showSectionHeadings
+            ? sections
+                  .filter(section => section.entries.length > 0)
+                  .map(section => [
+                      section.entries[0].teamId,
+                      section.category?.name ?? t('event.ratingCategory.withoutCategory'),
+                  ])
+            : [],
+    )
     const openTeams = openResultTeams(match)
     const resultsComplete = match.teams.length > 0 && openTeams.length === 0
-    const columns = hasResults
-        ? '2ch minmax(0, 1fr) 10.5ch 2rem 26px'
-        : '2ch minmax(0, 1fr) 26px'
+    const columns = hasResults ? '2ch minmax(0, 1fr) 10.5ch 2rem 26px' : '2ch minmax(0, 1fr) 26px'
     // Sobald Zeit und Platz ihre Spalten belegen, bleibt der Vereinszeile am Telefon noch die
     // Hälfte der Breite - die Kette muss dann früher aufs "+n" ausweichen.
     const narrowChainChars = hasResults ? CLUB_CHAIN_NARROW_RESULT_CHARS : CLUB_CHAIN_NARROW_CHARS
@@ -222,13 +241,25 @@ const LiveDashboardMatchCard = ({
                                     running || preparing || skipped || awaitingFinish
                                         ? 'common.white'
                                         : 'grey.900',
-                                textDecoration: statusChip.strikeThrough
-                                    ? 'line-through'
-                                    : 'none',
+                                textDecoration: statusChip.strikeThrough ? 'line-through' : 'none',
                             }}>
                             {translate(statusChip.labelKey, statusChip.values)}
                         </Box>
                     </Box>
+                    {/*
+                        Muss der letzte Kind-Knoten dieses Grids bleiben: die vier Kinder davor
+                        füllen Zeile 1 und 2 exakt wie vor der Freilos-Anzeige, erst danach bleibt
+                        für dieses volle-Breite-Element nur die eigene Zeile 3 übrig. Stünde es
+                        früher, würde die Statuskennzeichnung in Zeile 2 keinen Platz mehr finden
+                        und in Zeile 4 an die Spaltenkante statt an die Kartenkante rutschen.
+                    */}
+                    {bye && (
+                        <Box sx={{gridColumn: '1 / -1'}}>
+                            <Typography variant="caption" sx={{color: 'grey.700'}}>
+                                {translate(bye.key, bye.values)}
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
                 {(() => {
                     const pollStatus = raceClockerPollStatus(match)
@@ -282,42 +313,52 @@ const LiveDashboardMatchCard = ({
                     const substituted = team.substituted
                     const showClubLine = teamShowsClubLine(team)
                     const showCrew = teamShowsCrew(team)
+                    const heading = headingBeforeTeam.get(team.teamId)
 
                     return (
-                        <Box
-                            key={team.teamId}
-                            onClick={() => onTeamClick(match.matchId, team.teamId)}
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: columns,
-                                columnGap: 0.75,
-                                alignItems: 'center',
-                                py: 1.25,
-                                mx: -1,
-                                px: 1,
-                                cursor: 'pointer',
-                                borderRadius: 1,
-                                borderBottom: index < teams.length - 1 ? '1px solid' : 'none',
-                                borderBottomColor: 'divider',
-                                '&:active': {backgroundColor: 'action.selected'},
-                                '@media (hover: hover)': {
-                                    '&:hover': {backgroundColor: 'action.hover'},
-                                },
-                            }}>
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight={700}
-                                sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.700'}}>
-                                {team.startNumber ?? '–'}
-                            </Typography>
-                            <Box sx={{minWidth: 0}}>
-                                <Stack
-                                    direction="row"
-                                    spacing={0.5}
-                                    alignItems="center"
-                                    sx={{minWidth: 0}}>
-                                    <Box sx={{minWidth: 0}}>
-                                        {/*
+                        <Fragment key={team.teamId}>
+                            {heading !== undefined && (
+                                <Typography
+                                    variant="body2"
+                                    fontWeight={700}
+                                    color="text.secondary"
+                                    sx={{mt: 1}}>
+                                    {heading}
+                                </Typography>
+                            )}
+                            <Box
+                                onClick={() => onTeamClick(match.matchId, team.teamId)}
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: columns,
+                                    columnGap: 0.75,
+                                    alignItems: 'center',
+                                    py: 1.25,
+                                    mx: -1,
+                                    px: 1,
+                                    cursor: 'pointer',
+                                    borderRadius: 1,
+                                    borderBottom: index < teams.length - 1 ? '1px solid' : 'none',
+                                    borderBottomColor: 'divider',
+                                    '&:active': {backgroundColor: 'action.selected'},
+                                    '@media (hover: hover)': {
+                                        '&:hover': {backgroundColor: 'action.hover'},
+                                    },
+                                }}>
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight={700}
+                                    sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.700'}}>
+                                    {team.startNumber ?? '–'}
+                                </Typography>
+                                <Box sx={{minWidth: 0}}>
+                                    <Stack
+                                        direction="row"
+                                        spacing={0.5}
+                                        alignItems="center"
+                                        sx={{minWidth: 0}}>
+                                        <Box sx={{minWidth: 0}}>
+                                            {/*
                                             Die Vereinskette steht oben und trägt die Zeile: sie
                                             sagt, wer da rudert. Der Mannschaftsname ist dagegen
                                             nur ein Zähler (`#1`, `#2`) für Vereine mit mehreren
@@ -328,168 +369,178 @@ const LiveDashboardMatchCard = ({
                                             rückt der Name an ihre Stelle und bekommt ihr Gewicht:
                                             prominent ist immer das, was oben steht.
                                         */}
-                                        {showClubLine && (
-                                            <Typography
-                                                variant="body2"
-                                                aria-label={t('event.liveDashboard.team.clubs')}
-                                                sx={{
-                                                    color: 'grey.800',
-                                                    // Zwei Zeilen hoch; schmal ist die Kette
-                                                    // vorher schon auf ganze Vereinsnamen samt
-                                                    // "+n" gekürzt, breit läuft sie hier aus.
-                                                    display: '-webkit-box',
-                                                    WebkitLineClamp: 2,
-                                                    WebkitBoxOrient: 'vertical',
-                                                    overflow: 'hidden',
-                                                }}>
-                                                <Box
-                                                    component="span"
+                                            {showClubLine && (
+                                                <Typography
+                                                    variant="body2"
+                                                    aria-label={t('event.liveDashboard.team.clubs')}
                                                     sx={{
-                                                        display: 'inline',
-                                                        [`@container (min-width: ${WIDE_CARD_PX}px)`]:
-                                                            {
-                                                                display: 'none',
-                                                            },
+                                                        color: 'grey.800',
+                                                        // Zwei Zeilen hoch; schmal ist die Kette
+                                                        // vorher schon auf ganze Vereinsnamen samt
+                                                        // "+n" gekürzt, breit läuft sie hier aus.
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
                                                     }}>
-                                                    {shortenClubChain(
-                                                        team.clubsShort,
-                                                        narrowChainChars,
-                                                    )}
-                                                </Box>
-                                                <Box
-                                                    component="span"
-                                                    sx={{
-                                                        display: 'none',
-                                                        [`@container (min-width: ${WIDE_CARD_PX}px)`]:
-                                                            {
-                                                                display: 'inline',
-                                                            },
-                                                    }}>
-                                                    {team.clubsFull}
-                                                </Box>
-                                            </Typography>
-                                        )}
-                                        {team.teamName != null && (
-                                            <Typography
-                                                variant={showClubLine ? 'caption' : 'subtitle1'}
-                                                sx={{
-                                                    lineHeight: 1.25,
-                                                    overflowWrap: 'break-word',
-                                                    color: showClubLine ? 'grey.600' : undefined,
-                                                    display: '-webkit-box',
-                                                    WebkitLineClamp: 2,
-                                                    WebkitBoxOrient: 'vertical',
-                                                    overflow: 'hidden',
-                                                }}>
-                                                {team.teamName}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                    {substituted && (
-                                        <SwapHorizIcon
-                                            sx={{
-                                                fontSize: 22,
-                                                flexShrink: 0,
-                                                color: 'info.dark',
-                                            }}
-                                            titleAccess={t(
-                                                'event.liveDashboard.substitution.short',
+                                                    <Box
+                                                        component="span"
+                                                        sx={{
+                                                            display: 'inline',
+                                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]:
+                                                                {
+                                                                    display: 'none',
+                                                                },
+                                                        }}>
+                                                        {shortenClubChain(
+                                                            team.clubsShort,
+                                                            narrowChainChars,
+                                                        )}
+                                                    </Box>
+                                                    <Box
+                                                        component="span"
+                                                        sx={{
+                                                            display: 'none',
+                                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]:
+                                                                {
+                                                                    display: 'inline',
+                                                                },
+                                                        }}>
+                                                        {team.clubsFull}
+                                                    </Box>
+                                                </Typography>
                                             )}
-                                        />
+                                            {team.teamName != null && (
+                                                <Typography
+                                                    variant={showClubLine ? 'caption' : 'subtitle1'}
+                                                    sx={{
+                                                        lineHeight: 1.25,
+                                                        overflowWrap: 'break-word',
+                                                        color: showClubLine
+                                                            ? 'grey.600'
+                                                            : undefined,
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
+                                                    }}>
+                                                    {team.teamName}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        {substituted && (
+                                            <SwapHorizIcon
+                                                sx={{
+                                                    fontSize: 22,
+                                                    flexShrink: 0,
+                                                    color: 'info.dark',
+                                                }}
+                                                titleAccess={t(
+                                                    'event.liveDashboard.substitution.short',
+                                                )}
+                                            />
+                                        )}
+                                    </Stack>
+                                    {showCrew && (
+                                        <Typography
+                                            variant="caption"
+                                            aria-label={t('event.liveDashboard.team.crew')}
+                                            sx={{
+                                                color: 'grey.700',
+                                                display: 'none',
+                                                [`@container (min-width: ${CREW_CARD_PX}px)`]: {
+                                                    display: '-webkit-box',
+                                                },
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                            }}>
+                                            {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
+                                        </Typography>
                                     )}
-                                </Stack>
-                                {showCrew && (
-                                    <Typography
-                                        variant="caption"
-                                        aria-label={t('event.liveDashboard.team.crew')}
-                                        sx={{
-                                            color: 'grey.700',
-                                            display: 'none',
-                                            [`@container (min-width: ${CREW_CARD_PX}px)`]: {
-                                                display: '-webkit-box',
-                                            },
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden',
-                                        }}>
-                                        {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
-                                    </Typography>
-                                )}
-                                {team.inArenaRequired && team.inArenaAt && (
-                                    <Typography
-                                        variant="caption"
-                                        display="block"
-                                        sx={{
-                                            color: 'success.dark',
-                                            fontVariantNumeric: 'tabular-nums',
-                                        }}>
-                                        {t('event.liveDashboard.team.inArenaAt', {
-                                            time: format(new Date(team.inArenaAt), t('format.time')),
-                                        })}
-                                    </Typography>
-                                )}
-                            </Box>
-                            {hasResults && (
-                                <>
-                                    {/* Times share one right-aligned monospaced column, so they
+                                    {team.inArenaRequired && team.inArenaAt && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{
+                                                color: 'success.dark',
+                                                fontVariantNumeric: 'tabular-nums',
+                                            }}>
+                                            {t('event.liveDashboard.team.inArenaAt', {
+                                                time: format(
+                                                    new Date(team.inArenaAt),
+                                                    t('format.time'),
+                                                ),
+                                            })}
+                                        </Typography>
+                                    )}
+                                </Box>
+                                {hasResults && (
+                                    <>
+                                        {/* Times share one right-aligned monospaced column, so they
                                         can be compared by scanning straight down. */}
-                                    <Typography
-                                        fontWeight={700}
-                                        textAlign="right"
-                                        sx={{
-                                            fontSize: '0.9rem',
-                                            fontFamily:
-                                                'ui-monospace, SFMono-Regular, Menlo, monospace',
-                                            fontVariantNumeric: 'tabular-nums',
-                                            letterSpacing: '-0.05em',
-                                            color: team.failed ? 'warning.dark' : 'text.primary',
-                                        }}>
-                                        {team.failed
-                                            ? (matchResultStatus(team.failedReason).status ??
-                                              t('event.liveDashboard.team.failedShort'))
-                                            : (team.time ?? '')}
-                                        {team.penaltySeconds != null && (
-                                            <Typography
-                                                component="span"
-                                                color="warning.dark"
-                                                display="block"
-                                                sx={{
-                                                    fontSize: '0.8rem',
-                                                    fontVariantNumeric: 'tabular-nums',
-                                                }}>
-                                                {t('event.liveDashboard.penaltyIncluded', {
-                                                    seconds: team.penaltySeconds,
-                                                })}
-                                            </Typography>
-                                        )}
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            width: '2rem',
-                                            height: '2rem',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            borderRadius: '50%',
-                                            backgroundColor:
-                                                team.place != null ? 'primary.main' : 'transparent',
-                                        }}>
-                                        {team.place != null && (
-                                            <Typography
-                                                fontWeight={700}
-                                                color="primary.contrastText"
-                                                sx={{
-                                                    fontSize: '0.95rem',
-                                                    fontVariantNumeric: 'tabular-nums',
-                                                }}>
-                                                {team.place}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                </>
-                            )}
-                            <SeverityIcon severity={team.severity} />
-                        </Box>
+                                        <Typography
+                                            fontWeight={700}
+                                            textAlign="right"
+                                            sx={{
+                                                fontSize: '0.9rem',
+                                                fontFamily:
+                                                    'ui-monospace, SFMono-Regular, Menlo, monospace',
+                                                fontVariantNumeric: 'tabular-nums',
+                                                letterSpacing: '-0.05em',
+                                                color: team.failed
+                                                    ? 'warning.dark'
+                                                    : 'text.primary',
+                                            }}>
+                                            {team.failed
+                                                ? (matchResultStatus(team.failedReason).status ??
+                                                  t('event.liveDashboard.team.failedShort'))
+                                                : (team.time ?? '')}
+                                            {team.penaltySeconds != null && (
+                                                <Typography
+                                                    component="span"
+                                                    color="warning.dark"
+                                                    display="block"
+                                                    sx={{
+                                                        fontSize: '0.8rem',
+                                                        fontVariantNumeric: 'tabular-nums',
+                                                    }}>
+                                                    {t('event.liveDashboard.penaltyIncluded', {
+                                                        seconds: team.penaltySeconds,
+                                                    })}
+                                                </Typography>
+                                            )}
+                                        </Typography>
+                                        <Box
+                                            sx={{
+                                                width: '2rem',
+                                                height: '2rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: '50%',
+                                                backgroundColor:
+                                                    team.place != null
+                                                        ? 'primary.main'
+                                                        : 'transparent',
+                                            }}>
+                                            {team.place != null && (
+                                                <Typography
+                                                    fontWeight={700}
+                                                    color="primary.contrastText"
+                                                    sx={{
+                                                        fontSize: '0.95rem',
+                                                        fontVariantNumeric: 'tabular-nums',
+                                                    }}>
+                                                    {team.categoryPlace ?? team.place}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </>
+                                )}
+                                <SeverityIcon severity={team.severity} />
+                            </Box>
+                        </Fragment>
                     )
                 })}
                 {(showFinish || showActivationToggle || showMarkStarted) && (
@@ -572,11 +623,7 @@ type PendingSlotCardProps = {
  * ein wartender Lauf-Slot (Runde noch nicht gesetzt); `slot.name` unterscheidet die Fälle (siehe
  * `PendingSlotDto`). Bewusst ohne Teams oder Ergebnis-Spalten, die gibt es für beide Fälle nicht.
  */
-export const LiveDashboardPendingSlotCard = ({
-    slot,
-    onSkip,
-    shortLabels,
-}: PendingSlotCardProps) => {
+export const LiveDashboardPendingSlotCard = ({slot, onSkip, shortLabels}: PendingSlotCardProps) => {
     const {t} = useTranslation()
     const isFree = slot.name != null
     const label = pendingSlotLabel(slot, shortLabels ? 'short' : 'full')
@@ -593,7 +640,11 @@ export const LiveDashboardPendingSlotCard = ({
                         columnGap: 1.5,
                         alignItems: 'baseline',
                     }}>
-                    <Typography variant="subtitle1" fontWeight={700} noWrap sx={{color: 'grey.700'}}>
+                    <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        noWrap
+                        sx={{color: 'grey.700'}}>
                         {label || stateLabel}
                     </Typography>
                     <Typography

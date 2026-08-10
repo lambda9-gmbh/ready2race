@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -116,6 +117,14 @@ data class AthleteBoardResult(
 
 data class AthleteBoardResultTeam(
     val place: Int?,
+    /**
+     * Die Wertungskategorie des Bootes, `null` ohne Zuordnung. Die Anzeige trennt danach in
+     * Abschnitte, in der Reihenfolge aus [RatingCategoryRef.sortOrder].
+     */
+    val ratingCategory: RatingCategoryRef?,
+    /** Der Platz innerhalb der Wertungskategorie, ab 1 — das ist die angezeigte Zahl. */
+    val categoryPlace: Int?,
+    /** Wie bei [AthleteBoardTeam.startNumber]: die Startposition im Lauf, nicht nullbar. */
     val startNumber: Int,
     /** Die n-te Mannschaft dieses Vereins im Wettkampf - nur gezeigt, wenn [teamName] fehlt. */
     val teamNumber: Int?,

@@ -43,6 +43,7 @@ class GapPlaceholderLogicTest {
         competitionShortName = "CF 1x",
         clubName = "RC Allemannia Hamburg v. 1866",
         teamName = null,
+        ratingCategory = "Meisterschaften",
         eventDate = "16.–17. August 2025",
         eventLocation = "Flensburg",
     )

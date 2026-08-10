@@ -20,7 +20,9 @@ import {format} from 'date-fns'
 import BaseDialog from '@components/BaseDialog.tsx'
 import {useTranslation} from 'react-i18next'
 import {ResultsMatchInfo} from '@components/results/ResultsMatchCard.tsx'
+
 import {sortByPlaces, compareNullsHigh} from '@utils/helpers.ts'
+import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
 
@@ -40,11 +42,22 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
 
     const smallScreenLayout = useMediaQuery(`(max-width:${theme.breakpoints.values.sm}px)`)
 
-    const sortedTeams = match
+    // Der Dialog bedient zwei Formen: das Ergebnis eines gefahrenen Laufs und den laufenden Lauf.
+    // Ohne die gemeinsame Annotation bliebe hier eine Vereinigung zweier Listen stehen, die sich
+    // nicht am Stück gruppieren lässt.
+    const sortedTeams: ResultsMatchInfo['teams'][number][] = match
         ? 'executionOrder' in match
             ? match.teams.sort((a, b) => compareNullsHigh(a.startNumber, b.startNumber))
             : sortByPlaces(match.teams)
         : []
+
+    // Ergebnisse werden je Wertungskategorie getrennt gezeigt und je Abschnitt ab 1 gezählt. Ein
+    // Lauf ohne Kategorien liefert genau einen namenlosen Abschnitt - dann bleibt die Anzeige die
+    // gewohnte gemeinsame Liste, ohne Überschrift.
+    const sections = groupByRatingCategory(sortedTeams, team =>
+        'ratingCategory' in team ? team.ratingCategory : null,
+    )
+    const showSectionHeadings = hasRatingCategories(sections)
 
     return (
         <BaseDialog
@@ -82,133 +95,163 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                     </Typography>
                                 </Stack>
                             )}
-                            {sortedTeams.map(team => (
-                                <Card key={team.teamId}>
-                                    <CardContent>
-                                        <Stack
-                                            spacing={4}
-                                            direction={'row'}
-                                            sx={{
-                                                justifyContent: 'space-between',
-                                            }}>
-                                            {/* Unterscheidet die Ergebnis-Mannschaft von der
+                            {sections.map(section => (
+                                <Stack spacing={2} key={section.category?.id ?? 'none'}>
+                                    {showSectionHeadings && (
+                                        <Typography variant={'subtitle1'} fontWeight={'bold'}>
+                                            {section.category?.name ??
+                                                t('event.ratingCategory.withoutCategory')}
+                                        </Typography>
+                                    )}
+                                    {section.entries.map(team => (
+                                        <Card key={team.teamId}>
+                                            <CardContent>
+                                                <Stack
+                                                    spacing={4}
+                                                    direction={'row'}
+                                                    sx={{
+                                                        justifyContent: 'space-between',
+                                                    }}>
+                                                    {/* Unterscheidet die Ergebnis-Mannschaft von der
                                                 eines laufenden Laufs. Bewusst an `deregistered`:
                                                 Zeit, Zeitstrafe und `failed` trägt inzwischen
                                                 auch die laufende Mannschaft (Teilergebnisse). */}
-                                            {'deregistered' in team ? (
-                                                <Box>
-                                                    <Typography
-                                                        variant={team.place ? 'h5' : 'body1'}>
-                                                        {team.place
-                                                            ? `${team.place}.`
-                                                            : team.failed
-                                                              ? failedLabel(
-                                                                    team.failedReason,
-                                                                    t(
-                                                                        'event.competition.execution.results.failed',
-                                                                    ),
-                                                                )
-                                                              : team.deregistered
-                                                                ? t(
-                                                                      'event.competition.registration.deregister.deregistered',
-                                                                  ) +
-                                                                  (team.deregisteredReason
-                                                                      ? ` (${team.deregisteredReason})`
-                                                                      : '')
-                                                                : ''}
-                                                    </Typography>
-                                                    {!team.failed && team.timeString && (
-                                                            <Box
-                                                                display="flex"
-                                                                gap={1}
-                                                                alignItems={'center'}>
-                                                                <TimerOutlinedIcon
-                                                                    color={'action'}
-                                                                    fontSize={'inherit'}
-                                                                />
-                                                                <Typography
-                                                                    color={'textSecondary'}
-                                                                    variant={'body2'}>
-                                                                    {team.timeString}
-                                                                </Typography>
-                                                            </Box>
-                                                        )}
-                                                    {team.penaltySeconds != null && (
+                                                    {'deregistered' in team ? (
+                                                        <Box>
+                                                            {/* Gezeigt wird der Platz innerhalb der
+                                                        Wertungskategorie; team.place bleibt der
+                                                        Platz im Lauf und ist nur seine Grundlage. */}
                                                             <Typography
-                                                                color={'warning.main'}
-                                                                variant={'body2'}>
-                                                                {t(
-                                                                    'event.competition.execution.results.penalty',
-                                                                    {seconds: team.penaltySeconds},
-                                                                )}
-                                                                {team.penaltyNote
-                                                                    ? ` · ${team.penaltyNote}`
-                                                                    : ''}
+                                                                variant={
+                                                                    team.categoryPlace
+                                                                        ? 'h5'
+                                                                        : 'body1'
+                                                                }>
+                                                                {team.categoryPlace
+                                                                    ? `${team.categoryPlace}.`
+                                                                    : team.failed
+                                                                      ? failedLabel(
+                                                                            team.failedReason,
+                                                                            t(
+                                                                                'event.competition.execution.results.failed',
+                                                                            ),
+                                                                        )
+                                                                      : team.deregistered
+                                                                        ? t(
+                                                                              'event.competition.registration.deregister.deregistered',
+                                                                          ) +
+                                                                          (team.deregisteredReason
+                                                                              ? ` (${team.deregisteredReason})`
+                                                                              : '')
+                                                                        : ''}
                                                             </Typography>
-                                                        )}
-                                                </Box>
-                                            ) : (
-                                                <Box></Box>
-                                            )}
-                                            <Box>
-                                                <Typography textAlign={'right'}>
-                                                    {team.clubsFull ?? team.clubName}
-                                                </Typography>
-                                                <Typography
-                                                    color={'textSecondary'}
-                                                    variant={'body2'}
-                                                    textAlign={'right'}>
-                                                    {`${t('club.registeredBy')} ` +
-                                                        team.clubName +
-                                                        ` | ${team.teamName}`}
-                                                </Typography>
-                                            </Box>
-                                        </Stack>
-                                        <Divider sx={{my: 1}} />
-                                        <Grid2 container>
-                                            {team.participants
-                                                .sort((a, b) =>
-                                                    a.namedRole === b.namedRole
-                                                        ? a.firstName === b.firstName
-                                                            ? a.lastName > b.lastName
-                                                                ? 1
-                                                                : -1
-                                                            : a.firstName > b.firstName
-                                                              ? 1
-                                                              : -1
-                                                        : (a.namedRole ?? '') > (b.namedRole ?? '')
-                                                          ? 1
-                                                          : -1,
-                                                )
-                                                .map(participant => (
-                                                    <Grid2 size={6} key={participant.participantId}>
-                                                        <ListItemText
-                                                            primary={
-                                                                participant.firstName +
-                                                                ' ' +
-                                                                participant.lastName
-                                                            }
-                                                            secondary={
-                                                                <>
+                                                            {!team.failed && team.timeString && (
+                                                                <Box
+                                                                    display="flex"
+                                                                    gap={1}
+                                                                    alignItems={'center'}>
+                                                                    <TimerOutlinedIcon
+                                                                        color={'action'}
+                                                                        fontSize={'inherit'}
+                                                                    />
                                                                     <Typography
-                                                                        variant="body2"
-                                                                        color="text.secondary">
-                                                                        {participant.namedRole}
+                                                                        color={'textSecondary'}
+                                                                        variant={'body2'}>
+                                                                        {team.timeString}
                                                                     </Typography>
-                                                                    <Typography
-                                                                        variant="body2"
-                                                                        color="text.secondary">
-                                                                        {participant.externalClubName ??
-                                                                            team.clubName}
-                                                                    </Typography>
-                                                                </>
-                                                            }
-                                                        />
-                                                    </Grid2>
-                                                ))}
-                                        </Grid2>
-                                    </CardContent>
-                                </Card>
+                                                                </Box>
+                                                            )}
+                                                            {team.penaltySeconds != null && (
+                                                                <Typography
+                                                                    color={'warning.main'}
+                                                                    variant={'body2'}>
+                                                                    {t(
+                                                                        'event.competition.execution.results.penalty',
+                                                                        {
+                                                                            seconds:
+                                                                                team.penaltySeconds,
+                                                                        },
+                                                                    )}
+                                                                    {team.penaltyNote
+                                                                        ? ` · ${team.penaltyNote}`
+                                                                        : ''}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
+                                                    ) : (
+                                                        <Box></Box>
+                                                    )}
+                                                    <Box>
+                                                        <Typography textAlign={'right'}>
+                                                            {team.clubsFull ?? team.clubName}
+                                                        </Typography>
+                                                        <Typography
+                                                            color={'textSecondary'}
+                                                            variant={'body2'}
+                                                            textAlign={'right'}>
+                                                            {[
+                                                                t('club.registeredBy') +
+                                                                    ' ' +
+                                                                    team.clubName,
+                                                                team.teamName,
+                                                            ]
+                                                                .filter(Boolean)
+                                                                .join(' | ')}
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
+                                                <Divider sx={{my: 1}} />
+                                                <Grid2 container>
+                                                    {team.participants
+                                                        .sort((a, b) =>
+                                                            a.namedRole === b.namedRole
+                                                                ? a.firstName === b.firstName
+                                                                    ? a.lastName > b.lastName
+                                                                        ? 1
+                                                                        : -1
+                                                                    : a.firstName > b.firstName
+                                                                      ? 1
+                                                                      : -1
+                                                                : (a.namedRole ?? '') >
+                                                                    (b.namedRole ?? '')
+                                                                  ? 1
+                                                                  : -1,
+                                                        )
+                                                        .map(participant => (
+                                                            <Grid2
+                                                                size={6}
+                                                                key={participant.participantId}>
+                                                                <ListItemText
+                                                                    primary={
+                                                                        participant.firstName +
+                                                                        ' ' +
+                                                                        participant.lastName
+                                                                    }
+                                                                    secondary={
+                                                                        <>
+                                                                            <Typography
+                                                                                variant="body2"
+                                                                                color="text.secondary">
+                                                                                {
+                                                                                    participant.namedRole
+                                                                                }
+                                                                            </Typography>
+                                                                            <Typography
+                                                                                variant="body2"
+                                                                                color="text.secondary">
+                                                                                {participant.externalClubName ??
+                                                                                    team.clubName}
+                                                                            </Typography>
+                                                                        </>
+                                                                    }
+                                                                />
+                                                            </Grid2>
+                                                        ))}
+                                                </Grid2>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </Stack>
                             ))}
                         </Stack>
                     </DialogContent>

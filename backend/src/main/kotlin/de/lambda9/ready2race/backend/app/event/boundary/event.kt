@@ -27,6 +27,7 @@ import de.lambda9.ready2race.backend.app.task.boundary.task
 import de.lambda9.ready2race.backend.app.participantTracking.boundary.participantTracking
 import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryService
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoriesToEventRequest
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryOrderRequest
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -187,6 +188,15 @@ fun Route.event() {
                         val eventId = !pathParam("eventId", uuid)
 
                         RatingCategoryService.getRatingCategoriesForEvent(eventId)
+                    }
+                }
+                put("/order") {
+                    call.respondComprehension {
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val eventId = !pathParam("eventId", uuid)
+                        val body = !receiveKIO(RatingCategoryOrderRequest.example)
+
+                        RatingCategoryService.updateOrderForEvent(eventId, user.id!!, body)
                     }
                 }
                 route("/{ratingCategoryId}") {

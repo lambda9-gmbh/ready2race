@@ -67,17 +67,19 @@ fun Route.awardCertificate() {
 }
 
 /**
- * Die vier Query-Parameter der drei Urkunden-Endpunkte, mit den dokumentierten Defaults.
+ * Die Query-Parameter der drei Urkunden-Endpunkte, mit den dokumentierten Defaults.
  */
 private fun CallComprehensionScope.awardCertificateOptions(): AwardCertificateOptions {
     val maxPlace = !optionalQueryParam("maxPlace", int) ?: AwardCertificateOptions.DEFAULT_MAX_PLACE
     val mode = !optionalQueryParam("mode", enum<AwardCertificateMode>()) ?: AwardCertificateMode.PER_ATHLETE
     val withBackground = !optionalQueryParam("background", boolean) ?: false
+    val printRatingCategory = !optionalQueryParam("ratingCategory", boolean) ?: false
 
     return AwardCertificateOptions(
         maxPlace = maxPlace,
         mode = mode,
         withBackground = withBackground,
+        printRatingCategory = printRatingCategory,
     )
 }
 

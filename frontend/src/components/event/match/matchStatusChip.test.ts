@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {EventScheduleSlotDto, MatchStatusDto} from '@api/types.gen.ts'
+import {EventScheduleSlotDto, MatchByeDto, MatchStatusDto} from '@api/types.gen.ts'
 import {
     OVERDUE_GRACE_MINUTES,
     matchStatusChip,
@@ -326,5 +326,109 @@ describe('slotMatchStatus', () => {
             teamsTotal: 6,
             teamsScored: 2,
         })
+    })
+})
+
+describe('slotMatchStatus beim Freilos', () => {
+    const slot = (overrides: Partial<EventScheduleSlotDto>): EventScheduleSlotDto =>
+        ({
+            id: 'slot-1',
+            startTime: minutesAgo(10),
+            state: 'LINKED',
+            matchId: 'match-1',
+            matchTeamsTotal: 1,
+            matchTeamsScored: 1,
+            ...overrides,
+        }) as EventScheduleSlotDto
+
+    it('trägt das Freilos in den Zeitplan-Status', () => {
+        const status = slotMatchStatus(slot({bye: {cause: 'NO_OPPONENT'}}))
+        expect(status?.bye).toEqual({cause: 'NO_OPPONENT'})
+        expect(matchStatusChip(status!, slot({}).startTime, NOW).labelKey).toBe(
+            'event.match.status.bye.open',
+        )
+    })
+})
+
+const structuralBye: MatchByeDto = {cause: 'NO_OPPONENT'}
+const withdrawalBye: MatchByeDto = {
+    cause: 'DEREGISTRATION',
+    teamName: 'RV Hansa',
+    reason: 'Krankheit',
+}
+
+describe('matchStatusChip beim Freilos', () => {
+    it('sagt „offen", solange niemand quittiert hat', () => {
+        const chip = matchStatusChip(
+            status({state: 'AWAITING_FINISH', bye: structuralBye}),
+            minutesAgo(30),
+            NOW,
+        )
+        expect(chip).toEqual({labelKey: 'event.match.status.bye.open', color: 'info'})
+    })
+
+    /** „Überfällig" würde ein Ergebnis einfordern, auf das niemand wartet. */
+    it('wird nie überfällig', () => {
+        const chip = matchStatusChip(
+            status({state: 'UPCOMING', bye: structuralBye}),
+            minutesAgo(OVERDUE_GRACE_MINUTES + 60),
+            NOW,
+        )
+        expect(chip.labelKey).toBe('event.match.status.bye.open')
+    })
+
+    /** Ebenso wenig „Teilweise gewertet": zu werten gibt es hier nichts. */
+    it('wird nie teilweise gewertet', () => {
+        const chip = matchStatusChip(
+            status({state: 'UPCOMING', teamsTotal: 2, teamsScored: 1, bye: withdrawalBye}),
+            minutesAgo(1),
+            NOW,
+        )
+        expect(chip.labelKey).toBe('event.match.status.bye.open')
+    })
+
+    it('sagt „quittiert", sobald der Lauf beendet ist', () => {
+        const chip = matchStatusChip(
+            status({state: 'FINISHED', bye: structuralBye}),
+            minutesAgo(30),
+            NOW,
+        )
+        expect(chip).toEqual({labelKey: 'event.match.status.bye.acknowledged', color: 'success'})
+    })
+
+    it('sagt „entfallen" und streicht durch, wenn der Slot abgesagt ist', () => {
+        const chip = matchStatusChip(
+            status({state: 'SKIPPED', bye: structuralBye}),
+            minutesAgo(30),
+            NOW,
+        )
+        expect(chip).toEqual({
+            labelKey: 'event.match.status.bye.cancelled',
+            color: 'default',
+            strikeThrough: true,
+        })
+    })
+
+    /** Was tatsächlich passiert, schlägt weiterhin alles: aktiviert heißt aktiviert. */
+    it('tritt hinter einen aktivierten Lauf zurück', () => {
+        expect(
+            matchStatusChip(status({state: 'PREPARING', bye: structuralBye}), minutesAgo(1), NOW)
+                .labelKey,
+        ).toBe('event.match.status.preparing')
+        expect(
+            matchStatusChip(
+                status({state: 'RUNNING', startedAt: minutesAgo(4), bye: structuralBye}),
+                minutesAgo(5),
+                NOW,
+            ).labelKey,
+        ).toBe('event.match.status.running')
+    })
+
+    it('lässt den Arena-Chip schweigen', () => {
+        expect(
+            arenaChip(
+                status({state: 'UPCOMING', teamsTotal: 1, teamsInArena: 0, bye: structuralBye}),
+            ),
+        ).toBeNull()
     })
 })

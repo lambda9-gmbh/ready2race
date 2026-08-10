@@ -135,6 +135,7 @@ class ClubChainInDisplaysTest {
                 maxPlace = 3,
                 mode = AwardCertificateMode.PER_TEAM,
                 withBackground = false,
+                printRatingCategory = false,
             ),
             format = AwardCertificateService.Format.PDF,
         )
@@ -162,6 +163,7 @@ class ClubChainInDisplaysTest {
                 maxPlace = 3,
                 mode = AwardCertificateMode.PER_TEAM,
                 withBackground = false,
+                printRatingCategory = false,
             ),
             format = AwardCertificateService.Format.DOCX,
         )

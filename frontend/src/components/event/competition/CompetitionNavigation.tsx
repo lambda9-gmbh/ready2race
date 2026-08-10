@@ -13,6 +13,8 @@ import {
     Paper,
     Stack,
     TextField,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography,
     useMediaQuery,
     useTheme,
@@ -32,6 +34,9 @@ import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getCompetitions} from '@api/sdk.gen.ts'
 import {competitionLabelName, CompetitionTab} from '@components/event/competition/common.ts'
+import CompetitionScheduleRail from '@components/event/competition/CompetitionScheduleRail.tsx'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {readEventGlobal} from '@authorization/privileges.ts'
 import Throbber from '@components/Throbber.tsx'
 
 /** Merkt sich pro Gerät, ob die Wettkampfliste zugeklappt ist - sonst steht sie bei jedem
@@ -47,6 +52,15 @@ const NAV_SHORT_NAMES_STORAGE_KEY = 'competition_nav_short_names'
 
 const storedNavShortNames = (): boolean =>
     localStorage.getItem(NAV_SHORT_NAMES_STORAGE_KEY) === 'true'
+
+/** Womit die Leiste gefüllt ist: der Rennliste oder dem Zeitplan. Am Regattatag springt man
+ * zwischen beidem hin und her, deshalb bleibt die zuletzt gewählte Seite stehen. */
+export type NavMode = 'competitions' | 'schedule'
+
+const NAV_MODE_STORAGE_KEY = 'competition_nav_mode'
+
+const storedNavMode = (): NavMode =>
+    localStorage.getItem(NAV_MODE_STORAGE_KEY) === 'schedule' ? 'schedule' : 'competitions'
 
 const LIST_WIDTH = 240
 /** Abstand der mitlaufenden Leiste zum Fensterrand, in Pixeln. */
@@ -68,6 +82,7 @@ const CompetitionNavigation = ({
     children,
 }: Props) => {
     const {t} = useTranslation()
+    const user = useUser()
     const feedback = useFeedback()
     const theme = useTheme()
 
@@ -77,6 +92,12 @@ const CompetitionNavigation = ({
 
     const [collapsed, setCollapsed] = useState(storedNavCollapsed)
     const [shortNames, setShortNames] = useState(storedNavShortNames)
+    const [mode, setMode] = useState<NavMode>(storedNavMode)
+
+    const switchMode = (next: NavMode) => {
+        setMode(next)
+        localStorage.setItem(NAV_MODE_STORAGE_KEY, next)
+    }
     const [drawerOpen, setDrawerOpen] = useState(false)
     const [filter, setFilter] = useState('')
 
@@ -172,7 +193,16 @@ const CompetitionNavigation = ({
     }
 
     // Ein einzelner Wettkampf ist keine Liste - dann bleibt nur der Weg zurück.
-    const showList = competitions.length > 1
+    // Der Zeitplan-Endpunkt verlangt dasselbe Recht wie der Zeitplan-Tab. Ohne diese Prüfung
+    // böte die Leiste einen Umschalter an, der nur eine Fehlermeldung und eine leere Liste
+    // bringt - und wer den Modus einmal gewählt hat, behielte ihn über den Speicher bei.
+    const maySeeSchedule = user.checkPrivilege(readEventGlobal)
+    const effectiveMode: NavMode = mode === 'schedule' && !maySeeSchedule ? 'competitions' : mode
+
+    // Angemeldeten vorbehalten: abgemeldete Besucher sehen die öffentliche Wettkampfseite ohne
+    // Leiste, und der Zeitplan stünde ihnen ohnehin nicht offen.
+    const showList =
+        user.loggedIn && (competitions.length > 1 || effectiveMode === 'schedule')
 
     useEffect(() => {
         const measure = () => {
@@ -232,14 +262,6 @@ const CompetitionNavigation = ({
                             <ShortText fontSize={'small'} />
                         )}
                     </IconButton>
-                    {isNarrow && (
-                        <IconButton
-                            size={'small'}
-                            onClick={() => setDrawerOpen(false)}
-                            aria-label={t('common.close')}>
-                            <Close fontSize={'small'} />
-                        </IconButton>
-                    )}
                 </Stack>
             </Stack>
             <Box sx={{px: 1.5, pb: 1.5}}>
@@ -340,6 +362,54 @@ const CompetitionNavigation = ({
         </>
     )
 
+    // Der Umschalter steht über beiden Füllungen, damit er beim Wechsel nicht springt. Die
+    // Zeitplan-Leiste wird nur eingehängt, wenn sie auch gewählt ist - so lädt der Zeitplan
+    // nicht bei jedem Aufruf einer Wettkampfseite mit.
+    const railContent = (
+        <>
+            <Stack
+                direction={'row'}
+                spacing={1}
+                sx={{alignItems: 'center', px: 1.5, pt: 1.5, pb: 1}}>
+                <ToggleButtonGroup
+                    size={'small'}
+                    exclusive
+                    fullWidth
+                    value={effectiveMode}
+                    onChange={(_, next: NavMode | null) => next && switchMode(next)}>
+                    <ToggleButton value={'competitions'}>
+                        {t('event.competition.navigation.modeCompetitions')}
+                    </ToggleButton>
+                    {maySeeSchedule && (
+                        <ToggleButton value={'schedule'}>
+                            {t('event.competition.navigation.modeSchedule')}
+                        </ToggleButton>
+                    )}
+                </ToggleButtonGroup>
+                {isNarrow && (
+                    <IconButton
+                        size={'small'}
+                        onClick={() => setDrawerOpen(false)}
+                        aria-label={t('common.close')}
+                        sx={{flex: 'none'}}>
+                        <Close fontSize={'small'} />
+                    </IconButton>
+                )}
+            </Stack>
+            <Divider />
+            {effectiveMode === 'competitions' ? (
+                listContent
+            ) : (
+                <CompetitionScheduleRail
+                    eventId={eventId}
+                    competitionId={competitionId}
+                    activeTab={activeTab}
+                    onNavigate={() => setDrawerOpen(false)}
+                />
+            )}
+        </>
+    )
+
     return (
         <Stack spacing={2}>
             <Stack direction={'row'} spacing={1} sx={{alignItems: 'center', flexWrap: 'wrap'}}>
@@ -371,7 +441,7 @@ const CompetitionNavigation = ({
                             display: 'flex',
                             flexDirection: 'column',
                         }}>
-                        {listContent}
+                        {railContent}
                     </Paper>
                 )}
                 <Box sx={{flex: 1, minWidth: 0}}>{children}</Box>
@@ -390,7 +460,7 @@ const CompetitionNavigation = ({
                             flexDirection: 'column',
                         },
                     }}>
-                    {listContent}
+                    {railContent}
                 </Drawer>
             )}
         </Stack>

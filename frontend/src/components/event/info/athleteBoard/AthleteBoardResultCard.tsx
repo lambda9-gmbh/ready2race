@@ -1,3 +1,4 @@
+import {Fragment} from 'react'
 import {Box, Chip, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardResult} from '@api/types.gen'
@@ -8,8 +9,11 @@ import {
     AthleteBoardBoatRow,
     AthleteBoardBoatStatus,
     AthleteBoardBoatSubline,
+    AthleteBoardSectionHeading,
+    BoatListRow,
 } from './AthleteBoardBoatRow'
 import {formatClockTime, scaled} from './common'
+import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 
 interface AthleteBoardResultCardProps {
     result: AthleteBoardResult
@@ -29,7 +33,18 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
         return a.place - b.place
     })
 
-    const boats = teams.length
+    // Getrennte Abschnitte je Wertungskategorie, in der konfigurierten Reihenfolge - dieselbe
+    // Gruppierung wie auf der oeffentlichen Ergebnisseite und im Schiedsrichter-Dashboard. Ein
+    // Lauf ohne Kategorien ergibt genau einen namenlosen Abschnitt und bleibt damit wie bisher.
+    const sections = groupByRatingCategory(teams, team => team.ratingCategory)
+    const showSectionHeadings = hasRatingCategories(sections)
+
+    // Das Zeilenraster der Liste, in derselben Reihenfolge wie die Kinder darunter: je Abschnitt
+    // erst die Überschrift (falls es Kategorien gibt), dann seine Boote.
+    const rows: BoatListRow[] = sections.flatMap(section => [
+        ...(showSectionHeadings ? (['heading'] as BoatListRow[]) : []),
+        ...section.entries.map((): BoatListRow => 'boat'),
+    ])
 
     return (
         <>
@@ -76,49 +91,64 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                 )}
             </Stack>
 
-            <AthleteBoardBoatList boats={boats}>
-                {teams.map((team, index) => (
-                    <AthleteBoardBoatRow
-                        key={`${result.matchId}-${team.startNumber}`}
-                        index={index}
-                        // Die große Zahl ist der Platz, nicht die Startnummer: an dieser Stelle
-                        // erwartet eine Besatzung das Ergebnis. Die Startnummer steht klein
-                        // darunter, damit die Zeile dem Boot zuzuordnen bleibt.
-                        leadNumber={team.place ?? '–'}
-                        trailing={
-                            <>
-                                <AthleteBoardBoatStatus
-                                    muted={team.failed || team.deregistered}
-                                    label={
-                                        team.deregistered
-                                            ? [
-                                                  t('event.info.athleteBoard.deregistered'),
-                                                  team.deregisteredReason,
-                                              ]
-                                                  .filter(Boolean)
-                                                  .join(' · ')
-                                            : team.failed
-                                              ? (team.failedReason ??
-                                                t('event.info.athleteBoard.failed'))
-                                              : (team.timeString ?? '')
-                                    }
+            <AthleteBoardBoatList rows={rows}>
+                {sections.map(section => (
+                    // Fragment statt Box: die Zeilen müssen direkte Kinder des Rasters bleiben,
+                    // sonst bekäme jeder Abschnitt seine eigene Höhe zurück.
+                    <Fragment key={section.category?.id ?? 'none'}>
+                        {showSectionHeadings && (
+                            <AthleteBoardSectionHeading>
+                                {section.category?.name ??
+                                    t('event.ratingCategory.withoutCategory')}
+                            </AthleteBoardSectionHeading>
+                        )}
+                        {section.entries.map((team, index) => (
+                            <AthleteBoardBoatRow
+                                key={`${result.matchId}-${team.startNumber}`}
+                                index={index}
+                                // Der Platz innerhalb der Wertungskategorie — team.place bleibt der
+                                // Platz im Lauf und ist nur seine Grundlage. Die große Zahl ist
+                                // damit weiterhin ein Ergebnis, nie die Startnummer; die steht
+                                // klein darunter, damit die Zeile dem Boot zuzuordnen bleibt.
+                                leadNumber={team.categoryPlace ?? '–'}
+                                trailing={
+                                    <>
+                                        <AthleteBoardBoatStatus
+                                            muted={team.failed || team.deregistered}
+                                            label={
+                                                team.deregistered
+                                                    ? [
+                                                          t(
+                                                              'event.info.athleteBoard.deregistered',
+                                                          ),
+                                                          team.deregisteredReason,
+                                                      ]
+                                                          .filter(Boolean)
+                                                          .join(' · ')
+                                                    : team.failed
+                                                      ? (team.failedReason ??
+                                                        t('event.info.athleteBoard.failed'))
+                                                      : (team.timeString ?? '')
+                                            }
+                                        />
+                                        {!team.deregistered && (
+                                            <AthleteBoardPenaltyNote
+                                                penaltySeconds={team.penaltySeconds}
+                                                penaltyNote={team.penaltyNote}
+                                            />
+                                        )}
+                                    </>
+                                }>
+                                <AthleteBoardTeamLabel
+                                    team={team}
+                                    color={team.deregistered ? 'text.secondary' : 'text.primary'}
                                 />
-                                {!team.deregistered && (
-                                    <AthleteBoardPenaltyNote
-                                        penaltySeconds={team.penaltySeconds}
-                                        penaltyNote={team.penaltyNote}
-                                    />
-                                )}
-                            </>
-                        }>
-                        <AthleteBoardTeamLabel
-                            team={team}
-                            color={team.deregistered ? 'text.secondary' : 'text.primary'}
-                        />
-                        <AthleteBoardBoatSubline>
-                            {t('event.info.athleteBoard.startNumber')} {team.startNumber}
-                        </AthleteBoardBoatSubline>
-                    </AthleteBoardBoatRow>
+                                <AthleteBoardBoatSubline>
+                                    {t('event.info.athleteBoard.startNumber')} {team.startNumber}
+                                </AthleteBoardBoatSubline>
+                            </AthleteBoardBoatRow>
+                        ))}
+                    </Fragment>
                 ))}
             </AthleteBoardBoatList>
         </>

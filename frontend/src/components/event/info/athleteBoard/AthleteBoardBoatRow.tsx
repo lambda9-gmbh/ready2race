@@ -13,34 +13,56 @@ import {scaled} from './common'
  * Breite der rechten Spalte).
  */
 
+/**
+ * Was in einer Rasterzeile der Liste steht. `boat` teilt sich die verfügbare Höhe mit den anderen
+ * Booten, `heading` (die Überschrift einer Wertungskategorie) nimmt nur, was sie braucht.
+ */
+export type BoatListRow = 'boat' | 'heading'
+
 interface AthleteBoardBoatListProps {
-    /** Anzahl der Bootszeilen. Bestimmt das Zeilenraster der Karte. */
-    boats: number
+    /** Die Zeilen in ihrer Reihenfolge. Muss zur Reihenfolge der Kinder passen. */
+    rows: BoatListRow[]
     children: ReactNode
 }
 
 /**
  * Der Rahmen um die Bootszeilen.
  *
- * Ab `lg` teilen sich die Zeilen die verbleibende Höhe zu gleichen Teilen — damit kann die Karte
- * nicht überlaufen, ganz gleich wie voll das Feld ist; an die Stelle eines Scrollbalkens tritt die
- * kleinere Schrift aus `densityScale()`. Darunter behalten die Zeilen ihre natürliche Höhe und die
- * Seite scrollt, statt sie ineinander zu quetschen.
+ * Ab `lg` teilen sich die Bootszeilen die verbleibende Höhe zu gleichen Teilen — damit kann die
+ * Karte nicht überlaufen, ganz gleich wie voll das Feld ist; an die Stelle eines Scrollbalkens
+ * tritt die kleinere Schrift aus `densityScale()`. Darunter behalten die Zeilen ihre natürliche
+ * Höhe und die Seite scrollt, statt sie ineinander zu quetschen.
+ *
+ * Überschriften und Boote liegen bewusst in **einem** Raster: eine Wertungskategorie in einem
+ * eigenen Kasten hätte ihre eigene Höhe, und die Summe der Kästen könnte die Karte wieder
+ * sprengen.
  */
-export const AthleteBoardBoatList = ({boats, children}: AthleteBoardBoatListProps) => (
-    <Box
-        sx={{
-            minHeight: 0,
-            display: 'grid',
-            gridTemplateRows: {
-                // Math.max gegen ein leeres Feld: `repeat(0, …)` ist ungültiges CSS und ließe die
-                // ganze Deklaration ins Leere laufen.
-                xs: `repeat(${Math.max(boats, 1)}, auto)`,
-                lg: `repeat(${Math.max(boats, 1)}, minmax(0, 1fr))`,
-            },
-        }}>
+export const AthleteBoardBoatList = ({rows, children}: AthleteBoardBoatListProps) => {
+    // Ein leeres Feld ergäbe eine leere Rasterangabe und damit ungültiges CSS, das die ganze
+    // Deklaration ins Leere laufen ließe.
+    const template = (boat: string) =>
+        rows.map(row => (row === 'heading' ? 'auto' : boat)).join(' ') || 'auto'
+
+    return (
+        <Box
+            sx={{
+                minHeight: 0,
+                display: 'grid',
+                gridTemplateRows: {xs: template('auto'), lg: template('minmax(0, 1fr)')},
+            }}>
+            {children}
+        </Box>
+    )
+}
+
+/** Die Überschrift eines Wertungskategorie-Abschnitts innerhalb der Liste. */
+export const AthleteBoardSectionHeading = ({children}: {children: ReactNode}) => (
+    <Typography
+        noWrap
+        sx={{fontSize: scaled('0.8rem', '1.3vw', '1.8rem'), fontWeight: 700, alignSelf: 'end'}}
+        color="text.secondary">
         {children}
-    </Box>
+    </Typography>
 )
 
 interface AthleteBoardBoatRowProps {

@@ -1,6 +1,8 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.entity
 
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -65,6 +67,14 @@ data class LiveDashboardParticipantDto(
     val substitutedFor: String?,
     val substitutionReason: String?,
     val requirements: List<LiveDashboardRequirementStatusDto>,
+    /**
+     * Der letzte Steg-Scan dieser Person: ENTRY heißt "in der Arena", EXIT "zurück am Steg", null
+     * "nie erfasst". Die Mannschafts-Ampel [LiveDashboardTeamDto.inArenaAt] fasst dasselbe für das
+     * ganze Boot zusammen, sagt aber nicht, an wem es liegt - und genau das braucht, wer den
+     * fehlenden Eintrag von Hand nachträgt.
+     */
+    val trackingStatus: String?,
+    val trackingAt: LocalDateTime?,
 )
 
 /**
@@ -101,6 +111,18 @@ data class LiveDashboardTeamDto(
     val crew: List<LiveDashboardCrewMemberDto>?,
     val startNumber: Int?,
     val place: Int?,
+    /**
+     * Die Wertungskategorie der Mannschaft, `null` ohne Zuordnung. Die Karte gruppiert das
+     * Ergebnis eines beendeten Laufs danach - in der Reihenfolge aus
+     * [de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef.sortOrder].
+     */
+    val ratingCategory: RatingCategoryRef?,
+    /**
+     * Der Platz innerhalb der Wertungskategorie, ab 1. Steht neben [place], dem Platz im Lauf:
+     * solange der Lauf noch fährt, ist die Karte nach Bahn sortiert und zeigt [place] als
+     * Teilergebnis; das Ergebnis eines beendeten Laufs zeigt diesen hier.
+     */
+    val categoryPlace: Int?,
     val time: String?,
     val failed: Boolean,
     val failedReason: String?,
@@ -149,6 +171,12 @@ data class LiveDashboardMatchDto(
      * [LiveDashboardMatchState.RUNNING]), wäre ein zweites Feld nur eine zweite Wahrheit.
      */
     val state: LiveDashboardMatchState,
+    /**
+     * Gesetzt, wenn dieser Lauf ein Freilos ist - siehe `MatchStatusLogic.deriveBye`. Kein eigener
+     * [LiveDashboardMatchState]: das Freilos sagt etwas über den Lauf, nicht über seinen Fortschritt,
+     * und ein aktivierter Lauf bleibt RUNNING.
+     */
+    val bye: MatchByeDto? = null,
     val competitionId: UUID,
     val competitionName: String,
     /** Rennnummer und Kurzname des Wettkampfs - das Board zeigt sie statt des ausgeschriebenen
