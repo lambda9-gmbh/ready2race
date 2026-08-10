@@ -9,7 +9,10 @@ durch dieses hier ersetzt.
 Dieses Dokument beschreibt, was **seit** dem Merge auf `feature/crf-2026` dazugekommen ist
 und in einem Folge-MR an lambda9 gehen soll.
 
-**Stand:** `3b78e87c`. Der Branch enthält `origin/main` vollständig.
+**Stand:** `eff2645a` (10.08.2026, nach dem großen Durchtest). Der Branch enthält `origin/main`
+vollständig (`origin/main` ist Vorfahr, kein weiterer Merge nötig). Alle am 07.08. noch außerhalb
+liegenden Zweige (früherer Abschnitt 4) sind inzwischen zusammengeführt und gelöscht — es liegt
+nichts mehr außerhalb.
 
 ---
 
@@ -183,8 +186,37 @@ Laufname aber nicht, listet die Zeile die Laufnamen auf, die dieser Wettkampf ta
 ### 1.9 Urkundenvorlagen als Paket teilen — nur Entwurf (`68d98012`, `de42b32d`)
 
 Auf dem Branch liegen **ausschließlich** das Design (`docs/urkundenvorlagen-teilen-design.md`)
-und der Umsetzungsplan (`docs/urkundenvorlagen-teilen-plan.md`). **Implementierungscode ist
-nicht enthalten** — der entsteht auf einem eigenen Branch (Abschnitt 4).
+und der Umsetzungsplan (`docs/urkundenvorlagen-teilen-plan.md`). Der Implementierungscode dazu ist
+inzwischen ebenfalls eingeflossen (Vorlagen-Austausch, Editor, Export/Import als Paket) — siehe 1.10.
+
+### 1.10 Seit dem 09.08. dazugekommen
+
+Zwischen dem 07.08. (Stand des vorigen Dokuments) und dem 10.08. sind fünfzehn weitere Stränge in
+den Sammelbranch gelaufen. Jeder trägt einen eigenen Testkatalog-Block (`docs/superpowers/specs/`),
+Unit-/DB-Tests und, wo am 10.08. nachgezogen, einen Handtest-Nachweis. Kurzüberblick:
+
+| Strang | Kern | Migration(en) |
+|---|---|---|
+| RaceClocker-Polling (automatischer Abruf) | Server zieht Ergebnisse im Takt, schneller Takt bei laufendem Lauf | `V202608071600` |
+| Bahnen vor dem ersten Ergebnis | Bahnvergabe vor dem Ergebnis-Riegel; ergebnisloser Lauf endet mit Erfolg statt `NoResults` (09.08-Bug) | — |
+| Wellenname mit Wettkampf | `10:30 \| 12 JM4x \| AF1` in Export und Pull aus derselben Funktion | — |
+| Benannte RaceClocker-Rennen | Rennen als eigene Zeilen, Veranstaltung/Wettkampf wählen daraus; ein Abruf je Rennen statt je Adresspaar | `V202608101100`, `V202608101110` |
+| Auto-Abgleich der Durchführung | selbsttätige Übernahme, Pausieren bei Handeingabe, „Automatik wieder aufnehmen" | `V202608091500` |
+| Folgerunden-Automatik | Folgerunde entsteht beim Beenden von selbst | `V202608091501` |
+| Ergebnisse nach Wertungskategorien | getrennte Wertung, unkonfigurierte Kategorien sortieren hinten | `V202608091510` |
+| Manueller Check-in/-out je Athlet:in | Audit-Tabelle `participant_tracking_change`, Rechte über bestehende Privilegien | `V202608091600` |
+| Vereinskette statt „Renngemeinschaft" | getragene Vereine als Kette, Kurzformen/Namensregeln | (Ruder-Seed, Kurzform-Pflege) |
+| Freilos als Freilos erkennbar | Freilos durch die ganze Kette bis in die öffentliche Anzeige | — |
+| Einheitlicher Laufstatus öffentlich | Laufstatus in der öffentlichen Ergebnisanzeige | — |
+| Siegerehrungsbogen | druckbarer Bogen je Wettkampf | — |
+| „Mein Event" über den QR-Code | persönliches Dashboard ohne Anmeldung über das Teilnehmerband | `V202508110945`, `V202608101000` |
+| Athletenanzeige 27″ | Bühne ohne Scrollen, Startnummer statt Bahn | — |
+| Helfer-App als PWA | installierbar, Offline-Fall, Service-Worker-Scope über `/app/` | — |
+
+Die zugehörigen Design- und Testkatalog-Dokumente liegen unter `docs/superpowers/`. Der große
+Durchtest vom 10.08. hat davon in der laufenden Anwendung belegt: benannte Rennen (F16–F22), den
+Wellennamen und die vorgezogene Bahnvergabe end-to-end gegen echtes RaceClocker (C35, C38, C40, C42,
+C45), die Vereinskette (J1, J18) und „Mein Event" (P) — siehe Abschnitt 3.
 
 ---
 
@@ -252,70 +284,56 @@ Check-in wäre sie schlicht falsch und würde am Steg zu Rückfragen führen.
 
 ## 3. Verifikation
 
-Alle Zahlen gemessen auf `3b78e87c`.
+Alle Zahlen gemessen auf `eff2645a` (10.08.2026).
 
 | | Ergebnis |
 |---|---|
-| Backend `./mvnw test` | `Tests run: 419, Failures: 0, Errors: 0, Skipped: 0` · `BUILD SUCCESS` |
-| Frontend `npm run test` | `Test Files 16 passed (16)` · `Tests 448 passed (448)` |
-| `npm run generate` | kein unstaged Diff — die generierten API-Typen sind aus der gemergten `documentation.yaml` reproduzierbar |
-| `./mvnw generate-sources` | Exit 0, jOOQ aus den gemergten Migrationen fehlerfrei |
-| `tsc -b` | **6 Fehler in 5 Dateien** — siehe unten |
-| `npm run lint` | **136 Meldungen (57 Fehler, 79 Warnungen)** |
+| Backend `./mvnw test` | 854 Tests, 0 Failures, 0 Errors, 0 Skipped · `BUILD SUCCESS` (Testcontainers-Postgres) |
+| Frontend `npm run test` | `Test Files 40 passed (40)` · `Tests 792 passed (792)` |
+| Frontend `npm run build` | grün — `tsc -b` fällt nicht mehr (die 6 Fehler vom 07.08. sind behoben) |
+| Migrationen | leere Datenbank, alle 90 versionierten Migrationen + `afterMigrate.sql` sauber durch (geprüft am 10.08. beim Erststart) |
+| Bauzeit | clean 81 s, No-Change-Rebuild 12 s, Dev-Rebuild mit `-DskipCodegen=true` 8,8 s; Fat-Jar-Index und Manifest gegenüber dem alten pom byte-identisch |
 
-**Migrationen gegen eine leere Datenbank:** alle 74 versionierten Migrationen in
-Versionsreihenfolge sauber durchgelaufen, danach `afterMigrate.sql` ebenfalls — 107 Tabellen,
-72 Views. Gemessen beim Merge von `origin/main` (`e657f8a4`); die beiden seitdem
-hinzugekommenen Migrationen aus Abschnitt 0 sind darin noch nicht enthalten.
+**Handtest gegen die laufende Anwendung (10.08., Prod-Seed = echte CRF-Meldungen):** Erststart auf
+leerer DB, benannte RaceClocker-Rennen komplett (anlegen, Anwahl auf Event- und Wettkampf-Ebene,
+Vererbung, Löschen mit Rückfrage, Dubletten-409), Startlisten-Export → Import in ein echtes
+RaceClocker-Rennen → Knopf-Pull zurück (Wellenname `09:20 | 1 CF2x | Finale`, Bahnvergabe nach
+`Rank` **ohne** ein einziges Ergebnis, HTTP 204 statt `NoResults` — der 09.08-Bug ist damit in der
+App belegt behoben), Vereinskette im Schiedsrichter-Dashboard, „Mein Event" über einen Band-Code,
+Athleten-Board, Kiosk und öffentliche Ergebnisse ohne 500er. Nachweise stehen fallweise in
+`docs/superpowers/specs/2026-08-05-testkatalog-crf-2026.md`.
 
-**Die 6 TypeScript-Fehler und die 136 Lint-Meldungen sind vorbestehend, nicht neu.** Gegen die
-Basis gemessen: derselbe Stand ohne die zuletzt gemergte Urkunden-Linie hatte ebenfalls 6
-Fehler in denselben 5 Dateien und dieselben 136 Meldungen. Es sind **zwei** Ursachen:
-
-- **4 Fehler in 3 Testdateien** — Fixtures, denen Pflichtfelder fehlen, die die DTOs seit 1.5
-  führen: `common.test.ts` und `timelineIndicator.test.ts` lassen
-  `matchTeamsTotal`/`matchTeamsScored` an `EventScheduleSlotDto` weg,
-  `roundCancellation.test.ts` fehlen `skipped` und `status` an `CompetitionMatchDto`,
-  `editMatchForm.test.ts` führt `skipped` optional statt verpflichtend.
-- **2 Fehler in Produktivcode** — `CompetitionExecutionRound.tsx:80`: `t()` wird mit einer
-  `string`-Variablen statt einem Literal-Schlüssel aufgerufen, liefert dadurch `unknown`, und
-  das landet als `label` an einem MUI-`Chip`, der `ReactNode` erwartet.
-
-Die Tests laufen grün, weil vitest nicht typprüft; `npm run build` (`tsc -b && vite build`)
-fällt darüber. **Beides ist vor dem MR zu beheben** — der zweite Punkt ist der interessantere,
-weil er echten Code betrifft und nicht nur Testdaten.
-
-**Real-Test: nichts davon ist gegen die laufende Anwendung durchgespielt.** Weder der
-Lauf-Status auf den drei Oberflächen, noch der Wasser-Chip, noch die Schweregrade, noch die
-Zeitnahme-Vererbung, noch die umbenannten Anzeigetexte, noch die Import-Diagnose.
+**Sicherheits-Durchsicht (10.08.):** Kein `KIO.fail`-ohne-`!`-No-Op und keine `!!`-NPE im neuen
+Code; alle neuen Endpunkte tragen `authenticate` mit passendem Privileg, öffentliche sind bewusst
+öffentlich und rate-limitiert. Zwei Härtungen sind eingeflossen: der RaceClocker-Feed-Abruf folgt
+keinen Redirects mehr (SSRF über Open-Redirect), und `V202608101120` normalisiert die
+Backfill-Adressen auf die Apex-Form, damit der Dubletten-Schutz über beide Schreibweisen greift.
 
 ---
 
 ## 4. Offene Punkte
 
-**Vor dem MR zu erledigen:**
+**Erledigt seit dem 07.08.:** Die 6 TypeScript-Fehler sind behoben (`npm run build` grün), und es
+liegt **keine Arbeit mehr außerhalb des Branches** — die sechs damals offenen Zweige sind alle
+zusammengeführt und gelöscht (Konsolidierungen vom 07. und 10.08.).
 
-- **6 TypeScript-Fehler** (Abschnitt 3) — `npm run build` fällt darüber. Vier sind
-  Testfixtures ohne die neuen Pflichtfelder, zwei sitzen in
-  `CompetitionExecutionRound.tsx` im Produktivcode.
-- **Sechs dänische Übersetzungsschlüssel fehlen**, alle unter
-  `event.schedule.importDialog`: `template`, `templateError`, `templateHint` (aus `cc87ca07`)
-  sowie `rowCompetitionNotFound`, `rowMatchNotFound`, `rowMatchNotFoundEmpty` (aus
-  `7cad2501`). de und en sind vollständig. Fällt in keinen Test, weil die Konsistenztests nur
-  die Fehlercode-Module abdecken — ein Test über **alle** Schlüssel wäre die eigentliche Lücke.
-- **Kein Durchlauf gegen die laufende Anwendung** (Abschnitt 3).
+**Noch offen:**
 
-**Arbeit, die noch außerhalb des Branches liegt** — jede davon mündet nach `feature/crf-2026`,
-keine ist enthalten:
-
-| Branch | offene Commits | Inhalt |
-|---|---|---|
-| `worktree-urkundenvorlagen` | 23 | Implementierung des Vorlagen-Austauschs und der Editor-Verbesserungen zu 1.9 |
-| `claude/raceclocker-polling-53dac0` | 25 | RaceClocker-Polling; belegt `V202608071600` |
-| `claude/schiedsrichter-pr-fungsschweregrad-12750a` | 19 | Vorgängerbranch zu 1.7; Überschneidung vor dem Merge prüfen |
-| `claude/kio-fail-audit` | 2 | QR-Code-Löschung meldet wieder 404, mit Test |
-| `claude/backlog-b2-fc060e` | 47 | Athleten-Anzeige |
-| `feature/zeitstrahl` | 127 | historisch, vermutlich vollständig über andere Wege enthalten — vor dem Aufräumen prüfen |
+- **Dänische Übersetzungsschlüssel** unter `event.schedule.importDialog` (Stand 07.08.: sechs
+  fehlend; de und en vollständig). Ein Konsistenztest über **alle** Schlüssel bleibt die
+  eigentliche Lücke.
+- **Handtest-Restlücken** (Testkatalog): C43 (fertig gewerteter Lauf bleibt beim Takt heil), der
+  echte Automatik-Takt (bisher nur der Knopf belegt), Block O am physischen Ausdruck, die
+  Gerätefälle (Telefon-Layout P24, 27″-Anzeige, PWA-Installation — die PWA ist nur gegen einen
+  gebauten Stand testbar, der Dev-Server liefert kein Manifest).
+- **Upload-Größenlimit**: kein globales Request-Size-Limit; `competitionExecution.kt` trägt am
+  Challenge-Upload selbst ein `// Todo: Limit file size`, und der Pfad ist token-, nicht
+  sitzungsauthentifiziert. Empfehlung: `RequestSizeLimit` installieren.
+- **„Mein Event"-Bandcodes**: die Sicherheit des QR-Wegs hängt vollständig an der Entropie der
+  extern bedruckten Bänder (Rate-Limit: 500 Anfragen/5 s je Host). Vor dem Renntag die tatsächlich
+  verwendeten Codes auf Ratbarkeit prüfen.
+- **`CertificateService.challengeEndAt!!`** (Bestand von `main`): NPE möglich, wenn ein Wettkampf
+  eines Challenge-Events keine Challenge-Konfigurationszeile trägt.
 
 **Bewusst so belassen:**
 
