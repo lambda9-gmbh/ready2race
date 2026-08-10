@@ -8,7 +8,7 @@ import io.ktor.http.*
 sealed interface RaceClockerError : ServiceError {
 
     /**
-     * Neither results URL is configured on the competition. Which of the two a round would use no
+     * Neither RaceClocker race is selected for this competition. Which of the two a round would use no
      * longer matters here: the pull falls back to the other race anyway, so it only gives up when both
      * are missing.
      */
@@ -21,11 +21,14 @@ sealed interface RaceClockerError : ServiceError {
     data class MalformedFeed(val reason: String) : RaceClockerError
 
     /**
-     * None of the configured feeds contains a row for any team of this match. Either the start list for
+     * None of the selected races contains a row for any team of this match. Either the start list for
      * this heat has not been imported into RaceClocker yet, or it was exported before the round was
      * re-created and carries identifiers that no longer exist.
+     *
+     * [raceNames] rides along because a race name is what an operator can act on at the regatta; a
+     * bare URL is not.
      */
-    data class MatchNotInFeed(val urls: List<String>) : RaceClockerError
+    data class MatchNotInFeed(val urls: List<String>, val raceNames: List<String>) : RaceClockerError
 
     /**
      * RaceClocker is insert-only: importing the same start list twice creates duplicates rather than
@@ -73,7 +76,7 @@ sealed interface RaceClockerError : ServiceError {
         is MatchNotInFeed -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "No entries for this heat in the RaceClocker feed",
-            details = mapOf("urls" to urls),
+            details = mapOf("urls" to urls, "races" to raceNames),
             errorCode = ErrorCode.RACECLOCKER_MATCH_NOT_IN_FEED,
         )
 

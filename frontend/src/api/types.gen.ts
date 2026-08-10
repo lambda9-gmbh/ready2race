@@ -1021,8 +1021,14 @@ export type CompetitionTimingDeviationDto = {
     identifier: string
     name: string
     timingSystem?: TimingSystem | null
-    timeTrialResultsUrl?: string | null
-    heatsResultsUrl?: string | null
+    /**
+     * Name of the deviating race for qualification rounds - a name, not an id, because this list is read rather than processed.
+     */
+    raceQualificationName?: string | null
+    /**
+     * Name of the deviating race for all other rounds.
+     */
+    raceRoundsName?: string | null
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
@@ -1207,6 +1213,8 @@ export type ErrorCode =
     | 'RACECLOCKER_DUPLICATE_TEAMS'
     | 'RACECLOCKER_NO_RESULTS'
     | 'RACECLOCKER_MATCH_IS_BYE'
+    | 'RACECLOCKER_RACE_NAME_TAKEN'
+    | 'RACECLOCKER_RACE_URL_TAKEN'
     | 'STARTLIST_CONFIG_NOT_CONFIGURED'
     | 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
     | 'SCHEDULE_SHIFT_WITHOUT_CHANGE'
@@ -1571,13 +1579,19 @@ export type EventScheduleSlotDto = {
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
 
 /**
- * Event-wide timing defaults. RaceClocker races are created per event, so the timing system and the two results URLs live here once and every competition without its own values inherits them. Column presets stay per competition - they depend on the concrete start list.
+ * Event-wide timing defaults. RaceClocker races belong to the event, so the timing system and the two race selections live here once and every competition without its own values inherits them. Column presets stay per competition - they depend on the concrete start list.
  *
  */
 export type EventTimingConfigDto = {
     timingSystem?: TimingSystem | null
-    timeTrialResultsUrl?: string | null
-    heatsResultsUrl?: string | null
+    /**
+     * The selected RaceClocker race for qualification rounds.
+     */
+    raceQualification?: string | null
+    /**
+     * The selected RaceClocker race for all other rounds.
+     */
+    raceRounds?: string | null
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
@@ -1608,13 +1622,19 @@ export type EventTimingConfigDto = {
 }
 
 /**
- * The RaceClocker fields are optional, like the per-competition config. The URLs must be https URLs on raceclocker.com. The five auto-pull fields are not optional - the database always has a value for them, and null here would ambiguously mean "leave unchanged".
+ * The RaceClocker fields are optional, like the per-competition config. Both race ids must belong to this event. The five auto-pull fields are not optional - the database always has a value for them, and null here would ambiguously mean "leave unchanged".
  *
  */
 export type EventTimingConfigRequest = {
     timingSystem?: TimingSystem | null
-    timeTrialResultsUrl?: string | null
-    heatsResultsUrl?: string | null
+    /**
+     * The selected RaceClocker race for qualification rounds.
+     */
+    raceQualification?: string | null
+    /**
+     * The selected RaceClocker race for all other rounds.
+     */
+    raceRounds?: string | null
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
@@ -2828,6 +2848,24 @@ export type QrCodePublicResponse = {
     type?: QrCodeDtoType
 }
 
+export type RaceClockerRaceDto = {
+    id: string
+    name: string
+    resultsUrl: string
+    startMode: RaceClockerStartMode
+    capturesLaps: boolean
+    position: number
+}
+
+export type RaceClockerRaceRequest = {
+    name: string
+    resultsUrl: string
+    startMode: RaceClockerStartMode
+    capturesLaps: boolean
+}
+
+export type RaceClockerStartMode = 'INDIVIDUAL' | 'WAVE'
+
 export type RatingCategoriesToEventRequest = {
     ratingCategories: Array<RatingCategoryToEventRequest>
 }
@@ -3273,18 +3311,18 @@ export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'
 export type TimingConfigDto = {
     timingSystem?: TimingSystem | null
     /**
-     * Public results URL of the individual-start race used for the qualification round.
+     * The selected RaceClocker race for qualification rounds.
      */
-    timeTrialResultsUrl?: string | null
+    raceQualification?: string | null
     /**
-     * Public results URL of the wave-start race used for all other rounds.
+     * The selected RaceClocker race for all other rounds.
      */
-    heatsResultsUrl?: string | null
+    raceRounds?: string | null
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
     /**
-     * Whether this competition's setup contains a qualification round. Read-only; it comes along with the timing config because both the timing tab and the execution tab already load it, and both need to know whether the qualification start list preset and the time trial results URL are required at all.
+     * Whether this competition's setup contains a qualification round. Read-only; it comes along with the timing config because both the timing tab and the execution tab already load it, and both need to know whether the qualification start list preset and the qualification race are required at all.
      *
      */
     hasQualificationRound?: boolean
@@ -3293,13 +3331,13 @@ export type TimingConfigDto = {
      */
     eventTimingSystem?: TimingSystem | null
     /**
-     * Event-wide default time trial results URL; inherited while the competition's own field is null.
+     * Event-wide default race for qualification rounds; inherited while the competition's own field is null.
      */
-    eventTimeTrialResultsUrl?: string | null
+    eventRaceQualification?: string | null
     /**
-     * Event-wide default heats results URL; inherited while the competition's own field is null.
+     * Event-wide default race for all other rounds; inherited while the competition's own field is null.
      */
-    eventHeatsResultsUrl?: string | null
+    eventRaceRounds?: string | null
     /**
      * Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
      */
@@ -3315,13 +3353,19 @@ export type TimingConfigDto = {
 }
 
 /**
- * Every field is optional - the RaceClocker races only exist shortly before the regatta, so an incomplete configuration must be storable. The URLs must be https URLs on raceclocker.com; the host is pinned so the backend cannot be pointed at other services.
+ * Every field is optional - the RaceClocker races only exist shortly before the regatta, so an incomplete configuration must be storable. Both race ids must belong to this competition's event; the service rejects a race from another event.
  *
  */
 export type TimingConfigRequest = {
     timingSystem?: TimingSystem | null
-    timeTrialResultsUrl?: string | null
-    heatsResultsUrl?: string | null
+    /**
+     * The selected RaceClocker race for qualification rounds.
+     */
+    raceQualification?: string | null
+    /**
+     * The selected RaceClocker race for all other rounds.
+     */
+    raceRounds?: string | null
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
@@ -4614,6 +4658,50 @@ export type UpdateMatchResultsData = {
 export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRaceClockerRacesData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRaceClockerRacesResponse = Array<RaceClockerRaceDto>
+
+export type GetRaceClockerRacesError = BadRequestError | ApiError
+
+export type AddRaceClockerRaceData = {
+    body: RaceClockerRaceRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type AddRaceClockerRaceResponse = string
+
+export type AddRaceClockerRaceError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateRaceClockerRaceData = {
+    body: RaceClockerRaceRequest
+    path: {
+        eventId: string
+        raceId: string
+    }
+}
+
+export type UpdateRaceClockerRaceResponse = void
+
+export type UpdateRaceClockerRaceError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteRaceClockerRaceData = {
+    path: {
+        eventId: string
+        raceId: string
+    }
+}
+
+export type DeleteRaceClockerRaceResponse = void
+
+export type DeleteRaceClockerRaceError = BadRequestError | ApiError
 
 export type GetEventTimingConfigData = {
     path: {

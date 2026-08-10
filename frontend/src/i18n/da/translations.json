@@ -1167,10 +1167,10 @@
           "raceclocker": {
             "success": "Resultater hentet fra RaceClocker",
             "error": {
-              "urlMissing": "Der er ikke angivet nogen RaceClocker-resultat-URL for denne konkurrence.",
+              "urlMissing": "Der er ikke valgt et RaceClocker-løb til denne konkurrence.",
               "urlInvalid": "Den angivne RaceClocker-URL er ugyldig. Der forventes en adresse på raceclocker.com.",
               "unreachable": "Resultaterne kunne ikke hentes fra RaceClocker. Kontroller URL og forbindelse.",
-              "matchNotInFeed": "Der er ingen poster for dette heat i RaceClocker. Er startlisten importeret der endnu? Stammer den fra en tidligere version af runden, skal den eksporteres igen.",
+              "matchNotInFeed": "Heatet findes ikke i {{races}}. Er startlisten importeret dertil?",
               "duplicateTeams": "RaceClocker indeholder dublerede besætninger ({{teams}}). Ryd op der, og hent igen.",
               "noResults": "Der foreligger endnu ingen tider for dette heat i RaceClocker.",
               "matchIsBye": "Dette heat er en frirunde: holdet går videre uden at køre, så der er ingen resultater at hente."
@@ -1278,9 +1278,7 @@
           "title": "Filformater",
           "hint": "Hvilke kolonner der eksporteres og importeres. Kun nødvendigt separat, hvis denne konkurrence kører ind i et andet løb i tidtagningssystemet."
         },
-        "raceclockerHint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
-        "timeTrialUrl": "Resultatadresse for enkeltstart",
-        "heatsUrl": "Resultatadresse for heat",
+        "raceclockerHint": "RaceClocker-løb hører til stævnet, ikke til den enkelte konkurrence. Opret hvert løb én gang her — for eksempel „Time trials“, „Langdistance“ og „Kortdistance“ — og vælg nedenfor, hvilket der gælder for kvalifikationsrunder, og hvilket for alle øvrige runder. Konkurrencer arver dette valg og kan afvige bevidst.",
         "startlistQualification": "Startliste-eksport til kvalifikation",
         "startlistRounds": "Startliste-eksport til øvrige runder",
         "startlist": "Startliste-eksport",
@@ -1293,14 +1291,16 @@
         },
         "incomplete": {
           "title": "Denne tidtagning er endnu ikke klar til brug",
-          "heatsUrl": "Resultatadressen for heat-løbet mangler – uden den kan der ikke hentes resultater fra RaceClocker.",
-          "timeTrialUrl": "Denne konkurrence har en kvalifikationsrunde, men resultatadressen for enkeltstart-løbet mangler – uden den kan der ikke hentes resultater fra RaceClocker til kvalifikationen.",
           "startlistRounds": "Startlistepresettet mangler – uden det kan der ikke eksporteres en startliste som CSV.",
           "startlistQualification": "Denne konkurrence har en kvalifikationsrunde, men startlistepresettet til kvalifikationen mangler – uden det kan der ikke eksporteres en startliste til kvalifikationen.",
-          "link": "Gå til tidtagningsindstillingerne"
+          "link": "Gå til tidtagningsindstillingerne",
+          "raceRounds": "Der er ikke valgt et løb til heatene – uden et kan der ikke hentes resultater fra RaceClocker.",
+          "raceQualification": "Denne konkurrence har en kvalifikationsrunde, men der er ikke valgt et enkeltstart-løb – uden et kan der ikke hentes resultater fra RaceClocker til kvalifikationen."
         },
         "saved": "Tidtagningsindstillinger gemt",
-        "invalid": "Angiv adresser på raceclocker.com."
+        "invalid": "Vælg venligst et løb, der hører til dette stævne.",
+        "raceQualification": "Løb til kvalifikationsrunder",
+        "raceRounds": "Løb til alle øvrige runder"
       },
       "places": {
         "places": "Placeringer",
@@ -1477,9 +1477,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker kræver to løb: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunderne og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her – de gælder så for hele arrangementet.",
-      "timeTrialUrl": "Resultatadresse for enkeltstart",
-      "heatsUrl": "Resultatadresse for heat",
+      "raceclockerHint": "RaceClocker-løb hører til stævnet, ikke til den enkelte konkurrence. Opret hvert løb én gang her — for eksempel „Time trials“, „Langdistance“ og „Kortdistance“ — og vælg nedenfor, hvilket der gælder for kvalifikationsrunder, og hvilket for alle øvrige runder. Konkurrencer arver dette valg og kan afvige bevidst.",
       "autoPull": {
         "enabled": "Hent resultater automatisk",
         "hint": "Når et heat er i gang, henter serveren resultaterne i det hurtige interval. Kommende heats overvåges i det langsomme interval for at opdage deres start; afsluttede heats hentes ikke.",
@@ -1498,16 +1496,39 @@
         "3": " og gælder for alle arrangementer."
       },
       "saved": "Tidtagningsstandard gemt",
-      "invalid": "Indtastningerne blev afvist: adresser skal pege på raceclocker.com, intervallerne skal være mindst 2 sekunder, og observationsvinduerne må ikke være negative.",
+      "invalid": "Vælg venligst et løb, der hører til dette stævne.",
       "deviations": {
         "title": "Konkurrencer med egen tidtagning",
         "none": "Ingen konkurrence afviger – alle følger denne standard.",
         "system": "eget system",
-        "timeTrialUrl": "egen enkeltstart-adresse",
-        "heatsUrl": "egen heat-adresse",
         "startlistQualification": "egen startliste-eksport til kvalifikation",
         "startlistRounds": "egen startliste-eksport",
-        "resultImport": "egen løbsresultater-import"
+        "resultImport": "egen løbsresultater-import",
+        "raceQualification": "eget kvalifikationsløb: {{name}}",
+        "raceRounds": "eget løb: {{name}}"
+      },
+      "raceQualification": "Løb til kvalifikationsrunder",
+      "raceRounds": "Løb til alle øvrige runder",
+      "races": {
+        "title": "RaceClocker-løb",
+        "hint": "Hvert løb bærer sin resultatadresse præcis én gang. Den automatiske hentning henter kun de løb, der køres lige nu.",
+        "add": "Tilføj løb",
+        "edit": "Rediger løb",
+        "name": "Navn",
+        "url": "Resultatadresse",
+        "startMode": "Starttype",
+        "startModes": {
+          "INDIVIDUAL": "Individuelle starter (tidsløb)",
+          "WAVE": "Start i flere heat"
+        },
+        "capturesLaps": "Registrerer omgangstider",
+        "none": "Endnu intet løb oprettet.",
+        "deleteConfirm": "Slet „{{name}}“? Konkurrencer, der peger på det, falder tilbage til stævnets standard.",
+        "nameTaken": "Der findes allerede et løb med dette navn.",
+        "urlTaken": "Der findes allerede et løb med denne adresse.",
+        "invalidUrl": "Adressen skal ligge på raceclocker.com.",
+        "saved": "Løb gemt.",
+        "deleted": "Løb slettet."
       }
     },
     "info": {

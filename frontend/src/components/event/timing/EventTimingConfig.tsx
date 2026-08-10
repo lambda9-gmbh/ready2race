@@ -1,18 +1,21 @@
-import {Alert, Box, Divider, Stack, Typography} from '@mui/material'
+import {Alert, Box, Button, Divider, IconButton, Stack, Typography} from '@mui/material'
+import {Add, Delete, Edit} from '@mui/icons-material'
 import {FormContainer, useForm, useWatch} from 'react-hook-form-mui'
 import {Trans, useTranslation} from 'react-i18next'
 import {useState} from 'react'
 import {eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {
+    deleteRaceClockerRace,
     getEventTimingConfig,
     getMatchResultImportConfigs,
+    getRaceClockerRaces,
     getStartListConfigs,
     updateEventTimingConfig,
 } from '@api/sdk.gen.ts'
-import {CompetitionTimingDeviationDto} from '@api/types.gen.ts'
+import {CompetitionTimingDeviationDto, RaceClockerRaceDto} from '@api/types.gen.ts'
+import RaceClockerRaceDialog from './RaceClockerRaceDialog.tsx'
 import InlineLink from '@components/InlineLink.tsx'
-import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
@@ -28,21 +31,36 @@ import {
 /**
  * Was an einem Wettkampf abweicht — jedes gesetzte Feld einzeln, weil ein Teil-Override („erbt das
  * System, hat aber ein eigenes Läufe-Rennen") die häufigste und die am leichtesten zu übersehende
- * Abweichung ist. Ausgeschriebene Schlüssel, damit i18n typgeprüft bleibt.
+ * Abweichung ist.
+ *
+ * Liefert fertige Texte statt Schlüssel, weil zwei davon den Rennennamen einsetzen müssen. Die
+ * `as never`-Casts sind der Preis dafür: Die Schlüssel stehen hier nicht mehr als Literale, die der
+ * i18n-Typ prüfen könnte.
  */
-const describeDeviation = (deviation: CompetitionTimingDeviationDto) =>
+const describeDeviation = (
+    deviation: CompetitionTimingDeviationDto,
+    t: (key: never, options?: object) => string,
+) =>
     [
-        deviation.timingSystem ? ('event.timing.deviations.system' as const) : null,
-        deviation.timeTrialResultsUrl ? ('event.timing.deviations.timeTrialUrl' as const) : null,
-        deviation.heatsResultsUrl ? ('event.timing.deviations.heatsUrl' as const) : null,
+        deviation.timingSystem ? t('event.timing.deviations.system' as never) : null,
+        // Beim Namen genannt statt nur „hat ein eigenes Rennen": Wer hier nachsieht, will wissen,
+        // WOHIN der Wettkampf zeigt.
+        deviation.raceQualificationName
+            ? t('event.timing.deviations.raceQualification' as never, {
+                  name: deviation.raceQualificationName,
+              })
+            : null,
+        deviation.raceRoundsName
+            ? t('event.timing.deviations.raceRounds' as never, {name: deviation.raceRoundsName})
+            : null,
         deviation.startlistConfigQualification
-            ? ('event.timing.deviations.startlistQualification' as const)
+            ? t('event.timing.deviations.startlistQualification' as never)
             : null,
         deviation.startlistConfigRounds
-            ? ('event.timing.deviations.startlistRounds' as const)
+            ? t('event.timing.deviations.startlistRounds' as never)
             : null,
-        deviation.resultImportConfig ? ('event.timing.deviations.resultImport' as const) : null,
-    ].filter(key => key !== null)
+        deviation.resultImportConfig ? t('event.timing.deviations.resultImport' as never) : null,
+    ].filter(text => text !== null)
 
 /**
  * Die Zeitnahme-Voreinstellung einer Veranstaltung: ein RaceClocker-Rennen für die Zeitfahren und
@@ -86,6 +104,81 @@ const EventTimingConfig = () => {
             },
         },
     )
+
+    // Die Rennen der Veranstaltung. Sie stehen außerhalb des Formulars, weil sie über eigene
+    // Endpunkte gepflegt werden — ein Rennen anzulegen ist kein Teil des Speicherns dieser Seite.
+    const [racesReloaded, setRacesReloaded] = useState(0)
+    const [raceDialogOpen, setRaceDialogOpen] = useState(false)
+    const [editedRace, setEditedRace] = useState<RaceClockerRaceDto | undefined>(undefined)
+
+    const {data: races, pending: racesPending} = useFetch(
+        signal => getRaceClockerRaces({signal, path: {eventId}}),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            },
+            deps: [eventId, racesReloaded],
+        },
+    )
+
+    const raceOptions = (races ?? []).map(race => ({id: race.id, label: race.name}))
+
+    const removeRace = async (race: RaceClockerRaceDto) => {
+        // Wer darauf zeigt, wird beim Namen genannt. „Wettkämpfe erben danach wieder" ist wahr,
+        // aber unbrauchbar, solange man nicht weiß, welche.
+        const affected = deviations
+            .filter(
+                d =>
+                    d.raceQualificationName === race.name || d.raceRoundsName === race.name,
+            )
+            .map(d => `${d.identifier} ${d.name}`)
+
+        const question = [
+            t('event.timing.races.deleteConfirm', {name: race.name}),
+            affected.length > 0 ? affected.join(', ') : null,
+        ]
+            .filter(line => line !== null)
+            .join('\n\n')
+
+        if (!confirm(question)) return
+
+        const {error} = await deleteRaceClockerRace({
+            path: {eventId, raceId: race.id},
+        })
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else {
+            feedback.success(t('event.timing.races.deleted'))
+            setRacesReloaded(Date.now())
+            // Die Anwahl im Formular zeigt sonst auf ein Rennen, das es nicht mehr gibt. Gezielt
+            // geleert statt das ganze Formular neu zu laden: Ein Neuladen würde jede nicht
+            // gespeicherte Eingabe daneben stillschweigend verwerfen.
+            if (formContext.getValues('raceQualification')?.id === race.id) {
+                formContext.setValue('raceQualification', null)
+            }
+            if (formContext.getValues('raceRounds')?.id === race.id) {
+                formContext.setValue('raceRounds', null)
+            }
+            // Nur die Rennen-Anwahl aus dem Eintrag nehmen, nicht den ganzen Eintrag: Ein
+            // Wettkampf mit zusätzlich eigenem System oder Preset weicht weiterhin ab und darf
+            // nicht aus der Liste verschwinden.
+            setDeviations(current =>
+                current
+                    .map(d => ({
+                        ...d,
+                        raceQualificationName:
+                            d.raceQualificationName === race.name
+                                ? undefined
+                                : d.raceQualificationName,
+                        raceRoundsName:
+                            d.raceRoundsName === race.name ? undefined : d.raceRoundsName,
+                    }))
+                    .filter(d => describeDeviation(d, t).length > 0),
+            )
+        }
+    }
 
     // Die Abweichungen stehen bewusst außerhalb des Formulars: sie werden hier nicht bearbeitet,
     // sondern nur gezeigt. Nach dem Speichern neu geladen, weil ein Wettkampf durch eine geänderte
@@ -155,13 +248,79 @@ const EventTimingConfig = () => {
                             <Alert variant={'outlined'} severity={'info'}>
                                 <Trans i18nKey={'event.timing.raceclockerHint'} />
                             </Alert>
-                            <FormInputText
-                                name={'timeTrialResultsUrl'}
-                                label={t('event.timing.timeTrialUrl')}
+                            <Box>
+                                <Typography variant={'subtitle2'} gutterBottom>
+                                    <Trans i18nKey={'event.timing.races.title'} />
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    <Trans i18nKey={'event.timing.races.hint'} />
+                                </Typography>
+                                <Stack spacing={1} sx={{mt: 2}}>
+                                    {(races ?? []).length === 0 && !racesPending && (
+                                        <Typography variant={'body2'} color={'text.secondary'}>
+                                            <Trans i18nKey={'event.timing.races.none'} />
+                                        </Typography>
+                                    )}
+                                    {(races ?? []).map(race => (
+                                        <Stack
+                                            key={race.id}
+                                            direction={'row'}
+                                            spacing={1}
+                                            alignItems={'center'}>
+                                            <Box sx={{flexGrow: 1, minWidth: 0}}>
+                                                <Typography variant={'body2'}>
+                                                    {race.name}
+                                                    {race.capturesLaps &&
+                                                        ` · ${t('event.timing.races.capturesLaps')}`}
+                                                </Typography>
+                                                <Typography
+                                                    variant={'body2'}
+                                                    color={'text.secondary'}
+                                                    sx={{wordBreak: 'break-all'}}>
+                                                    {t(
+                                                        `event.timing.races.startModes.${race.startMode}`,
+                                                    )}{' '}
+                                                    · {race.resultsUrl}
+                                                </Typography>
+                                            </Box>
+                                            <IconButton
+                                                aria-label={t('event.timing.races.edit')}
+                                                onClick={() => {
+                                                    setEditedRace(race)
+                                                    setRaceDialogOpen(true)
+                                                }}>
+                                                <Edit fontSize={'small'} />
+                                            </IconButton>
+                                            <IconButton
+                                                aria-label={t('common.delete')}
+                                                onClick={() => removeRace(race)}>
+                                                <Delete fontSize={'small'} />
+                                            </IconButton>
+                                        </Stack>
+                                    ))}
+                                </Stack>
+                                <Button
+                                    startIcon={<Add />}
+                                    sx={{mt: 1}}
+                                    onClick={() => {
+                                        setEditedRace(undefined)
+                                        setRaceDialogOpen(true)
+                                    }}>
+                                    <Trans i18nKey={'event.timing.races.add'} />
+                                </Button>
+                            </Box>
+
+                            <FormInputAutocomplete
+                                name={'raceQualification'}
+                                options={raceOptions}
+                                loading={racesPending}
+                                label={t('event.timing.raceQualification')}
                             />
-                            <FormInputText
-                                name={'heatsResultsUrl'}
-                                label={t('event.timing.heatsUrl')}
+                            <FormInputAutocomplete
+                                name={'raceRounds'}
+                                options={raceOptions}
+                                loading={racesPending}
+                                label={t('event.timing.raceRounds')}
                             />
                             <Divider />
                             <FormInputSwitch
@@ -310,9 +469,7 @@ const EventTimingConfig = () => {
                                             {deviation.identifier} {deviation.name}
                                         </InlineLink>
                                         <Typography variant={'body2'} color={'text.secondary'}>
-                                            {describeDeviation(deviation)
-                                                .map(key => t(key))
-                                                .join(', ')}
+                                            {describeDeviation(deviation, t).join(', ')}
                                         </Typography>
                                     </Box>
                                 ))}
@@ -321,6 +478,15 @@ const EventTimingConfig = () => {
                     </Box>
                 </Stack>
             </FormContainer>
+
+            <RaceClockerRaceDialog
+                eventId={eventId}
+                entityName={t('event.timing.races.title')}
+                dialogIsOpen={raceDialogOpen}
+                closeDialog={() => setRaceDialogOpen(false)}
+                reloadData={() => setRacesReloaded(Date.now())}
+                entity={editedRace}
+            />
         </Box>
     )
 }

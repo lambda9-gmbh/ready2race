@@ -9,8 +9,9 @@ export type TimingFormSystem = 'NONE' | 'RACECLOCKER' | 'WEBSCORER'
 
 export type TimingForm = {
     timingSystem: TimingFormSystem
-    timeTrialResultsUrl: string
-    heatsResultsUrl: string
+    /** Das angewählte Rennen je Rundenart; null heißt „erbt von der Veranstaltung". */
+    raceQualification: AutocompleteOption
+    raceRounds: AutocompleteOption
     startlistConfigQualification: AutocompleteOption
     startlistConfigRounds: AutocompleteOption
     resultImportConfig: AutocompleteOption
@@ -33,8 +34,8 @@ export type TimingForm = {
      * Listen nach, damit dieses Modul ohne Netz testbar bleibt.
      */
     eventTimingSystem: TimingFormSystem
-    eventTimeTrialResultsUrl: string
-    eventHeatsResultsUrl: string
+    eventRaceQualification: string
+    eventRaceRounds: string
     eventStartlistConfigQualification: string
     eventStartlistConfigRounds: string
     eventResultImportConfig: string
@@ -42,15 +43,15 @@ export type TimingForm = {
 
 export const emptyTimingForm: TimingForm = {
     timingSystem: 'NONE',
-    timeTrialResultsUrl: '',
-    heatsResultsUrl: '',
+    raceQualification: null,
+    raceRounds: null,
     startlistConfigQualification: null,
     startlistConfigRounds: null,
     resultImportConfig: null,
     hasQualificationRound: false,
     eventTimingSystem: 'NONE',
-    eventTimeTrialResultsUrl: '',
-    eventHeatsResultsUrl: '',
+    eventRaceQualification: '',
+    eventRaceRounds: '',
     eventStartlistConfigQualification: '',
     eventStartlistConfigRounds: '',
     eventResultImportConfig: '',
@@ -67,8 +68,8 @@ export const effectiveTimingSystem = (form: TimingForm): TimingFormSystem =>
  */
 export const overridesTiming = (form: TimingForm): boolean =>
     form.timingSystem !== 'NONE' ||
-    form.timeTrialResultsUrl.trim() !== '' ||
-    form.heatsResultsUrl.trim() !== '' ||
+    form.raceQualification !== null ||
+    form.raceRounds !== null ||
     form.startlistConfigQualification !== null ||
     form.startlistConfigRounds !== null ||
     form.resultImportConfig !== null
@@ -79,8 +80,8 @@ export const overridesTiming = (form: TimingForm): boolean =>
  */
 export const mapDtoToTimingForm = (dto: TimingConfigDto): TimingForm => ({
     timingSystem: dto.timingSystem ?? 'NONE',
-    timeTrialResultsUrl: dto.timeTrialResultsUrl ?? '',
-    heatsResultsUrl: dto.heatsResultsUrl ?? '',
+    raceQualification: dto.raceQualification ? {id: dto.raceQualification, label: ''} : null,
+    raceRounds: dto.raceRounds ? {id: dto.raceRounds, label: ''} : null,
     startlistConfigQualification: dto.startlistConfigQualification
         ? {id: dto.startlistConfigQualification, label: ''}
         : null,
@@ -90,14 +91,12 @@ export const mapDtoToTimingForm = (dto: TimingConfigDto): TimingForm => ({
     resultImportConfig: dto.resultImportConfig ? {id: dto.resultImportConfig, label: ''} : null,
     hasQualificationRound: dto.hasQualificationRound ?? false,
     eventTimingSystem: dto.eventTimingSystem ?? 'NONE',
-    eventTimeTrialResultsUrl: dto.eventTimeTrialResultsUrl ?? '',
-    eventHeatsResultsUrl: dto.eventHeatsResultsUrl ?? '',
+    eventRaceQualification: dto.eventRaceQualification ?? '',
+    eventRaceRounds: dto.eventRaceRounds ?? '',
     eventStartlistConfigQualification: dto.eventStartlistConfigQualification ?? '',
     eventStartlistConfigRounds: dto.eventStartlistConfigRounds ?? '',
     eventResultImportConfig: dto.eventResultImportConfig ?? '',
 })
-
-const trimmedOrNull = (value: string): string | null => value.trim() || null
 
 /**
  * Felder, die für das gewählte System nicht sichtbar sind, werden bewusst geleert statt durchgereicht:
@@ -112,8 +111,8 @@ export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest =>
 
     return {
         timingSystem: form.timingSystem === 'NONE' ? null : form.timingSystem,
-        timeTrialResultsUrl: raceClocker ? trimmedOrNull(form.timeTrialResultsUrl) : null,
-        heatsResultsUrl: raceClocker ? trimmedOrNull(form.heatsResultsUrl) : null,
+        raceQualification: raceClocker ? (form.raceQualification?.id ?? null) : null,
+        raceRounds: raceClocker ? (form.raceRounds?.id ?? null) : null,
         startlistConfigQualification: raceClocker
             ? (form.startlistConfigQualification?.id ?? null)
             : null,
@@ -123,15 +122,15 @@ export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest =>
 }
 
 export type TimingWarning =
-    | 'heatsUrl'
-    | 'timeTrialUrl'
+    | 'raceRounds'
+    | 'raceQualification'
     | 'startlistRounds'
     | 'startlistQualification'
 
 /**
  * Was fehlt, um die Zeitnahme benutzen zu können.
  *
- * Die Zeitfahren-URL und das Qualifikations-Preset hängen an [TimingForm.hasQualificationRound]: ein
+ * Das Zeitfahren-Rennen und das Qualifikations-Preset hängen an [TimingForm.hasQualificationRound]: ein
  * Wettkampf ohne Qualifikationsrunde braucht beides nie, und eine Warnung, die dort dauerhaft steht,
  * wird ignoriert. Hat er eine, sind beide genauso Pflicht wie die übrigen Felder — sonst antwortet der
  * Startlisten-Export mit STARTLIST_CONFIG_NOT_CONFIGURED und der Lauf-Pull findet keine Ergebnisse,
@@ -146,19 +145,19 @@ export const timingConfigWarnings = (form: TimingForm): TimingWarning[] => {
     if (system === 'NONE') return []
 
     const raceClocker = system === 'RACECLOCKER'
-    const heatsUrl = form.heatsResultsUrl.trim() || form.eventHeatsResultsUrl.trim()
-    const timeTrialUrl = form.timeTrialResultsUrl.trim() || form.eventTimeTrialResultsUrl.trim()
+    const raceRounds = form.raceRounds?.id || form.eventRaceRounds
+    const raceQualification = form.raceQualification?.id || form.eventRaceQualification
     // Auch die Formate können von der Veranstaltung kommen — dann fehlen sie nicht.
     const startlistRounds = form.startlistConfigRounds?.id || form.eventStartlistConfigRounds
     const startlistQualification =
         form.startlistConfigQualification?.id || form.eventStartlistConfigQualification
 
     const warnings: TimingWarning[] = []
-    if (raceClocker && !heatsUrl) {
-        warnings.push('heatsUrl')
+    if (raceClocker && !raceRounds) {
+        warnings.push('raceRounds')
     }
-    if (raceClocker && form.hasQualificationRound && !timeTrialUrl) {
-        warnings.push('timeTrialUrl')
+    if (raceClocker && form.hasQualificationRound && !raceQualification) {
+        warnings.push('raceQualification')
     }
     if (!startlistRounds) {
         warnings.push('startlistRounds')

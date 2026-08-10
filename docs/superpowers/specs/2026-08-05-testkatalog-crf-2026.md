@@ -317,6 +317,30 @@ und xlsx-Import wieder funktionieren — das ist gewollt und muss trotzdem gepr�
 | F14 | Round-Trip Webscorer | Ein Preset, CSV laden, xlsx ohne Dialog hochladen | `b13a7173` | |
 | F15 | Sprachen | Tab, Fehlermeldungen und Preset-Namen auf de/en/da vollständig | `9756762b` | |
 
+### F16–F22 — Benannte Rennen statt zweier fester Adressen
+
+Neu am 10.08. Bis hierher hatte eine Veranstaltung genau **zwei** Adressfelder (Zeitfahren, Läufe),
+und ein Wettkampf konnte sie mit eigenen Adressen überschreiben. Eine Regatta fährt aber mehr Rennen
+als zwei — bei CRF sind es Timetrials, Langstrecke und Kurzstrecke. Ab jetzt legt die Veranstaltung
+**benannte Rennen** an, und Veranstaltung wie Wettkampf **wählen** daraus aus.
+
+Für den Bestand ändert sich nichts: Die Migration erzeugt aus den alten Adressen Rennen und setzt die
+Anwahl so, dass jeder Wettkampf weiterhin dieselbe Adresse abfragt wie vorher.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| F16 | Rennen anlegen | Drei Rennen anlegen (Timetrials/Einzelstarts, Langstrecke/Läufe mit Rundenzeiten-Kennzeichen, Kurzstrecke/Läufe); alle drei erscheinen in der Liste mit Startart und Adresse | `a5d30cf3` | |
+| F17 | Voreinstellung anwählen | Quali → Timetrials, übrige Runden → Kurzstrecke; ein Wettkampf ohne eigene Anwahl zeigt im Zeitnahme-Tab genau diese beiden Namen als „geerbt" | `a5d30cf3` | |
+| F18 | Wettkampf weicht ab | Bei einem Wettkampf „Langstrecke" anwählen, speichern, Seite neu laden; im Event-Tab steht er unter „Wettkämpfe mit eigener Zeitnahme" **mit Rennennamen** | `a5d30cf3` | |
+| F19 | Anwahl wieder leeren | Override-Schalter aus → der Wettkampf erbt wieder, und die Abweichungs-Liste nennt ihn nicht mehr | `a5d30cf3` | |
+| F20 | Falsches Rennen angewählt | Absichtlich das falsche Rennen anwählen und Ergebnisse abrufen: Der Lauf wird über den Rückfall trotzdem gefunden, die Regatta läuft weiter | `a5d30cf3` | |
+| F21 | Rennen löschen | Ein angewähltes Rennen löschen: Rückfrage erscheint; danach erben die betroffenen Wettkämpfe wieder die Voreinstellung, und der Abruf überspringt Läufe ohne jedes Rennen still | `a5d30cf3` | |
+| F22 | Doppelte Adresse abgewiesen | Zwei Rennen mit derselben Ergebnis-Adresse anlegen → verständliche Meldung statt „Unerwarteter Fehler"; dasselbe für zwei gleiche Namen | `a5d30cf3` | |
+
+**Was der Abruf dabei sparen soll (C15–C26 im Blick behalten):** Der Takt holt nur noch die Rennen,
+die *gerade* gefahren werden, und den Rückfall erst, wenn ein Lauf im angewählten Rennen fehlt. Fährt
+die Regatta nur Kurzstrecke, darf im Netzwerk-Protokoll pro Takt **eine** Anfrage stehen, nicht zwei.
+
 ## G — Urkunden
 
 Neu auf dem Sammelbranch. Die Vorlagenpflege nutzt die bestehende Gap-Mechanik: PDF-Export der

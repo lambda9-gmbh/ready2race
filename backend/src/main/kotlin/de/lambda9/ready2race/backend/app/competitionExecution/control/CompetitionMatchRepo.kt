@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListCo
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
 import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRef
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
@@ -65,25 +66,39 @@ object CompetitionMatchRepo {
      * time, competition and match name, see [WaveName] - MUST be formatted exactly like
      * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.buildCsv]
      * builds it for the export, or the wave-name fallback filter in `assignFeedRows` never matches)
-     * and the competition's two results URLs. Which of the two applies follows from the round: a
+     * and the two RaceClocker races it selected. Which of the two applies follows from the round: a
      * qualification round is timed as a separate time trial race, because only individual starts have
      * a real countdown in RaceClocker.
      */
     fun getForRaceClockerPull(id: UUID) = Jooq.query {
-        // Wettkampf-Wert vor Veranstaltungs-Voreinstellung (Migration V202608062100): die
-        // RaceClocker-Rennen werden pro Veranstaltung angelegt, einzelne Wettkaempfe koennen mit
-        // eigenen URLs ausscheren.
-        val timeTrialUrl = DSL.coalesce(COMPETITION.RACECLOCKER_TT_RESULTS_URL, EVENT.RACECLOCKER_TT_RESULTS_URL).`as`("time_trial_url")
-        val heatsUrl = DSL.coalesce(COMPETITION.RACECLOCKER_HEATS_RESULTS_URL, EVENT.RACECLOCKER_HEATS_RESULTS_URL).`as`("heats_url")
+        // Wettkampf-Anwahl vor Veranstaltungs-Voreinstellung (Migration V202608101100): die
+        // RaceClocker-Rennen gehören der Veranstaltung, einzelne Wettkämpfe können mit einer
+        // eigenen Anwahl ausscheren. Zwei Aliase, weil dieselbe Tabelle zweimal gebraucht wird.
+        val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
+        val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")
+        val qualiRaceId = DSL.coalesce(
+            COMPETITION.RACECLOCKER_RACE_QUALIFICATION,
+            EVENT.RACECLOCKER_RACE_QUALIFICATION,
+        )
+        val roundsRaceId = DSL.coalesce(
+            COMPETITION.RACECLOCKER_RACE_ROUNDS,
+            EVENT.RACECLOCKER_RACE_ROUNDS,
+        )
 
         select(
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
+            // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die sechs
+            // Rennen-Spalten die Anwahl.
             COMPETITION_PROPERTIES.IDENTIFIER,
             COMPETITION_PROPERTIES.SHORT_NAME,
-            timeTrialUrl,
-            heatsUrl,
+            qualiRace.ID,
+            qualiRace.NAME,
+            qualiRace.RESULTS_URL,
+            roundsRace.ID,
+            roundsRace.NAME,
+            roundsRace.RESULTS_URL,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -94,19 +109,25 @@ object CompetitionMatchRepo {
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
+            .leftJoin(qualiRace).on(qualiRace.ID.eq(qualiRaceId))
+            .leftJoin(roundsRace).on(roundsRace.ID.eq(roundsRaceId))
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
-            .fetchOne {
+            .fetchOne { record ->
                 RaceClockerMatchTarget(
                     waveName = WaveName.format(
-                        matchName = it[COMPETITION_SETUP_MATCH.NAME],
-                        startTime = it[COMPETITION_MATCH.START_TIME],
-                        competitionIdentifier = it[COMPETITION_PROPERTIES.IDENTIFIER],
-                        competitionShortName = it[COMPETITION_PROPERTIES.SHORT_NAME],
+                        matchName = record[COMPETITION_SETUP_MATCH.NAME],
+                        startTime = record[COMPETITION_MATCH.START_TIME],
+                        competitionIdentifier = record[COMPETITION_PROPERTIES.IDENTIFIER],
+                        competitionShortName = record[COMPETITION_PROPERTIES.SHORT_NAME],
                     ),
                     // Not null in the schema; the projection just loses that guarantee.
-                    isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
-                    timeTrialUrl = it[timeTrialUrl],
-                    heatsUrl = it[heatsUrl],
+                    isQualification = record[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
+                    qualificationRace = record[qualiRace.ID]?.let {
+                        RaceClockerRaceRef(it, record[qualiRace.NAME]!!, record[qualiRace.RESULTS_URL]!!)
+                    },
+                    roundsRace = record[roundsRace.ID]?.let {
+                        RaceClockerRaceRef(it, record[roundsRace.NAME]!!, record[roundsRace.RESULTS_URL]!!)
+                    },
                 )
             }
     }

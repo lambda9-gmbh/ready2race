@@ -37,15 +37,15 @@ describe('mapEventTimingFormToRequest', () => {
         expect(mapEventTimingFormToRequest(emptyEventTimingForm).timingSystem).toBeNull()
     })
 
-    it('verwirft die URLs, wenn nicht RaceClocker gewählt ist', () => {
-        // Eine unsichtbare Adresse, die alle Wettkämpfe erben, findet sonst niemand wieder.
+    it('verwirft die Rennen-Anwahl, wenn nicht RaceClocker gewählt ist', () => {
+        // Ein unsichtbar angewähltes Rennen, das alle Wettkämpfe erben, findet sonst niemand wieder.
         const request = mapEventTimingFormToRequest({
             ...emptyEventTimingForm,
             timingSystem: 'WEBSCORER',
-            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            raceRounds: {id: '44444444-4444-4444-4444-444444444444', label: 'Kurzstrecke'},
         })
 
-        expect(request.heatsResultsUrl).toBeNull()
+        expect(request.raceRounds).toBeNull()
     })
 
     it('verwirft das Qualifikations-Format, wenn nicht RaceClocker gewählt ist', () => {
@@ -74,16 +74,18 @@ describe('mapEventTimingFormToRequest', () => {
         expect(request.resultImportConfig).toBeNull()
     })
 
-    it('macht aus einer leeren URL null statt eines Leerstrings', () => {
+    it('gibt eine leere Anwahl als null weiter, nicht als Leerwert', () => {
+        // Ohne Zeitfahren-Rennen bleibt die Quali-Anwahl leer -- das ist der Normalfall einer
+        // Regatta ohne Zeitfahren und muss als "nicht angewählt" ankommen.
         const request = mapEventTimingFormToRequest({
             ...emptyEventTimingForm,
             timingSystem: 'RACECLOCKER',
-            timeTrialResultsUrl: '   ',
-            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            raceQualification: null,
+            raceRounds: {id: '44444444-4444-4444-4444-444444444444', label: 'Kurzstrecke'},
         })
 
-        expect(request.timeTrialResultsUrl).toBeNull()
-        expect(request.heatsResultsUrl).toBe('https://www.raceclocker.com/7c854955')
+        expect(request.raceQualification).toBeNull()
+        expect(request.raceRounds).toBe('44444444-4444-4444-4444-444444444444')
     })
 })
 
@@ -91,8 +93,8 @@ describe('automatischer Abruf', () => {
     it('übernimmt die Abruf-Einstellungen aus dem Dto', () => {
         const form = mapDtoToEventTimingForm({
             timingSystem: 'RACECLOCKER',
-            timeTrialResultsUrl: null,
-            heatsResultsUrl: null,
+            raceQualification: null,
+            raceRounds: null,
             startlistConfigQualification: null,
             startlistConfigRounds: null,
             resultImportConfig: null,

@@ -1,93 +1,93 @@
 package de.lambda9.ready2race.backend.app.raceclocker
 
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRef
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 /**
- * Die URL-Auswahl für einen RaceClocker-Pull. Hat dieselbe Form wie StartListConfigTargetTest und
- * denselben Grund: RaceClocker braucht pro Wettkampf zwei Rennen (Zeitfahren- und Läufe-Race), und
- * [RaceClockerMatchTarget.isQualification] entscheidet nur, welches zuerst versucht wird - candidateUrls
- * fällt danach auf das jeweils andere zurück, statt bei einer leeren primären URL aufzugeben.
+ * Welches Rennen für einen Lauf gilt — und welches der Rückfall ist.
+ *
+ * Die Runde entscheidet, welches Rennen ZUERST versucht wird. Sie ist eine Angabe, keine Garantie:
+ * Eine als Zeitfahren gefahrene, aber nicht als Qualifikation markierte Runde findet ihren Lauf im
+ * anderen Rennen. Deshalb bleibt der Rückfall — nur wird er ab jetzt erst bei Bedarf geholt.
  */
 class RaceClockerMatchTargetTest {
 
-    private val timeTrialUrl = "https://raceclocker.com/timetrial"
-    private val heatsUrl = "https://raceclocker.com/heats"
+    private val timeTrials = RaceClockerRaceRef(UUID.randomUUID(), "Timetrials", "https://raceclocker.com/tt")
+    private val shortCourse = RaceClockerRaceRef(UUID.randomUUID(), "Kurzstrecke", "https://raceclocker.com/kurz")
+
+    private fun target(
+        isQualification: Boolean,
+        qualificationRace: RaceClockerRaceRef? = timeTrials,
+        roundsRace: RaceClockerRaceRef? = shortCourse,
+    ) = RaceClockerMatchTarget(
+        waveName = "Lauf 1",
+        isQualification = isQualification,
+        qualificationRace = qualificationRace,
+        roundsRace = roundsRace,
+    )
 
     @Test
-    fun qualificationRoundPrefersTheTimeTrialUrl() {
-        val target = RaceClockerMatchTarget(
-            waveName = null,
-            isQualification = true,
-            timeTrialUrl = timeTrialUrl,
-            heatsUrl = heatsUrl,
-        )
-
-        assertEquals(timeTrialUrl, target.resultsUrl)
-        assertEquals(heatsUrl, target.alternateResultsUrl)
-        assertEquals(listOf(timeTrialUrl, heatsUrl), target.candidateUrls)
+    fun `eine Qualifikationsrunde beginnt beim Zeitfahren-Rennen`() {
+        val t = target(isQualification = true)
+        assertEquals(timeTrials.resultsUrl, t.resultsUrl)
+        assertEquals(shortCourse.resultsUrl, t.alternateResultsUrl)
+        assertEquals(listOf(timeTrials.resultsUrl, shortCourse.resultsUrl), t.candidateUrls)
+        assertEquals(listOf("Timetrials", "Kurzstrecke"), t.candidateRaceNames)
     }
 
     @Test
-    fun otherRoundsPreferTheHeatsUrl() {
-        val target = RaceClockerMatchTarget(
-            waveName = "AF1 CM1x",
-            isQualification = false,
-            timeTrialUrl = timeTrialUrl,
-            heatsUrl = heatsUrl,
-        )
+    fun `jede andere Runde beginnt beim Läufe-Rennen`() {
+        val t = target(isQualification = false)
+        assertEquals(shortCourse.resultsUrl, t.resultsUrl)
+        assertEquals(timeTrials.resultsUrl, t.alternateResultsUrl)
+        assertEquals(listOf(shortCourse.resultsUrl, timeTrials.resultsUrl), t.candidateUrls)
+        assertEquals(listOf("Kurzstrecke", "Timetrials"), t.candidateRaceNames)
+    }
 
-        assertEquals(heatsUrl, target.resultsUrl)
-        assertEquals(timeTrialUrl, target.alternateResultsUrl)
-        assertEquals(listOf(heatsUrl, timeTrialUrl), target.candidateUrls)
+    /**
+     * Eine Qualifikationsrunde ohne angewähltes Zeitfahren-Rennen hat kein erstes Rennen — wohl aber
+     * einen Rückfall. Für den Abruf zählt allein [RaceClockerMatchTarget.candidateUrls]: Der Lauf
+     * wird im Läufe-Rennen gesucht und dort auch gefunden. Genau dieser Fall ist der Normalzustand
+     * einer Regatta ohne Zeitfahren, und er darf nicht zu „nichts zu holen" führen.
+     */
+    @Test
+    fun `ohne Quali-Anwahl wird das Läufe-Rennen zum Rückfall`() {
+        val t = target(isQualification = true, qualificationRace = null)
+        assertNull(t.resultsUrl)
+        assertEquals(shortCourse.resultsUrl, t.alternateResultsUrl)
+        assertEquals(listOf(shortCourse.resultsUrl), t.candidateUrls)
+        assertEquals(listOf("Kurzstrecke"), t.candidateRaceNames)
     }
 
     @Test
-    fun qualificationWithoutATimeTrialUrlFallsBackToTheHeatsUrl() {
-        // Das Zeitfahren-Ergebnisrennen ist nicht konfiguriert - resultsUrl bleibt aus, aber
-        // candidateUrls liefert trotzdem noch das Läufe-Rennen als einzigen Kandidaten.
-        val target = RaceClockerMatchTarget(
-            waveName = null,
-            isQualification = true,
-            timeTrialUrl = null,
-            heatsUrl = heatsUrl,
-        )
-
-        assertNull(target.resultsUrl)
-        assertEquals(heatsUrl, target.alternateResultsUrl)
-        assertEquals(listOf(heatsUrl), target.candidateUrls)
+    fun `ohne jede Anwahl gibt es nichts zu holen`() {
+        val t = target(isQualification = false, qualificationRace = null, roundsRace = null)
+        assertNull(t.resultsUrl)
+        assertEquals(emptyList(), t.candidateUrls)
+        assertEquals(emptyList(), t.candidateRaceNames)
     }
 
     @Test
-    fun blankUrlsCountAsNotConfigured() {
-        // takeIf { isNotBlank() }: eine leere oder nur aus Leerraum bestehende URL zaehlt wie "nicht
-        // konfiguriert", nicht wie eine echte (kaputte) URL.
-        val target = RaceClockerMatchTarget(
-            waveName = null,
-            isQualification = true,
-            timeTrialUrl = "   ",
-            heatsUrl = heatsUrl,
-        )
-
-        assertNull(target.resultsUrl)
-        assertEquals(heatsUrl, target.alternateResultsUrl)
-        assertEquals(listOf(heatsUrl), target.candidateUrls)
+    fun `dasselbe Rennen für beides wird nur einmal geholt`() {
+        val t = target(isQualification = true, qualificationRace = shortCourse, roundsRace = shortCourse)
+        assertEquals(listOf(shortCourse.resultsUrl), t.candidateUrls)
+        assertEquals(listOf("Kurzstrecke"), t.candidateRaceNames)
     }
 
+    /**
+     * Zwei verschiedene Rennen, die auf dieselbe Adresse zeigen, kann es je Veranstaltung nicht
+     * geben — `uq_raceclocker_race_event_url` verbietet es. Der Rückfall entdoppelt trotzdem über
+     * die Adresse und nicht über die Kennung, weil geholt wird, was die Adresse hergibt.
+     */
     @Test
-    fun bothUrlsMissingYieldsNoCandidates() {
-        val target = RaceClockerMatchTarget(
-            waveName = null,
-            isQualification = false,
-            timeTrialUrl = null,
-            heatsUrl = "",
-        )
-
-        assertNull(target.resultsUrl)
-        assertNull(target.alternateResultsUrl)
-        assertTrue(target.candidateUrls.isEmpty())
+    fun `gleiche Adresse unter anderem Namen zählt als dasselbe Rennen`() {
+        val twin = RaceClockerRaceRef(UUID.randomUUID(), "Kurzstrecke B", shortCourse.resultsUrl)
+        val t = target(isQualification = false, qualificationRace = twin, roundsRace = shortCourse)
+        assertEquals(listOf(shortCourse.resultsUrl), t.candidateUrls)
+        assertEquals(listOf("Kurzstrecke"), t.candidateRaceNames)
     }
 }

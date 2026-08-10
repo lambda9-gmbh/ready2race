@@ -363,7 +363,25 @@ class RaceClockerFeedTest {
         // What keeps this endpoint from being an SSRF lever is the host allowlist, not the scheme.
         val url = RaceClockerFeed.normalizeUrl("http://www.raceclocker.com/7c854955").unsafeRunSync().getOrNull()
         assertNotNull(url)
-        assertEquals("https://www.raceclocker.com/7c854955", url.toString())
+        assertEquals("https://raceclocker.com/7c854955", url.toString())
+    }
+
+    /**
+     * Both hosts serve the same feed, but as strings they differ - and a race's uniqueness per event
+     * and the pull's de-duplication both hang on that string. Without folding them together, the www
+     * and apex forms would be two races answering identically: two requests per tick for one result,
+     * which is the waste this whole change exists to remove.
+     */
+    @Test
+    fun theWwwHostIsFoldedIntoTheApex() {
+        val withWww = RaceClockerFeed.normalizeUrl("https://www.raceclocker.com/7c854955")
+            .unsafeRunSync().getOrNull()
+        val withoutWww = RaceClockerFeed.normalizeUrl("https://raceclocker.com/7c854955")
+            .unsafeRunSync().getOrNull()
+
+        assertNotNull(withWww)
+        assertNotNull(withoutWww)
+        assertEquals(withoutWww.toString(), withWww.toString())
     }
 
     @Test

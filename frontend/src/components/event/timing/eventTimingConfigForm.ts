@@ -6,8 +6,12 @@ export type EventTimingFormSystem = TimingSystem | 'NONE'
 
 export type EventTimingForm = {
     timingSystem: EventTimingFormSystem
-    timeTrialResultsUrl: string
-    heatsResultsUrl: string
+    /**
+     * Das voreingestellte RaceClocker-Rennen je Rundenart. Angewählt statt eingetippt: die Rennen
+     * gehören der Veranstaltung und tragen ihre Adresse genau einmal.
+     */
+    raceQualification: AutocompleteOption
+    raceRounds: AutocompleteOption
     /**
      * Startlisten-Export und Rennergebnisse-Import wie im Wettkampf (Migration V202608071300). Sie
      * stehen hier, weil alle Wettkämpfe einer Regatta in dieselben Rennen im Fremdsystem exportieren
@@ -29,8 +33,8 @@ export type EventTimingForm = {
 
 export const emptyEventTimingForm: EventTimingForm = {
     timingSystem: 'NONE',
-    timeTrialResultsUrl: '',
-    heatsResultsUrl: '',
+    raceQualification: null,
+    raceRounds: null,
     startlistConfigQualification: null,
     startlistConfigRounds: null,
     resultImportConfig: null,
@@ -43,8 +47,8 @@ export const emptyEventTimingForm: EventTimingForm = {
 
 export const mapDtoToEventTimingForm = (dto: EventTimingConfigDto): EventTimingForm => ({
     timingSystem: dto.timingSystem ?? 'NONE',
-    timeTrialResultsUrl: dto.timeTrialResultsUrl ?? '',
-    heatsResultsUrl: dto.heatsResultsUrl ?? '',
+    raceQualification: dto.raceQualification ? {id: dto.raceQualification, label: ''} : null,
+    raceRounds: dto.raceRounds ? {id: dto.raceRounds, label: ''} : null,
     // Wie im Wettkampf-Formular: nur die ID, das Label füllt die Komponente aus den geladenen Listen.
     startlistConfigQualification: dto.startlistConfigQualification
         ? {id: dto.startlistConfigQualification, label: ''}
@@ -60,8 +64,6 @@ export const mapDtoToEventTimingForm = (dto: EventTimingConfigDto): EventTimingF
     watchAfterMinutes: dto.watchAfterMinutes,
 })
 
-const trimmedOrNull = (value: string): string | null => value.trim() || null
-
 /**
  * Verwirft, was für das gewählte System nicht sichtbar ist — dieselbe Regel wie im Wettkampf: eine
  * unsichtbare Voreinstellung, die stillschweigend an alle Wettkämpfe vererbt wird, wäre die
@@ -73,8 +75,8 @@ export const mapEventTimingFormToRequest = (form: EventTimingForm): EventTimingC
 
     return {
         timingSystem: form.timingSystem === 'NONE' ? null : form.timingSystem,
-        timeTrialResultsUrl: raceClocker ? trimmedOrNull(form.timeTrialResultsUrl) : null,
-        heatsResultsUrl: raceClocker ? trimmedOrNull(form.heatsResultsUrl) : null,
+        raceQualification: raceClocker ? (form.raceQualification?.id ?? null) : null,
+        raceRounds: raceClocker ? (form.raceRounds?.id ?? null) : null,
         // Nur RaceClocker kennt die Zweiteilung Zeitfahren/Läufe; Webscorer füllt allein den Runden-Slot.
         startlistConfigQualification: raceClocker
             ? (form.startlistConfigQualification?.id ?? null)

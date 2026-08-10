@@ -5,6 +5,8 @@ import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchTeamWithRegistration
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchWithTeams
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollLogic.PollMode
@@ -108,9 +110,59 @@ object RaceClockerPollService {
         }
     }
 
+    /** Ein Lauf, dessen Turnierstruktur und Mannschaften bereits aufgelöst sind. */
+    private data class ResolvedMatch(
+        val candidate: RaceClockerPollCandidate,
+        val match: CompetitionMatchWithTeams,
+        val teams: List<CompetitionMatchTeamWithRegistration>,
+    )
+
     /**
-     * Ein Abruf für eine Veranstaltung: beobachtete Läufe bestimmen, jede benötigte Adresse genau
-     * einmal holen, die Antwort auf die Läufe verteilen.
+     * Wie das Auflösen eines Laufs ausgegangen ist.
+     *
+     * [Skip] und [Defect] auf denselben Wert abzubilden wäre die teuerste Vereinfachung dieser
+     * Datei: „Der Job lässt den Lauf bewusst in Ruhe" und „es ist etwas unerwartet kaputtgegangen"
+     * sehen in der Datenbank sonst gleich aus. Ein Defekt bekäme Takt für Takt einen sauberen
+     * Stempel, der Lauf nie ein Ergebnis, und in der Oberfläche stünde nichts — der Fehler wäre nur
+     * im Server-Protokoll, wo ihn am Renntag niemand sucht.
+     */
+    private sealed interface Resolution {
+        data class Ok(val match: CompetitionMatchWithTeams) : Resolution
+
+        /** Gesperrt, Freilos, leere Struktur — kein Abruf-Fehler, den die Oberfläche zeigen müsste. */
+        data object Skip : Resolution
+
+        data object Defect : Resolution
+    }
+
+    /**
+     * Was die bisher geholten Rennen über einen Lauf hergeben.
+     *
+     * Die drei Fälle sind bewusst getrennt, weil sie am Renntag drei verschiedene Dinge bedeuten:
+     * gefunden; „die Welle gibt es dort noch nicht" (vor dem Start der Normalfall); und „kein
+     * Rennen hat geantwortet" (die einzige echte Störung). Nur der letzte gehört als Fehler in die
+     * Oberfläche — eine Warnung, die immer leuchtet, bringt dem Büro bei, auch die eine zu
+     * übersehen, auf die es ankommt.
+     */
+    private sealed interface MatchFeed {
+        data class Found(
+            /** Alle Zeilen des Rennens — `applyRaceClockerRows` braucht sie, nicht nur die eigenen. */
+            val rows: List<RaceClockerFeedRow>,
+            val assigned: List<RaceClockerFeedRow>,
+        ) : MatchFeed
+
+        data object NotInFeed : MatchFeed
+
+        data class Failed(val errorCode: String?) : MatchFeed
+    }
+
+    /**
+     * Ein Abruf für eine Veranstaltung, in vier Phasen.
+     *
+     * Der Umweg über Phasen ist nicht Ordnungsliebe: Der Rückfall soll erst geholt werden, wenn das
+     * angewählte Rennen den Lauf nicht enthält — und ob es ihn enthält, weiß man erst, wenn die
+     * Mannschaften des Laufs bekannt sind. Auflösen, Zuordnen und Schreiben müssen deshalb
+     * auseinander.
      */
     private suspend fun CoroutineComprehensionScope<Nothing>.pollEvent(
         event: RaceClockerPollEvent,
@@ -132,20 +184,16 @@ object RaceClockerPollService {
             return
         }
 
-        // Ein Abruf liefert das ganze Rennen. Deshalb je Adresse genau einmal holen und die Antwort
-        // teilen - bei einer Regatta sind das ein bis zwei Abrufe pro Takt, egal wie viele Läufe
-        // gerade laufen.
-        val feeds = watched.flatMap { it.target.candidateUrls }.distinct()
-            .associateWith { fetchRows(it) }
-
-        // Dieselbe Sparsamkeit auf der Datenbankseite: `getSetupRoundsWithMatches` sind zwei
-        // Abfragen plus der ganze Baum aus Runden, Läufen und Mannschaften. Acht beobachtete Läufe
-        // desselben Wettkampfs hätten ihn achtmal je Takt gelesen - einmal je Wettkampf reicht, der
-        // Stand kann sich innerhalb eines Taktes nicht ändern.
+        // Phase 1: Auflösen. `getSetupRoundsWithMatches` sind zwei Abfragen plus der ganze Baum aus
+        // Runden, Läufen und Mannschaften. Acht beobachtete Läufe desselben Wettkampfs hätten ihn
+        // achtmal je Takt gelesen - einmal je Wettkampf reicht, der Stand kann sich innerhalb eines
+        // Taktes nicht ändern.
         val setupRoundsByCompetition = mutableMapOf<UUID, List<CompetitionSetupRoundWithMatches>>()
-
-        var anyRunning = false
-        watched.forEach { candidate ->
+        // Läufe, die diese Phase aussortiert, brauchen trotzdem ihren Stempel - siehe unten.
+        val skipped = mutableListOf<UUID>()
+        // Und die, bei denen etwas unerwartet gescheitert ist - die gehören als Fehler sichtbar.
+        val defective = mutableListOf<UUID>()
+        val resolved = watched.mapNotNull { candidate ->
             val setupRounds = setupRoundsByCompetition.getOrPut(candidate.competitionId) {
                 // Ein Fehler der Turnierstruktur heißt für den Job dasselbe wie "Lauf nicht
                 // gefunden": Er überspringt ihn still. `orDie` wäre hier falsch - ein einzelner
@@ -157,15 +205,109 @@ object RaceClockerPollService {
                         .recoverDefault { emptyList() }
                 }
             }
-            val outcome = runIsolated(candidate.matchId, MatchOutcome(errorCode = ErrorCode.INTERNAL_ERROR.name)) {
-                pollMatch(candidate, feeds, setupRounds, now)
+
+            // Dieselbe Sperre wie beim Knopf: `checkUpdateMatchResult` löst die aktuelle Runde auf
+            // und weist einen Lauf außerhalb davon ab. Ohne das würde der Job einen ersten Vorlauf,
+            // den niemand beendet hat, für immer weiter beschreiben - und damit Plätze
+            // überschreiben, aus denen die Setzung der nächsten Runde längst abgeleitet ist.
+            // Scheitert die Prüfung (gesperrt, Freilos, Struktur leer), überspringt der Job den
+            // Lauf still: das ist kein Abruf-Fehler, den die Oberfläche anzeigen müsste.
+            val resolution = runIsolated<Resolution>(candidate.matchId, Resolution.Defect) {
+                CompetitionExecutionService.checkUpdateMatchResult(setupRounds, candidate.matchId)
+                    .map { match -> Resolution.Ok(match) as Resolution }
+                    .recoverDefault { Resolution.Skip }
+            }
+
+            val match = when (resolution) {
+                is Resolution.Ok -> resolution.match
+                Resolution.Skip -> {
+                    skipped += candidate.matchId
+                    return@mapNotNull null
+                }
+                Resolution.Defect -> {
+                    defective += candidate.matchId
+                    return@mapNotNull null
+                }
+            }
+
+            ResolvedMatch(candidate, match, match.teams.filter { !it.deregistered })
+        }
+
+        // Phase 2: Runde 1 - nur die angewählten Rennen. Ein Abruf liefert das ganze Rennen, deshalb
+        // je Adresse genau einmal holen und die Antwort teilen.
+        val feeds = mutableMapOf<String, FeedResult>()
+        RaceClockerFeedAssignment.primaryUrls(resolved.map { it.candidate.target })
+            .forEach { feeds[it] = fetchRows(it) }
+
+        // Über die Lauf-Kennung verschlüsselt, nicht über das Objekt: `ResolvedMatch` trägt den
+        // ganzen Lauf mitsamt Mannschaften, und dessen Gleichheit ist hier weder nötig noch billig.
+        val firstPass: Map<UUID, MatchFeed> = resolved.associate { entry ->
+            // Defekt-Vorgabe ist Failed, nicht NotInFeed: NotInFeed heißt „vor dem Start normal"
+            // und würde einen Defekt als gesunden Abruf durchgehen lassen.
+            entry.candidate.matchId to runIsolated<MatchFeed>(
+                entry.candidate.matchId,
+                MatchFeed.Failed(ErrorCode.INTERNAL_ERROR.name),
+            ) {
+                KIO.ok(assign(entry, feeds))
+            }
+        }
+
+        // Phase 3: Runde 2 - der Rückfall, aber nur für das, was leer ausgegangen ist. Im gesunden
+        // Betrieb ist diese Runde leer, und genau darin liegt die Ersparnis.
+        val unresolved = resolved.filter { firstPass[it.candidate.matchId] !is MatchFeed.Found }
+        if (unresolved.isNotEmpty()) {
+            RaceClockerFeedAssignment
+                .fallbackUrls(unresolved.map { it.candidate.target }, feeds.keys.toSet())
+                .forEach { feeds[it] = fetchRows(it) }
+        }
+
+        // Phase 4: Schreiben.
+        //
+        // Zuerst die still übersprungenen: Sie bekommen einen Abruf ohne Fehler eingetragen. Das ist
+        // keine Kosmetik. Ein Lauf, dessen Runde nicht mehr die aktuelle ist, wird hier absichtlich
+        // nicht mehr angefasst - trüge er noch den Fehlercode eines alten Netzaussetzers, bliebe der
+        // für immer stehen, weil ihn niemand mehr überschreibt. Durchführungs-Tab und
+        // Schiedsrichter-Board zeigten dann dauerhaft eine Störung an einem Lauf, den der Job
+        // bewusst in Ruhe lässt - genau die Dauerwarnung, gegen die dieser Job sonst argumentiert.
+        skipped.forEach { matchId ->
+            runIsolated(matchId, Unit) {
+                RaceClockerPollRepo.recordPoll(matchId, now, null).orDie().map { }
+            }
+        }
+
+        // Die defekten dagegen sichtbar: Sie hätten abgerufen werden sollen.
+        defective.forEach { matchId ->
+            runIsolated(matchId, Unit) {
+                RaceClockerPollRepo.recordPoll(matchId, now, ErrorCode.INTERNAL_ERROR.name).orDie().map { }
+            }
+        }
+
+        var anyRunning = false
+        resolved.forEach { entry ->
+            // Wer in Runde 1 gefunden wurde, wird nicht erneut zugeordnet; für alle anderen sind
+            // inzwischen die Rückfall-Rennen da.
+            val first = firstPass.getValue(entry.candidate.matchId)
+            val feed = if (first is MatchFeed.Found) {
+                first
+            } else {
+                runIsolated<MatchFeed>(
+                    entry.candidate.matchId,
+                    MatchFeed.Failed(ErrorCode.INTERNAL_ERROR.name),
+                ) { KIO.ok(assign(entry, feeds)) }
+            }
+
+            val outcome = runIsolated(
+                entry.candidate.matchId,
+                MatchOutcome(errorCode = ErrorCode.INTERNAL_ERROR.name),
+            ) {
+                writeMatch(entry, feed, now)
             }
             // Der schnelle Takt hängt an der Aktivierung, nicht am Ist-Start: Ein Lauf am Start ist
             // genau der, dessen Startmeldung so früh wie möglich ankommen soll.
-            anyRunning = anyRunning || candidate.activatedAt != null || outcome.activated
+            anyRunning = anyRunning || entry.candidate.activatedAt != null || outcome.activated
 
-            runIsolated(candidate.matchId, Unit) {
-                RaceClockerPollRepo.recordPoll(candidate.matchId, now, outcome.errorCode).orDie().map { }
+            runIsolated(entry.candidate.matchId, Unit) {
+                RaceClockerPollRepo.recordPoll(entry.candidate.matchId, now, outcome.errorCode).orDie().map { }
             }
         }
 
@@ -175,6 +317,35 @@ object RaceClockerPollService {
         // langsamen Takt (Vorgabe 60 s) auf seinen ersten Ergebnisabruf - und das Versprechen der
         // Funktion ist, dass Start und Ergebnisse so schnell wie möglich ankommen.
         eventStates[event.eventId] = EventState(now, RaceClockerPollLogic.modeFor(anyRunning))
+    }
+
+    /**
+     * Sucht diesen Lauf in den bereits geholten Rennen — angewähltes zuerst, dann der Rückfall.
+     *
+     * Entscheidend ist wie beim Knopf, ob die Welle im Feed STEHT, nicht bloß, ob die Adresse
+     * geantwortet hat. Sonst gewönne bei einer als Zeitfahren gefahrenen, aber nicht als
+     * Qualifikation markierten Runde immer das erste, falsche Rennen, und der Lauf bliebe die ganze
+     * Regatta ohne Ergebnis.
+     */
+    private fun assign(entry: ResolvedMatch, feeds: Map<String, FeedResult>): MatchFeed {
+        val target = entry.candidate.target
+        val fetched = target.candidateUrls.mapNotNull { feeds[it] }
+        val answered = fetched.filterIsInstance<FeedResult.Rows>()
+
+        val found = answered.firstNotNullOfOrNull { feed ->
+            CompetitionExecutionService.assignedRowsFor(feed.rows, entry.teams, target.waveName)
+                .takeIf { it.isNotEmpty() }
+                ?.let { MatchFeed.Found(feed.rows, it) }
+        }
+        if (found != null) return found
+
+        // Hat gar kein Rennen mit Zeilen geantwortet, ist DAS der Fehler, den die Oberfläche zeigen
+        // soll. Hat eines geantwortet und die Welle fehlt bloß, ist das vor dem Start der Normalfall.
+        return if (answered.isEmpty()) {
+            MatchFeed.Failed((fetched.firstOrNull() as? FeedResult.Failed)?.errorCode)
+        } else {
+            MatchFeed.NotInFeed
+        }
     }
 
     /** Was ein Abrufversuch über einen Lauf ergeben hat. */
@@ -209,54 +380,29 @@ object RaceClockerPollService {
     )
 
     /**
-     * Ein einzelner Lauf.
+     * Ein einzelner Lauf, ab der fertigen Zuordnung.
      *
      * Ein Fehler bleibt hier: Ein Lauf mit doppelten Crews in RaceClocker darf die anderen Läufe
      * derselben Veranstaltung nicht mitreißen.
      */
-    private fun pollMatch(
-        candidate: RaceClockerPollCandidate,
-        feeds: Map<String, FeedResult>,
-        setupRounds: List<CompetitionSetupRoundWithMatches>,
+    private fun writeMatch(
+        entry: ResolvedMatch,
+        feed: MatchFeed,
         now: LocalDateTime,
     ): App<Nothing, MatchOutcome> = KIO.comprehension {
-        // Dieselbe Sperre wie beim Knopf, und aus demselben Grund: `checkUpdateMatchResult` löst die
-        // aktuelle Runde auf und weist einen Lauf außerhalb davon ab. Ohne das würde der Job einen
-        // ersten Vorlauf, den niemand beendet hat, für immer weiter beschreiben - und damit Plätze
-        // überschreiben, aus denen die Setzung der nächsten Runde längst abgeleitet ist. Scheitert
-        // die Prüfung (gesperrt, Freilos, Struktur leer), überspringt der Job den Lauf still: das
-        // ist kein Abruf-Fehler, den die Oberfläche anzeigen müsste.
-        val match = !CompetitionExecutionService.checkUpdateMatchResult(setupRounds, candidate.matchId)
-            .recoverDefault { null }
-            ?: return@comprehension KIO.ok(MatchOutcome())
+        val candidate = entry.candidate
+        val match = entry.match
 
-        val teams = match.teams.filter { !it.deregistered }
-
-        // Dieselbe Reihenfolge wie beim Knopf: Die Runde entscheidet, welches Rennen zuerst versucht
-        // wird, das andere ist der Rückfall. Entscheidend ist wie dort, ob die Welle im Feed steht -
-        // nicht bloß, ob die Adresse geantwortet hat. Sonst gewönne bei einer als Zeitfahren
-        // gefahrenen, aber nicht als Qualifikation markierten Runde immer das erste, falsche Rennen,
-        // und der Lauf bliebe die ganze Regatta ohne Ergebnis. Ein weiterer Abruf kostet das nicht:
-        // Beide Adressen liegen bereits geholt in [feeds].
-        val fetched = candidate.target.candidateUrls.mapNotNull { feeds[it] }
-        val answered = fetched.filterIsInstance<FeedResult.Rows>()
-        val (rows, assigned) = answered
-            .firstNotNullOfOrNull { feed ->
-                CompetitionExecutionService.assignedRowsFor(feed.rows, teams, candidate.target.waveName)
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { feed.rows to it }
-            }
-            // Keine Adresse kennt die Welle: Es bleibt beim ersten geholten Rennen, damit der Lauf
-            // unten auf demselben Weg endet wie bisher - kein Treffer, kein Fehler.
-            ?: answered.firstOrNull()?.let { it.rows to emptyList<RaceClockerFeedRow>() }
+        val found = when (feed) {
             // Gar keine Antwort: Das ist der Fehler, den die Oberfläche zeigen soll.
-            ?: return@comprehension KIO.ok(
-                MatchOutcome(errorCode = (fetched.firstOrNull() as? FeedResult.Failed)?.errorCode)
-            )
-
-        // Eine Welle, die in RaceClocker noch nicht angelegt ist, ist vor dem Start der Normalfall
-        // und keine Störung.
-        if (assigned.isEmpty()) return@comprehension KIO.ok(MatchOutcome())
+            is MatchFeed.Failed -> return@comprehension KIO.ok(MatchOutcome(errorCode = feed.errorCode))
+            // Eine Welle, die in RaceClocker noch nicht angelegt ist, ist vor dem Start der
+            // Normalfall und keine Störung.
+            MatchFeed.NotInFeed -> return@comprehension KIO.ok(MatchOutcome())
+            is MatchFeed.Found -> feed
+        }
+        val rows = found.rows
+        val assigned = found.assigned
 
         // Bevorstehender Lauf: nur hinsehen, nichts schreiben außer der Aktivierung. Ein
         // Umsortieren in RaceClocker vor dem Start schlägt erst durch, wenn der Lauf aktiv ist.
@@ -279,9 +425,10 @@ object RaceClockerPollService {
 
         // Aktiviert, aber noch ohne Ist-Start: Der Lauf wurde von Hand oder von der Kette an den
         // Start gerufen, und der Feed weiß vielleicht schon, dass er losgegangen ist. Der Stempel
-        // steht hier und nicht in `applyRaceClockerRows`: Dort bricht der NoResults-Zweig ab, bevor
-        // die gemessene Startzeit übernommen wird, und er läuft innerhalb von `.transact()` - ein
-        // dort gesetzter Zeitstempel fiele dem Rollback zum Opfer. Ohne diesen Zweig bliebe ein von
+        // steht hier und nicht in `applyRaceClockerRows`: Dort kehrt der ergebnislose Lauf zurück,
+        // bevor die gemessene Startzeit übernommen wird - seit die Bahnvergabe vorgezogen ist, mit
+        // Erfolg statt mit `NoResults`, aber in beiden Fällen ohne Stempel. Und die Funktion läuft
+        // innerhalb von `.transact()` - ein dort gesetzter Zeitstempel fiele dem Rollback zum Opfer. Ohne diesen Zweig bliebe ein von
         // der Kette aktivierter Lauf "in Vorbereitung", bis das erste Boot durchs Ziel ist.
         //
         // Welche Zeit das ist, entscheidet [RaceClockerPollLogic.measuredStartFor] - hier steht nur

@@ -9,6 +9,8 @@ import {
 } from './timingConfigForm.ts'
 
 const qualificationPreset = '11111111-1111-1111-1111-111111111111'
+const timeTrialRace = '55555555-5555-5555-5555-555555555555'
+const shortCourseRace = '66666666-6666-6666-6666-666666666666'
 const roundsPreset = '22222222-2222-2222-2222-222222222222'
 const importPreset = '33333333-3333-3333-3333-333333333333'
 
@@ -28,11 +30,11 @@ describe('mapDtoToTimingForm', () => {
     it('übernimmt die Zeitnahme-Voreinstellung der Veranstaltung', () => {
         const form = mapDtoToTimingForm({
             eventTimingSystem: 'RACECLOCKER',
-            eventHeatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            eventRaceRounds: shortCourseRace,
         })
 
         expect(form.eventTimingSystem).toBe('RACECLOCKER')
-        expect(form.eventHeatsResultsUrl).toBe('https://www.raceclocker.com/7c854955')
+        expect(form.eventRaceRounds).toBe(shortCourseRace)
         // Ein alter Server ohne die Felder darf nicht als „erbt etwas" gelesen werden.
         expect(mapDtoToTimingForm({}).eventTimingSystem).toBe('NONE')
     })
@@ -51,15 +53,15 @@ describe('mapTimingFormToRequest', () => {
         expect(request.timingSystem).toBeNull()
     })
 
-    it('verwirft die URLs, wenn nicht RaceClocker gewählt ist', () => {
-        // Sonst bliebe eine URL stehen, die im Tab gar nicht mehr sichtbar ist.
+    it('verwirft die Rennen-Anwahl, wenn nicht RaceClocker gewählt ist', () => {
+        // Sonst bliebe eine Anwahl stehen, die im Tab gar nicht mehr sichtbar ist.
         const request = mapTimingFormToRequest({
             ...emptyTimingForm,
             timingSystem: 'WEBSCORER',
-            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
         })
 
-        expect(request.heatsResultsUrl).toBeNull()
+        expect(request.raceRounds).toBeNull()
     })
 
     it('verwirft das Qualifikations-Preset, wenn nicht RaceClocker gewählt ist', () => {
@@ -79,8 +81,8 @@ describe('mapTimingFormToRequest', () => {
         const request = mapTimingFormToRequest({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
-            timeTrialResultsUrl: 'https://www.raceclocker.com/7ffb822a',
-            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            raceQualification: {id: timeTrialRace, label: 'Timetrials'},
+            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
             startlistConfigQualification: {id: qualificationPreset, label: 'Zeitfahren'},
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
             resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
@@ -92,33 +94,32 @@ describe('mapTimingFormToRequest', () => {
         expect(request.resultImportConfig).toBe(importPreset)
     })
 
-    it('behält Override-URL und Presets, wenn RaceClocker von der Veranstaltung geerbt wird', () => {
-        // Bei geerbtem System steht das lokale Feld auf NONE — trotzdem sind die Adressen und
-        // Presets im Tab sichtbar, und was sichtbar eingetragen wurde, darf das Speichern nicht
-        // wegwerfen.
+    it('behält Rennen-Anwahl und Presets, wenn RaceClocker von der Veranstaltung geerbt wird', () => {
+        // Bei geerbtem System steht das lokale Feld auf NONE — trotzdem sind Anwahl und Presets im
+        // Tab sichtbar, und was sichtbar angewählt wurde, darf das Speichern nicht wegwerfen.
         const request = mapTimingFormToRequest({
             ...emptyTimingForm,
             timingSystem: 'NONE',
             eventTimingSystem: 'RACECLOCKER',
-            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
             resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
         })
 
         expect(request.timingSystem).toBeNull()
-        expect(request.heatsResultsUrl).toBe('https://www.raceclocker.com/7c854955')
+        expect(request.raceRounds).toBe(shortCourseRace)
         expect(request.startlistConfigRounds).toBe(roundsPreset)
         expect(request.resultImportConfig).toBe(importPreset)
     })
 
-    it('macht aus einer leeren URL null statt eines Leerstrings', () => {
+    it('schickt eine fehlende Anwahl als null', () => {
         const request = mapTimingFormToRequest({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
-            timeTrialResultsUrl: '   ',
+            raceQualification: null,
         })
 
-        expect(request.timeTrialResultsUrl).toBeNull()
+        expect(request.raceQualification).toBeNull()
     })
 
     it('verwirft alle Presets, wenn kein System gesetzt ist', () => {
@@ -162,20 +163,16 @@ describe('overridesTiming', () => {
         ).toBe(false)
     })
 
-    it('zählt auch eine einzelne eigene Adresse als Abweichung', () => {
+    it('zählt auch eine einzelne eigene Rennen-Anwahl als Abweichung', () => {
         // Teil-Override: System geerbt, aber ein eigenes Läufe-Rennen. Der Schalter im Tab muss
-        // dafür an sein, sonst würde die Adresse beim nächsten Speichern still verschwinden.
+        // dafür an sein, sonst würde die Anwahl beim nächsten Speichern still verschwinden.
         expect(
             overridesTiming({
                 ...emptyTimingForm,
                 eventTimingSystem: 'RACECLOCKER',
-                heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+                raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
             }),
         ).toBe(true)
-    })
-
-    it('lässt sich von Leerzeichen nicht täuschen', () => {
-        expect(overridesTiming({...emptyTimingForm, heatsResultsUrl: '   '})).toBe(false)
     })
 
     it('zählt ein eigenes Dateiformat als Abweichung', () => {
@@ -196,28 +193,28 @@ describe('timingConfigWarnings', () => {
         expect(timingConfigWarnings(emptyTimingForm)).toEqual([])
     })
 
-    it('mahnt bei RaceClocker die Läufe-URL an', () => {
+    it('mahnt bei RaceClocker das Läufe-Rennen an', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
         })
 
-        expect(warnings).toEqual(['heatsUrl'])
+        expect(warnings).toEqual(['raceRounds'])
     })
 
-    it('mahnt eine URL nicht an, die von der Veranstaltung kommt', () => {
+    it('mahnt ein Rennen nicht an, das von der Veranstaltung kommt', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             eventTimingSystem: 'RACECLOCKER',
-            eventHeatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            eventRaceRounds: shortCourseRace,
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
         })
 
         expect(warnings).toEqual([])
     })
 
-    it('mahnt bei geerbtem RaceClocker ohne Adressen trotzdem an', () => {
+    it('mahnt bei geerbtem RaceClocker ohne Anwahl trotzdem an', () => {
         // Sonst bliebe der einzige Hinweis auf eine halbfertige Veranstaltungs-Vorgabe aus, weil
         // der Wettkampf selbst „nichts gesetzt" hat.
         const warnings = timingConfigWarnings({
@@ -226,14 +223,14 @@ describe('timingConfigWarnings', () => {
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
         })
 
-        expect(warnings).toEqual(['heatsUrl'])
+        expect(warnings).toEqual(['raceRounds'])
     })
 
     it('mahnt einen Startlisten Export nicht an, der von der Veranstaltung kommt', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             eventTimingSystem: 'RACECLOCKER',
-            eventHeatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            eventRaceRounds: shortCourseRace,
             eventStartlistConfigRounds: roundsPreset,
         })
 
@@ -244,8 +241,8 @@ describe('timingConfigWarnings', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             eventTimingSystem: 'RACECLOCKER',
-            eventTimeTrialResultsUrl: 'https://www.raceclocker.com/7ffb822a',
-            eventHeatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            eventRaceQualification: timeTrialRace,
+            eventRaceRounds: shortCourseRace,
             eventStartlistConfigQualification: qualificationPreset,
             eventStartlistConfigRounds: roundsPreset,
             hasQualificationRound: true,
@@ -260,37 +257,37 @@ describe('timingConfigWarnings', () => {
         expect(warnings).toEqual(['startlistRounds'])
     })
 
-    it('mahnt die Zeitfahren-URL nicht an, solange der Wettkampf keine Qualifikation hat', () => {
+    it('mahnt das Zeitfahren-Rennen nicht an, solange der Wettkampf keine Qualifikation hat', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
-            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
         })
 
         expect(warnings).toEqual([])
     })
 
-    it('mahnt bei einer Qualifikationsrunde die Zeitfahren-URL und ihr Preset an', () => {
+    it('mahnt bei einer Qualifikationsrunde das Zeitfahren-Rennen und sein Preset an', () => {
         // Genau der stille Fall: ohne Quali-Preset antwortet der Startlisten-Export mit
         // STARTLIST_CONFIG_NOT_CONFIGURED, und das faellt sonst erst am Renntag auf.
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
-            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
             hasQualificationRound: true,
         })
 
-        expect(warnings).toEqual(['timeTrialUrl', 'startlistQualification'])
+        expect(warnings).toEqual(['raceQualification', 'startlistQualification'])
     })
 
     it('schweigt, wenn die Qualifikation vollstaendig eingerichtet ist', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
-            timeTrialResultsUrl: 'https://www.raceclocker.com/7ffb822a',
-            heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            raceQualification: {id: timeTrialRace, label: 'Timetrials'},
+            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
             startlistConfigQualification: {id: qualificationPreset, label: 'Zeitfahren'},
             startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
             resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},

@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSe
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRef
 import de.lambda9.ready2race.backend.app.timecode.control.TimecodeRepo
 import de.lambda9.ready2race.backend.app.timecode.control.toRecord
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -54,8 +55,12 @@ class RaceClockerRestartResetTest {
     private val target = RaceClockerMatchTarget(
         waveName = "08:50 Vorlauf 2 DM",
         isQualification = false,
-        timeTrialUrl = null,
-        heatsUrl = "https://www.raceclocker.com/7aa7e86d",
+        qualificationRace = null,
+        roundsRace = RaceClockerRaceRef(
+            UUID.randomUUID(),
+            "Kurzstrecke",
+            "https://www.raceclocker.com/7aa7e86d",
+        ),
     )
 
     @Test
