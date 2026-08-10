@@ -43,6 +43,24 @@ const isPartiallyScored = (status: MatchStatusDto): boolean =>
     status.teamsTotal > 0 && status.teamsScored > 0 && status.teamsScored < status.teamsTotal
 
 /**
+ * Der Chip eines Freiloses. Er ersetzt „Anstehend", „Überfällig" und „Teilweise gewertet" — genau
+ * die drei Chips, die ein Ergebnis erwarten lassen, auf das hier niemand wartet. Was er stattdessen
+ * sagt, ist die Frage, die am Steg offen ist: muss das noch quittiert werden?
+ *
+ * „Quittiert" ist bewusst kein eigener Vorgang, sondern der bestehende Beenden-Klick
+ * (`finished_at`); „entfallen" ist die abgesagte Runde. An beidem ändert sich nichts.
+ */
+const byeChip = (status: MatchStatusDto): MatchChip => {
+    if (status.state === 'FINISHED') {
+        return {labelKey: 'event.match.status.bye.acknowledged', color: 'success'}
+    }
+    if (status.state === 'SKIPPED') {
+        return {labelKey: 'event.match.status.bye.cancelled', color: 'default', strikeThrough: true}
+    }
+    return {labelKey: 'event.match.status.bye.open', color: 'info'}
+}
+
+/**
  * Der Chip eines Laufs — die Übersetzung von [MatchStatusDto] in genau eine Aussage.
  *
  * Die Reihenfolge der Zweige folgt bewusst der von `LiveDashboardLogic.deriveMatchState` im
@@ -58,6 +76,11 @@ const isPartiallyScored = (status: MatchStatusDto): boolean =>
  * Unter den verbliebenen Zuständen (UPCOMING, UNSCHEDULED) gewinnt die Teilwertung vor
  * „Überfällig": liegen bereits Ergebnisse vor, ist der Lauf faktisch unterwegs, und der Verzug
  * gegen die geplante Zeit sagt dann nichts mehr aus.
+ *
+ * Das Freilos ([byeChip]) steht zwischen beiden Gruppen: hinter den aktivierten Zuständen, weil
+ * auch dort gilt, dass tatsächliches Geschehen den Rest schlägt — und vor allem anderen, weil
+ * „Anstehend", „Überfällig" und „Teilweise gewertet" ein Ergebnis erwarten lassen, auf das bei
+ * einem Freilos niemand wartet.
  *
  * [now] kommt von außen, damit die Ableitung ohne Uhr prüfbar bleibt. Die verstrichenen Minuten
  * rechnet bewusst das Frontend: beide Ansichten ticken ohnehin, und so zählt der Chip zwischen
@@ -87,6 +110,13 @@ export const matchStatusChip = (
                   color: 'primary',
               }
             : {labelKey: 'event.match.status.runningPlain', color: 'primary'}
+    }
+
+    // Erst hier, nicht weiter oben: Was tatsächlich passiert, schlägt weiterhin alles. Ein Freilos,
+    // das jemand aktiviert hat, zeigt „In Vorbereitung"/„Läuft" — die Anzeige behauptet nicht, es
+    // passiere nichts, während in der Arena etwas passiert.
+    if (status.bye) {
+        return byeChip(status)
     }
 
     if (status.state === 'FINISHED') {
@@ -142,12 +172,15 @@ export const matchStatusChip = (
  * Runde je einen Scan, schickt der Server null statt 0 (Abschnitt 6 der Spec, entschieden in
  * `MatchStatusLogic.teamsInArenaPerMatch`), sonst stünde bei jedem Lauf dauerhaft „Arena 0/6".
  *
- * Er entfällt außerdem, sobald er nichts mehr aussagt: bei einem Lauf ohne Mannschaften, nach
- * Beenden oder Absage, und wenn ohnehin alle Crews draußen sind.
+ * Er entfällt außerdem, sobald er nichts mehr aussagt: bei einem Lauf ohne Mannschaften, bei einem
+ * Freilos, nach Beenden oder Absage, und wenn ohnehin alle Crews draußen sind.
  */
 export const arenaChip = (status: MatchStatusDto): MatchChip | null => {
     const inArena = status.teamsInArena
     if (inArena == null) return null
+    // Ein Boot, das nicht fährt, muss auch nicht draußen sein — „Arena 0/1" wäre hier reines
+    // Rauschen.
+    if (status.bye) return null
     if (status.teamsTotal === 0) return null
     if (
         status.state !== 'UPCOMING' &&
@@ -251,5 +284,6 @@ export const slotMatchStatus = (slot: EventScheduleSlotDto): MatchStatusDto | nu
         startedAt: slot.matchStartedAt ?? undefined,
         teamsTotal: slot.matchTeamsTotal,
         teamsScored: slot.matchTeamsScored,
+        bye: slot.bye,
     }
 }

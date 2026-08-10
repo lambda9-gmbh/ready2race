@@ -49,6 +49,7 @@ import QrAssignPage from './pages/app/QrAssignPage.tsx'
 import AppLoginPage from './pages/app/AppLoginPage.tsx'
 import ForbiddenPage from './pages/app/ForbiddenPage.tsx'
 import AppFunctionSelectPage from './pages/app/AppFunctionSelectPage.tsx'
+import AppDashboardPage from './pages/app/AppDashboardPage.tsx'
 import EventRegistrationPage from './pages/eventRegistration/EventRegistrationPage.tsx'
 import InvoicesPage from './pages/InvoicePage.tsx'
 import ResultsPage from './pages/results/ResultsPage.tsx'
@@ -316,7 +317,10 @@ export const eventInfoRoute = createRoute({
 export const eventLiveDashboardRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'liveDashboard',
-    component: () => <LiveDashboardPage />,
+    component: function EventLiveDashboard() {
+        const {eventId} = eventLiveDashboardRoute.useParams()
+        return <LiveDashboardPage eventId={eventId} />
+    },
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, readLiveDashboardGlobal)
     },
@@ -458,6 +462,15 @@ export const appFunctionSelectRoute = createRoute({
     },
 })
 
+export const appDashboardRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: 'dashboard',
+    component: () => <AppDashboardPage />,
+    beforeLoad: ({context}) => {
+        checkAuthApp(context)
+    },
+})
+
 export const invoicesRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
     path: 'invoices',
@@ -543,6 +556,7 @@ const routeTree = rootRoute.addChildren([
         qrParticipantRoute,
         qrAssignRoute,
         appFunctionSelectRoute,
+        appDashboardRoute,
         appForbiddenRoute,
     ]),
     resultsRoute.addChildren([resultsIndexRoute, resultsQRCodeRoute, resultsEventRoute]),

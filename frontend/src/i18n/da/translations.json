@@ -700,6 +700,8 @@
       "competition": "Konkurrence",
       "competitions": "Konkurrencer",
       "navigation": {
+        "modeCompetitions": "Løb",
+        "modeSchedule": "Tidsplan",
         "backToEvent": "Tilbage til arrangementet",
         "filter": "Filtrér",
         "showShortNames": "Vis korte navne",
@@ -1011,6 +1013,7 @@
         },
         "teamsWithBye": "Hold med frirunde",
         "match": {
+          "status": "Status",
           "startTime": "Starttid",
           "startTimeOffset": "Forskudt starttid",
           "startNumber": {
@@ -1587,6 +1590,11 @@
         "unscheduled": "Ikke planlagt",
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Gennemføres ikke",
+        "bye": {
+          "open": "Oversidder · åben",
+          "acknowledged": "Oversidder · kvitteret",
+          "cancelled": "Oversidder · aflyst"
+        },
         "counter": {
           "preparing": "{{n}} forbereder",
           "running": "{{n}} i gang",
@@ -1594,6 +1602,11 @@
           "finished": "{{n}} afsluttet",
           "cancelled": "{{n}} aflyst"
         }
+      },
+      "bye": {
+        "deregistration": "Oversidder efter afmelding – {{team}}",
+        "deregistrationWithReason": "Oversidder efter afmelding – {{team}} ({{reason}})",
+        "noOpponent": "Oversidder – ingen modstander i denne runde"
       }
     },
     "liveDashboard": {
@@ -1607,6 +1620,7 @@
       },
       "lastUpdated": "Opdateret: {{time}}",
       "staleWarning": "Forbindelsen er afbrudt — visningen er muligvis ikke aktuel.",
+      "staleSince": "Pr. {{time}} — ingen handlinger er mulige uden forbindelse.",
       "loadError": "Data kunne ikke indlæses.",
       "noRunning": "Der er ingen igangværende løb.",
       "nextUp": "Næste",
@@ -2373,7 +2387,8 @@
         "qrManagement": "QR-kodeadministration",
         "competitionCheck": "Konkurrence-check",
         "eventRequirement": "Kontrollér betingelser",
-        "caterer": "Forplejning"
+        "caterer": "Forplejning",
+        "liveDashboard": "Dommerpanel"
       },
       "switchEvent": "Skift arrangement"
     },
@@ -2381,6 +2396,17 @@
       "title": "Ingen adgang",
       "message": "Du har ikke adgang til denne side.",
       "backButton": "Tilbage til login"
+    },
+    "dashboard": {
+      "noEvent": "Ingen begivenhed valgt."
+    },
+    "update": {
+      "available": "Ny version tilgængelig",
+      "reload": "Indlæs nu"
+    },
+    "reset": {
+      "button": "Nulstil app",
+      "confirm": "Nulstiller appen på denne enhed og genindlæser den. Du forbliver logget ind."
     }
   },
   "caterer": {
