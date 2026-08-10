@@ -452,7 +452,7 @@ Postgres geprüft, aber nichts davon wurde je gerendert.
 
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
-| J1 | Reine Vereinsboote unverändert | **Die zentrale Zusage.** Die 58 nicht gemischten Boote sehen aus wie vorher — ein Vereinsname, keine Kette, kein Trenner. Vorher/Nachher an derselben Karte vergleichen | `ae25377f` | |
+| J1 | Reine Vereinsboote unverändert | **Die zentrale Zusage.** Die 58 nicht gemischten Boote sehen aus wie vorher — ein Vereinsname, keine Kette, kein Trenner. Vorher/Nachher an derselben Karte vergleichen | `ae25377f` | c6a37f63, 10.08. (CF): Schiedsrichter-Dashboard gegen Prod-Seed — reine Vereinsboote (z. B. „Hochschulrudern Flensburg") ein Name ohne Trenner, gemischte als Kette „… / …" |
 | J2 | Telefon: Kurzformen | Karte schmaler als 480 px: die Kette steht in Kurzformen und bricht auf zwei Zeilen um. Was dann nicht mehr passt, wird abgeschnitten — bewusst, nicht mit „+3" gekappt | `e8eb7559` | |
 | J3 | Tablet-Spalte: volle Namen | Karte ab 480 px: dieselbe Kette in vollen Vereinsnamen. Das Fenster ist **nicht** entscheidend, die Karte ist es — auf dem Tablet stehen zwei schmale Spalten nebeneinander | `e8eb7559` | |
 | J4 | Laptop: Crew je Person | Karte ab 700 px: zusätzlich je Person Nachname und Vereinskurzform. Rollenkürzel gegenlesen — „Sen." und „Ste." sind eine Setzung des Entwicklers, keine Vorgabe | `e8eb7559` | |
@@ -469,7 +469,7 @@ Postgres geprüft, aber nichts davon wurde je gerendert.
 | J15 | Regeln, Reihenfolge | Ein Wortpaar anlegen und die Reihenfolge prüfen: `Ruderverein → RV` muss vor `Verein → V` greifen, sonst bleibt `Ruder-V` stehen | offen | |
 | J16 | Regeln, Schalter | „Gründungsjahre entfernen" ausschalten: `Erster Kieler Ruder-Club von 1862` behält sein Jahr, überall. Wieder einschalten: weg | offen | |
 | J17 | Frische Installation | Eine Installation ohne den Ruder-Seed kürzt Vereinstypen **nicht** — nur Rechtsform, Jahreszahlen und Klammerzusätze fallen weg. Das ist Absicht: `Ruderclub → RC` ist Sportart-Wissen und gehört nicht in den Produktkern | offen | |
-| J18 | Meldeverein verschwunden | Auf Board, Athleten-Anzeige und Urkunde darf der meldende Verein nirgends mehr auftauchen, wenn er nicht zufällig auch ein getragener ist | `8c63ee0b`, `95d10153` | |
+| J18 | Meldeverein verschwunden | Auf Board, Athleten-Anzeige und Urkunde darf der meldende Verein nirgends mehr auftauchen, wenn er nicht zufällig auch ein getragener ist | `8c63ee0b`, `95d10153` | c6a37f63, 10.08. (CF): Schiedsrichter-Dashboard zeigt bei gemischten Booten nur die getragenen Vereine als Kette, kein „Renngemeinschaft"-Sammelbegriff (Board/Urkunde noch offen) |
 
 ---
 
