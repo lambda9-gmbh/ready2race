@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
 import io.ktor.client.*
+import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -88,28 +89,40 @@ object RaceClockerFeed {
     fun feedUrl(url: Url): Url = URLBuilder(url).apply { parameters["json"] = "1" }.build()
 
     /**
-     * [client] is injectable so tests can swap in a [io.ktor.client.engine.mock.MockEngine]-backed
-     * client instead of talking to the real raceclocker.com - the default recreates exactly the CIO
-     * client this function always used, so production behaviour is unchanged.
+     * [engine] is injectable so tests can swap in an [io.ktor.client.engine.mock.MockEngine]
+     * instead of talking to the real raceclocker.com. Deliberately the engine and not a whole
+     * [HttpClient]: the client configuration below (redirects, expectSuccess) IS behaviour this
+     * integration relies on, so tests must run against exactly the configuration production uses.
+     *
+     * The engine is closed here in every case - the default CIO engine would otherwise leak its
+     * worker threads on each poll tick.
      */
     suspend fun fetch(
         url: Url,
-        client: HttpClient = HttpClient(CIO) {
-            engine { requestTimeout = TIMEOUT_MS }
-            expectSuccess = false
-        },
+        engine: HttpClientEngine = CIO.create { requestTimeout = TIMEOUT_MS },
     ): IO<RaceClockerError, List<RaceClockerFeedRow>> {
         val body = try {
-            client.use { c ->
-                val response = c.get(url)
-                if (!response.status.isSuccess()) {
-                    return KIO.fail(RaceClockerError.Unreachable(url.toString(), "HTTP ${response.status.value}"))
+            engine.use { eng ->
+                HttpClient(eng) {
+                    expectSuccess = false
+                    // Redirects werden gemeldet, nicht verfolgt. Die Host-Allowlist in
+                    // [normalizeUrl] prüft nur die GESPEICHERTE Adresse - eine Weiterleitung von
+                    // raceclocker.com auf einen fremden Host würde vom Server selbst angefragt und
+                    // machte den Abruf über einen Open-Redirect doch noch zum SSRF-Hebel. Ein 3xx
+                    // endet stattdessen unten als [RaceClockerError.Unreachable] mit Statuscode;
+                    // die echten Feeds antworten direkt, ein Redirect ist hier immer eine Störung.
+                    followRedirects = false
+                }.use { c ->
+                    val response = c.get(url)
+                    if (!response.status.isSuccess()) {
+                        return KIO.fail(RaceClockerError.Unreachable(url.toString(), "HTTP ${response.status.value}"))
+                    }
+                    val text = response.bodyAsText()
+                    if (text.length > MAX_BYTES) {
+                        return KIO.fail(RaceClockerError.Unreachable(url.toString(), "response too large"))
+                    }
+                    text
                 }
-                val text = response.bodyAsText()
-                if (text.length > MAX_BYTES) {
-                    return KIO.fail(RaceClockerError.Unreachable(url.toString(), "response too large"))
-                }
-                text
             }
         } catch (e: Exception) {
             return KIO.fail(RaceClockerError.Unreachable(url.toString(), e.message ?: e::class.simpleName ?: "unknown"))
