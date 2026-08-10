@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.control
 
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -22,7 +23,7 @@ object LiveDashboardRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_MATCH.FINISHED_AT,
             // raceclocker_polled_at fehlt hier bewusst: Es ändert sich für jeden beobachteten Lauf
             // alle fünf Sekunden und würde den ETag des Dashboards bei jedem Abruf umwerfen.
@@ -33,6 +34,11 @@ object LiveDashboardRepo {
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
+            // Rennnummer und Kurzname für die Kurzform der Karten - dieselben Spalten wie im
+            // Zeitplan (EventScheduleRepo.getSlots), hier aus COMPETITION_PROPERTIES, weil
+            // COMPETITION_VIEW sie nicht führt.
+            COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
+            COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
         )
             .from(COMPETITION_MATCH)
@@ -87,6 +93,9 @@ object LiveDashboardRepo {
             COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.`as`("round_id"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_PROPERTIES.CHECK_IN_OUT_REQUIRED,
+            RATING_CATEGORY.ID.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_ID),
+            RATING_CATEGORY.NAME.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_NAME),
+            EVENT_RATING_CATEGORY.SORT_ORDER.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER),
         )
             .from(COMPETITION_MATCH_TEAM)
             .join(COMPETITION_SETUP_MATCH)
@@ -111,10 +120,31 @@ object LiveDashboardRepo {
                     .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
             )
             .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
+            .leftJoin(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY))
+            // Die Abschnittsreihenfolge haengt an der Zuordnung zur Veranstaltung, nicht an der
+            // Kategorie selbst - hier ueber COMPETITION.EVENT, das die Abfrage ohnehin einschraenkt.
+            .leftJoin(EVENT_RATING_CATEGORY)
+            .on(
+                EVENT_RATING_CATEGORY.EVENT.eq(COMPETITION.EVENT)
+                    .and(EVENT_RATING_CATEGORY.RATING_CATEGORY.eq(RATING_CATEGORY.ID))
+            )
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
             .and(matchId?.let { COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(it) } ?: DSL.noCondition())
             .and(registrationId?.let { COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(it) } ?: DSL.noCondition())
+            .orderBy(
+                // Innerhalb einer Mannschaft: eine feste Reihenfolge der Crew. Ohne sie gibt
+                // Postgres die Zeilen in beliebiger Reihenfolge zurück, und die Vereinskette
+                // stünde bei jedem Abruf anders da - auf einer Anzeige, die im Sekundentakt
+                // nachlädt, ist das ein flackerndes Boot.
+                //
+                // Dieselbe Regel wie in den Abfragen der Athleten-Anzeige
+                // (CompetitionMatchTeamRepo); die Mannschaften untereinander sortiert der
+                // Aufrufer nach Startnummer, hier zählt nur die Reihenfolge im Boot.
+                NAMED_PARTICIPANT.NAME.asc().nullsLast(),
+                PARTICIPANT.LASTNAME.asc().nullsLast(),
+                PARTICIPANT.ID.asc().nullsLast(),
+            )
             .fetch()
     }
 
@@ -184,8 +214,9 @@ object LiveDashboardRepo {
     }
 
     /**
-     * Läufe, die als nächste anstehen: geplant, noch nicht laufend und noch ohne vollständiges
-     * Ergebnis. Sortiert nach Startzeit, damit der Aufrufer die früheste Startzeit greifen kann.
+     * Läufe, die als nächste anstehen: geplant, noch nicht an den Start gerufen und noch ohne
+     * vollständiges Ergebnis. Sortiert nach Startzeit, damit der Aufrufer die früheste Startzeit
+     * greifen kann.
      */
     fun getActivationCandidates(eventId: UUID) = Jooq.query {
         select(
@@ -202,7 +233,7 @@ object LiveDashboardRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.START_TIME.isNotNull)
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.isFalse)
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNull)
             // Ein beendeter Lauf ist nie wieder Kandidat.
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             // mindestens eine Mannschaft ohne Ergebnis: der Lauf steht noch aus. Abgemeldete

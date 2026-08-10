@@ -78,8 +78,41 @@ object RatingCategoryService {
 
         !EventService.checkEventExisting(eventId)
 
-        val records = !request.ratingCategories.traverse { it.toRecord(eventId, userId) }
+        // Neu zugeordnete Kategorien hängen sich hinten an die Abschnittsreihenfolge an, in der
+        // Reihenfolge, in der sie in der Anfrage stehen.
+        val firstFreePosition = !EventRatingCategoryRepo.nextSortOrder(eventId).orDie()
+        val records = !request.ratingCategories.mapIndexed { index, category ->
+            category.toRecord(eventId, userId, firstFreePosition + index)
+        }.traverse { it }
         !EventRatingCategoryRepo.insert(records).orDie()
+
+        KIO.ok(ApiResponse.NoData)
+    }
+
+    /**
+     * Schreibt die Reihenfolge der Ergebnisabschnitte fest. Die Anfrage trägt die vollständige
+     * Liste; Kategorien, die sie nicht nennt, rutschen dahinter und behalten untereinander ihre
+     * bisherige Reihenfolge.
+     */
+    fun updateOrderForEvent(
+        eventId: UUID,
+        userId: UUID,
+        request: RatingCategoryOrderRequest,
+    ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
+
+        !EventService.checkEventExisting(eventId)
+
+        val assigned = !EventRatingCategoryRepo.getByEvent(eventId).orDie()
+
+        val requested = request.ratingCategories.filter { id -> assigned.any { it.ratingCategory == id } }
+        val remaining = assigned
+            .filter { it.ratingCategory !in requested }
+            .sortedBy { it.sortOrder }
+            .map { it.ratingCategory }
+
+        !(requested + remaining).mapIndexed { position, categoryId ->
+            EventRatingCategoryRepo.updateSortOrder(eventId, categoryId, position, userId).orDie()
+        }.traverse { it }
 
         KIO.ok(ApiResponse.NoData)
     }

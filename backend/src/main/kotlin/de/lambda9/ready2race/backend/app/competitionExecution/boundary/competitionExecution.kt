@@ -68,17 +68,17 @@ fun Route.competitionExecution() {
                     }
                 }
             }
-            route("/running-state") {
+            route("/activation") {
                 put {
                     call.respondComprehension {
                         val user = !authenticate(Privilege.UpdateEventGlobal)
                         val eventId = !pathParam("eventId", uuid)
                         val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
-                        val body = !receiveKIO<UpdateCompetitionMatchRunningStateRequest>(
-                            UpdateCompetitionMatchRunningStateRequest.example
+                        val body = !receiveKIO<UpdateCompetitionMatchActivationRequest>(
+                            UpdateCompetitionMatchActivationRequest.example
                         )
-                        CompetitionExecutionService.updateMatchRunningState(
+                        CompetitionExecutionService.updateMatchActivation(
                             eventId = eventId,
                             matchId = competitionMatchId,
                             userId = user.id!!,

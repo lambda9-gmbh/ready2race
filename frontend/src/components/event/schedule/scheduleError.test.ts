@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest'
 import {
     ScheduleApiError,
+    advanceErrorText,
     importErrorText,
     importUnexpectedKey,
     roundSkipErrorText,
@@ -314,6 +315,61 @@ describe('Übersetzungen', () => {
                     'event.competition.execution.cancelRound.error.hasRunsToRace_other',
                 ),
             ).toBe('string')
+        }
+    })
+})
+
+describe('advanceErrorText', () => {
+    it('nennt die drei eigenen Ablehnungsgründe des Vorziehens beim Namen', () => {
+        expect(advanceErrorText(error({errorCode: 'SCHEDULE_ADVANCE_NO_DELTA'}), ctx)).toEqual({
+            key: 'event.schedule.advance.error.noDelta',
+        })
+        expect(advanceErrorText(error({errorCode: 'SCHEDULE_SLOT_NOT_SKIPPED'}), ctx)).toEqual({
+            key: 'event.schedule.advance.error.slotNotSkipped',
+        })
+        expect(
+            advanceErrorText(error({errorCode: 'SCHEDULE_SHIFT_TARGET_INVALID'}), ctx),
+        ).toEqual({key: 'event.schedule.advance.error.targetInvalid'})
+    })
+
+    it('reicht die Grenzen des Zeitplans an den Verschieben-Text weiter', () => {
+        // Renntag und Vorgänger sind dieselbe Ablehnung wie beim Verschieben - und verdienen
+        // deshalb denselben Satz, statt einer zweiten, leicht anderen Formulierung.
+        expect(
+            advanceErrorText(
+                error({
+                    errorCode: 'SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR',
+                    details: {earliestStartTime: '2026-08-17T10:00:00', maxAdvanceMinutes: 12},
+                }),
+                ctx,
+            ),
+        ).toEqual({
+            key: 'event.schedule.shift.error.overtakesPredecessor',
+            values: {earliest: '[2026-08-17T10:00:00]', max: 12},
+        })
+    })
+
+    it('faellt bei einem unbekannten Fehler auf die allgemeine Meldung zurueck', () => {
+        expect(advanceErrorText(error({}), ctx)).toEqual({key: shiftUnexpectedKey})
+    })
+
+    it('hat jeden Text des Vorzieh-Dialogs in allen drei Sprachen', () => {
+        const keys = [
+            'event.schedule.advance.title',
+            'event.schedule.advance.intro',
+            'event.schedule.advance.targetSlot',
+            'event.schedule.advance.help',
+            'event.schedule.advance.apply',
+            'event.schedule.advance.decline',
+            'event.schedule.advance.success',
+            'event.schedule.advance.error.noDelta',
+            'event.schedule.advance.error.slotNotSkipped',
+            'event.schedule.advance.error.targetInvalid',
+        ]
+        for (const translations of [deTranslations, enTranslations, daTranslations]) {
+            for (const key of keys) {
+                expect(typeof lookup(translations, key), key).toBe('string')
+            }
         }
     })
 })

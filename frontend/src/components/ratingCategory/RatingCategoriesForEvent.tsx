@@ -13,7 +13,12 @@ import {
     Stack,
     Typography,
 } from '@mui/material'
-import {Add as AddIcon, Delete as DeleteIcon} from '@mui/icons-material'
+import {
+    Add as AddIcon,
+    ArrowDownward as ArrowDownwardIcon,
+    ArrowUpward as ArrowUpwardIcon,
+    Delete as DeleteIcon,
+} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks'
 import {
@@ -21,6 +26,7 @@ import {
     getRatingCategories,
     getRatingCategoriesForEvent,
     removeRatingCategoryFromEvent,
+    updateRatingCategoryOrderForEvent,
 } from '@api/sdk.gen'
 import {RatingCategoryToEventDto} from '@api/types.gen'
 import Throbber from '@components/Throbber'
@@ -122,6 +128,33 @@ const RatingCategoriesForEvent = () => {
         )
     }
 
+    /**
+     * Verschiebt eine Kategorie um eine Stelle. Geschickt wird immer die vollstaendige
+     * Reihenfolge - so kann eine zweite offene Konfigurationsseite keine halbvertauschte
+     * Reihenfolge hinterlassen.
+     */
+    const handleMove = async (index: number, direction: -1 | 1) => {
+        if (!assignedCategories) return
+
+        const order = assignedCategories.map(it => it.ratingCategory.id)
+        const target = index + direction
+        if (target < 0 || target >= order.length) return
+        ;[order[index], order[target]] = [order[target], order[index]]
+
+        setSubmitting(true)
+        const {error} = await updateRatingCategoryOrderForEvent({
+            path: {eventId},
+            body: {ratingCategories: order},
+        })
+        setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else {
+            reload()
+        }
+    }
+
     const availableCategories =
         allCategories?.data.filter(
             cat => !assignedCategories?.some(assigned => assigned.ratingCategory.id === cat.id),
@@ -149,17 +182,40 @@ const RatingCategoriesForEvent = () => {
                         {t('event.ratingCategory.add.title')}
                     </Button>
                 </Box>
+                {assignedCategories && assignedCategories.length > 1 && (
+                    <Typography variant={'body2'} color={'text.secondary'}>
+                        {t('event.ratingCategory.order.hint')}
+                    </Typography>
+                )}
                 <List sx={{maxWidth: 500}}>
-                    {assignedCategories?.map(category => (
+                    {assignedCategories?.map((category, index) => (
                         <ListItem
                             key={category.ratingCategory.id}
                             secondaryAction={
-                                <IconButton
-                                    edge="end"
-                                    onClick={() => handleRemove(category)}
-                                    className="cursor-pointer">
-                                    <DeleteIcon />
-                                </IconButton>
+                                <Stack direction={'row'}>
+                                    <IconButton
+                                        edge="end"
+                                        title={t('event.ratingCategory.order.moveUp')}
+                                        disabled={submitting || index === 0}
+                                        onClick={() => handleMove(index, -1)}>
+                                        <ArrowUpwardIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        edge="end"
+                                        title={t('event.ratingCategory.order.moveDown')}
+                                        disabled={
+                                            submitting || index === assignedCategories.length - 1
+                                        }
+                                        onClick={() => handleMove(index, 1)}>
+                                        <ArrowDownwardIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        edge="end"
+                                        onClick={() => handleRemove(category)}
+                                        className="cursor-pointer">
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Stack>
                             }>
                             <ListItemText
                                 primary={category.ratingCategory.name}

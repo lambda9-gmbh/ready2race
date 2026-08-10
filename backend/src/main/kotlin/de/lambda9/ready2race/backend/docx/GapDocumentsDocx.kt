@@ -1,7 +1,9 @@
 package de.lambda9.ready2race.backend.docx
 
 import de.lambda9.ready2race.backend.pdf.AdditionalText
+import de.lambda9.ready2race.backend.pdf.GapTextWidths
 import de.lambda9.ready2race.backend.pdf.gapTextMetrics
+import de.lambda9.ready2race.backend.pdf.wrappedToBoxes
 import de.lambda9.ready2race.backend.text.TextAlign
 import de.lambda9.ready2race.backend.text.sanitizeNonPrintable
 import org.apache.poi.xwpf.usermodel.BreakType
@@ -47,17 +49,29 @@ private data class RenderPage(val size: DocxPageSize, val additions: List<Additi
  * gleicher Größe.
  *
  * Ein Hintergrundbild wird bewusst nicht gesetzt — gedruckt wird auf vorgedrucktes Papier.
+ *
+ * [font] ist dieselbe Schriftdatei, die der PDF-Renderer einbetten würde - hier wird sie nicht
+ * gesetzt, sondern nur gemessen: der Umbruch entsteht vor dem Rendern und für beide Formate gleich
+ * (siehe [wrappedToBoxes]). Ohne sie bräche Word innerhalb der Rahmen nach eigenen Maßen um, und
+ * dieselbe Urkunde sähe als PDF und als DOCX verschieden aus.
  */
 fun gapDocumentsDocx(
     templatePageSizes: List<DocxPageSize>,
     fontName: String?,
+    font: ByteArray?,
     certificates: List<List<AdditionalText>>,
 ): XWPFDocument {
     val document = XWPFDocument()
 
-    val renderPages = certificates.flatMap { additions ->
-        templatePageSizes.mapIndexed { index, size ->
-            RenderPage(size = size, additions = additions.filter { it.page == index + 1 })
+    val renderPages = GapTextWidths.of(font).use { widths ->
+        certificates.flatMap { additions ->
+            templatePageSizes.mapIndexed { index, size ->
+                RenderPage(
+                    size = size,
+                    additions = additions.filter { it.page == index + 1 }
+                        .wrappedToBoxes(size.widthPoints, size.heightPoints, widths),
+                )
+            }
         }
     }
 

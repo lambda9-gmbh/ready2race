@@ -32,9 +32,12 @@ data class EventScheduleSlotDto(
     val setupRoundId: UUID?,
     val matchStartedAt: LocalDateTime?,
     val matchFinishedAt: LocalDateTime?,
-    /** Ob der verknüpfte Lauf gerade aktiv ist - steuert im Zeitplan-Tab, ob "Lauf aktivieren" oder
-     * "Lauf beenden" angeboten wird (C1). Immer false ohne verknüpften Lauf. */
-    val matchCurrentlyRunning: Boolean,
+    /**
+     * Wann der verknüpfte Lauf an den Start gerufen wurde - steuert im Zeitplan-Tab, ob "Lauf
+     * aktivieren" oder "Lauf beenden" angeboten wird (C1), und zusammen mit [matchStartedAt], ob
+     * der Slot "In Vorbereitung" oder "Läuft" zeigt. Immer null ohne verknüpften Lauf.
+     */
+    val matchActivatedAt: LocalDateTime?,
     /**
      * Mannschaften des verknüpften Laufs, die im Rennen sind (ohne die aus der Vorrunde
      * mitgeführten OUT-Zeilen) - 0 ohne verknüpften Lauf.

@@ -11,6 +11,9 @@ import {isLiveMatch, pendingSlotLabel} from '@components/event/liveDashboard/com
  */
 export type TimelineEntryState =
     | 'finished'
+    // An den Start gerufen, aber noch nicht unterwegs — eigener Wert und nicht 'running', weil der
+    // Balken sonst dasselbe behauptete wie bei einem fahrenden Lauf (und mitpulsierte).
+    | 'preparing'
     | 'running'
     | 'awaitingFinish'
     | 'linked'
@@ -53,6 +56,11 @@ export const scheduleSlotState = (slot: EventScheduleSlotDto): TimelineEntryStat
     if (slot.matchStartedAt) {
         return 'running'
     }
+    // Vor den Slot-Zuständen, aber nach dem Ist-Start: aktiviert und noch nicht losgefahren ist
+    // "in Vorbereitung" — dieselbe Unterscheidung wie `slotMatchStatus` sie für den Chip trifft.
+    if (slot.matchActivatedAt) {
+        return 'preparing'
+    }
     switch (slot.state) {
         case 'WAITING':
             return 'waiting'
@@ -80,6 +88,8 @@ export const scheduleSlotsToEntries = (slots: EventScheduleSlotDto[]): TimelineE
 
 export const dashboardMatchState = (match: LiveDashboardMatchDto): TimelineEntryState => {
     switch (match.state) {
+        case 'PREPARING':
+            return 'preparing'
         case 'RUNNING':
             return 'running'
         case 'FINISHED':

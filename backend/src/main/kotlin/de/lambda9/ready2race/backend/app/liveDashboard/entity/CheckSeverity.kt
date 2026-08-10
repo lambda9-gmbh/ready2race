@@ -10,7 +10,7 @@ import java.util.UUID
  * sind trotzdem getrennt einstellbar: "gar nicht abgehakt" und "abgehakt, aber zur falschen Zeit"
  * sind am Zelt zwei verschiedene Vorgänge.
  */
-enum class CheckType { INVOICE_OPEN, NOT_ON_WATER, REQUIREMENT, REQUIREMENT_TIME_WINDOW }
+enum class CheckType { INVOICE_OPEN, NOT_IN_ARENA, REQUIREMENT, REQUIREMENT_TIME_WINDOW }
 
 /** Was pro Wettkampf eingestellt werden kann. */
 enum class CheckSeverity { OK, WARNING, CRITICAL }

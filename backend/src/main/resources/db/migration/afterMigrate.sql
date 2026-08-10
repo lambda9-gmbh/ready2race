@@ -24,6 +24,7 @@ drop view if exists participant_qr_assignment_view;
 drop view if exists competition_registration_team;
 drop view if exists competition_registration_team_participant;
 drop view if exists participant_tracking_for_team_participant;
+drop view if exists participant_tracking_change_view;
 drop view if exists participant_tracking_view;
 drop view if exists startlist_view;
 drop view if exists startlist_team;
@@ -574,6 +575,8 @@ select e.id,
        e.chain_progression_mode,
        e.show_breaks_on_public_boards,
        e.public_results_visibility,
+       e.execution_auto_refresh,
+       e.execution_auto_refresh_seconds,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        max(cpcc.end_at)                                                                 as challenge_end,
        err.event is not null                                                            as registrations_finalized
@@ -613,6 +616,10 @@ select err.event,
 from event_registration_report err
          join event_registration_report_data errd on err.event = errd.result_document;
 
+-- club_name ist der eigene Verein der PERSON, nicht der meldende Verein der Mannschaft (der steht
+-- eine Ebene höher in registered_competition_team). Beides nebeneinander braucht die Urkunde: sie
+-- zeigt seit dem 09.08.2026 die Vereine, die die Athleten tragen, als vollständige Kette - für
+-- Vereinsmitglieder also diese Spalte, für Gastruderer external_club_name.
 create view registered_competition_team_participant as
 select crnp.competition_registration as team_id,
        np.id                         as role_id,
@@ -623,10 +630,12 @@ select crnp.competition_registration as team_id,
        p.year,
        p.gender,
        p.external,
-       p.external_club_name
+       p.external_club_name,
+       c.name                        as club_name
 from competition_registration_named_participant crnp
          join named_participant np on crnp.named_participant = np.id
          join participant p on crnp.participant = p.id
+         left join club c on p.club = c.id
 ;
 
 create view registered_competition_team as
@@ -807,7 +816,13 @@ select cmt.id,
        coalesce(array_agg(rctp) filter (where rctp.team_id is not null), '{}') as participants,
        (cd.competition_registration is not null)                               as deregistered,
        cd.reason                                                               as deregistration_reason,
+       rc.id                                                                   as rating_category_id,
        rc.name                                                                 as rating_category_name,
+       -- Die Reihenfolge der Ergebnisabschnitte haengt an der Zuordnung zur Veranstaltung. Fehlt
+       -- sie, sortiert die Kategorie ganz hinten (RatingCategoryRef.UNCONFIGURED_SORT_ORDER) und
+       -- untereinander nach Namen - eine nie konfigurierte Kategorie darf sich nicht vor die
+       -- gepflegte Reihenfolge draengen.
+       coalesce(erc.sort_order, 2147483647)                                    as rating_category_sort_order,
        e.mixed_team_term                                                       as mixed_team_term
 from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id
@@ -820,8 +835,9 @@ from competition_match_team cmt
          left join timecode tc on cmt.timecode = tc.id
          left join event_registration er on cr.event_registration = er.id
          left join event e on er.event = e.id
+         left join event_rating_category erc on erc.event = er.event and erc.rating_category = rc.id
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.competition_registration, cr.club, c.name,
-         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, e.mixed_team_term,
+         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id, erc.sort_order, e.mixed_team_term,
          cmt.penalty_seconds, cmt.penalty_note
 ;
 
@@ -833,7 +849,7 @@ group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.com
 create view competition_match_with_teams as
 select cm.competition_setup_match,
        cm.start_time,
-       cm.currently_running,
+       cm.activated_at,
        cm.started_at,
        cm.finished_at,
        (ess.skipped_at is not null)                                         as skipped,
@@ -993,27 +1009,68 @@ from competition_setup_match csm
          left join startlist_team st on csm.id = st.competition_match
 group by csm.id, csr.id, cm.competition_setup_match, cp.id, cc.id, c.event, e.id;
 
+-- Die Herkunft eines Eintrags steht in zwei Teilen: pt.source sagt, wie er entstanden ist, das
+-- Aggregat unten, ob er seither von Hand berichtigt wurde. Bewusst als Aggregat und nicht als
+-- zweite Spalte auf participant_tracking: ein Feld, das denselben Sachverhalt behauptet, kann von
+-- ihm abweichen -- eine Summe ueber die Spur kann das nicht.
 create view participant_tracking_view as
 select pt.id,
-       pt.event      as event_id,
+       pt.event         as event_id,
        pt.scan_type,
        pt.scanned_at,
-       pt.scanned_by as scanned_by_id,
-       au.firstname  as scanned_by_firstname,
-       au.lastname   as scanned_by_lastname,
-       p.id          as participant_id,
+       pt.source,
+       pt.scanned_by    as scanned_by_id,
+       au.firstname     as scanned_by_firstname,
+       au.lastname      as scanned_by_lastname,
+       coalesce(ed.edit_count, 0) as edit_count,
+       ed.last_edited_at,
+       ed.last_edited_by_id,
+       ed.last_edited_by_firstname,
+       ed.last_edited_by_lastname,
+       p.id             as participant_id,
        p.firstname,
        p.lastname,
        p.year,
        p.gender,
        p.external,
        p.external_club_name,
-       c.id          as club_id,
-       c.name        as club_name
+       c.id             as club_id,
+       c.name           as club_name
 from participant_tracking pt
          left join participant p on pt.participant = p.id
          left join club c on p.club = c.id
-         left join app_user au on pt.scanned_by = au.id;
+         left join app_user au on pt.scanned_by = au.id
+         left join lateral (
+    select count(*)                                                   as edit_count,
+           max(ptc.created_at)                                        as last_edited_at,
+           (array_agg(eau.id order by ptc.created_at desc))[1]        as last_edited_by_id,
+           (array_agg(eau.firstname order by ptc.created_at desc))[1] as last_edited_by_firstname,
+           (array_agg(eau.lastname order by ptc.created_at desc))[1]  as last_edited_by_lastname
+    from participant_tracking_change ptc
+             left join app_user eau on ptc.created_by = eau.id
+    where ptc.tracking = pt.id
+      and ptc.change_type = 'UPDATE'
+    ) ed on true;
+
+-- Die Spur je Eintrag, mit dem Namen der Person, die sie geschrieben hat. Der Dialog zeigt sie in
+-- voller Laenge; das Protokoll oben braucht davon nur die Summe.
+create view participant_tracking_change_view as
+select ptc.id,
+       ptc.tracking,
+       ptc.participant   as participant_id,
+       ptc.event         as event_id,
+       ptc.change_type,
+       ptc.previous_scan_type,
+       ptc.previous_scanned_at,
+       ptc.new_scan_type,
+       ptc.new_scanned_at,
+       ptc.reason,
+       ptc.created_at,
+       ptc.created_by    as created_by_id,
+       au.firstname      as created_by_firstname,
+       au.lastname       as created_by_lastname
+from participant_tracking_change ptc
+         left join app_user au on ptc.created_by = au.id;
 
 create view participant_tracking_for_team_participant as
 select pt.id,
@@ -1355,7 +1412,8 @@ select erc.event,
        rc.name        as rating_category_name,
        rc.description as rating_category_description,
        erc.year_restriction_from,
-       erc.year_restriction_to
+       erc.year_restriction_to,
+       erc.sort_order
 from event_rating_category erc
          join rating_category rc on rc.id = erc.rating_category
 ;

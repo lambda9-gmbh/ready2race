@@ -26,22 +26,24 @@ object RaceClockerPollLogic {
     /**
      * Ob dieser Lauf überhaupt beobachtet wird.
      *
-     * Ein aktiver Lauf immer — er kann längst vor oder nach seinem Plan laufen, und was tatsächlich
-     * passiert, schlägt den Plan. Ein noch nicht aktiver nur im Fenster um seine geplante Startzeit:
-     * ohne diese Grenze würde eine Veranstaltung in drei Monaten jede Minute abgefragt.
+     * Ein aktivierter Lauf immer — er kann längst vor oder nach seinem Plan laufen, und was
+     * tatsächlich passiert, schlägt den Plan. Dass er dabei erst am Start steht und noch nicht
+     * unterwegs ist, ändert nichts: Gerade dann soll der Abruf den gemessenen Start entdecken. Ein
+     * noch nicht aktivierter nur im Fenster um seine geplante Startzeit: ohne diese Grenze würde
+     * eine Veranstaltung in drei Monaten jede Minute abgefragt.
      *
      * Beide Grenzen zählen einschließlich. Ohne geplante Startzeit gibt es kein Fenster, also auch
      * keine Beobachtung — solche Läufe aktiviert weiterhin jemand von Hand, und ab dann greift der
      * erste Zweig.
      */
     fun isWatched(
-        currentlyRunning: Boolean,
+        activated: Boolean,
         startTime: LocalDateTime?,
         now: LocalDateTime,
         watchBeforeMinutes: Int,
         watchAfterMinutes: Int,
     ): Boolean = when {
-        currentlyRunning -> true
+        activated -> true
         startTime == null -> false
         else -> !now.isBefore(startTime.minusMinutes(watchBeforeMinutes.toLong())) &&
             !now.isAfter(startTime.plusMinutes(watchAfterMinutes.toLong()))
@@ -71,6 +73,34 @@ object RaceClockerPollLogic {
      */
     fun startDetected(rows: List<RaceClockerFeedRow>): Boolean =
         rows.any { it.start != null || it.hasResult }
+
+    /**
+     * Der Ist-Start, den der Feed für einen bereits aktivierten Lauf hergibt — null, wenn er schon
+     * einen hat oder der Feed keinen kennt.
+     *
+     * Der Unterschied zu [startDetected] ist Absicht: Dort genügt ein verwertbares Ergebnis als
+     * Beleg, dass der Lauf gefahren ist; hier zählt nur eine gemessene Startzeit, denn nur sie sagt,
+     * WANN er losging. Ein Ergebnis ohne Startstempel lässt `started_at` deshalb leer, statt eine
+     * Uhrzeit zu erfinden.
+     *
+     * [existingStartedAt] gewinnt immer: Ein einmal gesetzter Ist-Start wird nicht verschoben, auch
+     * wenn RaceClocker später eine andere Zeit meldet — sonst rückte der Zeitpunkt unter der
+     * laufenden Anzeige weg.
+     *
+     * Der Renntag steckt bewusst in dieser Regel und nicht im Abruf: Der Feed liefert nur die
+     * Uhrzeit, und ohne den Tag des Laufs läge ein am Vortag geplanter Lauf um Mitternacht falsch.
+     * [now] ist der Rückfall für Läufe ganz ohne geplante Startzeit.
+     */
+    fun measuredStartFor(
+        rows: List<RaceClockerFeedRow>,
+        existingStartedAt: LocalDateTime?,
+        plannedStart: LocalDateTime?,
+        now: LocalDateTime,
+    ): LocalDateTime? = when {
+        existingStartedAt != null -> null
+        else -> RaceClockerFeedRow.earliestStart(rows)
+            ?.atDate(plannedStart?.toLocalDate() ?: now.toLocalDate())
+    }
 
     /**
      * Ein Kurzwert über alles, was aus diesen Zeilen in die Datenbank wandert. Ist er seit dem

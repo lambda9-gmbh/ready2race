@@ -44,7 +44,7 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
     // Es wurde noch nie erfolgreich geladen und der letzte Versuch ist fehlgeschlagen
     // (Backend tot, HTTP-Fehler, kein Netz). Das darf nicht wie "keine Läufe" aussehen —
     // ein montierter Bildschirm würde sonst bei totem Backend behaupten, es sei kein Lauf
-    // auf dem Wasser.
+    // in der Arena.
     if (!data && loadFailed) {
         return (
             <Box sx={{display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', p: 3}}>

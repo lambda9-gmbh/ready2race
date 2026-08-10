@@ -39,6 +39,7 @@ object GapPlaceholderLogic {
         GapDocumentPlaceholderType.COMPETITION_SHORT_NAME -> values.competitionShortName ?: values.competitionName
         GapDocumentPlaceholderType.CLUB_NAME -> values.clubName
         GapDocumentPlaceholderType.TEAM_NAME -> values.teamName
+        GapDocumentPlaceholderType.RATING_CATEGORY -> values.ratingCategory
         GapDocumentPlaceholderType.EVENT_DATE -> values.eventDate
         GapDocumentPlaceholderType.EVENT_LOCATION -> values.eventLocation
         GapDocumentPlaceholderType.FREE_TEXT -> placeholder.staticText

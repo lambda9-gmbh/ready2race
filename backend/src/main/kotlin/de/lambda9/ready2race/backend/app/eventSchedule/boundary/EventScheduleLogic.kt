@@ -78,16 +78,22 @@ object EventScheduleLogic {
      * Ist der Lauf eines Slots schon unterwegs und damit der Absage entzogen? Zwei Quellen, eine
      * Antwort:
      * - [startedAt] ist der IST-Start. Er kommt aus der Zeitnahme und ist der harte Beleg.
-     * - [currentlyRunning] ist die Aktivierung durch den Schiedsrichter. Sie geht dem Ist-Start
-     *   voraus: zwischen "Boote gehen an den Start" und "RaceClocker meldet den Start" liegt ein
-     *   Zeitfenster, in dem `started_at` noch leer ist, der Lauf aber längst passiert.
+     * - [activated] ist die Aktivierung durch den Schiedsrichter (`activated_at`). Sie geht dem
+     *   Ist-Start voraus: zwischen "Boote gehen an den Start" und "RaceClocker meldet den Start"
+     *   liegt ein Zeitfenster, in dem `started_at` noch leer ist, der Lauf aber längst passiert.
      *
      * Nur auf [startedAt] zu schauen, öffnete genau dieses Fenster für eine Absage - der Lauf war
      * danach abgesagt UND laufend zugleich, und Anzeige wie Dashboard zeigten ihn unverändert. Aus
      * Sicht des Schiedsrichters ist ein aktivierter Lauf gestartet, also zählt beides.
+     *
+     * Diese Regel bleibt bewusst an der Aktivierung, obwohl der Anzeigezustand seit dem
+     * 09.08.2026 zwischen "in Vorbereitung" und "läuft" unterscheidet: Der Absage-Schutz greift
+     * früher als die Anzeige, und genau das ist sein Zweck. Nur der Parametername ist mitgezogen
+     * worden, damit im Backend nirgends mehr von "laufend" die Rede ist, wo Aktivierung gemeint
+     * ist.
      */
-    fun matchUnderway(startedAt: LocalDateTime?, currentlyRunning: Boolean): Boolean =
-        startedAt != null || currentlyRunning
+    fun matchUnderway(startedAt: LocalDateTime?, activated: Boolean): Boolean =
+        startedAt != null || activated
 
     /**
      * Baut aus einer rohen Zeitstrahl-Zeile einen WAITING-Platzhalter, oder liefert null - für
@@ -274,6 +280,91 @@ object EventScheduleLogic {
             entries.add(ShiftPreviewEntry(slots[idx].id, slots[idx].startTime, slots[idx].startTime))
         }
         return ShiftResult.Ok(entries)
+    }
+
+    /**
+     * Der Index des ersten Slots, der wirklich HINTER [skippedStartTime] liegt - oder null, wenn es
+     * ihn in [slots] nicht gibt. [slots] sind die Slots desselben Renntags hinter dem entfallenen
+     * Slot, aufsteigend sortiert.
+     *
+     * "Echt später" statt "der nächste in der Liste" ist der ganze Punkt dieser Funktion: parallele
+     * Slots (gleiche Startzeit wie der entfallene, z. B. zwei Läufe, die zusammen gestartet werden)
+     * stehen in der sortierten Liste direkt dahinter, sind aber nicht "danach". Sie als Folgeslot zu
+     * nehmen hieße, ein Delta von 0 zu messen und einen Block vorzuziehen, der gar nicht nachrückt.
+     * Sie bleiben deshalb - wie der entfallene Slot selbst - an ihrer Zeit stehen.
+     */
+    fun firstFollowingIndex(slots: List<ShiftSlot>, skippedStartTime: LocalDateTime): Int? =
+        slots.indexOfFirst { it.startTime > skippedStartTime }.takeIf { it >= 0 }
+
+    /**
+     * Das Zeitdelta, das ein entfallener Slot freigibt - oder null, wenn sich keins belastbar
+     * ermitteln lässt und das Vorziehen deshalb gar nicht erst angeboten wird.
+     *
+     * Zwei Quellen in fester Rangfolge:
+     * - [durationMinutes] ist die geplante Dauer des Slots, also die Angabe, die das Regattabüro
+     *   selbst gepflegt hat. Sie geht vor, weil die Lücke zum Folgeslot mehr enthält als den Slot:
+     *   Wendezeiten und Puffer stecken mit darin und sollen nach der Absage bestehen bleiben.
+     * - [nextStartTime] ist die geplante Startzeit des ersten Slots danach (siehe
+     *   [firstFollowingIndex]). Ohne gepflegte Dauer ist der Abstand zu ihm das Beste, was der Plan
+     *   über die Länge des Entfallenen sagt.
+     *
+     * Eine gepflegte Dauer wird auch dann genommen, wenn sie GRÖSSER als die Lücke ist. Das Vorziehen
+     * scheitert dann an der Vorgänger-Prüfung, mit einer konkreten Obergrenze in der Meldung - besser,
+     * als still auf die Lücke zu kürzen und dem Nutzer eine Zahl unterzuschieben, die er nirgends
+     * eingegeben hat.
+     *
+     * Eine Dauer von 0 oder weniger und eine Lücke von 0 (der Folgeslot beginnt zeitgleich, kann bei
+     * [firstFollowingIndex] nicht vorkommen, hier aber der Vollständigkeit halber) sind kein Delta:
+     * es gäbe nichts vorzuziehen.
+     */
+    fun advanceDeltaMinutes(
+        durationMinutes: Int?,
+        skippedStartTime: LocalDateTime,
+        nextStartTime: LocalDateTime?,
+    ): Long? {
+        if (durationMinutes != null) {
+            return durationMinutes.toLong().takeIf { it > 0 }
+        }
+        if (nextStartTime == null) {
+            return null
+        }
+        return Duration.between(skippedStartTime, nextStartTime).toMinutes().takeIf { it > 0 }
+    }
+
+    /**
+     * Zieht den Block [blockSlots] bis EINSCHLIESSLICH [targetSlotId] um [advanceMinutes] nach vorn;
+     * alles hinter dem Ziel-Slot behält seine Zeit und wandert nur unverändert durch die Vorschau.
+     * [blockSlots] beginnt beim ersten Slot, der nachrücken soll (siehe [firstFollowingIndex]), und
+     * ist aufsteigend sortiert.
+     *
+     * Bewusst ein reines Blockverschieben statt einer Stauchung wie in [computeShift]: die Abstände
+     * innerhalb des Blocks sind der gefahrene Rhythmus des Renntags (Wendezeiten, Ablauf am Steg) und
+     * nicht der Puffer, aus dem das Delta kommt. Der Puffer entsteht stattdessen HINTER dem Ziel-Slot,
+     * und genau dort ist er gewollt: Der Ziel-Slot ist die Stelle, ab der der Zeitplan wieder gelten
+     * soll - typischerweise eine Mittagspause, die selbst mit vorrückt und sich dafür verlängert.
+     *
+     * [advanceMinutes] ist positiv gemeint (so viele Minuten NACH VORN); die Richtung steckt hier in
+     * der Funktion, damit an der Aufrufstelle kein Vorzeichen zu drehen ist.
+     */
+    fun computeAdvance(
+        blockSlots: List<ShiftSlot>,
+        advanceMinutes: Long,
+        targetSlotId: UUID,
+    ): List<ShiftPreviewEntry> {
+        val targetIndex = blockSlots.indexOfFirst { it.id == targetSlotId }
+        require(targetIndex >= 0) { "target slot must be part of the advanceable block" }
+
+        return blockSlots.mapIndexed { index, slot ->
+            ShiftPreviewEntry(
+                slotId = slot.id,
+                oldStartTime = slot.startTime,
+                newStartTime = if (index <= targetIndex) {
+                    slot.startTime.minusMinutes(advanceMinutes)
+                } else {
+                    slot.startTime
+                },
+            )
+        }
     }
 
     /**

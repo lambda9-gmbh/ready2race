@@ -33,7 +33,7 @@ class UpdateCheckSeverityRequestTest {
         val request = UpdateCheckSeverityRequest(
             entries = listOf(
                 entry(CheckType.INVOICE_OPEN, null),
-                entry(CheckType.NOT_ON_WATER, null),
+                entry(CheckType.NOT_IN_ARENA, null),
                 entry(CheckType.REQUIREMENT, requirement),
                 entry(CheckType.REQUIREMENT_TIME_WINDOW, requirement),
             )

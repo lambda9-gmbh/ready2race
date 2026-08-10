@@ -31,14 +31,14 @@ export const rowSummary = (severities: CheckSeverity[]): RowSummary => {
 }
 
 /**
- * Wettkämpfe ohne `checkInOutRequired` gehören für die Prüfung "Nicht auf dem Wasser" gar nicht
+ * Wettkämpfe ohne `checkInOutRequired` gehören für die Prüfung "Nicht in der Arena" gar nicht
  * erst in die Matrix - dort gibt es nichts einzustellen. Für alle anderen Prüfungen ist jeder
  * Wettkampf anwendbar.
  */
 export const isRowApplicable = (
     row: Pick<CheckSeverityRowDto, 'checkType'>,
     competition: Pick<CheckSeverityCompetitionDto, 'checkInOutRequired'>,
-): boolean => row.checkType !== 'NOT_ON_WATER' || competition.checkInOutRequired
+): boolean => row.checkType !== 'NOT_IN_ARENA' || competition.checkInOutRequired
 
 /**
  * Der eingestellte Wert eines Feldes der Matrix, sonst der vom Server gelieferte Standard.

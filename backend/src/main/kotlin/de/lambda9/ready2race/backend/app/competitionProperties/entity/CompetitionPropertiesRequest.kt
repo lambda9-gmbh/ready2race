@@ -15,7 +15,7 @@ data class CompetitionPropertiesRequest(
     val identifier: String,
     val name: String,
     val shortName: String?,
-    /** Ob dieser Wettkampf eine An-/Abmeldung aufs Wasser verlangt (Beachsprint: nein). */
+    /** Ob dieser Wettkampf eine An-/Abmeldung in die Arena verlangt (Beachsprint: nein). */
     val checkInOutRequired: Boolean = true,
     val description: String?,
     val competitionCategory: UUID?,

@@ -39,8 +39,8 @@ object CompetitionMatchRepo {
     fun getForStartList(id: UUID) = STARTLIST_VIEW.selectOne { ID.eq(id) }
 
     /**
-     * Everything needed to pull this match's results from RaceClocker: the wave name (match name plus
-     * planned start time, see [WaveName] - MUST be formatted exactly like
+     * Everything needed to pull this match's results from RaceClocker: the wave name (planned start
+     * time, competition and match name, see [WaveName] - MUST be formatted exactly like
      * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.buildCsv]
      * builds it for the export, or the wave-name fallback filter in `assignFeedRows` never matches)
      * and the competition's two results URLs. Which of the two applies follows from the round: a
@@ -58,6 +58,8 @@ object CompetitionMatchRepo {
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_PROPERTIES.SHORT_NAME,
             timeTrialUrl,
             heatsUrl,
         )
@@ -73,7 +75,12 @@ object CompetitionMatchRepo {
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne {
                 RaceClockerMatchTarget(
-                    waveName = WaveName.format(it[COMPETITION_SETUP_MATCH.NAME], it[COMPETITION_MATCH.START_TIME]),
+                    waveName = WaveName.format(
+                        matchName = it[COMPETITION_SETUP_MATCH.NAME],
+                        startTime = it[COMPETITION_MATCH.START_TIME],
+                        competitionIdentifier = it[COMPETITION_PROPERTIES.IDENTIFIER],
+                        competitionShortName = it[COMPETITION_PROPERTIES.SHORT_NAME],
+                    ),
                     // Not null in the schema; the projection just loses that guarantee.
                     isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
                     timeTrialUrl = it[timeTrialUrl],
@@ -224,7 +231,7 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
@@ -242,7 +249,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(true))
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNotNull)
             .orderBy(
                 COMPETITION_MATCH.START_TIME.asc(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()
@@ -321,7 +328,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(false))
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNull)
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             .and(
                 // Unverändert aus getMatchResults übernommene Teilbedingungen, hier als exists
@@ -356,7 +363,7 @@ object CompetitionMatchRepo {
 
     fun getMatchesByEvent(
         eventId: UUID,
-        currentlyRunning: Boolean? = null,
+        activated: Boolean? = null,
         withoutPlaces: Boolean? = null
     ): JIO<List<MatchForRunningStatusDto>> = Jooq.query {
         val cm = COMPETITION_MATCH
@@ -390,7 +397,7 @@ object CompetitionMatchRepo {
                 )
                 .otherwise(DSL.inline(true))
                 .`as`("has_places_set"),
-            cm.CURRENTLY_RUNNING,
+            cm.ACTIVATED_AT,
             cm.START_TIME
         )
             .from(cm)
@@ -401,8 +408,8 @@ object CompetitionMatchRepo {
             .join(c).on(cp.COMPETITION.eq(c.ID))
             .where(c.EVENT.eq(eventId))
 
-        if (currentlyRunning != null) {
-            query = query.and(cm.CURRENTLY_RUNNING.eq(currentlyRunning))
+        if (activated != null) {
+            query = query.and(if (activated) cm.ACTIVATED_AT.isNotNull else cm.ACTIVATED_AT.isNull)
         }
 
         if (withoutPlaces == true) {
@@ -426,15 +433,15 @@ object CompetitionMatchRepo {
                 matchNumber = record.value6()!!,
                 matchName = record.value7(),
                 hasPlacesSet = record.value8()!!,
-                currentlyRunning = record.value9()!!,
+                activatedAt = record.value9(),
                 startTime = record.value10()
             )
         }
     }
 
     /**
-     * Die Steg-Scans der Crews dieses Wettkampfs — die Grundlage des Wasser-Chips auf der
-     * Durchführungsseite („Wasser 2/6").
+     * Die Steg-Scans der Crews dieses Wettkampfs — die Grundlage des Arena-Chips auf der
+     * Durchführungsseite („Arena 2/6").
      *
      * Bewusst je Wettkampf statt je Veranstaltung: die Durchführungsseite zeigt immer genau einen
      * Wettkampf, die Scans der übrigen läse dort niemand. Das ist der einzige Unterschied zu
@@ -442,7 +449,7 @@ object CompetitionMatchRepo {
      * dem Pendant des Schiedsrichter-Dashboards — sonst dasselbe Muster: eine flache Abfrage, die
      * Reduktion auf den letzten Scan je Person macht der Aufrufer, und ob eine Mannschaft draußen
      * ist, entscheidet weiterhin allein
-     * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamOnWaterAt].
+     * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamInArenaAt].
      *
      * Abfragelast: ein Index-Zugriff auf `participant_tracking` (Index auf `event`) plus ein
      * `exists` über die Anmeldungen des Wettkampfs. Kein Join je Lauf und kein N+1 je Mannschaft —

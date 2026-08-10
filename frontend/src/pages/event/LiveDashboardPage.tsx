@@ -6,6 +6,7 @@ import {
     BottomNavigationAction,
     Box,
     CircularProgress,
+    IconButton,
     Paper,
     Stack,
     Typography,
@@ -14,13 +15,17 @@ import {
 } from '@mui/material'
 import LiveTvIcon from '@mui/icons-material/LiveTv'
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered'
+import {ShortText, Subject} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
     finishLiveDashboardMatch,
+    getEventTimingConfig,
     getLiveDashboard,
-    setLiveDashboardMatchRunning,
+    resumeRaceClockerAutoPull,
+    setLiveDashboardMatchActivated,
     skipScheduleSlot,
+    startLiveDashboardMatch,
 } from '@api/sdk.gen.ts'
 import {LiveDashboardDto} from '@api/types.gen.ts'
 import {useFetch, useFeedback} from '@utils/hooks.ts'
@@ -29,6 +34,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
+import {useShortLabels} from '@components/event/shortLabels.ts'
 import {
     LiveColumn,
     LiveDashboardActions,
@@ -107,6 +113,8 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
 
     const [tab, setTab] = useState<LiveDashboardTab>('live')
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
+    // Geteilt mit dem Zeitplan-Tab (siehe shortLabels.ts); hier startet es in der Kurzform.
+    const [shortLabels, toggleShortLabels] = useShortLabels(true)
     const cacheUserId = user.loggedIn ? user.id : ''
     // Einmal lesen, dreifach verwenden: Der Startwert aller drei Zustände kommt aus demselben
     // Eintrag, und der useState-Initialisierer läuft nur beim ersten Rendern.
@@ -118,7 +126,7 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
     )
     // In REGATTABUERO läuft "Lauf beenden" ausschließlich über den Zeitplan-Tab (siehe
     // EventSchedule.tsx) - der Button verschwindet hier dafür, das Notfall-Override
-    // (onSetRunning) bleibt unabhängig vom Modus verfügbar.
+    // (onSetActivated) bleibt unabhängig vom Modus verfügbar.
     const mayFinish = mayControl && dashboard?.chainProgressionMode !== 'REGATTABUERO'
     const [lastUpdated, setLastUpdated] = useState<Date | null>(
         cachedStart ? new Date(cachedStart.fetchedAt) : null,
@@ -222,6 +230,23 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
         },
     )
 
+    /**
+     * Ob RaceClocker den Start dieser Veranstaltung ohnehin selbst meldet — daran hängt allein der
+     * Hinweis am „Läuft"-Knopf, nicht der Knopf selbst. Einmal geladen, nicht im Abruftakt: die
+     * Einstellung ändert sich am Renntag nicht.
+     *
+     * Scheitert der Abruf (die Zeitnahme-Voreinstellung verlangt `ReadEventGlobal`, und das hat
+     * nicht jede Schiedsrichter-Rolle), bleibt der Hinweis weg. Das ist die richtige Richtung: ein
+     * fehlender Hinweis kostet einen überflüssigen Klick, ein falscher ließe jemanden auf eine
+     * Automatik warten, die es nicht gibt.
+     */
+    const timingConfigData = useFetch(signal => getEventTimingConfig({signal, path: {eventId}}), {
+        deps: [eventId],
+    })
+    const raceClockerAutoPull =
+        timingConfigData.data?.autoPull === true &&
+        timingConfigData.data.timingSystem === 'RACECLOCKER'
+
     // Der Live-Tab zeigt, was jetzt eine Handlung verlangt: die laufenden Läufe UND die, die
     // vollständig gewertet auf ihr Beenden warten (siehe liveMatches / selectForScope im Backend).
     const currentMatches = liveMatches(dashboard?.matches ?? [])
@@ -290,13 +315,42 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
         dashboardData.reload()
     }
 
-    const handleSetRunning = async (matchId: string, running: boolean) => {
-        const {error} = await setLiveDashboardMatchRunning({
+    const handleSetActivated = async (matchId: string, activated: boolean) => {
+        const {error} = await setLiveDashboardMatchActivated({
             path: {eventId, matchId},
-            query: {running},
+            query: {activated},
         })
         if (error) {
             feedback.error(t('event.liveDashboard.control.error'))
+        }
+        dashboardData.reload()
+    }
+
+    /**
+     * „Läuft": stellt fest, dass das Rennen unterwegs ist. Der Endpunkt ist idempotent und setzt
+     * nur den Ist-Start — eine Zeitnahme löst er nicht aus.
+     */
+    const handleMarkStarted = async (matchId: string) => {
+        const {error} = await startLiveDashboardMatch({path: {eventId, matchId}})
+        if (error) {
+            feedback.error(t('event.liveDashboard.control.error'))
+        }
+        dashboardData.reload()
+    }
+
+    /**
+     * Gibt den automatischen RaceClocker-Abruf wieder frei. Der Knopf gehört hierher, weil das
+     * Deaktivieren eines Laufs die Automatik pausiert und im Dashboard deaktiviert wird — im
+     * Durchführungs-Tab käme der Schiedsrichter am Steg nicht vorbei.
+     */
+    const handleResumeAutoPull = async (matchId: string, competitionId: string) => {
+        const {error} = await resumeRaceClockerAutoPull({
+            path: {eventId, competitionId, competitionMatchId: matchId},
+        })
+        if (error) {
+            feedback.error(t('event.liveDashboard.control.error'))
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.poll.resumed'))
         }
         dashboardData.reload()
     }
@@ -321,9 +375,17 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
 
     const actions: LiveDashboardActions = {
         onTeamClick: handleTeamClick,
+        // Bei veraltetem Stand entfallen alle fünf schreibenden Handlungen: Die Karten blenden
+        // ihre Knöpfe aus, sobald der Handler `undefined` ist. Niemand soll einen Lauf auf
+        // Grundlage von Daten starten oder beenden, die aus dem Gerätespeicher stammen.
         onFinish: mayFinish && !staleState.actionsLocked ? handleFinish : undefined,
-        onSetRunning: mayControl && !staleState.actionsLocked ? handleSetRunning : undefined,
+        onSetActivated: mayControl && !staleState.actionsLocked ? handleSetActivated : undefined,
+        onMarkStarted: mayControl && !staleState.actionsLocked ? handleMarkStarted : undefined,
+        onResumeAutoPull:
+            mayControl && !staleState.actionsLocked ? handleResumeAutoPull : undefined,
         onSkipSlot: mayControl && !staleState.actionsLocked ? handleSkipSlot : undefined,
+        // Kein Handler, sondern ein Kennzeichen der Veranstaltung - bleibt unabhängig vom Stand.
+        raceClockerAutoPull,
     }
 
     const liveColumn = (
@@ -332,6 +394,7 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
             nextEntry={nextEntry}
             loaded={dashboard !== null}
             actions={actions}
+            shortLabels={shortLabels}
         />
     )
     const matchListColumn = (
@@ -342,6 +405,7 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
                 dashboard !== null && dashboard.matches.length === 0 && pendingSlots.length === 0
             }
             actions={actions}
+            shortLabels={shortLabels}
         />
     )
 
@@ -373,6 +437,24 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
                         {t('event.liveDashboard.title')}
                     </Typography>
                     <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
+                        {/* Dieselbe Wahl wie am Spaltenkopf "Slot" im Zeitplan-Tab: wer die Rennen
+                            am Kürzel liest, liest sie hier genauso. */}
+                        <IconButton
+                            size="small"
+                            onClick={toggleShortLabels}
+                            color={shortLabels ? 'primary' : 'default'}
+                            aria-pressed={shortLabels}
+                            title={t(
+                                shortLabels
+                                    ? 'event.schedule.showFullNames'
+                                    : 'event.schedule.showShortNames',
+                            )}>
+                            {shortLabels ? (
+                                <Subject fontSize="small" />
+                            ) : (
+                                <ShortText fontSize="small" />
+                            )}
+                        </IconButton>
                         {lastUpdated && (
                             <Typography variant="caption" noWrap sx={{color: 'grey.700'}}>
                                 {format(lastUpdated, t('format.timeWithSeconds'))}

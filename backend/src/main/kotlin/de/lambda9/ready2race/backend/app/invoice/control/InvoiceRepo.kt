@@ -17,7 +17,7 @@ import java.util.UUID
 
 object InvoiceRepo {
 
-    fun InvoiceForEventRegistration.searchFields() = listOf(INVOICE_NUMBER)
+    fun InvoiceForEventRegistration.searchFields() = listOf(INVOICE_NUMBER, BILLED_TO_ORGANIZATION, BILLED_TO_NAME)
 
     fun create(record: InvoiceRecord) = INVOICE.insertReturning(record) { ID }
 

@@ -4,7 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameLogic
-import de.lambda9.ready2race.backend.app.club.control.ClubShortNameRepo
+import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
@@ -20,6 +20,9 @@ import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecu
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionCheckSeverityRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
@@ -56,7 +59,7 @@ object LiveDashboardService {
             val checkRecords = !LiveDashboardRepo.getChecks(eventId).orDie()
             val invoiceRecords = !LiveDashboardRepo.getInvoicePaymentsByClub(eventId).orDie()
             val substitutionRecords = !SubstitutionRepo.getByEvent(eventId, null, Privilege.Scope.GLOBAL).orDie()
-            // Letzter Steg-Scan je Person: Grundlage für "Boot ist auf dem Wasser" pro Team.
+            // Letzter Steg-Scan je Person: Grundlage für "Boot ist in der Arena" pro Team.
             val lastScanByParticipant = !ParticipantTrackingRepo.getScansByEvent(eventId).orDie()
                 .map { scans ->
                     scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }
@@ -95,8 +98,9 @@ object LiveDashboardService {
             )
 
             // Beides einmal je Abruf, nicht je Mannschaft: der Endpunkt wird im Sekundentakt
-            // gepollt, und eine Veranstaltung hat leicht hundert Mannschaften.
-            val aliases = !ClubShortNameRepo.aliases().orDie()
+            // gepollt, und eine Veranstaltung hat leicht hundert Mannschaften. Die Einstellungen
+            // tragen gepflegte Kurzformen und Kürzungsregeln zusammen - ein Ladeweg, nicht zwei.
+            val clubShortNames = !ClubShortNameSettings.load()
             val wornClubs = !wornClubsByParticipant(teamRecords, substitutionRecords)
 
             val context =
@@ -131,27 +135,27 @@ object LiveDashboardService {
 
                 val participants = !buildParticipants(rows, registrationId, startTime, context, competitionId)
 
-                val onWaterAt = LiveDashboardLogic.teamOnWaterAt(
+                val inArenaAt = LiveDashboardLogic.teamInArenaAt(
                     participants.map { lastScanByParticipant[it.participantId] }
                 )
                 val invoiceSeverity = LiveDashboardLogic.invoiceSeverity(
                     invoiceState,
                     severityConfig.severityFor(competitionId, CheckType.INVOICE_OPEN),
                 )
-                val onWaterSeverity = LiveDashboardLogic.onWaterSeverity(
-                    evaluated = LiveDashboardLogic.onWaterApplies(
+                val inArenaSeverity = LiveDashboardLogic.inArenaSeverity(
+                    evaluated = LiveDashboardLogic.inArenaApplies(
                         matchRunning = matchRunning,
                         checkInOutRequired = checkInOutRequired,
                         deregistered = deregistered,
                     ),
-                    onWater = onWaterAt != null,
-                    configured = severityConfig.severityFor(competitionId, CheckType.NOT_ON_WATER),
+                    inArena = inArenaAt != null,
+                    configured = severityConfig.severityFor(competitionId, CheckType.NOT_IN_ARENA),
                 )
 
                 // Die Kette entsteht aus der Crew, die wirklich startet - nach den Ummeldungen.
                 // Genau das ist der Fall, der im Betrieb weh tut: kommt die Ersatzperson aus einem
                 // anderen Verein, steht das ab sofort auf der Karte.
-                val clubs = ClubComposition.of(participants.map { it.clubName }, aliases)
+                val clubs = ClubComposition.of(participants.map { it.clubName }, clubShortNames)
 
                 KIO.ok(
                     LiveDashboardTeamDto(
@@ -164,7 +168,7 @@ object LiveDashboardService {
                             participants.map {
                                 LiveDashboardCrewMemberDto(
                                     lastName = it.lastName,
-                                    clubShort = it.clubName?.let { name -> ClubShortNameLogic.shorten(name, aliases) },
+                                    clubShort = it.clubName?.let { name -> ClubShortNameLogic.shorten(name, clubShortNames) },
                                     role = LiveDashboardLogic.roleAbbreviation(it.namedRole),
                                 )
                             }
@@ -173,6 +177,22 @@ object LiveDashboardService {
                         },
                         startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                         place = first[COMPETITION_MATCH_TEAM.PLACE],
+                        ratingCategory = first.get(CompetitionMatchTeamRepo.RATING_CATEGORY_ID, UUID::class.java)
+                            ?.let { categoryId ->
+                                RatingCategoryRef(
+                                    id = categoryId,
+                                    name = first.get(
+                                        CompetitionMatchTeamRepo.RATING_CATEGORY_NAME,
+                                        String::class.java
+                                    ) ?: "",
+                                    sortOrder = first.get(
+                                        CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER,
+                                        Int::class.java
+                                    ) ?: RatingCategoryRef.UNCONFIGURED_SORT_ORDER,
+                                )
+                            },
+                        // Erst wenn das ganze Feld des Laufs steht, siehe buildMatchDto.
+                        categoryPlace = null,
                         time = first[TIMECODE.TIME]?.let {
                             Timecode(
                                 millis = it,
@@ -190,16 +210,16 @@ object LiveDashboardService {
                         // Die Personendaten selbst bleiben hier: sie sind der größte Posten im
                         // Poll und werden erst im Detail-Dialog gebraucht - nur die fertige Ampel
                         // je Bedingung fließt in die Team-Ampel ein.
-                        onWaterRequired = checkInOutRequired,
+                        inArenaRequired = checkInOutRequired,
                         invoiceSeverity = invoiceSeverity,
-                        onWaterSeverity = onWaterSeverity,
+                        inArenaSeverity = inArenaSeverity,
                         severity = LiveDashboardLogic.teamSeverity(
                             requirementSeverities = participants.flatMap { it.requirements }.map { it.severity },
                             invoice = invoiceSeverity,
-                            onWater = onWaterSeverity,
+                            inArena = inArenaSeverity,
                         ),
                         substituted = participants.any { it.substitutedFor != null },
-                        onWaterAt = onWaterAt,
+                        inArenaAt = inArenaAt,
                     )
                 )
             }
@@ -209,7 +229,11 @@ object LiveDashboardService {
                 val startTime = match[COMPETITION_MATCH.START_TIME]
                 val startedAt = match[COMPETITION_MATCH.STARTED_AT]
                 val finishedAt = match[COMPETITION_MATCH.FINISHED_AT]
-                val running = match[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
+                val activatedAt = match[COMPETITION_MATCH.ACTIVATED_AT]
+                // Für die Arena-Prüfung zählt weiterhin die Aktivierung, nicht der Ist-Start: ein
+                // Boot, das an den Start gerufen ist, gehört raus - unabhängig davon, ob das Rennen
+                // schon unterwegs ist.
+                val running = activatedAt != null
 
                 val matchRows = teamsByMatch[matchId] ?: emptyList()
                 // Anzeige-Präzision pro Lauf: standardmäßig eine Nachkommastelle, feiner nur,
@@ -219,13 +243,18 @@ object LiveDashboardService {
                     .groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION]!! }
                     .toList()
                     .traverse { (registrationId, rows) -> buildTeamDto(registrationId, rows, startTime, timePrecision, running) }
-                    .map { list -> list.sortedWith(compareBy(nullsLast()) { it.startNumber }) }
+                    // Die Karte bleibt nach Bahn sortiert - am Steg wird sie gegen das Wasser
+                    // gelesen, nicht gegen die Ergebnisliste. Nur der Kategorieplatz kommt hinzu,
+                    // damit das Ergebnis eines beendeten Laufs dieselbe Zahl zeigt wie die
+                    // oeffentliche Ansicht.
+                    .map { list -> withCategoryPlaces(list).sortedWith(compareBy(nullsLast()) { it.startNumber }) }
 
                 KIO.ok(
                     LiveDashboardMatchDto(
                         matchId = matchId,
                         state = LiveDashboardLogic.deriveMatchState(
-                            currentlyRunning = running,
+                            activatedAt = activatedAt,
+                            startedAt = startedAt,
                             startTime = startTime,
                             finishedAt = finishedAt,
                             teamResults = teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) },
@@ -233,13 +262,14 @@ object LiveDashboardService {
                         ),
                         competitionId = match.get("competition_id", UUID::class.java)!!,
                         competitionName = match.get("competition_name", String::class.java) ?: "",
+                        competitionIdentifier = match.get("competition_identifier", String::class.java),
+                        competitionShortName = match.get("competition_short_name", String::class.java),
                         categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
                         roundName = match.get("round_name", String::class.java),
                         matchName = match.get("match_name", String::class.java),
                         executionOrder = match[COMPETITION_SETUP_MATCH.EXECUTION_ORDER] ?: 0,
                         startTime = startTime,
                         startedAt = startedAt,
-                        currentlyRunning = running,
                         elapsedMinutes = startedAt?.let { Duration.between(it, now).toMinutes().coerceAtLeast(0) },
                         teams = teams,
                         raceClockerPollError = match[COMPETITION_MATCH.RACECLOCKER_POLL_ERROR],
@@ -278,7 +308,25 @@ object LiveDashboardService {
      * [slotRecords] kommt von außen, weil dieselben Zeilen im Aufrufer bereits für die Absagen an
      * echten Läufen gebraucht werden.
      */
+    /**
+     * Setzt je Mannschaft den Platz innerhalb ihrer Wertungskategorie. Gerechnet wird in
+     * [RatingCategoryRanking] - derselben Stelle, aus der die öffentliche Ergebnisseite und die
+     * Athleten-Anzeige ihre Zahlen beziehen. Die Reihenfolge der Liste bleibt Sache des Aufrufers.
+     */
+    private fun withCategoryPlaces(teams: List<LiveDashboardTeamDto>): List<LiveDashboardTeamDto> =
+        RatingCategoryRanking.groupAndRank(
+            items = teams,
+            category = { it.ratingCategory },
+            place = { it.place },
+            tieBreak = { it.startNumber ?: Int.MAX_VALUE },
+        ).flatMap { section ->
+            section.entries.map { it.item.copy(categoryPlace = it.categoryPlace) }
+        }
+
     private fun getPendingSlots(slotRecords: List<Record>, matchIds: Set<UUID>): List<PendingSlotDto> {
+        // Die Rohzeile bleibt neben dem Platzhalter stehen: Rennnummer und Kurzname braucht nur das
+        // Dashboard, und PendingScheduleSlotInfo teilt sich die Athleten-Anzeige, die ohne sie
+        // auskommt.
         val waiting = slotRecords.mapNotNull { r ->
             EventScheduleLogic.pendingSlotOrNull(
                 slotId = r[EVENT_SCHEDULE_SLOT.ID]!!,
@@ -291,17 +339,19 @@ object LiveDashboardService {
                 skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
                 roundMaterialized = r.get("round_materialized", Boolean::class.java) == true,
                 matchExists = r.get("match_exists", Boolean::class.java) == true,
-            )
+            )?.let { r to it }
         }
             // Zwei getrennte Reads — wenn zwischen ihnen eine Runde entsteht oder gelöscht wird,
             // könnte derselbe Lauf doppelt auftauchen; echte Einträge gewinnen.
-            .filterNot { it.setupMatchId in matchIds }
-            .map { slot ->
+            .filterNot { (_, slot) -> slot.setupMatchId in matchIds }
+            .map { (r, slot) ->
                 PendingSlotDto(
                     slotId = slot.slotId,
                     startTime = slot.startTime,
                     name = null,
                     competitionName = slot.competitionName,
+                    competitionIdentifier = r.get("competition_identifier", String::class.java),
+                    competitionShortName = r.get("competition_short_name", String::class.java),
                     roundName = slot.roundName,
                     matchName = slot.matchName,
                 )
@@ -321,6 +371,8 @@ object LiveDashboardService {
                 startTime = slot.startTime,
                 name = slot.name,
                 competitionName = null,
+                competitionIdentifier = null,
+                competitionShortName = null,
                 roundName = null,
                 matchName = null,
             )
@@ -366,6 +418,17 @@ object LiveDashboardService {
         )
         val competitionId = teamRecords.first().get("competition_id", UUID::class.java)!!
 
+        // Nur der Detail-Dialog zeigt den Steg-Scan je Person; die Übersichtskarten hängen am
+        // Sekunden-Takt und fassen ihn ohnehin je Boot zusammen.
+        val lastScanByParticipant = !ParticipantTrackingRepo.getScansByEvent(eventId).orDie()
+            .map { scans ->
+                scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }
+                    .mapValues { (_, rows) ->
+                        val last = rows.maxBy { it[PARTICIPANT_TRACKING.SCANNED_AT]!! }
+                        last[PARTICIPANT_TRACKING.SCAN_TYPE]!! to last[PARTICIPANT_TRACKING.SCANNED_AT]!!
+                    }
+            }
+
         val participants = !buildParticipants(
             rows = teamRecords,
             registrationId = teamId,
@@ -376,6 +439,7 @@ object LiveDashboardService {
                 substitutionRecords,
                 severityConfig,
                 !wornClubsByParticipant(teamRecords, substitutionRecords),
+                lastScanByParticipant,
             ),
             competitionId = competitionId,
         )
@@ -442,8 +506,12 @@ object LiveDashboardService {
             !LiveDashboardRepo.markOpenTeamsFailed(matchId, openResults.name, userId).orDie()
         }
 
-        !setRunning(matchId, false, userId)
         !CompetitionMatchRepo.update(matchId) {
+            // Beenden nimmt die Aktivierung zurück, lässt den Ist-Start aber stehen: Wann der Lauf
+            // losgegangen ist, bleibt auch danach eine Tatsache. Deshalb bewusst NICHT über
+            // `CompetitionExecutionService.setMatchActivation` — dessen Deaktivieren löscht
+            // `started_at` und pausiert den RaceClocker-Abruf, und beides wäre hier falsch.
+            activatedAt = null
             finishedAt = LocalDateTime.now()
             updatedBy = userId
             updatedAt = LocalDateTime.now()
@@ -479,11 +547,18 @@ object LiveDashboardService {
         KIO.unit
     }
 
-    /** Manuelles Übersteuern, falls zu viele oder zu wenige Läufe aktiv sind. */
-    fun setMatchRunning(
+    /**
+     * Ruft einen Lauf an den Start oder nimmt das zurück — manuelles Übersteuern, falls zu viele
+     * oder zu wenige Läufe am Start stehen.
+     *
+     * Was dabei geschrieben wird (und warum Deaktivieren die RaceClocker-Automatik pausiert), steht
+     * an der geteilten Stelle: [CompetitionExecutionService.setMatchActivation]. Das
+     * Durchführungs-Tab kommt über denselben Weg — sonst hinge dieselbe Regel an zwei Orten.
+     */
+    fun setMatchActivated(
         eventId: UUID,
         matchId: UUID,
-        running: Boolean,
+        activated: Boolean,
         userId: UUID,
     ): App<LiveDashboardError, ApiResponse.NoData> = KIO.comprehension {
         val exists = !EventRepo.exists(eventId).orDie()
@@ -491,7 +566,7 @@ object LiveDashboardService {
             return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
         }
 
-        !setRunning(matchId, running, userId)
+        !CompetitionExecutionService.setMatchActivation(matchId, activated, userId)
 
         noData
     }
@@ -499,7 +574,12 @@ object LiveDashboardService {
     /**
      * Markiert den echten Start eines Laufs — getrennt von der geplanten Startzeit. Idempotent:
      * ein zweiter Aufruf verschiebt den Zeitstempel nicht mehr, er ist nur beim ersten Mal gesetzt.
-     * Zugleich geht der Lauf auf "aktiv", da "gestartet" ohne "laufend" keinen Sinn ergibt.
+     * Zugleich geht der Lauf auf "aktiv", da "gestartet" ohne "am Start gerufen" keinen Sinn ergibt.
+     *
+     * Der Knopf heißt in der Oberfläche „Läuft" und nicht „Start": Er stellt fest, dass das Rennen
+     * unterwegs ist, er löst keine Zeitnahme aus. Wo RaceClocker abgerufen wird, meldet der Feed
+     * den Start ohnehin selbst — der Knopf bleibt für den Ausfall und für Zeitnahmen ohne
+     * Startstempel.
      */
     fun markMatchStarted(
         eventId: UUID,
@@ -515,7 +595,9 @@ object LiveDashboardService {
             if (startedAt == null) {
                 startedAt = LocalDateTime.now()
             }
-            currentlyRunning = true
+            if (activatedAt == null) {
+                activatedAt = LocalDateTime.now()
+            }
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
@@ -547,7 +629,7 @@ object LiveDashboardService {
 
         val rows = buildList {
             add(CheckSeverityRowDto(CheckType.INVOICE_OPEN, null, null))
-            add(CheckSeverityRowDto(CheckType.NOT_ON_WATER, null, null))
+            add(CheckSeverityRowDto(CheckType.NOT_IN_ARENA, null, null))
             requirements.forEach { req ->
                 val id = req[PARTICIPANT_REQUIREMENT.ID]!!
                 add(CheckSeverityRowDto(CheckType.REQUIREMENT, id, req[PARTICIPANT_REQUIREMENT.NAME]))
@@ -680,6 +762,12 @@ object LiveDashboardService {
         val severityConfig: CheckSeverityConfig,
         /** Der getragene Verein je Person, siehe [wornClubsByParticipant]. */
         val wornClubs: Map<UUID, String>,
+        /**
+         * Letzter Steg-Scan je Person (Typ und Zeitpunkt). Leer, wo die Ansicht die Scans nicht
+         * erhebt - die Übersichtskarten fassen sie schon je Boot zusammen und brauchen sie hier
+         * nicht noch einmal je Person.
+         */
+        val lastScans: Map<UUID, Pair<String, LocalDateTime>> = emptyMap(),
     ) {
         /** requirement id -> assigned named participants (null element = global assignment) */
         val requirementAssignments = requirementRecords.groupBy(
@@ -701,9 +789,9 @@ object LiveDashboardService {
     }
 
     /**
-     * Der Verein, den jede Person *trägt*, je Personen-Kennung: bei Gastruderern der Freitext aus
-     * der Meldung, sonst der Name ihres eigenen Vereins. Der meldende Verein steht bewusst nicht
-     * darin - er ist für die Durchführung bedeutungslos.
+     * Der Verein, den jede Person *trägt*, je Personen-Kennung - die Regel selbst steht in
+     * [ClubComposition.clubWorn], damit Board, Athleten-Anzeige und Urkunde nicht drei Fassungen
+     * davon pflegen.
      *
      * Zwei Quellen, weil eine nicht reicht: [teamRecords] deckt alle gemeldeten Personen ab, eine
      * Ummeldung darf aber ein Vereinsmitglied hereinholen, das für diese Veranstaltung nirgends
@@ -714,12 +802,9 @@ object LiveDashboardService {
         teamRecords: List<Record>,
         substitutionRecords: List<SubstitutionViewRecord>,
     ): App<Nothing, Map<UUID, String>> = KIO.comprehension {
-        fun wornClub(external: Boolean?, externalClubName: String?, ownClubName: String?) =
-            if (external == true) externalClubName else ownClubName
-
         val fromRegistrations = teamRecords.mapNotNull { row ->
             val id = row.get("participant_id", UUID::class.java) ?: return@mapNotNull null
-            wornClub(
+            ClubComposition.clubWorn(
                 external = row[PARTICIPANT.EXTERNAL],
                 externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
                 ownClubName = row.get("participant_club_name", String::class.java),
@@ -734,7 +819,7 @@ object LiveDashboardService {
         val fromSubstitutions = !LiveDashboardRepo.getParticipantClubs(missing).orDie().map { rows ->
             rows.mapNotNull { row ->
                 val id = row[PARTICIPANT.ID] ?: return@mapNotNull null
-                wornClub(
+                ClubComposition.clubWorn(
                     external = row[PARTICIPANT.EXTERNAL],
                     externalClubName = row[PARTICIPANT.EXTERNAL_CLUB_NAME],
                     ownClubName = row.get("participant_club_name", String::class.java),
@@ -858,17 +943,12 @@ object LiveDashboardService {
                     substitutedFor = replaced?.let { "${it.firstname} ${it.lastname}" },
                     substitutionReason = substitution?.reason,
                     requirements = requirements,
+                    trackingStatus = context.lastScans[p.id]?.first,
+                    trackingAt = context.lastScans[p.id]?.second,
                 )
             }
         )
     }
-
-    private fun setRunning(matchId: UUID, running: Boolean, userId: UUID): App<Nothing, Unit> =
-        CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = running
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie().map { }
 
     private fun activateNext(candidates: List<Record>, userId: UUID): App<Nothing, Unit> =
         KIO.comprehension {
@@ -878,7 +958,11 @@ object LiveDashboardService {
             // Alle Läufe derselben Startzeit gemeinsam aktivieren: parallele Starts gehören zusammen.
             !candidates
                 .filter { it[COMPETITION_MATCH.START_TIME] == nextStart }
-                .traverse { setRunning(it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!, true, userId) }
+                .traverse {
+                    CompetitionExecutionService.setMatchActivation(
+                        it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!, activated = true, userId = userId,
+                    )
+                }
 
             KIO.unit
         }

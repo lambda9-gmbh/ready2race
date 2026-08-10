@@ -2,7 +2,8 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.singletonOrFallback
+import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
+import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
@@ -14,6 +15,8 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.data.Timecode
@@ -139,13 +142,22 @@ object EventInfoService {
         limit: Int = 10,
         competitionId: UUID?,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
+        getLatestMatchResults(eventId, limit, competitionId, !clubShortNames())
+    }
+
+    private fun getLatestMatchResults(
+        eventId: UUID,
+        limit: Int,
+        competitionId: UUID?,
+        clubShortNames: ClubShortNameSettings,
+    ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
 
         val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
         val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit, visibility).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
-            val teams = !getMatchResultTeams(matchId)
+            val teams = !getMatchResultTeams(matchId, clubShortNames)
 
             LatestMatchResultInfo(
                 matchId = matchId,
@@ -169,11 +181,19 @@ object EventInfoService {
         eventId: UUID,
         limit: Int = 10,
     ): App<Nothing, ApiResponse.ListDto<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
+        getUpcomingCompetitionMatches(eventId, limit, !clubShortNames())
+    }
+
+    private fun getUpcomingCompetitionMatches(
+        eventId: UUID,
+        limit: Int,
+        clubShortNames: ClubShortNameSettings,
+    ): App<Nothing, ApiResponse.ListDto<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
 
         val matches =
             !CompetitionMatchRepo.getUpcomingMatches(eventId, limit).orDie()
 
-        val real = !toUpcomingCompetitionMatchInfos(matches)
+        val real = !toUpcomingCompetitionMatchInfos(matches, clubShortNames)
         // Ohne Nachfrist: CompetitionMatchRepo.getUpcomingMatches nimmt nur Läufe mit
         // START_TIME > jetzt, für die Platzhalter der Kiosk-Ansicht gilt dieselbe Grenze.
         val result = !mergeWithPendingPlaceholders(eventId, real, limit, Duration.ZERO)
@@ -188,12 +208,20 @@ object EventInfoService {
         eventId: UUID,
         limit: Int,
     ): App<Nothing, ApiResponse.ListDto<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
+        getUpcomingMatchesForBoard(eventId, limit, !clubShortNames())
+    }
+
+    private fun getUpcomingMatchesForBoard(
+        eventId: UUID,
+        limit: Int,
+        clubShortNames: ClubShortNameSettings,
+    ): App<Nothing, ApiResponse.ListDto<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
 
         val grace = Duration.ofMinutes(AthleteBoardLogic.DEFAULT_OVERDUE_GRACE_MINUTES.toLong())
         val matches =
             !CompetitionMatchRepo.getUpcomingMatchesForBoard(eventId, limit, grace).orDie()
 
-        val real = !toUpcomingCompetitionMatchInfos(matches)
+        val real = !toUpcomingCompetitionMatchInfos(matches, clubShortNames)
         val result = !mergeWithPendingPlaceholders(eventId, real, limit, grace)
 
         KIO.ok(ApiResponse.ListDto(result))
@@ -315,11 +343,12 @@ object EventInfoService {
     // getUpcomingCompetitionMatches und getUpcomingMatchesForBoard - beide Queries liefern
     // dieselbe Spaltenform.
     private fun toUpcomingCompetitionMatchInfos(
-        matches: List<Record>
+        matches: List<Record>,
+        clubShortNames: ClubShortNameSettings,
     ): App<Nothing, List<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
-            val teams = !getUpcomingMatchTeams(matchId)
+            val teams = !getUpcomingMatchTeams(matchId, clubShortNames)
 
             UpcomingCompetitionMatchInfo(
                 matchId = matchId,
@@ -344,6 +373,14 @@ object EventInfoService {
         eventId: UUID,
         limit: Int = 10,
     ): App<Nothing, ApiResponse.ListDto<RunningMatchInfo>> = KIO.comprehension {
+        getRunningMatches(eventId, limit, !clubShortNames())
+    }
+
+    private fun getRunningMatches(
+        eventId: UUID,
+        limit: Int,
+        clubShortNames: ClubShortNameSettings,
+    ): App<Nothing, ApiResponse.ListDto<RunningMatchInfo>> = KIO.comprehension {
 
         val matches = !CompetitionMatchRepo.getRunningMatches(eventId, limit).orDie()
 
@@ -354,7 +391,7 @@ object EventInfoService {
             val elapsedMinutes = startedAt?.let {
                 java.time.Duration.between(it, LocalDateTime.now()).toMinutes()
             }
-            val teams = !getRunningMatchTeams(matchId)
+            val teams = !getRunningMatchTeams(matchId, clubShortNames)
 
             RunningMatchInfo(
                 matchId = matchId,
@@ -363,6 +400,7 @@ object EventInfoService {
                 competitionName = match.get("competition_name", String::class.java) ?: "",
                 categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
                 startTime = startTime,
+                activatedAt = match[COMPETITION_MATCH.ACTIVATED_AT],
                 startedAt = startedAt,
                 elapsedMinutes = elapsedMinutes,
                 placeName = null,
@@ -406,9 +444,13 @@ object EventInfoService {
                     displayDurationSeconds = boardView?.displayDurationSeconds,
                 )
 
-                val running = !getRunningMatches(eventId, config.runningLimit)
-                val upcoming = !getUpcomingMatchesForBoard(eventId, config.upcomingLimit)
-                val results = !getLatestMatchResults(eventId, config.resultsLimit, null)
+                // Einmal je Aufbau, nicht je Mannschaft: die Anzeige pollt, und die drei Blöcke
+                // darunter lösen zusammen leicht hundert Vereinsnamen auf.
+                val clubShortNames = !clubShortNames()
+
+                val running = !getRunningMatches(eventId, config.runningLimit, clubShortNames)
+                val upcoming = !getUpcomingMatchesForBoard(eventId, config.upcomingLimit, clubShortNames)
+                val results = !getLatestMatchResults(eventId, config.resultsLimit, null, clubShortNames)
 
                 val dto = AthleteBoardDto(
                     eventName = eventName!!,
@@ -437,6 +479,34 @@ object EventInfoService {
     // Helper Methods
 
     /**
+     * Die gepflegten Vereinskurzformen und die Kürzungsregeln, EINMAL je Abruf. Aufgelöst wird danach ohne weitere
+     * Abfrage - die öffentlichen Endpoints hier laufen im Sekunden- bis Viertelminutentakt und
+     * bauen je Antwort Dutzende Mannschaften auf; ein Nachschlagen je Boot wäre derselbe Fehler
+     * in klein, gegen den der Zwischenspeicher der Athleten-Anzeige gebaut wurde.
+     */
+    private fun clubShortNames(): App<Nothing, ClubShortNameSettings> =
+        ClubShortNameSettings.load()
+
+    /**
+     * Die Vereinskette einer Mannschaft aus den Zeilen ihrer Crew - in Bootsreihenfolge, wie die
+     * Abfrage sie liefert. Erwartet die Spalten der drei Anzeige-Abfragen in
+     * [CompetitionMatchTeamRepo] (inkl. des zweiten, aliasierten CLUB-Joins auf die Person).
+     */
+    private fun clubComposition(
+        records: List<Record>,
+        clubShortNames: ClubShortNameSettings,
+    ): ClubComposition = ClubComposition.of(
+        records.map {
+            ClubComposition.clubWorn(
+                external = it[PARTICIPANT.EXTERNAL],
+                externalClubName = it[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                ownClubName = it.get(CompetitionMatchTeamRepo.PARTICIPANT_CLUB_NAME, String::class.java),
+            )
+        },
+        clubShortNames,
+    )
+
+    /**
      * Die erfasste Zeit als Anzeigetext, oder null solange keine Zeit vorliegt. Erwartet die
      * TIMECODE-Spalten im Record (left join) - Ergebnis- und Laufabfrage liefern beide dieselbe
      * Spaltenform. [precision] kommt pro Lauf aus [Timecode.displayPrecision], damit alle Zeiten
@@ -451,21 +521,29 @@ object EventInfoService {
             ).toString()
         }
 
-    private fun getMatchResultTeams(matchId: UUID): App<Nothing, List<MatchResultTeamInfo>> = KIO.comprehension {
+    private fun getMatchResultTeams(
+        matchId: UUID,
+        clubShortNames: ClubShortNameSettings,
+    ): App<Nothing, List<MatchResultTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamsForMatchResult(matchId).orDie()
         val timePrecision = Timecode.displayPrecision(records.mapNotNull { it[TIMECODE.TIME] })
 
-        val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
+        val teams = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
                 val first = groupedRecords.first()
+                val clubs = clubComposition(groupedRecords, clubShortNames)
                 MatchResultTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
                     teamNumber = first[COMPETITION_REGISTRATION.TEAM_NUMBER],
                     clubName = first.get("club_name", String::class.java),
-                    actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
+                    clubsShort = clubs.short.ifEmpty { null },
+                    clubsFull = clubs.full.ifEmpty { null },
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
                     place = first[COMPETITION_MATCH_TEAM.PLACE],
+                    ratingCategory = ratingCategoryRef(first),
+                    // Der Kategorieplatz entsteht erst, wenn das ganze Feld des Laufs bekannt ist.
+                    categoryPlace = null,
                     timeString = timeStringOrNull(first, timePrecision),
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                     failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
@@ -487,22 +565,59 @@ object EventInfoService {
                 )
             }
 
-        KIO.ok(result)
+        KIO.ok(rankWithinRatingCategories(teams))
     }
 
-    private fun getUpcomingMatchTeams(matchId: UUID): App<Nothing, List<UpcomingMatchTeamInfo>> = KIO.comprehension {
+    /**
+     * Die Wertungskategorie einer Ergebniszeile, `null` solange das Boot keiner zugeordnet ist.
+     * Die Sortierstelle kommt aus `event_rating_category`; fehlt die Zuordnung zur Veranstaltung,
+     * gilt [RatingCategoryRef.UNCONFIGURED_SORT_ORDER].
+     */
+    private fun ratingCategoryRef(record: Record): RatingCategoryRef? =
+        record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_ID, UUID::class.java)?.let { id ->
+            RatingCategoryRef(
+                id = id,
+                name = record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_NAME, String::class.java) ?: "",
+                sortOrder = record.get(CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER, Int::class.java)
+                    ?: RatingCategoryRef.UNCONFIGURED_SORT_ORDER,
+            )
+        }
+
+    /**
+     * Zählt die Mannschaften eines Laufs je Wertungskategorie neu ab 1 und gibt sie in
+     * Abschnittsreihenfolge zurück. Gerechnet wird in
+     * [de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking], damit
+     * öffentliche Ergebnisseite, Athleten-Anzeige und Schiedsrichter-Dashboard nachweislich
+     * dieselbe Zählung zeigen.
+     */
+    private fun rankWithinRatingCategories(teams: List<MatchResultTeamInfo>): List<MatchResultTeamInfo> =
+        RatingCategoryRanking.groupAndRank(
+            items = teams,
+            category = { it.ratingCategory },
+            place = { it.place },
+            tieBreak = { it.startNumber },
+        ).flatMap { section ->
+            section.entries.map { it.item.copy(categoryPlace = it.categoryPlace) }
+        }
+
+    private fun getUpcomingMatchTeams(
+        matchId: UUID,
+        clubShortNames: ClubShortNameSettings,
+    ): App<Nothing, List<UpcomingMatchTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamsForUpcomingMatch(matchId).orDie()
 
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
                 val first = groupedRecords.first()
+                val clubs = clubComposition(groupedRecords, clubShortNames)
                 UpcomingMatchTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
                     teamNumber = first[COMPETITION_REGISTRATION.TEAM_NUMBER],
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                     clubName = first.get("club_name", String::class.java),
-                    actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
+                    clubsShort = clubs.short.ifEmpty { null },
+                    clubsFull = clubs.full.ifEmpty { null },
                     participants = groupedRecords.mapNotNull { record ->
                         record.get("participant_id", UUID::class.java)?.let {
                             UpcomingMatchParticipantInfo(
@@ -522,20 +637,25 @@ object EventInfoService {
         KIO.ok(result)
     }
 
-    private fun getRunningMatchTeams(matchId: UUID): App<Nothing, List<RunningMatchTeamInfo>> = KIO.comprehension {
+    private fun getRunningMatchTeams(
+        matchId: UUID,
+        clubShortNames: ClubShortNameSettings,
+    ): App<Nothing, List<RunningMatchTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamForRunningMatch(matchId).orDie()
         val timePrecision = Timecode.displayPrecision(records.mapNotNull { it[TIMECODE.TIME] })
 
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
                 val first = groupedRecords.first()
+                val clubs = clubComposition(groupedRecords, clubShortNames)
                 RunningMatchTeamInfo(
                     teamId = registrationId!!,
                     teamName = first.get("team_name", String::class.java),
                     teamNumber = first[COMPETITION_REGISTRATION.TEAM_NUMBER],
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                     clubName = first.get("club_name", String::class.java),
-                    actualClubName = singletonOrFallback(groupedRecords.map {it[PARTICIPANT.EXTERNAL_CLUB_NAME]}.toSet(), first[EVENT.MIXED_TEAM_TERM]),
+                    clubsShort = clubs.short.ifEmpty { null },
+                    clubsFull = clubs.full.ifEmpty { null },
                     currentScore = null, // Could be calculated if scoring data is available
                     currentPosition = first[COMPETITION_MATCH_TEAM.PLACE],
                     timeString = timeStringOrNull(first, timePrecision),

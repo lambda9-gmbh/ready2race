@@ -43,12 +43,29 @@ class RaceClockerPollLogicTest {
     // --- Fenster ---
 
     @Test
-    fun aRunningMatchIsWatchedRegardlessOfItsPlannedTime() {
+    fun anActivatedMatchIsWatchedRegardlessOfItsPlannedTime() {
         assertTrue(
             RaceClockerPollLogic.isWatched(
-                currentlyRunning = true,
+                activated = true,
                 startTime = now.minusHours(6),
                 now = now,
+                watchBeforeMinutes = 15,
+                watchAfterMinutes = 120,
+            )
+        )
+    }
+
+    @Test
+    fun anActivatedMatchWithoutARealStartStaysWatched() {
+        // Aktiviert schlägt das Zeitfenster: Der Lauf kann längst vor oder nach seinem Plan
+        // stattfinden, und was tatsächlich passiert, schlägt den Plan. Genau dieser Fall trägt
+        // seit dem 09.08.2026 den Ist-Start nach - ein von der Kette an den Start gerufener Lauf
+        // bliebe sonst "in Vorbereitung", bis das erste Boot durchs Ziel ist.
+        assertTrue(
+            RaceClockerPollLogic.isWatched(
+                activated = true,
+                startTime = LocalDateTime.of(2026, 8, 14, 10, 0),
+                now = LocalDateTime.of(2026, 8, 14, 14, 0),
                 watchBeforeMinutes = 15,
                 watchAfterMinutes = 120,
             )
@@ -137,6 +154,79 @@ class RaceClockerPollLogicTest {
         assertTrue(
             RaceClockerPollLogic.startDetected(
                 listOf(row(result = "In race...", start = LocalTime.of(10, 3)))
+            )
+        )
+    }
+
+    // --- der nachgetragene Ist-Start ---
+    //
+    // Der Fall, der den ganzen Umbau ausgelöst hat (Entwurf 09.08.2026, §2.2): Ein von der Kette an
+    // den Start gerufener Lauf soll seinen Ist-Start bekommen, sobald RaceClocker eine Startzeit
+    // meldet - und zwar lange bevor ein Boot durchs Ziel ist.
+
+    @Test
+    fun aTimedStartCountsEvenWhileEveryBoatIsStillRacing() {
+        assertEquals(
+            LocalDateTime.of(2026, 8, 14, 10, 3),
+            RaceClockerPollLogic.measuredStartFor(
+                rows = listOf(
+                    row(result = "In race...", start = LocalTime.of(10, 3)),
+                    row(result = "In race...", start = LocalTime.of(10, 3)),
+                ),
+                existingStartedAt = null,
+                plannedStart = LocalDateTime.of(2026, 8, 14, 10, 0),
+                now = LocalDateTime.of(2026, 8, 14, 10, 5),
+            )
+        )
+    }
+
+    @Test
+    fun anExistingStartStampIsNeverMoved() {
+        assertEquals(
+            null,
+            RaceClockerPollLogic.measuredStartFor(
+                rows = listOf(row(result = "In race...", start = LocalTime.of(10, 3))),
+                existingStartedAt = LocalDateTime.of(2026, 8, 14, 10, 1),
+                plannedStart = LocalDateTime.of(2026, 8, 14, 10, 0),
+                now = LocalDateTime.of(2026, 8, 14, 10, 5),
+            )
+        )
+    }
+
+    @Test
+    fun withoutATimedStartInTheFeedNothingIsStamped() {
+        assertEquals(
+            null,
+            RaceClockerPollLogic.measuredStartFor(
+                rows = listOf(row(result = "3:21.4"), row(result = "Not started")),
+                existingStartedAt = null,
+                plannedStart = LocalDateTime.of(2026, 8, 14, 10, 0),
+                now = LocalDateTime.of(2026, 8, 14, 10, 5),
+            )
+        )
+    }
+
+    @Test
+    fun theRaceDayComesFromThePlanAndFallsBackToToday() {
+        // Der Feed liefert nur die Uhrzeit. Ohne den Tag des Laufs läge ein am Vortag geplanter
+        // Lauf um Mitternacht falsch - deshalb gehört die Ableitung in die Regel und nicht in den
+        // Abruf.
+        assertEquals(
+            LocalDateTime.of(2026, 8, 13, 18, 30),
+            RaceClockerPollLogic.measuredStartFor(
+                rows = listOf(row(start = LocalTime.of(18, 30))),
+                existingStartedAt = null,
+                plannedStart = LocalDateTime.of(2026, 8, 13, 18, 25),
+                now = LocalDateTime.of(2026, 8, 14, 0, 10),
+            )
+        )
+        assertEquals(
+            LocalDateTime.of(2026, 8, 14, 10, 3),
+            RaceClockerPollLogic.measuredStartFor(
+                rows = listOf(row(start = LocalTime.of(10, 3))),
+                existingStartedAt = null,
+                plannedStart = null,
+                now = LocalDateTime.of(2026, 8, 14, 10, 5),
             )
         )
     }

@@ -33,7 +33,7 @@ import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
 import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
-import ClubsPage from './pages/club/ClubsPage.tsx'
+import ClubsPage, {ClubTab} from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
 import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx'
@@ -381,7 +381,9 @@ export const clubsIndexRoute = createRoute({
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
+    validateSearch: validateTabSearch<ClubTab>,
 })
+
 
 export const administrationRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,

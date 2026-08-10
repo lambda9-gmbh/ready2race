@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchStatusLogic
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
@@ -36,9 +37,9 @@ private fun List<CompetitionMatchTeamParticipant>.toNamedParticipantsDto() =
 
 /**
  * [lastScanByParticipant] ist der letzte Steg-Scan je Person (aus
- * [CompetitionMatchRepo.getScansByCompetition]) und speist allein den Wasser-Chip. Eine leere Karte
- * heißt "keine Scans" - dann bleibt `teamsOnWater` null und der Chip entfällt, statt bei jedem Lauf
- * dauerhaft "Wasser 0/6" zu behaupten.
+ * [CompetitionMatchRepo.getScansByCompetition]) und speist allein den Arena-Chip. Eine leere Karte
+ * heißt "keine Scans" - dann bleibt `teamsInArena` null und der Chip entfällt, statt bei jedem Lauf
+ * dauerhaft "Arena 0/6" zu behaupten.
  *
  * Bekannte Ungenauigkeit: die Crew kommt hier aus der Anmeldung (View
  * `registered_competition_team_participant`), Ummeldungen der Runde sind darin nicht aufgelöst -
@@ -55,7 +56,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
 
     // Ein Aufruf für die ganze Runde: nur so lässt sich der Fall "kein Team der Runde hatte je
     // einen Scan" überhaupt erkennen (Abschnitt 6 der Spec).
-    val teamsOnWaterPerMatch = MatchStatusLogic.teamsOnWaterPerMatch(
+    val teamsInArenaPerMatch = MatchStatusLogic.teamsInArenaPerMatch(
         matchPairs.map { (match, _) ->
             match.teams.map { team ->
                 team.participants.distinctBy { it.participantId }
@@ -101,15 +102,15 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                         executionOrder = match.second.executionOrder,
                         startTime = match.first.startTime,
                         startTimeOffset = match.second.startTimeOffset,
-                        currentlyRunning = match.first.currentlyRunning,
+                        activatedAt = match.first.activatedAt,
                         startedAt = match.first.startedAt,
                         finishedAt = match.first.finishedAt,
                         skipped = match.first.skipped,
                         // Dieselbe Ableitung wie im Schiedsrichter-Dashboard - eine Ableitung, drei
-                        // Aufrufer. teamsOnWater führt nur diese Ansicht: Zeitplan und öffentliche
+                        // Aufrufer. teamsInArena führt nur diese Ansicht: Zeitplan und öffentliche
                         // Anzeigen lassen es null ("nicht erhoben" ist etwas anderes als 0).
                         status = MatchStatusLogic.matchStatus(
-                            currentlyRunning = match.first.currentlyRunning,
+                            activatedAt = match.first.activatedAt,
                             startTime = match.first.startTime,
                             startedAt = match.first.startedAt,
                             finishedAt = match.first.finishedAt,
@@ -121,7 +122,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                                     deregistered = team.deregistered,
                                 )
                             },
-                            teamsOnWater = teamsOnWaterPerMatch[index],
+                            teamsInArena = teamsInArenaPerMatch[index],
                         ),
                         raceClockerPolledAt = match.first.raceClockerPolledAt,
                         raceClockerPollError = match.first.raceClockerPollError,
@@ -159,7 +160,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
             CompetitionMatchWithTeams(
                 competitionSetupMatch = match.competitionSetupMatch!!,
                 startTime = match.startTime,
-                currentlyRunning = match.currentlyRunning ?: false,
+                activatedAt = match.activatedAt,
                 startedAt = match.startedAt,
                 finishedAt = match.finishedAt,
                 skipped = match.skipped ?: false,
@@ -191,6 +192,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                                 gender = p.gender!!,
                                 external = p.external,
                                 externalClubName = p.externalClubName,
+                                clubName = p.clubName,
                             )
                         },
                         deregistered = team.deregistered!!,
@@ -200,7 +202,14 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                         failedReason = team.failedReason,
                         penaltySeconds = team.penaltySeconds,
                         penaltyNote = team.penaltyNote,
-                        ratingCategory = team.ratingCategoryName,
+                        ratingCategory = team.ratingCategoryId?.let {
+                            RatingCategoryRef(
+                                id = it,
+                                name = team.ratingCategoryName!!,
+                                sortOrder = team.ratingCategorySortOrder
+                                    ?: RatingCategoryRef.UNCONFIGURED_SORT_ORDER,
+                            )
+                        },
                         mixedTeamTerm = mixedTeamTerm,
                     )
                 }
@@ -229,8 +238,10 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
 )
 
 
-fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) = KIO.ok(
+fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int, categoryPlace: Int?) = KIO.ok(
     CompetitionTeamPlaceDto(
+        ratingCategory = ratingCategory,
+        categoryPlace = categoryPlace,
         competitionRegistrationId = competitionRegistration,
         teamNumber = teamNumber!!, // This should not be null because competition_match_teams are not created if the registration teamNumber is missing
         teamName = registrationName,

@@ -28,6 +28,7 @@ import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollLogic
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollService
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
@@ -37,6 +38,8 @@ import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarg
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RankedCategory
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
@@ -84,6 +87,7 @@ import de.lambda9.ready2race.backend.xls.XLSReadError
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
@@ -95,15 +99,22 @@ import de.lambda9.ready2race.backend.validation.fold
 
 object CompetitionExecutionService {
 
+    private val logger = KotlinLogging.logger {}
+
     /** Separates competition short name and rating category where both share one export column. */
     private const val RATING_SEPARATOR = "·"
 
+    /**
+     * Die Läufe der Veranstaltung, wahlweise gefiltert nach [activated]: true liefert die an den
+     * Start gerufenen, false die übrigen. Ob ein aufgerufener Lauf auch schon unterwegs ist, sagt
+     * dieser Filter bewusst nicht - dafür gibt es den abgeleiteten Zustand.
+     */
     fun getMatchesByEvent(
         eventId: UUID,
-        currentlyRunning: Boolean? = null,
+        activated: Boolean? = null,
         withoutPlaces: Boolean? = null
     ): App<ServiceError, ApiResponse.ListDto<MatchForRunningStatusDto>> = KIO.comprehension {
-        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces).orDie()
+        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, activated, withoutPlaces).orDie()
         KIO.ok(ApiResponse.ListDto(matches))
     }
 
@@ -322,10 +333,19 @@ object CompetitionExecutionService {
         noData
     }
 
+    /**
+     * Der Stand der Durchführung: Runden, Läufe, Ergebnisse, Steg-Scans.
+     *
+     * Antwortet mit ETag, weil die Durchführungsseite diesen Endpunkt im eingestellten Takt abruft
+     * (siehe `event.execution_auto_refresh`). Ein unveränderter Stand kommt dann als 304 ohne
+     * Rumpf zurück, und die Seite rührt ihren State nicht an - das ist der Unterschied zwischen
+     * einem Abgleich, der nebenbei läuft, und einem, der alle fünf Sekunden das Rendern auslöst.
+     * Gespart wird die Übertragung, nicht die Abfrage.
+     */
     fun getProgress(
         eventId: UUID,
         competitionId: UUID,
-    ): App<ServiceError, ApiResponse.Dto<CompetitionExecutionProgressDto>> =
+    ): App<ServiceError, ApiResponse.ETagged<CompetitionExecutionProgressDto>> =
         KIO.comprehension {
             val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
@@ -346,10 +366,10 @@ object CompetitionExecutionService {
 
             val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
 
-            // Letzter Steg-Scan je Person dieses Wettkampfs — Grundlage des Wasser-Chips. Dieselbe
+            // Letzter Steg-Scan je Person dieses Wettkampfs — Grundlage des Arena-Chips. Dieselbe
             // Reduktion wie im Schiedsrichter-Dashboard (LiveDashboardService): die Abfrage liefert
             // alle Scans flach, der letzte je Person zählt. Bleibt die Karte leer, läuft die
-            // Veranstaltung ohne Check-in und der Chip entfällt (teamsOnWater = null).
+            // Veranstaltung ohne Check-in und der Chip entfällt (teamsInArena = null).
             val lastScanByParticipant = !CompetitionMatchRepo.getScansByCompetition(eventId, competitionId).orDie()
                 .map { scans ->
                     scans.groupBy { it[PARTICIPANT_TRACKING.PARTICIPANT]!! }
@@ -363,7 +383,7 @@ object CompetitionExecutionService {
                 round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
                     .toCompetitionRoundDto(event.mixedTeamTerm, lastScanByParticipant)
             }.map {
-                ApiResponse.Dto(
+                ApiResponse.ETagged(
                     CompetitionExecutionProgressDto(
                         rounds = it,
                         canNotCreateRoundReasons,
@@ -567,7 +587,7 @@ object CompetitionExecutionService {
      * Setzt alle Plätze eines Laufs zurück, damit eine neue Ergebnis-Eingabe nicht auf alten
      * Werten aufsetzt.
      *
-     * Rührt `currently_running` NICHT MEHR an (C1): egal ob die Ergebnisse aus der manuellen
+     * Rührt `activated_at` NICHT MEHR an (C1): egal ob die Ergebnisse aus der manuellen
      * Eingabe, einem Datei-Upload oder dem RaceClocker-Pull vollständig sind, der Lauf bleibt
      * aktiv, bis ein aktives Beenden ihn stempelt (`LiveDashboardService.finishMatch` bzw.
      * `EventScheduleService.finishSlot`). Vorher deaktivierte diese Funktion einen Lauf mit
@@ -1047,6 +1067,20 @@ object CompetitionExecutionService {
             )
         }
 
+        // Neustart in RaceClocker: keine Zeile trägt mehr eine gemessene Startzeit oder ein Ergebnis.
+        // Der Zeitnehmer setzt eine Welle zurück, wenn ein Start ungültig war; der Feed sagt danach,
+        // dieser Lauf sei nie gefahren, und ready2race übernimmt diese Aussage - sonst stünden Zeiten
+        // und Plätze des ungültigen Laufs weiter da, während RaceClocker längst neu misst.
+        //
+        // Die Bedingung ist bewusst dieselbe wie beim Aktivieren ([RaceClockerPollLogic.startDetected]),
+        // nur andersherum gelesen: Was einen Lauf starten lässt, hält ihn auch gestartet. Ohne die
+        // Startzeit im Zweig träfe der Reset den Normalfall "alle noch auf dem Wasser" - dort trägt
+        // ebenfalls keine Zeile ein Ergebnis - und nähme einem laufenden Rennen die bereits
+        // eingelaufenen Boote wieder weg.
+        if (!RaceClockerPollLogic.startDetected(rowsByTeam.values.flatten())) {
+            return@comprehension resetRaceClockerResults(matchId, rowsByTeam.keys, userId)
+        }
+
         // Crews without a usable result are skipped rather than treated as an error, so the pull can
         // be repeated as the heat progresses. "Ohne Ergebnis" heißt hier: weder Zeit noch echte
         // Ausscheidung - RaceClocker schreibt in dieselbe Spalte auch Verlaufszustände (`Not started`,
@@ -1100,6 +1134,60 @@ object CompetitionExecutionService {
         }
 
         applyParsedTeamResults(match, matchId, parsed, userId)
+    }
+
+    /**
+     * Nimmt einem Lauf alles zurück, was aus einem gefahrenen Rennen stammt: Zeit, Platz,
+     * Ausscheidung, Strafzeit und den Ist-Start.
+     *
+     * Angefasst werden nur die Mannschaften, deren Zeilen im Feed stehen ([registrationIds]) - ein
+     * Boot, das RaceClocker gar nicht kennt, hat sein Ergebnis von Hand bekommen und geht diesen Weg
+     * nichts an.
+     *
+     * Die Bahnen bleiben stehen: Die Zeilen stehen weiterhin im Feed, nur ohne Zeiten, und bis der
+     * Zeitnehmer sie umsortiert, ist die Aufstellung des neuen Versuchs dieselbe. `activated_at`
+     * bleibt ebenfalls unangetastet - ein Schiedsrichter hat den Lauf an den Start gerufen, und dass
+     * die Zeitnahme neu aufsetzt, nimmt ihm diese Entscheidung nicht ab.
+     */
+    private fun resetRaceClockerResults(
+        matchId: UUID,
+        registrationIds: Set<UUID>,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        val now = LocalDateTime.now()
+
+        !registrationIds.toList().traverse { registrationId ->
+            KIO.comprehension {
+                val record = !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(matchId, registrationId).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+
+                // Der Fremdschlüssel steht auf `on delete set null`; die Spalte wird unten trotzdem
+                // ausdrücklich geleert, damit hier nicht zwei Stellen dasselbe zusagen müssen.
+                !TimecodeRepo.delete(record.id).orDie()
+
+                CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
+                    place = null
+                    placesCalculated = false
+                    failed = false
+                    failedReason = null
+                    timecode = null
+                    penaltySeconds = null
+                    penaltyNote = null
+                    updatedBy = userId
+                    updatedAt = now
+                }.orDie()
+            }
+        }
+
+        !CompetitionMatchRepo.update(matchId) {
+            startedAt = null
+            updatedBy = userId
+            updatedAt = now
+        }.orDie()
+
+        logger.info { "RaceClocker hat den Lauf $matchId zurückgesetzt - Zeiten, Plätze und Ist-Start gelöscht." }
+
+        noData
     }
 
     /**
@@ -1179,25 +1267,73 @@ object CompetitionExecutionService {
         waveName: String?,
     ): List<RaceClockerFeedRow> = assignFeedRows(rows, teams, waveName).values.flatten()
 
-    fun updateMatchRunningState(
+    fun updateMatchActivation(
         matchId: UUID,
         userId: UUID,
-        request: UpdateCompetitionMatchRunningStateRequest,
+        request: UpdateCompetitionMatchActivationRequest,
         eventId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
-        !CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = request.currentlyRunning
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie()
+        !setMatchActivation(matchId, request.activated, userId)
 
         noData
     }
 
+    /**
+     * Ruft einen Lauf an den Start oder nimmt das zurück — die eine Stelle für beide Wege dorthin
+     * (Durchführungs-Tab über [updateMatchActivation], Schiedsrichter-Dashboard über
+     * `LiveDashboardService.setMatchActivated`, dazu die Legacy-Aktivierung nach dem Beenden).
+     *
+     * Aktivieren setzt ausschließlich `activated_at`: Der Klick stellt fest, dass der Lauf
+     * drankommt, nicht dass er fährt. Der Ist-Start kommt aus der Zeitnahme oder aus
+     * `LiveDashboardService.markMatchStarted`. Ein erneutes Aktivieren rückt den Zeitpunkt nicht
+     * vor — "seit wann steht der Lauf am Start" soll nicht bei jedem Klick neu beginnen.
+     *
+     * Deaktivieren nimmt beides zurück und pausiert zugleich den automatischen RaceClocker-Abruf.
+     * Ohne die Pause wäre die Rücknahme wirkungslos: Der Lauf steht im Beobachtungsfenster, der Job
+     * findet die Startzeit im Feed und aktiviert ihn im nächsten Takt wieder — spätestens nach 60
+     * Sekunden. Freigegeben wird er über denselben Weg wie ein von Hand eingetragener Lauf
+     * ([resumeRaceClockerAutoPull]).
+     *
+     * Die Funktion steht hier und nicht im Live-Dashboard, weil dieser Service ohnehin die
+     * Schreibpfade auf `competition_match` hält (Ergebnisse, Pause, Freigabe) und
+     * [pauseRaceClockerAutoPull] samt seiner Bedingung schon hier liegt; das Dashboard importiert
+     * ihn längst. Die Alternative — die Logik im Dashboard und von hier aus aufrufen — hätte die
+     * Abhängigkeit nur umgedreht und die Pause von ihrer Bedingung getrennt.
+     *
+     * Beenden geht bewusst NICHT über diesen Weg: Dort fällt zwar auch die Aktivierung, aber der
+     * Ist-Start bleibt stehen (er ist eine Tatsache) und pausiert werden darf nichts.
+     */
+    fun setMatchActivation(matchId: UUID, activated: Boolean, userId: UUID): App<Nothing, Unit> =
+        KIO.comprehension {
+            val now = LocalDateTime.now()
+            !CompetitionMatchRepo.update(matchId) {
+                if (activated) {
+                    if (activatedAt == null) {
+                        activatedAt = now
+                    }
+                } else {
+                    activatedAt = null
+                    startedAt = null
+                }
+                updatedBy = userId
+                updatedAt = now
+            }.orDie()
+
+            if (!activated) {
+                !pauseRaceClockerAutoPull(matchId)
+
+                // Ohne das Vergessen des Merkpostens überspränge der nächste Takt die Änderung: Der
+                // Job hält je Lauf den zuletzt geschriebenen Stand, und der beschreibt nach der
+                // Rücknahme nicht mehr, was in der Datenbank steht.
+                RaceClockerPollService.forget(matchId)
+            }
+
+            unit
+        }
 
     fun deleteCurrentRound(
         competitionId: UUID,
@@ -1460,6 +1596,39 @@ object CompetitionExecutionService {
         KIO.ok(result)
     }
 
+    /**
+     * Ein platziertes Boot mit beiden Plätzen nebeneinander: [place] wettkampfweit aus der
+     * Rundenlogik, [categoryPlace] innerhalb seiner Wertungskategorie.
+     */
+    data class PlaceInCategory(
+        val team: CompetitionMatchTeamWithRegistration,
+        val place: Int,
+        val categoryPlace: Int?,
+    )
+
+    /**
+     * Gliedert die Platzierungen eines Wettkampfs in Abschnitte je Wertungskategorie und zählt in
+     * jedem Abschnitt neu ab 1. [computeCompetitionPlaces] selbst bleibt unberührt und liefert
+     * weiter die wettkampfweite Platzierung — daran hängen die Urkunden.
+     *
+     * Abgemeldete, ausgeschiedene und disqualifizierte Boote gelten hier als ungewertet: sie haben
+     * zwar einen rechnerischen Platz, aber keinen, der in einer Ergebnisliste etwas zu suchen hat.
+     * Sie behalten ihren Abschnitt und stehen dort am Ende.
+     */
+    fun placesByRatingCategory(
+        places: List<Pair<CompetitionMatchTeamWithRegistration, Int>>,
+    ): List<RankedCategory<PlaceInCategory>> =
+        RatingCategoryRanking.groupAndRank(
+            items = places.map { (team, place) -> PlaceInCategory(team, place, null) },
+            category = { it.team.ratingCategory },
+            place = { if (it.team.deregistered || it.team.out || it.team.failed) null else it.place },
+            tieBreak = { it.team.startNumber },
+        ).map { section ->
+            section.copy(
+                entries = section.entries.map { it.copy(item = it.item.copy(categoryPlace = it.categoryPlace)) }
+            )
+        }
+
     fun getCompetitionPlaces(
         eventId: UUID,
         competitionId: UUID,
@@ -1470,9 +1639,11 @@ object CompetitionExecutionService {
 
         computeCompetitionPlaces(competitionId)
             .andThen { places ->
-                places
-                    .sortedBy { it.second }
-                    .traverse { it.first.toCompetitionTeamPlaceDto(it.second) }
+                // In Abschnittsreihenfolge, innerhalb des Abschnitts nach Kategorieplatz - die
+                // Anzeige gruppiert die flache Liste danach wieder auf.
+                placesByRatingCategory(places)
+                    .flatMap { it.entries.map { entry -> entry.item } }
+                    .traverse { it.team.toCompetitionTeamPlaceDto(it.place, it.categoryPlace) }
             }.map {
                 ApiResponse.ListDto(
                     it
@@ -1959,10 +2130,17 @@ object CompetitionExecutionService {
                 optionalColumn(config.colTeamRatingCategory) { ratingCategory?.name ?: "" }
                 optionalColumn(config.colTeamClub) { actualClubName ?: registeringClubName }
 
-                // Die Wellen-Name-Formatierung (Startzeit + Name) MUSS mit CompetitionMatchRepo.
-                // getForRaceClockerPull übereinstimmen (siehe WaveName) - sonst greift dessen
-                // Fallback-Filter über den Wellen-Namen beim Ergebnis-Pull nicht mehr.
-                optionalColumn(config.colMatchName) { WaveName.format(data.matchName, data.startTime) ?: "" }
+                // Die Wellen-Name-Formatierung (Startzeit + Wettkampf + Name) MUSS mit
+                // CompetitionMatchRepo.getForRaceClockerPull übereinstimmen (siehe WaveName) - sonst
+                // greift dessen Fallback-Filter über den Wellen-Namen beim Ergebnis-Pull nicht mehr.
+                optionalColumn(config.colMatchName) {
+                    WaveName.format(
+                        matchName = data.matchName,
+                        startTime = data.startTime,
+                        competitionIdentifier = data.competition.identifier,
+                        competitionShortName = data.competition.shortName,
+                    ) ?: ""
+                }
                 optionalColumn(config.colMatchStartTime) { idx ->
                     val offsetSeconds = idx * (data.startTimeOffset ?: 0)
                     data.startTime?.plusSeconds(offsetSeconds)

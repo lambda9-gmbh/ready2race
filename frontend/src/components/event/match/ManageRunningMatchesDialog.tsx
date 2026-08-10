@@ -11,7 +11,7 @@ import {
 import {Close} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {useFetch} from '@utils/hooks.ts'
-import {getEventMatches, updateMatchRunningState} from '@api/sdk.gen.ts'
+import {getEventMatches, updateMatchActivation} from '@api/sdk.gen.ts'
 import {MatchForRunningStatusDto} from '@api/types.gen.ts'
 import {useEffect, useState} from 'react'
 import DragDropMatchLists from './DragDropMatchLists.tsx'
@@ -43,8 +43,10 @@ const ManageRunningMatchesDialog = ({open, onClose, eventId}: ManageRunningMatch
 
     useEffect(() => {
         if (matches) {
-            setRunningMatches(matches.filter(m => m.currentlyRunning))
-            setAvailableMatches(matches.filter(m => !m.currentlyRunning))
+            // Aktiviert heißt „an den Start gerufen" — der Zeitstempel tritt an die Stelle des
+            // früheren Flags, die Aussage der beiden Listen bleibt dieselbe.
+            setRunningMatches(matches.filter(m => m.activatedAt != null))
+            setAvailableMatches(matches.filter(m => m.activatedAt == null))
         }
     }, [matches])
 
@@ -57,15 +59,15 @@ const ManageRunningMatchesDialog = ({open, onClose, eventId}: ManageRunningMatch
 
             if (!match) return
 
-            // Update the match running state
-            await updateMatchRunningState({
+            // Update the match activation
+            await updateMatchActivation({
                 path: {
                     eventId,
                     competitionId: match.competitionId,
                     competitionMatchId: matchId,
                 },
                 body: {
-                    currentlyRunning: toRunning,
+                    activated: toRunning,
                 },
             })
 
@@ -74,20 +76,20 @@ const ManageRunningMatchesDialog = ({open, onClose, eventId}: ManageRunningMatch
                 const matchToMove = availableMatches.find(m => m.id === matchId)
                 if (matchToMove) {
                     setAvailableMatches(availableMatches.filter(m => m.id !== matchId))
-                    setRunningMatches([...runningMatches, {...matchToMove, currentlyRunning: true}])
+                    setRunningMatches([
+                        ...runningMatches,
+                        {...matchToMove, activatedAt: new Date().toISOString()},
+                    ])
                 }
             } else {
                 const matchToMove = runningMatches.find(m => m.id === matchId)
                 if (matchToMove) {
                     setRunningMatches(runningMatches.filter(m => m.id !== matchId))
-                    setAvailableMatches([
-                        ...availableMatches,
-                        {...matchToMove, currentlyRunning: false},
-                    ])
+                    setAvailableMatches([...availableMatches, {...matchToMove, activatedAt: null}])
                 }
             }
         } catch (error) {
-            console.error('Failed to update match running state:', error)
+            console.error('Failed to update match activation:', error)
         } finally {
             setSaving(false)
         }

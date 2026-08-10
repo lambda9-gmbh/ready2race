@@ -43,6 +43,12 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
                 return theme.palette.success.main
             case 'running':
                 return theme.palette.primary.main
+            // Eigener Ton für den Lauf am Start, aber bewusst nicht `info.main`: den trägt schon
+            // "wartet auf Beenden", und zwei gleich eingefärbte Balken nebeneinander wären keine
+            // Unterscheidung mehr. Der helle Ton bleibt in derselben Farbfamilie wie der
+            // "In Vorbereitung"-Chip (MUI-Farbe `info`).
+            case 'preparing':
+                return theme.palette.info.light
             // Eigener Ton, weder "läuft" noch "beendet": der Lauf ist gewertet, aber der
             // Beenden-Klick fehlt noch - auf dem Balken soll genau das auffallen.
             case 'awaitingFinish':

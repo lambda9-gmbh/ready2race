@@ -27,6 +27,7 @@ import de.lambda9.ready2race.backend.app.task.boundary.task
 import de.lambda9.ready2race.backend.app.participantTracking.boundary.participantTracking
 import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryService
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoriesToEventRequest
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryOrderRequest
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -102,10 +103,12 @@ fun Route.event() {
                 call.respondComprehension {
                     !authenticate(Privilege.ReadEventGlobal)
                     val eventId = !pathParam("eventId", uuid)
-                    val currentlyRunning = !optionalQueryParam("currentlyRunning", boolean)
+                    // "activated" statt "laufend": gefragt wird, ob der Lauf an den Start
+                    // gerufen ist - ob er auch schon unterwegs ist, sagt der abgeleitete Zustand.
+                    val activated = !optionalQueryParam("activated", boolean)
                     val withoutPlaces = !optionalQueryParam("withoutPlaces", boolean)
 
-                    CompetitionExecutionService.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces)
+                    CompetitionExecutionService.getMatchesByEvent(eventId, activated, withoutPlaces)
                 }
             }
 
@@ -185,6 +188,15 @@ fun Route.event() {
                         val eventId = !pathParam("eventId", uuid)
 
                         RatingCategoryService.getRatingCategoriesForEvent(eventId)
+                    }
+                }
+                put("/order") {
+                    call.respondComprehension {
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val eventId = !pathParam("eventId", uuid)
+                        val body = !receiveKIO(RatingCategoryOrderRequest.example)
+
+                        RatingCategoryService.updateOrderForEvent(eventId, user.id!!, body)
                     }
                 }
                 route("/{ratingCategoryId}") {

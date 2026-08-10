@@ -19,7 +19,11 @@ class ScheduleChainTest {
         matchId: UUID? = null,
         finished: Boolean = false,
         open: Boolean = true,
-    ) = ChainSlot(UUID.randomUUID(), base.plusMinutes(min), state, matchId, finished, open)
+        activatedAt: LocalDateTime? = null,
+        startedAt: LocalDateTime? = null,
+    ) = ChainSlot(
+        UUID.randomUUID(), base.plusMinutes(min), state, matchId, finished, open, activatedAt, startedAt,
+    )
 
     @Test
     fun activatesTheNextLinkedOpenMatch() {
@@ -103,7 +107,8 @@ class ScheduleChainTest {
         val finished = ChainSlot(UUID.randomUUID(), t, LINKED, UUID.randomUUID(), matchFinished = true, matchOpen = false)
         val stillRunning = ChainSlot(
             UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
-            matchFinished = false, matchOpen = true, currentlyRunning = true,
+            matchFinished = false, matchOpen = true,
+            matchActivatedAt = t.minusMinutes(5), matchStartedAt = t,
         )
         val next = ChainSlot(
             UUID.randomUUID(), base.plusMinutes(20), LINKED, UUID.randomUUID(),
@@ -142,7 +147,8 @@ class ScheduleChainTest {
         val t = base.plusMinutes(10)
         val scoredButNotFinished = ChainSlot(
             UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
-            matchFinished = false, matchOpen = true, currentlyRunning = true,
+            matchFinished = false, matchOpen = true,
+            matchActivatedAt = t.minusMinutes(5), matchStartedAt = t,
         )
         val next = ChainSlot(
             UUID.randomUUID(), base.plusMinutes(20), LINKED, UUID.randomUUID(),
@@ -160,7 +166,8 @@ class ScheduleChainTest {
         val t = base.plusMinutes(10)
         val finished = ChainSlot(
             UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
-            matchFinished = true, matchOpen = false, currentlyRunning = true,
+            matchFinished = true, matchOpen = false,
+            matchActivatedAt = t.minusMinutes(5), matchStartedAt = t,
         )
         val m = UUID.randomUUID()
         val next = ChainSlot(
@@ -169,6 +176,48 @@ class ScheduleChainTest {
         )
 
         assertEquals(ChainDecision.Activate(listOf(m)), ScheduleChain.decideNext(listOf(finished, next)))
+    }
+
+    // --- nur der Ist-Start blockiert, nicht schon die Aktivierung ---
+    //
+    // Seit der Trennung von Aktivierung und Ist-Start (Entwurf 09.08.2026) heißt "läuft noch"
+    // matchStartedAt != null. Ein Lauf, den die Kette an den Start gerufen hat, dessen Boote aber
+    // noch am Steg liegen, hält die nächste Startgruppe nicht auf.
+
+    @Test
+    fun anActivatedButUnstartedSiblingDoesNotBlockTheGroup() {
+        // Der einzige Slot ist bereits aktiviert und damit nicht mehr aktivierbar - NothingToDo ist
+        // hier richtig. Geprüft wird, dass die Entscheidung NICHT schon an siblingStillRunning
+        // hängen bleibt, sondern die Suche in der nächsten Gruppe fortsetzen würde.
+        val decision = ScheduleChain.decideNext(
+            listOf(slot(10, LINKED, UUID.randomUUID(), activatedAt = base.plusMinutes(5))),
+        )
+        assertIs<ChainDecision.NothingToDo>(decision)
+    }
+
+    @Test
+    fun aTrulyStartedSiblingBlocksTheGroup() {
+        val t = base.plusMinutes(10)
+        val running = ChainSlot(
+            UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
+            matchFinished = false, matchOpen = true,
+            matchActivatedAt = t.minusMinutes(5), matchStartedAt = t.plusMinutes(1),
+        )
+        val activatable = ChainSlot(
+            UUID.randomUUID(), t, LINKED, UUID.randomUUID(),
+            matchFinished = false, matchOpen = true,
+        )
+
+        assertIs<ChainDecision.NothingToDo>(ScheduleChain.decideNext(listOf(running, activatable)))
+    }
+
+    @Test
+    fun theChainAdvancesWhenTheGroupHoldsOnlyPreparedMatches() {
+        val prepared = slot(10, LINKED, UUID.randomUUID(), activatedAt = base.plusMinutes(5))
+        val m = UUID.randomUUID()
+        val next = slot(20, LINKED, m)
+
+        assertEquals(ChainDecision.Activate(listOf(m)), ScheduleChain.decideNext(listOf(prepared, next)))
     }
 
     @Test

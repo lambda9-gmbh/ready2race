@@ -59,7 +59,7 @@ export const useFetch = <T, E, R = T>(
     useEffect(() => {
         if (options?.preCondition?.() != false) {
             const controller = new AbortController()
-            const timer = ifDefined(options?.autoReloadInterval, i => setTimeout(reload, i))
+            let timer: ReturnType<typeof setTimeout> | null = null
             setResult(prev => ({...prev, pending: true}))
             ;(async () => {
                 try {
@@ -91,6 +91,18 @@ export const useFetch = <T, E, R = T>(
                         } else {
                             throw error
                         }
+                    }
+                } finally {
+                    // Der nächste Takt zählt ab der Antwort, nicht ab dem Absenden. Beides hält
+                    // Anfragen davon ab, sich zu überlappen — aber ein Wecker, der beim Absenden
+                    // gestellt wird, bricht auf einer langsamen Verbindung jede Anfrage ab, bevor
+                    // sie ankommt: Die Seite holt dann nie wieder etwas und merkt es nicht einmal,
+                    // weil ein Abbruch kein Fehler ist. So wartet der Takt auf die Antwort.
+                    //
+                    // Nach einem Abbruch (Seitenwechsel, geänderte deps) wird kein Wecker mehr
+                    // gestellt: Der Nachfolger dieses Effekts stellt seinen eigenen.
+                    if (!controller.signal.aborted) {
+                        timer = ifDefined(options?.autoReloadInterval, i => setTimeout(reload, i))
                     }
                 }
             })()

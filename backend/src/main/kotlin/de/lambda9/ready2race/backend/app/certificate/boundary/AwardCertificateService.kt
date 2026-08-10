@@ -7,6 +7,8 @@ import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateErro
 import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateOptions
 import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateParticipant
 import de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateTeam
+import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
+import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.GapPlaceholderLogic
@@ -24,7 +26,6 @@ import de.lambda9.ready2race.backend.docx.gapDocumentsDocx
 import de.lambda9.ready2race.backend.docx.toByteArray
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.gapDocuments
-import de.lambda9.ready2race.backend.singletonOrFallback
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -132,8 +133,20 @@ object AwardCertificateService {
                     val places = !CompetitionExecutionService.computeCompetitionPlaces(competition.id!!)
 
                     val teams = places.map { (team, place) ->
-                        val clubs = team.participants.map { it.externalClubName }.toSet()
-                        val clubName = singletonOrFallback(clubs, team.mixedTeamTerm) ?: team.clubName
+                        // Die Urkunde zeigt die Vereine der Athleten in voller Länge und ohne jede
+                        // Kürzung - auch ohne heuristische (deshalb [ClubShortNameSettings.none],
+                        // ohne jede gepflegte Kurzform und ohne Regel): sie geht in die Hand des
+                        // Ruderers und hängt danach im Bootshaus, da hat "RC Nürtingen" nichts
+                        // verloren. Aus demselben Grund lädt die Urkunde die Einstellungen gar
+                        // nicht erst. Bis zum 09.08.2026 stand hier bei gemischter Crew das
+                        // pauschale "Renngemeinschaft".
+                        val clubs = ClubComposition.of(
+                            team.participants.map {
+                                ClubComposition.clubWorn(it.external, it.externalClubName, it.clubName)
+                            },
+                            ClubShortNameSettings.none,
+                        )
+                        val clubName = clubs.full.ifEmpty { null } ?: team.clubName
 
                         AwardCertificateTeam(
                             place = place,
@@ -141,6 +154,7 @@ object AwardCertificateService {
                             teamName = team.registrationName,
                             result = team.timeString,
                             startNumber = team.startNumber,
+                            ratingCategory = team.ratingCategory?.name,
                             excluded = team.deregistered || team.out || team.failed,
                             participants = team.participants.map {
                                 AwardCertificateParticipant(
@@ -195,6 +209,7 @@ object AwardCertificateService {
                     eventName = event.name,
                     eventLocation = event.location,
                     eventDate = eventDate,
+                    printRatingCategory = options.printRatingCategory,
                 ),
             )
         }
@@ -234,6 +249,9 @@ object AwardCertificateService {
                 gapDocumentsDocx(
                     templatePageSizes = listOf(DocxPageSize(width, height)),
                     fontName = template.fontName,
+                    // Dieselbe Schriftdatei wie im PDF-Zweig darüber - sie wird hier nur gemessen,
+                    // damit der Umbruch in beiden Formaten an denselben Stellen sitzt.
+                    font = template.fontData,
                     certificates = pages,
                 ).toByteArray()
             }

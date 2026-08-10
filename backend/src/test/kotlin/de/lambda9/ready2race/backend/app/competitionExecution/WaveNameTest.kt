@@ -11,27 +11,38 @@ class WaveNameTest {
     private val startTime = LocalDateTime.of(2026, 8, 17, 10, 30)
 
     @Test
-    fun prependsTheFormattedStartTimeWhenSet() {
-        assertEquals("10:30 AF1", WaveName.format("AF1", startTime))
+    fun joinsTimeCompetitionAndMatchName() {
+        assertEquals("10:30 | 12 JM4x | AF1", WaveName.format("AF1", startTime, "12", "JM4x"))
     }
 
     @Test
-    fun leavesTheNameUnchangedWithoutAStartTime() {
-        assertEquals("AF1", WaveName.format("AF1", null))
+    fun dropsTheShortNameWhenTheCompetitionHasNone() {
+        assertEquals("10:30 | 12 | AF1", WaveName.format("AF1", startTime, "12", null))
+        assertEquals("10:30 | 12 | AF1", WaveName.format("AF1", startTime, "12", "  "))
     }
 
     @Test
-    fun staysNullWithoutAStartTimeAndWithoutAName() {
-        assertNull(WaveName.format(null, null))
+    fun dropsTheTimeBlockWithoutAStartTime() {
+        assertEquals("12 JM4x | AF1", WaveName.format("AF1", null, "12", "JM4x"))
     }
 
     @Test
-    fun fallsBackToJustTheTimeWithoutAMatchName() {
-        assertEquals("10:30", WaveName.format(null, startTime))
+    fun dropsTheMatchNameBlockWithoutAMatchName() {
+        assertEquals("10:30 | 12 JM4x", WaveName.format(null, startTime, "12", "JM4x"))
+    }
+
+    @Test
+    fun dropsTheCompetitionBlockWhenNeitherIdentifierNorShortNameIsKnown() {
+        assertEquals("10:30 | AF1", WaveName.format("AF1", startTime, null, null))
+    }
+
+    @Test
+    fun staysNullWhenNothingIsKnown() {
+        assertNull(WaveName.format(null, null, null, null))
     }
 
     @Test
     fun padsHoursAndMinutesToTwoDigits() {
-        assertEquals("09:05 TT1", WaveName.format("TT1", LocalDateTime.of(2026, 8, 17, 9, 5)))
+        assertEquals("09:05 | 3 JM1x | TT1", WaveName.format("TT1", LocalDateTime.of(2026, 8, 17, 9, 5), "3", "JM1x"))
     }
 }
