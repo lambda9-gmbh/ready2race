@@ -561,7 +561,7 @@ sie prüfen, dass die Anzeige nichts behauptet, was sie nicht weiß.
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
 | M1 | Ein Vokabular, drei Oberflächen | Derselbe Freilos-Lauf trägt in Durchführung, Zeitplan und Schiedsrichter-Dashboard dieselbe Aussage. Alle drei lesen `status.bye` aus **einer** Ableitung (`MatchStatusLogic.deriveBye`) — sie können nicht auseinanderlaufen, aber sie können falsch abgeleitet sein | `87f85435` | |
-| M2 | Strukturelles Freilos | Ein Lauf, in den von vornherein nur ein Boot gesetzt wurde: Chip „Freilos · offen", darunter „Freilos – kein Gegner in dieser Runde". **Kein** „Anstehend", **kein** „Überfällig" | `87f85435` | |
+| M2 | Strukturelles Freilos | Ein Lauf, in den von vornherein nur ein Boot gesetzt wurde: Chip „Freilos · offen", in Zeitplan und Dashboard darunter „Freilos – kein Gegner in dieser Runde". **Kein** „Anstehend", **kein** „Überfällig". In der Durchführung steht bewusst nur der Chip im Panel — dort keinen Erklärungssatz suchen | `87f85435` | |
 | M3 | Freilos nach Abmeldung, mit Grund | Der Gegner ist mit gespeichertem Grund abgemeldet: „Freilos wegen Abmeldung – ⟨Verein⟩ (⟨Grund⟩)" in Zeitplan und Dashboard. Auch dann, wenn die Abmeldung in einer **früheren** Runde geschah und das Boot nur noch als `out`-Zeile mitläuft — genau dafür ist der Fall da | `87f85435` | |
 | M4 | Freilos nach Abmeldung, ohne Grund | Abmeldung ohne Freitext: derselbe Satz ohne Klammer, der Verein steht trotzdem da | `87f85435` | |
 | M5 | Zwei Abmeldungen im selben Lauf | Beide Vereine werden genannt, **der Grund entfällt** — die Zuordnung Name zu Grund wäre sonst geraten | `87f85435` | |
@@ -574,6 +574,7 @@ sie prüfen, dass die Anzeige nichts behauptet, was sie nicht weiß.
 | M12 | Durchführung: Panel statt Karte | Das Freilos steht im Panel „Teams mit Freilos", jetzt mit Statuschip in einer dritten Spalte, und **nicht** zusätzlich als Lauf-Karte. Gegenprobe: kein Lauf taucht doppelt auf, keiner verschwindet ganz | `87f85435` | |
 | M13 | Bedienung unverändert | Aktivier-Haken, „Ergebnisse eintragen", „Lauf beenden", „Runde entfällt", Startlisten und alle Rechte verhalten sich wie vor der Änderung — auch am Freilos | `87f85435` | |
 | M14 | Board-Poll bleibt ruhig | Bei einem Lauf mit zwei Abmeldungen darf die Namensreihenfolge zwischen zwei Abrufen nicht wechseln (fester `ORDER BY`); sonst kippt der ETag des Dashboards bei jedem Poll und die volle Nutzlast fließt neu | `87f85435` | |
+| M17 | Gegenprobe: kein Freilos, wo keins ist | Eine **verpflichtende** Runde mit einem einzigen Boot (Zeitrennen-Konstellation) trägt **keinen** Freilos-Chip und keinen Erklärungssatz — sie bleibt ein gewöhnlicher Lauf. Der billigste Handgriff, um eine falsch gespeiste Ableitung zu finden (etwa ein falsch gelesenes `round_required`) | `87f85435` | |
 
 **Zwei bekannte Abweichungen, die der Test bestätigen soll — beide bestanden schon vorher und werden
 durch die neue Anzeige nur sichtbar:**

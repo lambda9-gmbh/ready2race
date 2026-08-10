@@ -3,10 +3,15 @@ import {CompetitionMatchDto, CompetitionRoundDto} from '@api/types.gen.ts'
 /**
  * Die Aufteilung einer Runde in „gehört ins Freilos-Panel" und „bekommt eine Lauf-Karte".
  *
- * Beide fragen dasselbe Feld: `status.bye`, das der Server aus derselben Regel ableitet, nach der
- * er die Ergebniseingabe sperrt (`MatchStatusLogic.deriveBye`). Bis hierher stand die Regel ein
- * zweites Mal im Frontend als `teams.length === 1` — dieselbe Menge Läufe, aber eine zweite
- * Wahrheit, die auseinanderlaufen konnte.
+ * Beide fragen dasselbe Feld: `status.bye` aus `MatchStatusLogic.deriveBye`. Dessen Regel ist die
+ * dieses Panels — Runde nicht verpflichtend, genau eine nicht als `out` mitgeführte Mannschaft —,
+ * die bis hierher ein zweites Mal im Frontend als `teams.length === 1` stand: dieselbe Menge Läufe,
+ * aber eine zweite Wahrheit, die auseinanderlaufen konnte.
+ *
+ * **Nicht zu verwechseln mit der Ergebnissperre.** `CompetitionExecutionService.checkUpdateMatchResult`
+ * prüft die *ungefilterte* Teamliste und greift deshalb beim mitgeführten `out`-Gegner nicht — ein
+ * hier als Freilos angezeigter Lauf kann serverseitig weiter Ergebnisse annehmen. Das ist bekannt und
+ * steht als M16 im Testkatalog; siehe das KDoc von `deriveBye`.
  */
 export const byeMatches = (round: CompetitionRoundDto): CompetitionMatchDto[] =>
     round.matches.filter(match => match.status.bye != null).sort((a, b) => a.weighting - b.weighting)

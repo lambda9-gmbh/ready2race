@@ -140,9 +140,13 @@ die Ergebnisse erwarten lassen.
 
 Neues Modul `matchBye.ts` mit `byeExplanation(bye)` → Übersetzungsschlüssel und Werte:
 
-- `event.match.bye.deregistrationWithReason` — „Freilos wegen Abmeldung — {{team}} ({{reason}})"
-- `event.match.bye.deregistration` — „Freilos wegen Abmeldung — {{team}}"
+- `event.match.bye.deregistrationWithReason` — „Freilos wegen Abmeldung – {{team}} ({{reason}})"
+- `event.match.bye.deregistration` — „Freilos wegen Abmeldung – {{team}}"
 - `event.match.bye.noOpponent` — „Freilos – kein Gegner in dieser Runde"
+
+Im Deutschen und im Dänischen durchgehend der Halbgeviertstrich (–) als Gedankenstrich, im
+Englischen der Geviertstrich (—). Beide Sätze können im Zeitplan in derselben Spalte stehen; ein
+Wechsel zwischen ihnen läse sich als Tippfehler.
 
 ## 5. Die drei Ansichten
 
