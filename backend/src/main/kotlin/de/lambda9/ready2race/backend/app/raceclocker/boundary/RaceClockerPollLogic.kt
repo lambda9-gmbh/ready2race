@@ -88,18 +88,26 @@ object RaceClockerPollLogic {
      * laufenden Anzeige weg.
      *
      * Der Renntag steckt bewusst in dieser Regel und nicht im Abruf: Der Feed liefert nur die
-     * Uhrzeit, und ohne den Tag des Laufs läge ein am Vortag geplanter Lauf um Mitternacht falsch.
-     * [now] ist der Rückfall für Läufe ganz ohne geplante Startzeit.
+     * Uhrzeit. Den Tag dazu liefert [now] — es gewinnt das Datum (gestern, heute oder morgen), das
+     * den Stempel am nächsten an [now] heranrückt. Der Start ist gerade eben passiert, der Abruf
+     * läuft im Sekundentakt; näher als einen halben Tag liegt die Wahrheit immer. Der geplante
+     * Renntag taugt dafür ausdrücklich NICHT: Läuft ein Rennen an einem anderen Tag als geplant
+     * (Testbetrieb, verschobener Zeitplan), stünde der Ist-Start Tage daneben — in der Zukunft
+     * liegend wurde daraus „Läuft · 0 min", weil die Anzeige negative Laufzeiten auf 0 klemmt
+     * (beobachtet am 10.08.2026). Die Mitternachtsfälle deckt die Nächstliegend-Regel in beide
+     * Richtungen ab.
      */
     fun measuredStartFor(
         rows: List<RaceClockerFeedRow>,
         existingStartedAt: LocalDateTime?,
-        plannedStart: LocalDateTime?,
         now: LocalDateTime,
     ): LocalDateTime? = when {
         existingStartedAt != null -> null
-        else -> RaceClockerFeedRow.earliestStart(rows)
-            ?.atDate(plannedStart?.toLocalDate() ?: now.toLocalDate())
+        else -> RaceClockerFeedRow.earliestStart(rows)?.let { time ->
+            listOf(-1L, 0L, 1L)
+                .map { time.atDate(now.toLocalDate().plusDays(it)) }
+                .minBy { java.time.Duration.between(it, now).abs() }
+        }
     }
 
     /**

@@ -437,7 +437,6 @@ object RaceClockerPollService {
         val measuredStart = RaceClockerPollLogic.measuredStartFor(
             rows = assigned,
             existingStartedAt = candidate.startedAt,
-            plannedStart = candidate.startTime,
             now = now,
         )
         if (measuredStart != null) {

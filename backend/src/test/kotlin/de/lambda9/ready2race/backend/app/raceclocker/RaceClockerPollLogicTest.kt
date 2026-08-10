@@ -174,7 +174,6 @@ class RaceClockerPollLogicTest {
                     row(result = "In race...", start = LocalTime.of(10, 3)),
                 ),
                 existingStartedAt = null,
-                plannedStart = LocalDateTime.of(2026, 8, 14, 10, 0),
                 now = LocalDateTime.of(2026, 8, 14, 10, 5),
             )
         )
@@ -187,7 +186,6 @@ class RaceClockerPollLogicTest {
             RaceClockerPollLogic.measuredStartFor(
                 rows = listOf(row(result = "In race...", start = LocalTime.of(10, 3))),
                 existingStartedAt = LocalDateTime.of(2026, 8, 14, 10, 1),
-                plannedStart = LocalDateTime.of(2026, 8, 14, 10, 0),
                 now = LocalDateTime.of(2026, 8, 14, 10, 5),
             )
         )
@@ -200,33 +198,46 @@ class RaceClockerPollLogicTest {
             RaceClockerPollLogic.measuredStartFor(
                 rows = listOf(row(result = "3:21.4"), row(result = "Not started")),
                 existingStartedAt = null,
-                plannedStart = LocalDateTime.of(2026, 8, 14, 10, 0),
                 now = LocalDateTime.of(2026, 8, 14, 10, 5),
             )
         )
     }
 
     @Test
-    fun theRaceDayComesFromThePlanAndFallsBackToToday() {
-        // Der Feed liefert nur die Uhrzeit. Ohne den Tag des Laufs läge ein am Vortag geplanter
-        // Lauf um Mitternacht falsch - deshalb gehört die Ableitung in die Regel und nicht in den
-        // Abruf.
+    fun theRaceDayIsTheOneNearestToNow() {
+        // Der Feed liefert nur die Uhrzeit; den Tag bestimmt die Nähe zu `now`. Ein Lauf kurz vor
+        // Mitternacht, abgerufen kurz danach, gehört auf den Vortag …
         assertEquals(
-            LocalDateTime.of(2026, 8, 13, 18, 30),
+            LocalDateTime.of(2026, 8, 13, 23, 55),
             RaceClockerPollLogic.measuredStartFor(
-                rows = listOf(row(start = LocalTime.of(18, 30))),
+                rows = listOf(row(start = LocalTime.of(23, 55))),
                 existingStartedAt = null,
-                plannedStart = LocalDateTime.of(2026, 8, 13, 18, 25),
                 now = LocalDateTime.of(2026, 8, 14, 0, 10),
             )
         )
+        // … und der Normalfall auf heute.
         assertEquals(
             LocalDateTime.of(2026, 8, 14, 10, 3),
             RaceClockerPollLogic.measuredStartFor(
                 rows = listOf(row(start = LocalTime.of(10, 3))),
                 existingStartedAt = null,
-                plannedStart = null,
                 now = LocalDateTime.of(2026, 8, 14, 10, 5),
+            )
+        )
+    }
+
+    @Test
+    fun aRaceRunOnADifferentDayThanPlannedIsStampedOnTheDayItRan() {
+        // Der Fall vom 10.08.2026: Testlauf am Montagabend, geplant für Sonntag darauf. Mit dem
+        // geplanten Renntag stünde der Ist-Start sechs Tage in der Zukunft — die Anzeige klemmt
+        // negative Laufzeiten auf 0 und zeigte dauerhaft „Läuft · 0 min". Der Stempel gehört auf
+        // den Tag, an dem der Start tatsächlich gemessen wurde.
+        assertEquals(
+            LocalDateTime.of(2026, 8, 10, 22, 32, 9),
+            RaceClockerPollLogic.measuredStartFor(
+                rows = listOf(row(result = "In race...", start = LocalTime.of(22, 32, 9))),
+                existingStartedAt = null,
+                now = LocalDateTime.of(2026, 8, 10, 22, 33),
             )
         )
     }
