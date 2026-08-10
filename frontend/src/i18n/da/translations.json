@@ -151,7 +151,10 @@
       "step3": {
         "title": "Værdimappinger",
         "info": "Konfigurer, hvordan værdier i din CSV skal fortolkes.",
-        "valueMappings": "Værdimappinger"
+        "valueMappings": "Værdimappinger",
+        "valueWithCount": "{{value}} ({{count}} rækker)",
+        "selectedCount": "{{selected}} af {{total}} værdier valgt",
+        "nothingSelected": "Intet valgt — alle rækker tæller"
       },
       "error": {
         "noConfig": "Konfigurationen er ufuldstændig",
@@ -258,14 +261,22 @@
         "preview": {
           "title": "Forhåndsvisning af diplomskabeloner",
           "error": "Forhåndsvisningen kunne ikke indlæses.",
-          "show": "Vis diplom i forhåndsvisning"
+          "show": "Vis diplom i forhåndsvisning",
+          "approximate": "Visningen i editoren er en tilnærmelse. Det er forhåndsvisningen af den gemte skabelon, der er gældende."
         },
         "error": {
           "invalidFont": "Skrifttypefilen kunne ikke læses. Upload en gyldig TTF- eller OTF-fil.",
+          "invalidPdf": "Den valgte fil kan ikke læses som en PDF.",
+          "invalidPackage": "Pakken kan ikke læses. Den skal være en uændret .r2rtpl.zip-fil.",
+          "unsupportedPackageVersion": "Pakken stammer fra en nyere version. Opdater venligst ready2race.",
           "typeMismatch": "Skabelonen passer ikke til den dokumenttype, den skal tilknyttes.",
           "placeholderPageNotSupported": "Sejrsdiplomer har præcis én side — alle pladsholdere skal være på side 1.",
           "placeholderTypeNotSupported": "Denne pladsholder findes ikke for den valgte dokumenttype. Vælg en pladsholder fra typens liste."
-        }
+        },
+        "export": "Eksportér skabelon",
+        "exportHint": "Pakken indeholder PDF, pladsholdere og den gemte skrifttype.",
+        "import": "Importér skabelon",
+        "importSucceeded": "Skabelon importeret"
       },
       "placeholder": {
         "available": "Tilgængelige pladsholdere",
@@ -285,7 +296,8 @@
           "TEAM_NAME": "Holdnavn",
           "EVENT_DATE": "Arrangementdato",
           "EVENT_LOCATION": "Arrangementsted",
-          "FREE_TEXT": "Fri tekst"
+          "FREE_TEXT": "Fri tekst",
+          "RATING_CATEGORY": "Rangeringskategori"
         },
         "name": "Egen betegnelse (valgfrit)",
         "nameHelp": "En egen betegnelse til at identificere denne pladsholder",
@@ -298,6 +310,10 @@
         "page": "Side",
         "position": "Position",
         "size": "Størrelse",
+        "positionX": "X",
+        "positionY": "Y",
+        "width": "Bredde",
+        "height": "Højde",
         "fontSize": "Skriftstørrelse (pt)",
         "fontSizeHelp": "Lad stå tomt for at bruge højden af pladsholderboksen.",
         "bold": "Fed",
@@ -375,6 +391,52 @@
     }
   },
   "club": {
+    "tabs": {
+      "clubs": "Klubber",
+      "shortNames": "Korte navne",
+      "settings": "Indstillinger"
+    },
+    "shortName": {
+      "names": "Klubnavne",
+      "rules": {
+        "rules": "Forkortelsesregler",
+        "hint": "Bestemmer, hvordan et klubnavn automatisk forkortes. De gælder for listen nedenfor — en vedligeholdt post slår dem stadig.",
+        "removeYears": "Fjern stiftelsesår",
+        "removeBracketed": "Fjern parentestilføjelser med tal",
+        "wordPairs": "Ordpar",
+        "wordPairsHint": "En bestanddel og dens forkortelse, f.eks. Ruderverein → RV. Der erstattes ordnøjagtigt og uden hensyn til store og små bogstaver; stavevarianter som „Ruder-Verein“ kræver deres egen række.",
+        "removedTerms": "Sletteliste",
+        "removedTermsHint": "Bestanddele, der falder bort uden erstatning, f.eks. selskabsformen.",
+        "term": "Bestanddel",
+        "replacement": "Forkortelse",
+        "add": "Tilføj regel",
+        "moveUp": "Op",
+        "moveDown": "Ned",
+        "orderHint": "Rækkefølgen afgør: den længere sammensætning skal stå før den kortere.",
+        "saved": "Regel gemt",
+        "removed": "Regel fjernet",
+        "error": {
+          "rejected": "Angiv både bestanddel og forkortelse — og ingen bestanddel to gange."
+        }
+      },
+      "shortNames": "Klubforkortelser",
+      "dialogHint": "Hvordan klubben skrives på dommertavlen og atletvisningen. Udfyldt på forhånd med den automatisk dannede forkortelse; at tømme feltet betyder: dan den automatisk igen.",
+      "tableHint": "Bestemmer, hvordan en klub skrives på dommertavlen og atletvisningen. Uden en post dannes forkortelsen automatisk.",
+      "emptyHint": "At tømme feltet betyder: dan den automatisk igen. Ændringer gemmes, når du forlader feltet.",
+      "name": "Klubnavn",
+      "shortName": "Forkortelse",
+      "origin": "Oprindelse",
+      "also": "også: {{name}}",
+      "maintained": "vedligeholdt",
+      "automatic": "automatisk",
+      "filter": {
+        "all": "Alle klubber",
+        "event": "Kun klubber fra {{name}}"
+      },
+      "empty": "Der er endnu ingen klubnavne.",
+      "saved": "Forkortelse gemt",
+      "removed": "Forkortelse fjernet, den automatiske gælder igen"
+    },
     "nameLengthHint": "{{length}}/{{max}} tegn anbefales – længere navne forkortes i lister",
     "club": "Klub",
     "registrant": "Tilmeldende",
@@ -508,12 +570,37 @@
           "error": "Fejl ved check-out af deltager"
         },
         "noTeamsFound": "Ingen hold fundet",
+        "noCheckInOutNeeded": "ingen ind-/udtjekning nødvendig",
+        "noCheckInOutForAnyTeam": "Ingen af disse tilmeldinger bruger ind-/udtjekning.",
         "participantNotFound": "Deltager ikke fundet",
         "errorReason": {
           "alreadyCheckedIn": "Denne person er allerede tjekket ind — der er ikke mere at gøre.",
           "notCheckedIn": "Denne person er slet ikke tjekket ind og kan derfor ikke tjekkes ud.",
           "qrCodeNotAssociated": "Dette armbånd hører ikke til nogen deltager. Tildel det først til en person i QR-administrationen.",
-          "qrCodeNotFound": "Dette armbånd kendes ikke i systemet. Kontrollér koden, eller tag et andet armbånd."
+          "qrCodeNotFound": "Dette armbånd kendes ikke i systemet. Kontrollér koden, eller tag et andet armbånd.",
+          "entryNotFound": "Denne post findes ikke længere. Genindlæs forløbet.",
+          "sequenceConflict": "Med dette tidspunkt ville forløbet modsige sig selv: check-ind og check-ud skal skiftes og begynde med et check-ind.",
+          "timestampCollision": "Der findes allerede en post for denne person på præcis dette tidspunkt. Vælg et andet minut."
+        },
+        "manual": {
+          "title": "Check-ind/-ud for {{name}}",
+          "hint": "Normalt scannes QR-koden ved broen. Poster, der oprettes eller rettes manuelt her, er den dokumenterede undtagelse: de gemmes med begrundelse, tidligere status og ophavsmand og markeres som manuelle overalt.",
+          "entries": "Forløb",
+          "noEntries": "Der er endnu ikke registreret noget for denne person.",
+          "add": "Tilføj post manuelt",
+          "correct": "Ret post",
+          "reason": "Begrundelse",
+          "reasonHint": "Hvorfor indtastes dette manuelt? Teksten bliver permanent i loggen.",
+          "trail": "Ændringshistorik",
+          "changeCreated": "Oprettet manuelt: {{entry}}",
+          "sourceQr": "via QR",
+          "sourceQrCorrected": "via QR, rettet",
+          "sourceManual": "manuel",
+          "source": "Registrering",
+          "saved": "Post gemt",
+          "saveError": "Posten kunne ikke gemmes.",
+          "open": "Rediger check-ind/-ud",
+          "notTracked": "ingen scanning"
         }
       },
       "certificate": {
@@ -552,10 +639,11 @@
     "submissionNeedsVerification": "Indsendte resultater skal verificeres",
     "allowParticipantSelfRegistration": "Tillad deltageres selvregistrering",
     "chainProgressionMode": {
-      "label": "Kædetilstand",
-      "SCHIEDSRICHTER": "Dommer — afslut og kæde via dommer-dashboardet",
-      "REGATTABUERO": "Regattakontor — afslut og aktiver udelukkende via tidsplanen",
-      "DEAKTIVIERT": "Deaktiveret — ingen automatisk aktivering"
+      "label": "Afslut løb & aktivér det næste",
+      "SCHIEDSRICHTER": "Dommere afslutter i dashboardet — næste løb starter automatisk",
+      "REGATTABUERO": "Kun arrangørerne afslutter, via tidsplanen — næste løb starter automatisk",
+      "DEAKTIVIERT": "Dommere afslutter i dashboardet — næste løb aktiveres manuelt",
+      "hint": "Arrangørerne kan altid afslutte løb via tidsplanen, uanset denne indstilling."
     },
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
@@ -564,6 +652,11 @@
       "FINISHED_ONLY": "Kun afsluttede løb",
       "RESULTS_COMPLETE": "Også fuldt bedømte løb",
       "hint": "Gælder for atletskærmen, kiosk-visningen og den offentlige resultatside. Som standard kun afsluttede løb: så længe et løb ikke er afsluttet, kan der stadig komme en tidsstraf, og et allerede offentliggjort resultat kan ikke trækkes tilbage."
+    },
+    "executionAutoRefresh": {
+      "label": "Opdater gennemførelsessiden automatisk",
+      "seconds": "Interval i sekunder",
+      "hint": "Gennemførelsessiden henter tider, resultater, løb, rundeskift og check-ins i baggrunden i det indstillede interval — uden at genindlæse siden. Tilladt er 5 til 60 sekunder, standard er 5. Synkroniseringen hviler, mens en dialog er åben."
     },
     "invoice": {
       "prefix": "Fakturapræfiks",
@@ -606,6 +699,12 @@
     "competition": {
       "competition": "Konkurrence",
       "competitions": "Konkurrencer",
+      "navigation": {
+        "backToEvent": "Tilbage til arrangementet",
+        "filter": "Filtrér",
+        "showShortNames": "Vis korte navne",
+        "showLongNames": "Vis lange navne"
+      },
       "noCompetitionsAvailable": "Ingen konkurrencer tilgængelige",
       "identifier": "Identifikator",
       "name": "Navn",
@@ -614,6 +713,7 @@
       "ratingCategoryRequired": "Rangeringskategori påkrævet",
       "registrationCount": "Tilmeldinger",
       "shortName": "Kort navn",
+      "checkInOutRequired": "Kræver ind-/udtjekning i arenaen",
       "challenge": {
         "configs": "Challenge-indstillinger",
         "resultConfirmationImageRequired": "Bekræftelsesbillede for resultater påkrævet",
@@ -866,6 +966,10 @@
         "progress": {
           "error": "Kampene i konkurrencen kunne ikke indlæses."
         },
+        "autoRefresh": {
+          "lastUpdated": "Data fra {{time}}",
+          "disconnected": "Ingen forbindelse"
+        },
         "nextRound": {
           "create": "Opret næste runde",
           "error": "Næste runde kunne ikke oprettes",
@@ -921,7 +1025,7 @@
           "manageRunning": "Administrer igangværende kampe",
           "running": "Kører",
           "roundAndMatch": "Runde {{round}}, kamp {{match}}",
-          "currentlyRunning": "Kører lige nu",
+          "activated": "Ved start",
           "availableMatches": "Tilgængelige kampe",
           "noRunningMatches": "Ingen kampe kører i øjeblikket",
           "noAvailableMatches": "Ingen kampe klar til start"
@@ -1049,6 +1153,14 @@
               "duplicateTeams": "RaceClocker indeholder dublerede besætninger ({{teams}}). Ryd op der, og hent igen.",
               "noResults": "Der foreligger endnu ingen tider for dette heat i RaceClocker.",
               "matchIsBye": "Dette heat er en frirunde: holdet går videre uden at køre, så der er ingen resultater at hente."
+            },
+            "poll": {
+              "lastPolled": "Hentet automatisk: {{time}}",
+              "error": "Den automatiske hentning driller: {{reason}}",
+              "paused": "Automatisk hentning sat på pause — resultater blev indtastet manuelt.",
+              "resume": "Genoptag automatisk hentning",
+              "resumed": "Den automatiske hentning er aktiv igen.",
+              "duplicateTeams": "RaceClocker har dublerede besætninger. Hentning med knappen viser hvilke."
             }
           }
         },
@@ -1129,19 +1241,29 @@
         "system": "Tidtagningssystem",
         "systems": {
           "none": "ikke angivet",
-          "inherited": "Arrangementets standard ({{system}})",
           "raceclocker": "RaceClocker",
           "webscorer": "Webscorer"
         },
-        "inheritedHint": "Denne konkurrence bruger arrangementets tidtagning. Adresserne nedenfor er kun nødvendige, hvis den har sit eget RaceClocker-løb – ellers lad dem stå tomme.",
-        "inheritedUrl": "Arrangementets standard: {{url}}",
+        "eventDefaults": {
+          "title": "Arrangementets standard",
+          "unset": "ikke angivet",
+          "link": "Rediger arrangementets tidtagning"
+        },
+        "override": {
+          "label": "Angiv separat for denne konkurrence",
+          "hint": "Fra: konkurrencen følger arrangementet og overtager enhver senere ændring der. Til: den får sine egne værdier – kun relevant, hvis den har sit eget løb i tidtagningssystemet."
+        },
+        "presets": {
+          "title": "Filformater",
+          "hint": "Hvilke kolonner der eksporteres og importeres. Kun nødvendigt separat, hvis denne konkurrence kører ind i et andet løb i tidtagningssystemet."
+        },
         "raceclockerHint": "RaceClocker kræver to løb pr. konkurrence: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunden og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her. ready2race finder selv ud af, hvilken der gælder for et givet heat.",
         "timeTrialUrl": "Resultatadresse for enkeltstart",
         "heatsUrl": "Resultatadresse for heat",
-        "startlistQualification": "Startlistepreset til kvalifikation",
-        "startlistRounds": "Startlistepreset til øvrige runder",
-        "startlist": "Startlistepreset",
-        "resultImport": "Resultatimportpreset (xlsx)",
+        "startlistQualification": "Startliste-eksport til kvalifikation",
+        "startlistRounds": "Startliste-eksport til øvrige runder",
+        "startlist": "Startliste-eksport",
+        "resultImport": "Løbsresultater-import",
         "importHint": "RaceClocker-skabelonerne eksporterer uden overskriftsrække, fordi RaceClocker ellers importerer den som deltager. Tilknyt derfor kolonnerne efter deres rækkefølge ved import i RaceClocker – især den interne id til \"Extra info\".",
         "presetsHint": {
           "1": "Presets oprettes ",
@@ -1178,7 +1300,7 @@
       "yearsColName": "Kolonne med årgang",
       "clubColName": "Kolonne med klubnavn",
       "requirementColName": "Kolonne med deltagelsesbetingelse",
-      "requirementIsValidValue": "Gyldig værdi for deltagelsesbetingelse",
+      "requirementIsValidValues": "Gyldige værdier for deltagelsesbetingelse",
       "participantsOpen": "Åben",
       "participantsApproved": "Kontrolleret",
       "tableHint": {
@@ -1193,6 +1315,15 @@
         "content": "Skal godkendelsen af den kontrollerede deltagelsesbetingelse virkelig annulleres?",
         "ok": "Ja",
         "cancel": "Nej"
+      },
+      "openExportAction": "Eksportér manglende betingelser",
+      "openExport": {
+        "title": "Eksportér manglende betingelser",
+        "description": "Opretter et regneark over alle tilmeldte, der stadig mangler en betingelse, sorteret efter klub, så de berørte klubber kan kontaktes. Deltagere uden manglende betingelser er ikke med.",
+        "requirement": "Betingelse",
+        "allRequirements": "Alle aktive betingelser",
+        "submit": "Eksportér",
+        "error": "Eksporten kunne ikke oprettes."
       }
     },
     "action": {
@@ -1328,8 +1459,35 @@
       "raceclockerHint": "RaceClocker kræver to løb: ét af typen \"individuelle starter (enkeltstart)\" til kvalifikationsrunderne og ét af typen \"start i flere heat\" til alle øvrige runder. Angiv de offentlige resultatadresser for begge løb her – de gælder så for hele arrangementet.",
       "timeTrialUrl": "Resultatadresse for enkeltstart",
       "heatsUrl": "Resultatadresse for heat",
+      "autoPull": {
+        "enabled": "Hent resultater automatisk",
+        "hint": "Når et heat er i gang, henter serveren resultaterne i det hurtige interval. Kommende heats overvåges i det langsomme interval for at opdage deres start; afsluttede heats hentes ikke.",
+        "intervalActive": "Interval ved igangværende heat (sekunder)",
+        "intervalUpcoming": "Interval ved kommende heat (sekunder)",
+        "watchBefore": "Overvåg fra (minutter før planlagt start)",
+        "watchAfter": "Overvåg til (minutter efter planlagt start)"
+      },
+      "startlistQualification": "Startliste-eksport til kvalifikation",
+      "startlistRounds": "Startliste-eksport til øvrige runder",
+      "startlist": "Startliste-eksport",
+      "resultImport": "Løbsresultater-import",
+      "formatsHint": {
+        "1": "Startliste-eksporter og løbsresultater-importer oprettes ",
+        "2": "i konfigurationen",
+        "3": " og gælder for alle arrangementer."
+      },
       "saved": "Tidtagningsstandard gemt",
-      "invalid": "Angiv venligst adresser på raceclocker.com."
+      "invalid": "Indtastningerne blev afvist: adresser skal pege på raceclocker.com, intervallerne skal være mindst 2 sekunder, og observationsvinduerne må ikke være negative.",
+      "deviations": {
+        "title": "Konkurrencer med egen tidtagning",
+        "none": "Ingen konkurrence afviger – alle følger denne standard.",
+        "system": "eget system",
+        "timeTrialUrl": "egen enkeltstart-adresse",
+        "heatsUrl": "egen heat-adresse",
+        "startlistQualification": "egen startliste-eksport til kvalifikation",
+        "startlistRounds": "egen startliste-eksport",
+        "resultImport": "egen løbsresultater-import"
+      }
     },
     "info": {
       "infoPage": "Info-visning",
@@ -1387,7 +1545,7 @@
         "running": "Aktuelt løb",
         "upcoming": "Næste løb",
         "results": "Seneste resultat",
-        "noRunning": "Intet løb på vandet lige nu",
+        "noRunning": "Intet løb i arenaen lige nu",
         "noUpcoming": "Ingen flere løb planlagt",
         "noResults": "Endnu intet resultat",
         "lane": "Bane",
@@ -1411,7 +1569,31 @@
         "refreshHint": "Den offentlige atletvisning opdateres i denne takt, men aldrig hurtigere end hvert 10. sekund.",
         "loadError": "Data kunne ikke indlæses. Kontrollér venligst forbindelsen.",
         "minutesUnit": "min",
+        "hoursUnit": "t",
         "secondsUnit": "sek"
+      }
+    },
+    "match": {
+      "status": {
+        "upcoming": "Kommende",
+        "overdue": "Forsinket · {{minutes}} min",
+        "preparing": "Forbereder",
+        "running": "I gang · {{minutes}} min",
+        "runningPlain": "I gang",
+        "partiallyScored": "Delvist bedømt {{scored}}/{{total}}",
+        "awaitingFinish": "Afventer afslutning",
+        "finished": "Afsluttet",
+        "cancelled": "Aflyst",
+        "unscheduled": "Ikke planlagt",
+        "inArena": "Arena {{inArena}}/{{total}}",
+        "doesNotTakePlace": "Gennemføres ikke",
+        "counter": {
+          "preparing": "{{n}} forbereder",
+          "running": "{{n}} i gang",
+          "open": "{{n}} åbne",
+          "finished": "{{n}} afsluttet",
+          "cancelled": "{{n}} aflyst"
+        }
       }
     },
     "liveDashboard": {
@@ -1431,18 +1613,8 @@
       "unscheduled": "Uden starttid",
       "noMatches": "Ingen løb tilgængelige.",
       "noStartTime": "Ingen starttid planlagt",
-      "runningSince": "I gang i {{duration}}",
       "plannedAt": "planlagt {{time}}",
       "startedAtLabel": "startet {{time}}",
-      "state": {
-        "RUNNING": "I gang",
-        "FINISHED": "Afsluttet",
-        "SKIPPED": "Aflyst",
-        "AWAITING_FINISH": "Resultater komplette — venter på afslutning",
-        "AWAITING_FINISH_SHORT": "venter på afslutning",
-        "UPCOMING": "Kommende",
-        "UNSCHEDULED": "Ikke planlagt"
-      },
       "invoice": {
         "PAID": "Faktura betalt",
         "OPEN": "Faktura åben",
@@ -1460,6 +1632,8 @@
         "finishing": "Afsluttes …",
         "undo": "Fortryd",
         "finished": "Løbet er afsluttet — næste løb aktiveret",
+        "markStarted": "I gang",
+        "markStartedAutoHint": "RaceClocker melder selv starten, så snart den ser den.",
         "deactivate": "Deaktiver løb",
         "activate": "Aktiver løb",
         "incompleteWarning": "Der mangler stadig resultater — afslutning aktiverer alligevel de næste løb.",
@@ -1486,7 +1660,10 @@
         "deregistered": "Afmeldt",
         "failed": "Udgået",
         "failedShort": "DNF",
-        "onWaterAt": "på vandet {{time}}"
+        "inArenaAt": "i arenaen {{time}}",
+        "notInArena": "Ikke i arenaen",
+        "clubs": "Klubber",
+        "crew": "Besætning"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",
@@ -1501,11 +1678,35 @@
         "NOT_CHECKED": "Afventer",
         "beforeStart": "{{delta}} før start",
         "afterStart": "{{delta}} efter start"
+      },
+      "checkSeverity": {
+        "manage": "Administrer kontroller",
+        "title": "Kontrollernes alvorsgrad",
+        "description": "Angiver pr. konkurrence, hvor tungt en ikke-opfyldt kontrol vejer.",
+        "setAll": "sæt alle",
+        "uniform": "alle: {{severity}}",
+        "mixed": "blandet",
+        "noCheckInOut": "ingen ind-/udtjekning påkrævet",
+        "noCompetitions": "Denne begivenhed har endnu ingen konkurrencer. Der er derfor intet at indstille.",
+        "check": {
+          "INVOICE_OPEN": "Faktura åben",
+          "NOT_IN_ARENA": "Ikke i arenaen",
+          "REQUIREMENT_TIME_WINDOW": "Tidsvindue overskredet"
+        },
+        "severity": {
+          "OK": "OK (uden effekt)",
+          "WARNING": "Advarsel",
+          "CRITICAL": "Kritisk"
+        },
+        "saved": "Indstillinger gemt",
+        "saveError": "Indstillingerne kunne ikke gemmes."
       }
     },
     "schedule": {
       "tab": "Tidsplan",
       "slot": "Slot",
+      "showShortNames": "Vis korte navne",
+      "showFullNames": "Vis fulde navne",
       "addSlot": "Tilføj slot",
       "slotType": "Type",
       "freeSlot": "Fri slot",
@@ -1534,12 +1735,26 @@
       "skipConfirm_other": "Kun dette ene løb aflyses: „{{label}}“ kl. {{time}}. De øvrige {{count}} løb i runden „{{round}}“ er uændrede.",
       "skipConfirmOnly": "Løbet „{{label}}“ kl. {{time}} aflyses og springes over af kæden.",
       "skipConfirmFree": "Programpunktet „{{label}}“ kl. {{time}} aflyses.",
+      "advance": {
+        "title": "Ryk tidsplanen frem",
+        "intro": "„{{label}}“ kl. {{time}} er aflyst. Det frigør {{minutes}} minutter.",
+        "targetSlot": "Til og med slot",
+        "help": "Alle slots fra den næste til og med den valgte rykker {{minutes}} minutter frem. Alt derefter beholder sin tid — der opstår en buffer.",
+        "apply": "Ryk frem",
+        "decline": "Ryk ikke frem",
+        "success": "Tidsplanen blev rykket {{minutes}} minutter frem.",
+        "error": {
+          "noDelta": "Der kan ikke udledes frigjort tid fra denne slot — den har hverken en planlagt varighed eller en slot efter sig samme stævnedag. Brug „Tilpas tidsplan“ til at flytte tidsplanen manuelt.",
+          "slotNotSkipped": "Denne slot er ikke (længere) aflyst — der rykkes kun ind i tid, som en aflysning frigør. Genindlæs venligst tidsplanen.",
+          "targetInvalid": "Den valgte slot er ikke blandt dem, der kan rykke frem. Genindlæs tidsplanen, og vælg en slot efter den aflyste."
+        }
+      },
       "unskipConfirm": "Aflysning af „{{label}}“ kl. {{time}} fortrydes? Slotten indgår igen normalt.",
       "activate": "Aktiver løb",
       "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
       "activateAnyway": "Aktiver alligevel",
       "finish": "Afslut løb",
-      "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Afhængigt af kædetilstanden aktiveres de næste løb.",
+      "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Hvis stævnet skifter automatisk videre, aktiveres de næste løb.",
       "finishAnyway": "Afslut alligevel",
       "refereeModeWarning": "Dommertilstand er aktiv: løb aktiveres og afsluttes normalt af en dommer via dommer-dashboardet. Et indgreb herfra omgår denne vej.",
       "managedHint": "Vedligeholdes via tidsplanen",
@@ -1608,6 +1823,7 @@
         "now": "Nu",
         "state": {
           "finished": "Afsluttet",
+          "preparing": "Forbereder",
           "running": "Kører",
           "awaitingFinish": "Venter på afslutning",
           "linked": "Tilknyttet",
@@ -1647,6 +1863,12 @@
         "title": "Tildel rangeringskategori",
         "success": "Rangeringskategori tilføjet",
         "error": "Der opstod en fejl ved tilføjelse af rangeringskategorien til dette arrangement"
+      },
+      "withoutCategory": "Uden rangeringskategori",
+      "order": {
+        "moveUp": "Flyt op",
+        "moveDown": "Flyt ned",
+        "hint": "Rækkefølgen bestemmer, i hvilken orden afsnittene vises i resultatlister."
       }
     }
   },
@@ -2007,6 +2229,7 @@
     "download": "Download",
     "downloadError": "Der opstod en fejl under forsøget på at downloade fakturaen.",
     "invoiceNumber": "Fakturanummer",
+    "billedTo": "Faktura til",
     "amount": "Fakturabeløb",
     "paid": "Betalt",
     "tableHint": {
@@ -2480,6 +2703,10 @@
         "competitionNotInEvent": "Denne konkurrence hører ikke til dette stævne. Genindlæs siden.",
         "isChallengeEvent": "Et challenge-stævne har ingen sejrsdiplomer — der afvikles ingen løb, og der gives ingen placeringer. Deltagerdiplomer kan hentes fra deltagerlisten.",
         "unexpected": "Diplomerne kunne ikke oprettes. Genindlæs siden, og prøv igen."
+      },
+      "ratingCategory": {
+        "label": "Udskriv rangeringskategori",
+        "hint": "Kun synlig, hvis skabelonen indeholder en pladsholder til rangeringskategorien. Den trykte placering forbliver konkurrencens."
       }
     }
   },

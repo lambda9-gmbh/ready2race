@@ -174,9 +174,9 @@ import type {
     UpdateMatchDataData,
     UpdateMatchDataError,
     UpdateMatchDataResponse,
-    UpdateMatchRunningStateData,
-    UpdateMatchRunningStateError,
-    UpdateMatchRunningStateResponse,
+    UpdateMatchActivationData,
+    UpdateMatchActivationError,
+    UpdateMatchActivationResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -195,6 +195,9 @@ import type {
     PullMatchResultsFromRaceClockerData,
     PullMatchResultsFromRaceClockerError,
     PullMatchResultsFromRaceClockerResponse,
+    ResumeRaceClockerAutoPullData,
+    ResumeRaceClockerAutoPullError,
+    ResumeRaceClockerAutoPullResponse,
     DownloadStartListData,
     DownloadStartListError,
     DownloadStartListResponse,
@@ -330,6 +333,32 @@ import type {
     GetPendingClubRepresentativeApprovalsData,
     GetPendingClubRepresentativeApprovalsError,
     GetPendingClubRepresentativeApprovalsResponse,
+    GetClubShortNamesData,
+    GetClubShortNamesError,
+    GetClubShortNamesResponse,
+    GetClubShortNameForNameData,
+    GetClubShortNameForNameError,
+    GetClubShortNameForNameResponse,
+    UpdateClubShortNameData,
+    UpdateClubShortNameError,
+    UpdateClubShortNameResponse,
+    DeleteClubShortNameData,
+    DeleteClubShortNameError,
+    DeleteClubShortNameResponse,
+    GetClubNameRulesError,
+    GetClubNameRulesResponse,
+    AddClubNameRuleData,
+    AddClubNameRuleError,
+    AddClubNameRuleResponse,
+    ReorderClubNameRulesData,
+    ReorderClubNameRulesError,
+    ReorderClubNameRulesResponse,
+    UpdateClubNameRuleData,
+    UpdateClubNameRuleError,
+    UpdateClubNameRuleResponse,
+    DeleteClubNameRuleData,
+    DeleteClubNameRuleError,
+    DeleteClubNameRuleResponse,
     GetRegistrationsForEventData,
     GetRegistrationsForEventError,
     GetRegistrationsForEventResponse,
@@ -402,6 +431,9 @@ import type {
     GetActiveParticipantRequirementsForEventData,
     GetActiveParticipantRequirementsForEventError,
     GetActiveParticipantRequirementsForEventResponse,
+    ExportOpenParticipantRequirementsData,
+    ExportOpenParticipantRequirementsError,
+    ExportOpenParticipantRequirementsResponse,
     ActivateParticipantRequirementForEventData,
     ActivateParticipantRequirementForEventError,
     ActivateParticipantRequirementForEventResponse,
@@ -432,6 +464,15 @@ import type {
     CheckInOutParticipantData,
     CheckInOutParticipantError,
     CheckInOutParticipantResponse,
+    GetParticipantTrackingHistoryData,
+    GetParticipantTrackingHistoryError,
+    GetParticipantTrackingHistoryResponse,
+    AddManualParticipantTrackingData,
+    AddManualParticipantTrackingError,
+    AddManualParticipantTrackingResponse,
+    CorrectParticipantTrackingData,
+    CorrectParticipantTrackingError,
+    CorrectParticipantTrackingResponse,
     UpdateParticipantRequirementData,
     UpdateParticipantRequirementError,
     UpdateParticipantRequirementResponse,
@@ -466,6 +507,9 @@ import type {
     AddGapDocumentTemplateData,
     AddGapDocumentTemplateError,
     AddGapDocumentTemplateResponse,
+    ImportGapDocumentTemplateData,
+    ImportGapDocumentTemplateError,
+    ImportGapDocumentTemplateResponse,
     UpdateGapDocumentTemplateData,
     UpdateGapDocumentTemplateError,
     UpdateGapDocumentTemplateResponse,
@@ -478,6 +522,12 @@ import type {
     DownloadGapDocumentTemplateSampleData,
     DownloadGapDocumentTemplateSampleError,
     DownloadGapDocumentTemplateSampleResponse,
+    ExportGapDocumentTemplateData,
+    ExportGapDocumentTemplateError,
+    ExportGapDocumentTemplateResponse,
+    GetGapDocumentTemplateFontData,
+    GetGapDocumentTemplateFontError,
+    GetGapDocumentTemplateFontResponse,
     GetGapDocumentTemplateTypesError,
     GetGapDocumentTemplateTypesResponse,
     AssignGapDocumentTemplateData,
@@ -548,6 +598,9 @@ import type {
     GetRatingCategoriesForEventData,
     GetRatingCategoriesForEventError,
     GetRatingCategoriesForEventResponse,
+    UpdateRatingCategoryOrderForEventData,
+    UpdateRatingCategoryOrderForEventError,
+    UpdateRatingCategoryOrderForEventResponse,
     RemoveRatingCategoryFromEventData,
     RemoveRatingCategoryFromEventError,
     RemoveRatingCategoryFromEventResponse,
@@ -644,15 +697,21 @@ import type {
     StartLiveDashboardMatchData,
     StartLiveDashboardMatchError,
     StartLiveDashboardMatchResponse,
-    SetLiveDashboardMatchRunningData,
-    SetLiveDashboardMatchRunningError,
-    SetLiveDashboardMatchRunningResponse,
+    SetLiveDashboardMatchActivatedData,
+    SetLiveDashboardMatchActivatedError,
+    SetLiveDashboardMatchActivatedResponse,
     GetLiveDashboardData,
     GetLiveDashboardError,
     GetLiveDashboardResponse,
     GetLiveDashboardTeamDetailData,
     GetLiveDashboardTeamDetailError,
     GetLiveDashboardTeamDetailResponse,
+    GetCheckSeverityConfigData,
+    GetCheckSeverityConfigError,
+    GetCheckSeverityConfigResponse,
+    UpdateCheckSeverityConfigData,
+    UpdateCheckSeverityConfigError,
+    UpdateCheckSeverityConfigResponse,
     GetEventScheduleData,
     GetEventScheduleError,
     GetEventScheduleResponse,
@@ -668,6 +727,9 @@ import type {
     SkipScheduleSlotData,
     SkipScheduleSlotError,
     SkipScheduleSlotResponse,
+    AdvanceAfterSkippedSlotData,
+    AdvanceAfterSkippedSlotError,
+    AdvanceAfterSkippedSlotResponse,
     UnskipScheduleSlotData,
     UnskipScheduleSlotError,
     UnskipScheduleSlotResponse,
@@ -686,6 +748,9 @@ import type {
     ImportEventScheduleData,
     ImportEventScheduleError,
     ImportEventScheduleResponse,
+    DownloadEventScheduleImportTemplateData,
+    DownloadEventScheduleImportTemplateError,
+    DownloadEventScheduleImportTemplateResponse,
     GetInfoViewsData,
     GetInfoViewsError,
     GetInfoViewsResponse,
@@ -1455,6 +1520,9 @@ export const getCompetitionSetup = <ThrowOnError extends boolean = false>(
     })
 }
 
+/**
+ * Polled by the execution page in the interval configured on the event. Send the ETag of the previous answer as If-None-Match to get a 304 without a body while nothing changed.
+ */
 export const getCompetitionExecutionProgress = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetCompetitionExecutionProgressData, ThrowOnError>,
 ) => {
@@ -1507,16 +1575,16 @@ export const updateMatchData = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const updateMatchRunningState = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateMatchRunningStateData, ThrowOnError>,
+export const updateMatchActivation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchActivationData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
-        UpdateMatchRunningStateResponse,
-        UpdateMatchRunningStateError,
+        UpdateMatchActivationResponse,
+        UpdateMatchActivationError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/running-state',
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/activation',
     })
 }
 
@@ -1604,6 +1672,22 @@ export const pullMatchResultsFromRaceClocker = <ThrowOnError extends boolean = f
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/from-raceclocker',
+    })
+}
+
+/**
+ * Releases a match back to the automatic RaceClocker pull. Entering results by hand or uploading a file pauses the pull for that match, so the office keeps the last word; this undoes that and clears the last poll error.
+ */
+export const resumeRaceClockerAutoPull = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResumeRaceClockerAutoPullData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ResumeRaceClockerAutoPullResponse,
+        ResumeRaceClockerAutoPullError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results/raceclocker/resume',
     })
 }
 
@@ -2176,6 +2260,123 @@ export const getPendingClubRepresentativeApprovals = <ThrowOnError extends boole
     })
 }
 
+export const getClubShortNames = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetClubShortNamesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubShortNamesResponse,
+        GetClubShortNamesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubShortName',
+    })
+}
+
+export const getClubShortNameForName = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubShortNameForNameData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubShortNameForNameResponse,
+        GetClubShortNameForNameError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubShortName/forName',
+    })
+}
+
+export const updateClubShortName = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubShortNameData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateClubShortNameResponse,
+        UpdateClubShortNameError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubShortName/{nameKey}',
+    })
+}
+
+export const deleteClubShortName = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteClubShortNameData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteClubShortNameResponse,
+        DeleteClubShortNameError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubShortName/{nameKey}',
+    })
+}
+
+export const getClubNameRules = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubNameRulesResponse,
+        GetClubNameRulesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule',
+    })
+}
+
+export const addClubNameRule = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddClubNameRuleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddClubNameRuleResponse,
+        AddClubNameRuleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule',
+    })
+}
+
+export const reorderClubNameRules = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ReorderClubNameRulesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        ReorderClubNameRulesResponse,
+        ReorderClubNameRulesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule/order',
+    })
+}
+
+export const updateClubNameRule = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubNameRuleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateClubNameRuleResponse,
+        UpdateClubNameRuleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule/{ruleId}',
+    })
+}
+
+export const deleteClubNameRule = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteClubNameRuleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteClubNameRuleResponse,
+        DeleteClubNameRuleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/clubNameRule/{ruleId}',
+    })
+}
+
 export const getRegistrationsForEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetRegistrationsForEventData, ThrowOnError>,
 ) => {
@@ -2477,6 +2678,22 @@ export const getActiveParticipantRequirementsForEvent = <ThrowOnError extends bo
     })
 }
 
+/**
+ * Downloads an xlsx of the registered participants who are still missing requirements - the basis for notifying their clubs. Without requirementId every requirement active at the event counts. Requirements bound to a named participant only apply to that role, and participants with nothing open are left out.
+ */
+export const exportOpenParticipantRequirements = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ExportOpenParticipantRequirementsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        ExportOpenParticipantRequirementsResponse,
+        ExportOpenParticipantRequirementsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/open/export',
+    })
+}
+
 export const activateParticipantRequirementForEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<ActivateParticipantRequirementForEventData, ThrowOnError>,
 ) => {
@@ -2604,6 +2821,45 @@ export const checkInOutParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/participant/{participantId}/checkInOut',
+    })
+}
+
+export const getParticipantTrackingHistory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantTrackingHistoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantTrackingHistoryResponse,
+        GetParticipantTrackingHistoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking',
+    })
+}
+
+export const addManualParticipantTracking = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddManualParticipantTrackingData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddManualParticipantTrackingResponse,
+        AddManualParticipantTrackingError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking',
+    })
+}
+
+export const correctParticipantTracking = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CorrectParticipantTrackingData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        CorrectParticipantTrackingResponse,
+        CorrectParticipantTrackingError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/tracking/{trackingId}',
     })
 }
 
@@ -2768,6 +3024,24 @@ export const addGapDocumentTemplate = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const importGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ImportGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ImportGapDocumentTemplateResponse,
+        ImportGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/gapDocumentTemplate/import',
+    })
+}
+
 export const updateGapDocumentTemplate = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<UpdateGapDocumentTemplateData, ThrowOnError>,
 ) => {
@@ -2822,6 +3096,32 @@ export const downloadGapDocumentTemplateSample = <ThrowOnError extends boolean =
     >({
         ...options,
         url: '/gapDocumentTemplate/{gapDocumentTemplateId}/preview',
+    })
+}
+
+export const exportGapDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ExportGapDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        ExportGapDocumentTemplateResponse,
+        ExportGapDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}/export',
+    })
+}
+
+export const getGapDocumentTemplateFont = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetGapDocumentTemplateFontData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetGapDocumentTemplateFontResponse,
+        GetGapDocumentTemplateFontError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/gapDocumentTemplate/{gapDocumentTemplateId}/font',
     })
 }
 
@@ -3123,6 +3423,19 @@ export const getRatingCategoriesForEvent = <ThrowOnError extends boolean = false
     >({
         ...options,
         url: '/event/{eventId}/ratingCategories',
+    })
+}
+
+export const updateRatingCategoryOrderForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRatingCategoryOrderForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRatingCategoryOrderForEventResponse,
+        UpdateRatingCategoryOrderForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/ratingCategories/order',
     })
 }
 
@@ -3536,16 +3849,19 @@ export const startLiveDashboardMatch = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const setLiveDashboardMatchRunning = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<SetLiveDashboardMatchRunningData, ThrowOnError>,
+/**
+ * Calls the match to the start (activated=true) or takes that back. Deactivating also clears the real start and pauses the automatic RaceClocker pull.
+ */
+export const setLiveDashboardMatchActivated = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetLiveDashboardMatchActivatedData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
-        SetLiveDashboardMatchRunningResponse,
-        SetLiveDashboardMatchRunningError,
+        SetLiveDashboardMatchActivatedResponse,
+        SetLiveDashboardMatchActivatedError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/liveDashboard/match/{matchId}/running-state',
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/activation',
     })
 }
 
@@ -3578,6 +3894,38 @@ export const getLiveDashboardTeamDetail = <ThrowOnError extends boolean = false>
     >({
         ...options,
         url: '/event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}',
+    })
+}
+
+/**
+ * The competitions, the configurable checks with their defaults and the deviations set for this event - administration for the referee dashboard's severity configuration.
+ */
+export const getCheckSeverityConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCheckSeverityConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCheckSeverityConfigResponse,
+        GetCheckSeverityConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/checkSeverity',
+    })
+}
+
+/**
+ * Replaces the event's deviations. Entries matching the built-in default are dropped rather than stored, so a later change to the default keeps applying to existing data.
+ */
+export const updateCheckSeverityConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCheckSeverityConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCheckSeverityConfigResponse,
+        UpdateCheckSeverityConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/checkSeverity',
     })
 }
 
@@ -3652,6 +4000,22 @@ export const skipScheduleSlot = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule/slot/{slotId}/skip',
+    })
+}
+
+/**
+ * Moves the schedule up into the time freed by a cancelled slot, up to and including targetSlotId. The delta comes from the cancelled slot itself (its planned duration, else the gap to the following slot on the same race day); the slot must be cancelled. dryRun=true only computes the preview.
+ */
+export const advanceAfterSkippedSlot = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AdvanceAfterSkippedSlotData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AdvanceAfterSkippedSlotResponse,
+        AdvanceAfterSkippedSlotError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/slot/{slotId}/advance',
     })
 }
 
@@ -3750,6 +4114,22 @@ export const importEventSchedule = <ThrowOnError extends boolean = false>(
             ...options?.headers,
         },
         url: '/event/{eventId}/schedule/import',
+    })
+}
+
+/**
+ * Downloads an example xlsx for the schedule import, using the columns importEventSchedule reads. The example rows are dated to the event's first day.
+ */
+export const downloadEventScheduleImportTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadEventScheduleImportTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadEventScheduleImportTemplateResponse,
+        DownloadEventScheduleImportTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/import/template',
     })
 }
 

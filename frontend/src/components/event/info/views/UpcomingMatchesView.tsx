@@ -70,7 +70,66 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
             </Stack>
 
             <Stack spacing={2}>
-                {data.map((match: UpcomingCompetitionMatchInfo) => (
+                {data.map((match: UpcomingCompetitionMatchInfo) =>
+                    // Abgesagter Lauf: Er bleibt an seiner geplanten Stelle stehen, statt spurlos
+                    // zu verschwinden - ein verschwundener Lauf ist von einem Anzeigefehler nicht
+                    // zu unterscheiden. Schlanke Karte: Wettkampf, Runde, Lauf, die geplante Zeit
+                    // und der Hinweis, dass er nicht stattfindet. Keine Mannschaften (der Server
+                    // liefert sie gar nicht erst mit).
+                    match.cancelled ? (
+                        <Card key={match.matchId} sx={{opacity: 0.6}}>
+                            <CardContent>
+                                <Box sx={{display: 'flex', alignItems: 'center', gap: 3}}>
+                                    {match.scheduledStartTime && (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                minWidth: 120,
+                                                p: 2,
+                                                bgcolor: 'action.disabledBackground',
+                                                color: 'text.secondary',
+                                                borderRadius: 2,
+                                            }}>
+                                            <Typography
+                                                variant="h6"
+                                                fontWeight="bold"
+                                                sx={{textDecoration: 'line-through'}}>
+                                                {format(
+                                                    new Date(match.scheduledStartTime),
+                                                    t('format.time'),
+                                                )}
+                                            </Typography>
+                                            <Typography variant="caption">
+                                                {format(
+                                                    new Date(match.scheduledStartTime),
+                                                    t('format.date'),
+                                                )}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                    <Box sx={{flex: 1}}>
+                                        <Typography
+                                            variant="h6"
+                                            color="text.secondary"
+                                            sx={{textDecoration: 'line-through'}}>
+                                            {[
+                                                match.competitionName,
+                                                match.roundName,
+                                                match.matchName,
+                                            ]
+                                                .filter(Boolean)
+                                                .join(' · ')}
+                                        </Typography>
+                                        <Typography variant="subtitle1" color="text.secondary">
+                                            {t('event.match.status.doesNotTakePlace')}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    ) : (
                     <Card key={match.matchId}>
                         <CardContent>
                             <Box sx={{display: 'flex', alignItems: 'flex-start', gap: 3}}>
@@ -220,7 +279,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="caption"
                                                                             color="text.secondary">
-                                                                            {(team.actualClubName ??
+                                                                            {(team.clubsFull ??
                                                                                 team.clubName) +
                                                                                 ` ${t('club.registeredBy')} ${team.clubName} | ${team.teamName}`}
                                                                         </Typography>
@@ -230,7 +289,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="body1"
                                                                             fontWeight="medium">
-                                                                            {team.actualClubName ??
+                                                                            {team.clubsFull ??
                                                                                 team.clubName}
                                                                         </Typography>
                                                                         <Typography
@@ -316,7 +375,8 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                             </Box>
                         </CardContent>
                     </Card>
-                ))}
+                    ),
+                )}
             </Stack>
         </Box>
     )

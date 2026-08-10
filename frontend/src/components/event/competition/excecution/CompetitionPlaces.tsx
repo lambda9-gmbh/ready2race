@@ -23,6 +23,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {readEventGlobal} from '@authorization/privileges.ts'
 import WorkspacePremium from '@mui/icons-material/WorkspacePremium'
 import AwardCertificateDialog from '@components/awardCertificate/AwardCertificateDialog.tsx'
+import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 
 const CompetitionPlaces = () => {
     const {t} = useTranslation()
@@ -88,6 +89,12 @@ const CompetitionPlaces = () => {
         }
     }
 
+    // Platzierungen werden je Wertungskategorie getrennt gezeigt und je Abschnitt ab 1 gezaehlt.
+    // Ein Wettkampf ohne Kategorien liefert genau einen namenlosen Abschnitt und sieht damit aus
+    // wie die frueher gemeinsame Rangliste.
+    const sections = groupByRatingCategory(placesData ?? [], team => team.ratingCategory)
+    const showSectionHeadings = hasRatingCategories(sections)
+
     return placesData ? (
         placesData.length > 0 ? (
             <>
@@ -113,95 +120,120 @@ const CompetitionPlaces = () => {
                             </Button>
                         )}
                     </Stack>
-                    {placesData.map(team => (
-                        <Card key={team.teamNumber}>
-                            <CardContent>
-                                <Stack
-                                    spacing={4}
-                                    direction={'row'}
-                                    sx={{
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                    }}>
-                                    <Typography variant={team.place ? 'h5' : 'body1'}>
-                                        {team.place}
-                                    </Typography>
-                                    <Box>
-                                        <Typography textAlign={'right'}>
-                                            {team.actualClubName ?? team.clubName}
-                                        </Typography>
-                                        <Typography
-                                            color={'textSecondary'}
-                                            variant={'body2'}
-                                            textAlign={'right'}>
-                                            {`${t('club.registeredBy')} ` +
-                                                team.clubName +
-                                                ` | ${team.teamName}`}
-                                        </Typography>
-                                    </Box>
-                                    {/* Teams ohne Urkunde (DNF, DSQ, abgemeldet) zeigen das Download-Icon
+                    {sections.map(section => (
+                        <Stack spacing={2} key={section.category?.id ?? 'none'}>
+                            {showSectionHeadings && (
+                                <Typography variant={'subtitle1'} fontWeight={'bold'}>
+                                    {section.category?.name ??
+                                        t('event.ratingCategory.withoutCategory')}
+                                </Typography>
+                            )}
+                            {section.entries.map(team => (
+                                <Card key={team.competitionRegistrationId}>
+                                    <CardContent>
+                                        <Stack
+                                            spacing={4}
+                                            direction={'row'}
+                                            sx={{
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                            }}>
+                                            {/* Der Platz innerhalb der Wertungskategorie; team.place
+                                        bleibt der wettkampfweite und traegt weiterhin die Urkunde. */}
+                                            <Typography
+                                                variant={team.categoryPlace ? 'h5' : 'body1'}>
+                                                {team.categoryPlace ?? '-'}
+                                            </Typography>
+                                            <Box>
+                                                <Typography textAlign={'right'}>
+                                                    {team.actualClubName ?? team.clubName}
+                                                </Typography>
+                                                <Typography
+                                                    color={'textSecondary'}
+                                                    variant={'body2'}
+                                                    textAlign={'right'}>
+                                                    {[
+                                                        t('club.registeredBy') +
+                                                            ' ' +
+                                                            team.clubName,
+                                                        team.teamName,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' | ')}
+                                                </Typography>
+                                            </Box>
+                                            {/* Teams ohne Urkunde (DNF, DSQ, abgemeldet) zeigen das Download-Icon
                                     nicht - der Download würde sonst nur mit NoResults fehlschlagen. Dieselbe
                                     Ausschlussregel wie im Urkundengenerator (AwardCertificateService.excluded). */}
-                                    {user.checkPrivilege(readEventGlobal) && !team.excluded && (
-                                        <Tooltip title={t('awardCertificate.download.buttonSingle')}>
-                                            <IconButton
-                                                onClick={() =>
-                                                    openAwardCertificateDialog(
-                                                        team.competitionRegistrationId,
-                                                    )
-                                                }>
-                                                <WorkspacePremium />
-                                            </IconButton>
-                                        </Tooltip>
-                                    )}
-                                </Stack>
-                                <Divider sx={{my: 1}} />
-                                <Grid2 container>
-                                    {team.namedParticipants
-                                        .flatMap(it => it.participants)
-                                        .sort((a, b) =>
-                                            a.namedParticipantName === b.namedParticipantName
-                                                ? a.firstName === b.firstName
-                                                    ? a.lastName > b.lastName
-                                                        ? 1
-                                                        : -1
-                                                    : a.firstName > b.firstName
-                                                      ? 1
-                                                      : -1
-                                                : (a.namedParticipantName ?? '') >
-                                                    (b.namedParticipantName ?? '')
-                                                  ? 1
-                                                  : -1,
-                                        )
-                                        .map(participant => (
-                                            <Grid2 size={6} key={participant.participantId}>
-                                                <ListItemText
-                                                    primary={
-                                                        participant.firstName +
-                                                        ' ' +
-                                                        participant.lastName
-                                                    }
-                                                    secondary={
-                                                        <>
-                                                            <Typography
-                                                                variant="body2"
-                                                                color="text.secondary">
-                                                                {participant.namedParticipantName}
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="body2"
-                                                                color="text.secondary">
-                                                                {participant.externalClubName ??
-                                                                    team.clubName}
-                                                            </Typography>
-                                                        </>
-                                                    }
-                                                />
-                                            </Grid2>
-                                        ))}
-                                </Grid2>
-                            </CardContent>
-                        </Card>
+                                            {user.checkPrivilege(readEventGlobal) &&
+                                                !team.excluded && (
+                                                    <Tooltip
+                                                        title={t(
+                                                            'awardCertificate.download.buttonSingle',
+                                                        )}>
+                                                        <IconButton
+                                                            onClick={() =>
+                                                                openAwardCertificateDialog(
+                                                                    team.competitionRegistrationId,
+                                                                )
+                                                            }>
+                                                            <WorkspacePremium />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+                                        </Stack>
+                                        <Divider sx={{my: 1}} />
+                                        <Grid2 container>
+                                            {team.namedParticipants
+                                                .flatMap(it => it.participants)
+                                                .sort((a, b) =>
+                                                    a.namedParticipantName ===
+                                                    b.namedParticipantName
+                                                        ? a.firstName === b.firstName
+                                                            ? a.lastName > b.lastName
+                                                                ? 1
+                                                                : -1
+                                                            : a.firstName > b.firstName
+                                                              ? 1
+                                                              : -1
+                                                        : (a.namedParticipantName ?? '') >
+                                                            (b.namedParticipantName ?? '')
+                                                          ? 1
+                                                          : -1,
+                                                )
+                                                .map(participant => (
+                                                    <Grid2 size={6} key={participant.participantId}>
+                                                        <ListItemText
+                                                            primary={
+                                                                participant.firstName +
+                                                                ' ' +
+                                                                participant.lastName
+                                                            }
+                                                            secondary={
+                                                                <>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        color="text.secondary">
+                                                                        {
+                                                                            participant.namedParticipantName
+                                                                        }
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        color="text.secondary">
+                                                                        {participant.externalClubName ??
+                                                                            team.clubName}
+                                                                    </Typography>
+                                                                </>
+                                                            }
+                                                        />
+                                                    </Grid2>
+                                                ))}
+                                        </Grid2>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </Stack>
                     ))}
                 </Stack>
                 <AwardCertificateDialog

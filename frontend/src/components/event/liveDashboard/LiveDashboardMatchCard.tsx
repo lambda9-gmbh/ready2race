@@ -1,69 +1,145 @@
+import {Fragment} from 'react'
 import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import CancelIcon from '@mui/icons-material/Cancel'
-import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
-import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
+import {LiveDashboardMatchDto, MatchStatusDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
+import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
+import {matchStatusChip} from '@components/event/match/matchStatusChip.ts'
+import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 import {
-    formatMinutes,
+    CLUB_CHAIN_NARROW_CHARS,
+    CLUB_CHAIN_NARROW_RESULT_CHARS,
+    competitionLabel,
+    crewMemberLabel,
     matchControls,
+    matchHasResults,
     openResultTeams,
     pendingSlotLabel,
-    Severity,
-    shortClubName,
-    teamSeverity,
+    shortenClubChain,
+    teamHasResult,
+    teamShowsClubLine,
+    teamShowsCrew,
+    teamsInDisplayOrder,
 } from './common.ts'
 import FinishMatchButton from './FinishMatchButton.tsx'
+import SeverityIcon from './SeverityIcon.tsx'
+
+/**
+ * Ab dieser Kartenbreite ist Platz für die Langform des Status. Darunter würde sie die Spalte im
+ * Kopf-Grid so weit aufziehen, dass daneben nur noch der erste Buchstabe des Laufnamens bleibt —
+ * beide Zeilen teilen sich dieselbe Spalte.
+ */
+const WIDE_CARD_PX = 480
+
+/**
+ * Ab hier trägt die Karte zusätzlich die Crew je Boot — Nachname, Vereinskurzform und Rolle. Auch
+ * das entscheidet die Kartenbreite und nicht das Fenster: auf dem Tablet stehen zwei Spalten
+ * nebeneinander, von denen keine so breit wird, obwohl das Fenster es wäre. Ob die Crew überhaupt
+ * geladen wurde, hängt dagegen am Fenster (`dashboardCrew`) — die Nutzlast wird je Abruf
+ * entschieden, nicht je Karte.
+ */
+const CREW_CARD_PX = 700
 
 type Props = {
     match: LiveDashboardMatchDto
     onTeamClick: (matchId: string, teamId: string) => void
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onFinish?: (matchId: string, openResults: MatchResultStatus | null) => Promise<void>
-    onSetRunning?: (matchId: string, running: boolean) => Promise<void>
+    onSetActivated?: (matchId: string, activated: boolean) => Promise<void>
+    /** „Läuft": stellt fest, dass das Rennen unterwegs ist — löst keine Zeitnahme aus. */
+    onMarkStarted?: (matchId: string) => Promise<void>
+    /** Gibt den pausierten RaceClocker-Abruf dieses Laufs wieder frei. */
+    onResumeAutoPull?: (matchId: string, competitionId: string) => Promise<void>
+    /**
+     * Ob der automatische RaceClocker-Abruf für diese Veranstaltung eingeschaltet ist. Dann trägt
+     * der „Läuft"-Knopf den Hinweis, dass RaceClocker den Start ohnehin selbst meldet — bedienbar
+     * bleibt er trotzdem (Feed-Ausfall, Zeitnahme ohne Startstempel).
+     */
+    raceClockerAutoPull?: boolean
+    /** Rennen am Kürzel statt am ausgeschriebenen Wettkampfnamen (geteilt mit dem Zeitplan-Tab). */
+    shortLabels: boolean
 }
 
-// One glanceable icon per team replaces the detail chips — everything else
-// lives in the team dialog, one tap away.
-// Draußen zählt Kontrast: die dunklen Palette-Varianten bleiben auch bei Sonne
-// lesbar, während die konfigurierten main-Töne verblassen.
-const severityIcon = (severity: Severity) => {
-    const sx = {fontSize: 28, display: 'block'}
-    switch (severity) {
-        case 'ok':
-            return <CheckCircleIcon sx={{...sx, color: 'success.dark'}} />
-        case 'warning':
-            return <WarningAmberIcon sx={{...sx, color: 'warning.dark'}} />
-        case 'error':
-            return <CancelIcon sx={{...sx, color: 'error.dark'}} />
-        case 'neutral':
-            return <RadioButtonUncheckedIcon sx={{...sx, color: 'text.disabled'}} />
-    }
-}
-
-const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Props) => {
+const LiveDashboardMatchCard = ({
+    match,
+    onTeamClick,
+    onFinish,
+    onSetActivated,
+    onMarkStarted,
+    onResumeAutoPull,
+    raceClockerAutoPull = false,
+    shortLabels,
+}: Props) => {
     const {t} = useTranslation()
 
     const running = match.state === 'RUNNING'
+    // An den Start gerufen, aber noch nicht unterwegs — der Lauf, der als Nächstes losgeht.
+    const preparing = match.state === 'PREPARING'
     // Abgesagt wird gekennzeichnet, nicht versteckt: der Schiedsrichter muss die Absage sehen, um
     // sie im Zeitplan zurücknehmen zu können. Solange sie steht, gibt es hier aber nichts zu
     // steuern - aktiviert würde der Lauf sonst wieder abgesagt UND laufend zugleich.
     const skipped = match.state === 'SKIPPED'
     // Vollständig gewertet, aber nicht beendet: der Lauf wartet auf den Beenden-Klick.
     const awaitingFinish = match.state === 'AWAITING_FINISH'
-    const {showFinish, showRunToggle} = matchControls(match, onFinish != null, onSetRunning != null)
+    const {showFinish, showActivationToggle, showMarkStarted} = matchControls(
+        match,
+        onFinish != null,
+        onSetActivated != null,
+    )
+    /**
+     * Der Zustandstext der Karte kommt aus derselben Ableitung wie in Durchführung und Zeitplan —
+     * die Karte entscheidet nichts mehr selbst, sie malt nur. Vorher stand hier eigene Textlogik
+     * („läuft seit …", Lang-/Kurzform für „wartet auf Beenden"), die dieselbe Aussage anders
+     * formulierte; genau daran ließ sich nicht mehr erkennen, ob zwei Ansichten dasselbe meinen.
+     *
+     * `teamsScored` zählt nach derselben Regel wie `MatchStatusLogic.scoredCount` im Backend
+     * (Platz, ausgeschieden oder abgemeldet), damit „Teilweise gewertet" hier nichts anderes sagt
+     * als dort. Die Uhr ist die des Browsers: die Seite rendert bei jedem Abruf und mindestens alle
+     * 30 Sekunden neu (siehe `useLocalClock` in LiveDashboardPage), die Minutenangabe zählt also
+     * zwischen zwei Abrufen weiter.
+     */
+    const status: MatchStatusDto = {
+        state: match.state,
+        startedAt: match.startedAt ?? undefined,
+        teamsTotal: match.teams.length,
+        teamsScored: match.teams.filter(teamHasResult).length,
+    }
+    const statusChip = matchStatusChip(status, match.startTime, new Date())
+    // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur — dasselbe Muster
+    // wie `StatusChip` in CompetitionExecutionRound.tsx.
+    const translate = t as (key: string, values?: Record<string, string | number>) => string
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
-    const hasResults = match.teams.some(team => team.time || team.place != null || team.failed)
+    const hasResults = matchHasResults(match.teams)
+    // Sobald gewertet wird, steht der Erste oben — die Zahl links bleibt dabei die Bahn.
+    const orderedTeams = teamsInDisplayOrder(match.teams)
+    // Gewertet wird je Wertungskategorie. Solange kein Boot ein Ergebnis hat, bleibt die Karte
+    // eine durchgehende Bahnliste: am Steg wird sie gegen das Wasser gelesen, und Zwischenüberschriften
+    // zerschnitten dort nur den Blick auf das Feld.
+    const sections = hasResults
+        ? groupByRatingCategory(orderedTeams, team => team.ratingCategory)
+        : []
+    const showSectionHeadings = hasResults && hasRatingCategories(sections)
+    const teams = hasResults ? sections.flatMap(section => section.entries) : orderedTeams
+    // Vor welchem Boot eine Kategorieüberschrift steht: dem jeweils ersten seines Abschnitts.
+    const headingBeforeTeam = new Map(
+        showSectionHeadings
+            ? sections
+                  .filter(section => section.entries.length > 0)
+                  .map(section => [
+                      section.entries[0].teamId,
+                      section.category?.name ?? t('event.ratingCategory.withoutCategory'),
+                  ])
+            : [],
+    )
     const openTeams = openResultTeams(match)
     const resultsComplete = match.teams.length > 0 && openTeams.length === 0
-    const columns = hasResults
-        ? '2ch minmax(0, 1fr) 10.5ch 2rem 26px'
-        : '2ch minmax(0, 1fr) 26px'
+    const columns = hasResults ? '2ch minmax(0, 1fr) 10.5ch 2rem 26px' : '2ch minmax(0, 1fr) 26px'
+    // Sobald Zeit und Platz ihre Spalten belegen, bleibt der Vereinszeile am Telefon noch die
+    // Hälfte der Breite - die Kette muss dann früher aufs "+n" ausweichen.
+    const narrowChainChars = hasResults ? CLUB_CHAIN_NARROW_RESULT_CHARS : CLUB_CHAIN_NARROW_CHARS
 
     return (
         <Card
@@ -71,9 +147,15 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
             sx={{
                 minWidth: 0,
                 overflow: 'hidden',
-                // Accent bar instead of a full frame: marks the live race without shouting
-                borderLeft: running ? '6px solid' : undefined,
-                borderLeftColor: running ? 'success.dark' : undefined,
+                // Die Karte richtet sich nach ihrer eigenen Breite, nicht nach der des Fensters:
+                // nebeneinander stehende Spalten auf dem Tablet sind schmaler als ein Telefon,
+                // ein Blick aufs Fenster würde dort die Langformen erzwingen.
+                containerType: 'inline-size',
+                // Accent bar instead of a full frame: marks the live race without shouting. Ein
+                // Lauf am Start bekommt denselben Balken in seinem eigenen Ton — er ist der
+                // nächste, der losgeht, und soll in der Liste genauso auffallen.
+                borderLeft: running || preparing ? '6px solid' : undefined,
+                borderLeftColor: running ? 'success.dark' : preparing ? 'info.main' : undefined,
             }}>
             <CardContent sx={{p: 1.25, '&:last-child': {pb: 0.5}}}>
                 <Box
@@ -88,7 +170,9 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                         fontWeight={700}
                         noWrap
                         sx={{textDecoration: skipped ? 'line-through' : 'none'}}>
-                        {match.matchName ?? match.roundName ?? match.competitionName}
+                        {match.matchName ??
+                            match.roundName ??
+                            competitionLabel(match, shortLabels ? 'short' : 'full')}
                     </Typography>
                     <Box sx={{justifySelf: 'end', textAlign: 'right'}}>
                         <Typography
@@ -121,7 +205,11 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
                         }}>
-                        {[match.competitionName, match.categoryName, match.roundName]
+                        {[
+                            competitionLabel(match, shortLabels ? 'short' : 'full'),
+                            match.categoryName,
+                            match.roundName,
+                        ]
                             .filter(Boolean)
                             .join(' · ')}
                     </Typography>
@@ -136,203 +224,312 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                 fontSize: '0.8rem',
                                 fontWeight: 700,
                                 whiteSpace: 'nowrap',
+                                // Die Farbe bleibt die Betonung der Karte (der laufende Lauf trägt
+                                // den kräftigsten Ton), der Text kommt aus der geteilten
+                                // Ableitung. „In Vorbereitung" bekommt den helleren Blauton, weil
+                                // „wartet auf Beenden" den dunklen schon belegt.
                                 backgroundColor: running
                                     ? 'success.dark'
-                                    : skipped
-                                      ? 'warning.dark'
-                                      : awaitingFinish
-                                        ? 'info.dark'
-                                        : 'grey.200',
+                                    : preparing
+                                      ? 'info.main'
+                                      : skipped
+                                        ? 'warning.dark'
+                                        : awaitingFinish
+                                          ? 'info.dark'
+                                          : 'grey.200',
                                 color:
-                                    running || skipped || awaitingFinish
+                                    running || preparing || skipped || awaitingFinish
                                         ? 'common.white'
                                         : 'grey.900',
+                                textDecoration: statusChip.strikeThrough ? 'line-through' : 'none',
                             }}>
-                            {running && match.elapsedMinutes != null ? (
-                                t('event.liveDashboard.runningSince', {
-                                    duration: formatMinutes(match.elapsedMinutes),
-                                })
-                            ) : awaitingFinish ? (
-                                // Der volle Text sprengt schmale Karten; auf Telefonbreite
-                                // trägt die Kurzform dieselbe Aussage.
-                                <>
-                                    <Box
-                                        component="span"
-                                        sx={{display: {xs: 'none', sm: 'inline'}}}>
-                                        {t('event.liveDashboard.state.AWAITING_FINISH')}
-                                    </Box>
-                                    <Box
-                                        component="span"
-                                        sx={{display: {xs: 'inline', sm: 'none'}}}>
-                                        {t('event.liveDashboard.state.AWAITING_FINISH_SHORT')}
-                                    </Box>
-                                </>
-                            ) : (
-                                t(`event.liveDashboard.state.${match.state}`)
-                            )}
+                            {translate(statusChip.labelKey, statusChip.values)}
                         </Box>
                     </Box>
                 </Box>
-                <Divider sx={{mt: 1.5}} />
-                {match.teams.map((team, index) => {
-                    const substituted = team.substituted
-                    // Kurzform in der Liste; der vollständige Name steht im Detail-Dialog
-                    const fullClub = team.actualClubName ?? team.clubName
-                    const clubLine = fullClub != null ? shortClubName(fullClub) : null
-                    // Team names often already contain the club — then drop the second line
-                    const showClubLine =
-                        team.teamName != null &&
-                        fullClub != null &&
-                        clubLine != null &&
-                        !team.teamName.includes(fullClub) &&
-                        !team.teamName.includes(clubLine)
+                {(() => {
+                    const pollStatus = raceClockerPollStatus(match)
+                    if (pollStatus.kind === 'none' || pollStatus.kind === 'ok') return null
 
                     return (
-                        <Box
-                            key={team.teamId}
-                            onClick={() => onTeamClick(match.matchId, team.teamId)}
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: columns,
-                                columnGap: 0.75,
-                                alignItems: 'center',
-                                py: 1.25,
-                                mx: -1,
-                                px: 1,
-                                cursor: 'pointer',
-                                borderRadius: 1,
-                                borderBottom: index < match.teams.length - 1 ? '1px solid' : 'none',
-                                borderBottomColor: 'divider',
-                                '&:active': {backgroundColor: 'action.selected'},
-                                '@media (hover: hover)': {
-                                    '&:hover': {backgroundColor: 'action.hover'},
-                                },
-                            }}>
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight={700}
-                                sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.700'}}>
-                                {team.startNumber ?? '–'}
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            flexWrap="wrap"
+                            useFlexGap>
+                            <Typography variant={'caption'} color={'warning.main'}>
+                                {pollStatus.kind === 'paused'
+                                    ? t(
+                                          'event.competition.execution.results.raceclocker.poll.paused',
+                                      )
+                                    : t(
+                                          'event.competition.execution.results.raceclocker.poll.error',
+                                          {
+                                              reason: pollStatus.errorKey
+                                                  ? t(pollStatus.errorKey)
+                                                  : t('common.error.unexpected'),
+                                          },
+                                      )}
                             </Typography>
-                            <Box sx={{minWidth: 0}}>
-                                <Stack
-                                    direction="row"
-                                    spacing={0.5}
-                                    alignItems="center"
-                                    sx={{minWidth: 0}}>
-                                    <Typography
-                                        variant="subtitle1"
-                                        sx={{
-                                            lineHeight: 1.25,
-                                            overflowWrap: 'break-word',
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden',
-                                        }}>
-                                        {team.teamName ?? clubLine ?? ''}
-                                    </Typography>
-                                    {substituted && (
-                                        <SwapHorizIcon
-                                            sx={{
-                                                fontSize: 22,
-                                                flexShrink: 0,
-                                                color: 'info.dark',
-                                            }}
-                                            titleAccess={t(
-                                                'event.liveDashboard.substitution.short',
-                                            )}
-                                        />
+                            {/*
+                                Der Weg zurück gehört dorthin, wo pausiert wurde: Deaktivieren
+                                pausiert den automatischen Abruf (sonst aktivierte ihn der Job im
+                                nächsten Takt wieder), und deaktiviert wird hier im Dashboard.
+                                Bisher gab es diesen Knopf nur im Durchführungs-Tab — der
+                                Schiedsrichter am Steg käme dort nicht hin.
+                            */}
+                            {pollStatus.kind === 'paused' && onResumeAutoPull && (
+                                <Button
+                                    size="small"
+                                    variant="text"
+                                    onClick={() =>
+                                        onResumeAutoPull(match.matchId, match.competitionId)
+                                    }>
+                                    {t(
+                                        'event.competition.execution.results.raceclocker.poll.resume',
                                     )}
-                                </Stack>
-                                {showClubLine && (
-                                    <Typography
-                                        variant="body2"
-                                        noWrap
-                                        display="block"
-                                        sx={{color: 'grey.800'}}>
-                                        {clubLine}
-                                    </Typography>
-                                )}
-                                {team.onWaterAt && (
-                                    <Typography
-                                        variant="caption"
-                                        display="block"
-                                        sx={{
-                                            color: 'success.dark',
-                                            fontVariantNumeric: 'tabular-nums',
-                                        }}>
-                                        {t('event.liveDashboard.team.onWaterAt', {
-                                            time: format(new Date(team.onWaterAt), t('format.time')),
-                                        })}
-                                    </Typography>
-                                )}
-                            </Box>
-                            {hasResults && (
-                                <>
-                                    {/* Times share one right-aligned monospaced column, so they
-                                        can be compared by scanning straight down. */}
-                                    <Typography
-                                        fontWeight={700}
-                                        textAlign="right"
-                                        sx={{
-                                            fontSize: '0.9rem',
-                                            fontFamily:
-                                                'ui-monospace, SFMono-Regular, Menlo, monospace',
-                                            fontVariantNumeric: 'tabular-nums',
-                                            letterSpacing: '-0.05em',
-                                            color: team.failed ? 'warning.dark' : 'text.primary',
-                                        }}>
-                                        {team.failed
-                                            ? (matchResultStatus(team.failedReason).status ??
-                                              t('event.liveDashboard.team.failedShort'))
-                                            : (team.time ?? '')}
-                                        {team.penaltySeconds != null && (
-                                            <Typography
-                                                component="span"
-                                                color="warning.dark"
-                                                display="block"
-                                                sx={{
-                                                    fontSize: '0.8rem',
-                                                    fontVariantNumeric: 'tabular-nums',
-                                                }}>
-                                                {t('event.liveDashboard.penaltyIncluded', {
-                                                    seconds: team.penaltySeconds,
-                                                })}
-                                            </Typography>
-                                        )}
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            width: '2rem',
-                                            height: '2rem',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            borderRadius: '50%',
-                                            backgroundColor:
-                                                team.place != null ? 'primary.main' : 'transparent',
-                                        }}>
-                                        {team.place != null && (
-                                            <Typography
-                                                fontWeight={700}
-                                                color="primary.contrastText"
-                                                sx={{
-                                                    fontSize: '0.95rem',
-                                                    fontVariantNumeric: 'tabular-nums',
-                                                }}>
-                                                {team.place}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                </>
+                                </Button>
                             )}
-                            {/* "Auf dem Wasser" zählt nur bei aktivem Lauf in die Ampel. */}
-                            {severityIcon(teamSeverity(team, running))}
-                        </Box>
+                        </Stack>
+                    )
+                })()}
+                <Divider sx={{mt: 1.5}} />
+                {teams.map((team, index) => {
+                    const substituted = team.substituted
+                    const showClubLine = teamShowsClubLine(team)
+                    const showCrew = teamShowsCrew(team)
+                    const heading = headingBeforeTeam.get(team.teamId)
+
+                    return (
+                        <Fragment key={team.teamId}>
+                            {heading !== undefined && (
+                                <Typography
+                                    variant="body2"
+                                    fontWeight={700}
+                                    color="text.secondary"
+                                    sx={{mt: 1}}>
+                                    {heading}
+                                </Typography>
+                            )}
+                            <Box
+                                onClick={() => onTeamClick(match.matchId, team.teamId)}
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: columns,
+                                    columnGap: 0.75,
+                                    alignItems: 'center',
+                                    py: 1.25,
+                                    mx: -1,
+                                    px: 1,
+                                    cursor: 'pointer',
+                                    borderRadius: 1,
+                                    borderBottom: index < teams.length - 1 ? '1px solid' : 'none',
+                                    borderBottomColor: 'divider',
+                                    '&:active': {backgroundColor: 'action.selected'},
+                                    '@media (hover: hover)': {
+                                        '&:hover': {backgroundColor: 'action.hover'},
+                                    },
+                                }}>
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight={700}
+                                    sx={{fontVariantNumeric: 'tabular-nums', color: 'grey.700'}}>
+                                    {team.startNumber ?? '–'}
+                                </Typography>
+                                <Box sx={{minWidth: 0}}>
+                                    <Stack
+                                        direction="row"
+                                        spacing={0.5}
+                                        alignItems="center"
+                                        sx={{minWidth: 0}}>
+                                        <Box sx={{minWidth: 0}}>
+                                            {/*
+                                            Die Vereinskette steht oben und trägt die Zeile: sie
+                                            sagt, wer da rudert. Der Mannschaftsname ist dagegen
+                                            nur ein Zähler (`#1`, `#2`) für Vereine mit mehreren
+                                            Booten und steht deshalb klein darunter — er
+                                            unterscheidet, er benennt nicht.
+
+                                            Fehlt die Kette (der Name trägt den Verein schon),
+                                            rückt der Name an ihre Stelle und bekommt ihr Gewicht:
+                                            prominent ist immer das, was oben steht.
+                                        */}
+                                            {showClubLine && (
+                                                <Typography
+                                                    variant="body2"
+                                                    aria-label={t('event.liveDashboard.team.clubs')}
+                                                    sx={{
+                                                        color: 'grey.800',
+                                                        // Zwei Zeilen hoch; schmal ist die Kette
+                                                        // vorher schon auf ganze Vereinsnamen samt
+                                                        // "+n" gekürzt, breit läuft sie hier aus.
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
+                                                    }}>
+                                                    <Box
+                                                        component="span"
+                                                        sx={{
+                                                            display: 'inline',
+                                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]:
+                                                                {
+                                                                    display: 'none',
+                                                                },
+                                                        }}>
+                                                        {shortenClubChain(
+                                                            team.clubsShort,
+                                                            narrowChainChars,
+                                                        )}
+                                                    </Box>
+                                                    <Box
+                                                        component="span"
+                                                        sx={{
+                                                            display: 'none',
+                                                            [`@container (min-width: ${WIDE_CARD_PX}px)`]:
+                                                                {
+                                                                    display: 'inline',
+                                                                },
+                                                        }}>
+                                                        {team.clubsFull}
+                                                    </Box>
+                                                </Typography>
+                                            )}
+                                            {team.teamName != null && (
+                                                <Typography
+                                                    variant={showClubLine ? 'caption' : 'subtitle1'}
+                                                    sx={{
+                                                        lineHeight: 1.25,
+                                                        overflowWrap: 'break-word',
+                                                        color: showClubLine
+                                                            ? 'grey.600'
+                                                            : undefined,
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
+                                                    }}>
+                                                    {team.teamName}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        {substituted && (
+                                            <SwapHorizIcon
+                                                sx={{
+                                                    fontSize: 22,
+                                                    flexShrink: 0,
+                                                    color: 'info.dark',
+                                                }}
+                                                titleAccess={t(
+                                                    'event.liveDashboard.substitution.short',
+                                                )}
+                                            />
+                                        )}
+                                    </Stack>
+                                    {showCrew && (
+                                        <Typography
+                                            variant="caption"
+                                            aria-label={t('event.liveDashboard.team.crew')}
+                                            sx={{
+                                                color: 'grey.700',
+                                                display: 'none',
+                                                [`@container (min-width: ${CREW_CARD_PX}px)`]: {
+                                                    display: '-webkit-box',
+                                                },
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                            }}>
+                                            {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
+                                        </Typography>
+                                    )}
+                                    {team.inArenaRequired && team.inArenaAt && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{
+                                                color: 'success.dark',
+                                                fontVariantNumeric: 'tabular-nums',
+                                            }}>
+                                            {t('event.liveDashboard.team.inArenaAt', {
+                                                time: format(
+                                                    new Date(team.inArenaAt),
+                                                    t('format.time'),
+                                                ),
+                                            })}
+                                        </Typography>
+                                    )}
+                                </Box>
+                                {hasResults && (
+                                    <>
+                                        {/* Times share one right-aligned monospaced column, so they
+                                        can be compared by scanning straight down. */}
+                                        <Typography
+                                            fontWeight={700}
+                                            textAlign="right"
+                                            sx={{
+                                                fontSize: '0.9rem',
+                                                fontFamily:
+                                                    'ui-monospace, SFMono-Regular, Menlo, monospace',
+                                                fontVariantNumeric: 'tabular-nums',
+                                                letterSpacing: '-0.05em',
+                                                color: team.failed
+                                                    ? 'warning.dark'
+                                                    : 'text.primary',
+                                            }}>
+                                            {team.failed
+                                                ? (matchResultStatus(team.failedReason).status ??
+                                                  t('event.liveDashboard.team.failedShort'))
+                                                : (team.time ?? '')}
+                                            {team.penaltySeconds != null && (
+                                                <Typography
+                                                    component="span"
+                                                    color="warning.dark"
+                                                    display="block"
+                                                    sx={{
+                                                        fontSize: '0.8rem',
+                                                        fontVariantNumeric: 'tabular-nums',
+                                                    }}>
+                                                    {t('event.liveDashboard.penaltyIncluded', {
+                                                        seconds: team.penaltySeconds,
+                                                    })}
+                                                </Typography>
+                                            )}
+                                        </Typography>
+                                        <Box
+                                            sx={{
+                                                width: '2rem',
+                                                height: '2rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: '50%',
+                                                backgroundColor:
+                                                    team.place != null
+                                                        ? 'primary.main'
+                                                        : 'transparent',
+                                            }}>
+                                            {team.place != null && (
+                                                <Typography
+                                                    fontWeight={700}
+                                                    color="primary.contrastText"
+                                                    sx={{
+                                                        fontSize: '0.95rem',
+                                                        fontVariantNumeric: 'tabular-nums',
+                                                    }}>
+                                                    {team.categoryPlace ?? team.place}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </>
+                                )}
+                                <SeverityIcon severity={team.severity} />
+                            </Box>
+                        </Fragment>
                     )
                 })}
-                {(showFinish || showRunToggle) && (
+                {(showFinish || showActivationToggle || showMarkStarted) && (
                     <Stack
                         direction="row"
                         spacing={1}
@@ -350,15 +547,40 @@ const LiveDashboardMatchCard = ({match, onTeamClick, onFinish, onSetRunning}: Pr
                                 {t('event.liveDashboard.resultsCompleteWaiting')}
                             </Typography>
                         )}
-                        {showRunToggle && onSetRunning && (
+                        {showActivationToggle && onSetActivated && (
                             <Button
                                 size="small"
                                 variant="text"
-                                onClick={() => onSetRunning(match.matchId, !running)}>
-                                {running
+                                onClick={() =>
+                                    onSetActivated(match.matchId, !(running || preparing))
+                                }>
+                                {running || preparing
                                     ? t('event.liveDashboard.control.deactivate')
                                     : t('event.liveDashboard.control.activate')}
                             </Button>
+                        )}
+                        {/*
+                            „Läuft" statt „Start": der Klick löst keine Zeitnahme aus, er stellt
+                            fest, dass das Rennen unterwegs ist. Bei eingeschaltetem RaceClocker-
+                            Abruf bleibt er trotzdem bedienbar — der Feed kann ausfallen, und
+                            manche Zeitnahme meldet gar keinen Startstempel.
+                        */}
+                        {showMarkStarted && onMarkStarted && (
+                            <Stack alignItems="flex-end">
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() => onMarkStarted(match.matchId)}>
+                                    {t('event.liveDashboard.control.markStarted')}
+                                </Button>
+                                {raceClockerAutoPull && (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{color: 'grey.700', textAlign: 'right'}}>
+                                        {t('event.liveDashboard.control.markStartedAutoHint')}
+                                    </Typography>
+                                )}
+                            </Stack>
                         )}
                         {showFinish && onFinish && (
                             <FinishMatchButton
@@ -379,6 +601,7 @@ type PendingSlotCardProps = {
     slot: PendingSlotDto
     /** Nur gesetzt, wenn die Nutzerin den Ablauf steuern darf. */
     onSkip?: (slotId: string, label: string, time: string) => void
+    shortLabels: boolean
 }
 
 /**
@@ -386,10 +609,10 @@ type PendingSlotCardProps = {
  * ein wartender Lauf-Slot (Runde noch nicht gesetzt); `slot.name` unterscheidet die Fälle (siehe
  * `PendingSlotDto`). Bewusst ohne Teams oder Ergebnis-Spalten, die gibt es für beide Fälle nicht.
  */
-export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProps) => {
+export const LiveDashboardPendingSlotCard = ({slot, onSkip, shortLabels}: PendingSlotCardProps) => {
     const {t} = useTranslation()
     const isFree = slot.name != null
-    const label = pendingSlotLabel(slot)
+    const label = pendingSlotLabel(slot, shortLabels ? 'short' : 'full')
     const time = format(new Date(slot.startTime), t('format.time'))
     const stateLabel = t(isFree ? 'event.schedule.state.FREE' : 'event.schedule.state.WAITING')
 
@@ -403,7 +626,11 @@ export const LiveDashboardPendingSlotCard = ({slot, onSkip}: PendingSlotCardProp
                         columnGap: 1.5,
                         alignItems: 'baseline',
                     }}>
-                    <Typography variant="subtitle1" fontWeight={700} noWrap sx={{color: 'grey.700'}}>
+                    <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        noWrap
+                        sx={{color: 'grey.700'}}>
                         {label || stateLabel}
                     </Typography>
                     <Typography

@@ -78,7 +78,7 @@ object MyEventRepo {
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
             COMPETITION_MATCH.FINISHED_AT,
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION_PROPERTIES.NAME.`as`("competition_name"),

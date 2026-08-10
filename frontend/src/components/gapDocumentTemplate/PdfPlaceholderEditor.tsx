@@ -1,12 +1,14 @@
 import {Box, IconButton, Paper, Stack, Typography} from '@mui/material'
 import {Document, Page} from 'react-pdf'
-import {useCallback, useEffect, useRef, useState} from 'react'
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react'
 import {GapDocumentPlaceholderType, GapDocumentType, TextAlign} from '@api/types.gen.ts'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import {Delete, DragIndicator} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import '@utils/pdfWorker'
+import {clampRect, MIN_EXTENT, nudgeRect, renderedFontSize} from './placeholderGeometry.ts'
+import {CHAIN_SEPARATOR, chainSegments, sampleTextFor} from './placeholderSample.ts'
 
 type PlaceholderData = {
     id: string
@@ -32,6 +34,10 @@ type Props = {
     onAddPlaceholder: (type: GapDocumentPlaceholderType, page: number) => void
     selectedPlaceholder: string | null
     onSelectPlaceholder: (id: string | null) => void
+    /** CSS-Familienname der hochgeladenen Schrift, bereits per FontFace geladen. `undefined` lässt
+     * den Browser die Standardschrift verwenden — sowohl ohne Schrift als auch nach fehlgeschlagenem
+     * Laden. */
+    fontFamily?: string
 }
 
 const PdfPlaceholderEditor = (props: Props) => {
@@ -39,6 +45,12 @@ const PdfPlaceholderEditor = (props: Props) => {
     const [numPages, setNumPages] = useState<number>(0)
     const [pageWidth, setPageWidth] = useState<number>(0)
     const [pageDimensions, setPageDimensions] = useState<{width: number; height: number}>({
+        width: 0,
+        height: 0,
+    })
+    // Die von der PDF selbst berichtete Seitengröße in Punkten, getrennt von pageDimensions
+    // (gerenderte Pixel) — nötig, um Schriftgrößen in Punkten korrekt hochzuskalieren.
+    const [originalPageSize, setOriginalPageSize] = useState<{width: number; height: number}>({
         width: 0,
         height: 0,
     })
@@ -74,11 +86,20 @@ const PdfPlaceholderEditor = (props: Props) => {
         setNumPages(numPages)
     }
 
-    const onPageLoadSuccess = (page: {width: number; height: number}) => {
+    const onPageLoadSuccess = (page: {
+        width: number
+        height: number
+        originalWidth: number
+        originalHeight: number
+    }) => {
         // Update dimensions based on the actual rendered page
         setPageDimensions({
             width: page.width,
             height: page.height,
+        })
+        setOriginalPageSize({
+            width: page.originalWidth,
+            height: page.originalHeight,
         })
     }
 
@@ -113,14 +134,11 @@ const PdfPlaceholderEditor = (props: Props) => {
                 const relDeltaX = deltaX / pageDimensions.width
                 const relDeltaY = deltaY / pageDimensions.height
 
-                const newLeft = Math.max(
-                    0,
-                    Math.min(1 - placeholder.relWidth, placeholder.relLeft + relDeltaX),
-                )
-                const newTop = Math.max(
-                    0,
-                    Math.min(1 - placeholder.relHeight, placeholder.relTop + relDeltaY),
-                )
+                const {relLeft: newLeft, relTop: newTop} = clampRect({
+                    ...placeholder,
+                    relLeft: placeholder.relLeft + relDeltaX,
+                    relTop: placeholder.relTop + relDeltaY,
+                })
 
                 props.onPlaceholdersChange(
                     props.placeholders.map(p =>
@@ -143,13 +161,13 @@ const PdfPlaceholderEditor = (props: Props) => {
                 const edge = resizingPlaceholder.edge
                 if (edge.includes('e')) {
                     newWidth = Math.max(
-                        0.01,
+                        MIN_EXTENT,
                         Math.min(1 - placeholder.relLeft, placeholder.relWidth + relDeltaX),
                     )
                 } else if (edge.includes('w')) {
                     const adjustedDelta = Math.max(
                         -placeholder.relLeft,
-                        Math.min(placeholder.relWidth - 0.01, relDeltaX),
+                        Math.min(placeholder.relWidth - MIN_EXTENT, relDeltaX),
                     )
                     newLeft = placeholder.relLeft + adjustedDelta
                     newWidth = placeholder.relWidth - adjustedDelta
@@ -157,29 +175,28 @@ const PdfPlaceholderEditor = (props: Props) => {
 
                 if (edge.includes('s')) {
                     newHeight = Math.max(
-                        0.01,
+                        MIN_EXTENT,
                         Math.min(1 - placeholder.relTop, placeholder.relHeight + relDeltaY),
                     )
                 } else if (edge.includes('n')) {
                     const adjustedDelta = Math.max(
                         -placeholder.relTop,
-                        Math.min(placeholder.relHeight - 0.01, relDeltaY),
+                        Math.min(placeholder.relHeight - MIN_EXTENT, relDeltaY),
                     )
                     newTop = placeholder.relTop + adjustedDelta
                     newHeight = placeholder.relHeight - adjustedDelta
                 }
 
+                const clamped = clampRect({
+                    relLeft: newLeft,
+                    relTop: newTop,
+                    relWidth: newWidth,
+                    relHeight: newHeight,
+                })
+
                 props.onPlaceholdersChange(
                     props.placeholders.map(p =>
-                        p.id === resizingPlaceholder.id
-                            ? {
-                                  ...p,
-                                  relLeft: newLeft,
-                                  relTop: newTop,
-                                  relWidth: newWidth,
-                                  relHeight: newHeight,
-                              }
-                            : p,
+                        p.id === resizingPlaceholder.id ? {...p, ...clamped} : p,
                     ),
                 )
                 setDragStart({x: e.clientX, y: e.clientY})
@@ -205,6 +222,37 @@ const PdfPlaceholderEditor = (props: Props) => {
         }
     }, [draggedPlaceholder, resizingPlaceholder, handleMouseMove, handleMouseUp])
 
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (!props.selectedPlaceholder) {
+            return
+        }
+        const direction =
+            event.key === 'ArrowLeft'
+                ? 'left'
+                : event.key === 'ArrowRight'
+                  ? 'right'
+                  : event.key === 'ArrowUp'
+                    ? 'up'
+                    : event.key === 'ArrowDown'
+                      ? 'down'
+                      : undefined
+        if (!direction) {
+            return
+        }
+        event.preventDefault()
+        const placeholder = props.placeholders.find(p => p.id === props.selectedPlaceholder)
+        if (!placeholder) {
+            return
+        }
+        props.onPlaceholdersChange(
+            props.placeholders.map(p =>
+                p.id === props.selectedPlaceholder
+                    ? {...p, ...nudgeRect(p, direction, event.shiftKey)}
+                    : p,
+            ),
+        )
+    }
+
     const handleDeletePlaceholder = (id: string) => {
         props.onPlaceholdersChange(props.placeholders.filter(p => p.id !== id))
         if (props.selectedPlaceholder === id) {
@@ -217,6 +265,13 @@ const PdfPlaceholderEditor = (props: Props) => {
             .filter(p => p.page === page)
             .map(placeholder => {
                 const isSelected = props.selectedPlaceholder === placeholder.id
+                const fontSize = renderedFontSize(placeholder, pageDimensions, originalPageSize)
+                const justifyContent =
+                    placeholder.textAlign === 'CENTER'
+                        ? 'center'
+                        : placeholder.textAlign === 'RIGHT'
+                          ? 'flex-end'
+                          : 'flex-start'
                 return (
                     <Box
                         key={placeholder.id}
@@ -232,16 +287,92 @@ const PdfPlaceholderEditor = (props: Props) => {
                                 ? 'rgba(25, 118, 210, 0.1)'
                                 : 'rgba(0, 0, 0, 0.05)',
                             cursor: 'move',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
                             boxSizing: 'border-box',
+                            // Sichtbar statt abgeschnitten: ein umgebrochener Text wächst über den
+                            // Kasten hinaus (nach oben wie nach unten, siehe GapTextMetrics), und
+                            // genau das soll man hier sehen, bevor es auf dem Papier steht.
+                            overflow: 'visible',
                             '&:hover': {
                                 backgroundColor: 'rgba(25, 118, 210, 0.15)',
                                 borderColor: '#1976d2',
                             },
                         }}>
-                        <Stack direction="row" spacing={0.5} alignItems="center">
+                        {/* Beispieltext, in Ausrichtung/Größe/Schnitt/Schrift des Platzhalters,
+                            senkrecht zentriert.
+
+                            Bis zum 09.08.2026 stand hier `nowrap` samt `overflow: hidden`: ein zu
+                            langer Text endete sauber an der Kastenkante, während der Druck ihn über
+                            die Seite laufen ließ. Eine Vorschau, die das verschweigt, ist schlimmer
+                            als keine — seit die Vereinskette im Feld steht, trifft es das
+                            Vereinsfeld regelmäßig.
+
+                            Der Umbruch hier ist eine Annäherung: der Browser misst mit seinen
+                            eigenen Schriftmaßen und bricht an Wortgrenzen, der Renderer misst mit
+                            PDFBox und bricht an den Vereinsgrenzen der Kette (GapTextWrap). Die
+                            Zeilen können sich also unterscheiden — dass das Feld mehrzeilig wird
+                            und wie viel Platz es dafür braucht, sieht man trotzdem. Verbindlich
+                            bleibt die Vorschau als PDF. */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                inset: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent,
+                                overflow: 'visible',
+                                pointerEvents: 'none',
+                            }}>
+                            <Typography
+                                component="span"
+                                sx={{
+                                    fontSize: `${fontSize}px`,
+                                    fontWeight: placeholder.bold ? 'bold' : 'normal',
+                                    fontStyle: placeholder.italic ? 'italic' : 'normal',
+                                    fontFamily: props.fontFamily,
+                                    // pre-wrap statt nowrap: bricht um und hält dabei die
+                                    // Zeilenumbrüche, die der Beispieltext schon mitbringt.
+                                    whiteSpace: 'pre-wrap',
+                                    // Ohne Innenabstand bricht die Vorschau an derselben Kante um,
+                                    // an der auch der Renderer misst - der Kasten selbst.
+                                    maxWidth: '100%',
+                                    textAlign:
+                                        placeholder.textAlign === 'CENTER'
+                                            ? 'center'
+                                            : placeholder.textAlign === 'RIGHT'
+                                              ? 'right'
+                                              : 'left',
+                                    userSelect: 'none',
+                                    lineHeight: 1.2,
+                                }}>
+                                {chainSegments(
+                                    sampleTextFor(
+                                        placeholder.type,
+                                        placeholder.staticText,
+                                        t('gap.document.placeholder.staticText'),
+                                    ),
+                                ).map((segment, index) => (
+                                    <Fragment key={index}>
+                                        {index > 0 && CHAIN_SEPARATOR}
+                                        <Box component="span" sx={{whiteSpace: 'nowrap'}}>
+                                            {segment}
+                                        </Box>
+                                    </Fragment>
+                                ))}
+                            </Typography>
+                        </Box>
+                        <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                            sx={{
+                                position: 'absolute',
+                                top: 2,
+                                left: 2,
+                                backgroundColor: 'background.paper',
+                                opacity: 0.9,
+                                borderRadius: 0.5,
+                                px: 0.5,
+                            }}>
                             <DragIndicator fontSize="small" />
                             <Typography
                                 variant="caption"
@@ -355,7 +486,11 @@ const PdfPlaceholderEditor = (props: Props) => {
     const visiblePages = isSinglePageDocumentType ? Math.min(numPages, 1) : numPages
 
     return (
-        <Box ref={containerRef} sx={{overflow: 'auto', maxHeight: '70vh'}}>
+        <Box
+            ref={containerRef}
+            tabIndex={0}
+            onKeyDown={handleKeyDown}
+            sx={{overflow: 'auto', maxHeight: '70vh'}}>
             {isSinglePageDocumentType && numPages > 1 && (
                 <Typography variant="caption" color="text.secondary" sx={{display: 'block', mb: 1}}>
                     {t('gap.document.template.singlePageNotice')}

@@ -15,6 +15,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchTeamInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchParticipantInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchTeamInfo
+import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
 import de.lambda9.ready2race.backend.database.generated.tables.records.InfoViewConfigurationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.INFO_VIEW_CONFIGURATION
 import org.jooq.JSONB
@@ -56,11 +57,18 @@ fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant() = AthleteBoardParti
     role = namedRole,
 )
 
+/**
+ * Die Vereinskette der Athleten gewinnt; der meldende Verein tritt nur ein, wenn zum Boot noch
+ * gar keine Crew erfasst ist. Die Auflösung passiert hier statt in jeder Ansicht.
+ */
+private fun clubsOrRegistering(chain: String?, registeringClubName: String?) =
+    chain ?: registeringClubName
+
 fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
     lane = startNumber,
     teamNumber = teamNumber,
-    // Der tatsächliche Verein gewinnt; die Auflösung passiert hier statt in jeder Ansicht.
-    clubName = actualClubName ?: clubName,
+    clubsShort = clubsOrRegistering(clubsShort, clubName),
+    clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
     participants = participants.map { it.toAthleteBoardParticipant() },
     // Teilergebnis: gefüllt, sobald die Zeitnahme dieses Boot gewertet hat - der Lauf läuft
@@ -76,7 +84,8 @@ fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
 fun UpcomingMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
     lane = startNumber,
     teamNumber = teamNumber,
-    clubName = actualClubName ?: clubName,
+    clubsShort = clubsOrRegistering(clubsShort, clubName),
+    clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
     participants = participants.map { it.toAthleteBoardParticipant() },
 )
@@ -90,6 +99,20 @@ fun RunningMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCountdown: Bool
         matchName = matchName,
         startTime = startTime,
         actualStartTime = startedAt,
+        // Dieselbe Ableitung wie im Schiedsrichter-Dashboard, statt einer zweiten hier: die
+        // Karte las bis zum 09.08.2026 nur "actualStartTime gesetzt?" und war damit die einzige
+        // Oberfläche mit eigener Wahrheit. finishedAt und skipped sind hier immer aus dem Spiel -
+        // dieser Block führt ausschließlich aktivierte Läufe, und Beenden nimmt die Aktivierung
+        // zurück.
+        state = LiveDashboardLogic.deriveMatchState(
+            activatedAt = activatedAt,
+            startedAt = startedAt,
+            startTime = startTime,
+            finishedAt = null,
+            teamResults = teams.map {
+                LiveDashboardLogic.teamHasResult(it.currentPosition, it.failed, deregistered = false)
+            },
+        ),
         startState = AthleteBoardLogic.startState(startTime, now, showCountdown),
         teams = teams.map { it.toAthleteBoardTeam() },
     )
@@ -102,10 +125,22 @@ fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(now: LocalDateTime, showCou
         roundName = roundName,
         matchName = matchName,
         startTime = scheduledStartTime,
+        // Der Block führt ausschließlich nicht aktivierte Läufe; die Ableitung entscheidet damit
+        // nur noch zwischen abgesagt, ungeplant und anstehend. Sie steht trotzdem hier und nicht
+        // als eigenes `if`, damit die Anzeige dieselbe Aufzählung liest wie alle anderen.
+        state = LiveDashboardLogic.deriveMatchState(
+            activatedAt = null,
+            startedAt = null,
+            startTime = scheduledStartTime,
+            finishedAt = null,
+            teamResults = emptyList(),
+            skipped = cancelled,
+        ),
         startState = AthleteBoardLogic.startState(scheduledStartTime, now, showCountdown),
         teams = teams.map { it.toAthleteBoardTeam() },
         pendingRound = pendingRound,
         name = name,
+        cancelled = cancelled,
     )
 
 fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
@@ -122,9 +157,12 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
     teams = teams.map {
         AthleteBoardResultTeam(
             place = it.place,
+            ratingCategory = it.ratingCategory,
+            categoryPlace = it.categoryPlace,
             lane = it.startNumber,
             teamNumber = it.teamNumber,
-            clubName = it.actualClubName ?: it.clubName,
+            clubsShort = clubsOrRegistering(it.clubsShort, it.clubName),
+            clubsFull = clubsOrRegistering(it.clubsFull, it.clubName),
             teamName = it.teamName,
             timeString = it.timeString,
             penaltySeconds = it.penaltySeconds,

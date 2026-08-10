@@ -191,7 +191,11 @@ object MyEventService {
                     actualStartTime = first[COMPETITION_MATCH.STARTED_AT],
                     finishedAt = first[COMPETITION_MATCH.FINISHED_AT],
                     allTeamsScored = first.get("all_teams_scored", Boolean::class.java) == true,
-                    currentlyRunning = first[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
+                    // `currently_running` ist mit V202608091400 zu `activated_at` geworden:
+                    // dieselbe Aussage („vom Schiedsrichter an den Start gerufen"), nur als
+                    // Zeitstempel statt als Merker. Für die Aufteilung laufend/kommend zählt
+                    // weiterhin nur, ob der Lauf gerufen wurde.
+                    currentlyRunning = first[COMPETITION_MATCH.ACTIVATED_AT] != null,
                     lane = first[COMPETITION_MATCH_TEAM.START_NUMBER],
                     teamName = first.get("team_name", String::class.java),
                     clubName = first.get("club_name", String::class.java),

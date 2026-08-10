@@ -44,7 +44,7 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
     // Es wurde noch nie erfolgreich geladen und der letzte Versuch ist fehlgeschlagen
     // (Backend tot, HTTP-Fehler, kein Netz). Das darf nicht wie "keine Läufe" aussehen —
     // ein montierter Bildschirm würde sonst bei totem Backend behaupten, es sei kein Lauf
-    // auf dem Wasser.
+    // in der Arena.
     if (!data && loadFailed) {
         return (
             <Box sx={{display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', p: 3}}>
@@ -140,14 +140,9 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
                 direction={{xs: 'column', lg: 'row'}}
                 gap={{xs: 2, lg: 3}}
                 alignItems="stretch">
-                {/* Leserichtung der Zeit: gelaufen (links) — läuft (Mitte) — kommt (rechts) */}
-                {column(
-                    t('event.info.athleteBoard.results'),
-                    t('event.info.athleteBoard.noResults'),
-                    (data?.results ?? []).map(result => (
-                        <AthleteBoardResultCard key={result.matchId} result={result} />
-                    )),
-                )}
+                {/* Reihenfolge nach Dringlichkeit für die Besatzung am Steg: was jetzt läuft,
+                    was als Nächstes kommt, und erst danach das bereits Gelaufene. Auf dem
+                    Telefon entscheidet dieselbe Reihenfolge, was ohne Scrollen sichtbar ist. */}
                 {column(
                     t('event.info.athleteBoard.running'),
                     t('event.info.athleteBoard.noRunning'),
@@ -171,6 +166,13 @@ const AthleteBoardView = ({eventId, controlsOverlayed = false}: AthleteBoardView
                             variant="upcoming"
                             showCountdown={data?.showCountdown ?? true}
                         />
+                    )),
+                )}
+                {column(
+                    t('event.info.athleteBoard.results'),
+                    t('event.info.athleteBoard.noResults'),
+                    (data?.results ?? []).map(result => (
+                        <AthleteBoardResultCard key={result.matchId} result={result} />
                     )),
                 )}
             </Stack>

@@ -1,6 +1,14 @@
 package de.lambda9.ready2race.backend.calls.responses
 
 enum class ErrorCode {
+    /**
+     * Ein Defekt, kein fachlicher Fehler. Wird nicht beantwortet, sondern vom automatischen
+     * RaceClocker-Abruf in `competition_match.raceclocker_poll_error` abgelegt, wenn ein Lauf an
+     * etwas gescheitert ist, das keinen eigenen Code hat (typischerweise ein `orDie`-Fehlschlag in
+     * SQL). Die Oberfläche zeigt dafür „Unerwarteter Fehler" - der Grund steht im Server-Log.
+     */
+    INTERNAL_ERROR,
+
     CANNOT_ASSIGN_ROLES,
     CAPTCHA_WRONG,
     EMAIL_IN_USE,
@@ -57,6 +65,8 @@ enum class ErrorCode {
     SCHEDULE_SHIFT_TARGET_INVALID,
     SCHEDULE_SHIFT_LEAVES_RACE_DAY,
     SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR,
+    SCHEDULE_ADVANCE_NO_DELTA,
+    SCHEDULE_SLOT_NOT_SKIPPED,
     SCHEDULE_IMPORT_DUPLICATE_ROWS,
     SCHEDULE_COMPRESSION_IMPOSSIBLE,
     SCHEDULE_SETUP_MATCH_ALREADY_PLANNED,
@@ -83,6 +93,9 @@ enum class ErrorCode {
     DOCUMENT_TEMPLATE_TYPE_MISMATCH,
     DOCUMENT_TEMPLATE_PLACEHOLDER_PAGE_NOT_SUPPORTED,
     DOCUMENT_TEMPLATE_PLACEHOLDER_TYPE_NOT_SUPPORTED,
+    DOCUMENT_TEMPLATE_INVALID_PDF,
+    DOCUMENT_TEMPLATE_INVALID_PACKAGE,
+    DOCUMENT_TEMPLATE_UNSUPPORTED_PACKAGE_VERSION,
 
     SUBSTITUTION_NOT_FOUND,
     SUBSTITUTION_PARTICIPANT_OUT_NOT_FOUND,
@@ -114,6 +127,9 @@ enum class ErrorCode {
     TRACKING_TEAM_NOT_CHECKED_IN,
     TRACKING_QR_CODE_NOT_FOUND,
     TRACKING_QR_CODE_NOT_ASSOCIATED_WITH_PARTICIPANT,
+    TRACKING_ENTRY_NOT_FOUND,
+    TRACKING_SEQUENCE_CONFLICT,
+    TRACKING_TIMESTAMP_COLLISION,
 
     DEREGISTRATION_ALREADY_EXISTS,
     DEREGISTRATION_IS_LOCKED,

@@ -40,6 +40,9 @@ class GapDocumentsDocxTest {
     private fun doc(certificates: List<List<AdditionalText>>) = gapDocumentsDocx(
         templatePageSizes = listOf(a4),
         fontName = "TheSansOffice",
+        // Kein Schriftbyte-Array: gemessen wird dann mit Helvetica, wie im PDF-Zweig ohne
+        // eingebettete Vorlagenschrift auch.
+        font = null,
         certificates = certificates,
     )
 
@@ -119,6 +122,7 @@ class GapDocumentsDocxTest {
         val document = gapDocumentsDocx(
             templatePageSizes = listOf(a4),
             fontName = null,
+            font = null,
             certificates = listOf(
                 listOf(
                     addition("links", 0.4).copy(textAlign = TextAlign.LEFT),
@@ -189,6 +193,7 @@ class GapDocumentsDocxTest {
         val document = gapDocumentsDocx(
             templatePageSizes = listOf(a4, a5),
             fontName = null,
+            font = null,
             certificates = listOf(
                 listOf(
                     addition("Seite eins", 0.45, page = 1),
@@ -230,6 +235,7 @@ class GapDocumentsDocxTest {
         val document = gapDocumentsDocx(
             templatePageSizes = listOf(a4, a5),
             fontName = null,
+            font = null,
             certificates = listOf(
                 listOf(addition("Seite eins", 0.45, page = 1)),
                 // Seite 2 (A5) bekommt bewusst keinen Platzhalter.
@@ -263,6 +269,7 @@ class GapDocumentsDocxTest {
         val document = gapDocumentsDocx(
             templatePageSizes = listOf(a4),
             fontName = null,
+            font = null,
             certificates = listOf(
                 listOf(
                     addition("bleibt", 0.45, page = 1),
@@ -283,6 +290,7 @@ class GapDocumentsDocxTest {
         val bytes = gapDocumentsDocx(
             templatePageSizes = listOf(a4, a5),
             fontName = null,
+            font = null,
             certificates = listOf(
                 listOf(
                     addition("SEITE EINS (A4)", 0.45, page = 1),

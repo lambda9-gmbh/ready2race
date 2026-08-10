@@ -37,7 +37,7 @@ object CompetitionPropertiesHasNamedParticipantRepo {
             COMPETITION_PROPERTIES.COMPETITION_TEMPLATE,
             COMPETITION_PROPERTIES.COMPETITION,
             COMPETITION_PROPERTIES.NAME,
-            COMPETITION_PROPERTIES.SHORT_NAME
+            COMPETITION_PROPERTIES.SHORT_NAME,
         ).from(COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT)
             .join(COMPETITION_PROPERTIES)
             .on(COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.COMPETITION_PROPERTIES.eq(COMPETITION_PROPERTIES.ID))
@@ -48,7 +48,7 @@ object CompetitionPropertiesHasNamedParticipantRepo {
                     competitionTemplateId = it[COMPETITION_PROPERTIES.COMPETITION_TEMPLATE],
                     competitionId = it[COMPETITION_PROPERTIES.COMPETITION],
                     name = it[COMPETITION_PROPERTIES.NAME]!!,
-                    shortName = it[COMPETITION_PROPERTIES.SHORT_NAME]
+                    shortName = it[COMPETITION_PROPERTIES.SHORT_NAME],
                 )
             }
     }

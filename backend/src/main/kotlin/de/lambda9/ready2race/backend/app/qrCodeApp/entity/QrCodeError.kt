@@ -10,10 +10,14 @@ enum class QrCodeError : ServiceError {
     QrCodeAlreadyInUse,
 
     /**
-     * Toter Code: der einzige Aufruf in [de.lambda9.ready2race.backend.app.qrCodeApp.boundary.QrCodeAppService.loadQrCode]
-     * ist auskommentiert - ein unbekannter Code liefert dort bewusst eine leere Antwort, damit der
-     * Scanner ihn als "noch frei" behandeln kann. Bleibt vorerst stehen, bekommt aber keinen Code,
-     * weil ihn niemand auslösen kann.
+     * Ausgelöst beim Entfernen eines Bändchens in der Nutzerverwaltung
+     * ([de.lambda9.ready2race.backend.app.appUserWithQrCode.boundary.AppUserWithQrCodeService.deleteQrCode]):
+     * löscht die Abfrage keine Zeile, ist der Code unbekannt oder schon entfernt.
+     *
+     * Bewusst NICHT im Scanner-Weg: [de.lambda9.ready2race.backend.app.qrCodeApp.boundary.QrCodeAppService.loadQrCode]
+     * liefert für einen unbekannten Code eine leere Antwort, damit der Scanner ihn als "noch frei"
+     * behandeln kann, und [de.lambda9.ready2race.backend.app.qrCodeApp.boundary.QrCodeAppService.deleteQrCode]
+     * löscht dort weiterhin idempotent.
      */
     QrCodeNotFound;
 

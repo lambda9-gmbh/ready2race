@@ -4,6 +4,11 @@ import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import java.time.LocalDateTime
 import java.util.UUID
 
+/**
+ * Ob der Lauf eines Slots abgesagt ist, steht bewusst NICHT als eigenes Feld hier: [state] ist
+ * dann bereits [EventScheduleSlotState.SKIPPED], und zwei Quellen für dieselbe Aussage laufen
+ * früher oder später auseinander.
+ */
 data class EventScheduleSlotDto(
     val id: UUID,
     val startTime: LocalDateTime,
@@ -12,6 +17,13 @@ data class EventScheduleSlotDto(
     val durationMinutes: Int?,
     val competitionId: UUID?,
     val competitionName: String?,
+    /** Die Rennnummer des Wettkampfs (competition_properties.identifier, z. B. "17-NC") - steht im
+     * Zeitplan-Tab zusammen mit dem Kurznamen vor dem Slot-Namen. Null für freie Slots. */
+    val competitionIdentifier: String?,
+    /** Der Kurzname des Wettkampfs (competition_properties.short_name, z. B. "CM 4x+") - im
+     * Zeitplan-Tab dem Slot-Namen vorangestellt. Null für freie Slots ohne Wettkampf und für
+     * Wettkämpfe, bei denen der Kurzname nicht gepflegt ist (das Feld ist optional). */
+    val competitionShortName: String?,
     val roundName: String?,
     val matchName: String?,
     val matchId: UUID?,
@@ -20,15 +32,31 @@ data class EventScheduleSlotDto(
     val setupRoundId: UUID?,
     val matchStartedAt: LocalDateTime?,
     val matchFinishedAt: LocalDateTime?,
-    /** Ob der verknüpfte Lauf gerade aktiv ist - steuert im Zeitplan-Tab, ob "Lauf aktivieren" oder
-     * "Lauf beenden" angeboten wird (C1). Immer false ohne verknüpften Lauf. */
-    val matchCurrentlyRunning: Boolean,
+    /**
+     * Wann der verknüpfte Lauf an den Start gerufen wurde - steuert im Zeitplan-Tab, ob "Lauf
+     * aktivieren" oder "Lauf beenden" angeboten wird (C1), und zusammen mit [matchStartedAt], ob
+     * der Slot "In Vorbereitung" oder "Läuft" zeigt. Immer null ohne verknüpften Lauf.
+     */
+    val matchActivatedAt: LocalDateTime?,
+    /**
+     * Mannschaften des verknüpften Laufs, die im Rennen sind (ohne die aus der Vorrunde
+     * mitgeführten OUT-Zeilen) - 0 ohne verknüpften Lauf.
+     */
+    val matchTeamsTotal: Int,
+    /**
+     * Davon bereits gewertet: Platz gesetzt ODER ausgeschieden ODER abgemeldet, dieselbe Regel wie
+     * `LiveDashboardLogic.teamHasResult`. Aus beiden zusammen liest der Zeitplan "Teilweise
+     * gewertet n/m" ab; ein eigener Zustand ist das ausdrücklich nicht.
+     */
+    val matchTeamsScored: Int,
 )
 
 data class UnplannedSetupMatchDto(
     val setupMatchId: UUID,
     val competitionId: UUID,
     val competitionName: String,
+    val competitionIdentifier: String?,
+    val competitionShortName: String?,
     val roundName: String,
     val matchName: String?,
 )

@@ -238,6 +238,10 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             <FormInputText name="identifier" label={t('event.competition.identifier')} required />
             <FormInputText name="name" label={t('event.competition.name')} required />
             <FormInputText name="shortName" label={t('event.competition.shortName')} />
+            <FormInputSwitch
+                name={'checkInOutRequired'}
+                label={t('event.competition.checkInOutRequired')}
+            />
             <FormInputText name="description" label={t('event.competition.description')} />
             <FormInputAutocomplete
                 name="competitionCategory"

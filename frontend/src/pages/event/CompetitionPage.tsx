@@ -34,17 +34,8 @@ import CompetitionTimingConfig from '@components/event/competition/timing/Compet
 import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
 import CompetitionRegistrationTeams from '@components/event/competition/registration/CompetitionRegistrationTeams.tsx'
 import {format} from 'date-fns'
-
-const COMPETITION_TABS = [
-    'general',
-    'registrations',
-    'teams',
-    'setup',
-    'execution',
-    'timing',
-    'places',
-] as const
-export type CompetitionTab = (typeof COMPETITION_TABS)[number]
+import CompetitionNavigation from '@components/event/competition/CompetitionNavigation.tsx'
+import {CompetitionTab} from '@components/event/competition/common.ts'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -58,7 +49,7 @@ const CompetitionPage = () => {
     const {competitionId} = competitionRoute.useParams()
 
     const {tab} = competitionIndexRoute.useSearch()
-    const activeTab: CompetitionTab = tab ?? 'general'
+    const requestedTab: CompetitionTab = tab ?? 'general'
 
     const navigate = useNavigate()
     const switchTab = (tab: CompetitionTab) => {
@@ -152,6 +143,23 @@ const CompetitionPage = () => {
         eventData?.lateRegistrationAvailableTo &&
         competitionData?.properties.lateRegistrationAllowed
 
+    // Der Tab wird beim Sprung ins nächste Rennen mitgetragen und kann dort fehlen - etwa
+    // "Meldungen" bei geschlossener Meldung. Ohne diesen Rückfall zeigt MUI einen Tab-Streifen
+    // ohne aktiven Eintrag und der Inhaltsbereich bleibt leer.
+    const mayEdit = user.checkPrivilege(updateEventGlobal) && !eventData?.challengeEvent
+    const visibleTabs: CompetitionTab[] = [
+        'general',
+        ...(showRegistrationsTab ? (['registrations'] as const) : []),
+        ...(user.checkPrivilege(readRegistrationGlobal) ? (['teams'] as const) : []),
+        ...(mayEdit ? (['setup', 'execution', 'timing'] as const) : []),
+        ...(user.checkPrivilege(readResultGlobal) && !eventData?.challengeEvent
+            ? (['places'] as const)
+            : []),
+    ]
+    const activeTab: CompetitionTab = visibleTabs.includes(requestedTab)
+        ? requestedTab
+        : 'general'
+
     const challengeTimespan = competitionData?.properties.challengeConfig
         ? {
             from: competitionData?.properties.challengeConfig?.startAt,
@@ -162,6 +170,11 @@ const CompetitionPage = () => {
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {(competitionData && eventData && (
+                <CompetitionNavigation
+                    eventId={eventId}
+                    eventName={eventData.name}
+                    competitionId={competitionId}
+                    activeTab={activeTab}>
                     <Stack spacing={2}>
                         <Typography variant={'h1'}>
                             {competitionData.properties.identifier +
@@ -419,7 +432,12 @@ const CompetitionPage = () => {
                         )}
                         {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
                             <TabPanel index={'execution'} activeTab={activeTab}>
-                                <CompetitionExecution/>
+                                <CompetitionExecution
+                                    autoRefresh={{
+                                        enabled: eventData.executionAutoRefresh,
+                                        seconds: eventData.executionAutoRefreshSeconds,
+                                    }}
+                                />
                             </TabPanel>
                         )}
                         {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
@@ -433,7 +451,8 @@ const CompetitionPage = () => {
                             </TabPanel>
                         )}
                     </Stack>
-                )) ||
+                </CompetitionNavigation>
+            )) ||
                 (competitionPending && eventPending && <Throbber/>)}
         </Box>
     )

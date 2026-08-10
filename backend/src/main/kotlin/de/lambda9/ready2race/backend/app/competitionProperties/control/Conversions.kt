@@ -14,6 +14,7 @@ fun CompetitionPropertiesRequest.toRecord(competitionId: UUID?, competitionTempl
         identifier = identifier,
         name = name,
         shortName = shortName,
+        checkInOutRequired = checkInOutRequired,
         description = description,
         competitionCategory = competitionCategory,
         lateRegistrationAllowed = lateRegistrationAllowed,
@@ -68,6 +69,7 @@ fun CompetitionPropertiesRequest.toUpdateFunction(): CompetitionPropertiesRecord
         identifier = it.identifier
         name = it.name
         shortName = it.shortName
+        checkInOutRequired = it.checkInOutRequired
         description = it.description
         competitionCategory = it.competitionCategory
         lateRegistrationAllowed = it.lateRegistrationAllowed

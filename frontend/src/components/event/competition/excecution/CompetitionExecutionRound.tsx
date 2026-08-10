@@ -2,7 +2,6 @@ import {
     CompetitionMatchDto,
     CompetitionRoundDto,
     StartListFileType,
-    TimingConfigDto,
 } from '@api/types.gen.ts'
 import {
     Accordion,
@@ -10,6 +9,7 @@ import {
     AccordionSummary,
     Box,
     Card,
+    Chip,
     Divider,
     FormControlLabel,
     Stack,
@@ -27,11 +27,11 @@ import Substitutions from '@components/event/competition/excecution/Substitution
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
+import {Dispatch, Fragment, SetStateAction, SyntheticEvent, useEffect, useState} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
     skipScheduleRound,
-    updateMatchRunningState,
+    updateMatchActivation,
 } from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
@@ -42,6 +42,51 @@ import {failedLabel} from '@utils/matchResultStatus.ts'
 import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
 import {roundSkipErrorText} from '@components/event/schedule/scheduleError.ts'
 import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
+import {raceClockerPollStatus} from './raceClockerPollStatus.ts'
+import {TimingFormSystem} from '@components/event/competition/timing/timingConfigForm.ts'
+import {
+    MatchChip,
+    arenaChip,
+    matchStatusChip,
+    roundCounterChips,
+} from '@components/event/match/matchStatusChip.ts'
+
+/**
+ * Uhr für die verstrichenen Minuten auf den Status-Chips ("Läuft · 4 min", "Überfällig · 8 min").
+ * Die Durchführungsseite lädt nur auf Anforderung nach; ohne eigene Uhr stünde die Zahl auf dem
+ * Chip still und behauptete nach einer Viertelstunde noch immer "Läuft · 1 min". 30 Sekunden
+ * reichen für eine Minutenangabe.
+ */
+const useNow = (intervalMs = 30_000): Date => {
+    const [now, setNow] = useState(() => new Date())
+    useEffect(() => {
+        const id = window.setInterval(() => setNow(new Date()), intervalMs)
+        return () => window.clearInterval(id)
+    }, [intervalMs])
+    return now
+}
+
+/**
+ * Ein [MatchChip] als MUI-Chip. Welcher Chip es ist, entscheidet ausschließlich
+ * `matchStatusChip.ts` — hier wird nur noch übersetzt und gemalt.
+ */
+const StatusChip = ({chip}: {chip: MatchChip | null}) => {
+    const {t} = useTranslation()
+    // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur - dasselbe
+    // Muster wie `stateChipProps` in EventSchedule.tsx.
+    const translate = t as (key: string, values?: Record<string, string | number>) => string
+    // null heißt "dieser Chip sagt hier nichts aus" (z.B. der Arena-Chip ohne erhobene
+    // Check-in-Daten) - dann gar nichts zeigen, statt eine leere Hülle.
+    if (!chip) return null
+    return (
+        <Chip
+            size={'small'}
+            label={translate(chip.labelKey, chip.values)}
+            color={chip.color}
+            sx={chip.strikeThrough ? {textDecoration: 'line-through'} : undefined}
+        />
+    )
+}
 
 type Props = {
     round: CompetitionRoundDto
@@ -57,9 +102,16 @@ type Props = {
     smallScreenLayout: boolean
     setResultImportMatch: Dispatch<SetStateAction<string | null>>
     pullRaceClockerResults: (competitionMatchId: string) => Promise<void>
+    resumeRaceClockerAutoPull: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListCSV: (competitionMatchId: string) => Promise<void>
-    timingSystem: TimingConfigDto['timingSystem']
+    /**
+     * Das EFFEKTIVE Zeitnahmesystem des Wettkampfs (`effectiveTimingSystem`), also einschließlich
+     * dessen, was er von der Veranstaltung erbt — nicht seine eigene Spalte. Daran hängt unter
+     * anderem der Knopf „Automatik wieder aufnehmen"; mit dem lokalen Wert verschwände er bei jedem
+     * Wettkampf, der RaceClocker erbt, und der pausierte Lauf ließe sich nirgends mehr freigeben.
+     */
+    timingSystem: TimingFormSystem
 }
 
 const CompetitionExecutionRound = ({
@@ -70,6 +122,7 @@ const CompetitionExecutionRound = ({
     smallScreenLayout,
     setResultImportMatch,
     pullRaceClockerResults,
+    resumeRaceClockerAutoPull,
     handleDownloadStartListPDF,
     handleDownloadStartListCSV,
     timingSystem,
@@ -78,6 +131,11 @@ const CompetitionExecutionRound = ({
     const {t} = useTranslation()
     const feedback = useFeedback()
     const theme = useTheme()
+    const now = useNow()
+
+    // Die Zählerleiste fasst zusammen, was die Chips darunter einzeln sagen — bei einer einzigen
+    // Lauf-Karte wäre das bloße Wiederholung, deshalb bleibt sie dort leer (siehe roundCounterChips).
+    const counterChips = roundCounterChips(filteredMatches.map(match => match.status))
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -149,7 +207,12 @@ const CompetitionExecutionRound = ({
             props.handleAccordionExpandedChange(accordionIndex, isExpanded)
         }
 
-    const handleToggleRunningState = async (match: CompetitionMatchDto) => {
+    /**
+     * Ruft den Lauf an den Start oder nimmt das zurück. Der Haken sagt „Am Start", nicht „Läuft":
+     * er setzt `activated_at`, der Ist-Start kommt aus der Zeitnahme oder aus dem „Läuft"-Knopf im
+     * Schiedsrichter-Dashboard.
+     */
+    const handleToggleActivation = async (match: CompetitionMatchDto) => {
         // Check if match has no places set
         const hasPlacesSet = match.teams.some(
             team => team.place !== null && team.place !== undefined,
@@ -160,14 +223,14 @@ const CompetitionExecutionRound = ({
         }
 
         props.setSubmitting(true)
-        const {error} = await updateMatchRunningState({
+        const {error} = await updateMatchActivation({
             path: {
                 eventId: eventId,
                 competitionId: competitionId,
                 competitionMatchId: match.id,
             },
             body: {
-                currentlyRunning: !match.currentlyRunning,
+                activated: match.activatedAt == null,
             },
         })
         props.setSubmitting(false)
@@ -277,6 +340,13 @@ const CompetitionExecutionRound = ({
                 <Box sx={{py: 2}}>
                     <Divider variant={'middle'} />
                 </Box>
+                {counterChips.length > 0 && (
+                    <Stack direction={'row'} spacing={1} useFlexGap sx={{flexWrap: 'wrap'}}>
+                        {counterChips.map(chip => (
+                            <StatusChip key={chip.labelKey} chip={chip} />
+                        ))}
+                    </Stack>
+                )}
                 <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
                     {filteredMatches.map((match, matchIndex) => (
                         <Card
@@ -287,7 +357,7 @@ const CompetitionExecutionRound = ({
                                 [theme.breakpoints.up('md')]: {
                                     minWidth: 400,
                                 },
-                                ...(match.currentlyRunning && {
+                                ...(match.activatedAt != null && {
                                     borderColor: 'primary.main',
                                     borderWidth: 2,
                                     borderStyle: 'solid',
@@ -329,62 +399,36 @@ const CompetitionExecutionRound = ({
                                         <FormControlLabel
                                             control={
                                                 <Checkbox
-                                                    checked={match.currentlyRunning}
-                                                    onChange={() => handleToggleRunningState(match)}
+                                                    checked={match.activatedAt != null}
+                                                    onChange={() => handleToggleActivation(match)}
                                                     disabled={submitting}
                                                 />
                                             }
                                             label={t(
-                                                'event.competition.execution.match.currentlyRunning',
+                                                'event.competition.execution.match.activated',
                                             )}
                                         />
                                     )}
                                 </Stack>
                                 <Stack direction={'column'} spacing={1}>
-                                    {roundIndex === 0 && (
-                                        <SelectionMenu
-                                            anchor={{
-                                                button: {
-                                                    vertical: 'bottom',
-                                                    horizontal: 'right',
-                                                },
-                                                menu: {
-                                                    vertical: 'top',
-                                                    horizontal: 'right',
-                                                },
-                                            }}
-                                            buttonContent={t(
-                                                'event.competition.execution.results.enter',
-                                            )}
-                                            keyLabel={'competition-execution-results-enter'}
-                                            onSelectItem={async (value: string) => {
-                                                const v = value as MatchResultOption
-                                                switch (v) {
-                                                    case 'form':
-                                                        props.openResultsDialog(matchIndex)
-                                                        break
-                                                    case 'XLS':
-                                                        setResultImportMatch(match.id)
-                                                        break
-                                                    case 'RACECLOCKER':
-                                                        await pullRaceClockerResults(match.id)
-                                                        break
-                                                }
-                                            }}
-                                            items={matchResultOptions(timingSystem).map(
-                                                o =>
-                                                    ({
-                                                        id: o,
-                                                        label: t(
-                                                            `event.competition.execution.results.type.${o}`,
-                                                        ),
-                                                    }) satisfies {
-                                                        id: MatchResultOption
-                                                        label: string
-                                                    },
+                                    {/* Status oben rechts: Checkbox und farbiger Rahmen bleiben,
+                                        wie sie sind — der Chip sagt zusätzlich, was ein nicht
+                                        aktiver Lauf ist (beendet, abgesagt, überfällig, teilweise
+                                        gewertet), was bis hierher alles gleich aussah. */}
+                                    <Stack
+                                        direction={'row'}
+                                        spacing={1}
+                                        useFlexGap
+                                        sx={{flexWrap: 'wrap', justifyContent: 'flex-end'}}>
+                                        <StatusChip
+                                            chip={matchStatusChip(
+                                                match.status,
+                                                match.startTime,
+                                                now,
                                             )}
                                         />
-                                    )}
+                                        <StatusChip chip={arenaChip(match.status)} />
+                                    </Stack>
                                     <LoadingButton
                                         onClick={() =>
                                             props.openEditMatchDialog(roundIndex, matchIndex)
@@ -437,6 +481,109 @@ const CompetitionExecutionRound = ({
                                             ] satisfies {id: StartListFileType; label: string}[]
                                         }
                                     />
+                                    {roundIndex === 0 && (
+                                        <SelectionMenu
+                                            anchor={{
+                                                button: {
+                                                    vertical: 'bottom',
+                                                    horizontal: 'right',
+                                                },
+                                                menu: {
+                                                    vertical: 'top',
+                                                    horizontal: 'right',
+                                                },
+                                            }}
+                                            buttonContent={t(
+                                                'event.competition.execution.results.enter',
+                                            )}
+                                            keyLabel={'competition-execution-results-enter'}
+                                            onSelectItem={async (value: string) => {
+                                                const v = value as MatchResultOption
+                                                switch (v) {
+                                                    case 'form':
+                                                        props.openResultsDialog(matchIndex)
+                                                        break
+                                                    case 'XLS':
+                                                        setResultImportMatch(match.id)
+                                                        break
+                                                    case 'RACECLOCKER':
+                                                        await pullRaceClockerResults(match.id)
+                                                        break
+                                                }
+                                            }}
+                                            items={matchResultOptions(timingSystem).map(
+                                                o =>
+                                                    ({
+                                                        id: o,
+                                                        label: t(
+                                                            `event.competition.execution.results.type.${o}`,
+                                                        ),
+                                                    }) satisfies {
+                                                        id: MatchResultOption
+                                                        label: string
+                                                    },
+                                            )}
+                                        />
+                                    )}
+                                    {timingSystem === 'RACECLOCKER' &&
+                                        (() => {
+                                            const status = raceClockerPollStatus(match)
+                                            if (status.kind === 'none') return null
+
+                                            return (
+                                                <Stack spacing={0.5}>
+                                                    <Typography
+                                                        variant={'caption'}
+                                                        color={
+                                                            status.kind === 'ok'
+                                                                ? 'text.secondary'
+                                                                : 'warning.main'
+                                                        }>
+                                                        {status.kind === 'paused'
+                                                            ? t(
+                                                                  'event.competition.execution.results.raceclocker.poll.paused',
+                                                              )
+                                                            : status.kind === 'error'
+                                                              ? t(
+                                                                    'event.competition.execution.results.raceclocker.poll.error',
+                                                                    {
+                                                                        reason: status.errorKey
+                                                                            ? t(status.errorKey)
+                                                                            : t(
+                                                                                  'common.error.unexpected',
+                                                                              ),
+                                                                    },
+                                                                )
+                                                              : t(
+                                                                    'event.competition.execution.results.raceclocker.poll.lastPolled',
+                                                                    {
+                                                                        time: format(
+                                                                            new Date(
+                                                                                match.raceClockerPolledAt!,
+                                                                            ),
+                                                                            'HH:mm:ss',
+                                                                        ),
+                                                                    },
+                                                                )}
+                                                    </Typography>
+                                                    {status.kind === 'paused' && (
+                                                        <LoadingButton
+                                                            size={'small'}
+                                                            variant={'text'}
+                                                            pending={submitting}
+                                                            onClick={() =>
+                                                                resumeRaceClockerAutoPull(
+                                                                    match.id,
+                                                                )
+                                                            }>
+                                                            {t(
+                                                                'event.competition.execution.results.raceclocker.poll.resume',
+                                                            )}
+                                                        </LoadingButton>
+                                                    )}
+                                                </Stack>
+                                            )
+                                        })()}
                                 </Stack>
                             </Stack>
                             <Divider sx={{my: 2}} />

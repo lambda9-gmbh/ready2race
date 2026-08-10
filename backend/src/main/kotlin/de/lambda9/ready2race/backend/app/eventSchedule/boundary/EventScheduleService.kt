@@ -62,6 +62,8 @@ object EventScheduleService {
                     durationMinutes = r[EVENT_SCHEDULE_SLOT.DURATION_MINUTES],
                     competitionId = r.get("competition_id", UUID::class.java),
                     competitionName = r.get("competition_name", String::class.java),
+                    competitionIdentifier = r.get("competition_identifier", String::class.java),
+                    competitionShortName = r.get("competition_short_name", String::class.java),
                     roundName = r.get("round_name", String::class.java),
                     matchName = r.get("match_name", String::class.java),
                     matchId = if (matchExists) r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] else null,
@@ -69,7 +71,9 @@ object EventScheduleService {
                     setupRoundId = r.get("setup_round_id", UUID::class.java),
                     matchStartedAt = r.get("match_started_at", java.time.LocalDateTime::class.java),
                     matchFinishedAt = r.get("match_finished_at", java.time.LocalDateTime::class.java),
-                    matchCurrentlyRunning = r[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
+                    matchActivatedAt = r[COMPETITION_MATCH.ACTIVATED_AT],
+                    matchTeamsTotal = r.get("match_teams_total", Int::class.java) ?: 0,
+                    matchTeamsScored = r.get("match_teams_scored", Int::class.java) ?: 0,
                 )
             }
 
@@ -78,6 +82,8 @@ object EventScheduleService {
                     setupMatchId = r[COMPETITION_SETUP_MATCH.ID]!!,
                     competitionId = r.get("competition_id", UUID::class.java)!!,
                     competitionName = r.get("competition_name", String::class.java) ?: "",
+                    competitionIdentifier = r.get("competition_identifier", String::class.java),
+                    competitionShortName = r.get("competition_short_name", String::class.java),
                     roundName = r.get("round_name", String::class.java) ?: "",
                     matchName = r.get("match_name", String::class.java),
                 )
@@ -187,7 +193,7 @@ object EventScheduleService {
      * skip: erlaubt für FREE, WAITING und LINKED, solange der Lauf nicht unterwegs ist; OBSOLETE ist
      * endgültig (SlotNotSkippable), ein Lauf, der schon unterwegs ist, schlägt mit
      * MatchAlreadyStarted fehl. "Unterwegs" heißt seit dem 05.08.2026 nicht mehr nur `started_at`
-     * (Ist-Start aus der Zeitnahme), sondern auch `currently_running` (Aktivierung durch den
+     * (Ist-Start aus der Zeitnahme), sondern auch `activated_at` (Aktivierung durch den
      * Schiedsrichter) - siehe [EventScheduleLogic.matchUnderway]. Vorher ließ sich ein aktivierter
      * Lauf im Fenster vor der ersten Zeitnahme-Meldung absagen und war danach abgesagt UND laufend.
      *
@@ -203,7 +209,7 @@ object EventScheduleService {
      * beantwortet weiterhin nur die alte Frage "läuft im Event gerade etwas anderes".
      *
      * unskip: erlaubt, solange kein Lauf des Slots `started_at` trägt - hier bewusst OHNE
-     * `currently_running`. Eine Zeile aus der Zeit vor der Schutzregel kann abgesagt und laufend
+     * `activated_at`. Eine Zeile aus der Zeit vor der Schutzregel kann abgesagt und laufend
      * zugleich sein, und das Zurücknehmen der Absage ist genau der Weg, sie zu heilen.
      */
     fun setSlotSkipped(
@@ -225,7 +231,7 @@ object EventScheduleService {
         }
         val matchExists = row.get("match_exists", Boolean::class.java) == true
         val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
-        val matchCurrentlyRunning = row[COMPETITION_MATCH.CURRENTLY_RUNNING] == true
+        val matchActivated = row[COMPETITION_MATCH.ACTIVATED_AT] != null
         val roundMaterialized = row.get("round_materialized", Boolean::class.java) == true
         val alreadySkipped = row[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
 
@@ -240,7 +246,7 @@ object EventScheduleService {
             if (state == EventScheduleSlotState.OBSOLETE) {
                 return@comprehension KIO.fail(EventScheduleError.SlotNotSkippable(slotId))
             }
-            if (EventScheduleLogic.matchUnderway(matchStartedAt, matchCurrentlyRunning)) {
+            if (EventScheduleLogic.matchUnderway(matchStartedAt, matchActivated)) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
             }
 
@@ -334,7 +340,7 @@ object EventScheduleService {
             }
 
             val matchStartedAt = row.get("match_started_at", LocalDateTime::class.java)
-            if (EventScheduleLogic.matchUnderway(matchStartedAt, row[COMPETITION_MATCH.CURRENTLY_RUNNING] == true)) {
+            if (EventScheduleLogic.matchUnderway(matchStartedAt, row[COMPETITION_MATCH.ACTIVATED_AT] != null)) {
                 return@comprehension KIO.fail(EventScheduleError.MatchAlreadyStarted(slotId))
             }
 
@@ -384,7 +390,7 @@ object EventScheduleService {
 
     /**
      * Aktiviert den Lauf eines LINKED-Slots vom Zeitplan aus (C1) - Notfall-Override wie
-     * `LiveDashboardService.setMatchRunning`, nur vom Büro statt vom Schiedsrichter-Dashboard aus
+     * `LiveDashboardService.setMatchActivated`, nur vom Büro statt vom Schiedsrichter-Dashboard aus
      * und in JEDEM Modus erlaubt.
      */
     fun activateSlot(
@@ -405,7 +411,9 @@ object EventScheduleService {
         }
 
         !CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = true
+            if (activatedAt == null) {
+                activatedAt = LocalDateTime.now()
+            }
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
@@ -536,34 +544,157 @@ object EventScheduleService {
         }
 
         if (!request.dryRun) {
-            val changed = entries.filter { it.oldStartTime != it.newStartTime }
-            !changed.traverse { entry ->
-                KIO.comprehension {
-                    !EventScheduleRepo.updateSlot(eventId, entry.slotId) {
-                        startTime = entry.newStartTime
-                        updatedAt = LocalDateTime.now()
-                        updatedBy = userId
-                    }.orDie().onNullFail { EventScheduleError.SlotNotFound(entry.slotId) }
-
-                    val setupMatchId = setupMatchIdBySlot[entry.slotId]
-                    if (setupMatchId != null) {
-                        !EventScheduleRepo.stampMatchStartTime(setupMatchId, entry.newStartTime, userId).orDie()
-                    }
-
-                    KIO.unit
-                }
-            }
+            !applyStartTimes(eventId, entries, setupMatchIdBySlot, userId)
         }
 
-        KIO.ok(
-            ApiResponse.Dto(
-                ShiftPreviewDto(
-                    entries = entries.map { ShiftPreviewEntryDto(it.slotId, it.oldStartTime, it.newStartTime) },
-                    applied = !request.dryRun,
+        KIO.ok(shiftPreview(entries, applied = !request.dryRun))
+    }
+
+    /**
+     * Zieht den Zeitplan hinter einem entfallenen Slot nach vorn, bis EINSCHLIESSLICH
+     * [AdvanceScheduleRequest.targetSlotId]. Das Gegenstück zu [setSlotSkipped]: die Absage macht
+     * Zeit frei, hier rückt der Plan in diese Lücke nach.
+     *
+     * Anders als [shiftSchedule] bekommt der Server hier weder Startpunkt noch Minutenzahl, sondern
+     * leitet beides aus dem entfallenen Slot ab - der Dialog wählt nur, wie weit das Nachrücken
+     * reichen soll:
+     * - Startpunkt ist der erste Slot desselben Renntags, der ECHT hinter dem entfallenen liegt
+     *   ([EventScheduleLogic.firstFollowingIndex]); parallele Slots bleiben mit dem entfallenen an
+     *   ihrer Zeit stehen.
+     * - Das Delta kommt aus der geplanten Dauer, sonst aus der Lücke zum Startpunkt
+     *   ([EventScheduleLogic.advanceDeltaMinutes]). Ist keins von beidem zu holen, gibt es kein
+     *   Vorziehen - nicht ersatzweise irgendeine Zahl.
+     *
+     * Die Wächter sind dieselben wie beim Verschieben, aus demselben Grund: der Renntag bleibt der
+     * Renntag ([EventScheduleLogic.firstEntryLeavingDay]), und der vorgezogene Block überholt seinen
+     * Vorgänger nicht. Vorgänger ist hier zwangsläufig der entfallene Slot selbst - zwischen ihm und
+     * dem Startpunkt liegen nur Slots seiner eigenen Startzeit. Er bleibt als SKIPPED im Zeitstrahl
+     * stehen, und der Block darf höchstens BIS AUF seine Startzeit nachrücken, nicht darüber hinaus;
+     * genau dieser Gleichstand ist der Normalfall des Aufrückens und deshalb erlaubt.
+     */
+    fun advanceAfterSkippedSlot(
+        eventId: UUID,
+        slotId: UUID,
+        request: AdvanceScheduleRequest,
+        userId: UUID,
+    ): App<EventScheduleError, ApiResponse.Dto<ShiftPreviewDto>> = KIO.comprehension {
+        val allSlots = !EventScheduleRepo.getSlots(eventId).orDie()
+
+        val skippedIndex = allSlots.indexOfFirst { it[EVENT_SCHEDULE_SLOT.ID] == slotId }
+        if (skippedIndex == -1) {
+            return@comprehension KIO.fail(EventScheduleError.SlotNotFound(slotId))
+        }
+
+        val skippedRecord = allSlots[skippedIndex]
+        if (skippedRecord[EVENT_SCHEDULE_SLOT.SKIPPED_AT] == null) {
+            return@comprehension KIO.fail(EventScheduleError.SlotNotSkipped(slotId))
+        }
+
+        val skippedStartTime = skippedRecord[EVENT_SCHEDULE_SLOT.START_TIME]!!
+        val day = skippedStartTime.toLocalDate()
+
+        val dayRecords = allSlots.drop(skippedIndex + 1)
+            .takeWhile { it[EVENT_SCHEDULE_SLOT.START_TIME]!!.toLocalDate() == day }
+        val daySlots = dayRecords.map {
+            ShiftSlot(
+                id = it[EVENT_SCHEDULE_SLOT.ID]!!,
+                startTime = it[EVENT_SCHEDULE_SLOT.START_TIME]!!,
+                durationMinutes = it[EVENT_SCHEDULE_SLOT.DURATION_MINUTES],
+            )
+        }
+
+        // Ohne Folgeslot gibt es nichts, was nachrücken könnte - auch dann nicht, wenn der
+        // entfallene Slot eine gepflegte Dauer trägt.
+        val followingIndex = EventScheduleLogic.firstFollowingIndex(daySlots, skippedStartTime)
+            ?: return@comprehension KIO.fail(EventScheduleError.AdvanceDeltaUndeterminable(slotId))
+
+        val blockSlots = daySlots.drop(followingIndex)
+
+        val deltaMinutes = EventScheduleLogic.advanceDeltaMinutes(
+            durationMinutes = skippedRecord[EVENT_SCHEDULE_SLOT.DURATION_MINUTES],
+            skippedStartTime = skippedStartTime,
+            nextStartTime = blockSlots.first().startTime,
+        ) ?: return@comprehension KIO.fail(EventScheduleError.AdvanceDeltaUndeterminable(slotId))
+
+        // Ein Ziel-Slot außerhalb des Blocks kann nur aus einem veralteten Zeitplan-Tab kommen
+        // (zwischenzeitlich gelöscht, verschoben, anderer Renntag) - dieselbe Meldung wie beim
+        // Verschieben: einen Slot hinter dem entfallenen wählen.
+        if (blockSlots.none { it.id == request.targetSlotId }) {
+            return@comprehension KIO.fail(
+                EventScheduleError.ShiftTargetInvalid(ShiftTargetProblem.TARGET_NOT_AFTER_START)
+            )
+        }
+
+        val entries = EventScheduleLogic.computeAdvance(blockSlots, deltaMinutes, request.targetSlotId)
+
+        val leavingEntry = EventScheduleLogic.firstEntryLeavingDay(entries, day)
+        if (leavingEntry != null) {
+            return@comprehension KIO.fail(
+                EventScheduleError.ShiftLeavesRaceDay(
+                    slotId = leavingEntry.slotId,
+                    newStartTime = leavingEntry.newStartTime,
+                    raceDay = day,
                 )
             )
-        )
+        }
+
+        if (EventScheduleLogic.overtakesPredecessor(entries, skippedStartTime)) {
+            return@comprehension KIO.fail(
+                EventScheduleError.ShiftOvertakesPredecessor(
+                    earliestStartTime = skippedStartTime,
+                    maxAdvanceMinutes = EventScheduleLogic.maxAdvanceMinutes(entries, skippedStartTime),
+                )
+            )
+        }
+
+        if (!request.dryRun) {
+            val setupMatchIdBySlot = dayRecords.associate {
+                it[EVENT_SCHEDULE_SLOT.ID]!! to it[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]
+            }
+            !applyStartTimes(eventId, entries, setupMatchIdBySlot, userId)
+        }
+
+        KIO.ok(shiftPreview(entries, applied = !request.dryRun))
     }
+
+    private fun shiftPreview(entries: List<ShiftPreviewEntry>, applied: Boolean) =
+        ApiResponse.Dto(
+            ShiftPreviewDto(
+                entries = entries.map { ShiftPreviewEntryDto(it.slotId, it.oldStartTime, it.newStartTime) },
+                applied = applied,
+            )
+        )
+
+    /**
+     * Schreibt die neuen Startzeiten - der gemeinsame Nenner von [shiftSchedule] und
+     * [advanceAfterSkippedSlot]. Nur wirklich veränderte Zeilen werden angefasst; ein Slot, der auf
+     * seiner Zeit bleibt, soll keinen Zeitstempel und keinen Bearbeiter bekommen.
+     *
+     * Ein Lauf-Slot zieht die Startzeit seines Laufs mit (`competition_match.start_time`) - sonst
+     * stünde im Wettkampf weiterhin die alte Zeit, während der Zeitplan schon die neue zeigt.
+     */
+    private fun applyStartTimes(
+        eventId: UUID,
+        entries: List<ShiftPreviewEntry>,
+        setupMatchIdBySlot: Map<UUID, UUID?>,
+        userId: UUID,
+    ): App<EventScheduleError, Unit> =
+        entries.filter { it.oldStartTime != it.newStartTime }.traverse { entry ->
+            KIO.comprehension {
+                !EventScheduleRepo.updateSlot(eventId, entry.slotId) {
+                    startTime = entry.newStartTime
+                    updatedAt = LocalDateTime.now()
+                    updatedBy = userId
+                }.orDie().onNullFail { EventScheduleError.SlotNotFound(entry.slotId) }
+
+                val setupMatchId = setupMatchIdBySlot[entry.slotId]
+                if (setupMatchId != null) {
+                    !EventScheduleRepo.stampMatchStartTime(setupMatchId, entry.newStartTime, userId).orDie()
+                }
+
+                KIO.unit
+            }
+        }.map { }
 
     /**
      * Excel-Import des Zeitstrahls (Task 12). `dryRun=true` liefert nur die Vorschau (Matching je
@@ -588,11 +719,11 @@ object EventScheduleService {
         val eventYear = eventDays.minOfOrNull { it.date }?.year ?: LocalDate.now().year
 
         val parsedRows = !XLS.read(fileBytes.inputStream()) {
-            val date = !cell("Datum", CellParser.localDate(eventYear))
-            val time = !cell("Uhrzeit", CellParser.localTime)
-            val competition = !optionalCell("Wettkampf", CellParser.string)
-            val lauf = !cell("Lauf", CellParser.string)
-            val duration = !optionalCell("Dauer", CellParser.int)
+            val date = !cell(ScheduleImportTemplate.COLUMN_DATE, CellParser.localDate(eventYear))
+            val time = !cell(ScheduleImportTemplate.COLUMN_TIME, CellParser.localTime)
+            val competition = !optionalCell(ScheduleImportTemplate.COLUMN_COMPETITION, CellParser.string)
+            val lauf = !cell(ScheduleImportTemplate.COLUMN_MATCH, CellParser.string)
+            val duration = !optionalCell(ScheduleImportTemplate.COLUMN_DURATION, CellParser.int)
             ImportRow(
                 rowNumber = rowNum,
                 startTime = LocalDateTime.of(date, time),
@@ -632,14 +763,15 @@ object EventScheduleService {
         // Listen-Index - POI überspringt beim Iterieren leere Zeilen stillschweigend, mit einer
         // Leerzeile in der Datei würde Index + 2 sonst auf die falsche Excel-Zeile zeigen.
         val matched = parsedRows.map { row ->
-            val (status, setupMatchId) = ScheduleImport.matchRow(row.competition, row.lauf, candidates)
+            val match = ScheduleImport.matchRow(row.competition, row.lauf, candidates)
             ImportRowResult(
                 rowNumber = row.rowNumber,
                 startTime = row.startTime,
                 competitionText = row.competition,
                 laufText = row.lauf,
-                status = status,
-                setupMatchId = setupMatchId,
+                status = match.status,
+                setupMatchId = match.setupMatchId,
+                availableMatches = match.availableMatches,
             ) to row.duration
         }
 
@@ -668,6 +800,7 @@ object EventScheduleService {
                 } else {
                     null
                 },
+                availableMatches = result.availableMatches,
             )
         }
 
@@ -705,5 +838,27 @@ object EventScheduleService {
         }
 
         KIO.ok(ApiResponse.Dto(ScheduleImportResultDto(rowDtos, applied = true)))
+    }
+
+    /**
+     * Beispieldatei für den Excel-Import - dieselben Spalten, die [importSchedule] liest. Die
+     * Beispielzeilen tragen den ersten Veranstaltungstag als Datum, damit sie im Zeitraum des
+     * Events liegen; ohne Veranstaltungstage fällt das auf das heutige Datum zurück.
+     */
+    fun scheduleImportTemplate(eventId: UUID): App<EventScheduleError, ApiResponse.File> = KIO.comprehension {
+        val eventExists = !EventRepo.exists(eventId).orDie()
+        if (!eventExists) {
+            return@comprehension KIO.fail(EventScheduleError.EventNotFound(eventId))
+        }
+
+        val eventDays = !EventDayRepo.getByEvent(eventId).orDie()
+        val exampleDate = eventDays.minOfOrNull { it.date } ?: LocalDate.now()
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "zeitstrahl-import-beispiel.xlsx",
+                bytes = ScheduleImportTemplate.build(exampleDate),
+            )
+        )
     }
 }

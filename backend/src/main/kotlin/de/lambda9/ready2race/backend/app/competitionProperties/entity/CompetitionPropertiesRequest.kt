@@ -15,6 +15,8 @@ data class CompetitionPropertiesRequest(
     val identifier: String,
     val name: String,
     val shortName: String?,
+    /** Ob dieser Wettkampf eine An-/Abmeldung in die Arena verlangt (Beachsprint: nein). */
+    val checkInOutRequired: Boolean = true,
     val description: String?,
     val competitionCategory: UUID?,
     val namedParticipants: List<NamedParticipantForCompetitionRequestDto>,
@@ -52,6 +54,7 @@ data class CompetitionPropertiesRequest(
                 identifier = "001",
                 name = "Name",
                 shortName = "N",
+                checkInOutRequired = true,
                 description = "Description of name",
                 competitionCategory = UUID.randomUUID(),
                 namedParticipants = listOf(NamedParticipantForCompetitionRequestDto.example),

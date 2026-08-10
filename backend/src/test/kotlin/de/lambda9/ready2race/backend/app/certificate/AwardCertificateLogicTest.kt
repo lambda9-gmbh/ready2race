@@ -23,6 +23,7 @@ class AwardCertificateLogicTest {
         teamName: String? = null,
         result: String? = "33:17,7 min",
         startNumber: Int = place,
+        ratingCategory: String? = null,
         excluded: Boolean = false,
         participants: List<AwardCertificateParticipant> = listOf(participant("Carina", "Hein")),
     ) = AwardCertificateTeam(
@@ -31,6 +32,7 @@ class AwardCertificateLogicTest {
         teamName = teamName,
         result = result,
         startNumber = startNumber,
+        ratingCategory = ratingCategory,
         excluded = excluded,
         participants = participants,
         registrationId = UUID.randomUUID(),
@@ -39,7 +41,12 @@ class AwardCertificateLogicTest {
     private fun options(
         maxPlace: Int = 3,
         mode: AwardCertificateMode = AwardCertificateMode.PER_ATHLETE,
-    ) = AwardCertificateOptions(maxPlace = maxPlace, mode = mode, withBackground = false)
+    ) = AwardCertificateOptions(
+        maxPlace = maxPlace,
+        mode = mode,
+        withBackground = false,
+        printRatingCategory = false,
+    )
 
     private fun entries(
         teams: List<AwardCertificateTeam>,
@@ -290,5 +297,73 @@ class AwardCertificateLogicTest {
         assertNull(values.lastName)
         assertEquals("Carina Hein\nMalte Hein", values.fullName)
         assertNull(values.eventLocation)
+    }
+
+    @Test
+    fun ratingCategoryStaysOutOfTheCertificateByDefault() {
+        // Die Voreinstellung muss die Urkunde unveraendert lassen: ohne Wert bleibt ein etwaiger
+        // Platzhalter in der Vorlage leer, und die Ausgabe ist die von vor der Aenderung.
+        val entry = entries(listOf(team(place = 1, ratingCategory = "Meisterschaften"))).single()
+
+        val values = AwardCertificateLogic.placeholderValues(
+            entry = entry,
+            eventName = "Deutsche Meisterschaften",
+            eventLocation = null,
+            eventDate = "16. August 2025",
+        )
+
+        assertNull(values.ratingCategory)
+    }
+
+    @Test
+    fun ratingCategoryIsPrintedWhenTheOptionIsOn() {
+        val entry = entries(listOf(team(place = 1, ratingCategory = "Meisterschaften"))).single()
+
+        val values = AwardCertificateLogic.placeholderValues(
+            entry = entry,
+            eventName = "Deutsche Meisterschaften",
+            eventLocation = null,
+            eventDate = "16. August 2025",
+            printRatingCategory = true,
+        )
+
+        assertEquals("Meisterschaften", values.ratingCategory)
+    }
+
+    @Test
+    fun aBoatWithoutRatingCategoryPrintsNothingEvenWithTheOptionOn() {
+        val entry = entries(listOf(team(place = 1))).single()
+
+        val values = AwardCertificateLogic.placeholderValues(
+            entry = entry,
+            eventName = "Deutsche Meisterschaften",
+            eventLocation = null,
+            eventDate = "16. August 2025",
+            printRatingCategory = true,
+        )
+
+        assertNull(values.ratingCategory)
+    }
+
+    @Test
+    fun thePrintedPlaceStaysTheCompetitionWideOneWithTheOptionOn() {
+        // Ausdrueckliche Entscheidung: die Kategoriewertung aendert die Platzierungsansicht, aber
+        // nicht die Urkunde. Ein Boot auf Gesamtplatz 3 traegt "3. Platz", auch wenn es in seiner
+        // Kategorie Erster ist.
+        val entry = entries(
+            listOf(team(place = 3, ratingCategory = "Breitensport")),
+            options(maxPlace = 3),
+        ).single()
+
+        val values = AwardCertificateLogic.placeholderValues(
+            entry = entry,
+            eventName = "Deutsche Meisterschaften",
+            eventLocation = null,
+            eventDate = "16. August 2025",
+            printRatingCategory = true,
+        )
+
+        assertEquals(3, entry.place)
+        assertEquals("3. Platz", values.place)
     }
 }

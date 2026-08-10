@@ -18,8 +18,32 @@ export const groupSlotsByDay = (slots: EventScheduleSlotDto[]): DaySection[] => 
     return [...byDay.entries()].map(([date, daySlots]) => ({date, slots: daySlots}))
 }
 
-export const slotLabel = (slot: EventScheduleSlotDto): string =>
-    slot.name ?? [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' – ')
+// Im Zeitplan-Tab lässt sich der Slot-Text kürzen ([mode] = 'short'): der ausgeschriebene
+// Wettkampfname fällt dann weg, weil das vorangestellte Kürzel (siehe [competitionTag]) dieselbe
+// Auskunft schon gibt - übrig bleiben Runde und Lauf. Ohne gepflegtes Kürzel bliebe nur "Finale"
+// ohne Rennen stehen, deshalb bleibt der Name dort. Alles außerhalb der Tabelle (Bestätigungen,
+// Shift-Vorschau) ruft ohne [mode] auf und bekommt unverändert den vollen Text.
+export const slotLabel = (slot: EventScheduleSlotDto, mode: 'full' | 'short' = 'full'): string => {
+    if (slot.name != null) {
+        return slot.name
+    }
+    const dropCompetitionName = mode === 'short' && Boolean(competitionTag(slot))
+    return [dropCompetitionName ? null : slot.competitionName, slot.roundName, slot.matchName]
+        .filter(Boolean)
+        .join(' – ')
+}
+
+// Rennnummer und Kurzname des Wettkampfs, wie sie im Zeitplan vor dem Slot-Namen stehen, z. B.
+// "17 CM 4x+". Beides ist optional: der Kurzname ist ein Pflegefeld, das leer bleiben darf, und
+// freie Slots (Programmpunkte) haben gar keinen Wettkampf. Was fehlt, fällt weg - übrig bleibt
+// dann eben nur die Nummer, oder ein leerer String, den die Anzeige nicht rendert.
+export const competitionTag = (competition: {
+    competitionIdentifier?: string | null
+    competitionShortName?: string | null
+}): string =>
+    [competition.competitionIdentifier, competition.competitionShortName]
+        .filter(v => v)
+        .join(' ')
 
 // Editieren ist für freie Slots und für Match-Slots möglich, solange die Setup-Zeile noch
 // existiert (setupMatchId) - das deckt FREE, WAITING und LINKED ab. Nur OBSOLETE (die Setup-Zeile
@@ -32,11 +56,11 @@ export const isEditable = (slot: EventScheduleSlotDto): boolean =>
 // Spiegelt die serverseitige Schutzregel aus EventScheduleService.setSlotSkipped
 // (EventScheduleLogic.matchUnderway): Ein Lauf, der schon unterwegs ist, lässt sich nicht mehr
 // absagen. "Unterwegs" ist er nicht erst mit dem Ist-Start aus der Zeitnahme (matchStartedAt),
-// sondern schon mit der Aktivierung durch den Schiedsrichter (matchCurrentlyRunning) - dazwischen
+// sondern schon mit der Aktivierung durch den Schiedsrichter (matchActivatedAt) - dazwischen
 // liegt das Fenster, in dem die Boote längst am Start stehen. Die Absage-Aktion wird dafür gar
 // nicht erst angeboten; wer wirklich absagen will, beendet oder deaktiviert den Lauf zuerst.
 export const isCancellable = (slot: EventScheduleSlotDto): boolean =>
-    !slot.matchCurrentlyRunning && slot.matchStartedAt == null
+    slot.matchActivatedAt == null && slot.matchStartedAt == null
 
 // Vorbelegung für den Shift-Dialog: der erste Slot des Tages, der noch nicht gelaufen ist - ein
 // bereits beendeter Lauf zu verschieben ergibt fachlich keinen Sinn. Sind alle Slots schon
@@ -51,6 +75,44 @@ export const defaultFromSlotId = (slots: EventScheduleSlotDto[]): string | undef
 export const slotsAfter = (slots: EventScheduleSlotDto[], fromSlotId: string): EventScheduleSlotDto[] => {
     const idx = slots.findIndex(s => s.id === fromSlotId)
     return idx === -1 ? [] : slots.slice(idx + 1)
+}
+
+export type AdvanceOffer = {
+    deltaMinutes: number
+    targets: EventScheduleSlotDto[]
+}
+
+// Spiegelt die Server-Regel aus EventScheduleService.advanceAfterSkippedSlot: Welche Zeit gibt ein
+// entfallener Slot frei, und bis wohin lässt sie sich vorziehen? Der Server rechnet es selbst noch
+// einmal und ist die Instanz, die entscheidet - hier geht es nur um die Frage, ob das Angebot nach
+// der Absage überhaupt erscheint. Ein Dialog, der sich nur öffnet, um "geht nicht" zu sagen, ist am
+// Renntag ein Klick zu viel.
+//
+// Betroffen sind ausschließlich Slots desselben Renntags, die ECHT später beginnen: parallele Slots
+// (gleiche Startzeit wie der entfallene) rücken nicht nach, sie bleiben mit ihm stehen.
+// Das Delta ist die gepflegte Dauer, sonst der Abstand zum ersten dieser Slots; ohne beides - und
+// bei 0 oder weniger Minuten - gibt es kein Angebot.
+export const advanceOffer = (
+    slots: EventScheduleSlotDto[],
+    skippedSlot: EventScheduleSlotDto,
+): AdvanceOffer | null => {
+    const day = skippedSlot.startTime.slice(0, 10)
+    const targets = slots
+        .filter(s => s.startTime.slice(0, 10) === day && s.startTime > skippedSlot.startTime)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+
+    if (targets.length === 0) {
+        return null
+    }
+
+    const deltaMinutes =
+        skippedSlot.durationMinutes ??
+        Math.floor(
+            (new Date(targets[0].startTime).getTime() - new Date(skippedSlot.startTime).getTime()) /
+                60_000,
+        )
+
+    return deltaMinutes > 0 ? {deltaMinutes, targets} : null
 }
 
 // Zählt die Slots derselben Setup-Runde (client-seitig, ohne Zusatzrequest) - für die Bestätigung
@@ -127,6 +189,10 @@ export const importRowChipColor = (status: ImportRowStatus): ChipProps['color'] 
     switch (status) {
         case 'LINKED':
             return 'success'
+        // Nicht gefundene Wettkämpfe/Läufe blockieren den Import nicht, sind aber fast immer ein
+        // Fehler in der Datei - deshalb dieselbe Warnfarbe wie bei einer mehrdeutigen Zeile.
+        case 'COMPETITION_NOT_FOUND':
+        case 'MATCH_NOT_FOUND':
         case 'AMBIGUOUS':
             return 'warning'
         case 'DUPLICATE':

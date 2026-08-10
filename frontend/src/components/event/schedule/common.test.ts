@@ -1,6 +1,8 @@
 import {describe, expect, it} from 'vitest'
 import {
+    advanceOffer,
     buildShiftPreviewRows,
+    competitionTag,
     defaultFromSlotId,
     extractMaxReductionMinutes,
     groupSlotsByDay,
@@ -31,7 +33,9 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     setupRoundId: crypto.randomUUID(),
     matchStartedAt: null,
     matchFinishedAt: null,
-    matchCurrentlyRunning: false,
+    matchActivatedAt: null,
+    matchTeamsTotal: 0,
+    matchTeamsScored: 0,
     ...over,
 })
 
@@ -85,6 +89,42 @@ describe('slotLabel', () => {
             ),
         ).toBe('Mittagspause')
     })
+    it('drops the competition name in short mode', () => {
+        expect(
+            slotLabel(
+                slot('2026-08-17T08:00:00', {
+                    competitionIdentifier: '12',
+                    competitionShortName: 'CM 1x',
+                }),
+                'short',
+            ),
+        ).toBe('Achtelfinale – AF1')
+    })
+    it('keeps the competition name in short mode when there is no tag to replace it', () => {
+        expect(
+            slotLabel(
+                slot('2026-08-17T08:00:00', {
+                    competitionIdentifier: null,
+                    competitionShortName: null,
+                }),
+                'short',
+            ),
+        ).toBe('CM 1x – Achtelfinale – AF1')
+    })
+})
+
+describe('competitionTag', () => {
+    it('joins race number and short name', () => {
+        expect(
+            competitionTag({competitionIdentifier: '17', competitionShortName: 'CM 4x+'}),
+        ).toBe('17 CM 4x+')
+    })
+    it('falls back to the race number when no short name is maintained', () => {
+        expect(competitionTag({competitionIdentifier: '17', competitionShortName: null})).toBe('17')
+    })
+    it('is empty for a slot without a competition', () => {
+        expect(competitionTag({competitionIdentifier: null, competitionShortName: null})).toBe('')
+    })
 })
 
 describe('isEditable', () => {
@@ -132,7 +172,7 @@ describe('isCancellable', () => {
         // matchStartedAt noch leer - der Server lehnt die Absage trotzdem ab.
         expect(
             isCancellable(
-                slot('2026-08-17T08:00:00', {state: 'LINKED', matchCurrentlyRunning: true}),
+                slot('2026-08-17T08:00:00', {state: 'LINKED', matchActivatedAt: '2026-08-17T07:55:00'}),
             ),
         ).toBe(false)
     })
@@ -277,6 +317,7 @@ const importRow = (over: Partial<ImportRowResultDto> = {}): ImportRowResultDto =
     laufText: 'Achtelfinale AF1',
     status: 'LINKED',
     targetLabel: 'CM 1x – Achtelfinale – AF1',
+    availableMatches: [],
     ...over,
 })
 
@@ -289,6 +330,15 @@ describe('hasBlockingImportRows', () => {
 
     it('is false for AMBIGUOUS rows - they just fall back to a free slot', () => {
         expect(hasBlockingImportRows([importRow({status: 'AMBIGUOUS'})])).toBe(false)
+    })
+
+    it('is false for rows whose competition or race was not found - also just free slots', () => {
+        expect(
+            hasBlockingImportRows([
+                importRow({status: 'COMPETITION_NOT_FOUND'}),
+                importRow({status: 'MATCH_NOT_FOUND', availableMatches: ['HF1']}),
+            ]),
+        ).toBe(false)
     })
 
     it('is true as soon as one row is a DUPLICATE', () => {
@@ -306,6 +356,8 @@ describe('importRowChipColor', () => {
     it('maps each status to its chip color', () => {
         expect(importRowChipColor('LINKED')).toBe('success')
         expect(importRowChipColor('FREE')).toBe('default')
+        expect(importRowChipColor('COMPETITION_NOT_FOUND')).toBe('warning')
+        expect(importRowChipColor('MATCH_NOT_FOUND')).toBe('warning')
         expect(importRowChipColor('AMBIGUOUS')).toBe('warning')
         expect(importRowChipColor('DUPLICATE')).toBe('error')
     })
@@ -339,5 +391,53 @@ describe('hasRunningOrFinishedSlots', () => {
 
     it('is false for an empty schedule', () => {
         expect(hasRunningOrFinishedSlots([])).toBe(false)
+    })
+})
+
+describe('advanceOffer', () => {
+    const cancelled = (over: Partial<EventScheduleSlotDto> = {}) =>
+        slot('2026-08-17T10:00:00', {state: 'SKIPPED', ...over})
+
+    it('nimmt die gepflegte Dauer als frei gewordene Zeit', () => {
+        const skipped = cancelled({durationMinutes: 20})
+        const offer = advanceOffer([skipped, slot('2026-08-17T10:30:00')], skipped)
+        expect(offer?.deltaMinutes).toBe(20)
+    })
+
+    it('nimmt ohne Dauer den Abstand zum nächsten Slot', () => {
+        const skipped = cancelled()
+        const offer = advanceOffer([skipped, slot('2026-08-17T10:25:00')], skipped)
+        expect(offer?.deltaMinutes).toBe(25)
+    })
+
+    it('bietet ohne Folgeslot am selben Renntag nichts an', () => {
+        const skipped = cancelled({durationMinutes: 20})
+        // Der Slot am Folgetag zählt nicht - ein Vorziehen bleibt im Renntag.
+        expect(advanceOffer([skipped, slot('2026-08-18T09:00:00')], skipped)).toBeNull()
+        expect(advanceOffer([skipped], skipped)).toBeNull()
+    })
+
+    it('bietet bei einer Dauer von 0 nichts an', () => {
+        const skipped = cancelled({durationMinutes: 0})
+        expect(advanceOffer([skipped, slot('2026-08-17T10:30:00')], skipped)).toBeNull()
+    })
+
+    it('überspringt parallele Slots - sie rücken nicht nach', () => {
+        const skipped = cancelled()
+        const parallel = slot('2026-08-17T10:00:00')
+        const later = slot('2026-08-17T10:40:00')
+        const offer = advanceOffer([skipped, parallel, later], skipped)
+        // Delta aus dem ersten ECHT späteren Slot, und nur der steht zur Wahl.
+        expect(offer?.deltaMinutes).toBe(40)
+        expect(offer?.targets.map(s => s.id)).toEqual([later.id])
+    })
+
+    it('bietet alle folgenden Slots des Renntags als Bis-Slot an, Pausen eingeschlossen', () => {
+        const skipped = cancelled({durationMinutes: 15})
+        const next = slot('2026-08-17T10:20:00')
+        const lunch = slot('2026-08-17T12:00:00', {name: 'Mittagspause'})
+        const afterLunch = slot('2026-08-17T13:00:00')
+        const offer = advanceOffer([skipped, next, lunch, afterLunch], skipped)
+        expect(offer?.targets.map(s => s.id)).toEqual([next.id, lunch.id, afterLunch.id])
     })
 })
