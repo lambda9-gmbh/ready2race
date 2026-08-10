@@ -147,9 +147,9 @@ nicht die Erwartung anpassen.
 | C5 | Echter Start | Früheste gemessene Startzeit überschreibt `started_at`, auch gegen einen manuellen Stempel | `f86665ae`, `e4cb8753` | |
 | C6 | Mitternacht als Platzhalter | `00:00:00.0` für Boote ohne Start setzt `started_at` nicht auf Mitternacht | `c0458d8d` | |
 | C7 | Zeitstrafe aus dem Feed | `Penalty`/`Penalty note` landen als Ausweisung am Boot, die Zeit wird nicht zusätzlich verrechnet | `0c8e378c` | |
-| C8 | Bahnen aus „Rank" | Eine Bahnvertauschung in RaceClocker schlägt auf die Bahnen durch, auch für Boote ohne Zeit; der Bib wandert nicht mit | `d64ae540` | |
+| C8 | Bahnen aus „Rank" | Eine Bahnvertauschung in RaceClocker schlägt auf die Bahnen durch, auch für Boote ohne Zeit; der Bib wandert nicht mit | `d64ae540` | 10.08.: am CRF-Feed belegt (Finale A/B zogen im ersten Takt nach), nachdem `aa3d209a` den Riegel aus C35 entfernt hat |
 | C9 | Doppelte Mannschaft | Zwei Zeilen für dasselbe Boot → Pull verweigert mit Namensliste, statt zu raten | `dd8d67b8` | |
-| C10 | Keine Ergebnisse | Pull ohne gewertete Zeilen meldet das verständlich und ändert nichts | `dd8d67b8` | |
+| C10 | Keine Ergebnisse | Pull ohne gewertete Zeilen übernimmt **die Bahnen** und meldet Erfolg — seit `aa3d209a` kein Fehler mehr (Begründung in C35). Zeiten, Plätze und `started_at` bleiben unangetastet | `aa3d209a` | |
 | C11 | Fehlerfälle URL | Fehlende, ungültige und nicht erreichbare URL werden unterschieden gemeldet | `dd8d67b8` | |
 | C12 | Bahnen bei mehrfachem Pull | Wiederholte Pulls ohne Änderung in RaceClocker lassen die Bahnen unverändert; nichts wandert bei jedem Durchgang weiter | `d64ae540` | |
 | C13 | Boot ohne Zeile im Feed | Behält eine eindeutige Nummer oberhalb der importierten und kollidiert nie mit einer echten Bahn | `d64ae540` | |
@@ -206,6 +206,34 @@ Block, und einer, den am Renntag niemand rückgängig machen kann.
 | C32 | Boot außerhalb des Feeds | Ein Boot, das RaceClocker nicht kennt und dessen Ergebnis von Hand steht, behält es beim Reset — angefasst werden nur Boote mit einer Zeile im Feed | `e1742e0a` | |
 | C33 | Gesperrte Runde | Ein Lauf, aus dessen Plätzen die nächste Runde bereits gesetzt ist, wird auch vom Reset nicht angefasst — weder über den Job noch über den Knopf. Dieselbe Sperre wie beim Schreiben; ohne sie würde ein Neustart in RaceClocker Plätze löschen, aus denen die Setzung längst abgeleitet ist | `e1742e0a` | |
 | C34 | Handeingabe und Reset | Automatik läuft, Ergebnis von Hand eingetragen: der Lauf ist pausiert (C21) und ein Neustart in RaceClocker fasst ihn **nicht** an. Nach „Automatik wieder aufnehmen" (C23) schlägt der Reset dagegen durch und nimmt den Handeintrag mit. Das ist gewollt — aber einmal gesehen haben, bevor es am Renntag passiert | `e1742e0a` | |
+
+### C35–C40 — Bahnen vor dem ersten Ergebnis
+
+Neu am 10.08. (`aa3d209a`). Am Vorabend an der CRF-Testregatta aufgefallen: Ein Bahnentausch in
+RaceClocker kam **nie** an, solange kein Boot des Laufs eine Zeit oder eine Ausscheidung trug.
+`applyRaceClockerRows` brach mit `NoResults` ab, bevor die Bahnvergabe lief — und weil der Job
+`NoResults` als Normalfall wertet (C25), blieb die Oberfläche stumm und meldete „Automatisch
+abgerufen" bei unveränderten Bahnen. Getroffen hat das genau den Moment, in dem der Zeitnehmer die
+Bahnen festlegt: Lauf am Start, jede Zeile auf `Not started`. Die Zusage aus C8 („auch für Boote
+ohne Zeit") galt damit nur, solange **irgendein** Boot schon durchs Ziel war.
+
+Zwei Änderungen tragen den Block: Die Bahnvergabe steht jetzt **vor** dem Ergebnis-Riegel, und ein
+Lauf ohne Ergebnisse endet mit **Erfolg** statt mit einem Fehler. Letzteres ist keine Kosmetik —
+der Job umschließt die Routine mit `transact()`, ein Fehler nähme die eben geschriebenen Bahnen
+wieder zurück. Dieselbe Umdeutung wie in C29, jetzt auch für den Normalfall.
+
+Der teuerste denkbare Fehler in diesem Block ist C38: Wenn die vorgezogene Bahnvergabe einen
+bereits gewerteten Lauf umnummeriert, ohne dass jemand in RaceClocker etwas angefasst hat, wandern
+Zeiten und Plätze optisch auf falsche Bahnen.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| C35 | Tausch vor dem Start | Lauf aktivieren („Am Start"), in RaceClocker zwei Boote der Welle vertauschen, **ohne** eine Zeit zu nehmen. Innerhalb eines Takts stehen die neuen Bahnen in Durchführung, Schiedsrichter-Dashboard und Athleten-Anzeige. Kein Fehler, keine Warnung | `aa3d209a` | 10.08. am CRF-Feed belegt (Finale A: Bahn 1 wechselte von Frankfurt auf Cassel, erster Takt nach dem Neustart) |
+| C36 | Nicht aktivierter Lauf | Gegenprobe: derselbe Tausch an einem Lauf **ohne** „Am Start". Es passiert weiterhin nichts — ein Umsortieren vor der Aktivierung schlägt bewusst nicht durch. Der zweite Riegel bleibt bestehen und ist gewollt | `aa3d209a` | |
+| C37 | Knopf statt Automatik | „Ergebnisse eintragen → RaceClocker" auf einem Lauf ohne jede Zeit meldet jetzt **Erfolg** statt „keine Ergebnisse", und die Bahnen sind übernommen. Wie C29 ungewohnt zu lesen und trotzdem richtig | `aa3d209a` | |
+| C38 | Gewerteter Lauf bleibt heil | Lauf mit Zeiten und Plätzen, in RaceClocker **nichts** ändern, Takt abwarten: Bahnen, Zeiten und Plätze bleiben, wie sie sind. Prüft, dass die vorgezogene Bahnvergabe keinen fertigen Lauf umnummeriert | `aa3d209a` | |
+| C39 | Handeingabe gewinnt weiter | Wie C21, aber am Lauf ohne Ergebnisse: Nach einer Handeingabe ist der Lauf pausiert, und der nächste Takt fasst auch die **Bahnen** nicht mehr an | `aa3d209a` | |
+| C40 | Abgemeldetes Boot | Ein Boot ist abgemeldet und steht nicht mehr im Feed, der Lauf hat noch keine Zeiten: Es behält eine Nummer oberhalb der importierten Bahnen und kollidiert mit keiner echten Bahn (C13 für den ergebnislosen Fall) | `aa3d209a` | im DB-Test abgedeckt, in der App noch nicht gesehen |
 
 ## D — Schiedsrichter-Dashboard
 
