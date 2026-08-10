@@ -1,103 +1,42 @@
-import {AthleteBoardDto, AthleteBoardMatch, AthleteBoardResult} from '@api/types.gen'
+import {AthleteBoardMatch, AthleteBoardResult} from '@api/types.gen'
 
 /**
- * Wie viele Läufe in der Arena gleichzeitig auf die Bühne kommen.
- *
- * Auf einer Regatta sind höchstens zwei Läufe gleichzeitig relevant. Eine Anzeige, die auf
- * beliebig viele auslegt, zahlt dafür mit Enge, ohne den Nutzen je zu sehen. Was darüber
- * hinausgeht, verschwindet nicht stumm, sondern wird über [BoardLayout.hiddenRunning] gemeldet.
+ * Die Messfunktionen der Anzeige-Dichte. Bis zum Board-Umbau (10.08.2026) wählte dieses
+ * Modul auch die Spalten der festen Bühne aus (`selectBoardCards`); diese Entscheidung
+ * trifft jetzt der Server über die Timeline-Slots der Board-Antwort. Geblieben ist, was
+ * je Kachel weiter gebraucht wird: wie voll ein Feld ist, wie lang die längste
+ * Vereinskette, und welcher Schriftfaktor daraus folgt.
  */
-export const MAX_RUNNING_CARDS = 2
 
-export type BoardCardKind = 'running' | 'upcoming' | 'result'
-
-/**
- * Eine Spalte der Bühne. Genau eines von [match] und [result] ist gefüllt — oder keines, dann
- * steht die Statusspalte leer da und zeigt ihre neutrale Zeile.
- */
-export interface BoardCard {
-    kind: BoardCardKind
-    /** React-Schlüssel; für eine leere Statusspalte der Status selbst. */
-    key: string
+/** Der Inhalt einer Kachel, soweit er für die Dichte zählt. Höchstens eines von beiden gefüllt. */
+export interface BoardContent {
     match: AthleteBoardMatch | null
     result: AthleteBoardResult | null
 }
 
-export interface BoardLayout {
-    cards: BoardCard[]
-    /** Läufe in der Arena, für die kein Platz war. */
-    hiddenRunning: number
-}
+const boatsInContent = (content: BoardContent): number =>
+    content.match?.teams.length ?? content.result?.teams.length ?? 0
+
+/** Das vollste Boot-Feld — es bestimmt, wie eng es überall wird. */
+export const maxBoats = (contents: BoardContent[]): number =>
+    contents.reduce((max, content) => Math.max(max, boatsInContent(content)), 0)
+
+const teamsInContent = (
+    content: BoardContent,
+): {clubsFull?: string | null; teamName?: string | null}[] =>
+    content.match?.teams ?? content.result?.teams ?? []
 
 /**
- * Was auf die Bühne kommt, in fester Reihenfolge: die Läufe in der Arena (höchstens zwei), der
- * nächste Lauf, das letzte Ergebnis.
- *
- * Die drei Statusspalten stehen immer, auch leer. Ein fest montierter Bildschirm soll seine
- * Struktur nicht wechseln, nur weil gerade nichts fährt — wer täglich davorsteht, findet seine
- * Spalte über die Position, nicht über die Überschrift.
- */
-export const selectBoardCards = (data: AthleteBoardDto | null): BoardLayout => {
-    const running = data?.running ?? []
-    const shownRunning = running.slice(0, MAX_RUNNING_CARDS)
-
-    // Der Schlüssel trägt die Art der Spalte mit sich: ein Lauf, der gerade erst gestartet ist,
-    // kann zwischen zwei Backend-Abfragen kurz sowohl in `running` als auch noch in `upcoming`
-    // stehen. Ohne das Präfix hätten zwei nebeneinanderstehende Spalten denselben Schlüssel.
-    const runningCards: BoardCard[] =
-        shownRunning.length > 0
-            ? shownRunning.map(match => ({
-                  kind: 'running' as const,
-                  key: `running-${match.matchId}`,
-                  match,
-                  result: null,
-              }))
-            : [{kind: 'running' as const, key: 'running-empty', match: null, result: null}]
-
-    const upcoming = data?.upcoming?.[0] ?? null
-    const latest = data?.results?.[0] ?? null
-
-    return {
-        cards: [
-            ...runningCards,
-            {
-                kind: 'upcoming',
-                key: upcoming ? `upcoming-${upcoming.matchId}` : 'upcoming-empty',
-                match: upcoming,
-                result: null,
-            },
-            {
-                kind: 'result',
-                key: latest ? `result-${latest.matchId}` : 'result-empty',
-                match: null,
-                result: latest,
-            },
-        ],
-        hiddenRunning: running.length - shownRunning.length,
-    }
-}
-
-const boatsInCard = (card: BoardCard): number =>
-    card.match?.teams.length ?? card.result?.teams.length ?? 0
-
-/** Das vollste Boot-Feld auf der Bühne — es bestimmt, wie eng es überall wird. */
-export const maxBoats = (cards: BoardCard[]): number =>
-    cards.reduce((max, card) => Math.max(max, boatsInCard(card)), 0)
-
-const teamsInCard = (card: BoardCard): {clubsFull?: string | null; teamName?: string | null}[] =>
-    card.match?.teams ?? card.result?.teams ?? []
-
-/**
- * Die längste Mannschaftszeile auf der Bühne, in Zeichen.
+ * Die längste Mannschaftszeile, in Zeichen.
  *
  * Gezählt wird die ausgeschriebene Vereinskette samt Mannschaftsname — die Form, die ab `md` in
  * der Zeile steht (siehe `AthleteBoardTeamLabel`). Die Kurzform darunter ist unkritisch, dort
  * scrollt die Seite ohnehin.
  */
-export const longestTeamLabel = (cards: BoardCard[]): number =>
-    cards.reduce(
-        (max, card) =>
-            teamsInCard(card).reduce(
+export const longestTeamLabel = (contents: BoardContent[]): number =>
+    contents.reduce(
+        (max, content) =>
+            teamsInContent(content).reduce(
                 (inner, team) =>
                     Math.max(inner, (team.clubsFull?.length ?? 0) + (team.teamName?.length ?? 0)),
                 max,
@@ -150,7 +89,7 @@ const LINES_AT_FULL_SIZE = 2
 const LINE_STEP = 0.08
 
 /**
- * Der Faktor, mit dem alle Schriftgrößen der Bühne multipliziert werden.
+ * Der Faktor, mit dem alle Schriftgrößen einer Kachel multipliziert werden.
  *
  * Das Layout kann baulich nicht überlaufen — die Bootszeilen teilen sich als `1fr` die Höhe, die
  * da ist. Diese Funktion entscheidet, wie groß der Text dabei wird: Der Faktor wirkt in beide
@@ -169,8 +108,8 @@ export const densityScale = (
 ): number => {
     // Ohne die Untergrenze bei 0 wirkt ein kleines Feld hier auch negativ und hebt den Faktor an
     // — das ist beabsichtigt (siehe MAX_DENSITY_SCALE oben). Bei den Spalten gibt es diesen Fall
-    // nicht: die Bühne zeigt immer mindestens drei Statusspalten, also bleibt es bei der reinen
-    // Verkleinerung ab COLUMNS_AT_FULL_SIZE.
+    // nicht: unter COLUMNS_AT_FULL_SIZE Spalten bleibt es bei der reinen Verkleinerung über die
+    // Boote.
     const forBoats = BOAT_STEP * (boats - BOATS_AT_FULL_SIZE)
     const forColumns = COLUMN_STEP * Math.max(0, columns - COLUMNS_AT_FULL_SIZE)
     // Umbrechende Vereinsketten machen jede Bootszeile eine Textzeile höher. Nur nach unten: eine
@@ -183,18 +122,13 @@ export const densityScale = (
 }
 
 /**
- * Der Skalierungsfaktor der Bühne, aus ihrem eigenen Layout abgeleitet.
- *
- * [maxBoats], [longestTeamLabel], [rowTextLines] und [densityScale] sind bewusst pur und einzeln
- * testbar; ihre Verdrahtung (welches Feld bestimmt die Dichte, welche Spaltenzahl zählt, wann eine
- * Vereinskette umbricht) ist die einzige Stelle, an der sie falsch zusammengesteckt werden könnten
- * — deshalb steht sie hier statt in der Ansicht.
+ * Der Skalierungsfaktor einer Kachel, aus ihrem Inhalt und der Spaltenzahl des Boards
+ * abgeleitet — dieselbe Verdrahtung, die bis zum Umbau `boardScale` für die ganze Bühne
+ * traf, jetzt je Kachel.
  */
-export const boardScale = (layout: BoardLayout): number => {
-    const columns = layout.cards.length
-    return densityScale(
-        maxBoats(layout.cards),
+export const contentScale = (contents: BoardContent[], columns: number): number =>
+    densityScale(
+        maxBoats(contents),
         columns,
-        rowTextLines(longestTeamLabel(layout.cards), columns),
+        rowTextLines(longestTeamLabel(contents), columns),
     )
-}

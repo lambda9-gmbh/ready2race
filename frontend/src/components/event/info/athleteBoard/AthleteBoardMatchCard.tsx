@@ -32,11 +32,23 @@ interface AthleteBoardMatchCardProps {
     now: Date
     variant: AthleteBoardMatchCardVariant
     // Nur innerhalb variant="upcoming" relevant: ob zusätzlich zum "erwartet"-Hinweis
-    // auch die genaue Countdown-Zahl gezeigt wird (Einstellung der Veranstaltung).
+    // auch die genaue Countdown-Zahl gezeigt wird (Einstellung des Board-Elements).
     showCountdown?: boolean
+    // Namenszeilen der Besatzung unter der Vereinskette — in kleinen Kacheln (6er-Board)
+    // abschaltbar, damit die Bootszeile nur eine Textzeile trägt.
+    showCrew?: boolean
+    // Teilergebnisse (Platz/Zeit) im laufenden Lauf — je Board-Element abschaltbar.
+    showTimes?: boolean
 }
 
-const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: AthleteBoardMatchCardProps) => {
+const AthleteBoardMatchCard = ({
+    match,
+    now,
+    variant,
+    showCountdown = true,
+    showCrew = true,
+    showTimes = true,
+}: AthleteBoardMatchCardProps) => {
     const {t} = useTranslation()
 
     const startsInSeconds = match.startTime
@@ -194,7 +206,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
     // Nur im laufenden Lauf steht rechts eine Zeit. Im Block "Nächster Lauf" liefert der Server
     // Platz, Zeit und Strafe ohnehin nie — die Spalte entfällt dort strukturell, statt leer
     // mitzulaufen und Breite zu verbrauchen.
-    const showLiveResult = variant === 'running'
+    const showLiveResult = variant === 'running' && showTimes
 
     return (
         <>
@@ -288,7 +300,7 @@ const AthleteBoardMatchCard = ({match, now, variant, showCountdown = true}: Athl
                                 ) : undefined
                             }>
                             <AthleteBoardTeamLabel team={team} />
-                            {team.participants.length > 0 && (
+                            {showCrew && team.participants.length > 0 && (
                                 <AthleteBoardBoatSubline>
                                     {team.participants
                                         .map(p => (p.role ? `${p.name} (${p.role})` : p.name))
