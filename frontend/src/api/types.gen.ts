@@ -3447,6 +3447,13 @@ export type UnplannedSetupMatchDto = {
     competitionShortName?: string | null
     roundName: string
     matchName?: string | null
+    /**
+     * Match state, present once the round is materialized - mostly relevant for permanent byes whose open/acknowledged state should be visible in the schedule
+     */
+    matchActivatedAt?: string | null
+    matchStartedAt?: string | null
+    matchFinishedAt?: string | null
+    bye?: MatchByeDto | null
 }
 
 export type UnprocessableEntityError = ApiError & {

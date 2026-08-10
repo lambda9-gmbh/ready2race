@@ -1865,7 +1865,9 @@
       "deactivate": "Deactivate race",
       "deactivateConfirm": "Deactivate race \"{{label}}\" at {{time}}? This clears the real start and pauses the automatic pull.",
       "reopen": "Undo finish",
-      "reopenConfirm": "Undo finishing \"{{label}}\" at {{time}}? Activation, real start and results stay; a follow-up round that was already created may need to be deleted first."
+      "reopenConfirm": "Undo finishing \"{{label}}\" at {{time}}? Activation, real start and results stay; a follow-up round that was already created may need to be deleted first.",
+      "allDays": "All event days",
+      "unskipShiftHint": "Cancellation lifted. If the day was advanced, it can be shifted back here."
     },
     "results": {
       "download": "Download previous results",

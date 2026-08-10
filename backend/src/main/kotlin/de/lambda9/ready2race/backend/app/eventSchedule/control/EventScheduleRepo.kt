@@ -264,6 +264,12 @@ object EventScheduleRepo {
             COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Der Lauf-Zustand, sofern die Runde schon gesetzt ist: Die nicht verplanten Läufe
+            // sind vor allem Dauer-Freilose, und ob so eines noch quittiert werden muss, soll
+            // der Zeitplan zeigen, statt es hinter "Zur Durchführung" zu verstecken.
+            COMPETITION_MATCH.ACTIVATED_AT.`as`("match_activated_at"),
+            COMPETITION_MATCH.STARTED_AT.`as`("match_started_at"),
+            COMPETITION_MATCH.FINISHED_AT.`as`("match_finished_at"),
         )
             .from(COMPETITION_SETUP_MATCH)
             .join(COMPETITION_SETUP_ROUND)
@@ -271,6 +277,8 @@ object EventScheduleRepo {
             .join(COMPETITION_PROPERTIES)
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .leftJoin(COMPETITION_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .andNotExists(
                 selectOne()

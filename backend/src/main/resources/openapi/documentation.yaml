@@ -15348,6 +15348,23 @@ components:
         matchName:
           type: string
           nullable: true
+        matchActivatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Match state, present once the round is materialized - mostly relevant for permanent byes whose open/acknowledged state should be visible in the schedule"
+        matchStartedAt:
+          type: string
+          format: date-time
+          nullable: true
+        matchFinishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        bye:
+          allOf:
+            - $ref: '#/components/schemas/MatchByeDto'
+          nullable: true
 
     EventScheduleDto:
       type: object

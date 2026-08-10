@@ -7,12 +7,14 @@ import {
     ChipProps,
     IconButton,
     Stack,
+    Tab,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
+    Tabs,
     Tooltip,
     Typography,
 } from '@mui/material'
@@ -63,7 +65,11 @@ import {
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
 import {useShortLabels} from '@components/event/shortLabels.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
-import {matchStatusChip, slotMatchStatus} from '@components/event/match/matchStatusChip.ts'
+import {
+    matchStatusChip,
+    slotMatchStatus,
+    unplannedMatchStatus,
+} from '@components/event/match/matchStatusChip.ts'
 import {byeExplanation} from '@components/event/match/matchBye.ts'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
@@ -149,6 +155,23 @@ const EventSchedule = () => {
     const [lastRequested, setLastRequested] = useState(Date.now())
     const reload = () => setLastRequested(Date.now())
 
+    // Der Zeitplan zieht sich selbst nach: Am Regattatag arbeiten Schiedsrichter-Dashboard und
+    // Kette an denselben Läufen, und ein Zeitplan, der nur bei eigenen Aktionen neu lädt, zeigte
+    // deren Stand erst nach einem Reload (beobachtet am 10.08.2026). 30 Sekunden reichen - für
+    // die Sekunden-Frische ist das Dashboard da - und ein verdeckter Tab fragt gar nicht erst.
+    useEffect(() => {
+        const id = window.setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                setLastRequested(Date.now())
+            }
+        }, 30_000)
+        return () => window.clearInterval(id)
+    }, [])
+
+    // Tages-Auswahl: null heißt "noch keine Wahl getroffen" - dann gewinnt der heutige Tag, wenn
+    // die Veranstaltung heute läuft, sonst alle Tage. Erst ein Klick legt die Wahl fest.
+    const [selectedDay, setSelectedDay] = useState<string | null>(null)
+
     const [dialogOpen, setDialogOpen] = useState(false)
     const [editingSlot, setEditingSlot] = useState<EventScheduleSlotDto | undefined>(undefined)
     const [presetMatch, setPresetMatch] = useState<UnplannedSetupMatchDto | undefined>(undefined)
@@ -162,8 +185,10 @@ const EventSchedule = () => {
 
     const [importDialogOpen, setImportDialogOpen] = useState(false)
 
-    // Geteilt mit dem Schiedsrichter-Board (siehe shortLabels.ts).
-    const [shortLabels, toggleShortLabels] = useShortLabels()
+    // Geteilt mit dem Schiedsrichter-Board (siehe shortLabels.ts). Seit dem 11.08.2026 startet
+    // auch der Zeitplan in der Kurzform - die vollen Wettkampfnamen sprengten jede Zeile, und wer
+    // sie will, schaltet einmal um und behält das überall.
+    const [shortLabels, toggleShortLabels] = useShortLabels(true)
 
     const now = useLocalClock(30_000)
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
@@ -303,6 +328,19 @@ const EventSchedule = () => {
                 const {error} = await unskipScheduleSlot({path: {eventId, slotId: slot.id}})
                 if (error) {
                     showSlotActionError(error)
+                } else {
+                    // Das Gegenstück zum Vorziehen nach der Absage: Wer den Tag damals in die
+                    // frei gewordene Zeit nachrücken ließ, braucht jetzt Platz für den
+                    // zurückgekehrten Slot. Angeboten wird das vorhandene Verschieben-Werkzeug
+                    // des Tages - vorgeöffnet, nicht erzwungen: Wer nie vorgezogen hat, schließt
+                    // es einfach wieder.
+                    const daySlots = (data?.slots ?? []).filter(
+                        s => s.startTime.slice(0, 10) === slot.startTime.slice(0, 10),
+                    )
+                    if (daySlots.length > 0) {
+                        feedback.success(t('event.schedule.unskipShiftHint'))
+                        openShiftDialog(daySlots)
+                    }
                 }
                 reload()
             },
@@ -465,6 +503,16 @@ const EventSchedule = () => {
     const daySections = groupSlotsByDay(data?.slots ?? [])
     const unplannedSetupMatches = data?.unplannedSetupMatches ?? []
 
+    // 'all' oder ein Datum (YYYY-MM-DD). Die Vorauswahl spart den täglichen Klick: Wer den
+    // Zeitplan am Renntag öffnet, will fast immer den heutigen Tag sehen.
+    const today = format(new Date(), 'yyyy-MM-dd')
+    const effectiveDay =
+        selectedDay ?? (daySections.some(section => section.date === today) ? today : 'all')
+    const visibleSections =
+        effectiveDay === 'all'
+            ? daySections
+            : daySections.filter(section => section.date === effectiveDay)
+
     return (
         <Stack spacing={4}>
             <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
@@ -484,7 +532,24 @@ const EventSchedule = () => {
             {data && daySections.length === 0 && (
                 <Typography color={'text.secondary'}>{t('event.schedule.noSlots')}</Typography>
             )}
-            {daySections.map(section => (
+            {/* Ein Tab je Eventtag plus "Alle Eventtage" - erspart das Scrollen durch fremde Tage. */}
+            {daySections.length > 1 && (
+                <Tabs
+                    value={effectiveDay}
+                    onChange={(_, value: string) => setSelectedDay(value)}
+                    variant={'scrollable'}
+                    allowScrollButtonsMobile>
+                    <Tab value={'all'} label={t('event.schedule.allDays')} />
+                    {daySections.map(section => (
+                        <Tab
+                            key={section.date}
+                            value={section.date}
+                            label={format(new Date(section.date), t('format.date'))}
+                        />
+                    ))}
+                </Tabs>
+            )}
+            {visibleSections.map(section => (
                 <Box key={section.date}>
                     <Stack
                         direction={'row'}
@@ -846,43 +911,74 @@ const EventSchedule = () => {
                         <Table size={'small'}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell width={'30%'}>{t('event.schedule.competition')}</TableCell>
-                                    <TableCell width={'25%'}>{t('event.schedule.round')}</TableCell>
-                                    <TableCell width={'25%'}>{t('event.schedule.match')}</TableCell>
-                                    {canEdit && <TableCell width={'20%'} />}
+                                    <TableCell width={'25%'}>{t('event.schedule.competition')}</TableCell>
+                                    <TableCell width={'20%'}>{t('event.schedule.round')}</TableCell>
+                                    <TableCell width={'20%'}>{t('event.schedule.match')}</TableCell>
+                                    <TableCell width={'20%'}>{t('event.schedule.status')}</TableCell>
+                                    {canEdit && <TableCell width={'15%'} />}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {unplannedSetupMatches.map(match => (
-                                    <TableRow key={match.setupMatchId}>
-                                        <TableCell>
-                                            {competitionTag(match) && (
-                                                <Box
-                                                    component={'span'}
-                                                    sx={{color: 'text.secondary', mr: 1}}>
-                                                    {competitionTag(match)}
-                                                </Box>
-                                            )}
-                                            {/* Dieselbe Kürzung wie in der Slot-Spalte: mit
-                                                Kürzel davor sagt der ausgeschriebene Name nichts
-                                                Neues mehr. */}
-                                            {(!shortLabels || !competitionTag(match)) &&
-                                                match.competitionName}
-                                        </TableCell>
-                                        <TableCell>{match.roundName}</TableCell>
-                                        <TableCell>{match.matchName ?? '-'}</TableCell>
-                                        {canEdit && (
+                                {unplannedSetupMatches.map(match => {
+                                    // Vor allem für die Dauer-Freilose: "Freilos · offen" heißt,
+                                    // hier wartet noch eine Quittierung.
+                                    const status = unplannedMatchStatus(match)
+                                    const chip = status && matchStatusChip(status, null, now)
+                                    return (
+                                        <TableRow key={match.setupMatchId}>
                                             <TableCell>
-                                                <Button
-                                                    size={'small'}
-                                                    variant={'text'}
-                                                    onClick={() => openPlanDialog(match)}>
-                                                    {t('event.schedule.plan')}
-                                                </Button>
+                                                {competitionTag(match) && (
+                                                    <Box
+                                                        component={'span'}
+                                                        sx={{color: 'text.secondary', mr: 1}}>
+                                                        {competitionTag(match)}
+                                                    </Box>
+                                                )}
+                                                {/* Dieselbe Kürzung wie in der Slot-Spalte: mit
+                                                    Kürzel davor sagt der ausgeschriebene Name nichts
+                                                    Neues mehr. */}
+                                                {(!shortLabels || !competitionTag(match)) &&
+                                                    match.competitionName}
                                             </TableCell>
-                                        )}
-                                    </TableRow>
-                                ))}
+                                            <TableCell>{match.roundName}</TableCell>
+                                            <TableCell>{match.matchName ?? '-'}</TableCell>
+                                            <TableCell>
+                                                {chip && (
+                                                    <Chip
+                                                        size={'small'}
+                                                        // Der Schlüssel steht erst zur Laufzeit
+                                                        // fest - dasselbe Muster wie StatusChip.
+                                                        label={(
+                                                            t as (
+                                                                key: string,
+                                                                values?: Record<
+                                                                    string,
+                                                                    string | number
+                                                                >,
+                                                            ) => string
+                                                        )(chip.labelKey, chip.values)}
+                                                        color={chip.color}
+                                                        sx={
+                                                            chip.strikeThrough
+                                                                ? {textDecoration: 'line-through'}
+                                                                : undefined
+                                                        }
+                                                    />
+                                                )}
+                                            </TableCell>
+                                            {canEdit && (
+                                                <TableCell>
+                                                    <Button
+                                                        size={'small'}
+                                                        variant={'text'}
+                                                        onClick={() => openPlanDialog(match)}>
+                                                        {t('event.schedule.plan')}
+                                                    </Button>
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    )
+                                })}
                             </TableBody>
                         </Table>
                     </TableContainer>

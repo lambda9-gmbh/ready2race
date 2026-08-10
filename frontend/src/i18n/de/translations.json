@@ -1865,7 +1865,9 @@
       "deactivate": "Lauf deaktivieren",
       "deactivateConfirm": "Lauf „{{label}}“ um {{time}} deaktivieren? Der Ist-Start wird dabei gelöscht und der automatische Abruf pausiert.",
       "reopen": "Beenden zurücknehmen",
-      "reopenConfirm": "Beenden von „{{label}}“ um {{time}} zurücknehmen? Aktivierung, Ist-Start und Ergebnisse bleiben stehen; eine bereits erzeugte Folgerunde muss ggf. zuerst gelöscht werden."
+      "reopenConfirm": "Beenden von „{{label}}“ um {{time}} zurücknehmen? Aktivierung, Ist-Start und Ergebnisse bleiben stehen; eine bereits erzeugte Folgerunde muss ggf. zuerst gelöscht werden.",
+      "allDays": "Alle Eventtage",
+      "unskipShiftHint": "Entfall aufgehoben. Falls der Tag vorgezogen wurde, kann er hier wieder nach hinten verschoben werden."
     },
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",

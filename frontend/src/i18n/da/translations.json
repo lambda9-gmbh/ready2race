@@ -1859,7 +1859,9 @@
       "deactivate": "Deaktiver løb",
       "deactivateConfirm": "Deaktiver løb „{{label}}“ kl. {{time}}? Den reelle start slettes, og den automatiske hentning sættes på pause.",
       "reopen": "Fortryd afslutning",
-      "reopenConfirm": "Fortryd afslutningen af „{{label}}“ kl. {{time}}? Aktivering, reel start og resultater bevares; en allerede oprettet efterfølgende runde skal muligvis slettes først."
+      "reopenConfirm": "Fortryd afslutningen af „{{label}}“ kl. {{time}}? Aktivering, reel start og resultater bevares; en allerede oprettet efterfølgende runde skal muligvis slettes først.",
+      "allDays": "Alle stævnedage",
+      "unskipShiftHint": "Aflysningen er ophævet. Hvis dagen blev rykket frem, kan den flyttes tilbage her."
     },
     "results": {
       "download": "Download tidligere resultater",
