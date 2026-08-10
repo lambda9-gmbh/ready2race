@@ -4,7 +4,7 @@
 **Zweck:** Ein Katalog aller Fälle, die vor der Regatta am 14.08. auf **einem** gebauten Stand
 durchlaufen werden. Er sammelt die Fälle über alle Arbeitsstränge (Athleten-Anzeige, Zeitstrahl,
 RaceClocker, Schiedsrichter-Dashboard, Betrieb, Zeitnahme-Einstellungen, Urkunden, Lauf-Status,
-Prüfungsschweregrad, Vereinskette, Wertungskategorien), damit der große Test in der Woche vom 10.08. nicht aus dem Gedächtnis
+Prüfungsschweregrad, Vereinskette, Wertungskategorien, Siegerehrungsbogen), damit der große Test in der Woche vom 10.08. nicht aus dem Gedächtnis
 zusammengesucht werden muss.
 
 > **Am 07.08. dazugekommen.** An diesem Tag liefen sechs Worktrees parallel; sie sind alle in
@@ -504,6 +504,57 @@ Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfa
 | L20 | Kategorie ohne Boote | Eine zugeordnete Kategorie, in der niemand gemeldet ist, erzeugt in **keiner** Ergebnisliste einen leeren Abschnitt | `9fbe99ed` |  `AGENT 09.08.` |
 | L22 | Kategorie ohne Zuordnung zur Veranstaltung | Ein Boot trägt eine Kategorie, die der Veranstaltung nie zugeordnet wurde (im Bestand der Regelfall): ihr Abschnitt steht **hinter** allen konfigurierten, untereinander alphabetisch, und vor „Ohne Wertungskategorie". Am 09.08. im Browser bestätigt: „Deutsche Meisterschaft Wertung" vor „Internationale Wertung", beide hinter den gepflegten | `9fbe99ed` | `AGENT 09.08.` |
 | L21 | Altdaten nach der Migration | Eine Veranstaltung, die vor dem Update Kategorien hatte: die Reihenfolge ist nach dem Update die bisher gezeigte alphabetische. Die Migration allein darf keine Anzeige verändert haben | `9fbe99ed` | |
+
+---
+
+## M — Siegerehrungsbogen
+
+Am 09./10.08. gebaut. Bis dahin ging die Sprecherin mit dem Ergebnis-PDF der ganzen Veranstaltung
+oder dem Platzierungs-Tab ans Pult — beides listet **alle** Boote, kennzeichnet den meldenden
+Verein nicht und nennt den Heimatverein nur als Fußnote. Jetzt gibt es ein eigenes PDF: **eine
+A4-Seite je Wertungskategorie**, darauf die Plätze 1–3 mit Namen, Vereinen, Zeiten und Lauf, zum
+Vorlesen gesetzt. Auswahl über einen Dialog im Wettkämpfe-Tab und auf der Platzierungsseite.
+Entwurf: `docs/superpowers/specs/2026-08-09-siegerehrungsbogen-design.md`.
+
+> **Kein einziger Fall ist in der laufenden Anwendung gesehen worden, und der Bogen wurde nie
+> ausgedruckt.** Abgesichert ist er ausschließlich durch Unit-Tests, PDF-Textextraktion und
+> Code-Reviews. Hier zuerst hinsehen — und zwar mit einem echten Ausdruck, nicht am Bildschirm:
+> die zentrale Zusage („passt auf ein Blatt, ist vorlesbar") lässt sich nur auf Papier prüfen.
+
+Zwei Annahmen des Entwurfs sind beim Bau **widerlegt** worden und erklären, warum M4–M7 so genau
+hinsehen: `page { }` im PDF-Baukasten ist keine harte Seitengrenze (der Renderer legt bei Überlauf
+still eine **kopflose** Seite nach), und die Schriftgröße lässt sich nicht aus der Personenzahl
+ableiten (Vereinsketten brechen um — drei *Vierer* einer Renngemeinschaft sprengten A4 bei zwölf
+Personenzeilen, während sieben Personen zufällig passten). Heute wird die Seitenzahl gemessen.
+
+| Fall | Titel | Was zu tun und zu sehen ist | testbar ab | Nachweis |
+|---|---|---|---|---|
+| M1 | Auswahl öffnen | Veranstaltung → Wettkämpfe: Knopf „Siegerehrungsbogen". Der Dialog listet die Ehrungen nach Rennnummer, je Wettkampf eine Zeile pro Wertungskategorie, mit der Zahl der geehrten Boote. Alles ist vorausgewählt | `f566309b` | |
+| M2 | Auswahl vom einzelnen Rennen | Durchführung → Platzierungen eines Wettkampfs → „Siegerehrungsbogen": der Dialog zeigt **nur** dessen Ehrungen. Gegenprobe im Netzwerk-Tab: die Anfrage trägt `competitionId`, es wird nicht die ganze Regatta berechnet | `f566309b` | |
+| M3 | Eine Seite je Wertungskategorie | **Die zentrale Zusage.** Ein Rennen mit zwei Kategorien ergibt zwei Seiten. Keine Kategorie steht auf dem Blatt einer anderen, jede Seite trägt Veranstaltung, Rennnummer, Wettkampfname und Wertung | `f566309b` | |
+| M4 | **Ausdrucken und aus zwei Metern lesen** | Der wichtigste Fall. Ein Blatt auf Papier bringen und aus Pult-Entfernung vorlesen: Rangzahl (20 pt) und Vereinszeile (14 pt) müssen sicher greifbar sein, die Namenszeilen lesbar. Achtung: **jede Achter-Ehrung** landet auf der kleinsten Stufe (8,5 pt) — genau die ausdrucken, nicht einen Einer | `f566309b` | |
+| M5 | Renngemeinschaft mit ausgeschriebenen Vereinsnamen | Einmal als Vierer, einmal als Achter: Titelzeile ist die **Vereinskette** in Bootsreihenfolge (nicht „Renngemeinschaft"), darunter „Meldender Verein: …", hinter den Namen nur die **abweichenden** Vereine. Hier zerbrach die erste Fassung | `f566309b` | |
+| M6 | Fortsetzungsseite | Braucht ein sehr großes Feld (geteilter Rang mit vier Achtern als Renngemeinschaft) zwei Blätter, trägt **jedes** den vollständigen Kopf, und ab dem zweiten steht „Fortsetzung" darauf. Es darf **nie** ein Blatt ohne Kopf entstehen, und keine Mannschaft darf zerrissen werden | `f566309b` | |
+| M7 | Kein leerer Platzhalter | Ein Boot ohne Zeit, ein Boot ohne Bootsnamen, ein Wettkampf ohne Wertungskategorie: die jeweilige Angabe **entfällt ganz**. Nirgends ein „—", ein hängender Trenner oder ein Doppelpunkt ins Leere | `f566309b` | |
+| M8 | Reihenfolge der Kategorien | Die Seiten folgen der unter **L1** gepflegten Reihenfolge, nicht dem Alphabet — dieselbe Folge, in der auch geehrt wird. Zum Prüfen die Reihenfolge unter L1 absichtlich gegen das Alphabet stellen und beide Ausgaben nebeneinanderhalten | `f566309b` | |
+| M9 | Zählung ab 1 je Kategorie | Ein Boot, das im Wettkampf Sechster, in seiner Kategorie aber Erster ist, steht auf dem Bogen als **1.** Gleiche Regel wie L3 — der Bogen rechnet seit `2caaf096` an derselben Stelle | `f566309b` | |
+| M10 | Gleichstand ohne Bronze | Teilen sich zwei Boote den zweiten Platz, zeigt das Blatt 1., 2., 2. und **keinen** dritten Rang. Beide tragen den Vermerk „geteilt", die Rangzahl steht nur beim ersten. Herstellbar über eine Runde mit Platzvergabe „gleich" (`EQUAL`), siehe L6 | `f566309b` | |
+| M11 | Ausgeschlossene Boote | Ein abgemeldetes, ein ausgeschiedenes und ein disqualifiziertes Boot stehen **nicht** auf dem Bogen, und die Ränge der übrigen rücken entsprechend auf | `f566309b` | |
+| M12 | Zeit, Strafe, Lauf am richtigen Boot | Zeit rechts auf Höhe der Rangzahl, Zeitstrafe darunter („Zeitstrafe +10 s (Frühstart)") — beide beim Boot, zu dem sie gehören. Der Lauf steht im Kopf, wenn alle drei aus **demselben** stammen | `f566309b` | |
+| M13 | Zwei Läufe in einer Wertung | Kommen die Ränge aus verschiedenen Läufen (A-/B-Finale, Zeitläufe), steht **keine** Lauf-Angabe im Kopf, dafür je Rangblock eine eigene. Ein Sieger ohne Lauf darf die Angaben der anderen nicht verschlucken | `f566309b` | |
+| M14 | Meldender Verein verdichtet | Tragen alle Personen den meldenden Verein, steht er **einmal** als Titelzeile — keine Zeile „Meldender Verein", kein Vereinszusatz hinter den Namen. Startet die Crew für einen anderen Verein als den meldenden, stehen beide getrennt | `f566309b` | |
+| M15 | Schreibvarianten desselben Vereins | Zwei Personen mit „Rostocker Ruderclub" und „Rostocker Ruder-Club von 1885 e.V.": das ist **ein** Verein, eine Titelzeile, kein Vereinszusatz. Ein Vereinsboot darf nicht wie eine Renngemeinschaft aussehen | `f566309b` | |
+| M16 | Challenge-Veranstaltung | Bei einer Challenge-Veranstaltung erscheint der Knopf gar nicht erst; wird der Endpunkt direkt aufgerufen, kommt die Meldung „dort werden keine Läufe gefahren und keine Plätze vergeben" — nicht „keine Ergebnisse" | `f566309b` | |
+| M17 | Noch keine Platzierungen | Vor dem ersten gewerteten Lauf: der Dialog sagt „Es gibt noch keine Ehrungen", statt eine leere Liste oder einen Fehler zu zeigen | `f566309b` | |
+| M18 | Dialog zweimal öffnen | Zwischen zwei Öffnungen ein Ergebnis ändern: beim zweiten Öffnen stehen die neuen Zahlen da, die Vorauswahl ist wieder vollständig, und „Es gibt noch keine Ehrungen" blitzt nicht auf. Für diesen Fall gibt es hausüblich keinen Test | `f566309b` | |
+| M19 | Dateiname | Der Download heißt `siegerehrung_<Veranstaltung>.pdf`. Einmal mit einer Veranstaltung prüfen, deren Name Umlaute trägt | `f566309b` | |
+| M20 | Knopf gesperrt ohne Auswahl | Alle Häkchen entfernen: „Herunterladen" ist grau. Wichtig, weil eine leer verschickte Auswahl serverseitig „alle Ehrungen drucken" bedeutet | `f566309b` | |
+| M21 | Berechtigung | Ohne Anmeldung ist der Endpunkt nicht erreichbar (401). Durch `AwardCeremonyHttpIT` abgedeckt — die Klasse läuft mangels Failsafe-Konfiguration aber **nicht** im normalen Testlauf mit und muss gezielt gestartet werden: `./mvnw test -Dtest=AwardCeremonyHttpIT -DfailIfNoSpecifiedTests=false` | `f566309b` | |
+
+**Offen, vom Test zu entscheiden:** Ob 8,5 pt als kleinste Stufe für ein Vorleseblatt trägt (M4).
+Trägt sie nicht, ist der Boden höher zu setzen — dann bekommen mehr Ehrungen eine
+Fortsetzungsseite, was der bewussten Abwägung „lieber zwei lesbare Blätter als eines mit
+Kleingedrucktem" entspricht.
 
 ---
 
