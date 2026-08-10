@@ -16,6 +16,7 @@ type ParticipantRequirementForm = {
     description: string
     optional: boolean
     checkInApp: boolean
+    publiclyVisible: boolean
     checkEarliestMinutesBefore: string
     checkLatestMinutesBefore: string
 }
@@ -44,6 +45,7 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
         description: '',
         optional: false,
         checkInApp: false,
+        publiclyVisible: false,
         checkEarliestMinutesBefore: '',
         checkLatestMinutesBefore: '',
     }
@@ -66,6 +68,10 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
                 <FormInputText name="description" label={t('entity.description')} />
                 <FormInputCheckbox name="optional" label={t('entity.optional')} />
                 <FormInputCheckbox name="checkInApp" label={t('participantRequirement.checkInApp')} />
+                <FormInputCheckbox
+                    name="publiclyVisible"
+                    label={t('participantRequirement.publiclyVisible')}
+                />
                 <FormInputNumber
                     name="checkEarliestMinutesBefore"
                     label={t('participantRequirement.checkEarliestMinutesBefore')}
@@ -89,6 +95,7 @@ function mapFormToRequest(formData: ParticipantRequirementForm): ParticipantRequ
         description: takeIfNotEmpty(formData.description),
         optional: formData.optional,
         checkInApp: formData.checkInApp,
+        publiclyVisible: formData.publiclyVisible,
         checkEarliestMinutesBefore:
             formData.checkEarliestMinutesBefore !== ''
                 ? Number(formData.checkEarliestMinutesBefore)
@@ -106,6 +113,7 @@ function mapDtoToForm(dto: ParticipantRequirementDto): ParticipantRequirementFor
         description: dto.description ?? '',
         optional: dto.optional,
         checkInApp: dto.checkInApp,
+        publiclyVisible: dto.publiclyVisible,
         checkEarliestMinutesBefore: dto.checkEarliestMinutesBefore?.toString() ?? '',
         checkLatestMinutesBefore: dto.checkLatestMinutesBefore?.toString() ?? '',
     }

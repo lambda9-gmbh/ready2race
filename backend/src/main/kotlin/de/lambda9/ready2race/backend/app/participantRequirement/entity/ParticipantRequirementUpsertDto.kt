@@ -11,6 +11,7 @@ data class ParticipantRequirementUpsertDto(
     val description: String?,
     val optional: Boolean?,
     val checkInApp: Boolean?,
+    val publiclyVisible: Boolean?,
     val checkEarliestMinutesBefore: Int?,
     val checkLatestMinutesBefore: Int?,
 ) : Validatable {
@@ -34,6 +35,7 @@ data class ParticipantRequirementUpsertDto(
                 description = "Description",
                 optional = false,
                 checkInApp = false,
+                publiclyVisible = false,
                 checkEarliestMinutesBefore = 120,
                 checkLatestMinutesBefore = 15,
             )

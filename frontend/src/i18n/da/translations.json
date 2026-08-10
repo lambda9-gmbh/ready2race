@@ -1970,6 +1970,7 @@
     "removedGlobal": "Global tildeling fjernet",
     "checkRequirements": "Kontrollér betingelser",
     "checkInApp": "Kan kontrolleres i app",
+    "publiclyVisible": "Synlig for deltagere (Min begivenhed)",
     "checkEarliestMinutesBefore": "Tidligst (minutter før start)",
     "checkLatestMinutesBefore": "Senest (minutter før start)",
     "namedParticipantRequirements": {
@@ -2755,5 +2756,27 @@
         "hint": "Kun synlig, hvis skabelonen indeholder en pladsholder til rangeringskategorien. Den trykte placering forbliver konkurrencens."
       }
     }
+  },
+  "myEvent": {
+    "tab": "Min begivenhed",
+    "hint": "Scan QR-koden på dit armbånd for at se dine løb og resultater.",
+    "notFound": "Der findes ingen deltagelse med denne kode ved dette stævne.",
+    "next": "Dit næste løb",
+    "running": "I gang nu",
+    "matches": "Mine løb",
+    "results": "Mine resultater",
+    "unscheduled": "Tilmeldt, endnu ikke planlagt",
+    "requirements": "Mine betingelser",
+    "requirementsOpen": "Der mangler noget",
+    "requirementsAllDone": "Alt er klaret",
+    "requirementsOfficeHint": "Ordn det venligst i sekretariatet inden dit første løb.",
+    "requirementFulfilled": "klaret",
+    "requirementOpen": "mangler",
+    "requirementOptional": "frivillig",
+    "remove": "Fjern post",
+    "lane": "Startposition",
+    "team": "Hold",
+    "deregistered": "Afmeldt",
+    "noMatches": "Der er endnu ikke planlagt noget løb for dig."
   }
 }

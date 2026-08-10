@@ -26,6 +26,9 @@ export const COUNTDOWN_MAX_SECONDS = 24 * 60 * 60
  * Ohne Stundenstufe entstand für einen Lauf in einer Woche die Anzeige "in 9886 min" —
  * formal richtig, praktisch unlesbar. Aufrufer prüfen zusätzlich COUNTDOWN_MAX_SECONDS
  * und zeigen jenseits davon das Datum statt einer Restzeit.
+ *
+ * Wird auch von „Mein Event" genutzt: die Restzeit auf dem Telefon und die auf der
+ * Wandanzeige müssen dieselbe Formulierung tragen.
  */
 export const formatRemaining = (seconds: number, t: TFunction): string => {
     const total = Math.max(0, Math.floor(seconds))

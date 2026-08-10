@@ -6308,6 +6308,30 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/info/my-event/{qrCode}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: qrCode
+        in: path
+        required: true
+        description: "Code from the wristband. Unknown codes, codes of another event and codes belonging to a helper account all answer 404 alike."
+        schema:
+          type: string
+    get:
+      operationId: getMyEvent
+      description: "Personal dashboard of one participant, reachable without login through the QR code on the wristband"
+      responses:
+        200:
+          description: Personal dashboard retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyEventDto'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/liveDashboard/match/{matchId}/finish:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -10780,6 +10804,7 @@ components:
     ParticipantRequirementDto:
       type: object
       required:
+        - publiclyVisible
         - id
         - name
         - optional
@@ -10797,6 +10822,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true
@@ -10820,6 +10848,7 @@ components:
     ParticipantRequirementForEventDto:
       type: object
       required:
+        - publiclyVisible
         - id
         - name
         - optional
@@ -10840,6 +10869,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         requirements:
           type: array
           items:
@@ -10874,6 +10906,9 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        publiclyVisible:
+          type: boolean
+          description: "Im oeffentlichen Dashboard Mein Event sichtbar"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true
@@ -13916,6 +13951,220 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardResult'
+
+    MyEventTeamMemberDto:
+      type: object
+      required:
+        - name
+        - self
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          nullable: true
+        self:
+          type: boolean
+          description: "true for the person this QR code belongs to"
+
+    MyEventMatchDto:
+      type: object
+      required:
+        - matchId
+        - competitionName
+        - startState
+        - teamMembers
+        - deregistered
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "scheduled start"
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "real start, if stamped"
+        startState:
+          $ref: '#/components/schemas/AthleteBoardStartState'
+        lane:
+          type: integer
+          nullable: true
+        teamName:
+          type: string
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
+        teamMembers:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventTeamMemberDto'
+        deregistered:
+          type: boolean
+          description: "withdrawn - shown without countdown, even before the match becomes a public result"
+        deregisteredReason:
+          type: string
+          nullable: true
+
+    MyEventResultDto:
+      type: object
+      required:
+        - matchId
+        - competitionName
+        - failed
+        - deregistered
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        actualStartTime:
+          type: string
+          format: date-time
+          nullable: true
+        place:
+          type: integer
+          nullable: true
+        timeString:
+          type: string
+          nullable: true
+        penaltySeconds:
+          type: integer
+          nullable: true
+        penaltyNote:
+          type: string
+          nullable: true
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+          nullable: true
+        deregistered:
+          type: boolean
+        deregisteredReason:
+          type: string
+          nullable: true
+
+    MyEventRegistrationDto:
+      type: object
+      required:
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        teamName:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+
+    MyEventRequirementDto:
+      type: object
+      required:
+        - id
+        - name
+        - optional
+        - fulfilled
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        optional:
+          type: boolean
+        fulfilled:
+          type: boolean
+
+    MyEventDto:
+      type: object
+      required:
+        - displayName
+        - eventName
+        - serverTime
+        - refreshIntervalSeconds
+        - running
+        - upcoming
+        - results
+        - unscheduled
+        - requirements
+      properties:
+        displayName:
+          type: string
+        clubName:
+          type: string
+          nullable: true
+        eventName:
+          type: string
+        serverTime:
+          type: string
+          format: date-time
+        refreshIntervalSeconds:
+          type: integer
+        running:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventMatchDto'
+        upcoming:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventMatchDto'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventResultDto'
+        unscheduled:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventRegistrationDto'
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEventRequirementDto'
 
     LiveMatchInfo:
       type: object

@@ -1976,6 +1976,7 @@
     "removedGlobal": "Globale Zuordnung entfernt",
     "checkRequirements": "Bedingungen prüfen",
     "checkInApp": "Per App prüfbar",
+    "publiclyVisible": "Für Teilnehmende sichtbar (Mein Event)",
     "checkEarliestMinutesBefore": "Frühestens (Minuten vor Start)",
     "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
     "namedParticipantRequirements": {
@@ -2761,5 +2762,27 @@
         "hint": "Nur sichtbar, wenn die Vorlage einen Platzhalter für die Wertungskategorie enthält. Die gedruckte Platzierung bleibt die des Wettkampfs."
       }
     }
+  },
+  "myEvent": {
+    "tab": "Mein Event",
+    "hint": "Scanne den QR-Code auf deinem Band, um deine Läufe und Ergebnisse zu sehen.",
+    "notFound": "Zu diesem Code gibt es keine Teilnahme bei dieser Veranstaltung.",
+    "next": "Dein nächster Lauf",
+    "running": "Läuft gerade",
+    "matches": "Meine Läufe",
+    "results": "Meine Ergebnisse",
+    "unscheduled": "Gemeldet, noch nicht terminiert",
+    "requirements": "Meine Bedingungen",
+    "requirementsOpen": "Es fehlt noch etwas",
+    "requirementsAllDone": "Alles erledigt",
+    "requirementsOfficeHint": "Bitte kläre das vor deinem ersten Lauf in der Meldestelle.",
+    "requirementFulfilled": "erledigt",
+    "requirementOpen": "offen",
+    "requirementOptional": "freiwillig",
+    "remove": "Eintrag entfernen",
+    "lane": "Startposition",
+    "team": "Mannschaft",
+    "deregistered": "Abgemeldet",
+    "noMatches": "Für dich ist noch kein Lauf eingetragen."
   }
 }

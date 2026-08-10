@@ -332,6 +332,7 @@ object ParticipantRequirementService {
             description = request.description
             optional = request.optional ?: false
             checkInApp = request.checkInApp ?: false
+            publiclyVisible = request.publiclyVisible ?: false
             checkEarliestMinutesBefore = request.checkEarliestMinutesBefore
             checkLatestMinutesBefore = request.checkLatestMinutesBefore
             updatedAt = LocalDateTime.now()

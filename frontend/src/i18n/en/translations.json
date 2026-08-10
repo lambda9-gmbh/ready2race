@@ -1976,6 +1976,7 @@
     "removedGlobal": "Global assignment removed",
     "checkRequirements": "Check requirements",
     "checkInApp": "Checkable in app",
+    "publiclyVisible": "Visible to participants (My Event)",
     "checkEarliestMinutesBefore": "Earliest (minutes before start)",
     "checkLatestMinutesBefore": "Latest (minutes before start)",
     "namedParticipantRequirements": {
@@ -2761,5 +2762,27 @@
         "hint": "Only visible if the template contains a placeholder for the rating category. The printed place stays the competition-wide one."
       }
     }
+  },
+  "myEvent": {
+    "tab": "My Event",
+    "hint": "Scan the QR code on your wristband to see your races and results.",
+    "notFound": "There is no entry for this code at this event.",
+    "next": "Your next race",
+    "running": "Running now",
+    "matches": "My races",
+    "results": "My results",
+    "unscheduled": "Entered, not scheduled yet",
+    "requirements": "My requirements",
+    "requirementsOpen": "Something is still missing",
+    "requirementsAllDone": "All done",
+    "requirementsOfficeHint": "Please sort this out at the registration desk before your first race.",
+    "requirementFulfilled": "done",
+    "requirementOpen": "open",
+    "requirementOptional": "optional",
+    "remove": "Remove entry",
+    "lane": "Start position",
+    "team": "Team",
+    "deregistered": "Withdrawn",
+    "noMatches": "No race has been scheduled for you yet."
   }
 }
