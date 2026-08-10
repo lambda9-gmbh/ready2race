@@ -700,6 +700,8 @@
       "competition": "Competition",
       "competitions": "Competitions",
       "navigation": {
+        "modeCompetitions": "Races",
+        "modeSchedule": "Schedule",
         "backToEvent": "Back to the event",
         "filter": "Filter",
         "showShortNames": "Show short names",
@@ -1011,6 +1013,7 @@
         },
         "teamsWithBye": "Teams with a bye",
         "match": {
+          "status": "Status",
           "startTime": "Start time",
           "startTimeOffset": "Start time offset",
           "startNumber": {
@@ -1587,6 +1590,11 @@
         "unscheduled": "Unscheduled",
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Does not take place",
+        "bye": {
+          "open": "Bye · open",
+          "acknowledged": "Bye · acknowledged",
+          "cancelled": "Bye · cancelled"
+        },
         "counter": {
           "preparing": "{{n}} preparing",
           "running": "{{n}} running",
@@ -1594,6 +1602,11 @@
           "finished": "{{n}} finished",
           "cancelled": "{{n}} cancelled"
         }
+      },
+      "bye": {
+        "deregistration": "Bye after withdrawal — {{team}}",
+        "deregistrationWithReason": "Bye after withdrawal — {{team}} ({{reason}})",
+        "noOpponent": "Bye — no opponent in this round"
       }
     },
     "liveDashboard": {
@@ -1607,6 +1620,7 @@
       },
       "lastUpdated": "Updated: {{time}}",
       "staleWarning": "Connection lost — data may be outdated.",
+      "staleSince": "As of {{time}} — no actions are possible while offline.",
       "loadError": "Could not load data.",
       "noRunning": "No match is currently running.",
       "nextUp": "Up next",
@@ -2378,7 +2392,8 @@
         "qrManagement": "QR Code Management",
         "competitionCheck": "Competition Check",
         "eventRequirement": "Event Requirements",
-        "caterer": "Catering"
+        "caterer": "Catering",
+        "liveDashboard": "Referee dashboard"
       },
       "switchEvent": "Switch Event"
     },
@@ -2386,6 +2401,17 @@
       "title": "Not authorized",
       "message": "You are not authorized for this page.",
       "backButton": "Back to login"
+    },
+    "dashboard": {
+      "noEvent": "No event selected."
+    },
+    "update": {
+      "available": "New version available",
+      "reload": "Reload now"
+    },
+    "reset": {
+      "button": "Reset app",
+      "confirm": "Resets the app on this device and reloads it. You stay signed in."
     }
   },
   "caterer": {

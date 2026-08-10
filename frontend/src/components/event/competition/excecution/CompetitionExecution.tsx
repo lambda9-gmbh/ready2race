@@ -53,7 +53,6 @@ import {
     CompetitionExecutionProgressDto,
     CompetitionMatchDto,
     CompetitionMatchTeamDto,
-    CompetitionRoundDto,
     StartListFileType,
 } from '@api/types.gen.ts'
 import CompetitionExecutionMatchDialog from '@components/event/competition/excecution/CompetitionExecutionMatchDialog.tsx'
@@ -87,6 +86,7 @@ import {
     matchErrorText,
     raceClockerErrorText,
 } from '@components/event/competition/excecution/executionError.ts'
+import {raceableMatches} from '@components/event/competition/excecution/byeMatches.ts'
 import {
     AutoRefreshConfig,
     refreshIntervalMs,
@@ -293,14 +293,8 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
         setReloadData(!reloadData)
     }
 
-    const matchesFiltered = (round: CompetitionRoundDto): CompetitionMatchDto[] => {
-        return round.matches
-            .filter(match => match.teams.length > 0 && (match.teams.length > 1 || round.required))
-            .sort((a, b) => a.executionOrder - b.executionOrder)
-    }
-
     const currentRound = progressDto?.rounds[progressDto?.rounds.length - 1]
-    const currentRoundMatches = currentRound ? matchesFiltered(currentRound) : undefined
+    const currentRoundMatches = currentRound ? raceableMatches(currentRound) : undefined
 
     const resultsFormContext = useForm<EnterResultsForm>({
         values: {
@@ -715,7 +709,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
 
     const openEditMatchDialog = (roundIndex: number, matchIndex: number) => {
         const round = sortedRounds?.[roundIndex]
-        const selectedMatch = round ? matchesFiltered(round)[matchIndex] : null
+        const selectedMatch = round ? raceableMatches(round)[matchIndex] : null
         if (selectedMatch) {
             setEditMatchDialogOpen(true)
             editMatchFormContext.reset(mapMatchDtoToEditMatchForm(selectedMatch))
@@ -926,7 +920,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                         key={round.setupRoundId}
                         round={round}
                         roundIndex={roundIndex}
-                        filteredMatches={matchesFiltered(round)}
+                        filteredMatches={raceableMatches(round)}
                         reloadRoundDto={() => setReloadData(!reloadData)}
                         setSubmitting={setSubmitting}
                         submitting={submitting}

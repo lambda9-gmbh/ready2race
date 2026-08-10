@@ -2,6 +2,9 @@ package de.lambda9.ready2race.backend.app.matchStatus.boundary
 
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
 import de.lambda9.ready2race.backend.app.matchStatus.entity.CrewLastScans
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeCause
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeTeam
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
@@ -42,6 +45,7 @@ object MatchStatusLogic {
         skipped: Boolean,
         teams: List<MatchStatusTeam>,
         teamsInArena: Int? = null,
+        bye: MatchByeDto? = null,
     ): MatchStatusDto {
         val scored = scoredCount(teams)
         return MatchStatusDto(
@@ -62,6 +66,47 @@ object MatchStatusLogic {
             teamsTotal = teams.size,
             teamsScored = scored,
             teamsInArena = teamsInArena,
+            bye = bye,
+        )
+    }
+
+    /**
+     * Ob dieser Lauf ein Freilos ist - und wenn ja, warum.
+     *
+     * Die Regel - in einer nicht verpflichtenden Runde fährt genau ein Boot - ist dieselbe, nach
+     * der die Durchführungsseite ein Freilos vorher schon anzeigte (`teams.length === 1` auf der
+     * um `out`-Zeilen bereinigten Teamliste), und auf dem Folgerunden-Pfad auch dieselbe, nach der
+     * `automaticFirstPlace` den automatischen ersten Platz vergibt: dort ist
+     * `out = prevTeam.deregistered || prevTeam.out || prevTeam.failed` genau die Verneinung von
+     * "fährt".
+     *
+     * Zwei Stellen weichen davon bewusst ab - keine Regression, die alte Frontend-Anzeigeregel
+     * verhielt sich hier genauso:
+     * - `CompetitionExecutionService.checkUpdateMatchResult` zählt `match.teams.size == 1` auf der
+     *   UNGEFILTERTEN Teamliste. Ein fahrendes Boot plus eine aus einer Vorrunde mitgeführte
+     *   `out`-Zeile - der Regelfall dieser Anzeige - ist für die Sperre keine 1, für [deriveBye]
+     *   aber ein Freilos: die Ergebniseingabe bleibt offen, obwohl die Oberfläche "Freilos" zeigt.
+     * - `automaticFirstPlace` zählt auf dem Erstrunden-Pfad die ausgelosten Plätze unabhängig von
+     *   der Abmeldung. Ein Freilos der ersten Runde, das erst durch eine Abmeldung entsteht,
+     *   bekommt dort keinen automatischen ersten Platz und bleibt UPCOMING ("Freilos · offen").
+     *
+     * Über die Ursache entscheidet allein der Abmelde-Datensatz. Eine Zeile, die nur `out` ist,
+     * kann ausgeschieden oder nicht weitergekommen sein - daraus eine Abmeldung zu machen, wäre
+     * geraten. Der Freitext-Grund überlebt nur bei genau einer abgemeldeten Zeile: bei zweien wäre
+     * die Zuordnung Name -> Grund ebenfalls geraten.
+     */
+    fun deriveBye(roundRequired: Boolean, teams: List<MatchByeTeam>): MatchByeDto? {
+        if (roundRequired) return null
+        if (teams.count { it.racing } != 1) return null
+
+        val withdrawn = teams.filter { !it.racing && it.deregistered }
+        if (withdrawn.isEmpty()) {
+            return MatchByeDto(MatchByeCause.NO_OPPONENT, teamName = null, reason = null)
+        }
+        return MatchByeDto(
+            cause = MatchByeCause.DEREGISTRATION,
+            teamName = withdrawn.joinToString(", ") { it.name },
+            reason = withdrawn.singleOrNull()?.deregistrationReason,
         )
     }
 
