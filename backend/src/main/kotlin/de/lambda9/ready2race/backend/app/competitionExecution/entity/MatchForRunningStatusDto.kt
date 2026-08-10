@@ -12,6 +12,7 @@ data class MatchForRunningStatusDto(
     val matchNumber: Int,
     val matchName: String?,
     val hasPlacesSet: Boolean,
-    val currentlyRunning: Boolean,
+    /** Wann der Lauf an den Start gerufen wurde - null, solange ihn niemand aktiviert hat. */
+    val activatedAt: LocalDateTime?,
     val startTime: LocalDateTime?
 )

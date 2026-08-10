@@ -23,7 +23,8 @@ import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
 import EventsPage from './pages/event/EventsPage.tsx'
 import EventPage, {EventTab} from './pages/event/EventPage.tsx'
-import CompetitionPage, {CompetitionTab} from './pages/event/CompetitionPage.tsx'
+import CompetitionPage from './pages/event/CompetitionPage.tsx'
+import {CompetitionTab} from './components/event/competition/common.ts'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import EventInfoPage from './pages/event/EventInfoPage.tsx'
 import AthleteBoardPage from './pages/event/AthleteBoardPage.tsx'
@@ -32,7 +33,7 @@ import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
 import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
-import ClubsPage from './pages/club/ClubsPage.tsx'
+import ClubsPage, {ClubTab} from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
 import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx'
@@ -48,6 +49,7 @@ import QrAssignPage from './pages/app/QrAssignPage.tsx'
 import AppLoginPage from './pages/app/AppLoginPage.tsx'
 import ForbiddenPage from './pages/app/ForbiddenPage.tsx'
 import AppFunctionSelectPage from './pages/app/AppFunctionSelectPage.tsx'
+import AppDashboardPage from './pages/app/AppDashboardPage.tsx'
 import EventRegistrationPage from './pages/eventRegistration/EventRegistrationPage.tsx'
 import InvoicesPage from './pages/InvoicePage.tsx'
 import ResultsPage from './pages/results/ResultsPage.tsx'
@@ -315,7 +317,10 @@ export const eventInfoRoute = createRoute({
 export const eventLiveDashboardRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'liveDashboard',
-    component: () => <LiveDashboardPage />,
+    component: function EventLiveDashboard() {
+        const {eventId} = eventLiveDashboardRoute.useParams()
+        return <LiveDashboardPage eventId={eventId} />
+    },
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, readLiveDashboardGlobal)
     },
@@ -376,7 +381,9 @@ export const clubsIndexRoute = createRoute({
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
+    validateSearch: validateTabSearch<ClubTab>,
 })
+
 
 export const administrationRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
@@ -450,6 +457,15 @@ export const appFunctionSelectRoute = createRoute({
     getParentRoute: () => appRoute,
     path: 'function',
     component: () => <AppFunctionSelectPage />,
+    beforeLoad: ({context}) => {
+        checkAuthApp(context)
+    },
+})
+
+export const appDashboardRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: 'dashboard',
+    component: () => <AppDashboardPage />,
     beforeLoad: ({context}) => {
         checkAuthApp(context)
     },
@@ -540,6 +556,7 @@ const routeTree = rootRoute.addChildren([
         qrParticipantRoute,
         qrAssignRoute,
         appFunctionSelectRoute,
+        appDashboardRoute,
         appForbiddenRoute,
     ]),
     resultsRoute.addChildren([resultsIndexRoute, resultsQRCodeRoute, resultsEventRoute]),

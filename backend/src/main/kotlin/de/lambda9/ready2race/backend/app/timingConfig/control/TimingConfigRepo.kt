@@ -1,0 +1,62 @@
+package de.lambda9.ready2race.backend.app.timingConfig.control
+
+import de.lambda9.ready2race.backend.app.timingConfig.entity.CompetitionTimingDeviationDto
+import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
+import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
+import java.util.UUID
+
+object TimingConfigRepo {
+
+    /**
+     * Die Wettkämpfe einer Veranstaltung, die mindestens eines der sechs vererbbaren Zeitnahme-Felder
+     * selbst gesetzt haben. Alles null heißt „erbt" und taucht hier nicht auf.
+     *
+     * Nur `competition_properties` mit einem echten Wettkampf dahinter (`competition is not null`):
+     * dieselbe Tabelle trägt laut Check-Constraint auch die Zeilen der Wettkampf-Vorlagen, und die
+     * gehören zu keiner Veranstaltung.
+     */
+    fun getDeviations(eventId: UUID) = Jooq.query {
+        select(
+            COMPETITION.ID,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_PROPERTIES.NAME,
+            COMPETITION.TIMING_SYSTEM,
+            COMPETITION.RACECLOCKER_TT_RESULTS_URL,
+            COMPETITION.RACECLOCKER_HEATS_RESULTS_URL,
+            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
+            COMPETITION.STARTLIST_CONFIG_ROUNDS,
+            COMPETITION.RESULT_IMPORT_CONFIG,
+        )
+            .from(COMPETITION)
+            .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(
+                DSL.or(
+                    COMPETITION.TIMING_SYSTEM.isNotNull,
+                    COMPETITION.RACECLOCKER_TT_RESULTS_URL.isNotNull,
+                    COMPETITION.RACECLOCKER_HEATS_RESULTS_URL.isNotNull,
+                    COMPETITION.STARTLIST_CONFIG_QUALIFICATION.isNotNull,
+                    COMPETITION.STARTLIST_CONFIG_ROUNDS.isNotNull,
+                    COMPETITION.RESULT_IMPORT_CONFIG.isNotNull,
+                )
+            )
+            .orderBy(COMPETITION_PROPERTIES.IDENTIFIER)
+            .fetch {
+                CompetitionTimingDeviationDto(
+                    // Not null in the schema; the projection just loses that guarantee.
+                    competitionId = it[COMPETITION.ID]!!,
+                    identifier = it[COMPETITION_PROPERTIES.IDENTIFIER]!!,
+                    name = it[COMPETITION_PROPERTIES.NAME]!!,
+                    timingSystem = it[COMPETITION.TIMING_SYSTEM]?.let { s -> TimingSystem.valueOf(s) },
+                    timeTrialResultsUrl = it[COMPETITION.RACECLOCKER_TT_RESULTS_URL],
+                    heatsResultsUrl = it[COMPETITION.RACECLOCKER_HEATS_RESULTS_URL],
+                    startlistConfigQualification = it[COMPETITION.STARTLIST_CONFIG_QUALIFICATION],
+                    startlistConfigRounds = it[COMPETITION.STARTLIST_CONFIG_ROUNDS],
+                    resultImportConfig = it[COMPETITION.RESULT_IMPORT_CONFIG],
+                )
+            }
+    }
+}

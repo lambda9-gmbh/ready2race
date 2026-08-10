@@ -4,6 +4,7 @@ import {
     emptyTimingForm,
     mapDtoToTimingForm,
     mapTimingFormToRequest,
+    overridesTiming,
     timingConfigWarnings,
 } from './timingConfigForm.ts'
 
@@ -154,6 +155,42 @@ describe('effectiveTimingSystem', () => {
     })
 })
 
+describe('overridesTiming', () => {
+    it('erkennt einen Wettkampf ohne eigene Werte als „erbt"', () => {
+        expect(
+            overridesTiming({...emptyTimingForm, eventTimingSystem: 'RACECLOCKER'}),
+        ).toBe(false)
+    })
+
+    it('zählt auch eine einzelne eigene Adresse als Abweichung', () => {
+        // Teil-Override: System geerbt, aber ein eigenes Läufe-Rennen. Der Schalter im Tab muss
+        // dafür an sein, sonst würde die Adresse beim nächsten Speichern still verschwinden.
+        expect(
+            overridesTiming({
+                ...emptyTimingForm,
+                eventTimingSystem: 'RACECLOCKER',
+                heatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            }),
+        ).toBe(true)
+    })
+
+    it('lässt sich von Leerzeichen nicht täuschen', () => {
+        expect(overridesTiming({...emptyTimingForm, heatsResultsUrl: '   '})).toBe(false)
+    })
+
+    it('zählt ein eigenes Dateiformat als Abweichung', () => {
+        // Auch ein eigener Startlisten Export ist ein Override — sonst stünde der Schalter aus,
+        // und das nächste Speichern würde das Format wegwerfen.
+        expect(
+            overridesTiming({
+                ...emptyTimingForm,
+                eventTimingSystem: 'RACECLOCKER',
+                startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            }),
+        ).toBe(true)
+    })
+})
+
 describe('timingConfigWarnings', () => {
     it('schweigt, solange kein System gewählt ist', () => {
         expect(timingConfigWarnings(emptyTimingForm)).toEqual([])
@@ -190,6 +227,31 @@ describe('timingConfigWarnings', () => {
         })
 
         expect(warnings).toEqual(['heatsUrl'])
+    })
+
+    it('mahnt einen Startlisten Export nicht an, der von der Veranstaltung kommt', () => {
+        const warnings = timingConfigWarnings({
+            ...emptyTimingForm,
+            eventTimingSystem: 'RACECLOCKER',
+            eventHeatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            eventStartlistConfigRounds: roundsPreset,
+        })
+
+        expect(warnings).toEqual([])
+    })
+
+    it('mahnt bei einer Qualifikation den geerbten Quali-Export nicht an', () => {
+        const warnings = timingConfigWarnings({
+            ...emptyTimingForm,
+            eventTimingSystem: 'RACECLOCKER',
+            eventTimeTrialResultsUrl: 'https://www.raceclocker.com/7ffb822a',
+            eventHeatsResultsUrl: 'https://www.raceclocker.com/7c854955',
+            eventStartlistConfigQualification: qualificationPreset,
+            eventStartlistConfigRounds: roundsPreset,
+            hasQualificationRound: true,
+        })
+
+        expect(warnings).toEqual([])
     })
 
     it('mahnt das Startlisten-Preset an, auch bei Webscorer', () => {

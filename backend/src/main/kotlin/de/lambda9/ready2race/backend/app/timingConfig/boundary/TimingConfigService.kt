@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSet
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
+import de.lambda9.ready2race.backend.app.timingConfig.control.TimingConfigRepo
 import de.lambda9.ready2race.backend.app.timingConfig.entity.EventTimingConfigDto
 import de.lambda9.ready2race.backend.app.timingConfig.entity.EventTimingConfigRequest
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingConfigDto
@@ -48,6 +49,9 @@ object TimingConfigService {
                     eventTimingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
                     eventTimeTrialResultsUrl = event.raceclockerTtResultsUrl,
                     eventHeatsResultsUrl = event.raceclockerHeatsResultsUrl,
+                    eventStartlistConfigQualification = event.startlistConfigQualification,
+                    eventStartlistConfigRounds = event.startlistConfigRounds,
+                    eventResultImportConfig = event.resultImportConfig,
                 )
             )
         )
@@ -60,12 +64,26 @@ object TimingConfigService {
         val event = !EventRepo.get(eventId).orDie()
             .onNullFail { EventError.NotFound }
 
+        val deviations = !TimingConfigRepo.getDeviations(eventId).orDie()
+
         KIO.ok(
             ApiResponse.Dto(
                 EventTimingConfigDto(
                     timingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
                     timeTrialResultsUrl = event.raceclockerTtResultsUrl,
                     heatsResultsUrl = event.raceclockerHeatsResultsUrl,
+                    startlistConfigQualification = event.startlistConfigQualification,
+                    startlistConfigRounds = event.startlistConfigRounds,
+                    resultImportConfig = event.resultImportConfig,
+                    // Spalten sind in der Datenbank NOT NULL (Migration V202608071600); jOOQ generiert
+                    // Record-Felder dennoch nullable - dasselbe Muster wie bei den übrigen
+                    // Nicht-Null-Spalten des Events (siehe Conversions.kt).
+                    autoPull = event.raceclockerAutoPull!!,
+                    intervalActiveSeconds = event.raceclockerIntervalActiveSeconds!!,
+                    intervalUpcomingSeconds = event.raceclockerIntervalUpcomingSeconds!!,
+                    watchBeforeMinutes = event.raceclockerWatchBeforeMinutes!!,
+                    watchAfterMinutes = event.raceclockerWatchAfterMinutes!!,
+                    deviatingCompetitions = deviations,
                 )
             )
         )
@@ -90,6 +108,14 @@ object TimingConfigService {
             timingSystem = request.timingSystem?.name
             raceclockerTtResultsUrl = timeTrialUrl
             raceclockerHeatsResultsUrl = heatsUrl
+            startlistConfigQualification = request.startlistConfigQualification
+            startlistConfigRounds = request.startlistConfigRounds
+            resultImportConfig = request.resultImportConfig
+            raceclockerAutoPull = request.autoPull
+            raceclockerIntervalActiveSeconds = request.intervalActiveSeconds
+            raceclockerIntervalUpcomingSeconds = request.intervalUpcomingSeconds
+            raceclockerWatchBeforeMinutes = request.watchBeforeMinutes
+            raceclockerWatchAfterMinutes = request.watchAfterMinutes
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

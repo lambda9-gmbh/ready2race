@@ -23,7 +23,7 @@ export interface PolledState<T> {
  *   Bildschirm, der nach einem Aussetzer leer bleibt, ist der schlechteste Ausgang.
  * - Scheitert dagegen der allererste Abruf (also bevor je ein guter Stand da war),
  *   muss das von außen von "geladen, aber leer" unterscheidbar sein — sonst behauptet
- *   die Anzeige fälschlich, es sei kein Lauf auf dem Wasser.
+ *   die Anzeige fälschlich, es sei kein Lauf in der Arena.
  * - Im Hintergrund wird nicht geladen; beim Zurückkehren sofort einmal.
  *
  * `deps` steuert ausschließlich, wann der Takt **neu beginnt** (also etwa bei einem Wechsel

@@ -1,5 +1,6 @@
 import {Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
+import {scaled} from './common'
 
 interface AthleteBoardPenaltyNoteProps {
     penaltySeconds?: number | null
@@ -25,7 +26,7 @@ const AthleteBoardPenaltyNote = ({penaltySeconds, penaltyNote}: AthleteBoardPena
 
     return (
         <Typography
-            sx={{fontSize: 'clamp(0.65rem, 1vw, 0.9rem)', lineHeight: 1.2}}
+            sx={{fontSize: scaled('0.65rem', '1vw', '1.4rem'), lineHeight: 1.2}}
             color="warning.dark">
             {[label, penaltyNote].filter(Boolean).join(' · ')}
         </Typography>

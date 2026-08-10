@@ -22,12 +22,19 @@ data class ChainSlot(
     val matchFinished: Boolean,
     val matchOpen: Boolean,
     /**
-     * War der Lauf schon aktiviert (competition_match.currently_running), bevor er beendet wurde?
-     * Unterscheidet in [ScheduleChain.decideNext] einen noch laufenden Sibling-Lauf derselben
-     * Startzeit (blockiert das Vorrücken) von einem frisch aktivierbaren Lauf derselben Gruppe
-     * (Default `false`, unkritisch für alle Aufrufer, die parallele Starts nicht testen).
+     * Wann der Lauf an den Start gerufen wurde (competition_match.activated_at). Entscheidet in
+     * [ScheduleChain.decideNext], ob er noch aktivierbar ist — ein bereits aktivierter Lauf soll
+     * nicht ein zweites Mal aktiviert werden.
      */
-    val currentlyRunning: Boolean = false,
+    val matchActivatedAt: LocalDateTime? = null,
+    /**
+     * Der Ist-Start (competition_match.started_at). NUR er blockiert das Vorrücken: Ein Lauf, den
+     * die Kette an den Start gerufen hat, dessen Boote aber noch am Steg liegen, hält die nächste
+     * Startgruppe nicht auf. Vor der Trennung von Aktivierung und Ist-Start stand hier ein
+     * einzelnes Aktiv-Flag, das beide Fälle zusammenwarf — und damit eine Startgruppe schon dann
+     * blockierte, wenn sie nur gerufen war.
+     */
+    val matchStartedAt: LocalDateTime? = null,
 )
 
 sealed interface ChainDecision {
@@ -51,6 +58,8 @@ object ScheduleChain {
      *   bevor die nächste losgeht" (Vorgabe von Thomas) bedeutet, dass der zuletzt fertige Lauf der
      *   Gruppe den Vorstoß auslöst, nicht der erste. Ohne diese Prüfung würde ein einzeln beendeter
      *   Lauf sofort die nächste Gruppe aktivieren, während sein Parallel-Lauf noch läuft.
+     *   "Noch laufend" meint dabei den IST-Start ([ChainSlot.matchStartedAt]), nicht die bloße
+     *   Aktivierung: ein nur an den Start gerufener Nachbar hält die Kette nicht an.
      * - Sonst werden alle noch nicht aktivierten, aktivierbaren Läufe der Gruppe (LINKED, nicht
      *   beendet, noch offen, noch nicht laufend) gemeinsam aktiviert.
      * - Hat die Gruppe nur übersprungene, entfallene, freie oder bereits erledigte/geschlossene
@@ -66,14 +75,16 @@ object ScheduleChain {
             }
 
             val siblingStillRunning = group.any {
-                it.state == EventScheduleSlotState.LINKED && !it.matchFinished && it.matchOpen && it.currentlyRunning
+                it.state == EventScheduleSlotState.LINKED && !it.matchFinished && it.matchOpen &&
+                    it.matchStartedAt != null
             }
             if (siblingStillRunning) {
                 return ChainDecision.NothingToDo
             }
 
             val activatable = group.filter {
-                it.state == EventScheduleSlotState.LINKED && !it.matchFinished && it.matchOpen && !it.currentlyRunning
+                it.state == EventScheduleSlotState.LINKED && !it.matchFinished && it.matchOpen &&
+                    it.matchActivatedAt == null
             }
             if (activatable.isNotEmpty()) {
                 return ChainDecision.Activate(activatable.mapNotNull { it.matchId })
@@ -156,19 +167,24 @@ object ScheduleChainService {
                     matchId = if (matchExists) r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] else null,
                     matchFinished = r.get("match_finished_at", LocalDateTime::class.java) != null,
                     matchOpen = r.get("match_open", Boolean::class.java) == true,
-                    currentlyRunning = r[COMPETITION_MATCH.CURRENTLY_RUNNING] == true,
+                    matchActivatedAt = r[COMPETITION_MATCH.ACTIVATED_AT],
+                    matchStartedAt = r[COMPETITION_MATCH.STARTED_AT],
                 )
             })
         }
 
     private fun activate(decision: ChainDecision, userId: UUID): App<Nothing, Unit> = when (decision) {
-        is ChainDecision.Activate -> decision.matchIds.traverse { setRunning(it, userId) }.map { }
+        is ChainDecision.Activate -> decision.matchIds.traverse { activate(it, userId) }.map { }
         ChainDecision.WaitingForRound, ChainDecision.NothingToDo -> KIO.unit
     }
 
-    private fun setRunning(matchId: UUID, userId: UUID): App<Nothing, Unit> =
+    private fun activate(matchId: UUID, userId: UUID): App<Nothing, Unit> =
         CompetitionMatchRepo.update(matchId) {
-            currentlyRunning = true
+            // Die Kette ruft an den Start, sie startet nicht: nur activatedAt, und nur beim ersten
+            // Mal - ein erneuter Kettenlauf soll den Zeitpunkt nicht vorrücken.
+            if (activatedAt == null) {
+                activatedAt = LocalDateTime.now()
+            }
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie().map { }

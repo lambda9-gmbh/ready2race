@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
+import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVImportService
@@ -159,6 +160,18 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
 
             scheduleDynamic("Import next file from WebDAV Server", 10.seconds) {
                 WebDAVImportService.importNext(env)
+            }
+
+            // Herzschlag im Sekundentakt, der je Veranstaltung entscheidet, ob ihr eingestellter
+            // Takt fällig ist (RaceClockerPollService). Ohne eine Veranstaltung mit eingeschalteter
+            // Automatik meldet er Empty und schläft 30 s - der Normalzustand außerhalb einer Regatta.
+            scheduleDynamic(
+                "Pull RaceClocker results",
+                emptyDelay = 30.seconds,
+                processedDelay = 1.seconds,
+                defectDelay = 30.seconds,
+            ) {
+                RaceClockerPollService.pollTick(env)
             }
 
             scheduleFixed("Delete expired session tokens", 5.minutes) {

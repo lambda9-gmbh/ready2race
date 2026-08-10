@@ -36,11 +36,33 @@ object CompetitionMatchRepo {
 
     fun delete(ids: List<UUID>) = COMPETITION_MATCH.delete { COMPETITION_SETUP_MATCH.`in`(ids) }
 
+    /** Setzt den Vermerk "Paarung neu berechnet" auf die angegebenen Läufe. */
+    fun markPairingsRecalculated(setupMatchIds: List<UUID>, at: LocalDateTime) =
+        COMPETITION_MATCH.updateMany(
+            f = { pairingsRecalculatedAt = at },
+            condition = { COMPETITION_SETUP_MATCH.`in`(setupMatchIds) },
+        )
+
+    /**
+     * Der Wettkampf, zu dem dieser Lauf gehört — die Kette Lauf → Setup-Lauf → Runde →
+     * Eigenschaften → Wettkampf. Die Aufrufer der Automatik kennen nur den Lauf.
+     */
+    fun getCompetitionId(setupMatchId: UUID) = Jooq.query {
+        select(COMPETITION_PROPERTIES.COMPETITION)
+            .from(COMPETITION_SETUP_MATCH)
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_ROUND.ID.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_PROPERTIES.ID.eq(COMPETITION_SETUP_ROUND.COMPETITION_SETUP))
+            .where(COMPETITION_SETUP_MATCH.ID.eq(setupMatchId))
+            .fetchOne(COMPETITION_PROPERTIES.COMPETITION)
+    }
+
     fun getForStartList(id: UUID) = STARTLIST_VIEW.selectOne { ID.eq(id) }
 
     /**
-     * Everything needed to pull this match's results from RaceClocker: the wave name (match name plus
-     * planned start time, see [WaveName] - MUST be formatted exactly like
+     * Everything needed to pull this match's results from RaceClocker: the wave name (planned start
+     * time, competition and match name, see [WaveName] - MUST be formatted exactly like
      * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.buildCsv]
      * builds it for the export, or the wave-name fallback filter in `assignFeedRows` never matches)
      * and the competition's two results URLs. Which of the two applies follows from the round: a
@@ -58,6 +80,8 @@ object CompetitionMatchRepo {
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_PROPERTIES.SHORT_NAME,
             timeTrialUrl,
             heatsUrl,
         )
@@ -73,7 +97,12 @@ object CompetitionMatchRepo {
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne {
                 RaceClockerMatchTarget(
-                    waveName = WaveName.format(it[COMPETITION_SETUP_MATCH.NAME], it[COMPETITION_MATCH.START_TIME]),
+                    waveName = WaveName.format(
+                        matchName = it[COMPETITION_SETUP_MATCH.NAME],
+                        startTime = it[COMPETITION_MATCH.START_TIME],
+                        competitionIdentifier = it[COMPETITION_PROPERTIES.IDENTIFIER],
+                        competitionShortName = it[COMPETITION_PROPERTIES.SHORT_NAME],
+                    ),
                     // Not null in the schema; the projection just loses that guarantee.
                     isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
                     timeTrialUrl = it[timeTrialUrl],
@@ -90,12 +119,20 @@ object CompetitionMatchRepo {
     fun getStartListConfigTarget(id: UUID) = Jooq.query {
         // Wettkampf-Wert vor Veranstaltungs-Voreinstellung, wie in getForRaceClockerPull.
         val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM).`as`("timing_system")
+        val qualificationConfig = DSL.coalesce(
+            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
+            EVENT.STARTLIST_CONFIG_QUALIFICATION,
+        ).`as`("qualification_config")
+        val roundsConfig = DSL.coalesce(
+            COMPETITION.STARTLIST_CONFIG_ROUNDS,
+            EVENT.STARTLIST_CONFIG_ROUNDS,
+        ).`as`("rounds_config")
 
         select(
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
             timingSystem,
-            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
-            COMPETITION.STARTLIST_CONFIG_ROUNDS,
+            qualificationConfig,
+            roundsConfig,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -115,8 +152,8 @@ object CompetitionMatchRepo {
                     // konvertiert wie EventRepo.getChainProgressionMode. null ist hier legitim:
                     // es bedeutet "kein Zeitnahmesystem gesetzt".
                     timingSystem = it[timingSystem]?.let { s -> TimingSystem.valueOf(s) },
-                    qualificationConfig = it[COMPETITION.STARTLIST_CONFIG_QUALIFICATION],
-                    roundsConfig = it[COMPETITION.STARTLIST_CONFIG_ROUNDS],
+                    qualificationConfig = it[qualificationConfig],
+                    roundsConfig = it[roundsConfig],
                 )
             }
     }
@@ -216,7 +253,7 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
@@ -234,7 +271,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(true))
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNotNull)
             .orderBy(
                 COMPETITION_MATCH.START_TIME.asc(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()
@@ -313,7 +350,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(false))
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNull)
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             .and(
                 // Unverändert aus getMatchResults übernommene Teilbedingungen, hier als exists
@@ -348,7 +385,7 @@ object CompetitionMatchRepo {
 
     fun getMatchesByEvent(
         eventId: UUID,
-        currentlyRunning: Boolean? = null,
+        activated: Boolean? = null,
         withoutPlaces: Boolean? = null
     ): JIO<List<MatchForRunningStatusDto>> = Jooq.query {
         val cm = COMPETITION_MATCH
@@ -382,7 +419,7 @@ object CompetitionMatchRepo {
                 )
                 .otherwise(DSL.inline(true))
                 .`as`("has_places_set"),
-            cm.CURRENTLY_RUNNING,
+            cm.ACTIVATED_AT,
             cm.START_TIME
         )
             .from(cm)
@@ -393,8 +430,8 @@ object CompetitionMatchRepo {
             .join(c).on(cp.COMPETITION.eq(c.ID))
             .where(c.EVENT.eq(eventId))
 
-        if (currentlyRunning != null) {
-            query = query.and(cm.CURRENTLY_RUNNING.eq(currentlyRunning))
+        if (activated != null) {
+            query = query.and(if (activated) cm.ACTIVATED_AT.isNotNull else cm.ACTIVATED_AT.isNull)
         }
 
         if (withoutPlaces == true) {
@@ -418,10 +455,45 @@ object CompetitionMatchRepo {
                 matchNumber = record.value6()!!,
                 matchName = record.value7(),
                 hasPlacesSet = record.value8()!!,
-                currentlyRunning = record.value9()!!,
+                activatedAt = record.value9(),
                 startTime = record.value10()
             )
         }
+    }
+
+    /**
+     * Die Steg-Scans der Crews dieses Wettkampfs — die Grundlage des Arena-Chips auf der
+     * Durchführungsseite („Arena 2/6").
+     *
+     * Bewusst je Wettkampf statt je Veranstaltung: die Durchführungsseite zeigt immer genau einen
+     * Wettkampf, die Scans der übrigen läse dort niemand. Das ist der einzige Unterschied zu
+     * [de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo.getScansByEvent],
+     * dem Pendant des Schiedsrichter-Dashboards — sonst dasselbe Muster: eine flache Abfrage, die
+     * Reduktion auf den letzten Scan je Person macht der Aufrufer, und ob eine Mannschaft draußen
+     * ist, entscheidet weiterhin allein
+     * [de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic.teamInArenaAt].
+     *
+     * Abfragelast: ein Index-Zugriff auf `participant_tracking` (Index auf `event`) plus ein
+     * `exists` über die Anmeldungen des Wettkampfs. Kein Join je Lauf und kein N+1 je Mannschaft —
+     * die Zeilenzahl wächst mit den Scans des Wettkampfs, nicht mit der Zahl der Läufe.
+     */
+    fun getScansByCompetition(eventId: UUID, competitionId: UUID) = Jooq.query {
+        select(
+            PARTICIPANT_TRACKING.PARTICIPANT,
+            PARTICIPANT_TRACKING.SCAN_TYPE,
+            PARTICIPANT_TRACKING.SCANNED_AT,
+        )
+            .from(PARTICIPANT_TRACKING)
+            .where(PARTICIPANT_TRACKING.EVENT.eq(eventId))
+            .andExists(
+                selectOne()
+                    .from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
+                    .join(COMPETITION_REGISTRATION)
+                    .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+                    .where(COMPETITION_REGISTRATION.COMPETITION.eq(competitionId))
+                    .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT_TRACKING.PARTICIPANT))
+            )
+            .fetch()
     }
 
     fun getMatchForEventByEvents(eventIds: List<UUID>) = COMPETITION_MATCH_FOR_EVENT.select{ EVENT_ID.`in`(eventIds) }

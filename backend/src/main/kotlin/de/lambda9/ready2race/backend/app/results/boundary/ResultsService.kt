@@ -335,7 +335,11 @@ object ResultsService {
                             name = competition.name!!,
                             shortName = competition.shortName,
                             days = competition.eventDays!!.map { it!! },
-                            teams = places.map { (team, place) ->
+                            categories = CompetitionExecutionService.placesByRatingCategory(places).map { section ->
+                                EventResultData.RatingCategoryResultData(
+                                    name = section.category?.name,
+                                    teams = section.entries.map { entry ->
+                                        val team = entry.item.team
 
                                 val substitutions =
                                     !SubstitutionRepo.getOriginalsByCompetitionRegistration(team.competitionRegistration)
@@ -350,11 +354,10 @@ object ResultsService {
                                 }
 
                                 EventResultData.TeamResultData(
-                                    place = place,
+                                    place = entry.item.categoryPlace,
                                     clubName = team.clubName,
                                     teamName = team.registrationName,
                                     participatingClubName = actualClubName,
-                                    ratingCategory = team.ratingCategory,
                                     participants = team.participants.map {
                                         EventResultData.ParticipantResultData(
                                             role = it.namedParticipantName,
@@ -419,6 +422,8 @@ object ResultsService {
                                                 }
                                             }
                                         }.first,
+                                )
+                                    }
                                 )
                             }
                         )
@@ -534,13 +539,29 @@ object ResultsService {
                         }
                     }
 
-                    if (competition.teams.isEmpty()) {
+                    if (competition.categories.all { it.teams.isEmpty() }) {
                         text(
                             fontStyle = FontStyle.BOLD,
                             fontSize = 11f,
                         ) { "Keine Ergebnisse" }
                     } else {
-                        competition.teams.sortedBy { it.place }.forEach { team ->
+                        competition.categories.forEach { category ->
+                        // Die Überschrift steht auch über dem einzigen Abschnitt einer
+                        // Veranstaltung mit Wertungskategorien - ohne sie ließe sich eine
+                        // Kategoriewertung nicht von einer gemeinsamen Rangliste unterscheiden.
+                        // Ein Wettkampf ganz ohne Kategorien behält seine bisherige Ausgabe.
+                        if (category.name != null) {
+                            block(
+                                padding = Padding(0f, 0f, 0f, 8f)
+                            ) {
+                                text(
+                                    fontStyle = FontStyle.BOLD,
+                                    fontSize = 12f,
+                                ) { category.name }
+                            }
+                        }
+
+                        category.teams.forEach { team ->
                             block(
                                 padding = Padding(0f, 0f, 0f, 25f)
                             ) {
@@ -551,7 +572,10 @@ object ResultsService {
                                         fontStyle = FontStyle.BOLD,
                                         centered = true,
                                     ) {
-                                        team.place.toString()
+                                        // Ohne Platz: abgemeldet, ausgeschieden, disqualifiziert.
+                                        // Die Mannschaft bleibt in der Liste, damit niemand sie
+                                        // für vergessen hält.
+                                        team.place?.toString() ?: "-"
                                     }
                                 }
 
@@ -577,12 +601,6 @@ object ResultsService {
                                                 newLine = false,
                                                 fontSize = 8f,
                                             ) { " | $it" }
-                                        }
-                                        team.ratingCategory?.let {
-                                            text(
-                                                newLine = false,
-                                                fontSize = 8f,
-                                            ) { " $it" }
                                         }
                                     }
 
@@ -692,6 +710,7 @@ object ResultsService {
                                     }
                                 }
                             }
+                        }
                         }
                     }
                 }

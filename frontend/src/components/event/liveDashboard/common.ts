@@ -1,8 +1,9 @@
 import {
+    EffectiveSeverity,
+    LiveDashboardCrewMemberDto,
     LiveDashboardMatchDto,
-    LiveDashboardParticipantDto,
-    LiveDashboardRequirementStatusDto,
     LiveDashboardTeamDto,
+    MatchStatusDto,
     PendingSlotDto,
 } from '@api/types.gen.ts'
 
@@ -13,12 +14,141 @@ import {
  *
  * AWAITING_FINISH gehört dazu, weil der Lauf sonst genau dort fehlte, wo jemand handeln muss:
  * alle Boote sind gewertet, aber niemand hat beendet.
+ *
+ * PREPARING ebenso: ein Lauf, der an den Start gerufen ist, liegt im Zugriff des Schiedsrichters —
+ * er ist der nächste, der losgeht, und der Knopf „Läuft" sitzt auf seiner Karte.
  */
 export const isLiveMatch = (match: LiveDashboardMatchDto): boolean =>
-    match.state === 'RUNNING' || match.state === 'AWAITING_FINISH'
+    match.state === 'PREPARING' || match.state === 'RUNNING' || match.state === 'AWAITING_FINISH'
 
 export const liveMatches = (matches: LiveDashboardMatchDto[]): LiveDashboardMatchDto[] =>
     matches.filter(isLiveMatch)
+
+/** Die beiden Ansichten des Boards — schmal je eine, breit beide nebeneinander. */
+export type LiveDashboardTab = 'live' | 'matches'
+
+/**
+ * Wie viel der Server liefern soll. Schmal entscheidet der Umschalter: der Live-Tab braucht nur die
+ * laufenden Läufe (plus den nächsten), die vollständige Liste sieht sich dort niemand im
+ * Sekundentakt an. Breit stehen beide Spalten gleichzeitig auf dem Schirm, also führt kein Weg an
+ * der Gesamtliste vorbei.
+ */
+export const dashboardScope = (wide: boolean, tab: LiveDashboardTab): 'LIVE' | 'ALL' =>
+    !wide && tab === 'live' ? 'LIVE' : 'ALL'
+
+/**
+ * Ab dieser Fensterbreite kann eine Karte breit genug werden, dass die Crew-Stufe überhaupt
+ * erscheint — das Board steht dann auf einem Laptop, nicht auf einem Telefon oder einer
+ * Tablet-Spalte.
+ */
+export const CREW_WINDOW_PX = 1440
+
+/**
+ * Ob der Abruf die Crew je Boot mitbestellt. Anders als die drei Anzeigestufen hängt das an der
+ * *Fenster*breite und nicht an der Kartenbreite: die Nutzlast wird einmal je Abruf entschieden,
+ * lange bevor eine Karte weiß, wie breit sie wird. Die Kartenbreite entscheidet danach nur noch,
+ * ob die bereits geladene Crew auch gezeigt wird — großzügig zu laden ist billiger als eine
+ * zweite Runde, sobald jemand das Fenster zieht.
+ */
+export const dashboardCrew = (windowWidth: number): boolean => windowWidth >= CREW_WINDOW_PX
+
+/**
+ * Ob die Karte überhaupt eine Crew-Zeile hat. Die Stufen selbst schaltet eine Container-Query, die
+ * in jsdom nicht greift — diese eine Entscheidung hängt aber an den Daten und gehört deshalb
+ * hierher: unmittelbar nach dem Verbreitern des Fensters ist die Karte schon breit genug, der
+ * nächste Abruf mit `crew=true` aber noch unterwegs. Dann rendert die Karte Stufe 2 weiter, statt
+ * eine leere Fläche aufzuziehen.
+ */
+export const teamShowsCrew = (team: Pick<LiveDashboardTeamDto, 'crew'>): boolean =>
+    team.crew != null && team.crew.length > 0
+
+/** Eine Person in der Crew-Zeile: `Meier · RC Bergedorf (Ste.)`, Rolle und Verein je optional. */
+export const crewMemberLabel = (member: LiveDashboardCrewMemberDto): string => {
+    const name = [member.lastName, member.clubShort].filter(Boolean).join(' · ')
+    return member.role ? `${name} (${member.role})` : name
+}
+
+/**
+ * Ob die Zeile eine Vereinskette bekommt. Sie steht immer in der kleinen grauen Zeile und nie in
+ * der Überschrift — die trägt nur den Mannschaftsnamen (`#1`, `#2`), und den haben die wenigsten
+ * Boote. Stand die Kette dort, wurde aus jedem vereinsgemischten Boot zwei Zeilen Titeltext.
+ *
+ * Weggelassen wird sie nur, wenn der Mannschaftsname den Verein bereits trägt — sonst stünde er
+ * zweimal untereinander. Geprüft wird gegen beide Fassungen, weil die Karte je nach Breite die
+ * eine oder die andere zeigt und die Entscheidung nur einmal fallen kann.
+ */
+export const teamShowsClubLine = (
+    team: Pick<LiveDashboardTeamDto, 'teamName' | 'clubsShort' | 'clubsFull'>,
+): boolean =>
+    team.clubsFull !== '' &&
+    (team.teamName == null ||
+        (!team.teamName.includes(team.clubsFull) && !team.teamName.includes(team.clubsShort)))
+
+/** Trennzeichen der Kette — dieselbe Zeichenfolge wie `ClubComposition.SEPARATOR` im Backend. */
+export const CLUB_CHAIN_SEPARATOR = ' / '
+
+/**
+ * Wie viele Zeichen der Kurzform-Kette die schmale Karte trägt, bevor gekürzt wird.
+ *
+ * Nachgemessen am 09.08.2026 im Browser an der echten Karte (390 px Telefon, Roboto 14 px = MUI
+ * `body2`, im Mittel 6,6 px je Zeichen): der Vereinszeile bleiben 277 px, also gut 42 Zeichen je
+ * Zeile und rund 84 auf den zwei Zeilen, die sie hoch werden darf. Umgebrochen wird an den
+ * Trennern, eine Zeile füllt sich also nie ganz — der Abschlag darauf ergibt die 72.
+ */
+export const CLUB_CHAIN_NARROW_CHARS = 72
+
+/**
+ * Dasselbe für eine Karte, die bereits Ergebnisse zeigt: Zeit, Platz und Ampel nehmen sich feste
+ * Spalten, und der Vereinszeile bleiben am Telefon nur noch 149 px (nachgemessen wie oben) — etwa
+ * 22 Zeichen je Zeile. Ohne diesen zweiten Wert schnitte die Zeilenbegrenzung mitten im
+ * Vereinsnamen ab, und genau das soll das `+n` verhindern.
+ */
+export const CLUB_CHAIN_NARROW_RESULT_CHARS = 40
+
+/**
+ * Die Kurzform-Kette für die schmale Karte: so viele **ganze** Vereinsnamen, wie in etwa zwei
+ * Zeilen passen, der Rest als `+n`. Aus `Humlebæk Roklub / Nakskov Roklub / Kerteminde Roklub …`
+ * wird `Humlebæk Roklub / Nakskov Roklub +1`.
+ *
+ * Entschieden wird nach Textlänge und nicht nach einer festen Vereinszahl: zwei kurze dänische
+ * Vereine stehen noch nebeneinander, wo zwei lange deutsche schon abfallen. Ein Vereinsname wird
+ * dabei nie zerrissen — lieber steht ein einzelner überlanger Name allein da (und läuft in der
+ * Zeilenbegrenzung aus), als dass die Anzeige einen halben Verein behauptet.
+ *
+ * Nur für die schmale Stufe: ab 480 px zeigt die Karte die vollständige Kette in vollen Namen.
+ */
+export const shortenClubChain = (
+    chain: string,
+    maxChars: number = CLUB_CHAIN_NARROW_CHARS,
+): string => {
+    if (chain.length <= maxChars) return chain
+
+    const clubs = chain.split(CLUB_CHAIN_SEPARATOR)
+    for (let keep = clubs.length - 1; keep >= 1; keep--) {
+        const shortened = `${clubs.slice(0, keep).join(CLUB_CHAIN_SEPARATOR)} +${clubs.length - keep}`
+        if (shortened.length <= maxChars || keep === 1) return shortened
+    }
+    return chain
+}
+
+/**
+ * DOM-Id der Karte eines Eintrags, geteilt zwischen den Render-Schleifen und dem
+ * Klick-auf-den-Zeitstrahl. Breit steht ein laufender Lauf zweimal auf der Seite — links unter
+ * "Live" und rechts in der Gesamtliste —, deshalb gehört die Spalte in die Id; sonst wären die Ids
+ * doppelt und `getElementById` träfe die falsche Karte.
+ */
+export const dashboardEntryDomId = (id: string, column: 'live' | 'list'): string =>
+    `live-dashboard-entry-${column}-${id}`
+
+/**
+ * Wohin der Klick auf den Zeitstrahl springt: bevorzugt in die Gesamtliste, ersatzweise in die
+ * Live-Spalte. Breit ist die Live-Spalte ohnehin dauerhaft im Blick, dort zu scrollen brächte
+ * nichts; schmal existiert je nach Tab nur eine der beiden Karten.
+ */
+export const dashboardEntryDomIdCandidates = (id: string): string[] => [
+    dashboardEntryDomId(id, 'list'),
+    dashboardEntryDomId(id, 'live'),
+]
 
 /**
  * Welche Knöpfe die Karte anbietet — die Entscheidung liegt hier statt im JSX, damit sie ohne
@@ -30,57 +160,24 @@ export const liveMatches = (matches: LiveDashboardMatchDto[]): LiveDashboardMatc
  *   Handlung, auf die alles wartet — ein Aktivieren würde den fertigen Lauf zurückwerfen.
  * - Ein abgesagter Lauf bietet gar nichts an: aktiviert wäre er abgesagt UND laufend zugleich,
  *   und beenden muss ihn niemand.
+ * - "Läuft" gibt es nur am Start (PREPARING): der Knopf stellt fest, dass das Rennen unterwegs
+ *   ist. Bei einem Lauf, der schon unterwegs ist, gäbe es nichts mehr festzustellen; bei einem,
+ *   den niemand aufgerufen hat, wäre die Feststellung eine Behauptung.
  */
 export const matchControls = (
     match: LiveDashboardMatchDto,
     mayFinish: boolean,
     mayControl: boolean,
-): {showFinish: boolean; showRunToggle: boolean} => {
+): {showFinish: boolean; showActivationToggle: boolean; showMarkStarted: boolean} => {
     if (match.state === 'SKIPPED') {
-        return {showFinish: false, showRunToggle: false}
+        return {showFinish: false, showActivationToggle: false, showMarkStarted: false}
     }
     return {
         showFinish: mayFinish && isLiveMatch(match),
-        showRunToggle: mayControl && match.state !== 'AWAITING_FINISH',
+        showActivationToggle: mayControl && match.state !== 'AWAITING_FINISH',
+        showMarkStarted: mayControl && match.state === 'PREPARING',
     }
 }
-
-export type Severity = 'ok' | 'warning' | 'error' | 'neutral'
-
-const rank: Record<Severity, number> = {neutral: 0, ok: 1, warning: 2, error: 3}
-
-export const worstSeverity = (severities: Severity[]): Severity =>
-    severities.reduce<Severity>((acc, s) => (rank[s] > rank[acc] ? s : acc), 'neutral')
-
-export const requirementSeverity = (r: LiveDashboardRequirementStatusDto): Severity => {
-    if (!r.checked) {
-        return r.optional ? 'neutral' : 'error'
-    }
-    if (r.timeCheck && (r.timeCheck.status === 'LATE' || r.timeCheck.status === 'TOO_EARLY')) {
-        return 'warning'
-    }
-    return 'ok'
-}
-
-export const participantSeverity = (p: LiveDashboardParticipantDto): Severity =>
-    worstSeverity(p.requirements.map(requirementSeverity))
-
-/**
- * Dieselbe Bewertung wie [requirementSeverity], nur aus den verdichteten Zahlen der Liste: die
- * Bedingungen selbst kommen erst mit dem Detail-Dialog.
- *
- * "Auf dem Wasser" fließt mit in die Ampel ein, obwohl es keine konfigurierbare Bedingung ist:
- * bei aktivem Lauf ([matchActive]) muss das Boot ausgecheckt sein, sonst ist die Zeile ein
- * Fehler. Abgemeldete Boote fahren nicht mehr und sind ausgenommen.
- */
-export const teamSeverity = (team: LiveDashboardTeamDto, matchActive = false): Severity =>
-    worstSeverity([
-        team.requirements.missingRequired > 0 ? 'error' : 'neutral',
-        team.requirements.timeIssues > 0 ? 'warning' : 'neutral',
-        team.requirements.fulfilled > 0 ? 'ok' : 'neutral',
-        team.invoiceState === 'OPEN' ? 'error' : 'neutral',
-        matchActive && !team.deregistered && !team.onWaterAt ? 'error' : 'neutral',
-    ])
 
 /**
  * Ein Boot ist erledigt, sobald Platz, Zeit oder ein Ausscheidungsgrund vorliegt. Abgemeldete
@@ -89,15 +186,82 @@ export const teamSeverity = (team: LiveDashboardTeamDto, matchActive = false): S
 export const teamHasResult = (team: LiveDashboardTeamDto): boolean =>
     team.deregistered || team.failed || team.place != null || team.time != null
 
+/**
+ * Der Zustand eines Dashboard-Laufs als [MatchStatusDto] — dieselbe Form, die Durchführung und
+ * Zeitplan lesen. Stand bis hierher inline im JSX der Karte und war damit nicht prüfbar; die
+ * Ableitung selbst bleibt unverändert.
+ *
+ * `teamsScored` zählt nach derselben Regel wie `MatchStatusLogic.scoredCount` im Backend (Platz,
+ * ausgeschieden oder abgemeldet), damit „Teilweise gewertet" hier nichts anderes sagt als dort.
+ */
+export const dashboardMatchStatus = (match: LiveDashboardMatchDto): MatchStatusDto => ({
+    state: match.state,
+    startedAt: match.startedAt ?? undefined,
+    teamsTotal: match.teams.length,
+    teamsScored: match.teams.filter(teamHasResult).length,
+    bye: match.bye,
+})
+
+/**
+ * Ob der Lauf überhaupt schon etwas gewertet hat — dieselbe Bedingung, unter der die Karte ihre
+ * Ergebnisspalten aufzieht. Eine Abmeldung zählt bewusst nicht dazu: sie steht oft schon vor dem
+ * Start fest und soll die Anzeige nicht umsortieren, solange nichts gefahren ist.
+ */
+export const matchHasResults = (teams: LiveDashboardTeamDto[]): boolean =>
+    teams.some(team => team.time != null || team.place != null || team.failed)
+
+/**
+ * Rang der vier Gruppen, in denen die Boote untereinander stehen: gewertet, noch offen,
+ * ausgeschieden, abgemeldet.
+ *
+ * Die noch offenen Boote stehen bewusst über den ausgeschiedenen — auf sie wartet noch jemand,
+ * während bei DSQ/DNF nichts mehr zu entscheiden ist.
+ */
+const teamOrderGroup = (team: LiveDashboardTeamDto): number =>
+    team.place != null ? 0 : team.deregistered ? 3 : team.failed ? 2 : 1
+
+/**
+ * Die Boote eines Laufs in Anzeigereihenfolge: nach Startnummer, solange nichts gewertet ist — und
+ * nach Platz, sobald es etwas zu sehen gibt. Der Erste steht dann oben, so wie ihn der
+ * Schiedsrichter ins Ziel kommen sieht; ohne das musste er die Plätze in der Startliste
+ * zusammensuchen.
+ *
+ * **Die Zahl links bleibt die Startnummer** und wird nie zur Zählnummer der Liste — sie ist die
+ * einzige Verbindung zwischen der Karte und dem, was in der Arena steht. („Bahn" stand hier bis
+ * zum 10.08.2026; es gibt im Datenmodell nur eine Zahl je Boot und Lauf,
+ * `competition_match_team.start_number`, und die gesamte übrige Anwendung nennt sie Startnummer.)
+ *
+ * Solange kein einziges Boot ein Ergebnis hat, bleibt die Reihenfolge des Backends stehen (dort
+ * nach Startnummer sortiert): ein Umsortieren, das nichts aussagt, verwirrt nur.
+ */
+export const teamsInDisplayOrder = (teams: LiveDashboardTeamDto[]): LiveDashboardTeamDto[] => {
+    if (!matchHasResults(teams)) return teams
+
+    return [...teams].sort((a, b) => {
+        const group = teamOrderGroup(a) - teamOrderGroup(b)
+        if (group !== 0) return group
+        // Innerhalb der gewerteten Boote entscheidet der Platz, in allen anderen Gruppen die
+        // Startnummer. Boote ohne Startnummer fallen ans Ende ihrer Gruppe, statt die Sortierung
+        // zu stören.
+        if (a.place != null && b.place != null) return a.place - b.place
+        if (a.startNumber == null) return b.startNumber == null ? 0 : 1
+        if (b.startNumber == null) return -1
+        return a.startNumber - b.startNumber
+    })
+}
+
 /** Die Boote, für die beim Beenden eines Laufs noch zu entscheiden ist. */
 export const openResultTeams = (match: {teams: LiveDashboardTeamDto[]}): LiveDashboardTeamDto[] =>
     match.teams.filter(team => !teamHasResult(team))
 
-export const severityChipColor: Record<Severity, 'success' | 'warning' | 'error' | 'default'> = {
-    ok: 'success',
-    warning: 'warning',
-    error: 'error',
-    neutral: 'default',
+export const severityChipColor: Record<
+    EffectiveSeverity,
+    'success' | 'warning' | 'error' | 'default'
+> = {
+    OK: 'success',
+    WARNING: 'warning',
+    CRITICAL: 'error',
+    NEUTRAL: 'default',
 }
 
 export const formatMinutes = (totalMinutes: number): string => {
@@ -115,45 +279,6 @@ const DEFAULT_POLL_INTERVAL_MS = 10_000
 export const storedPollInterval = (): number => {
     const stored = Number(localStorage.getItem(POLL_INTERVAL_STORAGE_KEY))
     return POLL_INTERVAL_OPTIONS_MS.some(o => o === stored) ? stored : DEFAULT_POLL_INTERVAL_MS
-}
-
-const CLUB_NAME_BALLAST = [
-    /\s*\be\.?\s?V\.?(?=\s|$)/gi, // Rechtsform "e.V." / "eV"
-    /\s*\([^)]*\d[^)]*\)/g, // Gründungsjahre in Klammern, z.B. "(1879/83)"
-    /\s*\bvon\s+\d{4}\b/gi, // "von 1889"
-    /\s+\d{4}\b/g, // nachgestellte Jahreszahl, z.B. "München 1972"
-]
-
-// Im Rudersport gängige Kürzel — Schiedsrichter lesen sie ohne Nachdenken.
-const CLUB_TYPE_ABBREVIATIONS: [RegExp, string][] = [
-    [/\bRudergesellschaft\b/gi, 'RG'],
-    [/\bRuder-?vereinigung\b/gi, 'RVg'],
-    [/\bRuder-?verein\b/gi, 'RV'],
-    [/\bRuder-?club\b/gi, 'RC'],
-    [/\bRuder-?klub\b/gi, 'RK'],
-    [/\bSegel-?verein\b/gi, 'SV'],
-    [/\bSegel-?club\b/gi, 'SC'],
-    [/\bSportvereinigung\b/gi, 'SVg'],
-    [/\bSportverein\b/gi, 'SV'],
-    [/\bTurnverein\b/gi, 'TV'],
-    [/\bAkademischer\b/gi, 'Akad.'],
-]
-
-/**
- * Kurzform eines Vereinsnamens für die Listenansicht: Rechtsform und
- * Gründungsjahre entfallen, gängige Vereinstypen werden abgekürzt.
- * Der vollständige Name bleibt im Detail-Dialog sichtbar.
- */
-export const shortClubName = (name: string): string => {
-    const withoutBallast = CLUB_NAME_BALLAST.reduce(
-        (acc, pattern) => acc.replace(pattern, ' '),
-        name,
-    )
-    const abbreviated = CLUB_TYPE_ABBREVIATIONS.reduce(
-        (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
-        withoutBallast,
-    )
-    return abbreviated.replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').trim()
 }
 
 /**
@@ -214,13 +339,47 @@ export const nextUpEntry = (
     now: Date,
 ): LiveDashboardTimelineEntry | undefined => {
     const threshold = now.getTime() - NEXT_UP_GRACE_MINUTES * 60_000
-    const stillUpcoming = pendingSlots.filter(slot => new Date(slot.startTime).getTime() > threshold)
-    return buildLiveDashboardTimeline(nextUpcomingMatch ? [nextUpcomingMatch] : [], stillUpcoming)[0]
+    const stillUpcoming = pendingSlots.filter(
+        slot => new Date(slot.startTime).getTime() > threshold,
+    )
+    return buildLiveDashboardTimeline(
+        nextUpcomingMatch ? [nextUpcomingMatch] : [],
+        stillUpcoming,
+    )[0]
 }
+
+/**
+ * Rennnummer und Kurzname eines Wettkampfs, z. B. "17 CM 4x+" — dieselbe Zusammensetzung wie
+ * `competitionTag` im Zeitplan-Tab, hier für die DTOs des Boards. Leer, wo beides fehlt: bei
+ * Programmpunkten und bei Wettkämpfen ohne gepflegten Kurznamen und ohne Nummer.
+ */
+export const competitionTag = (competition: {
+    competitionIdentifier?: string | null
+    competitionShortName?: string | null
+}): string =>
+    [competition.competitionIdentifier, competition.competitionShortName].filter(v => v).join(' ')
+
+/**
+ * Wie ein Lauf auf der Karte benannt wird: in der Langform der ausgeschriebene Wettkampfname,
+ * in der Kurzform ("17 CM 4x+") das Kürzel. Ohne Kürzel bleibt es beim Namen — eine Karte ohne
+ * jede Angabe zum Rennen wäre auf dem Board unbrauchbar.
+ */
+export const competitionLabel = (
+    competition: {
+        competitionName?: string | null
+        competitionIdentifier?: string | null
+        competitionShortName?: string | null
+    },
+    mode: 'full' | 'short' = 'full',
+): string | null | undefined =>
+    mode === 'short' && competitionTag(competition)
+        ? competitionTag(competition)
+        : competition.competitionName
 
 /**
  * Anzeige-Label eines Platzhalters — für Programmpunkte (FREE, `name` gesetzt) schlicht der Name,
  * für wartende Lauf-Slots dieselbe Zusammensetzung wie slotLabel im Zeitplan-Tab.
  */
-export const pendingSlotLabel = (slot: PendingSlotDto): string =>
-    slot.name ?? [slot.competitionName, slot.roundName, slot.matchName].filter(Boolean).join(' · ')
+export const pendingSlotLabel = (slot: PendingSlotDto, mode: 'full' | 'short' = 'full'): string =>
+    slot.name ??
+    [competitionLabel(slot, mode), slot.roundName, slot.matchName].filter(Boolean).join(' · ')

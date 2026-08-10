@@ -1,4 +1,13 @@
-import {Alert, AlertTitle, Box, Card, Stack, Typography} from '@mui/material'
+import {
+    Alert,
+    AlertTitle,
+    Box,
+    Divider,
+    FormControlLabel,
+    Stack,
+    Switch,
+    Typography,
+} from '@mui/material'
 import {FormContainer, useForm, useWatch} from 'react-hook-form-mui'
 import {Trans, useTranslation} from 'react-i18next'
 import {useState} from 'react'
@@ -15,11 +24,16 @@ import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioBu
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import InlineLink from '@components/InlineLink.tsx'
+import {AutocompleteOption} from '@utils/types.ts'
+
+/** Ein geladenes Format aus den Listen der Konfiguration — anders als [AutocompleteOption] nie null. */
+type ConfigOption = {id: string; label: string}
 import {
     effectiveTimingSystem,
     emptyTimingForm,
     mapDtoToTimingForm,
     mapTimingFormToRequest,
+    overridesTiming,
     TimingForm,
     timingConfigWarnings,
 } from './timingConfigForm.ts'
@@ -74,33 +88,85 @@ const CompetitionTimingConfig = () => {
         },
     )
 
+    // Der Schalter steht bewusst neben dem Formular statt darin: er ist keine zu speichernde
+    // Einstellung, sondern die Frage „eigene Werte oder die der Veranstaltung?". Ausgeschaltet
+    // bedeutet: die drei Felder sind leer, und leer heißt im Backend geerbt.
+    const [override, setOverride] = useState(false)
+
     useFetch(signal => getTimingConfig({signal, path: {eventId, competitionId}}), {
         onResponse: ({data, error}) => {
             if (error) {
                 feedback.error(t('common.error.unexpected'))
             } else if (data) {
-                formContext.reset(mapDtoToTimingForm(data))
+                const form = mapDtoToTimingForm(data)
+                formContext.reset(form)
+                setOverride(overridesTiming(form))
             }
         },
         deps: [eventId, competitionId],
     })
 
-    const timingSystem = useWatch({control: formContext.control, name: 'timingSystem'})
     // useWatch() without `name` types its result as DeepPartialSkipArrayKey<TimingForm>; every
     // field is in fact populated because defaultValues (emptyTimingForm) already covers all of them.
     const formValues = useWatch<TimingForm>({control: formContext.control}) as TimingForm
     const warnings = timingConfigWarnings(formValues)
 
     // Was tatsächlich gilt: der eigene Wert, sonst die Voreinstellung der Veranstaltung. Die
-    // Abschnitte unten richten sich danach, sonst verschwände bei „erben" die halbe Seite, obwohl
-    // der Wettkampf sehr wohl mit RaceClocker fährt.
+    // Presets unten richten sich danach, sonst verschwände die halbe Seite, obwohl der Wettkampf
+    // sehr wohl mit RaceClocker fährt.
     const effectiveSystem = effectiveTimingSystem(formValues)
-    const inheritsSystem = timingSystem === 'NONE' && formValues.eventTimingSystem !== 'NONE'
-    const inheritedUrl = (url: string) =>
-        url ? {helperText: t('event.competition.timing.inheritedUrl', {url})} : {}
+    const eventSystem = formValues.eventTimingSystem
+
+    /**
+     * Die Veranstaltung liefert ihre Formate als blanke ID; den Namen dazu kennen erst die geladenen
+     * Listen. Solange die noch laufen, bleibt das Feld leer statt eine UUID zu zeigen.
+     */
+    const configOption = (options: ConfigOption[] | null, id: string): AutocompleteOption =>
+        (id && options?.find(option => option.id === id)) || null
+
+    const configName = (options: ConfigOption[] | null, id: string) =>
+        configOption(options, id)?.label || t('event.competition.timing.eventDefaults.unset')
+
+    /**
+     * Einschalten füllt alle Felder mit dem, was gerade gilt — man weicht von einem Stand ab, statt
+     * vor leeren Feldern zu stehen. Ausschalten leert sie wieder; das ist die einzige Art, das Erben
+     * zurückzubekommen, und der Schalter macht sie sichtbar statt sie zu verstecken.
+     */
+    const toggleOverride = (checked: boolean) => {
+        setOverride(checked)
+        if (checked) {
+            formContext.setValue(
+                'timingSystem',
+                eventSystem !== 'NONE' ? eventSystem : 'RACECLOCKER',
+            )
+            formContext.setValue('timeTrialResultsUrl', formValues.eventTimeTrialResultsUrl)
+            formContext.setValue('heatsResultsUrl', formValues.eventHeatsResultsUrl)
+            formContext.setValue(
+                'startlistConfigQualification',
+                configOption(startListConfigs, formValues.eventStartlistConfigQualification),
+            )
+            formContext.setValue(
+                'startlistConfigRounds',
+                configOption(startListConfigs, formValues.eventStartlistConfigRounds),
+            )
+            formContext.setValue(
+                'resultImportConfig',
+                configOption(importConfigs, formValues.eventResultImportConfig),
+            )
+        } else {
+            formContext.setValue('timingSystem', 'NONE')
+            formContext.setValue('timeTrialResultsUrl', '')
+            formContext.setValue('heatsResultsUrl', '')
+            formContext.setValue('startlistConfigQualification', null)
+            formContext.setValue('startlistConfigRounds', null)
+            formContext.setValue('resultImportConfig', null)
+        }
+    }
 
     return (
-        <Card sx={{p: 3, maxWidth: 720}}>
+        // Ohne Karte wie die Nachbar-Tabs (Durchführung, Wettbewerbsablauf): dort steht der Inhalt
+        // blank auf der Seite, eine Karte nur hier sähe nach einem fremden Bildschirm aus.
+        <Box sx={{maxWidth: 720}}>
             <FormContainer
                 formContext={formContext}
                 onSuccess={async (data: TimingForm) => {
@@ -122,33 +188,78 @@ const CompetitionTimingConfig = () => {
                     }
                 }}>
                 <Stack spacing={4}>
-                    <FormInputRadioButtonGroup
-                        name={'timingSystem'}
-                        label={t('event.competition.timing.system')}
-                        row
-                        options={[
-                            {
-                                id: 'NONE',
-                                // „nicht gesetzt" wäre falsch, sobald die Veranstaltung etwas
-                                // vorgibt: dann ist dieselbe Auswahl ein bewusstes „erben".
-                                label: inheritsSystem
-                                    ? t('event.competition.timing.systems.inherited', {
-                                          system: t(
-                                              systemLabelKeys[formValues.eventTimingSystem],
-                                          ),
-                                      })
-                                    : t('event.competition.timing.systems.none'),
-                            },
-                            {
-                                id: 'RACECLOCKER',
-                                label: t('event.competition.timing.systems.raceclocker'),
-                            },
-                            {
-                                id: 'WEBSCORER',
-                                label: t('event.competition.timing.systems.webscorer'),
-                            },
-                        ]}
-                    />
+                    {/* Was die Veranstaltung vorgibt — lesbar, nicht als Eingabefeld getarnt. Ein
+                        editierbares Feld, dessen Inhalt in Wahrheit woanders gepflegt wird, ist
+                        genau die Verwirrung, die dieser Block auflöst. */}
+                    <Box>
+                        <Typography variant={'subtitle2'} gutterBottom>
+                            <Trans i18nKey={'event.competition.timing.eventDefaults.title'} />
+                        </Typography>
+                        <Typography variant={'body2'} color={'text.secondary'}>
+                            {t('event.competition.timing.system')}:{' '}
+                            {t(systemLabelKeys[eventSystem])}
+                        </Typography>
+                        {eventSystem === 'RACECLOCKER' && (
+                            <>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    {t('event.competition.timing.timeTrialUrl')}:{' '}
+                                    {formValues.eventTimeTrialResultsUrl ||
+                                        t('event.competition.timing.eventDefaults.unset')}
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    {t('event.competition.timing.heatsUrl')}:{' '}
+                                    {formValues.eventHeatsResultsUrl ||
+                                        t('event.competition.timing.eventDefaults.unset')}
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    {t('event.competition.timing.startlistQualification')}:{' '}
+                                    {configName(
+                                        startListConfigs,
+                                        formValues.eventStartlistConfigQualification,
+                                    )}
+                                </Typography>
+                            </>
+                        )}
+                        {eventSystem !== 'NONE' && (
+                            <>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    {t(
+                                        eventSystem === 'RACECLOCKER'
+                                            ? 'event.competition.timing.startlistRounds'
+                                            : 'event.competition.timing.startlist',
+                                    )}
+                                    : {configName(startListConfigs, formValues.eventStartlistConfigRounds)}
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    {t('event.competition.timing.resultImport')}:{' '}
+                                    {configName(importConfigs, formValues.eventResultImportConfig)}
+                                </Typography>
+                            </>
+                        )}
+                        <Typography variant={'body2'} sx={{mt: 1}}>
+                            <InlineLink
+                                to={'/event/$eventId'}
+                                params={{eventId}}
+                                search={{tab: 'settings'}}>
+                                <Trans i18nKey={'event.competition.timing.eventDefaults.link'} />
+                            </InlineLink>
+                        </Typography>
+                    </Box>
+
+                    <Box>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={override}
+                                    onChange={(_, checked) => toggleOverride(checked)}
+                                />
+                            }
+                            label={t('event.competition.timing.override.label')}
+                        />
+                        <Typography variant={'body2'} color={'text.secondary'}>
+                            <Trans i18nKey={'event.competition.timing.override.hint'} />
+                        </Typography>
+                    </Box>
 
                     {warnings.length > 0 && (
                         <Alert variant={'outlined'} severity={'warning'}>
@@ -163,31 +274,56 @@ const CompetitionTimingConfig = () => {
                         </Alert>
                     )}
 
-                    {effectiveSystem === 'RACECLOCKER' && (
+                    {override && (
+                        <FormInputRadioButtonGroup
+                            name={'timingSystem'}
+                            label={t('event.competition.timing.system')}
+                            row
+                            // Kein „nicht gesetzt": leer heißt erben, und dafür ist der Schalter da.
+                            options={[
+                                {
+                                    id: 'RACECLOCKER',
+                                    label: t('event.competition.timing.systems.raceclocker'),
+                                },
+                                {
+                                    id: 'WEBSCORER',
+                                    label: t('event.competition.timing.systems.webscorer'),
+                                },
+                            ]}
+                        />
+                    )}
+
+                    {override && effectiveSystem === 'RACECLOCKER' && (
                         <Stack spacing={4}>
                             <Alert variant={'outlined'} severity={'info'}>
                                 <Trans i18nKey={'event.competition.timing.raceclockerHint'} />
                             </Alert>
-                            {inheritsSystem && (
-                                <Alert variant={'outlined'} severity={'info'}>
-                                    <Trans i18nKey={'event.competition.timing.inheritedHint'} />
-                                </Alert>
-                            )}
                             <FormInputText
                                 name={'timeTrialResultsUrl'}
                                 label={t('event.competition.timing.timeTrialUrl')}
-                                {...inheritedUrl(formValues.eventTimeTrialResultsUrl)}
                             />
                             <FormInputText
                                 name={'heatsResultsUrl'}
                                 label={t('event.competition.timing.heatsUrl')}
-                                {...inheritedUrl(formValues.eventHeatsResultsUrl)}
                             />
                         </Stack>
                     )}
 
-                    {effectiveSystem !== 'NONE' && (
+                    {override && effectiveSystem !== 'NONE' && (
                         <Stack spacing={4}>
+                            <Divider />
+                            {/* Die Presets sind kein Override: sie hängen an den Spalten dieser
+                                Startliste (Bootsklasse, Crew-Größe) und gelten immer nur für diesen
+                                Wettkampf. Deshalb unterhalb des Trenners und mit eigener Überschrift,
+                                damit der Schalter darüber nicht auf sie zu zielen scheint. */}
+                            <Box>
+                                <Typography variant={'subtitle2'}>
+                                    <Trans i18nKey={'event.competition.timing.presets.title'} />
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    <Trans i18nKey={'event.competition.timing.presets.hint'} />
+                                </Typography>
+                            </Box>
                             {effectiveSystem === 'RACECLOCKER' && (
                                 <FormInputAutocomplete
                                     name={'startlistConfigQualification'}
@@ -245,7 +381,7 @@ const CompetitionTimingConfig = () => {
                     </Box>
                 </Stack>
             </FormContainer>
-        </Card>
+        </Box>
     )
 }
 

@@ -27,6 +27,7 @@ import de.lambda9.tailwind.core.extensions.kio.traverse
 import org.jooq.tools.csv.CSVReader
 import java.nio.charset.Charset
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 object ParticipantRequirementService {
@@ -168,6 +169,64 @@ object ParticipantRequirementService {
         noData
     }
 
+    /**
+     * Die Gemeldeten, denen noch Bedingungen fehlen, als xlsx - Grundlage dafür, die betroffenen
+     * Vereine anzuschreiben.
+     *
+     * [requirementId] grenzt auf eine Bedingung ein; ohne Angabe zählen alle an der
+     * Veranstaltung aktiven. Personen ohne offene Bedingung fallen heraus, die Datei enthält
+     * also genau die, bei denen etwas zu tun ist.
+     */
+    fun exportOpenRequirements(
+        eventId: UUID,
+        requirementId: UUID?,
+    ): App<ToApiError, ApiResponse.File> = KIO.comprehension {
+
+        val scopes = !OpenRequirementExportRepo.getActiveRequirementScopes(eventId).orDie()
+            .map { all -> if (requirementId == null) all else all.filter { it.id == requirementId } }
+
+        if (requirementId != null && scopes.isEmpty()) {
+            return@comprehension KIO.fail(
+                ParticipantRequirementError.InvalidConfig("Missing requirement" to requirementId.toString())
+            )
+        }
+
+        // GLOBAL: die Route lässt nur ReadEventGlobal durch, der Export soll alle Vereine sehen.
+        val participants =
+            !ParticipantForEventRepo.getByEvent(eventId, clubId = null, scope = Privilege.Scope.GLOBAL).orDie()
+        val roleNames = !OpenRequirementExportRepo.getNamedParticipantNames().orDie()
+        val competitions = !OpenRequirementExportRepo.getCompetitionsByParticipant(eventId).orDie()
+
+        val rows = participants.mapNotNull { p ->
+            val roles = p.namedParticipantIds?.filterNotNull() ?: emptyList()
+            val checked = p.participantRequirementsChecked?.mapNotNull { it?.id } ?: emptyList()
+
+            val open = OpenRequirementLogic.openFor(scopes, roles, checked)
+            if (open.isEmpty()) return@mapNotNull null
+
+            OpenRequirementExport.Row(
+                club = p.externalClubName ?: p.clubName ?: "",
+                lastname = p.lastname ?: "",
+                firstname = p.firstname ?: "",
+                year = p.year,
+                roles = roles.mapNotNull { roleNames[it] },
+                email = p.email,
+                competitions = competitions[p.id] ?: emptyList(),
+                openRequirements = open.map { it.name },
+            )
+        }
+
+        val suffix = requirementId?.let { "-" + scopes.first().name } ?: ""
+        val date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "${date}_offene-Bedingungen$suffix.xlsx".replace(Regex("[/\\\\:*?\"<>|]"), "-"),
+                bytes = OpenRequirementExport.build(rows),
+            )
+        )
+    }
+
     fun checkRequirementForEvent(
         eventId: UUID,
         csvFile: File,
@@ -195,11 +254,18 @@ object ParticipantRequirementService {
         // persist requirements for all matches
         !validParticipants.traverse { vp ->
             uncheckedParticipants.filter { up ->
-                up.firstname.equals(vp.firstname, ignoreCase = true)
-                    && up.lastname.equals(vp.lastname, ignoreCase = true)
-                    && vp.club?.let { (up.externalClubName ?: up.clubName!!).equals(it, ignoreCase = true) } ?: true
-                    && vp.year?.let { up.year?.equals(it) } ?: true
-                    && (namedParticipantId == null || up.namedParticipantIds?.contains(namedParticipantId) == true)
+                RequirementMatchLogic.matches(
+                    listFirstname = vp.firstname,
+                    listLastname = vp.lastname,
+                    listYear = vp.year,
+                    listClub = vp.club,
+                    registeredFirstname = up.firstname,
+                    registeredLastname = up.lastname,
+                    registeredYear = up.year,
+                    registeredClub = up.externalClubName ?: up.clubName,
+                    namedParticipantId = namedParticipantId,
+                    registeredRoles = up.namedParticipantIds?.filterNotNull(),
+                )
             }.traverse { candidate ->
                 ParticipantHasRequirementForEventRepo.create(
                     ParticipantHasRequirementForEventRecord(
@@ -229,8 +295,10 @@ object ParticipantRequirementService {
             charset = config.charset ?: "UTF-8",
         ) {
             val valid = config.requirementColName == null ||
-                config.requirementIsValidValue == null ||
-                !cell(config.requirementColName) == config.requirementIsValidValue
+                RequirementMatchLogic.isAccepted(
+                    cellValue = !cell(config.requirementColName),
+                    acceptedValues = config.requirementIsValidValues,
+                )
 
             if (valid) {
                 ValidRequirementParticipant(

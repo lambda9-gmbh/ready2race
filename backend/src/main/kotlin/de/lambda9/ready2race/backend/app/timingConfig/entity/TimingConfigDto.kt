@@ -19,12 +19,15 @@ data class TimingConfigDto(
      */
     val hasQualificationRound: Boolean,
     /**
-     * Die Zeitnahme-Voreinstellung der Veranstaltung (Migration V202608062100): RaceClocker-Rennen
-     * werden pro Veranstaltung angelegt, deshalb erben Wettkaempfe System und URLs von dort. Die
-     * Felder oben sind der lokale Override (null = geerbt); diese drei zeigen der Oberflaeche, WAS
-     * geerbt wuerde.
+     * Die Zeitnahme-Voreinstellung der Veranstaltung (Migrationen V202608062100 und V202608071300):
+     * RaceClocker-Rennen werden pro Veranstaltung angelegt, deshalb erben Wettkaempfe System, URLs
+     * und die beiden Dateiformate von dort. Die Felder oben sind der lokale Override (null =
+     * geerbt); diese hier zeigen der Oberflaeche, WAS geerbt wuerde.
      */
     val eventTimingSystem: TimingSystem?,
     val eventTimeTrialResultsUrl: String?,
     val eventHeatsResultsUrl: String?,
+    val eventStartlistConfigQualification: UUID?,
+    val eventStartlistConfigRounds: UUID?,
+    val eventResultImportConfig: UUID?,
 )

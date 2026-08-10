@@ -144,16 +144,14 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                         ? 'divider'
                                                                         : 'transparent',
                                                             }}>
-                                                            {team.startNumber && (
-                                                                <Avatar
-                                                                    sx={{
-                                                                        width: 32,
-                                                                        height: 32,
-                                                                        fontSize: '0.875rem',
-                                                                    }}>
-                                                                    {team.startNumber}
-                                                                </Avatar>
-                                                            )}
+                                                            <Avatar
+                                                                sx={{
+                                                                    width: 32,
+                                                                    height: 32,
+                                                                    fontSize: '0.875rem',
+                                                                }}>
+                                                                {team.startNumber}
+                                                            </Avatar>
                                                             <Box sx={{flex: 1}}>
                                                                 {team.participants.length === 1 ? (
                                                                     <>
@@ -165,7 +163,7 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="caption"
                                                                             color="text.secondary">
-                                                                            {(team.actualClubName ??
+                                                                            {(team.clubsFull ??
                                                                                 team.clubName) +
                                                                                 ` ${t('club.registeredBy')} ${team.clubName} | ${team.teamName}`}
                                                                         </Typography>
@@ -175,7 +173,7 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="body1"
                                                                             fontWeight="medium">
-                                                                            {team.actualClubName ??
+                                                                            {team.clubsFull ??
                                                                                 team.clubName}
                                                                         </Typography>
                                                                         <Typography

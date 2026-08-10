@@ -12,6 +12,6 @@ describe('matchResultOptions', () => {
 
     it('lässt ohne gesetztes System alles stehen wie bisher', () => {
         // Bestehende Wettkämpfe haben kein System; ihnen darf nichts wegfallen.
-        expect(matchResultOptions(undefined)).toEqual(['form', 'XLS', 'RACECLOCKER'])
+        expect(matchResultOptions('NONE')).toEqual(['form', 'XLS', 'RACECLOCKER'])
     })
 })

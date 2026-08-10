@@ -3,14 +3,20 @@ package de.lambda9.ready2race.backend.app.participantTracking.control
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantTrackingChangeDto
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantTrackingChangeType
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantTrackingDto
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantTrackingEntryDto
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantTrackingSource
 import de.lambda9.ready2race.backend.app.participantTracking.entity.TeamForScanOverviewDto
 import de.lambda9.ready2race.backend.app.participantTracking.entity.TeamParticipantDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantTrackingChangeViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantTrackingViewRecord
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
+import java.util.UUID
 
 fun CompetitionRegistrationTeamRecord.toTeamForScanOverviewDtos() = KIO.ok(
     TeamForScanOverviewDto(
@@ -18,6 +24,7 @@ fun CompetitionRegistrationTeamRecord.toTeamForScanOverviewDtos() = KIO.ok(
         competitionId = competitionId!!,
         competitionIdentifier = competitionIdentifier!!,
         competitionName = competitionName!!,
+        checkInOutRequired = checkInOutRequired!!,
         clubId = clubId!!,
         clubName = clubName!!,
         teamName = teamName,
@@ -82,6 +89,46 @@ fun ParticipantForExecutionDto.toTeamForScanOverviewDto(
     )
 )
 
+/** Ein Eintrag für den Verlaufsdialog - dieselbe Sicht wie das Protokoll, ohne die Personendaten. */
+fun ParticipantTrackingViewRecord.toEntryDto(): App<Nothing, ParticipantTrackingEntryDto> = KIO.ok(
+    ParticipantTrackingEntryDto(
+        id = id!!,
+        scanType = ParticipantScanType.valueOf(scanType!!),
+        scannedAt = scannedAt!!,
+        source = ParticipantTrackingSource.valueOf(source!!),
+        recordedBy = appUserName(scannedById, scannedByFirstname, scannedByLastname),
+        editCount = (editCount ?: 0L).toInt(),
+        lastEditedAt = lastEditedAt,
+        lastEditedBy = appUserName(lastEditedById, lastEditedByFirstname, lastEditedByLastname),
+    )
+)
+
+fun ParticipantTrackingChangeViewRecord.toDto(): App<Nothing, ParticipantTrackingChangeDto> = KIO.ok(
+    ParticipantTrackingChangeDto(
+        id = id!!,
+        trackingId = tracking,
+        changeType = ParticipantTrackingChangeType.valueOf(changeType!!),
+        previousScanType = previousScanType?.let { ParticipantScanType.valueOf(it) },
+        previousScannedAt = previousScannedAt,
+        newScanType = ParticipantScanType.valueOf(newScanType!!),
+        newScannedAt = newScannedAt!!,
+        reason = reason!!,
+        createdAt = createdAt!!,
+        createdBy = appUserName(createdById, createdByFirstname, createdByLastname),
+    )
+)
+
+/**
+ * Ein Name ist nur dann einer, wenn alle drei Teile da sind. Ein gelöschtes Konto hinterlässt in
+ * der Spur `null` - dort steht dann kein Name, nicht ein halber.
+ */
+private fun appUserName(id: UUID?, firstname: String?, lastname: String?): AppUserNameDto? =
+    if (id != null && firstname != null && lastname != null) {
+        AppUserNameDto(id = id, firstname = firstname, lastname = lastname)
+    } else {
+        null
+    }
+
 fun ParticipantTrackingViewRecord.toDto(): App<Nothing, ParticipantTrackingDto> = KIO.ok(
     ParticipantTrackingDto(
         id = id!!,
@@ -99,10 +146,8 @@ fun ParticipantTrackingViewRecord.toDto(): App<Nothing, ParticipantTrackingDto> 
             scanType!!
         ) else null,
         scannedAt = scannedAt,
-        lastScanBy = if(scannedById != null && scannedByFirstname != null && scannedByLastname != null) AppUserNameDto(
-            id = scannedById!!,
-            firstname = scannedByFirstname!!,
-            lastname = scannedByLastname!!
-        ) else null
+        lastScanBy = appUserName(scannedById, scannedByFirstname, scannedByLastname),
+        source = ParticipantTrackingSource.valueOf(source!!),
+        editCount = (editCount ?: 0L).toInt(),
     )
 )

@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.COMPET
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_TEMPLATE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import java.time.LocalDateTime
 import java.util.UUID
 
 object CompetitionSetupRoundRepo {
@@ -29,6 +30,16 @@ object CompetitionSetupRoundRepo {
     fun updateNextRound(id: UUID, nextRoundId: UUID?) = COMPETITION_SETUP_ROUND.update(
         f = { nextRound = nextRoundId },
         condition = { ID.eq(id) },
+    )
+
+    /**
+     * Hält fest, dass diese Runde gesetzt wurde. Nur beim ersten Mal — der Zeitstempel ist die
+     * Auskunft "es gab sie schon einmal" und darf beim Wiederholen nicht vorrücken, sonst ginge
+     * genau die Unterscheidung verloren, für die er existiert.
+     */
+    fun markMaterialized(roundId: UUID, at: LocalDateTime) = COMPETITION_SETUP_ROUND.update(
+        f = { materializedAt = at },
+        condition = { ID.eq(roundId).and(MATERIALIZED_AT.isNull) },
     )
 
     fun get(id: UUID) = COMPETITION_SETUP_ROUND.selectOne { ID.eq(id) }

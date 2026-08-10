@@ -48,6 +48,28 @@ object CompetitionRepo {
     /** The competition row itself, for fields that live outside the (template-shared) properties. */
     fun getRecordById(id: UUID) = COMPETITION.selectOne { ID.eq(id) }
 
+    /**
+     * Die Übersteuerung dieses Wettkampfs. `null` heißt "der Veranstaltung folgen" und ist damit
+     * etwas anderes als `false` ("ausdrücklich aus") — die Unterscheidung darf hier nicht verloren
+     * gehen, sonst kann ein Wettkampf die eingeschaltete Veranstaltung nicht mehr abwählen.
+     */
+    fun getAutoCreateFollowingRounds(competitionId: UUID) = Jooq.query {
+        select(COMPETITION.AUTO_CREATE_FOLLOWING_ROUNDS)
+            .from(COMPETITION)
+            .where(COMPETITION.ID.eq(competitionId))
+            .fetchOne(COMPETITION.AUTO_CREATE_FOLLOWING_ROUNDS)
+    }
+
+    fun updateAutoCreateFollowingRounds(competitionId: UUID, value: Boolean?, userId: UUID) =
+        COMPETITION.update(
+            f = {
+                autoCreateFollowingRounds = value
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            },
+            condition = { ID.eq(competitionId) },
+        )
+
     fun getByIds(ids: List<UUID>) = COMPETITION_VIEW.select { ID.`in`(ids) }
 
     fun isOpenForRegistration(id: UUID, at: LocalDateTime) = Jooq.query {

@@ -11,7 +11,9 @@ const AthleteBoardPage = () => {
     const {eventId} = athleteBoardRoute.useParams()
 
     return (
-        <Box sx={{height: '100vh', overflow: 'hidden'}}>
+        // Das Scroll-Verbot gilt erst ab lg (siehe AthleteBoardView): darunter wächst die Seite
+        // natürlich mit ihrem Inhalt und scrollt wie jede andere Seite.
+        <Box sx={{height: {xs: 'auto', lg: '100dvh'}, overflow: {xs: 'visible', lg: 'hidden'}}}>
             <AthleteBoardView eventId={eventId} />
         </Box>
     )

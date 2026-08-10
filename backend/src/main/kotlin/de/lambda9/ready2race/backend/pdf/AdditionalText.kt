@@ -33,6 +33,14 @@ data class AdditionalText(
  *
  * Ist [AdditionalText.fontSize] nicht gesetzt, gilt die Kastenhöhe als Schriftgröße - das ist die
  * einzige Stelle, an der diese Regel definiert ist.
+ *
+ * Braucht der Text mehr Zeilen, als in den Kasten passen (seit dem Umbruch der Vereinskette der
+ * Normalfall, siehe [de.lambda9.ready2race.backend.pdf.GapTextWrap]), wird [blockTop] negativ und
+ * der Textblock wächst **symmetrisch** über den Kasten hinaus - gleich viel nach oben wie nach
+ * unten, die Mitte bleibt, wo die Vorlage sie vorgesehen hat. Zahlen für eine dreizeilige Kette
+ * bei 18 pt in einem Kasten von 4 % Seitenhöhe: 64,8 pt Blockhöhe gegen 33,7 pt Kastenhöhe, also
+ * gut 15 pt Überstand nach jeder Seite. Wer einen Platzhalter enger als das an einen anderen
+ * setzt, bekommt sie übereinander - das entscheidet die Vorlage, nicht der Renderer.
  */
 data class GapTextMetrics(
     val fontSize: Float,
@@ -41,11 +49,18 @@ data class GapTextMetrics(
 )
 
 /**
+ * Die tatsächlich verwendete Schriftgröße - die einzige Stelle, an der die Regel "ohne gesetzte
+ * Größe gilt die Kastenhöhe" steht. Auch der Umbruch ([de.lambda9.ready2race.backend.pdf.wrappedToBoxes])
+ * braucht sie, denn er muss in derselben Größe messen, in der später gesetzt wird.
+ */
+fun AdditionalText.gapFontSize(boxHeight: Float): Float = fontSize ?: boxHeight
+
+/**
  * @param boxHeight Höhe des Platzhalterkastens in derselben Einheit wie [AdditionalText.fontSize] (pt).
  * @param lineCount Anzahl der (bereits umgebrochenen) Zeilen des Textinhalts.
  */
 fun AdditionalText.gapTextMetrics(boxHeight: Float, lineCount: Int): GapTextMetrics {
-    val fontSize = this.fontSize ?: boxHeight
+    val fontSize = gapFontSize(boxHeight)
     val lineHeight = fontSize * 1.2f
     val blockTop = (boxHeight - lineHeight * lineCount) / 2
     return GapTextMetrics(fontSize = fontSize, lineHeight = lineHeight, blockTop = blockTop)

@@ -35,8 +35,10 @@ class LiveDisplayErrorTest {
             ErrorCode.QR_CODE_ALREADY_IN_USE,
             QrCodeError.QrCodeAlreadyInUse.respond().errorCode,
         )
-        // QrCodeNotFound ist toter Code (der einzige Aufruf in QrCodeAppService.loadQrCode ist
-        // auskommentiert) und bekommt deshalb bewusst keinen Code.
+        // QrCodeNotFound trifft die Nutzerverwaltung, nicht den Steg: es entsteht beim Entfernen
+        // eines Bändchens, das es nicht mehr gibt (AppUserWithQrCodeService.deleteQrCode). Dort
+        // sitzt jemand am Rechner und liest den 404 - ein eigener ErrorCode für die
+        // Helfer-Oberfläche wäre dafür fehl am Platz.
         assertNull(QrCodeError.QrCodeNotFound.respond().errorCode)
     }
 

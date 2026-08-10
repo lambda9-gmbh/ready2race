@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.control
 
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -9,18 +10,36 @@ import java.util.UUID
 
 object LiveDashboardRepo {
 
+    /**
+     * Der Verein, den eine Person *trägt* - nicht der, der sie gemeldet hat. `CLUB` hängt in
+     * [getTeams] an `COMPETITION_REGISTRATION.CLUB` und beantwortet damit nur die
+     * Verwaltungsfrage "wer hat gemeldet"; für die Anzeige zählt der eigene Verein jeder Person.
+     * Beides in einer Abfrage geht nur über einen zweiten Namen für dieselbe Tabelle.
+     */
+    private val PARTICIPANT_CLUB = CLUB.`as`("participant_club")
+
     fun getMatches(eventId: UUID) = Jooq.query {
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_MATCH.CURRENTLY_RUNNING,
+            COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_MATCH.FINISHED_AT,
+            // raceclocker_polled_at fehlt hier bewusst: Es ändert sich für jeden beobachteten Lauf
+            // alle fünf Sekunden und würde den ETag des Dashboards bei jedem Abruf umwerfen.
+            COMPETITION_MATCH.RACECLOCKER_POLL_ERROR,
+            COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT,
+            COMPETITION_MATCH.PAIRINGS_RECALCULATED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
+            // Rennnummer und Kurzname für die Kurzform der Karten - dieselben Spalten wie im
+            // Zeitplan (EventScheduleRepo.getSlots), hier aus COMPETITION_PROPERTIES, weil
+            // COMPETITION_VIEW sie nicht führt.
+            COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
+            COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
         )
             .from(COMPETITION_MATCH)
@@ -66,13 +85,18 @@ object LiveDashboardRepo {
             PARTICIPANT.GENDER,
             PARTICIPANT.EXTERNAL,
             PARTICIPANT.EXTERNAL_CLUB_NAME,
+            PARTICIPANT_CLUB.NAME.`as`("participant_club_name"),
             COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT.`as`("named_participant_id"),
             NAMED_PARTICIPANT.NAME.`as`("named_role"),
-            EVENT.MIXED_TEAM_TERM,
             TIMECODE.TIME,
             TIMECODE.BASE_UNIT,
             TIMECODE.MILLISECOND_PRECISION,
             COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.`as`("round_id"),
+            COMPETITION.ID.`as`("competition_id"),
+            COMPETITION_PROPERTIES.CHECK_IN_OUT_REQUIRED,
+            RATING_CATEGORY.ID.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_ID),
+            RATING_CATEGORY.NAME.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_NAME),
+            EVENT_RATING_CATEGORY.SORT_ORDER.`as`(CompetitionMatchTeamRepo.RATING_CATEGORY_SORT_ORDER),
         )
             .from(COMPETITION_MATCH_TEAM)
             .join(COMPETITION_SETUP_MATCH)
@@ -88,6 +112,7 @@ object LiveDashboardRepo {
             .leftJoin(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
             .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
             .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
+            .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
             .leftJoin(NAMED_PARTICIPANT)
             .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
             .leftJoin(COMPETITION_DEREGISTRATION)
@@ -95,13 +120,54 @@ object LiveDashboardRepo {
                 COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION)
                     .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
             )
-            .leftJoin(EVENT_REGISTRATION).on(EVENT_REGISTRATION.ID.eq(COMPETITION_REGISTRATION.EVENT_REGISTRATION))
-            .leftJoin(EVENT).on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID))
             .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
+            .leftJoin(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY))
+            // Die Abschnittsreihenfolge haengt an der Zuordnung zur Veranstaltung, nicht an der
+            // Kategorie selbst - hier ueber COMPETITION.EVENT, das die Abfrage ohnehin einschraenkt.
+            .leftJoin(EVENT_RATING_CATEGORY)
+            .on(
+                EVENT_RATING_CATEGORY.EVENT.eq(COMPETITION.EVENT)
+                    .and(EVENT_RATING_CATEGORY.RATING_CATEGORY.eq(RATING_CATEGORY.ID))
+            )
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
             .and(matchId?.let { COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(it) } ?: DSL.noCondition())
             .and(registrationId?.let { COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(it) } ?: DSL.noCondition())
+            .orderBy(
+                // Innerhalb einer Mannschaft: eine feste Reihenfolge der Crew. Ohne sie gibt
+                // Postgres die Zeilen in beliebiger Reihenfolge zurück, und die Vereinskette
+                // stünde bei jedem Abruf anders da - auf einer Anzeige, die im Sekundentakt
+                // nachlädt, ist das ein flackerndes Boot.
+                //
+                // Dieselbe Regel wie in den Abfragen der Athleten-Anzeige
+                // (CompetitionMatchTeamRepo); die Mannschaften untereinander sortiert der
+                // Aufrufer nach Startnummer, hier zählt nur die Reihenfolge im Boot.
+                NAMED_PARTICIPANT.NAME.asc().nullsLast(),
+                PARTICIPANT.LASTNAME.asc().nullsLast(),
+                PARTICIPANT.ID.asc().nullsLast(),
+            )
+            .fetch()
+    }
+
+    /**
+     * Der getragene Verein einzelner Personen, nachgeschlagen über ihre Kennung.
+     *
+     * [getTeams] deckt alle *gemeldeten* Personen ab. Eine Ummeldung darf aber ein Vereinsmitglied
+     * hereinholen, das für diese Veranstaltung gar nicht gemeldet ist (siehe
+     * `SubstitutionService.getPossibleSubstitutionsHelper`, das über `ParticipantRepo.getByClubId`
+     * geht) - ohne diese Abfrage stünde so jemand ohne Verein in der Kette. Der Aufrufer ruft sie
+     * nur für die Personen auf, die in den Meldezeilen fehlen; im Regelfall ist das niemand.
+     */
+    fun getParticipantClubs(participantIds: Collection<UUID>) = Jooq.query {
+        select(
+            PARTICIPANT.ID,
+            PARTICIPANT.EXTERNAL,
+            PARTICIPANT.EXTERNAL_CLUB_NAME,
+            PARTICIPANT_CLUB.NAME.`as`("participant_club_name"),
+        )
+            .from(PARTICIPANT)
+            .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
+            .where(PARTICIPANT.ID.`in`(participantIds))
             .fetch()
     }
 
@@ -149,8 +215,9 @@ object LiveDashboardRepo {
     }
 
     /**
-     * Läufe, die als nächste anstehen: geplant, noch nicht laufend und noch ohne vollständiges
-     * Ergebnis. Sortiert nach Startzeit, damit der Aufrufer die früheste Startzeit greifen kann.
+     * Läufe, die als nächste anstehen: geplant, noch nicht an den Start gerufen und noch ohne
+     * vollständiges Ergebnis. Sortiert nach Startzeit, damit der Aufrufer die früheste Startzeit
+     * greifen kann.
      */
     fun getActivationCandidates(eventId: UUID) = Jooq.query {
         select(
@@ -167,7 +234,7 @@ object LiveDashboardRepo {
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.START_TIME.isNotNull)
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.isFalse)
+            .and(COMPETITION_MATCH.ACTIVATED_AT.isNull)
             // Ein beendeter Lauf ist nie wieder Kandidat.
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             // mindestens eine Mannschaft ohne Ergebnis: der Lauf steht noch aus. Abgemeldete

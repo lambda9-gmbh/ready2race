@@ -12,6 +12,13 @@ sealed interface CSVReadError : ToApiError {
 
     data object MalformedData : CSVReadError
 
+    /**
+     * Die Datei lässt sich weder mit noch ohne Anführungszeichen-Auswertung lesen - etwa
+     * weil ein zitiertes Feld nie geschlossen wird. [detail] trägt den Anfang der Stelle,
+     * an der OpenCSV ausgestiegen ist, damit die Zeile in der Datei auffindbar ist.
+     */
+    data class MalformedQuotes(val detail: String?) : CSVReadError
+
     sealed interface CellError : CSVReadError {
 
         data class ColumnUnknown(val expected: String) : CellError
@@ -36,6 +43,13 @@ sealed interface CSVReadError : ToApiError {
             status = HttpStatusCode.UnprocessableEntity,
             message = "Cannot read content, rows have different number of values.",
             errorCode = ErrorCode.SPREADSHEET_MALFORMED,
+        )
+
+        is MalformedQuotes -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Cannot read content, a quoted value is never closed.",
+            errorCode = ErrorCode.SPREADSHEET_MALFORMED,
+            details = detail?.let { mapOf("detail" to it) } ?: emptyMap(),
         )
 
         is CellError.ColumnUnknown -> ApiError(
