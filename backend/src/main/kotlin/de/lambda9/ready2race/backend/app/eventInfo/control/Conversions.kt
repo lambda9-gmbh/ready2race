@@ -68,7 +68,7 @@ private fun clubsOrRegistering(chain: String?, registeringClubName: String?) =
     chain ?: registeringClubName
 
 fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
-    lane = startNumber,
+    startNumber = startNumber,
     teamNumber = teamNumber,
     clubsShort = clubsOrRegistering(clubsShort, clubName),
     clubsFull = clubsOrRegistering(clubsFull, clubName),
@@ -85,7 +85,7 @@ fun RunningMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
 )
 
 fun UpcomingMatchTeamInfo.toAthleteBoardTeam() = AthleteBoardTeam(
-    lane = startNumber,
+    startNumber = startNumber,
     teamNumber = teamNumber,
     clubsShort = clubsOrRegistering(clubsShort, clubName),
     clubsFull = clubsOrRegistering(clubsFull, clubName),
@@ -162,7 +162,7 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
             place = it.place,
             ratingCategory = it.ratingCategory,
             categoryPlace = it.categoryPlace,
-            lane = it.startNumber,
+            startNumber = it.startNumber,
             teamNumber = it.teamNumber,
             clubsShort = clubsOrRegistering(it.clubsShort, it.clubName),
             clubsFull = clubsOrRegistering(it.clubsFull, it.clubName),

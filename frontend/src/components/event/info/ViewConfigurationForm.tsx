@@ -15,6 +15,7 @@ import {
 import {useTranslation} from 'react-i18next'
 import {InfoViewConfigurationDto, InfoViewConfigurationRequest} from '@api/types.gen'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
+import {MAX_RUNNING_CARDS} from './athleteBoard/boardLayout'
 
 interface ViewConfigurationFormProps {
     view?: InfoViewConfigurationDto | null
@@ -69,11 +70,12 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
 
     // Hält die gespeicherte Konfiguration im gültigen Bereich; ein leeres Feld würde sonst
     // als 0 gespeichert. Das Backend klemmt zwar ebenfalls, aber die Maske soll zeigen,
-    // was tatsächlich gilt.
-    const setLimitFilter = (key: string, raw: string) => {
+    // was tatsächlich gilt. Die Untergrenze ist MAX_RUNNING_CARDS: darunter würde die
+    // Konfiguration Läufe kappen, die die Bühne eigentlich melden könnte (siehe hiddenRunning).
+    const setRunningLimitFilter = (raw: string) => {
         const value = Number(raw)
         if (Number.isFinite(value)) {
-            setFilter(key, Math.min(20, Math.max(1, Math.round(value))))
+            setFilter('running', Math.min(20, Math.max(MAX_RUNNING_CARDS, Math.round(value))))
         }
     }
 
@@ -145,30 +147,20 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
                                 <Typography variant="subtitle2">
                                     {t('event.info.athleteBoard.settingsTitle')}
                                 </Typography>
-                                <TextField
-                                    type="number"
-                                    size="small"
-                                    label={t('event.info.athleteBoard.limitRunning')}
-                                    value={filterNumber('running', 3)}
-                                    onChange={e => setLimitFilter('running', e.target.value)}
-                                    inputProps={{min: 1, max: 20}}
-                                />
-                                <TextField
-                                    type="number"
-                                    size="small"
-                                    label={t('event.info.athleteBoard.limitUpcoming')}
-                                    value={filterNumber('upcoming', 3)}
-                                    onChange={e => setLimitFilter('upcoming', e.target.value)}
-                                    inputProps={{min: 1, max: 20}}
-                                />
-                                <TextField
-                                    type="number"
-                                    size="small"
-                                    label={t('event.info.athleteBoard.limitResults')}
-                                    value={filterNumber('results', 1)}
-                                    onChange={e => setLimitFilter('results', e.target.value)}
-                                    inputProps={{min: 1, max: 20}}
-                                />
+                                <Box>
+                                    <TextField
+                                        type="number"
+                                        size="small"
+                                        fullWidth
+                                        label={t('event.info.athleteBoard.limitRunning')}
+                                        value={filterNumber('running', 3)}
+                                        onChange={e => setRunningLimitFilter(e.target.value)}
+                                        inputProps={{min: MAX_RUNNING_CARDS, max: 20}}
+                                    />
+                                    <Typography variant="caption" color="text.secondary">
+                                        {t('event.info.athleteBoard.limitRunningHint')}
+                                    </Typography>
+                                </Box>
                                 <FormControlLabel
                                     control={
                                         <Checkbox

@@ -233,7 +233,10 @@ export type AthleteBoardResultTeam = {
      * the place within the rating category, counted from 1
      */
     categoryPlace?: number | null
-    lane: number
+    /**
+     * starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)
+     */
+    startNumber: number
     /**
      * the nth team of this club in the competition - only shown when teamName is missing
      */
@@ -265,7 +268,10 @@ export type AthleteBoardResultTeam = {
 export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
 
 export type AthleteBoardTeam = {
-    lane?: number | null
+    /**
+     * starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)
+     */
+    startNumber: number
     /**
      * the nth team of this club in the competition - only shown when teamName is missing
      */
@@ -2857,7 +2863,10 @@ export type RunningMatchTeamInfo = {
     teamId: string
     teamName?: string | null
     teamNumber?: number | null
-    startNumber?: number | null
+    /**
+     * starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)
+     */
+    startNumber: number
     clubName?: string | null
     /**
      * the clubs the athletes of this boat wear, chained in boat order, in short form
@@ -3258,7 +3267,10 @@ export type UpcomingMatchTeamInfo = {
     teamId: string
     teamName?: string | null
     teamNumber?: number | null
-    startNumber?: number | null
+    /**
+     * starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)
+     */
+    startNumber: number
     clubName?: string | null
     /**
      * the clubs the athletes of this boat wear, chained in boat order, in short form

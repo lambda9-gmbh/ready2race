@@ -79,3 +79,13 @@ export const teamLabel = (
             : (team.clubsFull ?? team.clubsShort)
     return [clubs, name].filter(Boolean).join(' | ')
 }
+
+/**
+ * Eine Größe, die mit der Dichte der Bühne mitskaliert.
+ *
+ * `--ab-scale` setzt die Bühne einmal aus [densityScale]; jede Schriftgröße und jeder Abstand der
+ * Karten hängt daran. Der Vorgabewert 1 hält die Karten auch außerhalb der Bühne benutzbar
+ * (Kiosk-Rotation, künftige Einzelansichten).
+ */
+export const scaled = (min: string, preferred: string, max: string): string =>
+    `calc(var(--ab-scale, 1) * clamp(${min}, ${preferred}, ${max}))`

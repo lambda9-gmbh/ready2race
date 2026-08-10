@@ -113,11 +113,11 @@ const LiveDashboardMatchCard = ({
     // Result columns are reserved for the whole match, not per row: times then line up
     // underneath each other and every team name keeps the same width.
     const hasResults = matchHasResults(match.teams)
-    // Sobald gewertet wird, steht der Erste oben — die Zahl links bleibt dabei die Bahn.
+    // Sobald gewertet wird, steht der Erste oben — die Zahl links bleibt dabei die Startnummer.
     const orderedTeams = teamsInDisplayOrder(match.teams)
     // Gewertet wird je Wertungskategorie. Solange kein Boot ein Ergebnis hat, bleibt die Karte
-    // eine durchgehende Bahnliste: am Steg wird sie gegen das Wasser gelesen, und Zwischenüberschriften
-    // zerschnitten dort nur den Blick auf das Feld.
+    // eine durchgehende Startnummernliste: am Steg wird sie gegen das Wasser gelesen, und
+    // Zwischenüberschriften zerschnitten dort nur den Blick auf das Feld.
     const sections = hasResults
         ? groupByRatingCategory(orderedTeams, team => team.ratingCategory)
         : []

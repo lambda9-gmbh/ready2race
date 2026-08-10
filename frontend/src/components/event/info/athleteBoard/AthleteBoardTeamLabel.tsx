@@ -1,6 +1,6 @@
 import {Box, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {TeamWithClubs, teamLabel} from './common'
+import {TeamWithClubs, scaled, teamLabel} from './common'
 
 interface AthleteBoardTeamLabelProps {
     team: TeamWithClubs
@@ -28,7 +28,27 @@ const AthleteBoardTeamLabel = ({team, color}: AthleteBoardTeamLabelProps) => {
     const {t} = useTranslation()
 
     return (
-        <Typography sx={{fontSize: 'clamp(0.95rem, 1.6vw, 1.4rem)', fontWeight: 600}} color={color}>
+        <Typography
+            sx={{
+                // Bewusst eine Stufe kleiner als der Wettkampfname darüber: der ist kurz
+                // ("17 CM 4x+"), eine Vereinskette ist die längste Zeichenkette auf der Bühne.
+                // Bei vier Spalten passte "Ruderverein Flensburg" sonst nicht mehr in eine Zeile
+                // und der Name brach schon nach dem ersten Wort um.
+                fontSize: scaled('0.95rem', '1.6vw', '2.3rem'),
+                fontWeight: 600,
+                // Höchstens zwei Zeilen, danach Auslassungspunkte: ein sehr langer
+                // Renngemeinschafts-Name darf die Bootszeile nicht aufblähen.
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                // Auf dem großen Schirm wird die Schrift so groß, dass schon ein einzelnes
+                // Wort ("Rudergemeinschaft") breiter als die Spalte sein kann. Ohne diese
+                // Zeile ragt es aus der Karte und wird vom overflow hart abgeschnitten,
+                // statt umzubrechen — im Sichttest am 09.08.2026 genau so aufgetreten.
+                overflowWrap: 'anywhere',
+            }}
+            color={color}>
             <Box component="span" sx={{display: {xs: 'inline', md: 'none'}}}>
                 {teamLabel(team, t, 'short')}
             </Box>

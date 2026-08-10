@@ -13502,6 +13502,7 @@ components:
       type: object
       required:
         - teamId
+        - startNumber
         - participants
       properties:
         teamId:
@@ -13515,7 +13516,7 @@ components:
           nullable: true
         startNumber:
           type: integer
-          nullable: true
+          description: "starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)"
         clubName:
           type: string
           nullable: true
@@ -13685,12 +13686,13 @@ components:
     AthleteBoardTeam:
       type: object
       required:
+        - startNumber
         - participants
         - failed
       properties:
-        lane:
+        startNumber:
           type: integer
-          nullable: true
+          description: "starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)"
         teamNumber:
           type: integer
           nullable: true
@@ -13790,7 +13792,7 @@ components:
     AthleteBoardResultTeam:
       type: object
       required:
-        - lane
+        - startNumber
         - failed
         - deregistered
       properties:
@@ -13806,8 +13808,9 @@ components:
           type: integer
           nullable: true
           description: "the place within the rating category, counted from 1"
-        lane:
+        startNumber:
           type: integer
+          description: "starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)"
         teamNumber:
           type: integer
           nullable: true
@@ -14853,6 +14856,7 @@ components:
       type: object
       required:
         - teamId
+        - startNumber
         - participants
         - failed
       properties:
@@ -14867,7 +14871,7 @@ components:
           nullable: true
         startNumber:
           type: integer
-          nullable: true
+          description: "starting position in the match, from competition_match_team.start_number (NOT NULL since migration V202507040930)"
         clubName:
           type: string
           nullable: true
