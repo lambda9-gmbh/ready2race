@@ -151,7 +151,7 @@ const AwardCeremonyDialog = ({open, onClose, eventId, competitionId}: Props) => 
         const anchor = downloadRef.current
         if (pdf !== undefined && anchor) {
             anchor.href = URL.createObjectURL(pdf)
-            anchor.download = getFilename(response) ?? 'award_ceremony.pdf'
+            anchor.download = getFilename(response) ?? 'siegerehrungsbogen.pdf'
             anchor.click()
             anchor.href = ''
             anchor.download = ''
