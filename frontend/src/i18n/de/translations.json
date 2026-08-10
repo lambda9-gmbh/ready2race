@@ -973,7 +973,9 @@
         "deleteRound": {
           "delete": "Runde löschen",
           "confirmation": {
-            "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?"
+            "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?",
+            "onDisplay_one": "Achtung: {{count}} Lauf dieser Runde ist bereits auf den Anzeigen zu sehen. Beim Löschen verschwindet er dort — auch für Schiedsrichter, Athleten und Publikum. Wirklich löschen?",
+            "onDisplay_other": "Achtung: {{count}} Läufe dieser Runde sind bereits auf den Anzeigen zu sehen. Beim Löschen verschwinden sie dort — auch für Schiedsrichter, Athleten und Publikum. Wirklich löschen?"
           },
           "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
           "success": "Runde erfolgreich gelöscht"

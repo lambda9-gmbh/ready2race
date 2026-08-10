@@ -973,7 +973,9 @@
         "deleteRound": {
           "delete": "Delete round",
           "confirmation": {
-            "content": "Are you sure you want to delete the latest round?"
+            "content": "Are you sure you want to delete the latest round?",
+            "onDisplay_one": "Careful: {{count}} race of this round is already showing on the displays. Deleting it makes it disappear there — for referees, athletes and spectators alike. Delete anyway?",
+            "onDisplay_other": "Careful: {{count}} races of this round are already showing on the displays. Deleting them makes them disappear there — for referees, athletes and spectators alike. Delete anyway?"
           },
           "error": "An error has occurred when deleting the round",
           "success": "Round successfully deleted"

@@ -973,7 +973,9 @@
         "deleteRound": {
           "delete": "Slet runde",
           "confirmation": {
-            "content": "Er du sikker på, at den sidste runde skal slettes?"
+            "content": "Er du sikker på, at den sidste runde skal slettes?",
+            "onDisplay_one": "Bemærk: {{count}} løb i denne runde vises allerede på skærmene. Sletter du runden, forsvinder det der — også for dommere, atleter og publikum. Vil du slette alligevel?",
+            "onDisplay_other": "Bemærk: {{count}} løb i denne runde vises allerede på skærmene. Sletter du runden, forsvinder de der — også for dommere, atleter og publikum. Vil du slette alligevel?"
           },
           "error": "Der opstod en fejl ved sletning af runden",
           "success": "Runden blev slettet"
