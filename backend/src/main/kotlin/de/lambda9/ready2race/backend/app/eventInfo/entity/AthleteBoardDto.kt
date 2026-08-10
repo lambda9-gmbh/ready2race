@@ -5,21 +5,11 @@ import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDateTime
 import java.util.UUID
 
-/**
- * Antwort der Athleten-Anzeige. Bewusst schlanker als die Info-DTOs daneben:
- * Jahrgang, Geschlecht, Teilnehmer-IDs und der externe Vereinsname fehlen,
- * weil sie nicht angezeigt werden und im Mobilfunknetz kosten.
- */
-data class AthleteBoardDto(
-    val eventName: String,
-    val serverTime: LocalDateTime,
-    val refreshIntervalSeconds: Int,
-    val showCountdown: Boolean,
-    val running: List<AthleteBoardMatch>,
-    val upcoming: List<AthleteBoardMatch>,
-    val results: List<AthleteBoardResult>,
-)
-
+// Die Sammel-Antwort der alten Athleten-Anzeige (AthleteBoardDto) ist mit dem
+// Board-Umbau vom 10.08.2026 entfallen; die Bausteine darunter tragen jetzt die
+// Slots und Listen der Board-Antwort (BoardViewDto). Bewusst schlank: Jahrgang,
+// Geschlecht, Teilnehmer-IDs und der externe Vereinsname fehlen, weil sie nicht
+// angezeigt werden und im Mobilfunknetz kosten.
 data class AthleteBoardMatch(
     val matchId: UUID,
     val competitionName: String,

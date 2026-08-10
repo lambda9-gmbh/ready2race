@@ -1,18 +1,14 @@
 package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
-import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfigurationRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
-import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toLiveMatchInfo
-import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
@@ -21,11 +17,9 @@ import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.data.Timecode
-import de.lambda9.ready2race.backend.database.generated.enums.InfoViewType
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import org.jooq.JSONB
 import org.jooq.Record
 import java.time.Duration
 import java.time.LocalDateTime
@@ -33,20 +27,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object EventInfoService {
-
-    // Eine Instanz genügt: ObjectMapper ist threadsicher und wird von einem öffentlichen
-    // Endpoint bei einer Regatta im Sekundentakt aufgerufen.
-    private val objectMapper = ObjectMapper()
-
-    // Zwischenspeicher der Athleten-Anzeige je Veranstaltung. Ohne ihn löst jeder Abruf
-    // rund ein Dutzend Datenbankabfragen aus — bei 200 Telefonen im 15-Sekunden-Takt
-    // landet das ungebremst auf der Datenbank. Mit ihm zahlt die Datenbank höchstens
-    // einmal je CACHE_TTL_SECONDS und Veranstaltung, egal wie viele Zuschauer laden.
-    // Nur echte, per EventRepo geprüfte Veranstaltungen landen hier, die Karte bleibt
-    // also klein; abgelaufene Einträge werden beim nächsten Abruf überschrieben.
-    private data class CachedBoard(val builtAt: LocalDateTime, val dto: AthleteBoardDto)
-
-    private val athleteBoardCache = ConcurrentHashMap<UUID, CachedBoard>()
 
     // Zwischenspeicher der Live-Liste je Veranstaltung UND [limit]. Derselbe Grund wie beim
     // Athleten-Board: der Endpoint ist öffentlich, verlangt keine Anmeldung und wird vom
@@ -59,83 +39,6 @@ object EventInfoService {
     private data class CachedLiveMatches(val builtAt: LocalDateTime, val dto: ApiResponse.ListDto<LiveMatchInfo>)
 
     private val liveMatchesCache = ConcurrentHashMap<Pair<UUID, Int>, CachedLiveMatches>()
-
-    // Info View Configuration Methods
-
-    fun getInfoViews(
-        eventId: UUID,
-        includeInactive: Boolean = false
-    ): App<EventInfoProblem, ApiResponse.ListDto<InfoViewConfigurationDto>> =
-        KIO.comprehension {
-            val exists = !EventRepo.exists(eventId).orDie()
-            if (!exists) {
-                !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
-            }
-
-            val views = !InfoViewConfigurationRepo.findByEvent(eventId, includeInactive).orDie()
-            KIO.ok(ApiResponse.ListDto(views.map { it.toDto() }))
-        }
-
-    fun createInfoView(
-        eventId: UUID,
-        request: InfoViewConfigurationRequest
-    ): App<EventInfoProblem, ApiResponse.Created> = KIO.comprehension {
-        // Validate event exists
-        val exists = !EventRepo.exists(eventId).orDie()
-        if (!exists) {
-            !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
-        }
-
-        // Validate request
-        if (request.displayDurationSeconds <= 0) {
-            !KIO.fail<EventInfoProblem>(EventInfoProblem.InvalidViewConfiguration("Display duration must be positive"))
-        }
-        if (request.dataLimit <= 0 || request.dataLimit > 100) {
-            !KIO.fail<EventInfoProblem>(EventInfoProblem.InvalidViewConfiguration("Data limit must be between 1 and 100"))
-        }
-
-        val record = request.toRecord(eventId)
-        val created = !InfoViewConfigurationRepo.create(record).orDie()
-        KIO.ok(ApiResponse.Created(created))
-    }
-
-    fun updateInfoView(
-        id: UUID,
-        request: InfoViewConfigurationRequest
-    ): App<EventInfoProblem, ApiResponse.NoData> = KIO.comprehension {
-        val existing = !InfoViewConfigurationRepo.findById(id).orDie()
-        if (existing == null) {
-            !KIO.fail<EventInfoProblem>(EventInfoProblem.InfoViewConfigurationNotFound(id))
-        }
-
-        val updated = !InfoViewConfigurationRepo.update(id) {
-            viewType = request.viewType
-            displayDurationSeconds = request.displayDurationSeconds
-            dataLimit = request.dataLimit
-            filters = request.filters?.let { JSONB.jsonb(it.toString()) }
-            sortOrder = request.sortOrder
-            isActive = request.isActive
-            updatedAt = LocalDateTime.now()
-        }.orDie()
-
-        if (updated == null) {
-            KIO.fail<EventInfoProblem>(EventInfoProblem.InfoViewConfigurationNotFound(id))
-        } else {
-            KIO.ok(ApiResponse.NoData)
-        }
-    }
-
-    fun deleteInfoView(id: UUID): App<EventInfoProblem, ApiResponse.NoData> = KIO.comprehension {
-        val existing = !InfoViewConfigurationRepo.exists(id).orDie()
-
-        if (!existing) {
-            !KIO.fail<EventInfoProblem>(EventInfoProblem.InfoViewConfigurationNotFound(id))
-        }
-
-        !InfoViewConfigurationRepo.delete(id).orDie()
-
-        noData
-    }
 
     // Data Fetching Methods
 
@@ -158,7 +61,7 @@ object EventInfoService {
         getLatestMatchResults(eventId, limit, competitionId, !clubShortNames())
     }
 
-    private fun getLatestMatchResults(
+    internal fun getLatestMatchResults(
         eventId: UUID,
         limit: Int,
         competitionId: UUID?,
@@ -224,7 +127,7 @@ object EventInfoService {
         getUpcomingMatchesForBoard(eventId, limit, !clubShortNames())
     }
 
-    private fun getUpcomingMatchesForBoard(
+    internal fun getUpcomingMatchesForBoard(
         eventId: UUID,
         limit: Int,
         clubShortNames: ClubShortNameSettings,
@@ -389,7 +292,7 @@ object EventInfoService {
         getRunningMatches(eventId, limit, !clubShortNames())
     }
 
-    private fun getRunningMatches(
+    internal fun getRunningMatches(
         eventId: UUID,
         limit: Int,
         clubShortNames: ClubShortNameSettings,
@@ -491,67 +394,6 @@ object EventInfoService {
         }
     }
 
-    fun getAthleteBoard(eventId: UUID): App<EventInfoProblem, ApiResponse.Dto<AthleteBoardDto>> =
-        KIO.comprehension {
-            val now = LocalDateTime.now()
-
-            // serverTime ist die Bezugsgröße für den Countdown auf dem Gerät und muss
-            // deshalb je Antwort frisch sein — nur der Rest der Antwort kommt aus dem
-            // Zwischenspeicher. Die startState-Felder darin sind höchstens
-            // CACHE_TTL_SECONDS alt; das trägt die Anzeige.
-            val cached = athleteBoardCache[eventId]
-                ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
-
-            if (cached != null) {
-                KIO.ok(ApiResponse.Dto(cached.dto.copy(serverTime = now)))
-            } else {
-                val eventName = !EventRepo.getName(eventId).orDie()
-                if (eventName == null) {
-                    !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
-                }
-
-                // findByEvent liefert nur aktive Zeilen, aufsteigend nach sort_order.
-                // Gedacht ist genau eine ATHLETE_BOARD-Zeile; bei mehreren gewinnt die erste.
-                val views = !InfoViewConfigurationRepo.findByEvent(eventId).orDie()
-                val boardView = views.firstOrNull { it.viewType == InfoViewType.ATHLETE_BOARD }
-
-                val config = AthleteBoardLogic.resolveConfig(
-                    filters = boardView?.filters?.let { objectMapper.readTree(it.data()) },
-                    displayDurationSeconds = boardView?.displayDurationSeconds,
-                )
-
-                // Einmal je Aufbau, nicht je Mannschaft: die Anzeige pollt, und die drei Blöcke
-                // darunter lösen zusammen leicht hundert Vereinsnamen auf.
-                val clubShortNames = !clubShortNames()
-
-                val running = !getRunningMatches(eventId, config.runningLimit, clubShortNames)
-                val upcoming = !getUpcomingMatchesForBoard(eventId, config.upcomingLimit, clubShortNames)
-                val results = !getLatestMatchResults(eventId, config.resultsLimit, null, clubShortNames)
-
-                val dto = AthleteBoardDto(
-                    eventName = eventName!!,
-                    serverTime = now,
-                    refreshIntervalSeconds = config.refreshIntervalSeconds,
-                    showCountdown = config.showCountdown,
-                    running = running.data.map {
-                        it.toAthleteBoardMatch(now, config.showCountdown)
-                    },
-                    upcoming = AthleteBoardLogic.sortByStartTime(
-                        upcoming.data.map { it.toAthleteBoardMatch(now, config.showCountdown) }
-                    ) { it.startTime },
-                    results = results.data.map { it.toAthleteBoardResult() },
-                )
-
-                // Laufen mehrere Abrufe gleichzeitig in dieses Fenster, rechnen sie doppelt
-                // und der letzte gewinnt — bei Millisekunden Rechenzeit je Eintrag kein
-                // Grund für ein Lock.
-                athleteBoardCache[eventId] = CachedBoard(now, dto)
-
-                KIO.ok(ApiResponse.Dto(dto))
-            }
-        }
-
-
     // Helper Methods
 
     /**
@@ -560,7 +402,7 @@ object EventInfoService {
      * bauen je Antwort Dutzende Mannschaften auf; ein Nachschlagen je Boot wäre derselbe Fehler
      * in klein, gegen den der Zwischenspeicher der Athleten-Anzeige gebaut wurde.
      */
-    private fun clubShortNames(): App<Nothing, ClubShortNameSettings> =
+    internal fun clubShortNames(): App<Nothing, ClubShortNameSettings> =
         ClubShortNameSettings.load()
 
     /**

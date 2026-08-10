@@ -55,10 +55,11 @@ object BoardLogic {
     }
 
     /**
-     * Löst einen Offset gegen die drei Blöcke auf. [running] aufsteigend nach
-     * tatsächlichem Start, [upcoming] aufsteigend nach geplantem Start, [results]
-     * neuestes zuerst — genau die Reihenfolgen, die die bestehenden Abfragen liefern
-     * (verifiziert in [BoardService.getBoardView]).
+     * Löst einen Offset gegen die drei Blöcke auf. [running] in Arena-Reihenfolge
+     * (aufsteigend nach geplantem Start, so liefert `CompetitionMatchRepo.getRunningMatches`;
+     * ein Lauf in Vorbereitung steht damit hinter dem fahrenden), [upcoming] aufsteigend
+     * nach geplantem Start, [results] neuestes zuerst (`getMatchResults` sortiert nach
+     * `UPDATED_AT desc`) — die Reihenfolgen, auf denen [BoardService.getBoardView] aufbaut.
      */
     fun resolveOffset(
         offset: Int,
