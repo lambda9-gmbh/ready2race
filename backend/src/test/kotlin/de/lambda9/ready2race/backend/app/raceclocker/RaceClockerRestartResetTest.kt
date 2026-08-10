@@ -84,14 +84,20 @@ class RaceClockerRestartResetTest {
     /**
      * Die Gegenprobe: Boote auf dem Wasser sehen im Feed fast genauso aus - kein Ergebnis in keiner
      * Zeile - und unterscheiden sich allein in der gemessenen Startzeit. Hier darf nichts gelöscht
-     * werden; der Aufruf endet wie bisher mit [RaceClockerError.NoResults].
+     * werden.
+     *
+     * Der Aufruf endet dabei mit Erfolg, nicht mehr mit [RaceClockerError.NoResults]: Seit die
+     * Bahnvergabe vor den Riegeln steht, übernimmt auch ein Lauf ohne Ergebnisse etwas aus dem Feed,
+     * und ein Fehler würde diese Bahnen der Transaktion des Hintergrund-Jobs zum Opfer fallen
+     * lassen. Was dieser Fall wirklich zusichert, steht ohnehin in den Prüfungen darunter: dass
+     * Zeit, Platz und Ist-Start stehen bleiben.
      */
     @Test
     fun booteAufDemWasserLoeschenNichts() = testComprehension {
         val seeded = seedClubChain()
         val teamId = seedFinishedResult(seeded)
 
-        assertKIOFails(RaceClockerError.NoResults(target.waveName)) {
+        assertKIOSucceeds<ApiResponse.NoData> {
             applyRows(seeded, listOf(inRaceRow(teamId)))
         }
 
