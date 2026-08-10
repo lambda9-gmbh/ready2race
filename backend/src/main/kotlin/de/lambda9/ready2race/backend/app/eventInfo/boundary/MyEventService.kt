@@ -43,6 +43,11 @@ object MyEventService {
     // überschreitet - alles Abgelaufene fliegt dann in einem Rutsch heraus.
     private const val CACHE_CLEANUP_THRESHOLD = 500
 
+    // Abfragetakt des persönlichen Dashboards. Ruhiger als die Untergrenze der öffentlichen
+    // Anzeigen (AthleteBoardLogic.MIN_REFRESH_INTERVAL_SECONDS): eine Person hat nur ihre eigenen
+    // paar Läufe, da ändert sich nichts im Sekundentakt.
+    private const val REFRESH_INTERVAL_SECONDS = 15
+
     private data class CachedMyEvent(val builtAt: LocalDateTime, val dto: MyEventDto)
 
     private val cache = ConcurrentHashMap<Pair<UUID, UUID>, CachedMyEvent>()
@@ -127,9 +132,7 @@ object MyEventService {
                     ?: person?.get("club_name", String::class.java),
                 eventName = eventName ?: "",
                 serverTime = now,
-                // Untergrenze der öffentlichen Anzeigen, aber nie schneller als 15 Sekunden: eine
-                // Person hat nur ihre eigenen paar Läufe, da ändert sich nichts im Sekundentakt.
-                refreshIntervalSeconds = AthleteBoardLogic.MIN_REFRESH_INTERVAL_SECONDS.coerceAtLeast(15),
+                refreshIntervalSeconds = REFRESH_INTERVAL_SECONDS,
                 running = split.running,
                 upcoming = split.upcoming,
                 results = split.results,

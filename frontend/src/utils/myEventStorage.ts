@@ -57,8 +57,8 @@ export const readMyEventCodes = (): MyEventCode[] => {
         const parsed: unknown = JSON.parse(raw)
         if (!Array.isArray(parsed)) return []
         // Ein einzelner kaputter Eintrag verwirft die ganze Liste: der Speicher ist Beiwerk,
-        // ein neuer Scan stellt ihn in Sekunden wieder her, und halb gelesene Zustaende
-        // waeren schwerer zu verstehen als ein leerer.
+        // ein neuer Scan stellt ihn in Sekunden wieder her, und halb gelesene Zustände
+        // wären schwerer zu verstehen als ein leerer.
         return parsed.every(isCode) ? parsed : []
     } catch {
         return []

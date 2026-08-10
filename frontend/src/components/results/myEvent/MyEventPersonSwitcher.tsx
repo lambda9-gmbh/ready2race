@@ -11,8 +11,14 @@ type MyEventPersonSwitcherProps = {
 }
 
 /**
- * Umschalter für Eltern und Betreuende, die mehrere Bänder gescannt haben. Bei nur einer
- * Person bleibt er weg: ein Umschalter mit genau einem Knopf sieht nach einem Fehler aus.
+ * Umschalter für Eltern und Betreuende, die mehrere Bänder gescannt haben, samt Entfernen-Knopf.
+ *
+ * Bei nur einer Person bleibt die Knopfreihe weg — ein Umschalter mit genau einem Knopf sieht
+ * nach einem Fehler aus. Das Kreuz bleibt trotzdem stehen: es ist der einzige Weg, einen
+ * hinterlegten Code wieder loszuwerden, und gerade der häufigste Fall („ich scanne mein eigenes
+ * Band auf einem geliehenen Telefon") hat nur einen einzigen Eintrag. Ohne das Kreuz blieben
+ * dort Name, Verein, Läufe und der Stand der eigenen Bedingungen dauerhaft auf einem fremden
+ * Gerät.
  */
 export const MyEventPersonSwitcher = ({
     codes,
@@ -22,7 +28,7 @@ export const MyEventPersonSwitcher = ({
 }: MyEventPersonSwitcherProps) => {
     const {t} = useTranslation()
 
-    if (codes.length <= 1) {
+    if (codes.length === 0) {
         return null
     }
 
@@ -37,28 +43,38 @@ export const MyEventPersonSwitcher = ({
     const removeLabel = active ? `${t('myEvent.remove')}: ${label(active)}` : t('myEvent.remove')
 
     return (
-        <Stack direction="row" gap={0.5} flexWrap="wrap" alignItems="center" sx={{mb: 2}}>
-            <ToggleButtonGroup
-                value={activeQrCode}
-                exclusive
-                size="small"
-                sx={{flexWrap: 'wrap'}}
-                onChange={(_, value: string | null) => {
-                    // MUI meldet beim erneuten Tippen auf den aktiven Knopf null — dann bleibt
-                    // die Auswahl stehen, statt die Anzeige leer zu räumen.
-                    if (value !== null) {
-                        onSelect(value)
-                    }
-                }}>
-                {codes.map(code => (
-                    <ToggleButton
-                        key={code.qrCode}
-                        value={code.qrCode}
-                        sx={{textTransform: 'none'}}>
-                        <Typography variant="body2">{label(code)}</Typography>
-                    </ToggleButton>
-                ))}
-            </ToggleButtonGroup>
+        <Stack
+            direction="row"
+            gap={0.5}
+            flexWrap="wrap"
+            alignItems="center"
+            // Ohne Knopfreihe steht das Kreuz allein in der Zeile; rechtsbündig liest es sich
+            // als Aktion zu der Karte darunter statt als verirrtes Bedienelement.
+            justifyContent={codes.length > 1 ? 'flex-start' : 'flex-end'}
+            sx={{mb: 2}}>
+            {codes.length > 1 && (
+                <ToggleButtonGroup
+                    value={activeQrCode}
+                    exclusive
+                    size="small"
+                    sx={{flexWrap: 'wrap'}}
+                    onChange={(_, value: string | null) => {
+                        // MUI meldet beim erneuten Tippen auf den aktiven Knopf null — dann
+                        // bleibt die Auswahl stehen, statt die Anzeige leer zu räumen.
+                        if (value !== null) {
+                            onSelect(value)
+                        }
+                    }}>
+                    {codes.map(code => (
+                        <ToggleButton
+                            key={code.qrCode}
+                            value={code.qrCode}
+                            sx={{textTransform: 'none'}}>
+                            <Typography variant="body2">{label(code)}</Typography>
+                        </ToggleButton>
+                    ))}
+                </ToggleButtonGroup>
+            )}
             {/* Das Kreuz steht neben der Gruppe und nicht in einem der Knöpfe: eine
                 Schaltfläche in einer Schaltfläche ist ungültiges HTML und für Tastatur und
                 Screenreader nicht sauber erreichbar. Entfernt wird die gerade angezeigte

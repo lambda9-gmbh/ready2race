@@ -67,29 +67,29 @@ describe('blockOrder', () => {
         expect(order[0]).toBe('results')
     })
 
-    it('laesst die Laufliste weg, wenn nichts mehr ansteht', () => {
+    it('lässt die Laufliste weg, wenn nichts mehr ansteht', () => {
         // Sonst stand unter den Ergebnissen des Tages "Für dich ist noch kein Lauf
         // eingetragen." — das Gegenteil dessen, was direkt darüber zu lesen war.
         const order = blockOrder(dto({results: [match('m0')]}))
         expect(order).not.toContain('matches')
     })
 
-    it('laesst die Laufliste bei genau einem anstehenden Lauf weg', () => {
-        // Der eine Lauf steht bereits als große Karte oben; die Liste waere nur seine
+    it('lässt die Laufliste bei genau einem anstehenden Lauf weg', () => {
+        // Der eine Lauf steht bereits als große Karte oben; die Liste wäre nur seine
         // Wiederholung.
         const order = blockOrder(dto({upcoming: [match('m1')]}))
         expect(order).toContain('next')
         expect(order).not.toContain('matches')
     })
 
-    it('zeigt die Laufliste ab zwei anstehenden Laeufen', () => {
+    it('zeigt die Laufliste ab zwei anstehenden Läufen', () => {
         const order = blockOrder(dto({running: [match('m1')], upcoming: [match('m2')]}))
         expect(order.indexOf('next')).toBeLessThan(order.indexOf('matches'))
     })
 })
 
 describe('nothingToShow', () => {
-    it('meldet leer, wenn weder Laeufe noch Ergebnisse noch Meldungen vorliegen', () => {
+    it('meldet leer, wenn weder Läufe noch Ergebnisse noch Meldungen vorliegen', () => {
         expect(nothingToShow(dto({requirements: [requirement({fulfilled: false})]}))).toBe(true)
     })
 
@@ -98,7 +98,7 @@ describe('nothingToShow', () => {
         ['upcoming', dto({upcoming: [match('m1')]})],
         ['results', dto({results: [match('m0')]})],
         ['unscheduled', dto({unscheduled: [{competitionId: 'c1'} as never]})],
-    ])('meldet nicht leer, sobald %s gefuellt ist', (_name, data) => {
+    ])('meldet nicht leer, sobald %s gefüllt ist', (_name, data) => {
         expect(nothingToShow(data)).toBe(false)
     })
 })

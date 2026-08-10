@@ -125,6 +125,81 @@ class MyEventLogicTest {
     }
 
     @Test
+    fun overdueMatchBeyondGraceMovesToTheEndOfUpcoming() {
+        // Ein Lauf, der gefahren, aber nie „beendet" wurde und `currently_running` verloren hat,
+        // bleibt sonst den ganzen Tag anstehend — und stünde aufsteigend sortiert vor dem
+        // tatsächlich nächsten Lauf. Dann zeigte die Karte oben um 13:00 „Dein nächster Lauf,
+        // 09:00", während der echte 14-Uhr-Lauf darunter verschwindet. Die Nachfrist ist
+        // dieselbe wie auf der Athleten-Anzeige.
+        val forgotten = raw(startTime = now.minusHours(3))
+        val next = raw(startTime = now.plusHours(4))
+        val split = MyEventLogic.split(
+            entries = listOf(forgotten, next),
+            now = now,
+            visibility = PublicResultsVisibility.FINISHED_ONLY,
+            showCountdown = true,
+        )
+        assertEquals(listOf(next.matchId, forgotten.matchId), split.upcoming.map { it.matchId })
+    }
+
+    @Test
+    fun overdueMatchWithinGraceKeepsItsPlace() {
+        // Innerhalb der Nachfrist ist eine verstrichene Startzeit der Normalfall (der Start
+        // verzögert sich) — der Lauf bleibt vorn und wird nur als überfällig gezeichnet.
+        val delayed = raw(startTime = now.minusMinutes(10))
+        val later = raw(startTime = now.plusHours(2))
+        val split = MyEventLogic.split(
+            entries = listOf(later, delayed),
+            now = now,
+            visibility = PublicResultsVisibility.FINISHED_ONLY,
+            showCountdown = true,
+        )
+        assertEquals(listOf(delayed.matchId, later.matchId), split.upcoming.map { it.matchId })
+    }
+
+    @Test
+    fun overdueMatchBeyondGraceStaysVisible() {
+        // Verworfen wird er nicht: auf der Wandanzeige geht es um den Betrieb, hier um den
+        // eigenen Tag — der eigene Lauf darf nicht kommentarlos verschwinden.
+        val forgotten = raw(startTime = now.minusHours(3))
+        val split = MyEventLogic.split(
+            entries = listOf(forgotten),
+            now = now,
+            visibility = PublicResultsVisibility.FINISHED_ONLY,
+            showCountdown = true,
+        )
+        assertEquals(listOf(forgotten.matchId), split.upcoming.map { it.matchId })
+    }
+
+    @Test
+    fun unscheduledMatchStaysAheadOfMatchesBeyondGrace() {
+        val forgotten = raw(startTime = now.minusHours(3))
+        val unscheduled = raw(startTime = null)
+        val split = MyEventLogic.split(
+            entries = listOf(forgotten, unscheduled),
+            now = now,
+            visibility = PublicResultsVisibility.FINISHED_ONLY,
+            showCountdown = true,
+        )
+        assertEquals(listOf(unscheduled.matchId, forgotten.matchId), split.upcoming.map { it.matchId })
+    }
+
+    @Test
+    fun deregisteredMatchIsMarkedAndGetsNoCountdown() {
+        // Solange der Lauf kein öffentliches Ergebnis ist, steht die Abmeldung nur am kommenden
+        // Lauf. Ohne Kennzeichen sähe er wie ein ganz normaler Start aus.
+        val split = MyEventLogic.split(
+            entries = listOf(raw(startTime = now.plusHours(1), deregistered = true)),
+            now = now,
+            visibility = PublicResultsVisibility.FINISHED_ONLY,
+            showCountdown = true,
+        )
+        val match = split.upcoming.single()
+        assertTrue(match.deregistered)
+        assertEquals(AthleteBoardStartState.SCHEDULED, match.startState)
+    }
+
+    @Test
     fun timelessResultStaysBehindTimedResult() {
         // Vor dem Start abgemeldet: kein startTime, kein actualStartTime, aber via finishedAt
         // trotzdem ein Ergebnis. Das darf beim "neuestes zuerst" nicht vor einem Ergebnis mit

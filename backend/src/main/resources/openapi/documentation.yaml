@@ -12796,6 +12796,7 @@ components:
         - competitionName
         - startState
         - teamMembers
+        - deregistered
       properties:
         matchId:
           type: string
@@ -12836,6 +12837,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MyEventTeamMemberDto'
+        deregistered:
+          type: boolean
+          description: "withdrawn - shown without countdown, even before the match becomes a public result"
+        deregisteredReason:
+          type: string
+          nullable: true
 
     MyEventResultDto:
       type: object

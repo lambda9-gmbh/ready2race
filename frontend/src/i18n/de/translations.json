@@ -2502,6 +2502,7 @@
     "remove": "Eintrag entfernen",
     "lane": "Startposition",
     "team": "Mannschaft",
+    "deregistered": "Abgemeldet",
     "noMatches": "Für dich ist noch kein Lauf eingetragen."
   }
 }

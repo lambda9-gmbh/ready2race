@@ -78,20 +78,45 @@ const MatchHeading = ({match}: {match: MyEventMatchDto}) => {
     )
 }
 
+/**
+ * Ein zurückgezogenes Boot, das noch kein öffentliches Ergebnis trägt, steht weiter unter den
+ * kommenden Läufen — es zu verstecken wäre die unehrlichere Antwort. Damit niemand trotzdem an
+ * den Start geht, trägt es hier die Abmeldung samt Grund und keinen Countdown.
+ */
+const DeregisteredNote = ({match}: {match: MyEventMatchDto}) => {
+    const {t} = useTranslation()
+
+    if (!match.deregistered) return null
+
+    return (
+        <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap" sx={{mt: 1}}>
+            <Chip size="small" color="warning" label={t('myEvent.deregistered')} />
+            {match.deregisteredReason && (
+                <Typography variant="body2" color="text.secondary">
+                    {match.deregisteredReason}
+                </Typography>
+            )}
+        </Stack>
+    )
+}
+
 const MyEventNextCard = ({match, serverTime}: {match: MyEventMatchDto; serverTime: string}) => {
     const {t} = useTranslation()
     // Der Sekundentakt hängt an dieser Karte und nicht an der Liste: nur hier steht eine
     // Zahl, die sich jede Sekunde ändert.
     const now = useServerClock(serverTime)
 
-    const startsInSeconds = match.startTime
-        ? (new Date(match.startTime).getTime() - now.getTime()) / 1000
-        : null
+    const startsInSeconds =
+        match.startTime && !match.deregistered
+            ? (new Date(match.startTime).getTime() - now.getTime()) / 1000
+            : null
 
     // Der Server liefert den Zustand beim Abruf; zwischen zwei Abrufen läuft die Uhr weiter,
-    // deshalb wird der Übergang zu "erwartet" hier noch einmal geprüft.
+    // deshalb wird der Übergang zu "erwartet" hier noch einmal geprüft. Bei einer Abmeldung
+    // entfällt beides: weder Countdown noch "erwartet" sagen dann noch etwas Wahres.
     const overdue =
-        match.startState === 'OVERDUE' || (startsInSeconds !== null && startsInSeconds <= 0)
+        !match.deregistered &&
+        (match.startState === 'OVERDUE' || (startsInSeconds !== null && startsInSeconds <= 0))
 
     return (
         <Card variant="outlined" sx={{mb: 1.5}}>
@@ -106,10 +131,18 @@ const MyEventNextCard = ({match, serverTime}: {match: MyEventMatchDto; serverTim
                         {match.startTime ? (
                             <>
                                 <Typography
-                                    sx={{fontSize: '1.8rem', fontWeight: 700, lineHeight: 1.1}}>
+                                    sx={{
+                                        fontSize: '1.8rem',
+                                        fontWeight: 700,
+                                        lineHeight: 1.1,
+                                        textDecoration: match.deregistered
+                                            ? 'line-through'
+                                            : undefined,
+                                    }}
+                                    color={match.deregistered ? 'text.secondary' : undefined}>
                                     {formatClockTime(match.startTime)}
                                 </Typography>
-                                {match.actualStartTime ? (
+                                {match.deregistered ? null : match.actualStartTime ? (
                                     <Typography variant="body2" color="text.secondary">
                                         {t('event.info.athleteBoard.startedAt', {
                                             time: formatClockTime(match.actualStartTime),
@@ -137,8 +170,12 @@ const MyEventNextCard = ({match, serverTime}: {match: MyEventMatchDto; serverTim
                     </Stack>
                 </Stack>
 
+                <DeregisteredNote match={match} />
+
                 <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap" sx={{mt: 1.5}}>
-                    {match.lane != null && (
+                    {/* Die Startposition bleibt bei einer Abmeldung weg: "Startposition 3"
+                        neben einem zurückgezogenen Boot liest sich wie eine Anweisung. */}
+                    {match.lane != null && !match.deregistered && (
                         <Chip
                             size="small"
                             color="primary"
@@ -181,8 +218,13 @@ const MyEventMatchRow = ({match, current}: {match: MyEventMatchDto; current?: bo
                     : {borderLeft: 3, borderColor: 'transparent', pl: 1}),
             }}>
             <Typography
-                sx={{fontWeight: 700, minWidth: '4.5em', flexShrink: 0}}
-                color={match.startTime ? 'text.primary' : 'text.secondary'}>
+                sx={{
+                    fontWeight: 700,
+                    minWidth: '4.5em',
+                    flexShrink: 0,
+                    textDecoration: match.deregistered ? 'line-through' : undefined,
+                }}
+                color={match.startTime && !match.deregistered ? 'text.primary' : 'text.secondary'}>
                 {match.startTime
                     ? formatClockTime(match.startTime)
                     : t('event.info.athleteBoard.unscheduled')}
@@ -199,13 +241,24 @@ const MyEventMatchRow = ({match, current}: {match: MyEventMatchDto; current?: bo
                         {t('myEvent.team')}: {match.teamName}
                     </Typography>
                 )}
+                {/* Der Grund gehört in die Zeile und nicht nur an die große Karte: im
+                    Tagesplan ist diese Zeile alles, was von dem Lauf zu sehen ist. */}
+                {match.deregistered && match.deregisteredReason && (
+                    <Typography variant="body2" color="text.secondary">
+                        {match.deregisteredReason}
+                    </Typography>
+                )}
             </Box>
-            {match.lane != null && (
-                <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`${t('myEvent.lane')} ${match.lane}`}
-                />
+            {match.deregistered ? (
+                <Chip size="small" color="warning" label={t('myEvent.deregistered')} />
+            ) : (
+                match.lane != null && (
+                    <Chip
+                        size="small"
+                        variant="outlined"
+                        label={`${t('myEvent.lane')} ${match.lane}`}
+                    />
+                )
             )}
         </Stack>
     )

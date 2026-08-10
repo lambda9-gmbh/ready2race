@@ -22,7 +22,12 @@ interface AthleteBoardMatchCardProps {
     showCountdown?: boolean
 }
 
-const AthleteBoardMatchCard =({match, now, variant, showCountdown = true}: AthleteBoardMatchCardProps) => {
+const AthleteBoardMatchCard = ({
+    match,
+    now,
+    variant,
+    showCountdown = true,
+}: AthleteBoardMatchCardProps) => {
     const {t} = useTranslation()
 
     const startsInSeconds = match.startTime

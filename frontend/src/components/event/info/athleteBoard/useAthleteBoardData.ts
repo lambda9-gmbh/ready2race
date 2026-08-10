@@ -1,6 +1,6 @@
 import {getAthleteBoard} from '@api/sdk.gen'
 import {AthleteBoardDto} from '@api/types.gen'
-import {usePolledEndpoint, PolledState} from '@components/results/myEvent/usePolledEndpoint.ts'
+import {usePolledEndpoint, PolledState} from '@utils/usePolledEndpoint.ts'
 
 const FALLBACK_INTERVAL_SECONDS = 15
 

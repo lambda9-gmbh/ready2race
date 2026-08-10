@@ -36,6 +36,14 @@ data class MyEventMatchDto(
     val teamName: String?,
     val clubName: String?,
     val teamMembers: List<MyEventTeamMemberDto>,
+    /**
+     * Zurückgezogen. Solange der Lauf noch kein öffentliches Ergebnis ist (bei
+     * `FINISHED_ONLY` bis zum Beenden, unter Umständen bis zum nächsten Tag), steht die
+     * Abmeldung nur hier — ohne dieses Feld sähe sie auf dem Telefon wie ein ganz normaler
+     * kommender Lauf aus und schickte jemanden an den Start, der längst abgemeldet ist.
+     */
+    val deregistered: Boolean,
+    val deregisteredReason: String?,
 )
 
 data class MyEventTeamMemberDto(

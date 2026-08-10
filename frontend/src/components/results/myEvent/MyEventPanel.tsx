@@ -11,11 +11,11 @@ import {
     MyEventCode,
     rememberMyEventDisplayName,
 } from '@utils/myEventStorage.ts'
+import {usePolledEndpoint} from '@utils/usePolledEndpoint.ts'
 import {blockOrder, MyEventBlock, nothingToShow} from './myEventOrder.ts'
 import {MyEventMatchList, MyEventResultList, MyEventUnscheduledList} from './MyEventMatchList.tsx'
 import {MyEventPersonSwitcher} from './MyEventPersonSwitcher.tsx'
 import {MyEventRequirements} from './MyEventRequirements.tsx'
-import {usePolledEndpoint} from './usePolledEndpoint.ts'
 
 const FALLBACK_INTERVAL_SECONDS = 15
 // Wie beim Athleten-Board: erst ein tatsächlich fehlgeschlagener Abruf macht aus einem

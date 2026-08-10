@@ -23,6 +23,15 @@ const ResultsQrCodePage = () => {
                         entity: t('qrCode.qrCode'),
                     }),
                 )
+            } else if (response.data.type === 'User') {
+                // Helferbänder tragen keine Teilnahme. Gemerkt gäbe der Code auf dem Gerät
+                // dauerhaft ein „Mein Event", das nur „Zu diesem Code gibt es keine Teilnahme"
+                // anzeigen kann — also ohne Speichern und ohne den Reiter auf die
+                // Ergebnisseite, die für Helfende ohnehin das Ziel ist.
+                navigate({
+                    to: '/results/event/$eventId',
+                    params: {eventId: response.data.eventId},
+                })
             } else {
                 // Der Code wandert in den Gerätespeicher und nicht in die Zieladresse:
                 // ein weitergereichter Link soll niemanden in ein fremdes Dashboard lassen.

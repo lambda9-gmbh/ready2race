@@ -2502,6 +2502,7 @@
     "remove": "Remove entry",
     "lane": "Start position",
     "team": "Team",
+    "deregistered": "Withdrawn",
     "noMatches": "No race has been scheduled for you yet."
   }
 }

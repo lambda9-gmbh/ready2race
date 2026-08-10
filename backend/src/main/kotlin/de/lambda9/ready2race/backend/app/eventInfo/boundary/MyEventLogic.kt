@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventMatchDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventResultDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventTeamMemberDto
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -18,6 +19,16 @@ import java.util.UUID
  * eintreffende Zeitstrafe noch ändern.
  */
 object MyEventLogic {
+
+    /**
+     * Nachfrist für "kommt noch", übernommen aus [AthleteBoardLogic]: Ein Lauf, dessen Startzeit
+     * um mehr als diese Frist verstrichen ist, ohne dass er läuft oder ein Ergebnis trägt
+     * (Zeitplanänderung, abgebrochene Runde, vergessener Klick), gilt auf `/board` nicht mehr als
+     * anstehend. Bewusst dieselbe Grenze, damit derselbe Lauf nicht auf dem Telefon noch ansteht,
+     * während er auf der Wandanzeige längst verschwunden ist.
+     */
+    private val UPCOMING_GRACE: Duration =
+        Duration.ofMinutes(AthleteBoardLogic.DEFAULT_OVERDUE_GRACE_MINUTES.toLong())
 
     /**
      * Ein Lauf der Person, wie ihn die Datenbank liefert — vor der Einordnung in
@@ -69,8 +80,19 @@ object MyEventLogic {
             running = running
                 .sortedWith(compareBy(nullsLast()) { it.startTime })
                 .map { it.toMatchDto(now, showCountdown) },
+            // Überfällige Läufe wandern ans Ende, statt verworfen zu werden. Rein aufsteigend
+            // sortiert stünde ein vergessener 09-Uhr-Lauf um 13:00 vor dem tatsächlich nächsten,
+            // und die Karte oben ("Dein nächster Lauf") zeigte die falsche Uhrzeit. Weglassen
+            // wäre die andere schlechte Antwort: dem eigenen Menschen soll sein Lauf nicht
+            // kommentarlos abhandenkommen — anders als auf der Wandanzeige, die nur den Betrieb
+            // zeigt. Läufe ganz ohne Startzeit gelten weiter als anstehend und stehen deshalb
+            // am Ende der vorderen Gruppe.
             upcoming = upcoming
-                .sortedWith(compareBy(nullsLast()) { it.startTime })
+                .sortedWith(
+                    compareBy<RawMatch> {
+                        !AthleteBoardLogic.isStillUpcoming(it.startTime, now, UPCOMING_GRACE)
+                    }.thenBy(nullsLast<LocalDateTime>()) { it.startTime }
+                )
                 .map { it.toMatchDto(now, showCountdown) },
             // Neuestes zuerst: nach dem Rennen interessiert das eigene letzte Ergebnis,
             // nicht das vom Vormittag. Achtung: compareByDescending vertauscht intern die
@@ -91,11 +113,15 @@ object MyEventLogic {
         matchName = matchName,
         startTime = startTime,
         actualStartTime = actualStartTime,
-        startState = AthleteBoardLogic.startState(startTime, now, showCountdown),
+        // Ein abgemeldetes Boot bekommt keinen Countdown: eine Zahl, die auf einen Start
+        // hinunterzählt, den es nicht gibt, schickt jemanden an den Steg.
+        startState = AthleteBoardLogic.startState(startTime, now, showCountdown && !deregistered),
         lane = lane,
         teamName = teamName,
         clubName = clubName,
         teamMembers = teamMembers,
+        deregistered = deregistered,
+        deregisteredReason = deregisteredReason,
     )
 
     private fun RawMatch.toResultDto() = MyEventResultDto(

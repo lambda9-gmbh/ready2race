@@ -1741,6 +1741,11 @@ export type MyEventMatchDto = {
     teamName?: string | null
     clubName?: string | null
     teamMembers: Array<MyEventTeamMemberDto>
+    /**
+     * withdrawn - shown without countdown, even before the match becomes a public result
+     */
+    deregistered: boolean
+    deregisteredReason?: string | null
 }
 
 export type MyEventRegistrationDto = {
