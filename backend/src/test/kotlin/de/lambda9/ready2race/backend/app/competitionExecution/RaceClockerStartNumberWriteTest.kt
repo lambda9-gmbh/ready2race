@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSe
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRef
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionDeregistrationRecord
@@ -63,8 +64,8 @@ class RaceClockerStartNumberWriteTest {
     private val target = RaceClockerMatchTarget(
         waveName = null,
         isQualification = false,
-        timeTrialUrl = null,
-        heatsUrl = "https://www.raceclocker.com/heats",
+        qualificationRace = null,
+        roundsRace = RaceClockerRaceRef(UUID.randomUUID(), "Kurzstrecke", "https://www.raceclocker.com/heats"),
     )
 
     private data class SeededTeam(
