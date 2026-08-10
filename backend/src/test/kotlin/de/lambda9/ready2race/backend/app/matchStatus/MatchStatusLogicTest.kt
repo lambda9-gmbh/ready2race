@@ -54,6 +54,55 @@ class MatchStatusLogicTest {
 
     // --- matchStatus ---
 
+    /**
+     * Ein Block je Zustand: das ist die Liste, gegen die jede Oberfläche geprüft wird. Fällt hier
+     * ein Zweig um, zeigen Durchführung, Zeitplan, Dashboard, Athleten-Anzeige UND die öffentliche
+     * Ergebnisanzeige gemeinsam etwas Falsches - genau deshalb steht die Ableitung an einem Ort.
+     */
+    @Test
+    fun upcomingIsTheDefaultForAScheduledMatch() {
+        val status = MatchStatusLogic.matchStatus(
+            activatedAt = null,
+            startTime = start,
+            startedAt = null,
+            finishedAt = null,
+            skipped = false,
+            teams = listOf(open(), open()),
+        )
+        assertEquals(MatchState.UPCOMING, status.state)
+        assertEquals(2, status.teamsTotal)
+        assertEquals(0, status.teamsScored)
+    }
+
+    /** Aktiviert, aber ohne Ist-Start: der Lauf ist an den Start gerufen und liegt noch am Steg. */
+    @Test
+    fun activatedWithoutARealStartIsPreparing() {
+        val status = MatchStatusLogic.matchStatus(
+            activatedAt = start.minusMinutes(3),
+            startTime = start,
+            startedAt = null,
+            finishedAt = null,
+            skipped = false,
+            teams = listOf(open(), open()),
+        )
+        assertEquals(MatchState.PREPARING, status.state)
+        assertNull(status.startedAt)
+    }
+
+    @Test
+    fun activatedAndStartedIsRunning() {
+        val status = MatchStatusLogic.matchStatus(
+            activatedAt = start.minusMinutes(3),
+            startTime = start,
+            startedAt = start.plusMinutes(1),
+            finishedAt = null,
+            skipped = false,
+            teams = listOf(open(), open()),
+        )
+        assertEquals(MatchState.RUNNING, status.state)
+        assertEquals(start.plusMinutes(1), status.startedAt)
+    }
+
     @Test
     fun runningBeatsEverythingElse() {
         val status = MatchStatusLogic.matchStatus(

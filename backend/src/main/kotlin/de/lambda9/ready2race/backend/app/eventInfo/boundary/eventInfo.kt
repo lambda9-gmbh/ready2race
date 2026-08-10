@@ -51,6 +51,17 @@ fun Route.eventInfo() {
                 }
             }
 
+            // Der Tab "Live" der öffentlichen Ergebnisanzeige: aktivierte UND anstehende Läufe,
+            // jeder mit seinem Zustand. Öffentlich wie die Endpoints darüber.
+            get("/live-matches") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+                    val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
+
+                    EventInfoService.getLiveMatches(eventId, limit)
+                }
+            }
+
             // Alles, was die Athleten-Anzeige braucht, in einer Antwort.
             // Öffentlich wie die drei Endpoints darüber — bewusst ohne authenticate.
             get("/athlete-board") {

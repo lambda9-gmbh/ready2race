@@ -586,7 +586,57 @@ durch die neue Anzeige nur sichtbar:**
 
 ---
 
-## M — „Mein Event": persönliches Dashboard über den QR-Code
+## M — Laufstatus in der öffentlichen Ergebnisanzeige
+
+Am 09./10.08. gebaut. Vier Oberflächen zeigten den Laufzustand schon aus **einer** Ableitung
+(`LiveDashboardLogic.deriveMatchState`): Durchführung, Schiedsrichter-Dashboard, Zeitplan und
+Athleten-Anzeige. Die fünfte kannte ihn nicht — der Tab „Live" der öffentlichen Ergebnisanzeige
+zeigte ausschließlich aktivierte Läufe, ohne jede Statusangabe, und lud genau einmal. Jetzt zeigt
+er auch die anstehenden, jeden mit Chip, und aktualisiert sich alle 15 Sekunden von selbst.
+Entwurf: `docs/superpowers/specs/2026-08-09-einheitlicher-laufstatus-oeffentlich-design.md`.
+
+**Nichts davon ist in der laufenden Anwendung gesehen worden.** Der ganze Block ist unbelegt —
+das ist der Grund, warum er hier steht. Backend (681) und Frontend (616) sind grün, aber
+Testcontainers und Vitest sagen nichts darüber, was ein Zuschauer am Ufer sieht.
+
+**Die drei Stellen, an denen ich mit einem Fehler rechne**, in dieser Reihenfolge:
+
+1. **M4/M5** — der Takt. Er ist neu gebaut (`frontend/src/utils/polling.ts`), gegen Faketimer
+   geprüft und noch nie gegen ein echtes Funkloch gelaufen.
+2. **M9** — die Ergebnisfreigabe. Der Schutz ist strukturell (SQL plus ein DTO ohne
+   Ergebnisfelder) und zweifach getestet, aber ein Leck hier wäre der einzige Fehler dieses
+   Vorhabens, der einer Regatta wirklich schadet.
+3. **M12** — der Zwischenspeicher. Fünf Sekunden Vorhaltezeit sind gesetzt; ob sich das im Feld
+   wie „live" anfühlt oder wie ein Hänger, entscheidet erst der Blick.
+
+**Voraussetzung für diesen Block:** eine Veranstaltung mit Zeitplan, mindestens drei Läufen
+desselben Wettkampfs, einem abgesagten Slot, einem Programmpunkt (z.B. „Mittagspause", nur
+sichtbar bei eingeschaltetem `showBreaksOnPublicBoards`) und einer Runde, die noch nicht erzeugt
+ist. Der Förde-Seed bringt das mit. Zwei Geräte oder zwei Fenster nebeneinander: links das
+Schiedsrichter-Dashboard oder die Durchführung, rechts `/results/{eventId}` im Tab „Live".
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| M1 | Anstehende Läufe erscheinen überhaupt | Tab „Live" öffnen, ohne dass irgendein Lauf aktiviert ist: die nächsten Läufe stehen da, jeder mit Chip „Anstehend". Vorher war der Tab in dieser Lage **leer** — genau das war der Anlass | `7f7d7398` | |
+| M2 | Die Kette der Zustände an einem Lauf | Einen Lauf aktivieren → Chip springt auf „In Vorbereitung" (blau). „Läuft" drücken → „Läuft · n min", die Minutenzahl zählt hoch. Beenden → der Lauf verschwindet aus „Live" und taucht unter „Ergebnisse" auf | `7f7d7398` | |
+| M3 | Dieselben Worte wie nebenan | Denselben Lauf gleichzeitig in Durchführung, Zeitplan, Dashboard und im Live-Tab ansehen: **gleicher Text, gleiche Farbe**. Das ist die eigentliche Zusage des Vorhabens — eine Abweichung hier ist ein Befund, auch wenn beide Seiten für sich plausibel aussehen | `7f7d7398` | |
+| M4 | Wechsel ohne Neuladen | **Der Kernfall.** Den Live-Tab offen liegen lassen und im anderen Fenster aktivieren: der Chip wechselt binnen ~20 Sekunden von selbst. Nicht neu laden, nicht wegklicken — nur warten | `7f7d7398` | |
+| M5 | Netz weg, Netz wieder da | WLAN am Gerät abschalten: die Karten **bleiben stehen**, darüber erscheint „Stand von hh:mm". WLAN wieder an: die Liste ist binnen Sekunden wieder frisch und die Zeile verschwindet. Eine leere Seite nach einem Funkloch wäre der schlechteste Ausgang | `c750e0fe` | |
+| M6 | Erster Abruf scheitert | Backend anhalten, **dann** den Tab öffnen: „Die Läufe konnten nicht geladen werden." — und **nicht** „Zurzeit ist kein Lauf angesetzt." Der Unterschied ist der ganze Grund für das Feld `initialLoad` | `7f7d7398` | |
+| M7 | Nichts angesetzt | Eine Veranstaltung ohne anstehende Läufe: „Zurzeit ist kein Lauf angesetzt." Nicht die Fehlermeldung aus M6 | `7f7d7398` | |
+| M8 | Abgesagter Lauf | Einen Slot im Zeitplan absagen: der Lauf **bleibt** im Live-Tab stehen, durchgestrichen und abgeblendet, Chip „Abgesagt", nicht anklickbar. Eine Besatzung, die ihren Lauf sucht, muss ihn finden und daran ablesen, dass er nicht stattfindet | `248871b0` | |
+| M9 | **Ergebnisfreigabe hält** | Veranstaltung auf „nur beendete Läufe" (`FINISHED_ONLY`) stellen. Einen Lauf vollständig werten, aber **nicht** beenden. Erwartung: er erscheint **weder** im Tab „Live" **noch** im Tab „Ergebnisse". Dann auf `RESULTS_COMPLETE` umstellen — jetzt steht er unter „Ergebnisse", weiterhin nicht unter „Live" | `d691ed6c` | |
+| M10 | Teilergebnisse eines laufenden Laufs | Ein aktivierter Lauf, bei dem die Zeitnahme schon einzelne Boote gewertet hat: der Lauf bleibt „Läuft", und im Dialog stehen **keine** Plätze und Zeiten (der Dialog zeigt sie nur für beendete Ergebnisse). Das ist unverändertes Verhalten des alten Tabs — hier geht es darum, dass es unverändert **geblieben** ist | `7f7d7398` | |
+| M11 | Wartende Runde und Programmpunkt | Eine noch nicht erzeugte Runde erscheint mit dem Hinweis „Aufstellung steht noch nicht fest" statt einer leeren Karte. Ein Programmpunkt („Mittagspause") erscheint **ohne** Chip — und wird auch eine halbe Stunde nach seiner Zeit **nicht** „Überfällig" genannt | `affc8ae5`, `248871b0` | |
+| M12 | Last und Frische | Den Tab auf mehreren Geräten gleichzeitig offen halten. Der Zwischenspeicher hält die Antwort 5 Sekunden vor — ein Zustandswechsel darf sich dadurch um höchstens diese 5 Sekunden verspäten. Fühlt sich das nach „hängt" an, ist die Vorhaltezeit zu lang | `7ae3ae67` | |
+| M13 | Hintergrund | Den Tab in den Hintergrund legen (anderer Browser-Tab), einige Minuten warten, zurückkommen: die Liste ist **sofort** frisch. Dazwischen wurde nicht getaktet — das lässt sich am Netzwerk-Reiter der Entwicklerwerkzeuge ablesen | `4d1cc3b9` | |
+| M14 | Überfällig | Ein anstehender Lauf, dessen geplante Zeit mehr als 5 Minuten zurückliegt, ohne dass ihn jemand aktiviert hat: Chip „Überfällig · n min" in Rot. Bei 2 Minuten Verzug **noch nicht** — Regattaalltag soll nicht leuchten | `7f7d7398` | |
+| M15 | Ohne Termin | Ein Lauf ohne geplante Startzeit trägt „Ungeplant" und wird **niemals** „Überfällig" | `7f7d7398` | |
+| M16 | Ergebnis-Tab unberührt | **Regressionsfall.** Der Tab „Ergebnisse" daneben benutzt dieselbe Karte. Er muss aussehen und sich verhalten wie vor dem Update: kein Statuschip, Klickfläche vorhanden, Dialog wie gehabt | `7f7d7398` | |
+
+---
+
+## N — „Mein Event": persönliches Dashboard über den QR-Code
 
 Am 10.08. gebaut. Teilnehmende scannen den QR-Code auf ihrem Armband und sehen **ohne Anmeldung**
 ihre eigenen Läufe, Ergebnisse und die freigegebenen Bedingungen. Entwurf:
@@ -599,43 +649,43 @@ ihre eigenen Läufe, Ergebnisse und die freigegebenen Bedingungen. Entwurf:
 2. **Mindestens eine Bedingung freigeben.** `participant_requirement.publicly_visible` steht nach
    der Migration auf „aus" — im Bedingungs-Editor das Häkchen „Für Teilnehmende sichtbar (Mein
    Event)" setzen. **Ohne dieses Häkchen ist der Bedingungsblock leer, und das ist kein Fehler.**
-3. Zwei Bänder derselben Veranstaltung bereithalten (für M6–M8) und eines aus einer **anderen**
-   Veranstaltung (M3).
+3. Zwei Bänder derselben Veranstaltung bereithalten (für N6–N8) und eines aus einer **anderen**
+   Veranstaltung (N3).
 
 **Am 10.08. bereits an einer laufenden Instanz belegt** (Agent, eigener Stand auf `:5131` gegen ein
-Backend auf `:8131`, Seed `7e57` mit zwei Booten): M1, M2, M3, M4, M5, M6, M7, M9, M10, M12, M13,
-M14 und M16. Das ersetzt den Durchgang eines Menschen nicht — insbesondere sind Aussehen und
+Backend auf `:8131`, Seed `7e57` mit zwei Booten): N1, N2, N3, N4, N5, N6, N7, N9, N10, N12, N13,
+N14 und N16. Das ersetzt den Durchgang eines Menschen nicht — insbesondere sind Aussehen und
 Lesbarkeit auf einem echten Telefon nirgends geprüft.
 
 | ID | Fall | Erwartung | testbar ab | Nachweis |
 |---|---|---|---|---|
-| M1 | Einstieg über den Code | `/results/{qrCode}` öffnet die Ergebnisseite mit aktivem Reiter „Mein Event". Die Adresszeile lautet danach `/results/event/{eventId}?tab=my-event` und enthält den Code **nicht** mehr | `f3439c15` | `AGENT 10.08.` |
-| M2 | Code überlebt den Neustart | Browser schließen, `/results/event/{eventId}` direkt aufrufen, Reiter öffnen: die Daten sind ohne erneutes Scannen da | `f3439c15` | `AGENT 10.08.` |
-| M3 | Fremde Veranstaltung | Ein Band aus Veranstaltung A an Veranstaltung B: 404 mit derselben Meldung wie ein unbekannter Code — die Antwort darf nicht verraten, dass es den Code gibt | `f3439c15` | `AGENT 10.08.` |
-| M4 | Helferband | Ein Band, das an einem Helferkonto hängt, wird **nicht** gemerkt und führt ohne Reiter auf die Ergebnisseite. Kein hängengebliebenes „Mein Event", das nur Fehler zeigen kann | `f3439c15` | `AGENT 10.08.` (Endpunkt), Oberfläche offen |
-| M5 | Ohne Anmeldung | Alles im privaten Fenster, ohne jede Anmeldung. Gegenprobe: der Aufruf mit `curl` ohne Cookie liefert dieselben Daten | `f3439c15` | `AGENT 10.08.` |
-| M6 | Zweites Band auf demselben Gerät | Nach dem Scannen des zweiten Bandes steht **die zuletzt gescannte Person** oben — nicht die erste. Der Umschalter zeigt beide Namen | `f3439c15` | `AGENT 10.08.` |
-| M7 | Umschalten | Über den Umschalter zur ersten Person wechseln: Name, Verein, Läufe und Bedingungen wechseln vollständig mit | `f3439c15` | `AGENT 10.08.` |
-| M8 | Umschalter bleibt ruhig | Beim Öffnen darf der aktive Knopf nicht ~1 s später an eine andere Stelle springen (der Anzeigename wird nachgetragen). Auf dem Telefon tippt man sonst daneben | `f3439c15` | |
-| M9 | Entfernen bei genau einem Eintrag | Auch mit nur **einem** gemerkten Band ist „Eintrag entfernen" erreichbar. Sonst bleibt auf einem geliehenen Telefon dauerhaft ein fremdes Dashboard stehen | `f3439c15` | `AGENT 10.08.` |
-| M10 | Ohne gescannten Code | Ergebnisseite im privaten Fenster: der Reiter ist **da** und zeigt „Scanne den QR-Code auf deinem Band…" — er wird nicht ausgeblendet, sonst erfährt niemand von der Funktion | `f3439c15` | `AGENT 10.08.` |
-| M11 | Challenge-Veranstaltung | Bei einer Challenge-Veranstaltung erscheint der Reiter **nicht** (dort gelten Verein/relativ/einzeln) | `f3439c15` | |
-| M12 | Offene Pflichtbedingung | Ist eine freigegebene, nicht freiwillige Bedingung offen, steht ganz oben ein Band mit ihrem Namen und dem Verweis auf die Meldestelle | `f3439c15` | `AGENT 10.08.` |
-| M13 | Bedingung abhaken | Nach dem Abhaken verschwindet das Band, die Liste bleibt weiter unten mit „erledigt" stehen | `f3439c15` | `AGENT 10.08.` |
-| M14 | Nicht freigegebene Bedingung | Eine Bedingung **ohne** Häkchen taucht nirgends auf — weder im Band noch in der Liste | `f3439c15` | `AGENT 10.08.` |
-| M15 | Notiz bleibt drin | Zu einer freigegebenen Bedingung in der Meldestelle eine Freitext-Notiz erfassen: sie erscheint **nirgends** im Dashboard. Gegenprobe im JSON der Antwort | `f3439c15` | |
-| M16 | Abgemeldetes Boot | Eine Meldung für die Runde abmelden, **bevor** der Lauf beendet ist: die Karte zeigt „Abgemeldet · Grund", die Startzeit ist durchgestrichen, es läuft **kein** Countdown | `f3439c15` | `AGENT 10.08.` |
-| M17 | Überfälliger Lauf | Ein eigener Lauf, der gefahren, aber nie beendet wurde: er darf die Karte „Dein nächster Lauf" **nicht** besetzen. Der echte nächste Lauf steht oben, der überfällige rutscht ans Ende — dieselbe 30-Minuten-Nachfrist wie A15 | `f3439c15` | |
-| M18 | Ergebnis erscheint gleichzeitig | Lauf beenden: das Ergebnis erscheint im Dashboard und auf `/board` im selben Takt. Bei Voreinstellung „nur beendete Läufe" vorher in **keiner** der beiden Ansichten (vgl. A23) | `f3439c15` | |
-| M19 | Gemeldet, noch kein Lauf | Vor der Auslosung steht die Meldung unter „Gemeldet, noch nicht terminiert" und verschwindet dort, sobald der Lauf gesetzt ist | `f3439c15` | `AGENT 10.08.` (beide Richtungen) |
-| M20 | Zurückgezogene Meldung | Eine vor der Auslosung zurückgezogene Meldung erscheint **nicht** unter „Gemeldet, noch nicht terminiert" | `f3439c15` | |
-| M21 | Nur die eigenen Läufe | Im Dashboard stehen ausschließlich Läufe, in deren Mannschaft die Person sitzt — keine fremden Boote desselben Laufs, auch nicht deren Zeiten | `f3439c15` | `AGENT 10.08.` |
-| M22 | Rollengebundene Bedingung | Eine freigegebene Bedingung, die an eine Rolle gebunden ist, erscheint **nur** bei einer Person mit dieser Rolle — nicht bei allen als „offen" | `f3439c15` | |
-| M23 | Keine Suchmaschine | Quelltext der Ergebnisseite enthält `<meta name="robots" content="noindex, nofollow">`, auch auf `/results/{qrCode}` und der Auswahlseite | `f3439c15` | `AGENT 10.08.` |
-| M24 | Telefon-Layout | Auf einem echten Telefon: Blöcke untereinander, Namen brechen um, keine waagerechte Rolle, Countdown und „Abgemeldet" gut lesbar. **Der einzige Fall, den nur ein Mensch mit Gerät beantworten kann** | `f3439c15` | |
-| M25 | Privater Modus von Safari | Im privaten Modus wirft `localStorage` schon beim Lesen. Die Ergebnisseite muss vollständig funktionieren, der Reiter zeigt dann dauerhaft den Hinweistext — nichts darf weiß bleiben | `f3439c15` | |
-| M26 | Reiter-Unterstrich | Beim Einstieg über den Code steht der Unterstrich unter „Mein Event", nicht unter „Ergebnisse". In der kopflosen Browseransicht nicht messbar gewesen — **am Gerät nachsehen** | `f3439c15` | |
-| M27 | Verbindungsverlust | Backend anhalten: der letzte gute Stand bleibt stehen, es erscheint nie fälschlich „kein Lauf eingetragen" | `f3439c15` | |
+| N1 | Einstieg über den Code | `/results/{qrCode}` öffnet die Ergebnisseite mit aktivem Reiter „Mein Event". Die Adresszeile lautet danach `/results/event/{eventId}?tab=my-event` und enthält den Code **nicht** mehr | `f3439c15` | `AGENT 10.08.` |
+| N2 | Code überlebt den Neustart | Browser schließen, `/results/event/{eventId}` direkt aufrufen, Reiter öffnen: die Daten sind ohne erneutes Scannen da | `f3439c15` | `AGENT 10.08.` |
+| N3 | Fremde Veranstaltung | Ein Band aus Veranstaltung A an Veranstaltung B: 404 mit derselben Meldung wie ein unbekannter Code — die Antwort darf nicht verraten, dass es den Code gibt | `f3439c15` | `AGENT 10.08.` |
+| N4 | Helferband | Ein Band, das an einem Helferkonto hängt, wird **nicht** gemerkt und führt ohne Reiter auf die Ergebnisseite. Kein hängengebliebenes „Mein Event", das nur Fehler zeigen kann | `f3439c15` | `AGENT 10.08.` (Endpunkt), Oberfläche offen |
+| N5 | Ohne Anmeldung | Alles im privaten Fenster, ohne jede Anmeldung. Gegenprobe: der Aufruf mit `curl` ohne Cookie liefert dieselben Daten | `f3439c15` | `AGENT 10.08.` |
+| N6 | Zweites Band auf demselben Gerät | Nach dem Scannen des zweiten Bandes steht **die zuletzt gescannte Person** oben — nicht die erste. Der Umschalter zeigt beide Namen | `f3439c15` | `AGENT 10.08.` |
+| N7 | Umschalten | Über den Umschalter zur ersten Person wechseln: Name, Verein, Läufe und Bedingungen wechseln vollständig mit | `f3439c15` | `AGENT 10.08.` |
+| N8 | Umschalter bleibt ruhig | Beim Öffnen darf der aktive Knopf nicht ~1 s später an eine andere Stelle springen (der Anzeigename wird nachgetragen). Auf dem Telefon tippt man sonst daneben | `f3439c15` | |
+| N9 | Entfernen bei genau einem Eintrag | Auch mit nur **einem** gemerkten Band ist „Eintrag entfernen" erreichbar. Sonst bleibt auf einem geliehenen Telefon dauerhaft ein fremdes Dashboard stehen | `f3439c15` | `AGENT 10.08.` |
+| N10 | Ohne gescannten Code | Ergebnisseite im privaten Fenster: der Reiter ist **da** und zeigt „Scanne den QR-Code auf deinem Band…" — er wird nicht ausgeblendet, sonst erfährt niemand von der Funktion | `f3439c15` | `AGENT 10.08.` |
+| N11 | Challenge-Veranstaltung | Bei einer Challenge-Veranstaltung erscheint der Reiter **nicht** (dort gelten Verein/relativ/einzeln) | `f3439c15` | |
+| N12 | Offene Pflichtbedingung | Ist eine freigegebene, nicht freiwillige Bedingung offen, steht ganz oben ein Band mit ihrem Namen und dem Verweis auf die Meldestelle | `f3439c15` | `AGENT 10.08.` |
+| N13 | Bedingung abhaken | Nach dem Abhaken verschwindet das Band, die Liste bleibt weiter unten mit „erledigt" stehen | `f3439c15` | `AGENT 10.08.` |
+| N14 | Nicht freigegebene Bedingung | Eine Bedingung **ohne** Häkchen taucht nirgends auf — weder im Band noch in der Liste | `f3439c15` | `AGENT 10.08.` |
+| N15 | Notiz bleibt drin | Zu einer freigegebenen Bedingung in der Meldestelle eine Freitext-Notiz erfassen: sie erscheint **nirgends** im Dashboard. Gegenprobe im JSON der Antwort | `f3439c15` | |
+| N16 | Abgemeldetes Boot | Eine Meldung für die Runde abmelden, **bevor** der Lauf beendet ist: die Karte zeigt „Abgemeldet · Grund", die Startzeit ist durchgestrichen, es läuft **kein** Countdown | `f3439c15` | `AGENT 10.08.` |
+| N17 | Überfälliger Lauf | Ein eigener Lauf, der gefahren, aber nie beendet wurde: er darf die Karte „Dein nächster Lauf" **nicht** besetzen. Der echte nächste Lauf steht oben, der überfällige rutscht ans Ende — dieselbe 30-Minuten-Nachfrist wie A15 | `f3439c15` | |
+| N18 | Ergebnis erscheint gleichzeitig | Lauf beenden: das Ergebnis erscheint im Dashboard und auf `/board` im selben Takt. Bei Voreinstellung „nur beendete Läufe" vorher in **keiner** der beiden Ansichten (vgl. A23) | `f3439c15` | |
+| N19 | Gemeldet, noch kein Lauf | Vor der Auslosung steht die Meldung unter „Gemeldet, noch nicht terminiert" und verschwindet dort, sobald der Lauf gesetzt ist | `f3439c15` | `AGENT 10.08.` (beide Richtungen) |
+| N20 | Zurückgezogene Meldung | Eine vor der Auslosung zurückgezogene Meldung erscheint **nicht** unter „Gemeldet, noch nicht terminiert" | `f3439c15` | |
+| N21 | Nur die eigenen Läufe | Im Dashboard stehen ausschließlich Läufe, in deren Mannschaft die Person sitzt — keine fremden Boote desselben Laufs, auch nicht deren Zeiten | `f3439c15` | `AGENT 10.08.` |
+| N22 | Rollengebundene Bedingung | Eine freigegebene Bedingung, die an eine Rolle gebunden ist, erscheint **nur** bei einer Person mit dieser Rolle — nicht bei allen als „offen" | `f3439c15` | |
+| N23 | Keine Suchmaschine | Quelltext der Ergebnisseite enthält `<meta name="robots" content="noindex, nofollow">`, auch auf `/results/{qrCode}` und der Auswahlseite | `f3439c15` | `AGENT 10.08.` |
+| N24 | Telefon-Layout | Auf einem echten Telefon: Blöcke untereinander, Namen brechen um, keine waagerechte Rolle, Countdown und „Abgemeldet" gut lesbar. **Der einzige Fall, den nur ein Mensch mit Gerät beantworten kann** | `f3439c15` | |
+| N25 | Privater Modus von Safari | Im privaten Modus wirft `localStorage` schon beim Lesen. Die Ergebnisseite muss vollständig funktionieren, der Reiter zeigt dann dauerhaft den Hinweistext — nichts darf weiß bleiben | `f3439c15` | |
+| N26 | Reiter-Unterstrich | Beim Einstieg über den Code steht der Unterstrich unter „Mein Event", nicht unter „Ergebnisse". In der kopflosen Browseransicht nicht messbar gewesen — **am Gerät nachsehen** | `f3439c15` | |
+| N27 | Verbindungsverlust | Backend anhalten: der letzte gute Stand bleibt stehen, es erscheint nie fälschlich „kein Lauf eingetragen" | `f3439c15` | |
 
 **Nicht in diesem Block:** Ersatzleute. Auf diesem Stand sieht eine für eine Runde eingewechselte
 Person ihren Lauf nicht, und wer ausgewechselt wurde, sieht ihn weiterhin. Das wird auf dem Zweig
@@ -755,7 +805,7 @@ bleibende Nummer erwartet, siehe den offenen Punkt „Bootsnummer" unten.
 - **Löschen fehlt bewusst (K).** Ein falscher Eintrag wird korrigiert, nicht getilgt. Wenn am
   Testtag ein Fall auftaucht, in dem ein Eintrag ersatzlos weg muss (etwa eine komplett falsche
   Person), gibt es dafür heute keinen Weg außer SQL — vor der Regatta entscheiden, ob das reicht.
-- **Codeformat der Armbänder (Block M).** Der Entwurf zu „Mein Event" setzt voraus, dass
+- **Codeformat der Armbänder (Block N).** Der Entwurf zu „Mein Event" setzt voraus, dass
   `qr_code_id` nicht erratbar ist. Das Feld wird aber nirgends erzeugt, sondern beim Zuordnen vom
   **aufgedruckten** Band übernommen — was drinsteht, entscheidet der Lieferant. Bis hierher war das
   folgenlos, weil ein anonymer Aufruf nur die Veranstaltungs-Kennung zurückgab; jetzt gibt derselbe

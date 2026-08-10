@@ -2453,8 +2453,10 @@
       "noResults": "Der findes endnu ingen resultater for denne konkurrence."
     },
     "liveMatches": {
-      "liveMatches": "Igangværende kampe",
-      "noMatches": "Der afvikles ingen kampe i øjeblikket."
+      "noMatches": "Der er ingen løb planlagt lige nu.",
+      "loadFailed": "Løbene kunne ikke indlæses.",
+      "stale": "Opdateret {{time}}",
+      "pendingRound": "Holdopstillingen er endnu ikke fastlagt"
     },
     "clubRanking": {
       "error": "Fejl ved indlæsning af klubrangliste"

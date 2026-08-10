@@ -9,7 +9,6 @@ import {
     AccordionSummary,
     Box,
     Card,
-    Chip,
     Divider,
     FormControlLabel,
     Stack,
@@ -27,7 +26,7 @@ import Substitutions from '@components/event/competition/excecution/Substitution
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {Dispatch, Fragment, SetStateAction, SyntheticEvent, useEffect, useState} from 'react'
+import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
     skipScheduleRound,
@@ -46,48 +45,12 @@ import {MatchResultOption, matchResultOptions} from './matchResultOptions.ts'
 import {raceClockerPollStatus} from './raceClockerPollStatus.ts'
 import {TimingFormSystem} from '@components/event/competition/timing/timingConfigForm.ts'
 import {
-    MatchChip,
     arenaChip,
     matchStatusChip,
     roundCounterChips,
 } from '@components/event/match/matchStatusChip.ts'
-
-/**
- * Uhr für die verstrichenen Minuten auf den Status-Chips ("Läuft · 4 min", "Überfällig · 8 min").
- * Die Durchführungsseite lädt nur auf Anforderung nach; ohne eigene Uhr stünde die Zahl auf dem
- * Chip still und behauptete nach einer Viertelstunde noch immer "Läuft · 1 min". 30 Sekunden
- * reichen für eine Minutenangabe.
- */
-const useNow = (intervalMs = 30_000): Date => {
-    const [now, setNow] = useState(() => new Date())
-    useEffect(() => {
-        const id = window.setInterval(() => setNow(new Date()), intervalMs)
-        return () => window.clearInterval(id)
-    }, [intervalMs])
-    return now
-}
-
-/**
- * Ein [MatchChip] als MUI-Chip. Welcher Chip es ist, entscheidet ausschließlich
- * `matchStatusChip.ts` — hier wird nur noch übersetzt und gemalt.
- */
-const StatusChip = ({chip}: {chip: MatchChip | null}) => {
-    const {t} = useTranslation()
-    // Der Schlüssel steht erst zur Laufzeit fest, deshalb die gelockerte Signatur - dasselbe
-    // Muster wie `stateChipProps` in EventSchedule.tsx.
-    const translate = t as (key: string, values?: Record<string, string | number>) => string
-    // null heißt "dieser Chip sagt hier nichts aus" (z.B. der Arena-Chip ohne erhobene
-    // Check-in-Daten) - dann gar nichts zeigen, statt eine leere Hülle.
-    if (!chip) return null
-    return (
-        <Chip
-            size={'small'}
-            label={translate(chip.labelKey, chip.values)}
-            color={chip.color}
-            sx={chip.strikeThrough ? {textDecoration: 'line-through'} : undefined}
-        />
-    )
-}
+import StatusChip from '@components/event/match/StatusChip.tsx'
+import {useNow} from '@components/event/match/useNow.ts'
 
 type Props = {
     round: CompetitionRoundDto
