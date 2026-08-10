@@ -14,6 +14,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.boundary.Competiti
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.eventInfo.entity.BoardCeremonyDto
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
@@ -115,6 +116,55 @@ object AwardCeremonyService {
                 name = "siegerehrung_${event.name}.pdf",
                 bytes = AwardCeremonyPdf.render(sheets),
             )
+        )
+    }
+
+    /**
+     * Die Podien für Siegerehrungs-Kacheln der Boards, tolerant gegenüber veralteter
+     * Konfiguration: eine Ehrung zu einem gelöschten Wettkampf oder einer unbekannten
+     * Wertung fällt einfach aus der Antwort, statt das ganze Board scheitern zu lassen —
+     * ein montierter Bildschirm kann sich nicht beschweren. Challenge-Events haben keine
+     * Ehrungen (siehe [AwardCeremonyError.IsChallengeEvent]); dort bleibt die Liste leer.
+     *
+     * Achtung: das Podium entsteht aus der Platzberechnung, unabhängig von
+     * `Event.publicResultsVisibility` — genau wie der gedruckte Bogen. Wer die Kachel
+     * konfiguriert, entscheidet damit selbst über den Zeitpunkt der Veröffentlichung.
+     */
+    fun boardCeremonies(
+        eventId: UUID,
+        keys: List<AwardCeremonyKeyRequest>,
+    ): App<ServiceError, List<BoardCeremonyDto>> = KIO.comprehension {
+        if (keys.isEmpty()) {
+            return@comprehension KIO.ok(emptyList())
+        }
+        val isChallenge = !EventService.checkIsChallengeEvent(eventId)
+        if (isChallenge) {
+            return@comprehension KIO.ok(emptyList())
+        }
+
+        // Nur Wettkämpfe, die es (noch) gibt — collect() würde bei einer fremden ID scheitern.
+        val existing = (!CompetitionRepo.getByEvent(eventId).orDie()).map { it.id }.toSet()
+        val knownKeys = keys.filter { it.competitionId in existing }
+        if (knownKeys.isEmpty()) {
+            return@comprehension KIO.ok(emptyList())
+        }
+
+        val all = !collect(eventId, competitionIds = knownKeys.map { it.competitionId }.distinct())
+
+        KIO.ok(
+            knownKeys.mapNotNull { key ->
+                all.firstOrNull { it.matches(key) }?.let { ceremony ->
+                    BoardCeremonyDto(
+                        competitionId = ceremony.choice.competitionId,
+                        ratingCategoryId = ceremony.choice.ratingCategoryId,
+                        competitionIdentifier = ceremony.choice.competitionIdentifier,
+                        competitionShortName = ceremony.choice.competitionShortName,
+                        competitionName = ceremony.choice.competitionName,
+                        ratingCategoryName = ceremony.choice.ratingCategoryName,
+                        ranks = AwardCeremonyLogic.ranks(ceremony.entries),
+                    )
+                }
+            }
         )
     }
 

@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonyService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.BoardRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
@@ -10,10 +11,14 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.toJsonb
 import de.lambda9.ready2race.backend.app.eventInfo.control.toNameDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
+import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_SCHEDULE_SLOT
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.recover
 import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -97,7 +102,7 @@ object BoardService {
         KIO.comprehension {
             val now = LocalDateTime.now()
 
-            val cached = boardViewCache[boardId]?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
+            val cached = boardViewCache[boardId]?.takeIf { BoardLogic.isCacheFresh(it.builtAt, now) }
             if (cached != null) {
                 KIO.ok(ApiResponse.Dto(cached.dto.copy(serverTime = now)))
             } else {
@@ -122,16 +127,38 @@ object BoardService {
                 // getRunningMatches liefert aufsteigend nach Startzeit (getRunningMatches
                 // in CompetitionMatchRepo sortiert nach started_at), getMatchResults
                 // neuestes zuerst — die Reihenfolgen, auf denen BoardLogic.resolveOffset
-                // aufbaut.
-                val running = (!EventInfoService.getRunningMatches(eventId, needs.runningLimit, clubShortNames))
-                    .data.map { it.toAthleteBoardMatch(now, showCountdown = true) }
-                val upcoming = AthleteBoardLogic.sortByStartTime(
+                // aufbaut. Sprecherinnen-Details (Crew einzeln, Jahrgänge, meldender
+                // Verein) kommen nur mit, wenn irgendein Element sie anfordert.
+                val details = needs.crewDetails
+                var running = (!EventInfoService.getRunningMatches(eventId, needs.runningLimit, clubShortNames))
+                    .data.map { it.toAthleteBoardMatch(now, showCountdown = true, includeDetails = details) }
+                var upcoming = AthleteBoardLogic.sortByStartTime(
                     (!EventInfoService.getUpcomingMatchesForBoard(eventId, needs.upcomingLimit, clubShortNames))
-                        .data.map { it.toAthleteBoardMatch(now, showCountdown = true) }
+                        .data.map { it.toAthleteBoardMatch(now, showCountdown = true, includeDetails = details) }
                 ) { it.startTime }
                 val results =
                     (!EventInfoService.getLatestMatchResults(eventId, needs.resultsLimit, null, clubShortNames))
                         .data.map { it.toAthleteBoardResult() }
+
+                // „Weiter kommen N Boote → Finale": matchId IST die Setup-Lauf-Id; die
+                // Platzhalter der Zeitstrahl-Slots treffen in der Abfrage schlicht nichts.
+                if (needs.advancement) {
+                    val advancement = !BoardRepo
+                        .advancementBySetupMatch((running + upcoming).map { it.matchId }.toSet())
+                        .orDie()
+                    fun AthleteBoardMatch.withAdvancement() = advancement[matchId]
+                        ?.let { copy(nextRoundName = it.nextRoundName, advancingSeats = it.seats) }
+                        ?: this
+                    running = running.map { it.withAdvancement() }
+                    upcoming = upcoming.map { it.withAdvancement() }
+                }
+
+                // Ehrungen sind bewusst fehlertolerant: eine veraltete Kachel-Konfiguration
+                // darf das Board nicht mitreißen (siehe boardCeremonies).
+                val ceremonies = !AwardCeremonyService.boardCeremonies(eventId, needs.ceremonies)
+                    .recover { KIO.ok(emptyList()) }
+
+                val program = if (needs.schedule) !buildProgram(eventId) else emptyList()
 
                 val dto = BoardViewDto(
                     boardId = board.id,
@@ -146,12 +173,57 @@ object BoardService {
                             BoardListMode.RUNNING -> BoardListDto(mode, running.take(limit), emptyList())
                             BoardListMode.UPCOMING -> BoardListDto(mode, upcoming.take(limit), emptyList())
                             BoardListMode.RESULTS -> BoardListDto(mode, emptyList(), results.take(limit))
+                            // Das Tagesprogramm kommt ungekürzt: die Anzeige zentriert
+                            // selbst um „jetzt" und schneidet dort zu (boardView.ts).
+                            BoardListMode.SCHEDULE -> BoardListDto(mode, emptyList(), emptyList(), program)
                         }
                     },
+                    ceremonies = ceremonies,
                 )
 
                 boardViewCache[boardId] = CachedView(now, dto)
                 KIO.ok(ApiResponse.Dto(dto))
             }
+        }
+
+    /**
+     * Das Tagesprogramm aus dem Zeitplan: jeder Slot mit seinem Zustand. Entfallene
+     * Slots bleiben draußen; Pausen (FREE-Slots) nur, wenn die Veranstaltung sie auf
+     * öffentlichen Anzeigen zeigt — dieselbe Regel wie bei den Platzhaltern der
+     * Lauf-Blöcke (EventInfoService.mergeWithPendingPlaceholders).
+     */
+    private fun buildProgram(eventId: UUID): App<EventInfoProblem, List<BoardProgramEntry>> =
+        KIO.comprehension {
+            val showBreaks = !EventRepo.getShowBreaksOnPublicBoards(eventId).orDie()
+            val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
+
+            KIO.ok(
+                slotRecords.mapNotNull { r ->
+                    val isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
+                    val skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
+                    when {
+                        skipped -> null
+                        isFree && !showBreaks -> null
+                        else -> {
+                            val finished = r.get("match_finished_at", LocalDateTime::class.java) != null
+                            val active = r.get("match_started_at", LocalDateTime::class.java) != null ||
+                                r[COMPETITION_MATCH.ACTIVATED_AT] != null
+                            BoardProgramEntry(
+                                startTime = r[EVENT_SCHEDULE_SLOT.START_TIME],
+                                name = if (isFree) r[EVENT_SCHEDULE_SLOT.NAME] else null,
+                                competitionName = r.get("competition_name", String::class.java),
+                                competitionShortName = r.get("competition_short_name", String::class.java),
+                                roundName = r.get("round_name", String::class.java),
+                                matchName = r.get("match_name", String::class.java),
+                                state = when {
+                                    finished -> BoardProgramState.FINISHED
+                                    active -> BoardProgramState.RUNNING
+                                    else -> BoardProgramState.UPCOMING
+                                },
+                            )
+                        }
+                    }
+                }
+            )
         }
 }

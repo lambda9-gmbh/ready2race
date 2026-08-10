@@ -92,6 +92,31 @@ class BoardLogicTest {
     }
 
     @Test
+    fun dataNeedsCarryAnnouncerScheduleAndCeremonies() {
+        val competitionId = UUID.randomUUID()
+        val config = BoardConfig(
+            columns = 2,
+            tiles = listOf(
+                BoardTile(
+                    elements = listOf(
+                        BoardElement(type = BoardElementType.MATCH, offset = 0, showCrewDetails = true, showAdvancement = true),
+                        BoardElement(type = BoardElementType.MATCH_LIST, listMode = BoardListMode.SCHEDULE, limit = 10),
+                        // Dieselbe Ehrung zweimal konfiguriert wird nur einmal gerechnet.
+                        BoardElement(type = BoardElementType.AWARD_CEREMONY, competitionId = competitionId),
+                        BoardElement(type = BoardElementType.AWARD_CEREMONY, competitionId = competitionId),
+                    )
+                ),
+            ),
+        )
+        val needs = BoardLogic.dataNeeds(config)
+        assertEquals(true, needs.crewDetails)
+        assertEquals(true, needs.advancement)
+        assertEquals(true, needs.schedule)
+        assertEquals(1, needs.ceremonies.size)
+        assertEquals(competitionId, needs.ceremonies.single().competitionId)
+    }
+
+    @Test
     fun dataNeedsWithoutMatchElementsStayMinimal() {
         val config = BoardConfig(
             columns = 1,

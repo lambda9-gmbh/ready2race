@@ -1,4 +1,5 @@
 import {BoardElement, BoardViewDto} from '@api/types.gen'
+import BoardCeremonyElement from './BoardCeremonyElement'
 import BoardClockElement from './BoardClockElement'
 import BoardMatchListElement from './BoardMatchListElement'
 import BoardMatchSlotElement from './BoardMatchSlotElement'
@@ -37,6 +38,8 @@ const BoardElementView = ({
             return <BoardClockElement element={element} view={view} now={now} />
         case 'TEXT':
             return <BoardTextElement element={element} />
+        case 'AWARD_CEREMONY':
+            return <BoardCeremonyElement element={element} view={view} />
     }
 }
 

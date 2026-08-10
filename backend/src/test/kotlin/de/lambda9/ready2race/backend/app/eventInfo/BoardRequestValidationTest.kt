@@ -120,8 +120,13 @@ class BoardRequestValidationTest {
 
     @Test
     fun intervalsBelowTheFloorAreInvalid() {
-        val fastRefresh = BoardConfig(columns = 1, refreshIntervalSeconds = 5, tiles = tiles(1))
+        // Untergrenze 3 s (Sprecherinnen-Wunsch vom 10.08.2026) — 3 ist gültig, 2 nicht.
+        val fastRefresh = BoardConfig(columns = 1, refreshIntervalSeconds = 2, tiles = tiles(1))
         assertNotEquals(ValidationResult.Valid, request(fastRefresh).validate())
+        assertEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 1, refreshIntervalSeconds = 3, tiles = tiles(1))).validate(),
+        )
 
         val fastRotation = BoardConfig(
             columns = 1,

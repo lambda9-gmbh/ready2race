@@ -79,6 +79,10 @@ const BoardMatchSlotElement = ({
                         showCountdown={element.showCountdown !== false}
                         showCrew={element.showCrew !== false}
                         showTimes={element.showTimes !== false}
+                        showCrewDetails={element.showCrewDetails === true}
+                        showBirthYears={element.showBirthYears === true}
+                        showAdvancement={element.showAdvancement === true}
+                        showRegisteringClub={element.showRegisteringClub === true}
                     />
                 ) : content?.result ? (
                     <AthleteBoardResultCard

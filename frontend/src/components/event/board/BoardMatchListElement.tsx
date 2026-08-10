@@ -2,7 +2,7 @@ import {Box, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {BoardElement, BoardViewDto} from '@api/types.gen'
 import {formatClockTime, formatPlace, scaled, teamLabel} from '../info/athleteBoard/common'
-import {listForElement} from './boardView'
+import {listForElement, programForElement} from './boardView'
 
 interface BoardMatchListElementProps {
     element: BoardElement
@@ -18,13 +18,16 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
     const {t} = useTranslation()
 
     const list = listForElement(view, element)
+    const program = programForElement(view, element)
 
     const title =
         element.listMode === 'RESULTS'
             ? t('event.boards.element.listMode.results')
             : element.listMode === 'RUNNING'
               ? t('event.boards.element.listMode.running')
-              : t('event.boards.element.listMode.upcoming')
+              : element.listMode === 'SCHEDULE'
+                ? t('event.boards.element.listMode.schedule')
+                : t('event.boards.element.listMode.upcoming')
 
     // Kurzform: das Wettkampf-Kürzel (short_name) statt des vollen Namens — für schmale
     // Kacheln, in denen "Mixed-Doppelvierer mit Steuerfrau/-mann" jede Zeile sprengt.
@@ -32,10 +35,26 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
     const competitionLabel = (name: string, shortName?: string | null) =>
         element.useShortNames === true ? (shortName ?? name) : name
 
-    const rows: {key: string; time: string | null; label: string; detail: string | null}[] =
-        list == null
-            ? []
-            : list.mode === 'RESULTS'
+    const rows: {key: string; time: string | null; label: string; detail: string | null; state?: string}[] =
+        program != null
+            ? program.map((entry, index) => ({
+                  key: `${entry.startTime ?? ''}-${index}`,
+                  time: entry.startTime ? formatClockTime(entry.startTime) : null,
+                  label:
+                      entry.name ??
+                      [
+                          competitionLabel(entry.competitionName ?? '', entry.competitionShortName),
+                          entry.roundName,
+                          entry.matchName,
+                      ]
+                          .filter(Boolean)
+                          .join(' · '),
+                  detail: null,
+                  state: entry.state,
+              }))
+            : list == null
+              ? []
+              : list.mode === 'RESULTS'
               ? list.results.map(result => {
                     const winner = result.teams.find(team => team.place === 1)
                     return {
@@ -100,7 +119,9 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                             ? t('event.boards.element.emptyPast')
                             : element.listMode === 'RUNNING'
                               ? t('event.boards.element.emptyCurrent')
-                              : t('event.boards.element.emptyUpcoming')}
+                              : element.listMode === 'SCHEDULE'
+                                ? t('event.boards.element.emptySchedule')
+                                : t('event.boards.element.emptyUpcoming')}
                     </Typography>
                 ) : (
                     rows.map((row, index) => (
@@ -121,13 +142,22 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                                     fontWeight: 700,
                                     flexShrink: 0,
                                     minWidth: '3.2em',
+                                    // Tagesprogramm: Beendetes tritt zurück, Laufendes leuchtet.
+                                    opacity: row.state === 'FINISHED' ? 0.45 : 1,
+                                    color: row.state === 'RUNNING' ? 'primary.main' : undefined,
                                 }}>
                                 {row.time ?? '–'}
                             </Typography>
                             <Box sx={{minWidth: 0}}>
                                 <Typography
                                     noWrap
-                                    sx={{fontSize: scaled('0.9rem', '1.4vw', '2rem'), fontWeight: 600}}>
+                                    sx={{
+                                        fontSize: scaled('0.9rem', '1.4vw', '2rem'),
+                                        fontWeight: row.state === 'RUNNING' ? 800 : 600,
+                                        opacity: row.state === 'FINISHED' ? 0.45 : 1,
+                                    }}
+                                    color={row.state === 'RUNNING' ? 'primary.main' : undefined}>
+                                    {row.state === 'FINISHED' ? '✓ ' : row.state === 'RUNNING' ? '▶ ' : ''}
                                     {row.label}
                                 </Typography>
                                 {row.detail && (

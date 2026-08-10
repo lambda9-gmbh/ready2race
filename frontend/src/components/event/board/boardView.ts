@@ -1,4 +1,11 @@
-import {BoardElement, BoardMatchSlotDto, BoardTile, BoardViewDto} from '@api/types.gen'
+import {
+    BoardCeremonyDto,
+    BoardElement,
+    BoardMatchSlotDto,
+    BoardProgramEntry,
+    BoardTile,
+    BoardViewDto,
+} from '@api/types.gen'
 import {BoardContent, contentScale, MIN_DENSITY_SCALE} from '../info/athleteBoard/boardLayout'
 
 /**
@@ -95,6 +102,42 @@ export const listForElement = (view: BoardViewDto, element: BoardElement) => {
         matches: list.matches.slice(0, limit),
         results: list.results.slice(0, limit),
     }
+}
+
+/** Die Ehrung eines Siegerehrungs-Elements — null, wenn die Antwort sie (noch) nicht trägt. */
+export const ceremonyForElement = (
+    view: BoardViewDto,
+    element: BoardElement,
+): BoardCeremonyDto | null =>
+    element.type === 'AWARD_CEREMONY' && element.competitionId != null
+        ? (view.ceremonies?.find(
+              c =>
+                  c.competitionId === element.competitionId &&
+                  (c.ratingCategoryId ?? null) === (element.ratingCategoryId ?? null),
+          ) ?? null)
+        : null
+
+/** Wie viele beendete Zeilen das Tagesprogramm als Kontext behält, bevor es zuschneidet. */
+const PROGRAM_FINISHED_CONTEXT = 2
+
+/**
+ * Der Ausschnitt des Tagesprogramms für ein Listen-Element: zentriert um „jetzt" —
+ * ein paar beendete Läufe als Kontext, dann Laufendes und Anstehendes bis zum Limit.
+ * Der Server liefert bewusst den ganzen Tag; erst hier wird zugeschnitten, damit
+ * dieselbe Antwort Kacheln mit verschiedenen Limits bedienen kann.
+ */
+export const programForElement = (
+    view: BoardViewDto,
+    element: BoardElement,
+): BoardProgramEntry[] | null => {
+    if (element.type !== 'MATCH_LIST' || element.listMode !== 'SCHEDULE') return null
+    const program = view.lists.find(l => l.mode === 'SCHEDULE')?.program ?? []
+    const limit = element.limit ?? program.length
+    const firstOpen = program.findIndex(e => e.state !== 'FINISHED')
+    const start = firstOpen === -1
+        ? Math.max(0, program.length - limit)
+        : Math.max(0, firstOpen - PROGRAM_FINISHED_CONTEXT)
+    return program.slice(start, start + limit)
 }
 
 /**

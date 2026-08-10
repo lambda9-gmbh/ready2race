@@ -1568,7 +1568,12 @@
         "minutesUnit": "min",
         "hoursUnit": "Std.",
         "secondsUnit": "s",
-        "place": "{{count}}."
+        "place": "{{count}}.",
+        "advancing": "Weiter kommen {{count}} Boote → {{round}}",
+        "advancing_one": "Weiter kommt 1 Boot → {{round}}",
+        "advancingUnsized": "Weiter geht es: {{round}}",
+        "birthYear": "Jg. {{year}}",
+        "registeringClub": "Meldung: {{club}}"
       }
     },
     "match": {
@@ -1917,7 +1922,8 @@
           "match": "Lauf",
           "matchList": "Laufliste",
           "clock": "Uhr",
-          "text": "Hinweistext"
+          "text": "Hinweistext",
+          "awardCeremony": "Siegerehrung"
         },
         "offset": "Position",
         "offsetCurrent": "Aktueller Lauf",
@@ -1935,7 +1941,8 @@
           "label": "Inhalt",
           "upcoming": "Nächste Läufe",
           "results": "Letzte Ergebnisse",
-          "running": "Laufende Läufe"
+          "running": "Laufende Läufe",
+          "schedule": "Tagesprogramm"
         },
         "titleCurrent": "Im Rennen",
         "titleNext": "Als Nächstes",
@@ -1945,7 +1952,17 @@
         "emptyCurrent": "Kein Lauf im Rennen",
         "emptyUpcoming": "Kein weiterer Lauf geplant",
         "emptyPast": "Noch kein Ergebnis",
-        "useShortNames": "Wettkampf-Kürzel verwenden"
+        "useShortNames": "Wettkampf-Kürzel verwenden",
+        "ceremonyTitle": "Siegerehrung",
+        "ceremonyPick": "Ehrung",
+        "ceremonyEmpty": "Noch keine ehrungsreifen Ergebnisse",
+        "sharedRank": "geteilt",
+        "emptySchedule": "Kein Programm hinterlegt",
+        "announcerSection": "Für Sprecherinnen",
+        "showCrewDetails": "Crew im Detail (je Zeile)",
+        "showBirthYears": "Jahrgänge zeigen",
+        "showAdvancement": "Weiterkommens-Regel zeigen",
+        "showRegisteringClub": "Meldenden Verein zeigen"
       },
       "columns": "Spalten",
       "columnCount": "{{count}} Spalten",

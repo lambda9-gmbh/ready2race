@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest'
 import {AthleteBoardMatch, BoardElement, BoardTile, BoardViewDto} from '@api/types.gen'
 import {densityScale} from '../info/athleteBoard/boardLayout'
-import {elementScale, gridPlacement, listForElement, slotForElement} from './boardView'
+import {ceremonyForElement, elementScale, gridPlacement, listForElement, programForElement, slotForElement} from './boardView'
 
 const match = (id: string, boats = 4): AthleteBoardMatch =>
     ({
@@ -134,6 +134,78 @@ describe('listForElement', () => {
 
     test('andere Elementtypen haben keine Liste', () => {
         expect(listForElement(v, matchElement(0))).toBeNull()
+    })
+})
+
+describe('ceremonyForElement', () => {
+    const ceremony = {
+        competitionId: 'c1',
+        ratingCategoryId: null,
+        competitionIdentifier: '8',
+        competitionShortName: 'CMix 4x+',
+        competitionName: 'Mixed-Doppelvierer',
+        ratingCategoryName: null,
+        ranks: [],
+    }
+    const v = view({ceremonies: [ceremony]} as never)
+
+    test('findet die Ehrung über Wettkampf und Wertung', () => {
+        expect(
+            ceremonyForElement(v, {type: 'AWARD_CEREMONY', competitionId: 'c1'}),
+        ).toMatchObject({competitionId: 'c1'})
+    })
+
+    test('eine fremde Wertung trifft nichts', () => {
+        expect(
+            ceremonyForElement(v, {type: 'AWARD_CEREMONY', competitionId: 'c1', ratingCategoryId: 'r9'}),
+        ).toBeNull()
+    })
+})
+
+describe('programForElement', () => {
+    const entry = (state: string, time: string) => ({startTime: time, state}) as never
+    const v = view({
+        lists: [
+            {
+                mode: 'SCHEDULE',
+                matches: [],
+                results: [],
+                program: [
+                    entry('FINISHED', '08:00'),
+                    entry('FINISHED', '08:30'),
+                    entry('FINISHED', '09:00'),
+                    entry('RUNNING', '09:30'),
+                    entry('UPCOMING', '10:00'),
+                    entry('UPCOMING', '10:30'),
+                ],
+            } as never,
+        ],
+    })
+
+    // Zentriert um „jetzt": zwei beendete als Kontext, dann Laufendes und Anstehendes.
+    test('schneidet um den laufenden Lauf herum zu', () => {
+        const program = programForElement(v, {type: 'MATCH_LIST', listMode: 'SCHEDULE', limit: 4})
+        expect(program?.map(e => e.startTime)).toEqual(['08:30', '09:00', '09:30', '10:00'])
+    })
+
+    // Alles beendet: die letzten Zeilen bleiben stehen, statt den Morgen zu zeigen.
+    test('nach dem letzten Lauf zeigt es das Ende des Tages', () => {
+        const done = view({
+            lists: [
+                {
+                    mode: 'SCHEDULE',
+                    matches: [],
+                    results: [],
+                    program: [entry('FINISHED', '08:00'), entry('FINISHED', '09:00'), entry('FINISHED', '10:00')],
+                } as never,
+            ],
+        })
+        const program = programForElement(done, {type: 'MATCH_LIST', listMode: 'SCHEDULE', limit: 2})
+        expect(program?.map(e => e.startTime)).toEqual(['09:00', '10:00'])
+    })
+
+    test('andere Modi haben kein Programm', () => {
+        expect(programForElement(v, {type: 'MATCH_LIST', listMode: 'UPCOMING', limit: 4})).toBeNull()
     })
 })
 
