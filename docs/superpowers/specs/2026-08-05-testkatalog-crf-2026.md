@@ -527,6 +527,65 @@ Zusätzlich ein Wettkampf **ohne jede** Wertungskategorie für den Regressionsfa
 
 ---
 
+## M — „Mein Event": persönliches Dashboard über den QR-Code
+
+Am 10.08. gebaut. Teilnehmende scannen den QR-Code auf ihrem Armband und sehen **ohne Anmeldung**
+ihre eigenen Läufe, Ergebnisse und die freigegebenen Bedingungen. Entwurf:
+`docs/superpowers/specs/2026-08-09-mein-event-design.md`.
+
+**Vorbereitung, ohne die kein Fall dieses Blocks läuft:**
+
+1. **Mindestens ein Teilnehmerband zuordnen.** QR-App → Zuordnung, oder direkt in `qr_codes` eine
+   Zeile mit `participant` und `event`. Ohne zugeordneten Code zeigt der Reiter nur den Hinweistext.
+2. **Mindestens eine Bedingung freigeben.** `participant_requirement.publicly_visible` steht nach
+   der Migration auf „aus" — im Bedingungs-Editor das Häkchen „Für Teilnehmende sichtbar (Mein
+   Event)" setzen. **Ohne dieses Häkchen ist der Bedingungsblock leer, und das ist kein Fehler.**
+3. Zwei Bänder derselben Veranstaltung bereithalten (für M6–M8) und eines aus einer **anderen**
+   Veranstaltung (M3).
+
+**Am 10.08. bereits an einer laufenden Instanz belegt** (Agent, eigener Stand auf `:5131` gegen ein
+Backend auf `:8131`, Seed `7e57` mit zwei Booten): M1, M2, M3, M4, M5, M6, M7, M9, M10, M12, M13,
+M14 und M16. Das ersetzt den Durchgang eines Menschen nicht — insbesondere sind Aussehen und
+Lesbarkeit auf einem echten Telefon nirgends geprüft.
+
+| ID | Fall | Erwartung | testbar ab | Nachweis |
+|---|---|---|---|---|
+| M1 | Einstieg über den Code | `/results/{qrCode}` öffnet die Ergebnisseite mit aktivem Reiter „Mein Event". Die Adresszeile lautet danach `/results/event/{eventId}?tab=my-event` und enthält den Code **nicht** mehr | `f3439c15` | `AGENT 10.08.` |
+| M2 | Code überlebt den Neustart | Browser schließen, `/results/event/{eventId}` direkt aufrufen, Reiter öffnen: die Daten sind ohne erneutes Scannen da | `f3439c15` | `AGENT 10.08.` |
+| M3 | Fremde Veranstaltung | Ein Band aus Veranstaltung A an Veranstaltung B: 404 mit derselben Meldung wie ein unbekannter Code — die Antwort darf nicht verraten, dass es den Code gibt | `f3439c15` | `AGENT 10.08.` |
+| M4 | Helferband | Ein Band, das an einem Helferkonto hängt, wird **nicht** gemerkt und führt ohne Reiter auf die Ergebnisseite. Kein hängengebliebenes „Mein Event", das nur Fehler zeigen kann | `f3439c15` | `AGENT 10.08.` (Endpunkt), Oberfläche offen |
+| M5 | Ohne Anmeldung | Alles im privaten Fenster, ohne jede Anmeldung. Gegenprobe: der Aufruf mit `curl` ohne Cookie liefert dieselben Daten | `f3439c15` | `AGENT 10.08.` |
+| M6 | Zweites Band auf demselben Gerät | Nach dem Scannen des zweiten Bandes steht **die zuletzt gescannte Person** oben — nicht die erste. Der Umschalter zeigt beide Namen | `f3439c15` | `AGENT 10.08.` |
+| M7 | Umschalten | Über den Umschalter zur ersten Person wechseln: Name, Verein, Läufe und Bedingungen wechseln vollständig mit | `f3439c15` | `AGENT 10.08.` |
+| M8 | Umschalter bleibt ruhig | Beim Öffnen darf der aktive Knopf nicht ~1 s später an eine andere Stelle springen (der Anzeigename wird nachgetragen). Auf dem Telefon tippt man sonst daneben | `f3439c15` | |
+| M9 | Entfernen bei genau einem Eintrag | Auch mit nur **einem** gemerkten Band ist „Eintrag entfernen" erreichbar. Sonst bleibt auf einem geliehenen Telefon dauerhaft ein fremdes Dashboard stehen | `f3439c15` | `AGENT 10.08.` |
+| M10 | Ohne gescannten Code | Ergebnisseite im privaten Fenster: der Reiter ist **da** und zeigt „Scanne den QR-Code auf deinem Band…" — er wird nicht ausgeblendet, sonst erfährt niemand von der Funktion | `f3439c15` | `AGENT 10.08.` |
+| M11 | Challenge-Veranstaltung | Bei einer Challenge-Veranstaltung erscheint der Reiter **nicht** (dort gelten Verein/relativ/einzeln) | `f3439c15` | |
+| M12 | Offene Pflichtbedingung | Ist eine freigegebene, nicht freiwillige Bedingung offen, steht ganz oben ein Band mit ihrem Namen und dem Verweis auf die Meldestelle | `f3439c15` | `AGENT 10.08.` |
+| M13 | Bedingung abhaken | Nach dem Abhaken verschwindet das Band, die Liste bleibt weiter unten mit „erledigt" stehen | `f3439c15` | `AGENT 10.08.` |
+| M14 | Nicht freigegebene Bedingung | Eine Bedingung **ohne** Häkchen taucht nirgends auf — weder im Band noch in der Liste | `f3439c15` | `AGENT 10.08.` |
+| M15 | Notiz bleibt drin | Zu einer freigegebenen Bedingung in der Meldestelle eine Freitext-Notiz erfassen: sie erscheint **nirgends** im Dashboard. Gegenprobe im JSON der Antwort | `f3439c15` | |
+| M16 | Abgemeldetes Boot | Eine Meldung für die Runde abmelden, **bevor** der Lauf beendet ist: die Karte zeigt „Abgemeldet · Grund", die Startzeit ist durchgestrichen, es läuft **kein** Countdown | `f3439c15` | `AGENT 10.08.` |
+| M17 | Überfälliger Lauf | Ein eigener Lauf, der gefahren, aber nie beendet wurde: er darf die Karte „Dein nächster Lauf" **nicht** besetzen. Der echte nächste Lauf steht oben, der überfällige rutscht ans Ende — dieselbe 30-Minuten-Nachfrist wie A15 | `f3439c15` | |
+| M18 | Ergebnis erscheint gleichzeitig | Lauf beenden: das Ergebnis erscheint im Dashboard und auf `/board` im selben Takt. Bei Voreinstellung „nur beendete Läufe" vorher in **keiner** der beiden Ansichten (vgl. A23) | `f3439c15` | |
+| M19 | Gemeldet, noch kein Lauf | Vor der Auslosung steht die Meldung unter „Gemeldet, noch nicht terminiert" und verschwindet dort, sobald der Lauf gesetzt ist | `f3439c15` | `AGENT 10.08.` (beide Richtungen) |
+| M20 | Zurückgezogene Meldung | Eine vor der Auslosung zurückgezogene Meldung erscheint **nicht** unter „Gemeldet, noch nicht terminiert" | `f3439c15` | |
+| M21 | Nur die eigenen Läufe | Im Dashboard stehen ausschließlich Läufe, in deren Mannschaft die Person sitzt — keine fremden Boote desselben Laufs, auch nicht deren Zeiten | `f3439c15` | `AGENT 10.08.` |
+| M22 | Rollengebundene Bedingung | Eine freigegebene Bedingung, die an eine Rolle gebunden ist, erscheint **nur** bei einer Person mit dieser Rolle — nicht bei allen als „offen" | `f3439c15` | |
+| M23 | Keine Suchmaschine | Quelltext der Ergebnisseite enthält `<meta name="robots" content="noindex, nofollow">`, auch auf `/results/{qrCode}` und der Auswahlseite | `f3439c15` | `AGENT 10.08.` |
+| M24 | Telefon-Layout | Auf einem echten Telefon: Blöcke untereinander, Namen brechen um, keine waagerechte Rolle, Countdown und „Abgemeldet" gut lesbar. **Der einzige Fall, den nur ein Mensch mit Gerät beantworten kann** | `f3439c15` | |
+| M25 | Privater Modus von Safari | Im privaten Modus wirft `localStorage` schon beim Lesen. Die Ergebnisseite muss vollständig funktionieren, der Reiter zeigt dann dauerhaft den Hinweistext — nichts darf weiß bleiben | `f3439c15` | |
+| M26 | Reiter-Unterstrich | Beim Einstieg über den Code steht der Unterstrich unter „Mein Event", nicht unter „Ergebnisse". In der kopflosen Browseransicht nicht messbar gewesen — **am Gerät nachsehen** | `f3439c15` | |
+| M27 | Verbindungsverlust | Backend anhalten: der letzte gute Stand bleibt stehen, es erscheint nie fälschlich „kein Lauf eingetragen" | `f3439c15` | |
+
+**Nicht in diesem Block:** Ersatzleute. Auf diesem Stand sieht eine für eine Runde eingewechselte
+Person ihren Lauf nicht, und wer ausgewechselt wurde, sieht ihn weiterhin. Das wird auf dem Zweig
+`claude/mein-event-ersatzleute` nachgereicht — sobald der hier liegt, gehören zwei Fälle dazu
+(eingewechselt sieht den Lauf, ausgewechselt nicht mehr) und die Aufstellung in der Karte muss die
+gefahrene sein, nicht die gemeldete.
+
+---
+
 ## Detailablauf A6/C7 — Zeitstrafe während der Lauf läuft
 
 Der Kernfall: die Anzeige muss eine nachgetragene Strafe übernehmen, **bevor** der Lauf beendet ist.
@@ -637,6 +696,15 @@ bleibende Nummer erwartet, siehe den offenen Punkt „Bootsnummer" unten.
 - **Löschen fehlt bewusst (K).** Ein falscher Eintrag wird korrigiert, nicht getilgt. Wenn am
   Testtag ein Fall auftaucht, in dem ein Eintrag ersatzlos weg muss (etwa eine komplett falsche
   Person), gibt es dafür heute keinen Weg außer SQL — vor der Regatta entscheiden, ob das reicht.
+- **Codeformat der Armbänder (Block M).** Der Entwurf zu „Mein Event" setzt voraus, dass
+  `qr_code_id` nicht erratbar ist. Das Feld wird aber nirgends erzeugt, sondern beim Zuordnen vom
+  **aufgedruckten** Band übernommen — was drinsteht, entscheidet der Lieferant. Bis hierher war das
+  folgenlos, weil ein anonymer Aufruf nur die Veranstaltungs-Kennung zurückgab; jetzt gibt derselbe
+  Code Name, Verein, Läufe, Ergebnisse und Bedingungsstand heraus. Bei RKF ist es eine UUID (122 Bit,
+  unproblematisch). **Vor dem ersten Einsatz nachsehen, was auf den Bändern der CRF steht.** Sind es
+  kurze oder laufende Nummern, braucht der Pfad eine engere Rate-Limit-Gruppe als `publicInfo`
+  (dort sind 500 Anfragen je 5 s und Gegenstelle erlaubt, bewusst hoch für hunderte Telefone hinter
+  einer IP).
 
 ## Nicht in diesem Katalog
 
