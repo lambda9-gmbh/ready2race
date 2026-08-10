@@ -101,6 +101,47 @@ class MyEventServiceTest {
     }
 
     @Test
+    fun roleBoundRequirementAppearsForASubstitute() = testComprehension {
+        // Wer als Steuerfrau einrückt, braucht die Steuerprüfung - genau wie die, für die sie
+        // einspringt. Ihre Rolle steht in der Auswechslung, nicht in einer Meldung.
+        val fixture = !MyEventFixture.create()
+        !MyEventFixture.substitute(
+            registrationId = fixture.ownRegistrationId,
+            roundId = fixture.racedRoundId,
+            namedParticipantId = fixture.coxRoleId,
+            participantOut = fixture.coxId,
+            participantIn = fixture.reserveId,
+            orderForRound = 1,
+        )
+
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.reserveQrCode)
+        val names = response.dto.requirements.map { it.name }
+        assertTrue(names.contains(fixture.coxRequirementName), "Steuerprüfung fehlt: $names")
+        // Die rollenfreie Bedingung galt schon vorher für jede Person.
+        assertTrue(names.contains(fixture.publicRequirementName))
+    }
+
+    @Test
+    fun substituteOnlyGetsTheRequirementsOfTheirOwnRole() = testComprehension {
+        // Die Rolle kommt aus der Auswechslung, nicht aus dem Boot: wer als Ruderin einrückt,
+        // sitzt neben einer Steuerfrau, braucht deren Prüfung aber nicht.
+        val fixture = !MyEventFixture.create()
+        !MyEventFixture.substitute(
+            registrationId = fixture.ownRegistrationId,
+            roundId = fixture.racedRoundId,
+            namedParticipantId = fixture.rowerRoleId,
+            participantOut = fixture.participantId,
+            participantIn = fixture.reserveId,
+            orderForRound = 1,
+        )
+
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.reserveQrCode)
+        val names = response.dto.requirements.map { it.name }
+        assertFalse(names.contains(fixture.coxRequirementName), "Fremde Steuerprüfung: $names")
+        assertTrue(names.contains(fixture.publicRequirementName))
+    }
+
+    @Test
     fun substitutedInParticipantSeesTheMatch() = testComprehension {
         // Wer für eine Runde einrückt, hat an dem Tag einen Lauf - auch ohne eigene Meldung.
         val fixture = !MyEventFixture.create()

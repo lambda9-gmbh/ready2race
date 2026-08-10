@@ -83,6 +83,9 @@ object MyEventFixture {
         /** Die Runde des zweiten Wettkampfs - nur da, um "rundenscharf" prüfen zu können. */
         val unscheduledRoundId: UUID,
         val rowerRoleId: UUID,
+        /** Die zweite Rolle im selben Boot - an ihr hängt `coxRequirementName`. */
+        val coxRoleId: UUID,
+        val coxId: UUID,
         val teamMateQrCode: String,
         /** Vereinsmitglied ohne eigene Meldung - nur über eine Einwechslung kommt sie in ein Boot. */
         val reserveId: UUID,
@@ -264,6 +267,8 @@ object MyEventFixture {
             racedRoundId = findRoundId(racedCompetitionId),
             unscheduledRoundId = findRoundId(unscheduledCompetitionId),
             rowerRoleId = namedParticipantId,
+            coxRoleId = coxRoleId,
+            coxId = coxId,
             teamMateQrCode = teamMateQrCode,
             reserveId = reserveId,
             reserveName = reserveName,

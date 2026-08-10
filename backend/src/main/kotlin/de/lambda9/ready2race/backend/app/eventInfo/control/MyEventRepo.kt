@@ -213,10 +213,23 @@ object MyEventRepo {
     }
 
     /**
-     * Die Rollen, in denen die Person bei dieser Veranstaltung gemeldet ist (Steuerfrau, Ruderin,
-     * ...). Sie entscheiden mit, welche Bedingungen für sie überhaupt gelten - siehe
+     * Die Rollen, in denen die Person bei dieser Veranstaltung im Boot sitzt (Steuerfrau,
+     * Ruderin, ...). Sie entscheiden mit, welche Bedingungen für sie überhaupt gelten - siehe
      * [de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo.getRequirementsForNamedParticipants].
      * Mehrfachnennungen fallen weg, eine Rolle zweimal zu tragen ändert nichts.
+     *
+     * Zwei Quellen, weil eine Rolle auf zwei Wegen entsteht: aus der Meldung und aus einer
+     * Einwechslung. Wer als Steuerfrau einrückt, braucht die Steuerprüfung genauso wie die, für
+     * die sie einspringt - und sie steht in keiner Meldung. Maßgeblich ist dabei die Rolle aus
+     * der Auswechslung selbst, nicht die Besetzung des Bootes: wer als Ruderin einrückt, sitzt
+     * zwar neben einer Steuerfrau, braucht deren Prüfung aber nicht.
+     *
+     * Anders als bei den Läufen ohne Rundenbezug, und ausgewechselte Rollen fallen **nicht**
+     * weg. Eine Bedingung gilt für die ganze Veranstaltung, eine Auswechslung nur für ihre Runde:
+     * wer in Runde 2 herausgenommen wird, ist in Runde 1 als Steuerfrau gefahren, und die Prüfung
+     * dafür brauchte sie. Eine Rolle hier abzuziehen hieße, eine rundenscharfe Tatsache auf eine
+     * Frage anzuwenden, die keine Runde kennt - und ließe im Zweifel jemanden ohne gültige
+     * Prüfung an den Start.
      */
     fun findNamedParticipantIdsForParticipant(eventId: UUID, participantId: UUID): JIO<List<UUID>> = Jooq.query {
         selectDistinct(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT)
@@ -226,6 +239,18 @@ object MyEventRepo {
             .join(COMPETITION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION.ID))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(participantId))
+            .union(
+                // `named_participant` ist an der Auswechslung nicht als Pflichtfeld angelegt;
+                // ohne Rolle trägt die Zeile hier nichts bei und würde nur ein null einschleusen.
+                selectDistinct(SUBSTITUTION.NAMED_PARTICIPANT)
+                    .from(SUBSTITUTION)
+                    .join(COMPETITION_REGISTRATION)
+                    .on(SUBSTITUTION.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+                    .join(COMPETITION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION.ID))
+                    .where(COMPETITION.EVENT.eq(eventId))
+                    .and(SUBSTITUTION.PARTICIPANT_IN.eq(participantId))
+                    .and(SUBSTITUTION.NAMED_PARTICIPANT.isNotNull)
+            )
             .fetch { it.value1()!! }
     }
 
