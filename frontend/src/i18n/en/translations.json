@@ -1902,17 +1902,13 @@
       "tileCount_one": "1 tile",
       "tileCount_other": "{{count}} tiles",
       "refreshInterval": "Refresh interval",
-      "layout": {
-        "label": "Layout",
-        "oneColumn": "1 column",
-        "twoColumns": "2 columns",
-        "threeColumns": "3 columns",
-        "sixTiles": "6 tiles"
-      },
       "tile": {
         "title": "Tile {{index}}",
         "rotationInterval": "Rotation (seconds)",
-        "addElement": "Add element"
+        "addElement": "Add element",
+        "width": "Width (columns)",
+        "height": "Height (rows)",
+        "add": "Add tile"
       },
       "element": {
         "type": {
@@ -1947,8 +1943,13 @@
         "titlePast": "{{count}} matches back",
         "emptyCurrent": "No match racing",
         "emptyUpcoming": "No further match scheduled",
-        "emptyPast": "No result yet"
-      }
+        "emptyPast": "No result yet",
+        "useShortNames": "Use competition abbreviations"
+      },
+      "columns": "Columns",
+      "columnCount": "{{count}} columns",
+      "columnCount_one": "1 column",
+      "showHeader": "Header with name and clock"
     }
   },
   "task": {

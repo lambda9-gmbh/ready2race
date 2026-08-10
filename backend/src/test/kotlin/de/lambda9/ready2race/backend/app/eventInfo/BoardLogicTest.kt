@@ -65,7 +65,7 @@ class BoardLogicTest {
     @Test
     fun dataNeedsCoverOffsetsAndLists() {
         val config = BoardConfig(
-            layout = BoardLayout.TWO_COLUMNS,
+            columns = 2,
             tiles = listOf(
                 BoardTile(
                     elements = listOf(
@@ -94,7 +94,7 @@ class BoardLogicTest {
     @Test
     fun dataNeedsWithoutMatchElementsStayMinimal() {
         val config = BoardConfig(
-            layout = BoardLayout.ONE_COLUMN,
+            columns = 1,
             tiles = listOf(BoardTile(elements = listOf(BoardElement(type = BoardElementType.CLOCK)))),
         )
         val needs = BoardLogic.dataNeeds(config)

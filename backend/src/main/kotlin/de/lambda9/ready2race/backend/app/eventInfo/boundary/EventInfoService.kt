@@ -80,6 +80,7 @@ object EventInfoService {
                 competitionId = match.get("competition_id", UUID::class.java)!!,
                 competitionName = match.get("competition_name", String::class.java) ?: "",
                 categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
+                competitionShortName = match[COMPETITION_VIEW.SHORT_NAME],
                 roundName = match.get("round_name", String::class.java),
                 matchName = match.get("match_name", String::class.java),
                 matchNumber = null, // Could be parsed from match name if needed
@@ -221,6 +222,7 @@ object EventInfoService {
                 startTime = r[EVENT_SCHEDULE_SLOT.START_TIME]!!,
                 competitionId = r.get("competition_id", UUID::class.java),
                 competitionName = r.get("competition_name", String::class.java),
+                competitionShortName = r.get("competition_short_name", String::class.java),
                 roundName = r.get("round_name", String::class.java),
                 matchName = r.get("match_name", String::class.java),
                 skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
@@ -272,6 +274,7 @@ object EventInfoService {
                 competitionId = match.get("competition_id", UUID::class.java)!!,
                 competitionName = match.get("competition_name", String::class.java) ?: "",
                 categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
+                competitionShortName = match[COMPETITION_VIEW.SHORT_NAME],
                 scheduledStartTime = match[COMPETITION_MATCH.START_TIME],
                 placeName = null, // No place join in this query
                 roundNumber = null, // No round number field available
@@ -315,6 +318,7 @@ object EventInfoService {
                 competitionId = match.get("competition_id", UUID::class.java)!!,
                 competitionName = match.get("competition_name", String::class.java) ?: "",
                 categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
+                competitionShortName = match[COMPETITION_VIEW.SHORT_NAME],
                 startTime = startTime,
                 activatedAt = match[COMPETITION_MATCH.ACTIVATED_AT],
                 startedAt = startedAt,

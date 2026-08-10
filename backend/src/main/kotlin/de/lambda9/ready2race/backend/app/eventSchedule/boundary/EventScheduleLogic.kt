@@ -38,6 +38,8 @@ data class PendingScheduleSlotInfo(
     val startTime: LocalDateTime,
     val competitionId: UUID,
     val competitionName: String,
+    /** Wettkampf-Kürzel (short_name) — für Platzhalter in kompakten Listen. */
+    val competitionShortName: String? = null,
     val roundName: String?,
     val matchName: String?,
 )
@@ -113,6 +115,7 @@ object EventScheduleLogic {
         startTime: LocalDateTime,
         competitionId: UUID?,
         competitionName: String?,
+        competitionShortName: String? = null,
         roundName: String?,
         matchName: String?,
         skipped: Boolean,
@@ -139,6 +142,7 @@ object EventScheduleLogic {
                 startTime = startTime,
                 competitionId = competitionId,
                 competitionName = competitionName ?: "",
+                competitionShortName = competitionShortName,
                 roundName = roundName,
                 matchName = matchName,
             )

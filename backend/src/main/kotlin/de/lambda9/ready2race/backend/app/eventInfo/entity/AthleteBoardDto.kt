@@ -13,6 +13,8 @@ import java.util.UUID
 data class AthleteBoardMatch(
     val matchId: UUID,
     val competitionName: String,
+    /** Wettkampf-Kürzel (short_name) für kompakte Darstellungen; null, wenn keins gepflegt ist. */
+    val competitionShortName: String? = null,
     val categoryName: String?,
     val roundName: String?,
     val matchName: String?,
@@ -95,6 +97,8 @@ data class AthleteBoardParticipant(
 data class AthleteBoardResult(
     val matchId: UUID,
     val competitionName: String,
+    /** Wie bei [AthleteBoardMatch.competitionShortName]. */
+    val competitionShortName: String? = null,
     val categoryName: String?,
     val roundName: String?,
     val matchName: String?,

@@ -9,8 +9,10 @@ interface BoardTileViewProps {
     tile: BoardTile
     view: BoardViewDto
     now: Date
-    columns: number
-    rows: number
+    /** Breitenanteil der Kachel (Rasterspalten ÷ colSpan) — für die Dichteformel. */
+    effectiveColumns: number
+    /** Höhenanteil der Kachel (rowSpan ÷ Zeilenzahl) — für die Dichteformel. */
+    heightFraction: number
 }
 
 /**
@@ -18,7 +20,7 @@ interface BoardTileViewProps {
  * — der Server weiß von der Rotation nichts, er liefert die Daten aller Elemente in
  * jeder Antwort mit.
  */
-const BoardTileView = ({tile, view, now, columns, rows}: BoardTileViewProps) => {
+const BoardTileView = ({tile, view, now, effectiveColumns, heightFraction}: BoardTileViewProps) => {
     const [index, setIndex] = useState(0)
 
     const count = tile.elements.length
@@ -41,10 +43,16 @@ const BoardTileView = ({tile, view, now, columns, rows}: BoardTileViewProps) => 
     const element = tile.elements[index % count]
 
     return (
-        <Box sx={{minHeight: 0, position: 'relative'}}>
+        <Box sx={{height: '100%', minHeight: 0, position: 'relative'}}>
             <Fade key={index % count} in timeout={600}>
                 <Box sx={{height: '100%', minHeight: 0}}>
-                    <BoardElementView element={element} view={view} now={now} columns={columns} rows={rows} />
+                    <BoardElementView
+                        element={element}
+                        view={view}
+                        now={now}
+                        effectiveColumns={effectiveColumns}
+                        heightFraction={heightFraction}
+                    />
                 </Box>
             </Fade>
         </Box>

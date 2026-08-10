@@ -10,9 +10,9 @@ interface BoardMatchSlotElementProps {
     element: BoardElement
     view: BoardViewDto
     now: Date
-    /** Raster des Boards — Spalten und Zeilen bestimmen die Dichteformel der Kachel. */
-    columns: number
-    rows: number
+    /** Breiten- und Höhenanteil der Kachel im Raster — bestimmen die Dichteformel. */
+    effectiveColumns: number
+    heightFraction: number
 }
 
 /**
@@ -21,7 +21,13 @@ interface BoardMatchSlotElementProps {
  * laufender Lauf auf Offset −1 erscheint als Aufstellungs-Karte mit Zwischenständen,
  * ein beendeter als Ergebnis-Karte.
  */
-const BoardMatchSlotElement = ({element, view, now, columns, rows}: BoardMatchSlotElementProps) => {
+const BoardMatchSlotElement = ({
+    element,
+    view,
+    now,
+    effectiveColumns,
+    heightFraction,
+}: BoardMatchSlotElementProps) => {
     const {t} = useTranslation()
 
     const offset = element.offset ?? 0
@@ -55,7 +61,7 @@ const BoardMatchSlotElement = ({element, view, now, columns, rows}: BoardMatchSl
             sx={{
                 height: '100%',
                 minHeight: 0,
-                '--ab-scale': elementScale(element, content, columns, rows),
+                '--ab-scale': elementScale(element, content, effectiveColumns, heightFraction),
                 // „Farben aus": nüchterne Schwarzweiß-Darstellung für kontrastarme
                 // Umgebungen (direkte Sonne am Steg) — bewusst als Filter statt je
                 // Farbstelle, damit alle Karten-Bestandteile denselben Modus tragen.

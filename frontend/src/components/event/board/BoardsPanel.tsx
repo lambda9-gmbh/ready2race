@@ -50,17 +50,7 @@ const BoardsPanel = ({eventId}: BoardsPanelProps) => {
         `${window.location.origin}/board/${eventId}/${board.id}`
 
     const layoutLabel = (board: BoardDto) =>
-        t(
-            `event.boards.layout.${
-                board.config.layout === 'ONE_COLUMN'
-                    ? 'oneColumn'
-                    : board.config.layout === 'TWO_COLUMNS'
-                      ? 'twoColumns'
-                      : board.config.layout === 'THREE_COLUMNS'
-                        ? 'threeColumns'
-                        : 'sixTiles'
-            }`,
-        )
+        t('event.boards.columnCount', {count: board.config.columns ?? 3})
 
     const handleSubmit = async (request: BoardRequest) => {
         try {
