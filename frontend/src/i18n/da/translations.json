@@ -296,7 +296,8 @@
           "TEAM_NAME": "Holdnavn",
           "EVENT_DATE": "Arrangementdato",
           "EVENT_LOCATION": "Arrangementsted",
-          "FREE_TEXT": "Fri tekst"
+          "FREE_TEXT": "Fri tekst",
+          "RATING_CATEGORY": "Rangeringskategori"
         },
         "name": "Egen betegnelse (valgfrit)",
         "nameHelp": "En egen betegnelse til at identificere denne pladsholder",
@@ -391,9 +392,9 @@
   },
   "club": {
     "tabs": {
-        "clubs": "Klubber",
-        "shortNames": "Korte navne",
-        "settings": "Indstillinger"
+      "clubs": "Klubber",
+      "shortNames": "Korte navne",
+      "settings": "Indstillinger"
     },
     "shortName": {
       "names": "Klubnavne",
@@ -576,7 +577,30 @@
           "alreadyCheckedIn": "Denne person er allerede tjekket ind — der er ikke mere at gøre.",
           "notCheckedIn": "Denne person er slet ikke tjekket ind og kan derfor ikke tjekkes ud.",
           "qrCodeNotAssociated": "Dette armbånd hører ikke til nogen deltager. Tildel det først til en person i QR-administrationen.",
-          "qrCodeNotFound": "Dette armbånd kendes ikke i systemet. Kontrollér koden, eller tag et andet armbånd."
+          "qrCodeNotFound": "Dette armbånd kendes ikke i systemet. Kontrollér koden, eller tag et andet armbånd.",
+          "entryNotFound": "Denne post findes ikke længere. Genindlæs forløbet.",
+          "sequenceConflict": "Med dette tidspunkt ville forløbet modsige sig selv: check-ind og check-ud skal skiftes og begynde med et check-ind.",
+          "timestampCollision": "Der findes allerede en post for denne person på præcis dette tidspunkt. Vælg et andet minut."
+        },
+        "manual": {
+          "title": "Check-ind/-ud for {{name}}",
+          "hint": "Normalt scannes QR-koden ved broen. Poster, der oprettes eller rettes manuelt her, er den dokumenterede undtagelse: de gemmes med begrundelse, tidligere status og ophavsmand og markeres som manuelle overalt.",
+          "entries": "Forløb",
+          "noEntries": "Der er endnu ikke registreret noget for denne person.",
+          "add": "Tilføj post manuelt",
+          "correct": "Ret post",
+          "reason": "Begrundelse",
+          "reasonHint": "Hvorfor indtastes dette manuelt? Teksten bliver permanent i loggen.",
+          "trail": "Ændringshistorik",
+          "changeCreated": "Oprettet manuelt: {{entry}}",
+          "sourceQr": "via QR",
+          "sourceQrCorrected": "via QR, rettet",
+          "sourceManual": "manuel",
+          "source": "Registrering",
+          "saved": "Post gemt",
+          "saveError": "Posten kunne ikke gemmes.",
+          "open": "Rediger check-ind/-ud",
+          "notTracked": "ingen scanning"
         }
       },
       "certificate": {
@@ -628,6 +652,11 @@
       "FINISHED_ONLY": "Kun afsluttede løb",
       "RESULTS_COMPLETE": "Også fuldt bedømte løb",
       "hint": "Gælder for atletskærmen, kiosk-visningen og den offentlige resultatside. Som standard kun afsluttede løb: så længe et løb ikke er afsluttet, kan der stadig komme en tidsstraf, og et allerede offentliggjort resultat kan ikke trækkes tilbage."
+    },
+    "executionAutoRefresh": {
+      "label": "Opdater gennemførelsessiden automatisk",
+      "seconds": "Interval i sekunder",
+      "hint": "Gennemførelsessiden henter tider, resultater, løb, rundeskift og check-ins i baggrunden i det indstillede interval — uden at genindlæse siden. Tilladt er 5 til 60 sekunder, standard er 5. Synkroniseringen hviler, mens en dialog er åben."
     },
     "invoice": {
       "prefix": "Fakturapræfiks",
@@ -936,6 +965,10 @@
         "tabTitle": "Afvikling",
         "progress": {
           "error": "Kampene i konkurrencen kunne ikke indlæses."
+        },
+        "autoRefresh": {
+          "lastUpdated": "Data fra {{time}}",
+          "disconnected": "Ingen forbindelse"
         },
         "nextRound": {
           "create": "Opret næste runde",
@@ -1702,6 +1735,20 @@
       "skipConfirm_other": "Kun dette ene løb aflyses: „{{label}}“ kl. {{time}}. De øvrige {{count}} løb i runden „{{round}}“ er uændrede.",
       "skipConfirmOnly": "Løbet „{{label}}“ kl. {{time}} aflyses og springes over af kæden.",
       "skipConfirmFree": "Programpunktet „{{label}}“ kl. {{time}} aflyses.",
+      "advance": {
+        "title": "Ryk tidsplanen frem",
+        "intro": "„{{label}}“ kl. {{time}} er aflyst. Det frigør {{minutes}} minutter.",
+        "targetSlot": "Til og med slot",
+        "help": "Alle slots fra den næste til og med den valgte rykker {{minutes}} minutter frem. Alt derefter beholder sin tid — der opstår en buffer.",
+        "apply": "Ryk frem",
+        "decline": "Ryk ikke frem",
+        "success": "Tidsplanen blev rykket {{minutes}} minutter frem.",
+        "error": {
+          "noDelta": "Der kan ikke udledes frigjort tid fra denne slot — den har hverken en planlagt varighed eller en slot efter sig samme stævnedag. Brug „Tilpas tidsplan“ til at flytte tidsplanen manuelt.",
+          "slotNotSkipped": "Denne slot er ikke (længere) aflyst — der rykkes kun ind i tid, som en aflysning frigør. Genindlæs venligst tidsplanen.",
+          "targetInvalid": "Den valgte slot er ikke blandt dem, der kan rykke frem. Genindlæs tidsplanen, og vælg en slot efter den aflyste."
+        }
+      },
       "unskipConfirm": "Aflysning af „{{label}}“ kl. {{time}} fortrydes? Slotten indgår igen normalt.",
       "activate": "Aktiver løb",
       "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
@@ -1816,6 +1863,12 @@
         "title": "Tildel rangeringskategori",
         "success": "Rangeringskategori tilføjet",
         "error": "Der opstod en fejl ved tilføjelse af rangeringskategorien til dette arrangement"
+      },
+      "withoutCategory": "Uden rangeringskategori",
+      "order": {
+        "moveUp": "Flyt op",
+        "moveDown": "Flyt ned",
+        "hint": "Rækkefølgen bestemmer, i hvilken orden afsnittene vises i resultatlister."
       }
     }
   },
@@ -2649,6 +2702,10 @@
         "competitionNotInEvent": "Denne konkurrence hører ikke til dette stævne. Genindlæs siden.",
         "isChallengeEvent": "Et challenge-stævne har ingen sejrsdiplomer — der afvikles ingen løb, og der gives ingen placeringer. Deltagerdiplomer kan hentes fra deltagerlisten.",
         "unexpected": "Diplomerne kunne ikke oprettes. Genindlæs siden, og prøv igen."
+      },
+      "ratingCategory": {
+        "label": "Udskriv rangeringskategori",
+        "hint": "Kun synlig, hvis skabelonen indeholder en pladsholder til rangeringskategorien. Den trykte placering forbliver konkurrencens."
       }
     }
   },

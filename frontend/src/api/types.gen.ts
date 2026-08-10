@@ -14,6 +14,14 @@ export type ActionColors = {
     info: string
 }
 
+/**
+ * Only the target slot: start slot and delta are derived from the cancelled slot by the server.
+ */
+export type AdvanceScheduleRequest = {
+    targetSlotId: string
+    dryRun: boolean
+}
+
 export type ApiError = {
     status: {
         value: number
@@ -217,6 +225,14 @@ export type AthleteBoardResult = {
 
 export type AthleteBoardResultTeam = {
     place?: number | null
+    /**
+     * the rating category of this boat; null when it has none
+     */
+    ratingCategory?: RatingCategoryRefDto | null
+    /**
+     * the place within the rating category, counted from 1
+     */
+    categoryPlace?: number | null
     lane: number
     /**
      * the nth team of this club in the competition - only shown when teamName is missing
@@ -959,7 +975,18 @@ export type CompetitionTeamPlaceDto = {
     clubName: string
     actualClubName?: string
     namedParticipants: Array<CompetitionTeamNamedParticipantDto>
+    /**
+     * the competition-wide place from the round logic; still the one printed on the certificate
+     */
     place: number
+    /**
+     * the rating category of this team; null when it has none
+     */
+    ratingCategory?: RatingCategoryRefDto | null
+    /**
+     * the place within the rating category, counted from 1; null for excluded teams
+     */
+    categoryPlace?: number | null
     deregistered: boolean
     deregistrationReason?: string
     excluded: boolean
@@ -1027,6 +1054,14 @@ export type CreateEventRequest = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
 }
 
 export type CustomFontDto = {
@@ -1160,6 +1195,8 @@ export type ErrorCode =
     | 'SCHEDULE_SHIFT_TARGET_INVALID'
     | 'SCHEDULE_SHIFT_LEAVES_RACE_DAY'
     | 'SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR'
+    | 'SCHEDULE_ADVANCE_NO_DELTA'
+    | 'SCHEDULE_SLOT_NOT_SKIPPED'
     | 'SCHEDULE_IMPORT_DUPLICATE_ROWS'
     | 'SCHEDULE_COMPRESSION_IMPOSSIBLE'
     | 'SCHEDULE_SETUP_MATCH_ALREADY_PLANNED'
@@ -1215,6 +1252,9 @@ export type ErrorCode =
     | 'TRACKING_TEAM_NOT_CHECKED_IN'
     | 'TRACKING_QR_CODE_NOT_FOUND'
     | 'TRACKING_QR_CODE_NOT_ASSOCIATED_WITH_PARTICIPANT'
+    | 'TRACKING_ENTRY_NOT_FOUND'
+    | 'TRACKING_SEQUENCE_CONFLICT'
+    | 'TRACKING_TIMESTAMP_COLLISION'
     | 'DEREGISTRATION_ALREADY_EXISTS'
     | 'DEREGISTRATION_IS_LOCKED'
     | 'DEREGISTRATION_RESULTS_ALREADY_EXIST'
@@ -1293,6 +1333,14 @@ export type EventDto = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
     challengesFinished?: boolean
 }
 
@@ -1492,6 +1540,10 @@ export type EventScheduleSlotDto = {
      * Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own
      */
     matchTeamsScored: number
+    /**
+     * Set when the linked match is a bye - null for free slots and slots whose round is not materialized yet.
+     */
+    bye?: MatchByeDto | null
 }
 
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
@@ -1647,6 +1699,7 @@ export type GapDocumentPlaceholderType =
     | 'COMPETITION_SHORT_NAME'
     | 'CLUB_NAME'
     | 'TEAM_NAME'
+    | 'RATING_CATEGORY'
     | 'EVENT_DATE'
     | 'EVENT_LOCATION'
     | 'FREE_TEXT'
@@ -1853,6 +1906,10 @@ export type LiveDashboardMatchDto = {
      * The derived match state - the card's only statement about where the match stands. A separate running flag stood next to it until 2026-08-09; since "at the start" and "under way" are two states, a second field would only be a second truth.
      */
     state: LiveDashboardMatchState
+    /**
+     * Set when this match is a bye - the referee dashboard shows the reason below the match.
+     */
+    bye?: MatchByeDto | null
     competitionId: string
     competitionName: string
     /**
@@ -1914,6 +1971,8 @@ export type LiveDashboardParticipantDto = {
     substitutedFor?: string | null
     substitutionReason?: string | null
     requirements: Array<LiveDashboardRequirementStatusDto>
+    trackingStatus?: ParticipantScanType
+    trackingAt?: string | null
 }
 
 export type LiveDashboardRequirementStatusDto = {
@@ -1954,6 +2013,14 @@ export type LiveDashboardTeamDto = {
     crew?: Array<LiveDashboardCrewMemberDto> | null
     startNumber?: number | null
     place?: number | null
+    /**
+     * the rating category of this team; null when it has none
+     */
+    ratingCategory?: RatingCategoryRefDto | null
+    /**
+     * the place within the rating category, counted from 1
+     */
+    categoryPlace?: number | null
     time?: string | null
     failed: boolean
     failedReason?: string | null
@@ -1994,6 +2061,32 @@ export type LoginDto = {
 export type LoginRequest = {
     email: string
     password: string
+}
+
+export type ManualTrackingRequest = {
+    scanType: ParticipantScanType
+    scannedAt: string
+    reason: string
+}
+
+/**
+ * Why a match is a bye. DEREGISTRATION is only used when one of the non-racing rows of the match carries a deregistration record - competition_deregistration is unique per registration, so it also applies to a row carried over as OUT from an earlier round. NO_OPPONENT is the neutral fallback for everything else (only one boat seeded, or the opponent row was eliminated): without a record no withdrawal is claimed.
+ */
+export type MatchByeCause = 'DEREGISTRATION' | 'NO_OPPONENT'
+
+/**
+ * The bye of a match. Display only - it changes nothing about the chain, the result lock or the automatic first place.
+ */
+export type MatchByeDto = {
+    cause: MatchByeCause
+    /**
+     * The withdrawn teams, comma separated when there are several - null for NO_OPPONENT.
+     */
+    teamName?: string | null
+    /**
+     * The stored withdrawal reason - only when exactly one row is deregistered, because with several the mapping name -> reason would be a guess.
+     */
+    reason?: string | null
 }
 
 export type MatchForRunningStatusDto = {
@@ -2046,6 +2139,14 @@ export type MatchResultTeamInfo = {
      */
     clubsFull?: string | null
     place?: number
+    /**
+     * the rating category of this boat; null when it has none
+     */
+    ratingCategory?: RatingCategoryRefDto | null
+    /**
+     * the place within the rating category, counted from 1 - this is the number the result list shows
+     */
+    categoryPlace?: number | null
     timeString?: string
     failed: boolean
     failedReason?: string
@@ -2083,6 +2184,10 @@ export type MatchStatusDto = {
      * null = not collected in this view (schedule, public boards).
      */
     teamsInArena?: number
+    /**
+     * Set when this match is a bye. Like "overdue" and "partially scored" this is a reading, not a state of its own.
+     */
+    bye?: MatchByeDto | null
 }
 
 export type MatchTeamInfo = {
@@ -2384,6 +2489,21 @@ export type ParticipantRequirementUpsertDto = {
 
 export type ParticipantScanType = 'ENTRY' | 'EXIT'
 
+export type ParticipantTrackingChangeDto = {
+    id: string
+    trackingId?: string | null
+    changeType: ParticipantTrackingChangeType
+    previousScanType?: ParticipantScanType
+    previousScannedAt?: string | null
+    newScanType: ParticipantScanType
+    newScannedAt: string
+    reason: string
+    createdAt: string
+    createdBy?: AppUserNameDto
+}
+
+export type ParticipantTrackingChangeType = 'CREATE' | 'UPDATE'
+
 export type ParticipantTrackingDto = {
     id: string
     eventId: string
@@ -2399,7 +2519,27 @@ export type ParticipantTrackingDto = {
     scanType?: ParticipantScanType
     scannedAt?: string
     lastScanBy?: AppUserNameDto
+    source: ParticipantTrackingSource
+    editCount: number
 }
+
+export type ParticipantTrackingEntryDto = {
+    id: string
+    scanType: ParticipantScanType
+    scannedAt: string
+    source: ParticipantTrackingSource
+    recordedBy?: AppUserNameDto
+    editCount: number
+    lastEditedAt?: string | null
+    lastEditedBy?: AppUserNameDto
+}
+
+export type ParticipantTrackingHistoryDto = {
+    entries: Array<ParticipantTrackingEntryDto>
+    changes: Array<ParticipantTrackingChangeDto>
+}
+
+export type ParticipantTrackingSource = 'QR' | 'MANUAL'
 
 export type ParticipantUpsertDto = {
     firstname: string
@@ -2546,6 +2686,22 @@ export type RatingCategoryDto = {
     description?: string
 }
 
+export type RatingCategoryOrderRequest = {
+    /**
+     * Die vollständige Reihenfolge der Wertungskategorien von vorne nach hinten. Nicht genannte, aber zugeordnete Kategorien rutschen dahinter.
+     */
+    ratingCategories: Array<string>
+}
+
+/**
+ * Die Wertungskategorie eines Bootes in einer Ergebnisliste - zum Gruppieren, Anzeigen und Sortieren der Abschnitte.
+ */
+export type RatingCategoryRefDto = {
+    id: string
+    name: string
+    sortOrder: number
+}
+
 export type RatingCategoryRequest = {
     name: string
     description?: string
@@ -2555,6 +2711,10 @@ export type RatingCategoryToEventDto = {
     ratingCategory: RatingCategoryDto
     yearFrom?: number
     yearTo?: number
+    /**
+     * Stelle dieser Kategorie in den Ergebnisabschnitten der Veranstaltung, aufsteigend ab 0.
+     */
+    sortOrder: number
 }
 
 export type RatingCategoryToEventRequest = {
@@ -3160,6 +3320,14 @@ export type UpdateEventRequest = {
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
+    /**
+     * Whether the execution page keeps itself up to date in the background
+     */
+    executionAutoRefresh: boolean
+    /**
+     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
+     */
+    executionAutoRefreshSeconds: number
 }
 
 export type UpdateGlobalConfigurationsRequest = {
@@ -4206,7 +4374,7 @@ export type GetCompetitionExecutionProgressData = {
 
 export type GetCompetitionExecutionProgressResponse = CompetitionExecutionProgressDto
 
-export type GetCompetitionExecutionProgressError = BadRequestError | ApiError
+export type GetCompetitionExecutionProgressError = unknown | BadRequestError | ApiError
 
 export type DeleteCurrentCompetitionExecutionRoundData = {
     path: {
@@ -5585,6 +5753,45 @@ export type CheckInOutParticipantResponse = unknown
 
 export type CheckInOutParticipantError = BadRequestError | ApiError
 
+export type GetParticipantTrackingHistoryData = {
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type GetParticipantTrackingHistoryResponse = ParticipantTrackingHistoryDto
+
+export type GetParticipantTrackingHistoryError = ApiError
+
+export type AddManualParticipantTrackingData = {
+    body: ManualTrackingRequest
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type AddManualParticipantTrackingResponse = string
+
+export type AddManualParticipantTrackingError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type CorrectParticipantTrackingData = {
+    body: ManualTrackingRequest
+    path: {
+        eventId: string
+        participantId: string
+        trackingId: string
+    }
+}
+
+export type CorrectParticipantTrackingResponse = unknown
+
+export type CorrectParticipantTrackingError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type UpdateParticipantRequirementData = {
     body: ParticipantRequirementUpsertDto
     path: {
@@ -6146,6 +6353,20 @@ export type GetRatingCategoriesForEventResponse = Array<RatingCategoryToEventDto
 
 export type GetRatingCategoriesForEventError = BadRequestError | ApiError
 
+export type UpdateRatingCategoryOrderForEventData = {
+    body: RatingCategoryOrderRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type UpdateRatingCategoryOrderForEventResponse = void
+
+export type UpdateRatingCategoryOrderForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
 export type RemoveRatingCategoryFromEventData = {
     path: {
         eventId: string
@@ -6661,6 +6882,18 @@ export type SkipScheduleSlotData = {
 export type SkipScheduleSlotResponse = void
 
 export type SkipScheduleSlotError = ApiError
+
+export type AdvanceAfterSkippedSlotData = {
+    body: AdvanceScheduleRequest
+    path: {
+        eventId: string
+        slotId: string
+    }
+}
+
+export type AdvanceAfterSkippedSlotResponse = ShiftPreviewDto
+
+export type AdvanceAfterSkippedSlotError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type UnskipScheduleSlotData = {
     path: {
@@ -7387,6 +7620,10 @@ export type DownloadAwardCertificatesForEventData = {
         format?: 'pdf' | 'docx'
         maxPlace?: number
         mode?: 'PER_ATHLETE' | 'PER_TEAM'
+        /**
+         * Print the rating category on the certificate. Off by default; the template needs a RATING_CATEGORY placeholder for it to show. The printed place stays the competition-wide one either way.
+         */
+        ratingCategory?: boolean
     }
 }
 
@@ -7431,6 +7668,10 @@ export type DownloadAwardCertificatesForCompetitionData = {
         format?: 'pdf' | 'docx'
         maxPlace?: number
         mode?: 'PER_ATHLETE' | 'PER_TEAM'
+        /**
+         * Print the rating category on the certificate. Off by default; the template needs a RATING_CATEGORY placeholder for it to show. The printed place stays the competition-wide one either way.
+         */
+        ratingCategory?: boolean
     }
 }
 
@@ -7449,6 +7690,10 @@ export type DownloadAwardCertificateData = {
         format?: 'pdf' | 'docx'
         maxPlace?: number
         mode?: 'PER_ATHLETE' | 'PER_TEAM'
+        /**
+         * Print the rating category on the certificate. Off by default; the template needs a RATING_CATEGORY placeholder for it to show. The printed place stays the competition-wide one either way.
+         */
+        ratingCategory?: boolean
     }
 }
 

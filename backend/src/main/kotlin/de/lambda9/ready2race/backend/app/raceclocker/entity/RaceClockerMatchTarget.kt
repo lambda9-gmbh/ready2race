@@ -13,7 +13,7 @@ package de.lambda9.ready2race.backend.app.raceclocker.entity
  */
 data class RaceClockerMatchTarget(
     /**
-     * The match name plus the planned start time (see
+     * The planned start time, the competition (number and short name) and the match name (see
      * [de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName]), exported as the
      * RaceClocker wave name. Only used for pre-match-id start lists.
      */

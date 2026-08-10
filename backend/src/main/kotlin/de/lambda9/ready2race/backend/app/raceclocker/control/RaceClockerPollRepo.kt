@@ -84,6 +84,8 @@ object RaceClockerPollRepo {
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
             COMPETITION.ID.`as`("competition_id"),
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_PROPERTIES.SHORT_NAME,
             timeTrialUrl,
             heatsUrl,
         )
@@ -119,7 +121,12 @@ object RaceClockerPollRepo {
                     activatedAt = it[COMPETITION_MATCH.ACTIVATED_AT],
                     startedAt = it[COMPETITION_MATCH.STARTED_AT],
                     target = RaceClockerMatchTarget(
-                        waveName = WaveName.format(it[COMPETITION_SETUP_MATCH.NAME], it[COMPETITION_MATCH.START_TIME]),
+                        waveName = WaveName.format(
+                            matchName = it[COMPETITION_SETUP_MATCH.NAME],
+                            startTime = it[COMPETITION_MATCH.START_TIME],
+                            competitionIdentifier = it[COMPETITION_PROPERTIES.IDENTIFIER],
+                            competitionShortName = it[COMPETITION_PROPERTIES.SHORT_NAME],
+                        ),
                         isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
                         timeTrialUrl = it[timeTrialUrl],
                         heatsUrl = it[heatsUrl],

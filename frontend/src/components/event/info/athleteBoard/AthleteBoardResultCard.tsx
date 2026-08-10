@@ -4,6 +4,7 @@ import {AthleteBoardResult} from '@api/types.gen'
 import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
 import AthleteBoardTeamLabel from './AthleteBoardTeamLabel'
 import {formatClockTime} from './common'
+import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 
 interface AthleteBoardResultCardProps {
     result: AthleteBoardResult
@@ -22,6 +23,12 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
         if (b.place == null) return -1
         return a.place - b.place
     })
+
+    // Getrennte Abschnitte je Wertungskategorie, in der konfigurierten Reihenfolge - dieselbe
+    // Gruppierung wie auf der oeffentlichen Ergebnisseite und im Schiedsrichter-Dashboard. Ein
+    // Lauf ohne Kategorien ergibt genau einen namenlosen Abschnitt und bleibt damit wie bisher.
+    const sections = groupByRatingCategory(teams, team => team.ratingCategory)
+    const showSectionHeadings = hasRatingCategories(sections)
 
     return (
         <Card variant="outlined" sx={{mb: 1.5}}>
@@ -73,71 +80,97 @@ const AthleteBoardResultCard = ({result}: AthleteBoardResultCardProps) => {
                     )}
                 </Stack>
 
-                <Stack sx={{mt: 1.5}} divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
-                    {teams.map((team, index) => (
-                        <Stack
-                            key={`${result.matchId}-${team.lane}-${index}`}
-                            direction="row"
-                            alignItems="center"
-                            gap={1.5}
-                            sx={{py: 0.75}}>
+                {sections.map(section => (
+                    <Box key={section.category?.id ?? 'none'}>
+                        {showSectionHeadings && (
                             <Typography
                                 sx={{
-                                    fontSize: 'clamp(1.4rem, 2.8vw, 2.4rem)',
-                                    fontWeight: 800,
-                                    lineHeight: 1,
-                                    minWidth: '1.8em',
-                                    textAlign: 'center',
-                                }}>
-                                {team.place ?? '–'}
+                                    mt: 1.5,
+                                    fontSize: 'clamp(0.8rem, 1.3vw, 1.1rem)',
+                                    fontWeight: 700,
+                                }}
+                                color="text.secondary">
+                                {section.category?.name ??
+                                    t('event.ratingCategory.withoutCategory')}
                             </Typography>
-                            <Box sx={{flex: 1, minWidth: 0}}>
-                                <AthleteBoardTeamLabel
-                                    team={team}
-                                    color={team.deregistered ? 'text.secondary' : 'text.primary'}
-                                />
-                                <Typography
-                                    sx={{fontSize: 'clamp(0.7rem, 1.1vw, 0.95rem)'}}
-                                    color="text.secondary">
-                                    {t('event.info.athleteBoard.lane')} {team.lane}
-                                </Typography>
-                            </Box>
-                            {/* Ein langer DNF-Grund darf den Vereinsnamen nicht überlagern:
+                        )}
+                        <Stack
+                            sx={{mt: 1.5}}
+                            divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
+                            {section.entries.map((team, index) => (
+                                <Stack
+                                    key={`${result.matchId}-${team.lane}-${index}`}
+                                    direction="row"
+                                    alignItems="center"
+                                    gap={1.5}
+                                    sx={{py: 0.75}}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: 'clamp(1.4rem, 2.8vw, 2.4rem)',
+                                            fontWeight: 800,
+                                            lineHeight: 1,
+                                            minWidth: '1.8em',
+                                            textAlign: 'center',
+                                        }}>
+                                        {/* Der Platz innerhalb der Wertungskategorie - team.place
+                                    bleibt der Platz im Lauf und ist nur seine Grundlage. */}
+                                        {team.categoryPlace ?? '–'}
+                                    </Typography>
+                                    <Box sx={{flex: 1, minWidth: 0}}>
+                                        <AthleteBoardTeamLabel
+                                            team={team}
+                                            color={
+                                                team.deregistered
+                                                    ? 'text.secondary'
+                                                    : 'text.primary'
+                                            }
+                                        />
+                                        <Typography
+                                            sx={{fontSize: 'clamp(0.7rem, 1.1vw, 0.95rem)'}}
+                                            color="text.secondary">
+                                            {t('event.info.athleteBoard.lane')} {team.lane}
+                                        </Typography>
+                                    </Box>
+                                    {/* Ein langer DNF-Grund darf den Vereinsnamen nicht überlagern:
                                 rechts bündig in der eigenen Hälfte umbrechen. */}
-                            <Stack alignItems="flex-end" sx={{flexShrink: 0, maxWidth: '45%'}}>
-                                <Typography
-                                    sx={{
-                                        fontSize: 'clamp(0.9rem, 1.5vw, 1.3rem)',
-                                        fontWeight: 600,
-                                        textAlign: 'right',
-                                    }}
-                                    color={
-                                        team.failed || team.deregistered
-                                            ? 'text.secondary'
-                                            : 'text.primary'
-                                    }>
-                                    {team.deregistered
-                                        ? [
-                                              t('event.info.athleteBoard.deregistered'),
-                                              team.deregisteredReason,
-                                          ]
-                                              .filter(Boolean)
-                                              .join(' · ')
-                                        : team.failed
-                                          ? (team.failedReason ??
-                                            t('event.info.athleteBoard.failed'))
-                                          : (team.timeString ?? '')}
-                                </Typography>
-                                {!team.deregistered && (
-                                    <AthleteBoardPenaltyNote
-                                        penaltySeconds={team.penaltySeconds}
-                                        penaltyNote={team.penaltyNote}
-                                    />
-                                )}
-                            </Stack>
+                                    <Stack
+                                        alignItems="flex-end"
+                                        sx={{flexShrink: 0, maxWidth: '45%'}}>
+                                        <Typography
+                                            sx={{
+                                                fontSize: 'clamp(0.9rem, 1.5vw, 1.3rem)',
+                                                fontWeight: 600,
+                                                textAlign: 'right',
+                                            }}
+                                            color={
+                                                team.failed || team.deregistered
+                                                    ? 'text.secondary'
+                                                    : 'text.primary'
+                                            }>
+                                            {team.deregistered
+                                                ? [
+                                                      t('event.info.athleteBoard.deregistered'),
+                                                      team.deregisteredReason,
+                                                  ]
+                                                      .filter(Boolean)
+                                                      .join(' · ')
+                                                : team.failed
+                                                  ? (team.failedReason ??
+                                                    t('event.info.athleteBoard.failed'))
+                                                  : (team.timeString ?? '')}
+                                        </Typography>
+                                        {!team.deregistered && (
+                                            <AthleteBoardPenaltyNote
+                                                penaltySeconds={team.penaltySeconds}
+                                                penaltyNote={team.penaltyNote}
+                                            />
+                                        )}
+                                    </Stack>
+                                </Stack>
+                            ))}
                         </Stack>
-                    ))}
-                </Stack>
+                    </Box>
+                ))}
             </CardContent>
         </Card>
     )

@@ -34,12 +34,17 @@ fun RatingCategoryRecord.toDto(): App<Nothing, RatingCategoryDto> = KIO.ok(
     )
 )
 
-fun RatingCategoryToEventRequest.toRecord(event: UUID, userId: UUID): App<Nothing, EventRatingCategoryRecord> = KIO.ok(
+fun RatingCategoryToEventRequest.toRecord(
+    event: UUID,
+    userId: UUID,
+    sortOrder: Int,
+): App<Nothing, EventRatingCategoryRecord> = KIO.ok(
     EventRatingCategoryRecord(
         event = event,
         ratingCategory = ratingCategory,
         yearRestrictionFrom = yearFrom,
         yearRestrictionTo = yearTo,
+        sortOrder = sortOrder,
         createdAt = LocalDateTime.now(),
         createdBy = userId,
         updatedAt = LocalDateTime.now(),
@@ -56,5 +61,6 @@ fun EventRatingCategoryViewRecord.toDto(): App<Nothing, RatingCategoryToEventDto
         ),
         yearFrom = yearRestrictionFrom,
         yearTo = yearRestrictionTo,
+        sortOrder = sortOrder!!,
     )
 )

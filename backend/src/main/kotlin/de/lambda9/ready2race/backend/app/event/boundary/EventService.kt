@@ -98,6 +98,8 @@ object EventService {
             chainProgressionMode = request.chainProgressionMode.name
             showBreaksOnPublicBoards = request.showBreaksOnPublicBoards
             publicResultsVisibility = request.publicResultsVisibility.name
+            executionAutoRefresh = request.executionAutoRefresh
+            executionAutoRefreshSeconds = request.executionAutoRefreshSeconds
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
