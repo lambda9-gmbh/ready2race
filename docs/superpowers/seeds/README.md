@@ -30,9 +30,9 @@ liegen können, ohne sich zu stören:
 
 Ein neuer Seed nimmt einen bisher unbenutzten Präfix und trägt sich hier ein.
 
-> **Ablage:** Die älteren Seeds liegen in einem gitignorierten Worktree unter
-> `.claude/worktrees/zeitstrahl/.superpowers/sdd/` und sind dort schwer zu finden. Neue Seeds
-> liegen deshalb hier im Repo. Ob die älteren nachziehen, entscheidet Thomas.
+> **Ablage:** Die älteren Seeds lagen in einem gitignorierten Worktree; seit dessen Auflösung am
+> 10.08.2026 liegen sie — weiterhin ungetrackt — im Hauptcheckout unter `.superpowers/sdd/`.
+> Neue Seeds liegen hier im Repo. Ob die älteren nachziehen, entscheidet Thomas.
 
 ## Einspielen
 
