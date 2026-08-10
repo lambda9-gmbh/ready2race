@@ -191,6 +191,14 @@ export const a11yProps = <TabType>(name: string, index: TabType) => {
     }
 }
 
+/**
+ * Suffix, das hinter den Vereinsnamen einer Meldung gehängt wird ("Verein | Teamname").
+ * Boote ohne Teamnamen (kein Namensfeld gepflegt) sollen nur den Verein zeigen –
+ * ohne den Separator und ohne das Literal "undefined".
+ */
+export const teamNameSuffix = (name?: string | null): string =>
+    name && name.trim() !== '' ? ` | ${name}` : ''
+
 export const getFilename = (response: Response): string | undefined => {
     const disposition = response.headers.get('Content-Disposition')
 

@@ -1,6 +1,7 @@
 import {Avatar, Box, Card, CardContent, Chip, Skeleton, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFetch} from '@utils/hooks'
+import {teamNameSuffix} from '@utils/helpers.ts'
 import {getRunningMatches} from '@api/sdk.gen'
 import {RunningMatchInfo, RunningMatchTeamInfo} from '@api/types.gen'
 import {PlayCircleFilled} from '@mui/icons-material'
@@ -165,7 +166,10 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                             color="text.secondary">
                                                                             {(team.clubsFull ??
                                                                                 team.clubName) +
-                                                                                ` ${t('club.registeredBy')} ${team.clubName} | ${team.teamName}`}
+                                                                                ` ${t('club.registeredBy')} ${team.clubName}` +
+                                                                                teamNameSuffix(
+                                                                                    team.teamName,
+                                                                                )}
                                                                         </Typography>
                                                                     </>
                                                                 ) : (
@@ -181,7 +185,9 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                             color="text.secondary">
                                                                             {`${t('club.registeredBy')} ` +
                                                                                 team.clubName +
-                                                                                ` | ${team.teamName}`}
+                                                                                teamNameSuffix(
+                                                                                    team.teamName,
+                                                                                )}
                                                                         </Typography>
                                                                         {team.participants.length >
                                                                             0 && (
