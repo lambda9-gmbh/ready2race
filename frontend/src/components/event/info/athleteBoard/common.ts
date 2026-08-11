@@ -55,6 +55,33 @@ export const formatPlace = (place: number, t: TFunction): string =>
     t('event.info.athleteBoard.place', {count: place, ordinal: true})
 
 /**
+ * Reihenfolge der Boote im laufenden Lauf: Sobald Zwischenstände da sind, zählt die
+ * aktuelle Platzierung mehr als die Startnummer (Wunsch vom 11.08.2026 — beim Zeitfahren
+ * am Prod-Abzug standen die Boote 1–8 in Startreihenfolge, die Plätze kreuz und quer
+ * daneben). Ohne jedes Teilergebnis bleibt die Startreihenfolge stehen — vor dem ersten
+ * Zwischenstand gibt es nichts Relevanteres. Gewertete Boote nach Platz, noch fahrende
+ * dahinter in Startreihenfolge, DNF/DQ ans Ende; die Startnummer bleibt als große Zahl
+ * an der Zeile und trägt weiter die Zuordnung zum Boot.
+ */
+export const sortRunningTeams = <
+    T extends {startNumber: number; place?: number | null; failed?: boolean; timeString?: string | null},
+>(
+    teams: T[],
+): T[] => {
+    const anyResult = teams.some(t => t.place != null || t.failed === true || t.timeString != null)
+    if (!anyResult) return teams
+    return [...teams].sort((a, b) => {
+        const aFailed = a.failed === true
+        const bFailed = b.failed === true
+        if (aFailed !== bFailed) return aFailed ? 1 : -1
+        if (a.place == null && b.place == null) return a.startNumber - b.startNumber
+        if (a.place == null) return 1
+        if (b.place == null) return -1
+        return a.place - b.place || a.startNumber - b.startNumber
+    })
+}
+
+/**
  * Welche Form der Vereinskette in der Zeile steht. Die Entscheidung trifft die Breite des
  * Bildschirms, nicht der Inhalt: am Steg hängt ein großer Schirm, in der Hand ein Telefon.
  */
