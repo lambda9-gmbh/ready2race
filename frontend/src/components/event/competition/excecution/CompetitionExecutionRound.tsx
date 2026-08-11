@@ -26,7 +26,7 @@ import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {teamNameSuffix} from '@utils/helpers.ts'
-import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
+import {Dispatch, Fragment, SetStateAction, SyntheticEvent, useRef} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
     markMatchStartedFromExecution,
@@ -67,6 +67,8 @@ type Props = {
     handleAccordionExpandedChange: (accordionIndex: number, isExpanded: boolean) => void
     smallScreenLayout: boolean
     setResultImportMatch: Dispatch<SetStateAction<string | null>>
+    /** Notfallweg: eine heruntergeladene RaceClocker-Ergebnis-xlsx auf den Lauf schreiben. */
+    handleUploadRaceClockerFile: (competitionMatchId: string, file: File) => Promise<void>
     pullRaceClockerResults: (competitionMatchId: string) => Promise<void>
     resumeRaceClockerAutoPull: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
@@ -89,6 +91,7 @@ const CompetitionExecutionRound = ({
     submitting,
     smallScreenLayout,
     setResultImportMatch,
+    handleUploadRaceClockerFile,
     pullRaceClockerResults,
     resumeRaceClockerAutoPull,
     handleDownloadStartListPDF,
@@ -101,6 +104,11 @@ const CompetitionExecutionRound = ({
     const feedback = useFeedback()
     const theme = useTheme()
     const now = useNow()
+
+    // Versteckter Datei-Wähler für den RaceClocker-Notfall-Import: der Menüpunkt merkt sich den
+    // Lauf und klickt den Input; erst die Auswahl löst den Upload aus.
+    const raceClockerFileInputRef = useRef<HTMLInputElement>(null)
+    const raceClockerFileMatchId = useRef<string | null>(null)
 
     // Die Zählerleiste fasst zusammen, was die Chips darunter einzeln sagen — bei einer einzigen
     // Lauf-Karte wäre das bloße Wiederholung, deshalb bleibt sie dort leer (siehe roundCounterChips).
@@ -603,6 +611,10 @@ const CompetitionExecutionRound = ({
                                                     case 'RACECLOCKER':
                                                         await pullRaceClockerResults(match.id)
                                                         break
+                                                    case 'RACECLOCKER_FILE':
+                                                        raceClockerFileMatchId.current = match.id
+                                                        raceClockerFileInputRef.current?.click()
+                                                        break
                                                 }
                                             }}
                                             items={matchResultOptions(timingSystem).map(
@@ -619,6 +631,22 @@ const CompetitionExecutionRound = ({
                                             )}
                                         />
                                     )}
+                                    <input
+                                        ref={raceClockerFileInputRef}
+                                        type={'file'}
+                                        accept={'.xlsx'}
+                                        style={{display: 'none'}}
+                                        onChange={async e => {
+                                            const file = e.target.files?.[0]
+                                            const matchId = raceClockerFileMatchId.current
+                                            // Zurücksetzen, damit dieselbe Datei erneut gewählt
+                                            // werden kann (onChange feuert sonst nicht wieder).
+                                            e.target.value = ''
+                                            if (file && matchId) {
+                                                await handleUploadRaceClockerFile(matchId, file)
+                                            }
+                                        }}
+                                    />
                                     {match.pairingsRecalculatedAt && (
                                         <Typography variant={'caption'} color={'warning.main'}>
                                             {t('event.competition.execution.pairingsRecalculated')}

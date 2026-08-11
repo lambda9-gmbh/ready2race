@@ -1111,7 +1111,8 @@
           "type": {
             "form": "into Form",
             "XLS": "as XLS-File",
-            "RACECLOCKER": "from RaceClocker"
+            "RACECLOCKER": "from RaceClocker",
+            "RACECLOCKER_FILE": "from RaceClocker (file)"
           },
           "error": {
             "notConfigured": "No result import preset is configured for this competition. Please set one up in the \"Timing\" tab.",
@@ -1190,6 +1191,10 @@
               "resume": "Resume automatic pull",
               "resumed": "The automatic pull is active again.",
               "duplicateTeams": "RaceClocker has duplicate crews. Pulling with the button shows which ones."
+            },
+            "file": {
+              "notInFile": "The file has no boats of this heat — was the start list exported to RaceClocker with the R2R id mapped?",
+              "imported": "Results imported from the RaceClocker file."
             }
           }
         },

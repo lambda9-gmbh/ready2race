@@ -823,6 +823,9 @@ import type {
     UploadResultFileData,
     UploadResultFileError,
     UploadResultFileResponse,
+    UploadRaceClockerResultFileData,
+    UploadRaceClockerResultFileError,
+    UploadRaceClockerResultFileResponse,
     CheckQrCodeData,
     CheckQrCodeError,
     CheckQrCodeResponse,
@@ -4483,6 +4486,27 @@ export const uploadResultFile = <ThrowOnError extends boolean = false>(
             ...options?.headers,
         },
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file',
+    })
+}
+
+/**
+ * Offline fallback to the live pull: import a RaceClocker results xlsx (Results sheet) onto a match - team resolved via the R2R id in 'Extra info', place computed from times. Pauses the automatic pull like the plain file upload.
+ */
+export const uploadRaceClockerResultFile = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UploadRaceClockerResultFileData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UploadRaceClockerResultFileResponse,
+        UploadRaceClockerResultFileError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file/raceclocker',
     })
 }
 

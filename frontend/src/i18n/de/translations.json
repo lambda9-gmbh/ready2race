@@ -1111,7 +1111,8 @@
           "type": {
             "form": "mit Eingabeformular",
             "XLS": "als XLS-Datei",
-            "RACECLOCKER": "von RaceClocker holen"
+            "RACECLOCKER": "von RaceClocker holen",
+            "RACECLOCKER_FILE": "von RaceClocker (Datei)"
           },
           "error": {
             "notConfigured": "Für diesen Wettkampf ist kein Ergebnis-Import-Preset hinterlegt. Bitte im Tab \"Zeitnahme\" eintragen.",
@@ -1190,6 +1191,10 @@
               "resume": "Automatik wieder aufnehmen",
               "resumed": "Der automatische Abruf ist wieder aktiv.",
               "duplicateTeams": "In RaceClocker sind Crews doppelt vorhanden. Welche, zeigt der Abruf über den Knopf."
+            },
+            "file": {
+              "notInFile": "In der Datei stehen keine Boote dieses Laufs — wurde die Startliste mit gemappter R2R-Kennung nach RaceClocker exportiert?",
+              "imported": "Ergebnisse aus der RaceClocker-Datei übernommen."
             }
           }
         },

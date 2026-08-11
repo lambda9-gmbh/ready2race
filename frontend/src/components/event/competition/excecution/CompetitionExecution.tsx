@@ -9,6 +9,7 @@ import {
     getEventSchedule,
     updateMatchData,
     updateMatchResults,
+    uploadRaceClockerResultFile,
     uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {
@@ -482,6 +483,29 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
             feedback.error(t('common.error.unexpected'))
         } else {
             feedback.success(t('event.competition.execution.results.raceclocker.poll.resumed'))
+            setReloadData(!reloadData)
+        }
+    }
+
+    /** Notfallweg: RaceClocker-Ergebnis-xlsx auf den Lauf schreiben (eigener Parser fürs Results-Blatt). */
+    const handleUploadRaceClockerFile = async (competitionMatchId: string, file: File) => {
+        setSubmitting(true)
+        const {error} = await uploadRaceClockerResultFile({
+            path: {eventId, competitionId, competitionMatchId},
+            body: {files: [file]},
+        })
+        setSubmitting(false)
+
+        if (error) {
+            if (error.status.value === 400 && error.errorCode === 'RACECLOCKER_MATCH_NOT_IN_FEED') {
+                feedback.error(t('event.competition.execution.results.raceclocker.file.notInFile'))
+            } else if (error.status.value === 400 && error.errorCode === 'FILE_ERROR') {
+                feedback.error(t('common.error.upload.FILE_ERROR'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.file.imported'))
             setReloadData(!reloadData)
         }
     }
@@ -979,6 +1003,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                         }
                         smallScreenLayout={smallScreenLayout}
                         setResultImportMatch={setResultImportMatch}
+                        handleUploadRaceClockerFile={handleUploadRaceClockerFile}
                         pullRaceClockerResults={handlePullRaceClockerResults}
                         resumeRaceClockerAutoPull={handleResumeRaceClockerAutoPull}
                         handleDownloadStartListPDF={matchId =>

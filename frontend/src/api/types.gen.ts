@@ -7597,6 +7597,21 @@ export type UploadResultFileResponse = void
 
 export type UploadResultFileError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type UploadRaceClockerResultFileData = {
+    body: {
+        files: Array<Blob | File>
+    }
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UploadRaceClockerResultFileResponse = void
+
+export type UploadRaceClockerResultFileError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type CheckQrCodeData = {
     path: {
         qrCodeId: string

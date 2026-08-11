@@ -1111,7 +1111,8 @@
           "type": {
             "form": "med indtastningsformular",
             "XLS": "som XLS-fil",
-            "RACECLOCKER": "hent fra RaceClocker"
+            "RACECLOCKER": "hent fra RaceClocker",
+            "RACECLOCKER_FILE": "fra RaceClocker (fil)"
           },
           "error": {
             "notConfigured": "Der er ikke registreret et resultatimportpreset for denne konkurrence. Angiv det venligst under fanen \"Tidtagning\".",
@@ -1190,6 +1191,10 @@
               "resume": "Genoptag automatisk hentning",
               "resumed": "Den automatiske hentning er aktiv igen.",
               "duplicateTeams": "RaceClocker har dublerede besætninger. Hentning med knappen viser hvilke."
+            },
+            "file": {
+              "notInFile": "Filen indeholder ingen både fra dette løb — blev startlisten eksporteret til RaceClocker med R2R-id?",
+              "imported": "Resultater importeret fra RaceClocker-filen."
             }
           }
         },
