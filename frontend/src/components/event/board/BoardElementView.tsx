@@ -1,4 +1,5 @@
 import {BoardElement, BoardViewDto} from '@api/types.gen'
+import BoardCeremonyElement from './BoardCeremonyElement'
 import BoardClockElement from './BoardClockElement'
 import BoardMatchListElement from './BoardMatchListElement'
 import BoardMatchSlotElement from './BoardMatchSlotElement'
@@ -8,12 +9,18 @@ interface BoardElementViewProps {
     element: BoardElement
     view: BoardViewDto
     now: Date
-    columns: number
-    rows: number
+    effectiveColumns: number
+    heightFraction: number
 }
 
 /** Die Weiche über die Elementtypen — jede Kachel rendert ihr aktives Element hierüber. */
-const BoardElementView = ({element, view, now, columns, rows}: BoardElementViewProps) => {
+const BoardElementView = ({
+    element,
+    view,
+    now,
+    effectiveColumns,
+    heightFraction,
+}: BoardElementViewProps) => {
     switch (element.type) {
         case 'MATCH':
             return (
@@ -21,8 +28,8 @@ const BoardElementView = ({element, view, now, columns, rows}: BoardElementViewP
                     element={element}
                     view={view}
                     now={now}
-                    columns={columns}
-                    rows={rows}
+                    effectiveColumns={effectiveColumns}
+                    heightFraction={heightFraction}
                 />
             )
         case 'MATCH_LIST':
@@ -31,6 +38,8 @@ const BoardElementView = ({element, view, now, columns, rows}: BoardElementViewP
             return <BoardClockElement element={element} view={view} now={now} />
         case 'TEXT':
             return <BoardTextElement element={element} />
+        case 'AWARD_CEREMONY':
+            return <BoardCeremonyElement element={element} view={view} />
     }
 }
 

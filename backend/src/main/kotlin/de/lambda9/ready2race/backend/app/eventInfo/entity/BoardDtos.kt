@@ -36,8 +36,14 @@ data class BoardRequest(
     // Regel reicht der Admin-Maske.
     private fun configResult(): ValidationResult {
         val errors = mutableListOf<String>()
-        if (config.tiles.size != config.layout.tileCount) {
-            errors += "layout ${config.layout} expects ${config.layout.tileCount} tiles, got ${config.tiles.size}"
+        val columns = config.columns
+        if (columns == null || columns < BoardLimits.MIN_COLUMNS || columns > BoardLimits.MAX_COLUMNS) {
+            // Der Editor sendet immer `columns`; die Alt-Lesart `layout` gilt nur für
+            // gespeicherte Stände und wird beim Lesen normalisiert (Conversions).
+            errors += "columns must be in ${BoardLimits.MIN_COLUMNS}..${BoardLimits.MAX_COLUMNS}"
+        }
+        if (config.tiles.isEmpty() || config.tiles.size > BoardLimits.MAX_TILES) {
+            errors += "tiles must be 1..${BoardLimits.MAX_TILES}"
         }
         if (config.refreshIntervalSeconds < BoardLimits.MIN_REFRESH_INTERVAL_SECONDS) {
             errors += "refreshIntervalSeconds must be at least ${BoardLimits.MIN_REFRESH_INTERVAL_SECONDS}"
@@ -46,6 +52,12 @@ data class BoardRequest(
             if (tile.elements.isEmpty()) errors += "tile $tileIndex has no elements"
             if (tile.rotationIntervalSeconds < BoardLimits.MIN_ROTATION_INTERVAL_SECONDS) {
                 errors += "tile $tileIndex: rotationIntervalSeconds must be at least ${BoardLimits.MIN_ROTATION_INTERVAL_SECONDS}"
+            }
+            if (columns != null && (tile.colSpan < 1 || tile.colSpan > columns)) {
+                errors += "tile $tileIndex: colSpan must be in 1..$columns"
+            }
+            if (tile.rowSpan < 1 || tile.rowSpan > BoardLimits.MAX_ROW_SPAN) {
+                errors += "tile $tileIndex: rowSpan must be in 1..${BoardLimits.MAX_ROW_SPAN}"
             }
             tile.elements.forEachIndexed { elementIndex, element ->
                 val at = "tile $tileIndex element $elementIndex"
@@ -69,6 +81,10 @@ data class BoardRequest(
                         if (element.text.isNullOrBlank()) errors += "$at: TEXT needs text"
                     }
 
+                    BoardElementType.AWARD_CEREMONY -> {
+                        if (element.competitionId == null) errors += "$at: AWARD_CEREMONY needs competitionId"
+                    }
+
                     BoardElementType.CLOCK -> {}
                 }
             }
@@ -81,7 +97,7 @@ data class BoardRequest(
         val example = BoardRequest(
             name = "Athleten-Anzeige",
             config = BoardConfig(
-                layout = BoardLayout.THREE_COLUMNS,
+                columns = 3,
                 tiles = listOf(
                     BoardTile(elements = listOf(BoardElement(type = BoardElementType.MATCH, offset = 0))),
                     BoardTile(elements = listOf(BoardElement(type = BoardElementType.MATCH, offset = 1))),

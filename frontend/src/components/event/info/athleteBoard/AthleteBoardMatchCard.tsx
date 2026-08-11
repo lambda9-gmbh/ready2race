@@ -12,6 +12,7 @@ import {
 import {
     COUNTDOWN_MAX_SECONDS,
     formatClockTime,
+    formatPlace,
     formatRemaining,
     formatShortDate,
     isSameDay,
@@ -39,6 +40,15 @@ interface AthleteBoardMatchCardProps {
     showCrew?: boolean
     // Teilergebnisse (Platz/Zeit) im laufenden Lauf — je Board-Element abschaltbar.
     showTimes?: boolean
+    // Sprecherinnen-Details: jede Athletin auf eigener Zeile mit Rolle und Heimatverein.
+    // Die Daten kommen nur mit, wenn ein Board-Element sie anfordert (Backend).
+    showCrewDetails?: boolean
+    // Geburtsjahr je Athletin — nur zusammen mit showCrewDetails sichtbar.
+    showBirthYears?: boolean
+    // „Weiter kommen N Boote → Finale" unter dem Kopf des Laufs.
+    showAdvancement?: boolean
+    // Meldender Verein als kleine Zeile am Boot.
+    showRegisteringClub?: boolean
 }
 
 const AthleteBoardMatchCard = ({
@@ -48,6 +58,10 @@ const AthleteBoardMatchCard = ({
     showCountdown = true,
     showCrew = true,
     showTimes = true,
+    showCrewDetails = false,
+    showBirthYears = false,
+    showAdvancement = false,
+    showRegisteringClub = false,
 }: AthleteBoardMatchCardProps) => {
     const {t} = useTranslation()
 
@@ -249,6 +263,22 @@ const AthleteBoardMatchCard = ({
                                     />
                                 )}
                             </Stack>
+                            {/* Sprecherinnen-Zeile: worum geht es in diesem Lauf. Ohne
+                                Platzzahl (Massenfeld-Folgerunde) nur die Runde. */}
+                            {showAdvancement && match.nextRoundName && (
+                                <Typography
+                                    sx={{fontSize: scaled('0.75rem', '1.2vw', '1.6rem'), fontWeight: 600}}
+                                    color="primary">
+                                    {match.advancingSeats != null
+                                        ? t('event.info.athleteBoard.advancing', {
+                                              count: match.advancingSeats,
+                                              round: match.nextRoundName,
+                                          })
+                                        : t('event.info.athleteBoard.advancingUnsized', {
+                                              round: match.nextRoundName,
+                                          })}
+                                </Typography>
+                            )}
                         </>
                     )}
                 </Box>
@@ -289,7 +319,9 @@ const AthleteBoardMatchCard = ({
                                                 team.failed
                                                     ? (team.failedReason ??
                                                       t('event.info.athleteBoard.failed'))
-                                                    : `${team.place != null ? `${team.place}. ` : ''}${team.timeString}`
+                                                    // Als Ordnungszahl, damit der Zwischenstand
+                                                    // nicht wie eine zweite Startnummer liest.
+                                                    : `${team.place != null ? `${formatPlace(team.place, t)} ` : ''}${team.timeString}`
                                             }
                                         />
                                         <AthleteBoardPenaltyNote
@@ -300,11 +332,41 @@ const AthleteBoardMatchCard = ({
                                 ) : undefined
                             }>
                             <AthleteBoardTeamLabel team={team} />
-                            {showCrew && team.participants.length > 0 && (
+                            {/* Sprecherinnen-Detail: jede Athletin auf eigener Zeile —
+                                Boot für Boot vorstellbar, alle Namen lesbar. */}
+                            {showCrewDetails && team.participants.length > 0 ? (
+                                <>
+                                    {team.participants.map((p, i) => (
+                                        <AthleteBoardBoatSubline key={i}>
+                                            {[
+                                                p.role ? `${p.name} (${p.role})` : p.name,
+                                                p.clubName,
+                                                showBirthYears && p.year != null
+                                                    ? t('event.info.athleteBoard.birthYear', {
+                                                          year: p.year,
+                                                      })
+                                                    : null,
+                                            ]
+                                                .filter(Boolean)
+                                                .join(' · ')}
+                                        </AthleteBoardBoatSubline>
+                                    ))}
+                                </>
+                            ) : (
+                                showCrew &&
+                                team.participants.length > 0 && (
+                                    <AthleteBoardBoatSubline>
+                                        {team.participants
+                                            .map(p => (p.role ? `${p.name} (${p.role})` : p.name))
+                                            .join(', ')}
+                                    </AthleteBoardBoatSubline>
+                                )
+                            )}
+                            {showRegisteringClub && team.registeringClub && (
                                 <AthleteBoardBoatSubline>
-                                    {team.participants
-                                        .map(p => (p.role ? `${p.name} (${p.role})` : p.name))
-                                        .join(', ')}
+                                    {t('event.info.athleteBoard.registeringClub', {
+                                        club: team.registeringClub,
+                                    })}
                                 </AthleteBoardBoatSubline>
                             )}
                         </AthleteBoardBoatRow>

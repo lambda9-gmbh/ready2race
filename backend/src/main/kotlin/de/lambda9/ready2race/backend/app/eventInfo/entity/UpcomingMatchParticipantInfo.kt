@@ -9,5 +9,7 @@ data class UpcomingMatchParticipantInfo(
     val namedRole: String?,
     val year: Int?,
     val gender: String?,
-    val externalClubName: String?
+    val externalClubName: String?,
+    /** Der getragene Verein (Gastverein vor Heimatverein) — nur für Detail-Anzeigen befüllt. */
+    val wornClubName: String? = null
 )

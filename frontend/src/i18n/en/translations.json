@@ -1588,7 +1588,17 @@
         "loadError": "Data could not be loaded. Please check the connection.",
         "minutesUnit": "min",
         "hoursUnit": "h",
-        "secondsUnit": "s"
+        "secondsUnit": "s",
+        "place": "{{count}}th",
+        "place_ordinal_one": "{{count}}st",
+        "place_ordinal_two": "{{count}}nd",
+        "place_ordinal_few": "{{count}}rd",
+        "place_ordinal_other": "{{count}}th",
+        "advancing": "{{count}} boats advance → {{round}}",
+        "advancing_one": "1 boat advances → {{round}}",
+        "advancingUnsized": "Next up: {{round}}",
+        "birthYear": "b. {{year}}",
+        "registeringClub": "Entered by: {{club}}"
       }
     },
     "match": {
@@ -1934,17 +1944,13 @@
       "tileCount_one": "1 tile",
       "tileCount_other": "{{count}} tiles",
       "refreshInterval": "Refresh interval",
-      "layout": {
-        "label": "Layout",
-        "oneColumn": "1 column",
-        "twoColumns": "2 columns",
-        "threeColumns": "3 columns",
-        "sixTiles": "6 tiles"
-      },
       "tile": {
         "title": "Tile {{index}}",
         "rotationInterval": "Rotation (seconds)",
-        "addElement": "Add element"
+        "addElement": "Add element",
+        "width": "Width (columns)",
+        "height": "Height (rows)",
+        "add": "Add tile"
       },
       "element": {
         "type": {
@@ -1952,7 +1958,8 @@
           "match": "Match",
           "matchList": "Match list",
           "clock": "Clock",
-          "text": "Notice"
+          "text": "Notice",
+          "awardCeremony": "Award ceremony"
         },
         "offset": "Position",
         "offsetCurrent": "Current match",
@@ -1970,7 +1977,8 @@
           "label": "Content",
           "upcoming": "Upcoming matches",
           "results": "Latest results",
-          "running": "Running matches"
+          "running": "Running matches",
+          "schedule": "Day program"
         },
         "titleCurrent": "Racing now",
         "titleNext": "Up next",
@@ -1980,8 +1988,23 @@
         "emptyCurrent": "No match racing",
         "emptyUpcoming": "No further match scheduled",
         "emptyPast": "No result yet",
-        "textRequired": "Text must not be empty"
-      }
+        "textRequired": "Text must not be empty",
+        "useShortNames": "Use competition abbreviations",
+        "ceremonyTitle": "Award ceremony",
+        "ceremonyPick": "Ceremony",
+        "ceremonyEmpty": "No awardable results yet",
+        "sharedRank": "shared",
+        "emptySchedule": "No program available",
+        "announcerSection": "For announcers",
+        "showCrewDetails": "Crew in detail (one line each)",
+        "showBirthYears": "Show birth years",
+        "showAdvancement": "Show advancement rule",
+        "showRegisteringClub": "Show registering club"
+      },
+      "columns": "Columns",
+      "columnCount": "{{count}} columns",
+      "columnCount_one": "1 column",
+      "showHeader": "Header with name and clock"
     }
   },
   "task": {

@@ -9,6 +9,8 @@ data class UpcomingCompetitionMatchInfo(
     /** Bei einem FREE-Platzhalter (Programmpunkt, siehe [name]) gibt es keine Kompetition. */
     val competitionId: UUID?,
     val competitionName: String,
+    /** Wettkampf-Kürzel (short_name) für kompakte Anzeigen; null, wenn keins gepflegt ist. */
+    val competitionShortName: String? = null,
     val categoryName: String?,
     val scheduledStartTime: LocalDateTime?,
     val placeName: String?,

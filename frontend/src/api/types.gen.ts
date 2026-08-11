@@ -160,6 +160,7 @@ export type AssignRequirementToNamedParticipantDto = {
 export type AthleteBoardMatch = {
     matchId: string
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -189,16 +190,27 @@ export type AthleteBoardMatch = {
      * the match is cancelled ('does not take place'). It stays at its planned position in the upcoming block anyway - a crew waiting at the pontoon cannot tell a match that vanished without a trace from a display error. teams is then always empty
      */
     cancelled: boolean
+    /**
+     * name of the following round - only filled when a board element requests showAdvancement
+     */
+    nextRoundName?: string | null
+    /**
+     * number of seats in the following round; null when the following round is an open field
+     */
+    advancingSeats?: number | null
 }
 
 export type AthleteBoardParticipant = {
     name: string
     role?: string | null
+    year?: number | null
+    clubName?: string | null
 }
 
 export type AthleteBoardResult = {
     matchId: string
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -291,6 +303,19 @@ export type AthleteBoardTeam = {
     penaltyNote?: string | null
     failed: boolean
     failedReason?: string | null
+    /**
+     * registering club - only filled when a board element requests showRegisteringClub
+     */
+    registeringClub?: string | null
+}
+
+export type AwardCeremonyAthlete = {
+    name: string
+    role: string
+    /**
+     * home club - only set when it differs from the boat's title line
+     */
+    club?: string | null
 }
 
 /**
@@ -302,11 +327,11 @@ export type AwardCeremonyChoiceDto = {
      * Die Rennnummer des Wettkampfs, z. B. "17-NC".
      */
     competitionIdentifier: string
+    competitionName: string
     /**
      * Der Kurzname des Wettkampfs, z. B. "CM 4x+".
      */
     competitionShortName?: string | null
-    competitionName: string
     /**
      * Der Schlüssel der Wertung, in der geehrt wird - darüber wird ausgewählt. `null` ist ein gültiger Wert und heißt "der Wettkampf wird als Ganzes geehrt", nicht "unbekannt".
      */
@@ -332,11 +357,28 @@ export type AwardCeremonyKeyRequest = {
     ratingCategoryId?: string | null
 }
 
+export type AwardCeremonyRank = {
+    rank: number
+    shared: boolean
+    first: boolean
+    team: AwardCeremonyTeam
+}
+
 export type AwardCeremonySelectionRequest = {
     /**
      * Leere oder fehlende Auswahl heißt "alle Ehrungen drucken". Ein Schlüssel, zu dem es keine Ehrung gibt, führt zu 400 statt zu einem still fehlenden Blatt.
      */
     selection?: Array<AwardCeremonyKeyRequest> | null
+}
+
+export type AwardCeremonyTeam = {
+    clubLine: string
+    registeringClub?: string | null
+    boatLine: string
+    time?: string | null
+    penalty?: string | null
+    raceLine?: string | null
+    athletes: Array<AwardCeremonyAthlete>
 }
 
 export type BadRequestError = ApiError & {
@@ -360,8 +402,22 @@ export type BankAccountRequest = {
     bank: string
 }
 
+/**
+ * the podium of one award ceremony - the same ranks the printed sheet carries
+ */
+export type BoardCeremonyDto = {
+    competitionId: string
+    ratingCategoryId?: string | null
+    competitionIdentifier: string
+    competitionShortName?: string | null
+    competitionName: string
+    ratingCategoryName?: string | null
+    ranks: Array<AwardCeremonyRank>
+}
+
 export type BoardConfig = {
-    layout: BoardLayout
+    columns: number
+    showHeader?: boolean | null
     refreshIntervalSeconds?: number
     tiles: Array<BoardTile>
 }
@@ -386,23 +442,32 @@ export type BoardElement = {
     showTimes?: boolean | null
     contrastColors?: boolean | null
     autoFit?: boolean | null
+    showCrewDetails?: boolean | null
+    showBirthYears?: boolean | null
+    showAdvancement?: boolean | null
+    showRegisteringClub?: boolean | null
     listMode?: BoardListMode
     limit?: number | null
+    useShortNames?: boolean | null
+    competitionId?: string | null
+    ratingCategoryId?: string | null
     showEventName?: boolean | null
     text?: string | null
 }
 
-export type BoardElementType = 'MATCH' | 'MATCH_LIST' | 'CLOCK' | 'TEXT'
-
-export type BoardLayout = 'ONE_COLUMN' | 'TWO_COLUMNS' | 'THREE_COLUMNS' | 'SIX_TILES'
+export type BoardElementType = 'MATCH' | 'MATCH_LIST' | 'CLOCK' | 'TEXT' | 'AWARD_CEREMONY'
 
 export type BoardListDto = {
     mode: BoardListMode
     matches: Array<AthleteBoardMatch>
     results: Array<AthleteBoardResult>
+    /**
+     * only filled for mode SCHEDULE: the whole day program from the timeline
+     */
+    program?: Array<BoardProgramEntry>
 }
 
-export type BoardListMode = 'UPCOMING' | 'RESULTS' | 'RUNNING'
+export type BoardListMode = 'UPCOMING' | 'RESULTS' | 'RUNNING' | 'SCHEDULE'
 
 /**
  * One place on the day's timeline. At most one of match and result is set; both empty means the slot exists but is unoccupied
@@ -418,6 +483,21 @@ export type BoardNameDto = {
     name: string
 }
 
+export type BoardProgramEntry = {
+    startTime?: string | null
+    /**
+     * schedule item (break) name; null for real matches
+     */
+    name?: string | null
+    competitionName?: string | null
+    competitionShortName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    state: BoardProgramState
+}
+
+export type BoardProgramState = 'FINISHED' | 'RUNNING' | 'UPCOMING'
+
 export type BoardRequest = {
     name: string
     config: BoardConfig
@@ -425,6 +505,8 @@ export type BoardRequest = {
 
 export type BoardTile = {
     rotationIntervalSeconds?: number
+    colSpan?: number
+    rowSpan?: number
     elements: Array<BoardElement>
 }
 
@@ -436,6 +518,7 @@ export type BoardViewDto = {
     config: BoardConfig
     slots: Array<BoardMatchSlotDto>
     lists: Array<BoardListDto>
+    ceremonies?: Array<BoardCeremonyDto>
 }
 
 export type CaptchaDto = {
@@ -1634,13 +1717,13 @@ export type EventScheduleSlotDto = {
     competitionId?: string | null
     competitionName?: string | null
     /**
-     * The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab
-     */
-    competitionIdentifier?: string | null
-    /**
      * The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab
      */
     competitionShortName?: string | null
+    /**
+     * The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab
+     */
+    competitionIdentifier?: string | null
     roundName?: string | null
     matchName?: string | null
     matchId?: string | null
@@ -1964,6 +2047,7 @@ export type LatestMatchResultInfo = {
     matchId: string
     competitionId: string
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -2013,13 +2097,13 @@ export type LiveDashboardMatchDto = {
     competitionId: string
     competitionName: string
     /**
-     * The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels
-     */
-    competitionIdentifier?: string | null
-    /**
      * The competition's short name (Kurzname, e.g. 'CM 4x+')
      */
     competitionShortName?: string | null
+    /**
+     * The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels
+     */
+    competitionIdentifier?: string | null
     categoryName?: string | null
     roundName?: string | null
     matchName?: string | null
@@ -2828,13 +2912,13 @@ export type PendingSlotDto = {
     name?: string | null
     competitionName?: string | null
     /**
-     * The competition's race number (Rennnummer) - null for program items
-     */
-    competitionIdentifier?: string | null
-    /**
      * The competition's short name (Kurzname) - null for program items
      */
     competitionShortName?: string | null
+    /**
+     * The competition's race number (Rennnummer) - null for program items
+     */
+    competitionIdentifier?: string | null
     roundName?: string | null
     matchName?: string | null
 }
@@ -3115,6 +3199,7 @@ export type RunningMatchInfo = {
     matchNumber?: number | null
     competitionId: string
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     startTime?: string | null
     /**
@@ -3475,13 +3560,13 @@ export type UnplannedSetupMatchDto = {
     competitionId: string
     competitionName: string
     /**
-     * The competition's race number (Rennnummer)
-     */
-    competitionIdentifier?: string | null
-    /**
      * The competition's short name (Kurzname)
      */
     competitionShortName?: string | null
+    /**
+     * The competition's race number (Rennnummer)
+     */
+    competitionIdentifier?: string | null
     roundName: string
     matchName?: string | null
     /**
@@ -3515,6 +3600,7 @@ export type UpcomingCompetitionMatchInfo = {
      */
     competitionId?: string | null
     competitionName: string
+    competitionShortName?: string | null
     categoryName?: string | null
     scheduledStartTime?: string | null
     placeName?: string | null

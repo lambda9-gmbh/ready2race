@@ -13847,14 +13847,6 @@ components:
         appendRatingToShortName:
           type: boolean
 
-    BoardLayout:
-      type: string
-      enum:
-        - ONE_COLUMN
-        - TWO_COLUMNS
-        - THREE_COLUMNS
-        - SIX_TILES
-
     BoardElementType:
       type: string
       enum:
@@ -13862,6 +13854,7 @@ components:
         - MATCH_LIST
         - CLOCK
         - TEXT
+        - AWARD_CEREMONY
 
     BoardListMode:
       type: string
@@ -13869,6 +13862,7 @@ components:
         - UPCOMING
         - RESULTS
         - RUNNING
+        - SCHEDULE
 
     BoardElement:
       type: object
@@ -13898,12 +13892,35 @@ components:
         autoFit:
           type: boolean
           nullable: true
+        showCrewDetails:
+          type: boolean
+          nullable: true
+        showBirthYears:
+          type: boolean
+          nullable: true
+        showAdvancement:
+          type: boolean
+          nullable: true
+        showRegisteringClub:
+          type: boolean
+          nullable: true
         listMode:
           $ref: '#/components/schemas/BoardListMode'
         limit:
           type: integer
           minimum: 1
           maximum: 20
+          nullable: true
+        useShortNames:
+          type: boolean
+          nullable: true
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+        ratingCategoryId:
+          type: string
+          format: uuid
           nullable: true
         showEventName:
           type: boolean
@@ -13920,6 +13937,14 @@ components:
         rotationIntervalSeconds:
           type: integer
           minimum: 3
+        colSpan:
+          type: integer
+          minimum: 1
+          maximum: 4
+        rowSpan:
+          type: integer
+          minimum: 1
+          maximum: 3
         elements:
           type: array
           items:
@@ -13928,14 +13953,19 @@ components:
     BoardConfig:
       type: object
       required:
-        - layout
+        - columns
         - tiles
       properties:
-        layout:
-          $ref: '#/components/schemas/BoardLayout'
+        columns:
+          type: integer
+          minimum: 1
+          maximum: 4
+        showHeader:
+          type: boolean
+          nullable: true
         refreshIntervalSeconds:
           type: integer
-          minimum: 10
+          minimum: 3
         tiles:
           type: array
           items:
@@ -14073,6 +14103,9 @@ components:
           description: "null for a FREE placeholder (break/schedule item, see name) - there is no competition then"
         competitionName:
           type: string
+        competitionShortName:
+          type: string
+          nullable: true
         categoryName:
           type: string
           nullable: true
@@ -14188,6 +14221,9 @@ components:
           format: uuid
         competitionName:
           type: string
+        competitionShortName:
+          type: string
+          nullable: true
         categoryName:
           type: string
           nullable: true
@@ -14293,6 +14329,12 @@ components:
         role:
           type: string
           nullable: true
+        year:
+          type: integer
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
 
     AthleteBoardTeam:
       type: object
@@ -14343,6 +14385,10 @@ components:
         failedReason:
           type: string
           nullable: true
+        registeringClub:
+          type: string
+          nullable: true
+          description: "registering club - only filled when a board element requests showRegisteringClub"
 
     AthleteBoardMatch:
       type: object
@@ -14360,6 +14406,9 @@ components:
           format: uuid
         competitionName:
           type: string
+        competitionShortName:
+          type: string
+          nullable: true
         categoryName:
           type: string
           nullable: true
@@ -14399,6 +14448,14 @@ components:
         cancelled:
           type: boolean
           description: "the match is cancelled ('does not take place'). It stays at its planned position in the upcoming block anyway - a crew waiting at the pontoon cannot tell a match that vanished without a trace from a display error. teams is then always empty"
+        nextRoundName:
+          type: string
+          nullable: true
+          description: "name of the following round - only filled when a board element requests showAdvancement"
+        advancingSeats:
+          type: integer
+          nullable: true
+          description: "number of seats in the following round; null when the following round is an open field"
 
     AthleteBoardResultTeam:
       type: object
@@ -14471,6 +14528,9 @@ components:
           format: uuid
         competitionName:
           type: string
+        competitionShortName:
+          type: string
+          nullable: true
         categoryName:
           type: string
           nullable: true
@@ -14529,6 +14589,137 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardResult'
+        program:
+          type: array
+          description: "only filled for mode SCHEDULE: the whole day program from the timeline"
+          items:
+            $ref: '#/components/schemas/BoardProgramEntry'
+
+    BoardProgramState:
+      type: string
+      enum:
+        - FINISHED
+        - RUNNING
+        - UPCOMING
+
+    BoardProgramEntry:
+      type: object
+      required:
+        - state
+      properties:
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        name:
+          type: string
+          nullable: true
+          description: "schedule item (break) name; null for real matches"
+        competitionName:
+          type: string
+          nullable: true
+        competitionShortName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        state:
+          $ref: '#/components/schemas/BoardProgramState'
+
+    AwardCeremonyAthlete:
+      type: object
+      required:
+        - name
+        - role
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        club:
+          type: string
+          nullable: true
+          description: "home club - only set when it differs from the boat's title line"
+
+    AwardCeremonyTeam:
+      type: object
+      required:
+        - clubLine
+        - boatLine
+        - athletes
+      properties:
+        clubLine:
+          type: string
+        registeringClub:
+          type: string
+          nullable: true
+        boatLine:
+          type: string
+        time:
+          type: string
+          nullable: true
+        penalty:
+          type: string
+          nullable: true
+        raceLine:
+          type: string
+          nullable: true
+        athletes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwardCeremonyAthlete'
+
+    AwardCeremonyRank:
+      type: object
+      required:
+        - rank
+        - shared
+        - first
+        - team
+      properties:
+        rank:
+          type: integer
+        shared:
+          type: boolean
+        first:
+          type: boolean
+        team:
+          $ref: '#/components/schemas/AwardCeremonyTeam'
+
+    BoardCeremonyDto:
+      type: object
+      description: "the podium of one award ceremony - the same ranks the printed sheet carries"
+      required:
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+        - ranks
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        ratingCategoryId:
+          type: string
+          format: uuid
+          nullable: true
+        competitionIdentifier:
+          type: string
+        competitionShortName:
+          type: string
+          nullable: true
+        competitionName:
+          type: string
+        ratingCategoryName:
+          type: string
+          nullable: true
+        ranks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwardCeremonyRank'
 
     BoardViewDto:
       type: object
@@ -14561,6 +14752,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BoardListDto'
+        ceremonies:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardCeremonyDto'
 
     MyEventTeamMemberDto:
       type: object
@@ -14855,6 +15050,9 @@ components:
           format: uuid
         competitionName:
           type: string
+        competitionShortName:
+          type: string
+          nullable: true
         categoryName:
           type: string
           nullable: true
@@ -15197,14 +15395,14 @@ components:
           format: uuid
         competitionName:
           type: string
-        competitionIdentifier:
-          type: string
-          nullable: true
-          description: "The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels"
         competitionShortName:
           type: string
           nullable: true
           description: "The competition's short name (Kurzname, e.g. 'CM 4x+')"
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer) - shown together with the short name when the board is set to short labels"
         categoryName:
           type: string
           nullable: true
@@ -15266,14 +15464,14 @@ components:
         competitionName:
           type: string
           nullable: true
-        competitionIdentifier:
-          type: string
-          nullable: true
-          description: "The competition's race number (Rennnummer) - null for program items"
         competitionShortName:
           type: string
           nullable: true
           description: "The competition's short name (Kurzname) - null for program items"
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer) - null for program items"
         roundName:
           type: string
           nullable: true
@@ -15457,14 +15655,14 @@ components:
         competitionName:
           type: string
           nullable: true
-        competitionIdentifier:
-          type: string
-          nullable: true
-          description: "The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab"
         competitionShortName:
           type: string
           nullable: true
           description: "The competition's short name (Kurzname, e.g. 'CM 4x+') - shown in front of the slot label in the schedule tab"
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer, e.g. '17-NC') - shown in front of the slot label in the schedule tab"
         roundName:
           type: string
           nullable: true
@@ -15525,14 +15723,14 @@ components:
           format: uuid
         competitionName:
           type: string
-        competitionIdentifier:
-          type: string
-          nullable: true
-          description: "The competition's race number (Rennnummer)"
         competitionShortName:
           type: string
           nullable: true
           description: "The competition's short name (Kurzname)"
+        competitionIdentifier:
+          type: string
+          nullable: true
+          description: "The competition's race number (Rennnummer)"
         roundName:
           type: string
         matchName:
@@ -17361,12 +17559,12 @@ components:
         competitionIdentifier:
           description: Die Rennnummer des Wettkampfs, z. B. "17-NC".
           type: string
+        competitionName:
+          type: string
         competitionShortName:
           description: Der Kurzname des Wettkampfs, z. B. "CM 4x+".
           type: string
           nullable: true
-        competitionName:
-          type: string
         ratingCategoryId:
           description: >-
             Der Schlüssel der Wertung, in der geehrt wird - darüber wird ausgewählt. `null` ist ein

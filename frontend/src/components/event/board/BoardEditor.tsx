@@ -24,29 +24,26 @@ import {
     Delete as DeleteIcon,
 } from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
+import {useFetch} from '@utils/hooks'
+import {getAwardCeremonies} from '@api/sdk.gen'
 import {
     BoardConfig,
     BoardDto,
     BoardElement,
     BoardElementType,
-    BoardLayout,
     BoardListMode,
     BoardRequest,
     BoardTile,
 } from '@api/types.gen'
-import {gridForLayout} from './boardView'
+import {gridPlacement} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
 const MIN_ROTATION_SECONDS = 3
-const MIN_REFRESH_SECONDS = 10
-
-const LAYOUTS: BoardLayout[] = ['ONE_COLUMN', 'TWO_COLUMNS', 'THREE_COLUMNS', 'SIX_TILES']
-
-const tileCountFor = (layout: BoardLayout): number => {
-    const {columns, rows} = gridForLayout(layout)
-    return columns * rows
-}
+const MIN_REFRESH_SECONDS = 3
+const MAX_COLUMNS = 4
+const MAX_TILES = 12
+const MAX_ROW_SPAN = 3
 
 const defaultElement = (): BoardElement => ({
     type: 'MATCH',
@@ -58,7 +55,12 @@ const defaultElement = (): BoardElement => ({
     autoFit: true,
 })
 
-const defaultTile = (): BoardTile => ({rotationIntervalSeconds: 10, elements: [defaultElement()]})
+const defaultTile = (): BoardTile => ({
+    rotationIntervalSeconds: 10,
+    colSpan: 1,
+    rowSpan: 1,
+    elements: [defaultElement()],
+})
 
 /** Beim Typwechsel bekommt das Element die Vorgaben seines neuen Typs — keine Restfelder. */
 const elementForType = (type: BoardElementType): BoardElement => {
@@ -66,50 +68,75 @@ const elementForType = (type: BoardElementType): BoardElement => {
         case 'MATCH':
             return defaultElement()
         case 'MATCH_LIST':
-            return {type, listMode: 'UPCOMING', limit: 10}
+            return {type, listMode: 'UPCOMING', limit: 10, useShortNames: false}
         case 'CLOCK':
             return {type, showEventName: true}
         case 'TEXT':
             return {type, text: ''}
+        case 'AWARD_CEREMONY':
+            // Die Ehrung wählt das Formular; ohne Auswahl lehnt der Server das Board ab.
+            return {type}
     }
 }
 
 interface BoardEditorProps {
+    eventId: string
     board: BoardDto | null
     onSubmit: (request: BoardRequest) => void
     onCancel: () => void
 }
 
 /**
- * Der Board-Editor: Layout wählen, Kacheln füllen, Elemente konfigurieren. Bewusst
- * kontrollierter State statt react-hook-form — die Struktur ist verschachtelt und
- * dynamisch (Kacheln × Elemente), gespeichert wird immer das ganze Board.
+ * Der Board-Editor: Spaltenzahl wählen, Kacheln mit Breite/Höhe ins Raster legen,
+ * Elemente konfigurieren. Die Kachel-Karten stehen im selben Raster wie auf dem
+ * Bildschirm ([gridPlacement]) — der Editor ist damit zugleich die Vorschau der
+ * Anordnung. Bewusst kontrollierter State statt react-hook-form: die Struktur ist
+ * verschachtelt und dynamisch, gespeichert wird immer das ganze Board.
  */
-const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
+const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => {
     const {t} = useTranslation()
 
     const [name, setName] = useState(board?.name ?? '')
+
+    // Die wählbaren Ehrungen (je Wettkampf und Wertung eine) — nur im Editor geladen,
+    // die öffentliche Anzeige bekommt die aufgelösten Podien über die Board-Antwort.
+    const {data: ceremonies} = useFetch(signal => getAwardCeremonies({signal, path: {eventId}}), {
+        deps: [eventId],
+    })
     const [config, setConfig] = useState<BoardConfig>(
         board?.config ?? {
-            layout: 'THREE_COLUMNS',
+            columns: 3,
             refreshIntervalSeconds: 15,
             tiles: [defaultTile(), defaultTile(), defaultTile()],
         },
     )
 
-    const changeLayout = (layout: BoardLayout) => {
-        const count = tileCountFor(layout)
-        // Bestehende Kacheln bleiben erhalten; fehlende werden mit der Vorgabe gefüllt,
-        // überzählige abgeschnitten (der Zuschnitt ist erst mit dem Speichern endgültig).
-        const tiles = [
-            ...config.tiles.slice(0, count),
-            ...Array.from({length: Math.max(0, count - config.tiles.length)}, defaultTile),
-        ]
-        setConfig({...config, layout, tiles})
-    }
+    const columns = config.columns ?? 3
+
+    const changeColumns = (value: number) =>
+        setConfig({
+            ...config,
+            columns: value,
+            // Breiter als das Raster geht nicht — betroffene Kacheln einkürzen.
+            tiles: config.tiles.map(tile => ({
+                ...tile,
+                colSpan: Math.min(tile.colSpan ?? 1, value),
+            })),
+        })
 
     const updateTile = (index: number, tile: BoardTile) =>
         setConfig({...config, tiles: config.tiles.map((old, i) => (i === index ? tile : old))})
+
+    const removeTile = (index: number) =>
+        setConfig({...config, tiles: config.tiles.filter((_, i) => i !== index)})
+
+    const moveTile = (index: number, direction: -1 | 1) => {
+        const target = index + direction
+        if (target < 0 || target >= config.tiles.length) return
+        const tiles = [...config.tiles]
+        ;[tiles[index], tiles[target]] = [tiles[target], tiles[index]]
+        setConfig({...config, tiles})
+    }
 
     const updateElement = (tileIndex: number, elementIndex: number, element: BoardElement) => {
         const tile = config.tiles[tileIndex]
@@ -136,7 +163,7 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
         })
     }
 
-    const {columns} = gridForLayout(config.layout)
+    const placement = gridPlacement(config.tiles, columns)
 
     // Der einzige ungültige Zustand, den der Editor überhaupt erreichen lässt: ein leeres
     // TEXT-Element (alle anderen Felder haben gültige Vorgaben oder begrenzte Eingaben). Der
@@ -156,14 +183,26 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
         tileIndex: number,
         elementIndex: number,
         element: BoardElement,
-        field: 'showCrew' | 'showCountdown' | 'showTimes' | 'contrastColors' | 'autoFit',
+        field:
+            | 'showCrew'
+            | 'showCountdown'
+            | 'showTimes'
+            | 'contrastColors'
+            | 'autoFit'
+            | 'showCrewDetails'
+            | 'showBirthYears'
+            | 'showAdvancement'
+            | 'showRegisteringClub',
+        // Die Sprecherinnen-Optionen sind bewusst standardmäßig aus (Zusatzdaten nur auf
+        // Anforderung); die Anzeige-Optionen standardmäßig an.
+        defaultOn: boolean = true,
     ) => (
         <FormControlLabel
             key={field}
             control={
                 <Checkbox
                     size="small"
-                    checked={element[field] !== false}
+                    checked={defaultOn ? element[field] !== false : element[field] === true}
                     onChange={e =>
                         updateElement(tileIndex, elementIndex, {
                             ...element,
@@ -200,6 +239,9 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                     </MenuItem>
                     <MenuItem value="CLOCK">{t('event.boards.element.type.clock')}</MenuItem>
                     <MenuItem value="TEXT">{t('event.boards.element.type.text')}</MenuItem>
+                    <MenuItem value="AWARD_CEREMONY">
+                        {t('event.boards.element.type.awardCeremony')}
+                    </MenuItem>
                 </TextField>
                 <Box sx={{flex: 1}} />
                 <IconButton
@@ -254,6 +296,23 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                             ] as const
                         ).map(field => booleanOption(tileIndex, elementIndex, element, field))}
                     </Box>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary">
+                            {t('event.boards.element.announcerSection')}
+                        </Typography>
+                        <Box>
+                            {(
+                                [
+                                    'showCrewDetails',
+                                    'showBirthYears',
+                                    'showAdvancement',
+                                    'showRegisteringClub',
+                                ] as const
+                            ).map(field =>
+                                booleanOption(tileIndex, elementIndex, element, field, false),
+                            )}
+                        </Box>
+                    </Box>
                 </Stack>
             )}
 
@@ -279,7 +338,25 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                         <MenuItem value="RUNNING">
                             {t('event.boards.element.listMode.running')}
                         </MenuItem>
+                        <MenuItem value="SCHEDULE">
+                            {t('event.boards.element.listMode.schedule')}
+                        </MenuItem>
                     </TextField>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={element.useShortNames === true}
+                                onChange={e =>
+                                    updateElement(tileIndex, elementIndex, {
+                                        ...element,
+                                        useShortNames: e.target.checked,
+                                    })
+                                }
+                            />
+                        }
+                        label={t('event.boards.element.useShortNames')}
+                    />
                     <Box>
                         <Typography variant="caption" color="text.secondary">
                             {t('event.boards.element.limit')}: {element.limit ?? 10}
@@ -298,6 +375,41 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                         />
                     </Box>
                 </Stack>
+            )}
+
+            {element.type === 'AWARD_CEREMONY' && (
+                <TextField
+                    select
+                    size="small"
+                    fullWidth
+                    label={t('event.boards.element.ceremonyPick')}
+                    value={
+                        element.competitionId
+                            ? `${element.competitionId}|${element.ratingCategoryId ?? ''}`
+                            : ''
+                    }
+                    onChange={e => {
+                        const [competitionId, ratingCategoryId] = e.target.value.split('|')
+                        updateElement(tileIndex, elementIndex, {
+                            ...element,
+                            competitionId,
+                            ratingCategoryId: ratingCategoryId || undefined,
+                        })
+                    }}>
+                    {(ceremonies ?? []).map(choice => (
+                        <MenuItem
+                            key={`${choice.competitionId}|${choice.ratingCategoryId ?? ''}`}
+                            value={`${choice.competitionId}|${choice.ratingCategoryId ?? ''}`}>
+                            {[
+                                choice.competitionIdentifier,
+                                choice.competitionShortName ?? choice.competitionName,
+                                choice.ratingCategoryName,
+                            ]
+                                .filter(Boolean)
+                                .join(' · ')}
+                        </MenuItem>
+                    ))}
+                </TextField>
             )}
 
             {element.type === 'CLOCK' && (
@@ -357,45 +469,48 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                         fullWidth
                     />
 
-                    <Box>
-                        <Typography gutterBottom>{t('event.boards.layout.label')}</Typography>
-                        <ToggleButtonGroup
-                            exclusive
-                            value={config.layout}
-                            onChange={(_, value) => value && changeLayout(value as BoardLayout)}>
-                            {LAYOUTS.map(layout => (
-                                <ToggleButton key={layout} value={layout}>
-                                    {t(
-                                        `event.boards.layout.${
-                                            layout === 'ONE_COLUMN'
-                                                ? 'oneColumn'
-                                                : layout === 'TWO_COLUMNS'
-                                                  ? 'twoColumns'
-                                                  : layout === 'THREE_COLUMNS'
-                                                    ? 'threeColumns'
-                                                    : 'sixTiles'
-                                        }`,
-                                    )}
-                                </ToggleButton>
-                            ))}
-                        </ToggleButtonGroup>
-                    </Box>
-
-                    <Box>
-                        <Typography gutterBottom>
-                            {t('event.boards.refreshInterval')}:{' '}
-                            {config.refreshIntervalSeconds ?? 15}s
-                        </Typography>
-                        <Slider
-                            value={config.refreshIntervalSeconds ?? 15}
-                            min={MIN_REFRESH_SECONDS}
-                            max={60}
-                            step={5}
-                            onChange={(_, value) =>
-                                setConfig({...config, refreshIntervalSeconds: value as number})
+                    <Stack direction="row" gap={4} alignItems="center" flexWrap="wrap">
+                        <Box>
+                            <Typography gutterBottom>{t('event.boards.columns')}</Typography>
+                            <ToggleButtonGroup
+                                exclusive
+                                size="small"
+                                value={columns}
+                                onChange={(_, value) => value && changeColumns(value as number)}>
+                                {Array.from({length: MAX_COLUMNS}, (_, i) => i + 1).map(n => (
+                                    <ToggleButton key={n} value={n}>
+                                        {n}
+                                    </ToggleButton>
+                                ))}
+                            </ToggleButtonGroup>
+                        </Box>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={config.showHeader !== false}
+                                    onChange={e =>
+                                        setConfig({...config, showHeader: e.target.checked})
+                                    }
+                                />
                             }
+                            label={t('event.boards.showHeader')}
                         />
-                    </Box>
+                        <Box sx={{minWidth: 220, flex: 1}}>
+                            <Typography gutterBottom>
+                                {t('event.boards.refreshInterval')}:{' '}
+                                {config.refreshIntervalSeconds ?? 15}s
+                            </Typography>
+                            <Slider
+                                value={config.refreshIntervalSeconds ?? 15}
+                                min={MIN_REFRESH_SECONDS}
+                                max={60}
+                                step={5}
+                                onChange={(_, value) =>
+                                    setConfig({...config, refreshIntervalSeconds: value as number})
+                                }
+                            />
+                        </Box>
+                    </Stack>
 
                     {/* Die Kacheln im selben Raster wie auf dem Bildschirm — der Editor
                         ist damit zugleich die Vorschau der Anordnung. */}
@@ -408,54 +523,143 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                                 md: `repeat(${columns}, minmax(0, 1fr))`,
                             },
                         }}>
-                        {config.tiles.map((tile, tileIndex) => (
-                            <Card key={tileIndex} variant="outlined" sx={{p: 1.5}}>
-                                <Stack gap={1.5}>
-                                    <Typography variant="subtitle2">
-                                        {t('event.boards.tile.title', {index: tileIndex + 1})}
-                                    </Typography>
+                        {config.tiles.map((tile, tileIndex) => {
+                            const position = placement.positions[tileIndex]
+                            return (
+                                <Card
+                                    key={tileIndex}
+                                    variant="outlined"
+                                    sx={{
+                                        p: 1.5,
+                                        gridColumn: {
+                                            xs: 'auto',
+                                            md: `${position.column} / span ${position.colSpan}`,
+                                        },
+                                        gridRow: {
+                                            xs: 'auto',
+                                            md: `${position.row} / span ${position.rowSpan}`,
+                                        },
+                                    }}>
+                                    <Stack gap={1.5}>
+                                        <Stack direction="row" alignItems="center" gap={1}>
+                                            <Typography variant="subtitle2" sx={{flex: 1}}>
+                                                {t('event.boards.tile.title', {
+                                                    index: tileIndex + 1,
+                                                })}
+                                            </Typography>
+                                            <IconButton
+                                                size="small"
+                                                disabled={tileIndex === 0}
+                                                onClick={() => moveTile(tileIndex, -1)}>
+                                                <ArrowUpwardIcon fontSize="small" />
+                                            </IconButton>
+                                            <IconButton
+                                                size="small"
+                                                disabled={tileIndex === config.tiles.length - 1}
+                                                onClick={() => moveTile(tileIndex, 1)}>
+                                                <ArrowDownwardIcon fontSize="small" />
+                                            </IconButton>
+                                            <IconButton
+                                                size="small"
+                                                disabled={config.tiles.length === 1}
+                                                onClick={() => removeTile(tileIndex)}>
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </Stack>
 
-                                    {tile.elements.map((element, elementIndex) =>
-                                        renderElement(tileIndex, elementIndex, element),
-                                    )}
-
-                                    {tile.elements.length > 1 && (
-                                        <TextField
-                                            type="number"
-                                            size="small"
-                                            label={t('event.boards.tile.rotationInterval')}
-                                            value={tile.rotationIntervalSeconds ?? 10}
-                                            onChange={e => {
-                                                const value = Number(e.target.value)
-                                                if (Number.isFinite(value)) {
+                                        <Stack direction="row" gap={1}>
+                                            <TextField
+                                                select
+                                                size="small"
+                                                sx={{flex: 1}}
+                                                label={t('event.boards.tile.width')}
+                                                value={Math.min(tile.colSpan ?? 1, columns)}
+                                                onChange={e =>
                                                     updateTile(tileIndex, {
                                                         ...tile,
-                                                        rotationIntervalSeconds: Math.max(
-                                                            MIN_ROTATION_SECONDS,
-                                                            Math.round(value),
-                                                        ),
+                                                        colSpan: Number(e.target.value),
                                                     })
-                                                }
-                                            }}
-                                            inputProps={{min: MIN_ROTATION_SECONDS}}
-                                        />
-                                    )}
+                                                }>
+                                                {Array.from({length: columns}, (_, i) => i + 1).map(
+                                                    n => (
+                                                        <MenuItem key={n} value={n}>
+                                                            {n}
+                                                        </MenuItem>
+                                                    ),
+                                                )}
+                                            </TextField>
+                                            <TextField
+                                                select
+                                                size="small"
+                                                sx={{flex: 1}}
+                                                label={t('event.boards.tile.height')}
+                                                value={tile.rowSpan ?? 1}
+                                                onChange={e =>
+                                                    updateTile(tileIndex, {
+                                                        ...tile,
+                                                        rowSpan: Number(e.target.value),
+                                                    })
+                                                }>
+                                                {Array.from(
+                                                    {length: MAX_ROW_SPAN},
+                                                    (_, i) => i + 1,
+                                                ).map(n => (
+                                                    <MenuItem key={n} value={n}>
+                                                        {n}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Stack>
 
-                                    <Button
-                                        size="small"
-                                        startIcon={<AddIcon />}
-                                        onClick={() =>
-                                            updateTile(tileIndex, {
-                                                ...tile,
-                                                elements: [...tile.elements, defaultElement()],
-                                            })
-                                        }>
-                                        {t('event.boards.tile.addElement')}
-                                    </Button>
-                                </Stack>
-                            </Card>
-                        ))}
+                                        {tile.elements.map((element, elementIndex) =>
+                                            renderElement(tileIndex, elementIndex, element),
+                                        )}
+
+                                        {tile.elements.length > 1 && (
+                                            <TextField
+                                                type="number"
+                                                size="small"
+                                                label={t('event.boards.tile.rotationInterval')}
+                                                value={tile.rotationIntervalSeconds ?? 10}
+                                                onChange={e => {
+                                                    const value = Number(e.target.value)
+                                                    if (Number.isFinite(value)) {
+                                                        updateTile(tileIndex, {
+                                                            ...tile,
+                                                            rotationIntervalSeconds: Math.max(
+                                                                MIN_ROTATION_SECONDS,
+                                                                Math.round(value),
+                                                            ),
+                                                        })
+                                                    }
+                                                }}
+                                                inputProps={{min: MIN_ROTATION_SECONDS}}
+                                            />
+                                        )}
+
+                                        <Button
+                                            size="small"
+                                            startIcon={<AddIcon />}
+                                            onClick={() =>
+                                                updateTile(tileIndex, {
+                                                    ...tile,
+                                                    elements: [...tile.elements, defaultElement()],
+                                                })
+                                            }>
+                                            {t('event.boards.tile.addElement')}
+                                        </Button>
+                                    </Stack>
+                                </Card>
+                            )
+                        })}
                     </Box>
+
+                    <Button
+                        startIcon={<AddIcon />}
+                        disabled={config.tiles.length >= MAX_TILES}
+                        onClick={() => setConfig({...config, tiles: [...config.tiles, defaultTile()]})}>
+                        {t('event.boards.tile.add')}
+                    </Button>
                 </Stack>
             </DialogContent>
             <DialogActions>

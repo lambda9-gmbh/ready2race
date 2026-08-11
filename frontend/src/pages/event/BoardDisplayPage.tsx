@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from 'react'
-import {Box, CircularProgress, Fade, IconButton, Typography} from '@mui/material'
+import {Box, CircularProgress, Fade, IconButton, Stack, Typography} from '@mui/material'
 import {
     Fullscreen as FullscreenIcon,
     FullscreenExit as FullscreenExitIcon,
@@ -137,6 +137,8 @@ const BoardDisplayPage = () => {
     const stale =
         loadFailed && lastUpdated !== null && Date.now() - lastUpdated.getTime() > staleThresholdMs
 
+    const showHeader = data.config.showHeader !== false
+
     return (
         <Box
             onMouseMove={handleMouseMove}
@@ -144,11 +146,53 @@ const BoardDisplayPage = () => {
                 height: {xs: 'auto', lg: '100dvh'},
                 overflow: {xs: 'visible', lg: 'hidden'},
                 position: 'relative',
+                display: 'grid',
+                gridTemplateRows: showHeader ? 'auto minmax(0, 1fr)' : 'minmax(0, 1fr)',
             }}>
+            {/* Der Kopf der alten Bühne: Veranstaltungsname links, Serveruhr rechts,
+                darunter die "Stand"-Zeile. Je Board abschaltbar (showHeader). */}
+            {showHeader && (
+                <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="baseline"
+                    gap={2}
+                    sx={{
+                        pl: 'clamp(0.5rem, 1vw, 1.5rem)',
+                        // Rechts liegt der (auto-versteckende) Vollbild-Knopf über der
+                        // Ecke — die Uhr rückt ein Stück ein, statt darunter zu liegen.
+                        pr: 'clamp(3rem, 4vw, 4.5rem)',
+                        pt: 'clamp(0.4rem, 0.9vh, 1rem)',
+                    }}>
+                    <Typography sx={{fontSize: 'clamp(1rem, 1.8vw, 3rem)', fontWeight: 800}} noWrap>
+                        {data.eventName}
+                    </Typography>
+                    <Stack alignItems="flex-end" sx={{flexShrink: 0}}>
+                        <Typography sx={{fontSize: 'clamp(1rem, 1.8vw, 2rem)', fontWeight: 800}}>
+                            {now.toLocaleTimeString(undefined, {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                            })}
+                        </Typography>
+                        <Typography
+                            sx={{fontSize: 'clamp(0.65rem, 1vw, 0.85rem)'}}
+                            color={stale ? 'warning.main' : 'text.secondary'}>
+                            {t('event.info.athleteBoard.asOf', {
+                                time: asOfTime.toLocaleTimeString(undefined, {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                }),
+                            })}
+                            {stale ? ` — ${t('event.info.athleteBoard.stale')}` : ''}
+                        </Typography>
+                    </Stack>
+                </Stack>
+            )}
+
             <BoardRenderer view={data} now={now} />
 
-            {/* Nur bei Störung sichtbar: die "Stand"-Warnung eines abgehängten Bildschirms. */}
-            {stale && (
+            {/* Ohne Kopf bleibt die Störung trotzdem sichtbar: dezente Ecke unten rechts. */}
+            {!showHeader && stale && (
                 <Typography
                     sx={{
                         position: 'absolute',

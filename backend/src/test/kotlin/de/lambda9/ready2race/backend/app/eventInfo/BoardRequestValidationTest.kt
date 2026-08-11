@@ -17,47 +17,84 @@ class BoardRequestValidationTest {
 
     private fun request(config: BoardConfig) = BoardRequest(name = "Steg", config = config)
 
-    private fun tiles(n: Int) = List(n) { BoardTile(elements = listOf(matchElement(0))) }
+    private fun tiles(n: Int, colSpan: Int = 1, rowSpan: Int = 1) =
+        List(n) { BoardTile(colSpan = colSpan, rowSpan = rowSpan, elements = listOf(matchElement(0))) }
 
     @Test
-    fun aMatchingTileCountIsValid() {
-        val result = request(BoardConfig(layout = BoardLayout.THREE_COLUMNS, tiles = tiles(3))).validate()
+    fun aPlainConfigIsValid() {
+        val result = request(BoardConfig(columns = 3, tiles = tiles(3))).validate()
         assertEquals(ValidationResult.Valid, result)
     }
 
+    // Der Editor sendet immer `columns`; `layout` ist nur noch Alt-Lesart gespeicherter
+    // Stände und wird beim Lesen normalisiert — als Request ist es ungültig.
     @Test
-    fun aWrongTileCountIsInvalid() {
-        val result = request(BoardConfig(layout = BoardLayout.SIX_TILES, tiles = tiles(3))).validate()
-        assertNotEquals(ValidationResult.Valid, result)
+    fun columnsAreRequiredAndBounded() {
+        assertNotEquals(ValidationResult.Valid, request(BoardConfig(tiles = tiles(3))).validate())
+        assertNotEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(layout = BoardLayout.THREE_COLUMNS, tiles = tiles(3))).validate(),
+        )
+        assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 0, tiles = tiles(1))).validate())
+        assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 5, tiles = tiles(1))).validate())
+    }
+
+    @Test
+    fun tileCountIsBounded() {
+        assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = emptyList())).validate())
+        assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(13))).validate())
+        assertEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(12))).validate())
+    }
+
+    @Test
+    fun spansMustFitTheGrid() {
+        // Breiter als das Raster geht nicht …
+        assertNotEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 2, tiles = tiles(1, colSpan = 3))).validate(),
+        )
+        // … volle Breite schon.
+        assertEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 2, tiles = tiles(1, colSpan = 2))).validate(),
+        )
+        assertNotEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 2, tiles = tiles(1, rowSpan = 0))).validate(),
+        )
+        assertNotEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 2, tiles = tiles(1, rowSpan = 4))).validate(),
+        )
     }
 
     @Test
     fun aTileWithoutElementsIsInvalid() {
-        val config = BoardConfig(layout = BoardLayout.ONE_COLUMN, tiles = listOf(BoardTile(elements = emptyList())))
+        val config = BoardConfig(columns = 1, tiles = listOf(BoardTile(elements = emptyList())))
         assertNotEquals(ValidationResult.Valid, request(config).validate())
     }
 
     @Test
     fun aMatchElementNeedsAnOffsetInRange() {
         val missing = BoardConfig(
-            layout = BoardLayout.ONE_COLUMN,
+            columns = 1,
             tiles = listOf(BoardTile(elements = listOf(BoardElement(type = BoardElementType.MATCH)))),
         )
         assertNotEquals(ValidationResult.Valid, request(missing).validate())
 
         val outOfRange =
-            BoardConfig(layout = BoardLayout.ONE_COLUMN, tiles = listOf(BoardTile(elements = listOf(matchElement(7)))))
+            BoardConfig(columns = 1, tiles = listOf(BoardTile(elements = listOf(matchElement(7)))))
         assertNotEquals(ValidationResult.Valid, request(outOfRange).validate())
 
         val edge =
-            BoardConfig(layout = BoardLayout.ONE_COLUMN, tiles = listOf(BoardTile(elements = listOf(matchElement(-6)))))
+            BoardConfig(columns = 1, tiles = listOf(BoardTile(elements = listOf(matchElement(-6)))))
         assertEquals(ValidationResult.Valid, request(edge).validate())
     }
 
     @Test
     fun aListElementNeedsModeAndLimitInRange() {
         fun listElement(mode: BoardListMode?, limit: Int?) = BoardConfig(
-            layout = BoardLayout.ONE_COLUMN,
+            columns = 1,
             tiles = listOf(
                 BoardTile(
                     elements = listOf(
@@ -75,7 +112,7 @@ class BoardRequestValidationTest {
     @Test
     fun aTextElementNeedsText() {
         val config = BoardConfig(
-            layout = BoardLayout.ONE_COLUMN,
+            columns = 1,
             tiles = listOf(BoardTile(elements = listOf(BoardElement(type = BoardElementType.TEXT, text = " ")))),
         )
         assertNotEquals(ValidationResult.Valid, request(config).validate())
@@ -83,17 +120,22 @@ class BoardRequestValidationTest {
 
     @Test
     fun intervalsBelowTheFloorAreInvalid() {
-        val fastRefresh = BoardConfig(layout = BoardLayout.ONE_COLUMN, refreshIntervalSeconds = 5, tiles = tiles(1))
+        // Untergrenze 3 s (Sprecherinnen-Wunsch vom 10.08.2026) — 3 ist gültig, 2 nicht.
+        val fastRefresh = BoardConfig(columns = 1, refreshIntervalSeconds = 2, tiles = tiles(1))
         assertNotEquals(ValidationResult.Valid, request(fastRefresh).validate())
+        assertEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 1, refreshIntervalSeconds = 3, tiles = tiles(1))).validate(),
+        )
 
         val fastRotation = BoardConfig(
-            layout = BoardLayout.ONE_COLUMN,
+            columns = 1,
             tiles = listOf(BoardTile(rotationIntervalSeconds = 1, elements = listOf(matchElement(0)))),
         )
         assertNotEquals(ValidationResult.Valid, request(fastRotation).validate())
 
         val blankName =
-            BoardRequest(name = " ", config = BoardConfig(layout = BoardLayout.ONE_COLUMN, tiles = tiles(1)))
+            BoardRequest(name = " ", config = BoardConfig(columns = 1, tiles = tiles(1)))
         assertNotEquals(ValidationResult.Valid, blankName.validate())
     }
 }
