@@ -1973,7 +1973,8 @@
         "titlePast": "{{count}} løb tilbage",
         "emptyCurrent": "Intet løb i gang",
         "emptyUpcoming": "Ingen flere planlagte løb",
-        "emptyPast": "Endnu intet resultat"
+        "emptyPast": "Endnu intet resultat",
+        "textRequired": "Tekst må ikke være tom"
       }
     }
   },

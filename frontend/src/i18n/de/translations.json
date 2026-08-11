@@ -1979,7 +1979,8 @@
         "titlePast": "{{count}} Läufe zurück",
         "emptyCurrent": "Kein Lauf im Rennen",
         "emptyUpcoming": "Kein weiterer Lauf geplant",
-        "emptyPast": "Noch kein Ergebnis"
+        "emptyPast": "Noch kein Ergebnis",
+        "textRequired": "Text darf nicht leer sein"
       }
     }
   },

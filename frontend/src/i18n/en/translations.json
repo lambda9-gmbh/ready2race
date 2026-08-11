@@ -1979,7 +1979,8 @@
         "titlePast": "{{count}} matches back",
         "emptyCurrent": "No match racing",
         "emptyUpcoming": "No further match scheduled",
-        "emptyPast": "No result yet"
+        "emptyPast": "No result yet",
+        "textRequired": "Text must not be empty"
       }
     }
   },

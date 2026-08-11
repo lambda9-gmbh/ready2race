@@ -138,6 +138,13 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
 
     const {columns} = gridForLayout(config.layout)
 
+    // Der einzige ungültige Zustand, den der Editor überhaupt erreichen lässt: ein leeres
+    // TEXT-Element (alle anderen Felder haben gültige Vorgaben oder begrenzte Eingaben). Der
+    // Server lehnt das mit 422 ab; hier wird der Speichern-Knopf so lange gesperrt.
+    const hasBlankText = config.tiles.some(tile =>
+        tile.elements.some(el => el.type === 'TEXT' && (el.text ?? '').trim() === ''),
+    )
+
     const offsetLabel = (offset: number) =>
         offset === 0
             ? t('event.boards.element.offsetCurrent')
@@ -322,6 +329,14 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                     onChange={e =>
                         updateElement(tileIndex, elementIndex, {...element, text: e.target.value})
                     }
+                    // Leerer Text ist serverseitig ungültig; ohne diese Markierung sperrte er nur
+                    // stumm das Speichern (der Knopf unten ist dann deaktiviert).
+                    error={(element.text ?? '').trim() === ''}
+                    helperText={
+                        (element.text ?? '').trim() === ''
+                            ? t('event.boards.element.textRequired')
+                            : undefined
+                    }
                 />
             )}
         </Box>
@@ -447,7 +462,7 @@ const BoardEditor = ({board, onSubmit, onCancel}: BoardEditorProps) => {
                 <Button onClick={onCancel}>{t('common.cancel')}</Button>
                 <Button
                     variant="contained"
-                    disabled={name.trim() === ''}
+                    disabled={name.trim() === '' || hasBlankText}
                     onClick={() => onSubmit({name: name.trim(), config})}>
                     {board ? t('common.update') : t('common.create')}
                 </Button>
