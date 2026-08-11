@@ -247,13 +247,28 @@ fun List<AdditionalText>.wrappedToBoxes(
     widths: GapTextWidths,
 ): List<AdditionalText> = map { addition ->
     val boxWidth = pageWidth * addition.relWidth.toFloat()
-    val fontSize = addition.gapFontSize(pageHeight * addition.relHeight.toFloat())
+    val boxHeight = pageHeight * addition.relHeight.toFloat()
+    val baseSize = addition.gapFontSize(boxHeight)
 
-    addition.copy(
-        content = GapTextWrap.wrap(addition.content, boxWidth) {
-            widths.width(it, fontSize, addition.bold, addition.italic)
-        }
-    )
+    fun wrapAt(fontSize: Float): String = GapTextWrap.wrap(addition.content, boxWidth) {
+        widths.width(it, fontSize, addition.bold, addition.italic)
+    }
+
+    val wrapped = wrapAt(baseSize)
+    val metrics = addition.gapTextMetrics(boxHeight, wrapped.count { it == '\n' } + 1)
+
+    if (metrics.fontSize == baseSize) {
+        addition.copy(content = wrapped)
+    } else {
+        // Der Block passte nicht in den Kasten und die Schrift wurde geschrumpft (siehe
+        // gapTextMetrics). Der Umbruch oben hat aber mit der Ausgangsgröße gemessen - in der
+        // kleineren Schrift passt ggf. mehr in eine Zeile, deshalb einmal neu umbrechen. Eine
+        // Runde reicht: die Messbreite ist linear in der Schriftgröße, eine kleinere Schrift
+        // liefert also nie *mehr* Zeilen - und mit der geschrumpften Größe als neuer Basis
+        // (sie wird hier in den Platzhalter zurückgeschrieben, damit beide Renderer sie über
+        // gapTextMetrics wiederfinden) schrumpft der nächste Metrik-Aufruf nicht weiter.
+        addition.copy(content = wrapAt(metrics.fontSize), fontSize = metrics.fontSize)
+    }
 }
 
 private fun drawAddition(
