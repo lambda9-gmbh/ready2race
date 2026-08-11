@@ -73,7 +73,7 @@ const BoardMatchSlotElement = ({
                 // sobald das Feld nicht reicht.
                 overflow: 'auto',
             }}>
-            <AthleteBoardColumnCard title={title} emptyText={emptyText}>
+            <AthleteBoardColumnCard title={title} emptyText={emptyText} allowOverflow>
                 {content?.match ? (
                     <AthleteBoardMatchCard
                         match={content.match}

@@ -13,6 +13,15 @@ interface AthleteBoardColumnCardProps {
      * darin teilen können.
      */
     children?: ReactNode
+    /**
+     * Für das Board-System (Kachel im freien Raster): Der Rahmen klemmt seinen Inhalt NICHT ab,
+     * sondern lässt ihn auf seine natürliche Höhe wachsen — die Kachel selbst scrollt dann
+     * (BoardMatchSlotElement, `overflow: auto`). Ohne das blieb in kleinen Kacheln die Crew-Zeile
+     * unter der Vereinskette am unteren Rand hängen und wurde vom `overflow: hidden` der Bühne
+     * abgeschnitten (Rückmeldung vom 11.08.2026). Die klassische Bühne (Athleten-Board mit den drei
+     * Statusspalten) lässt das Flag aus und behält ihr Scroll-Verbot samt Dichte-Skalierung.
+     */
+    allowOverflow?: boolean
 }
 
 /**
@@ -22,17 +31,24 @@ interface AthleteBoardColumnCardProps {
  * leer, und ein fest montierter Bildschirm soll seine Struktur nicht wechseln, nur weil gerade
  * nichts fährt.
  */
-const AthleteBoardColumnCard = ({title, emptyText, children}: AthleteBoardColumnCardProps) => (
+const AthleteBoardColumnCard = ({
+    title,
+    emptyText,
+    children,
+    allowOverflow = false,
+}: AthleteBoardColumnCardProps) => (
     <Card
         variant="outlined"
         sx={{
             // Ab lg gilt das Scroll-Verbot der Bühne, darunter bleibt die Karte in ihrer
-            // natürlichen Höhe und darf wie früher gestapelt scrollen.
-            height: {xs: 'auto', lg: '100%'},
-            minHeight: 0,
-            overflow: {xs: 'visible', lg: 'hidden'},
+            // natürlichen Höhe und darf wie früher gestapelt scrollen. Im Board-System
+            // (allowOverflow) wächst die Karte dagegen auf ihre natürliche Höhe und die Kachel
+            // scrollt sie — sonst klemmt das Scroll-Verbot der Bühne die Crew-Zeile ab.
+            height: allowOverflow ? 'auto' : {xs: 'auto', lg: '100%'},
+            minHeight: allowOverflow ? '100%' : 0,
+            overflow: allowOverflow ? 'visible' : {xs: 'visible', lg: 'hidden'},
             display: 'grid',
-            gridTemplateRows: {xs: 'auto auto', lg: 'auto 1fr'},
+            gridTemplateRows: allowOverflow ? 'auto auto' : {xs: 'auto auto', lg: 'auto 1fr'},
             rowGap: scaled('0.25rem', '0.4vw', '0.6rem'),
             p: scaled('0.5rem', '0.9vw', '1.25rem'),
         }}>
@@ -51,7 +67,9 @@ const AthleteBoardColumnCard = ({title, emptyText, children}: AthleteBoardColumn
             sx={{
                 minHeight: 0,
                 display: 'grid',
-                gridTemplateRows: {xs: 'auto auto', lg: 'auto minmax(0, 1fr)'},
+                gridTemplateRows: allowOverflow
+                    ? 'auto auto'
+                    : {xs: 'auto auto', lg: 'auto minmax(0, 1fr)'},
                 rowGap: scaled('0.35rem', '0.6vw', '0.9rem'),
             }}>
             {children ?? (
