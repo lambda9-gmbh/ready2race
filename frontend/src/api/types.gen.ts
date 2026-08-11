@@ -483,7 +483,7 @@ export type BoardElement = {
 /**
  * MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile
  */
-export type BoardElementType = 'MATCH' | 'MATCH_DETAIL' | 'MATCH_LIST' | 'CLOCK' | 'TEXT' | 'AWARD_CEREMONY'
+export type BoardElementType = 'MATCH' | 'MATCH_DETAIL' | 'MATCH_LIST' | 'CLOCK' | 'TEXT' | 'AWARD_CEREMONY' | 'DELAY'
 
 export type BoardListDto = {
     mode: BoardListMode
@@ -552,6 +552,10 @@ export type BoardViewDto = {
     slots: Array<BoardMatchSlotDto>
     lists: Array<BoardListDto>
     ceremonies?: Array<BoardCeremonyDto>
+    /**
+     * current delay in seconds: started_at minus start_time of the latest started match; negative = ahead of schedule; null while nothing has started or the board has no DELAY element
+     */
+    currentDelaySeconds?: number | null
 }
 
 export type CaptchaDto = {

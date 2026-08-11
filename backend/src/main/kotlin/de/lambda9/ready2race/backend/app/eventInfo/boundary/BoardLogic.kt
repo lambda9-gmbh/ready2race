@@ -44,6 +44,13 @@ object BoardLogic {
          * Person — das zahlt nur, wer die Kachel tatsächlich konfiguriert hat.
          */
         val requirements: Boolean = false,
+        /**
+         * Aktuelle Verspätung (DELAY-Element) angefordert. Eigenes Flag statt „immer mitliefern":
+         * der Running-Block trägt die Zahl nicht verlässlich — der zuletzt gestartete Lauf kann
+         * längst beendet sein und ist dann dort verschwunden. Die Zahl braucht deshalb ihre
+         * eigene kleine Abfrage, und die zahlt nur ein Board mit DELAY-Element.
+         */
+        val delay: Boolean = false,
     )
 
     /**
@@ -93,7 +100,61 @@ object BoardLogic {
             schedule = BoardListMode.SCHEDULE in listLimits,
             ceremonies = ceremonies,
             requirements = matchDetail,
+            delay = elements.any { it.type == BoardElementType.DELAY },
         )
+    }
+
+    /**
+     * Programmpunkte (FREE-Slots) haben keinen eigenen Erledigt-Zustand: niemand „beendet" eine
+     * Mittagspause. Sie gelten als vorbei, sobald ein im Programm SPÄTERER Lauf gestartet,
+     * aktiviert oder beendet ist — Programm-Reihenfolge ist die geplante Startzeit, dieselbe
+     * Ordnung, in der das Tagesprogramm seine Zustände zeigt. Ohne diese Regel blieb eine
+     * 15-Uhr-Besprechung bei Verspätung ewig „als Nächstes" stehen, während längst die Läufe
+     * vom Nachmittag fuhren (Prod-Screenshot vom 11.08.2026).
+     *
+     * [latestProgressStartTime] ist die geplante Startzeit des spätesten Laufs mit Aktivität;
+     * null, solange noch gar nichts passiert ist — dann ist auch nichts überholt.
+     */
+    fun freeSlotPassed(
+        slotStartTime: java.time.LocalDateTime?,
+        latestProgressStartTime: java.time.LocalDateTime?,
+    ): Boolean =
+        latestProgressStartTime != null && slotStartTime != null &&
+            !slotStartTime.isAfter(latestProgressStartTime)
+
+    /**
+     * Dieselbe Regel im Tagesprogramm: überholte Programmpunkte werden als FINISHED markiert,
+     * damit der mitlaufende Ausschnitt (programForElement) nicht ewig an ihnen hängen bleibt.
+     * Die Schwelle kommt aus den eigenen Einträgen — genau der Quelle, aus der das Programm
+     * auch RUNNING/FINISHED ableitet, keine zweite Wahrheit.
+     */
+    fun markPassedFreeSlots(program: List<BoardProgramEntry>): List<BoardProgramEntry> {
+        val latestProgress = program
+            .filter { it.state != BoardProgramState.UPCOMING }
+            .mapNotNull { it.startTime }
+            .maxOrNull()
+        return program.map { entry ->
+            if (
+                entry.name != null &&
+                entry.state == BoardProgramState.UPCOMING &&
+                freeSlotPassed(entry.startTime, latestProgress)
+            ) entry.copy(state = BoardProgramState.FINISHED)
+            else entry
+        }
+    }
+
+    /**
+     * Aktuelle Verspätung der Veranstaltung: `started_at − start_time` des zuletzt (nach
+     * Ist-Start) gestarteten Laufs. Negativ = Verfrühung. Null, wenn noch nichts gestartet ist
+     * oder der zuletzt gestartete Lauf keine geplante Zeit hat — dann gibt es nichts zu
+     * vergleichen. [starts] sind Paare (Ist-Start, geplanter Start).
+     */
+    fun currentDelaySeconds(
+        starts: List<Pair<java.time.LocalDateTime, java.time.LocalDateTime?>>,
+    ): Long? {
+        val (startedAt, planned) = starts.maxByOrNull { it.first } ?: return null
+        if (planned == null) return null
+        return java.time.Duration.between(planned, startedAt).seconds
     }
 
     /**

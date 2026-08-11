@@ -1958,6 +1958,11 @@
         "add": "Add tile",
         "addDisabledMatchDetail": "The announcer tile fills the whole board — no further tiles are possible"
       },
+      "delay": {
+        "subtitle": "vs. schedule, as of last start",
+        "onTime": "on time",
+        "noStarts": "No race started yet"
+      },
       "detail": {
         "status": {
           "upcoming": "Upcoming",
@@ -1974,6 +1979,7 @@
           "matchDetail": "Announcer tile (full screen)",
           "matchList": "Match list",
           "clock": "Clock",
+          "delay": "Delay",
           "text": "Notice",
           "awardCeremony": "Award ceremony"
         },

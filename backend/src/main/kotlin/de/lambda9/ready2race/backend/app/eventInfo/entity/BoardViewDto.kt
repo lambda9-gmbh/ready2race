@@ -66,4 +66,10 @@ data class BoardViewDto(
     val lists: List<BoardListDto>,
     /** Je konfiguriertem Siegerehrungs-Element eine Ehrung; fehlende bleiben einfach aus. */
     val ceremonies: List<BoardCeremonyDto> = emptyList(),
+    /**
+     * Aktuelle Verspätung in Sekunden: `started_at − start_time` des zuletzt gestarteten Laufs
+     * (BoardLogic.currentDelaySeconds). Negativ = Verfrühung. Null, wenn noch nichts gestartet
+     * ist — oder das Board kein DELAY-Element hat (needs-Muster, siehe BoardDataNeeds.delay).
+     */
+    val currentDelaySeconds: Long? = null,
 )

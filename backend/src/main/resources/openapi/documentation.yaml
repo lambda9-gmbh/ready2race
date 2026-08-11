@@ -13821,6 +13821,7 @@ components:
         - CLOCK
         - TEXT
         - AWARD_CEREMONY
+        - DELAY
 
     BoardListMode:
       type: string
@@ -14763,6 +14764,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BoardCeremonyDto'
+        currentDelaySeconds:
+          type: integer
+          format: int64
+          nullable: true
+          description: "current delay in seconds: started_at minus start_time of the latest started match; negative = ahead of schedule; null while nothing has started or the board has no DELAY element"
 
     MyEventTeamMemberDto:
       type: object

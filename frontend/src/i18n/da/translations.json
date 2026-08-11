@@ -1948,6 +1948,11 @@
         "add": "Tilføj felt",
         "addDisabledMatchDetail": "Speaker-feltet fylder hele boardet — flere felter er ikke mulige"
       },
+      "delay": {
+        "subtitle": "i forhold til tidsplanen, pr. seneste start",
+        "onTime": "til tiden",
+        "noStarts": "Intet løb startet endnu"
+      },
       "detail": {
         "status": {
           "upcoming": "Kommende",
@@ -1964,6 +1969,7 @@
           "matchDetail": "Speaker-felt (fuld skærm)",
           "matchList": "Løbsliste",
           "clock": "Ur",
+          "delay": "Forsinkelse",
           "text": "Infotekst",
           "awardCeremony": "Præmieoverrækkelse"
         },

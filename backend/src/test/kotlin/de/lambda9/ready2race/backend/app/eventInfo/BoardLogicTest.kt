@@ -130,6 +130,83 @@ class BoardLogicTest {
         assertEquals(false, needs.requirements)
     }
 
+    // --- Programm-Reihenfolgen-Regel: Programmpunkte gelten als vorbei, sobald ein im
+    // Programm späterer Lauf Aktivität zeigt (der Prod-Fall vom 11.08.2026: Besprechung
+    // 15:00 nie „erledigt", Lauf 16:57 läuft — „Als Nächstes" darf nicht die Besprechung sein).
+
+    private fun at(hour: Int, minute: Int = 0) = java.time.LocalDateTime.of(2026, 8, 11, hour, minute)
+
+    private fun freeSlot(name: String, hour: Int) =
+        match(name).copy(name = name, startTime = at(hour))
+
+    @Test
+    fun aDelayedFreeSlotIsPassedOnceALaterMatchHasStarted() {
+        // Der 16:57-Lauf läuft: die 15-Uhr-Besprechung ist überholt, die 19-Uhr-Ehrung nicht.
+        // Der Filter sitzt in EventInfoService.mergeWithPendingPlaceholders VOR dem Limit,
+        // damit ein überholter Punkt den „Als Nächstes"-Block gar nicht erst besetzt.
+        val upcoming = listOf(
+            freeSlot("Besprechung", 15),
+            match("U-nach-dem-Laufenden").copy(startTime = at(17, 9)),
+            freeSlot("Siegerehrung", 19),
+        )
+        val cleaned = upcoming.filterNot {
+            it.name != null && BoardLogic.freeSlotPassed(it.startTime, at(16, 57))
+        }
+        assertEquals(listOf("U-nach-dem-Laufenden", "Siegerehrung"), cleaned.map { it.competitionName })
+        // „Als Nächstes" (+1) ist damit der Lauf nach dem laufenden, nicht die Besprechung.
+        assertEquals(
+            "U-nach-dem-Laufenden",
+            BoardLogic.resolveOffset(1, running, cleaned, results).match?.competitionName,
+        )
+    }
+
+    @Test
+    fun withoutAnyProgressNothingIsPassed() {
+        // Solange nichts gestartet ist, gibt es keine Schwelle — nichts gilt als überholt.
+        assertEquals(false, BoardLogic.freeSlotPassed(at(15), null))
+        // Gleichstand zählt als überholt: das Programm ist an diesem Punkt angekommen.
+        assertEquals(true, BoardLogic.freeSlotPassed(at(15), at(15)))
+        assertEquals(false, BoardLogic.freeSlotPassed(at(19), at(16, 57)))
+    }
+
+    @Test
+    fun theProgramMarksPassedFreeSlotsAsFinished() {
+        val program = listOf(
+            BoardProgramEntry(startTime = at(14), competitionName = "früh", state = BoardProgramState.FINISHED),
+            BoardProgramEntry(startTime = at(15), name = "Besprechung", state = BoardProgramState.UPCOMING),
+            BoardProgramEntry(startTime = at(16, 57), competitionName = "läuft", state = BoardProgramState.RUNNING),
+            BoardProgramEntry(startTime = at(19), name = "Siegerehrung", state = BoardProgramState.UPCOMING),
+            // Ein verspäteter LAUF bleibt anstehend — nur Programmpunkte kippen.
+            BoardProgramEntry(startTime = at(16), competitionName = "verspätet", state = BoardProgramState.UPCOMING),
+        )
+        val marked = BoardLogic.markPassedFreeSlots(program)
+        assertEquals(BoardProgramState.FINISHED, marked[1].state)
+        assertEquals(BoardProgramState.UPCOMING, marked[3].state)
+        assertEquals(BoardProgramState.UPCOMING, marked[4].state)
+    }
+
+    // --- Verspätung: started_at − start_time des zuletzt gestarteten Laufs ---
+
+    @Test
+    fun delayComesFromTheLatestStartedMatch() {
+        // Noch nichts gestartet: keine Aussage.
+        assertNull(BoardLogic.currentDelaySeconds(emptyList()))
+        // Verfrühung ist negativ.
+        assertEquals(-300L, BoardLogic.currentDelaySeconds(listOf(at(9, 55) to at(10, 0))))
+        // Mehrere Läufe: der zuletzt gestartete zählt, nicht der zuletzt geplante.
+        assertEquals(
+            18L * 60,
+            BoardLogic.currentDelaySeconds(
+                listOf(
+                    at(10, 0) to at(10, 0),
+                    at(11, 18) to at(11, 0),
+                )
+            ),
+        )
+        // Der zuletzt gestartete ohne geplante Zeit: nichts zu vergleichen.
+        assertNull(BoardLogic.currentDelaySeconds(listOf(at(10, 0) to at(10, 0), at(11, 0) to null)))
+    }
+
     // Die Sprecher-Kachel: Offset zählt in die Slot-Menge, und die Detailtiefe (Crew,
     // Weiterkommen, Bedingungen) ist ohne Schalter immer an.
     @Test

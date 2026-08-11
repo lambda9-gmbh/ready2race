@@ -77,6 +77,9 @@ const elementForType = (type: BoardElementType): BoardElement => {
             return {type, listMode: 'UPCOMING', limit: 10, useShortNames: false}
         case 'CLOCK':
             return {type, showEventName: true}
+        case 'DELAY':
+            // Die Verspätung rechnet der Server — das Element hat keine Optionen.
+            return {type}
         case 'TEXT':
             return {type, text: ''}
         case 'AWARD_CEREMONY':
@@ -252,6 +255,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         {t('event.boards.element.type.matchList')}
                     </MenuItem>
                     <MenuItem value="CLOCK">{t('event.boards.element.type.clock')}</MenuItem>
+                    <MenuItem value="DELAY">{t('event.boards.element.type.delay')}</MenuItem>
                     <MenuItem value="TEXT">{t('event.boards.element.type.text')}</MenuItem>
                     <MenuItem value="AWARD_CEREMONY">
                         {t('event.boards.element.type.awardCeremony')}

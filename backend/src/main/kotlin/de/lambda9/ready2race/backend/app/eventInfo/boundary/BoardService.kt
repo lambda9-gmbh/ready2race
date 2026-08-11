@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonyService
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.BoardRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.MyEventRepo
@@ -193,6 +194,13 @@ object BoardService {
 
                 val program = if (needs.schedule) !buildProgram(eventId) else emptyList()
 
+                // Nur für Boards mit DELAY-Element (needs-Muster): der Running-Block trägt die
+                // Zahl nicht verlässlich — der zuletzt gestartete Lauf kann längst beendet und
+                // dort verschwunden sein. Deshalb die eigene kleine Abfrage, gated statt gratis.
+                val currentDelaySeconds = if (needs.delay) {
+                    BoardLogic.currentDelaySeconds(!CompetitionMatchRepo.getLatestStartedTimes(eventId).orDie())
+                } else null
+
                 val dto = BoardViewDto(
                     boardId = board.id,
                     eventName = eventName!!,
@@ -212,6 +220,7 @@ object BoardService {
                         }
                     },
                     ceremonies = ceremonies,
+                    currentDelaySeconds = currentDelaySeconds,
                 )
 
                 boardViewCache[boardId] = CachedView(now, dto)
@@ -280,6 +289,10 @@ object BoardService {
             val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
 
             KIO.ok(
+                // markPassedFreeSlots: Programmpunkte ohne eigenen Erledigt-Zustand gelten als
+                // vorbei, sobald ein späterer Lauf Aktivität zeigt — sonst bleibt der
+                // mitlaufende Ausschnitt an einer überholten Pause hängen.
+                BoardLogic.markPassedFreeSlots(
                 slotRecords.mapNotNull { r ->
                     val isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
                     val skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
@@ -306,6 +319,7 @@ object BoardService {
                         }
                     }
                 }
+                )
             )
         }
 }

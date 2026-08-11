@@ -103,6 +103,9 @@ data class BoardRequest(
                     }
 
                     BoardElementType.CLOCK -> {}
+
+                    // Wie CLOCK: keine Pflichtfelder — die Verspätung rechnet der Server.
+                    BoardElementType.DELAY -> {}
                 }
             }
         }

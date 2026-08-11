@@ -65,6 +65,7 @@ import {
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
 import {useShortLabels} from '@components/event/shortLabels.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
+import {delayParts, latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
 import {
     matchStatusChip,
     slotMatchStatus,
@@ -513,10 +514,35 @@ const EventSchedule = () => {
             ? daySections
             : daySections.filter(section => section.date === effectiveDay)
 
+    // Aktuelle Verspätung aus den Ist-Starts der Slots — dieselbe Regel wie das
+    // Verspätungs-Element der Boards (scheduleDelay.ts): der zuletzt gestartete Lauf zählt.
+    // Die Daten liegen im Zeitplan-Tab bereits vor (matchStartedAt), kein eigener Endpoint.
+    const delaySeconds = latestStartDelaySeconds(
+        (data?.slots ?? []).map(slot => ({
+            startTime: slot.startTime,
+            startedAt: slot.matchStartedAt,
+        })),
+    )
+    const delay = delaySeconds != null ? delayParts(delaySeconds) : null
+
     return (
         <Stack spacing={4}>
             <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
-                <Typography variant={'h2'}>{t('event.schedule.tab')}</Typography>
+                <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                    <Typography variant={'h2'}>{t('event.schedule.tab')}</Typography>
+                    {delay && (
+                        <Chip
+                            size={'small'}
+                            color={delay.kind === 'late' ? 'warning' : 'default'}
+                            label={
+                                delay.kind === 'onTime'
+                                    ? t('event.boards.delay.onTime')
+                                    : `${delay.kind === 'late' ? '+' : '−'}${delay.minutes} min`
+                            }
+                            title={t('event.boards.delay.subtitle')}
+                        />
+                    )}
+                </Stack>
                 {canEdit && (
                     <Stack direction={'row'} spacing={2}>
                         <Button variant={'outlined'} onClick={openImportDialog}>

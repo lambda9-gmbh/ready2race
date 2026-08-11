@@ -42,7 +42,7 @@ enum class BoardLayout(val tileCount: Int, val columns: Int) {
  * einzige Kachel eines Boards gültig ([BoardRequest.validate]): sie ist für den zweiten
  * Bildschirm bzw. Browser-Tab der Sprecherin gedacht, nicht als Raster-Baustein.
  */
-enum class BoardElementType { MATCH, MATCH_DETAIL, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY }
+enum class BoardElementType { MATCH, MATCH_DETAIL, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY, DELAY }
 
 /** SCHEDULE = Tagesprogramm: alle Slots des Zeitplans mit Status, für Sprecherinnen und Aushänge. */
 enum class BoardListMode { UPCOMING, RESULTS, RUNNING, SCHEDULE }

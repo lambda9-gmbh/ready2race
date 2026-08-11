@@ -262,6 +262,55 @@ object CompetitionMatchRepo {
             .fetch()
     }
 
+    /**
+     * Die geplante Startzeit des im Zeitplan spätesten Laufs mit Aktivität (gestartet, aktiviert
+     * oder beendet) — die Schwelle der Programm-Reihenfolgen-Regel der Boards
+     * ([de.lambda9.ready2race.backend.app.eventInfo.boundary.BoardLogic.freeSlotPassed]):
+     * Programmpunkte vor dieser Zeit gelten als überholt.
+     */
+    fun getLatestProgressStartTime(eventId: UUID): JIO<LocalDateTime?> = Jooq.query {
+        select(max(COMPETITION_MATCH.START_TIME))
+            .from(COMPETITION_MATCH)
+            .join(COMPETITION_SETUP_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(
+                COMPETITION_MATCH.STARTED_AT.isNotNull
+                    .or(COMPETITION_MATCH.ACTIVATED_AT.isNotNull)
+                    .or(COMPETITION_MATCH.FINISHED_AT.isNotNull)
+            )
+            .fetchOne { it.value1() }
+    }
+
+    /**
+     * Ist-Start und geplanter Start des zuletzt gestarteten Laufs der Veranstaltung — die
+     * Eingabe der Verspätungsanzeige
+     * ([de.lambda9.ready2race.backend.app.eventInfo.boundary.BoardLogic.currentDelaySeconds]).
+     * Leer, solange noch nichts gestartet ist.
+     */
+    fun getLatestStartedTimes(eventId: UUID): JIO<List<Pair<LocalDateTime, LocalDateTime?>>> =
+        Jooq.query {
+            select(COMPETITION_MATCH.STARTED_AT, COMPETITION_MATCH.START_TIME)
+                .from(COMPETITION_MATCH)
+                .join(COMPETITION_SETUP_MATCH)
+                .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+                .join(COMPETITION_SETUP_ROUND)
+                .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                .join(COMPETITION_PROPERTIES)
+                .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+                .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+                .where(COMPETITION.EVENT.eq(eventId))
+                .and(COMPETITION_MATCH.STARTED_AT.isNotNull)
+                .orderBy(COMPETITION_MATCH.STARTED_AT.desc())
+                .limit(1)
+                .fetch { it.value1()!! to it.value2() }
+        }
+
     fun getRunningMatches(
         eventId: UUID,
         limit: Int
