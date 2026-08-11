@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import de.lambda9.ready2race.backend.app.event.entity.EventNoticeDto
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -21,6 +22,8 @@ data class MyEventDto(
     val results: List<MyEventResultDto>,
     val unscheduled: List<MyEventRegistrationDto>,
     val requirements: List<MyEventRequirementDto>,
+    /** Der veranstaltungsweite Hinweisbanner (z.B. Wetterwarnung); null = kein Banner. */
+    val notice: EventNoticeDto? = null,
 )
 
 data class MyEventMatchDto(

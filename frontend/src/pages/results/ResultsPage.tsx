@@ -152,6 +152,7 @@ const ResultsPage = () => {
                             eventId={eventId}
                             competitionSelected={competitionSelected}
                             setCompetitionSelected={setCompetitionSelected}
+                            notice={eventData.notice}
                         />
                     </TabPanel>
                     <TabPanel index={'live'} activeTab={activeResultsTab}>

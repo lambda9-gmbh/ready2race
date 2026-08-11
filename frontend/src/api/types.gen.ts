@@ -527,6 +527,7 @@ export type BoardViewDto = {
     slots: Array<BoardMatchSlotDto>
     lists: Array<BoardListDto>
     ceremonies?: Array<BoardCeremonyDto>
+    notice?: EventNoticeDto
 }
 
 export type CaptchaDto = {
@@ -1546,6 +1547,7 @@ export type EventDto = {
      */
     executionAutoRefreshSeconds: number
     challengesFinished?: boolean
+    notice?: EventNoticeDto
 }
 
 export type EventForExportDto = {
@@ -1559,6 +1561,19 @@ export type EventInvoicesInfoDto = {
     paidAmount: string
     producing: boolean
 }
+
+/**
+ * The event-wide notice banner (e.g. a weather warning). Absent/null means: no banner.
+ */
+export type EventNoticeDto = {
+    text: string
+    severity: EventNoticeSeverity
+}
+
+/**
+ * Severity of the event-wide notice banner; drives the banner color (CRITICAL=red, WARNING=yellow, INFO=green)
+ */
+export type EventNoticeSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
 
 export type EventParticipantRequirementDto = {
     requirementId: string
@@ -2065,6 +2080,7 @@ export type LiveDashboardDto = {
      */
     pendingSlots: Array<PendingSlotDto>
     chainProgressionMode: ChainProgressionMode
+    notice?: EventNoticeDto
 }
 
 export type LiveDashboardInvoiceState = 'PAID' | 'OPEN' | 'NONE'
@@ -2231,6 +2247,14 @@ export type LiveDashboardTeamDto = {
      * split times from RaceClocker, in mark order; empty when the race records none
      */
     laps?: Array<MatchTeamLapDto>
+}
+
+/**
+ * Response of the public results page's "live" tab. Used to be a bare array of LiveMatchInfo; the envelope carries the event-wide notice banner - this tab is the only polled answer of the public results page.
+ */
+export type LiveMatchesDto = {
+    notice?: EventNoticeDto
+    matches: Array<LiveMatchInfo>
 }
 
 /**
@@ -2433,6 +2457,7 @@ export type MyEventDto = {
     results: Array<MyEventResultDto>
     unscheduled: Array<MyEventRegistrationDto>
     requirements: Array<MyEventRequirementDto>
+    notice?: EventNoticeDto
 }
 
 export type MyEventMatchDto = {
@@ -3676,6 +3701,14 @@ export type UpdateCompetitionMatchTeamResultRequest = {
      */
     penaltySeconds?: number
     penaltyNote?: string
+}
+
+/**
+ * Sets (both fields) or clears (both null) the event-wide notice banner. A blank text or an unknown severity is rejected with 422.
+ */
+export type UpdateEventNoticeRequest = {
+    text?: string
+    severity?: EventNoticeSeverity
 }
 
 export type UpdateEventRequest = {
@@ -4943,6 +4976,17 @@ export type UpdateEventTimingConfigData = {
 export type UpdateEventTimingConfigResponse = void
 
 export type UpdateEventTimingConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateEventNoticeData = {
+    body: UpdateEventNoticeRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type UpdateEventNoticeResponse = void
+
+export type UpdateEventNoticeError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetTimingConfigData = {
     path: {
@@ -7250,7 +7294,7 @@ export type GetLiveMatchesData = {
     }
 }
 
-export type GetLiveMatchesResponse = Array<LiveMatchInfo>
+export type GetLiveMatchesResponse = LiveMatchesDto
 
 export type GetLiveMatchesError = ApiError
 

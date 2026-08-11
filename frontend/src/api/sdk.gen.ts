@@ -213,6 +213,9 @@ import type {
     UpdateEventTimingConfigData,
     UpdateEventTimingConfigError,
     UpdateEventTimingConfigResponse,
+    UpdateEventNoticeData,
+    UpdateEventNoticeError,
+    UpdateEventNoticeResponse,
     GetTimingConfigData,
     GetTimingConfigError,
     GetTimingConfigResponse,
@@ -1806,6 +1809,22 @@ export const updateEventTimingConfig = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/timing-config',
+    })
+}
+
+/**
+ * Sets or clears the event-wide notice banner (e.g. a weather warning) - both fields set means set, both null means clear. Deliberately a small dedicated endpoint instead of a field on the big event update, so the race-day action stays lightweight. The notice is read through EventDto and embedded in the polled public responses (my-event, board view, live dashboard, live-matches); caches and poll intervals mean a change takes a few seconds to show up on devices.
+ */
+export const updateEventNotice = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateEventNoticeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateEventNoticeResponse,
+        UpdateEventNoticeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/notice',
     })
 }
 

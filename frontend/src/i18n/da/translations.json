@@ -1485,6 +1485,21 @@
       "organisation": "Organisation",
       "invoices": "Fakturaer"
     },
+    "notice": {
+      "title": "Global meddelelse",
+      "description": "Et banner på alle offentlige visninger (resultatside, Mit arrangement, boards) og på dommer-dashboardet — f.eks. til en vejrvarsel. Ændringer vises på enhederne ved næste opdatering (få sekunder op til et kvart minut).",
+      "text": "Meddelelsestekst",
+      "severity": {
+        "label": "Niveau",
+        "CRITICAL": "Rød (kritisk)",
+        "WARNING": "Gul (advarsel)",
+        "INFO": "Grøn (info)"
+      },
+      "remove": "Fjern meddelelse",
+      "saved": "Meddelelse gemt",
+      "removed": "Meddelelse fjernet",
+      "saveError": "Meddelelsen kunne ikke gemmes"
+    },
     "timing": {
       "title": "Tidtagning",
       "hint": "Gælder for alle konkurrencer i dette arrangement. En enkelt konkurrence kan angive sine egne værdier i sin tidtagningsfane og dermed afvige bevidst.",

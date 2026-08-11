@@ -1485,6 +1485,21 @@
       "organisation": "Organisation",
       "invoices": "Invoices"
     },
+    "notice": {
+      "title": "Global notice",
+      "description": "A banner on all public displays (results page, My event, boards) and on the referee dashboard — e.g. for a weather warning. Changes appear on the devices with their next poll (a few seconds up to a quarter of a minute).",
+      "text": "Notice text",
+      "severity": {
+        "label": "Level",
+        "CRITICAL": "Red (critical)",
+        "WARNING": "Yellow (warning)",
+        "INFO": "Green (info)"
+      },
+      "remove": "Remove notice",
+      "saved": "Notice saved",
+      "removed": "Notice removed",
+      "saveError": "The notice could not be saved"
+    },
     "timing": {
       "title": "Timing",
       "hint": "Applies to every competition of this event. A single competition can enter its own values in its timing tab and deviate deliberately.",

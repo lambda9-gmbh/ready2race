@@ -3,9 +3,10 @@ import {Alert, Stack, Typography} from '@mui/material'
 import Throbber from '@components/Throbber.tsx'
 import ResultsMatchCard from '@components/results/ResultsMatchCard.tsx'
 import {useState} from 'react'
-import {LiveMatchInfo} from '@api/types.gen.ts'
+import {LiveMatchesDto, LiveMatchInfo} from '@api/types.gen.ts'
 import {getLiveMatches} from '@api/sdk.gen.ts'
 import ResultsMatchDialog from '@components/results/ResultsMatchDialog.tsx'
+import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 import {matchStatusChip} from '@components/event/match/matchStatusChip.ts'
 import {useNow} from '@components/event/match/useNow.ts'
 import {usePolledFetch} from '@utils/usePolledFetch.ts'
@@ -39,7 +40,9 @@ const ResultsLiveMatches = ({eventId}: Props) => {
     // zwei Abrufen weiter, statt eine Viertelminute lang stillzustehen.
     const now = useNow()
 
-    const {data, lastUpdated, initialLoad, failed} = usePolledFetch<LiveMatchInfo[]>(
+    // Seit dem Hinweisbanner ist die Antwort ein Umschlag (LiveMatchesDto) statt eines nackten
+    // Arrays: die Läufe stehen in `matches`, daneben der veranstaltungsweite Hinweis.
+    const {data, lastUpdated, initialLoad, failed} = usePolledFetch<LiveMatchesDto>(
         async signal => {
             const {data} = await getLiveMatches({
                 signal,
@@ -77,6 +80,10 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                     </Alert>
                 ) : (
                     <>
+                        {/* Der veranstaltungsweite Hinweis (z.B. Wetterwarnung), eingebettet in
+                            der ohnehin gepollten Antwort — er erscheint und verschwindet also
+                            ohne Neuladen. */}
+                        <EventNoticeBanner notice={data.notice} sx={{width: 1}} />
                         {/* Der letzte gute Stand bleibt stehen, wenn ein Abruf scheitert - eine
                             leere Seite nach einem Funkloch wäre der schlechteste Ausgang. Die
                             Zeile sagt, wie alt das Gezeigte ist. */}
@@ -87,12 +94,12 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                                 })}
                             </Typography>
                         )}
-                        {data.length === 0 ? (
+                        {data.matches.length === 0 ? (
                             <Alert severity={'info'} sx={{width: 1}}>
                                 {t('results.liveMatches.noMatches')}
                             </Alert>
                         ) : (
-                            data.map(match => (
+                            data.matches.map(match => (
                                 <ResultsMatchCard
                                     match={match}
                                     selectMatch={onClickMatch}

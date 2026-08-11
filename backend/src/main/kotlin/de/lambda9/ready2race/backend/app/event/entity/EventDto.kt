@@ -40,4 +40,6 @@ data class EventDto(
     /** Takt dieses Abgleichs in Sekunden; nur wirksam, wenn [executionAutoRefresh] gesetzt ist. */
     val executionAutoRefreshSeconds: Int,
     val challengesFinished: Boolean?,
+    /** Der veranstaltungsweite Hinweisbanner (z.B. Wetterwarnung); null = kein Banner. */
+    val notice: EventNoticeDto?,
 )

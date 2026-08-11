@@ -306,6 +306,7 @@ object LiveDashboardService {
 
             val pendingSlots = getPendingSlots(slotRecords, matchesWithLaps.map { it.matchId }.toSet())
             val chainProgressionMode = !EventRepo.getChainProgressionMode(eventId).orDie()
+            val notice = !EventRepo.getNotice(eventId).orDie()
 
             KIO.ok(
                 ApiResponse.ETagged(
@@ -315,6 +316,7 @@ object LiveDashboardService {
                         // als nächstes ansteht, auch wenn die Runde noch nicht erzeugt ist.
                         pendingSlots = pendingSlots,
                         chainProgressionMode = chainProgressionMode,
+                        notice = notice,
                     )
                 )
             )

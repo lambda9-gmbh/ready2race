@@ -37,7 +37,7 @@ object EventInfoService {
     // getShowBreaksOnPublicBoards und EventScheduleRepo.getSlots. Der Schlüssel trägt [limit]
     // mit, weil verschiedene Aufrufer (künftig oder heute schon mit abweichender Seitengröße)
     // sonst den falsch bemessenen Stand eines anderen bekämen.
-    private data class CachedLiveMatches(val builtAt: LocalDateTime, val dto: ApiResponse.ListDto<LiveMatchInfo>)
+    private data class CachedLiveMatches(val builtAt: LocalDateTime, val dto: ApiResponse.Dto<LiveMatchesDto>)
 
     private val liveMatchesCache = ConcurrentHashMap<Pair<UUID, Int>, CachedLiveMatches>()
 
@@ -385,7 +385,7 @@ object EventInfoService {
     fun getLiveMatches(
         eventId: UUID,
         limit: Int,
-    ): App<Nothing, ApiResponse.ListDto<LiveMatchInfo>> = KIO.comprehension {
+    ): App<Nothing, ApiResponse.Dto<LiveMatchesDto>> = KIO.comprehension {
         val now = LocalDateTime.now()
         val key = eventId to limit
 
@@ -404,11 +404,17 @@ object EventInfoService {
             val activated = !getRunningMatches(eventId, limit, clubShortNames)
             val upcoming = !getUpcomingMatchesForBoard(eventId, limit, clubShortNames)
 
-            val dto = ApiResponse.ListDto(
-                LiveMatchesLogic.merge(
-                    activated = activated.data.map { it.toLiveMatchInfo() },
-                    upcoming = upcoming.data.map { it.toLiveMatchInfo() },
-                    limit = limit,
+            // Der Hinweis liegt mit im Zwischenspeicher - Änderung sichtbar nach TTL + Poll-Takt.
+            val notice = !EventRepo.getNotice(eventId).orDie()
+
+            val dto = ApiResponse.Dto(
+                LiveMatchesDto(
+                    notice = notice,
+                    matches = LiveMatchesLogic.merge(
+                        activated = activated.data.map { it.toLiveMatchInfo() },
+                        upcoming = upcoming.data.map { it.toLiveMatchInfo() },
+                        limit = limit,
+                    ),
                 )
             )
 

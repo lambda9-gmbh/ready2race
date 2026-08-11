@@ -1485,6 +1485,21 @@
       "organisation": "Organisation",
       "invoices": "Rechnungen"
     },
+    "notice": {
+      "title": "Globaler Hinweis",
+      "description": "Ein Banner auf allen öffentlichen Anzeigen (Ergebnisseite, Mein Event, Boards) und im Schiedsrichter-Dashboard — z. B. für eine Wetterwarnung. Änderungen erscheinen auf den Geräten mit dem nächsten Abruf (wenige Sekunden bis eine Viertelminute).",
+      "text": "Hinweistext",
+      "severity": {
+        "label": "Stufe",
+        "CRITICAL": "Rot (kritisch)",
+        "WARNING": "Gelb (Warnung)",
+        "INFO": "Grün (Info)"
+      },
+      "remove": "Hinweis entfernen",
+      "saved": "Hinweis gespeichert",
+      "removed": "Hinweis entfernt",
+      "saveError": "Der Hinweis konnte nicht gespeichert werden"
+    },
     "timing": {
       "title": "Zeitnahme",
       "hint": "Gilt für alle Wettkämpfe dieser Veranstaltung. Ein einzelner Wettkampf kann in seinem Zeitnahme-Tab eigene Werte eintragen und weicht damit gezielt ab.",

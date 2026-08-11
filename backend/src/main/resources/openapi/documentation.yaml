@@ -1878,6 +1878,41 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
+  /event/{eventId}/notice:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    put:
+      operationId: updateEventNotice
+      description: >-
+        Sets or clears the event-wide notice banner (e.g. a weather warning) - both fields set
+        means set, both null means clear. Deliberately a small dedicated endpoint instead of a
+        field on the big event update, so the race-day action stays lightweight. The notice is
+        read through EventDto and embedded in the polled public responses (my-event, board view,
+        live dashboard, live-matches); caches and poll intervals mean a change takes a few
+        seconds to show up on devices.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventNoticeRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/competition/{competitionId}/timing-config:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6527,9 +6562,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LiveMatchInfo'
+                $ref: '#/components/schemas/LiveMatchesDto'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -10030,6 +10063,34 @@ components:
           description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
         challengesFinished:
           type: boolean
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
+
+    EventNoticeSeverity:
+      type: string
+      enum: [ INFO, WARNING, CRITICAL ]
+      description: "Severity of the event-wide notice banner; drives the banner color (CRITICAL=red, WARNING=yellow, INFO=green)"
+
+    EventNoticeDto:
+      type: object
+      description: "The event-wide notice banner (e.g. a weather warning). Absent/null means: no banner."
+      required:
+        - text
+        - severity
+      properties:
+        text:
+          type: string
+        severity:
+          $ref: '#/components/schemas/EventNoticeSeverity'
+
+    UpdateEventNoticeRequest:
+      type: object
+      description: "Sets (both fields) or clears (both null) the event-wide notice banner. A blank text or an unknown severity is rejected with 422."
+      properties:
+        text:
+          type: string
+        severity:
+          $ref: '#/components/schemas/EventNoticeSeverity'
 
     EventPublicDto:
       type: object
@@ -14730,6 +14791,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BoardCeremonyDto'
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
 
     MyEventTeamMemberDto:
       type: object
@@ -14944,6 +15007,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MyEventRequirementDto'
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
 
     LiveMatchInfo:
       type: object
@@ -15003,6 +15068,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RunningMatchTeamInfo'
+
+    LiveMatchesDto:
+      type: object
+      description: >-
+        Response of the public results page's "live" tab. Used to be a bare array of
+        LiveMatchInfo; the envelope carries the event-wide notice banner - this tab is the only
+        polled answer of the public results page.
+      required:
+        - matches
+      properties:
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveMatchInfo'
 
     RunningMatchInfo:
       type: object
@@ -15476,6 +15557,8 @@ components:
             $ref: '#/components/schemas/PendingSlotDto'
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
 
     CheckType:
       type: string

@@ -97,6 +97,9 @@ object MyEventService {
             // auf dem Weg nur die Zusage darauf.
             val eventName = !EventRepo.getName(eventId).orDie()
             val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
+            // Der veranstaltungsweite Hinweis wandert mit in den Zwischenspeicher - eine
+            // Änderung wird also erst nach Cache-TTL plus Poll-Takt sichtbar, wie alles hier.
+            val notice = !EventRepo.getNotice(eventId).orDie()
 
             val person = !MyEventRepo.findParticipant(participantId).orDie()
             val matchRecords = !MyEventRepo.findMatchesForParticipant(eventId, participantId).orDie()
@@ -163,6 +166,7 @@ object MyEventService {
                         )
                     }
                     .sortedBy { it.name },
+                notice = notice,
             )
 
             // Rechnen zwei Abrufe gleichzeitig, gewinnt der letzte - bei Millisekunden Rechenzeit

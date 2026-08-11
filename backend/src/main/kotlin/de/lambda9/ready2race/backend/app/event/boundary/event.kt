@@ -101,6 +101,7 @@ fun Route.event() {
             awardCertificate()
             awardCeremony()
             eventTimingConfig()
+            eventNotice()
             raceClockerRace()
 
             get("/matches") {
