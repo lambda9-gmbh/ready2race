@@ -21,7 +21,14 @@ const CompetitionRegistrationTeams = ({eventData, competitionData}: Props) => {
 
     return (
         ((eventData.registrationCount ?? 0 > 0) || !user.clubId) && (
+            /* Der Wettkampf-Wechsler ändert nur den Routen-Parameter, die Seite bleibt gemountet.
+               Die geänderte competitionId steckt dann nur in der dataRequest-Closure der Tabelle —
+               die useFetch-Deps in EntityTable (paginationModel, sortModel, …) sehen sie nicht,
+               der paginierte Request würde also nie neu gefeuert. Der key erzwingt beim Wechsel
+               einen Remount samt frischem Fetch; dass Pagination und Suche dabei zurückspringen,
+               ist gewollt. */
             <CompetitionRegistrationTeamTable
+                key={competitionData.id}
                 {...competitionRegistrationTeamProps.table}
                 eventData={eventData}
                 competitionData={competitionData}

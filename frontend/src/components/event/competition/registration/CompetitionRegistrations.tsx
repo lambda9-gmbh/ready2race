@@ -106,7 +106,10 @@ const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Pro
                     competitionId={competitionData.id}
                 />
             )}
+            {/* key: siehe Kommentar in CompetitionRegistrationTeams — Wettkampf-Wechsel ohne
+                Remount, die EntityTable-Deps sehen die neue competitionId sonst nicht */}
             <CompetitionRegistrationTable
+                key={competitionData.id}
                 {...competitionRegistrationProps.table}
                 registrationState={registrationState}
                 registrationInitialized={registrationInitialized}
