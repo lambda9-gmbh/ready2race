@@ -2882,7 +2882,8 @@
   },
   "myEvent": {
     "tab": "Mein Event",
-    "hint": "Scanne den QR-Code auf deinem Band, um deine Läufe und Ergebnisse zu sehen.",
+    "emptyTitle": "Dein persönlicher Zeitplan",
+    "emptyHint": "Scanne den QR-Code auf deinem Teilnehmerband mit der Handykamera. Deine Läufe, Startzeiten und Ergebnisse erscheinen dann automatisch hier.",
     "notFound": "Zu diesem Code gibt es keine Teilnahme bei dieser Veranstaltung.",
     "next": "Dein nächster Lauf",
     "running": "Läuft gerade",
