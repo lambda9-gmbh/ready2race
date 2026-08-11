@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchTeamLapDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDateTime
@@ -96,6 +97,11 @@ data class AthleteBoardTeam(
     val failedReason: String? = null,
     /** Meldender Verein — nur befüllt, wenn ein Element showRegisteringClub anfordert. */
     val registeringClub: String? = null,
+    /**
+     * Zwischenzeiten aus RaceClocker, in Markenreihenfolge — leer, wenn das Rennen keine führt.
+     * Die Anzeige zeigt sie unter der Zeile, sobald sie da sind (Rückmeldung vom 11.08.2026).
+     */
+    val laps: List<MatchTeamLapDto> = emptyList(),
 )
 
 data class AthleteBoardParticipant(
@@ -155,4 +161,6 @@ data class AthleteBoardResultTeam(
      */
     val deregistered: Boolean,
     val deregisteredReason: String?,
+    /** Zwischenzeiten wie bei [AthleteBoardTeam.laps]; leer, wenn das Rennen keine führt. */
+    val laps: List<MatchTeamLapDto> = emptyList(),
 )

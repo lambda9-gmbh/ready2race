@@ -265,6 +265,10 @@ export type AthleteBoardResultTeam = {
      */
     deregistered: boolean
     deregisteredReason?: string | null
+    /**
+     * split times from RaceClocker, in mark order; empty when the race records none
+     */
+    laps?: Array<MatchTeamLapDto>
 }
 
 export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
@@ -307,6 +311,10 @@ export type AthleteBoardTeam = {
      * registering club - only filled when a board element requests showRegisteringClub
      */
     registeringClub?: string | null
+    /**
+     * split times from RaceClocker, in mark order; empty when the race records none
+     */
+    laps?: Array<MatchTeamLapDto>
 }
 
 export type AwardCeremonyAthlete = {
@@ -2218,6 +2226,10 @@ export type LiveDashboardTeamDto = {
      * When the boat entered the arena (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known
      */
     inArenaAt?: string | null
+    /**
+     * split times from RaceClocker, in mark order; empty when the race records none
+     */
+    laps?: Array<MatchTeamLapDto>
 }
 
 /**

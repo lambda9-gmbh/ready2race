@@ -108,6 +108,7 @@ fun RunningMatchTeamInfo.toAthleteBoardTeam(includeDetails: Boolean = false) = A
     penaltyNote = penaltyNote,
     failed = failed,
     failedReason = failedReason,
+    laps = laps,
 )
 
 fun UpcomingMatchTeamInfo.toAthleteBoardTeam(includeDetails: Boolean = false) = AthleteBoardTeam(
@@ -212,6 +213,7 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
             failedReason = it.failedReason,
             deregistered = it.deregistered,
             deregisteredReason = it.deregisteredReason,
+            laps = it.laps,
         )
     },
 )

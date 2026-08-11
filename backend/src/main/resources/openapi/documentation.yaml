@@ -14352,6 +14352,11 @@ components:
           type: string
           nullable: true
           description: "registering club - only filled when a board element requests showRegisteringClub"
+        laps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTeamLapDto'
+          description: "split times from RaceClocker, in mark order; empty when the race records none"
 
     AthleteBoardMatch:
       type: object
@@ -14478,6 +14483,11 @@ components:
         deregisteredReason:
           type: string
           nullable: true
+        laps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTeamLapDto'
+          description: "split times from RaceClocker, in mark order; empty when the race records none"
 
     AthleteBoardResult:
       type: object
@@ -15313,6 +15323,11 @@ components:
           format: date-time
           nullable: true
           description: "When the boat entered the arena (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known"
+        laps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTeamLapDto'
+          description: "split times from RaceClocker, in mark order; empty when the race records none"
 
     LiveDashboardTeamDetailDto:
       type: object

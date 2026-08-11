@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamLapRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
@@ -91,7 +92,7 @@ object EventInfoService {
             )
         }
 
-        KIO.ok(ApiResponse.ListDto(result))
+        KIO.ok(ApiResponse.ListDto(!attachLaps(result, { it.matchId }, { it.teams }, { m, t -> m.copy(teams = t) }, { it.teamId }, { t, l -> t.copy(laps = l) })))
     }
 
     fun getUpcomingCompetitionMatches(
@@ -332,7 +333,28 @@ object EventInfoService {
             )
         }
 
-        KIO.ok(ApiResponse.ListDto(result))
+        KIO.ok(ApiResponse.ListDto(!attachLaps(result, { it.matchId }, { it.teams }, { m, t -> m.copy(teams = t) }, { it.teamId }, { t, l -> t.copy(laps = l) })))
+    }
+
+    /**
+     * Zwischenzeiten je Boot nachtragen, in einer Abfrage für alle sichtbaren Läufe. Die
+     * Anzeigeobjekte führen ihre Boote über (Lauf, Meldung) - genau der Schlüssel, unter dem
+     * [CompetitionMatchTeamLapRepo.getByMatches] die Laps bündelt. Generisch gehalten, weil laufende
+     * Läufe und Ergebnisse dieselbe Zuordnung brauchen, nur über andere Typen.
+     */
+    private fun <M, T> attachLaps(
+        matches: List<M>,
+        matchId: (M) -> UUID,
+        teamsOf: (M) -> List<T>,
+        withTeams: (M, List<T>) -> M,
+        teamId: (T) -> UUID,
+        withLaps: (T, List<de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchTeamLapDto>) -> T,
+    ): App<Nothing, List<M>> = KIO.comprehension {
+        val laps = !CompetitionMatchTeamLapRepo.getByMatches(matches.map(matchId).toSet()).orDie()
+        if (laps.isEmpty()) return@comprehension KIO.ok(matches)
+        KIO.ok(matches.map { m ->
+            withTeams(m, teamsOf(m).map { t -> withLaps(t, laps[matchId(m) to teamId(t)] ?: emptyList()) })
+        })
     }
 
     /**

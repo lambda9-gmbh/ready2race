@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.liveDashboard.entity
 
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchTeamLapDto
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
@@ -160,6 +161,11 @@ data class LiveDashboardTeamDto(
      * oder keine Crew bekannt ist. Siehe [LiveDashboardLogic.teamInArenaAt].
      */
     val inArenaAt: LocalDateTime?,
+    /**
+     * Zwischenzeiten aus RaceClocker, in Markenreihenfolge - leer, wenn das Rennen keine führt.
+     * Dieselben Laps, die auch die Boards zeigen; das Dashboard listet sie in der Zeile mit.
+     */
+    val laps: List<MatchTeamLapDto> = emptyList(),
 )
 
 /** Was der Detail-Dialog zusätzlich braucht; wird einzeln je Mannschaft geladen. */

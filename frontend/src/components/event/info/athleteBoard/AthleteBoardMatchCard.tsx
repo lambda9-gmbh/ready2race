@@ -374,6 +374,16 @@ const AthleteBoardMatchCard = ({
                                     })}
                                 </AthleteBoardBoatSubline>
                             )}
+                            {/* Zwischenzeiten aus RaceClocker unter dem Boot — nur wenn die
+                                Teilergebnisse ohnehin sichtbar sind (showLiveResult), sonst hinge
+                                eine Fahrzeit ohne Endzeit in der Luft. */}
+                            {showLiveResult && (team.laps ?? []).length > 0 && (
+                                <AthleteBoardBoatSubline>
+                                    {(team.laps ?? [])
+                                        .map(lap => `${lap.name} ${lap.timeString}`)
+                                        .join(' · ')}
+                                </AthleteBoardBoatSubline>
+                            )}
                         </AthleteBoardBoatRow>
                     ))}
                 </AthleteBoardBoatList>

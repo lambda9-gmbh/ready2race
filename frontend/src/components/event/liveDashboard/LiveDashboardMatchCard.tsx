@@ -463,6 +463,21 @@ const LiveDashboardMatchCard = ({
                                             {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
                                         </Typography>
                                     )}
+                                    {/* Zwischenzeiten aus RaceClocker, sobald der Feed sie liefert -
+                                        dieselben Laps wie auf den Boards, hier in der Zeile mit. */}
+                                    {(team.laps ?? []).length > 0 && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{
+                                                color: 'grey.700',
+                                                fontVariantNumeric: 'tabular-nums',
+                                            }}>
+                                            {(team.laps ?? [])
+                                                .map(lap => `${lap.name} ${lap.timeString}`)
+                                                .join(' · ')}
+                                        </Typography>
+                                    )}
                                     {/*
                                         Vor dem ersten Ergebnis gibt es keine Kategorie-Abschnitte
                                         (die Karte bleibt Startnummernliste, siehe oben) - die

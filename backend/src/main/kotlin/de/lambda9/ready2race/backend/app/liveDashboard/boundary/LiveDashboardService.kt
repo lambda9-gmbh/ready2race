@@ -23,6 +23,7 @@ import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecu
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamLapRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
@@ -294,13 +295,22 @@ object LiveDashboardService {
             }
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
-            val pendingSlots = getPendingSlots(slotRecords, matches.map { it.matchId }.toSet())
+
+            // Zwischenzeiten je Boot nachtragen - eine Abfrage für alle Läufe des Dashboards, danach
+            // je Lauf/Meldung zugeordnet. Erst hier, nicht in buildTeamDto, damit es nicht je Boot
+            // eine eigene Abfrage wird.
+            val lapsByTeam = !CompetitionMatchTeamLapRepo.getByMatches(matches.map { it.matchId }.toSet()).orDie()
+            val matchesWithLaps = if (lapsByTeam.isEmpty()) matches else matches.map { m ->
+                m.copy(teams = m.teams.map { t -> t.copy(laps = lapsByTeam[m.matchId to t.teamId] ?: emptyList()) })
+            }
+
+            val pendingSlots = getPendingSlots(slotRecords, matchesWithLaps.map { it.matchId }.toSet())
             val chainProgressionMode = !EventRepo.getChainProgressionMode(eventId).orDie()
 
             KIO.ok(
                 ApiResponse.ETagged(
                     LiveDashboardDto(
-                        matches = LiveDashboardLogic.selectForScope(matches, scope),
+                        matches = LiveDashboardLogic.selectForScope(matchesWithLaps, scope),
                         // Unabhängig vom Scope: auch im LIVE-Ausschnitt soll sichtbar bleiben, was
                         // als nächstes ansteht, auch wenn die Runde noch nicht erzeugt ist.
                         pendingSlots = pendingSlots,

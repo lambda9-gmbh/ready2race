@@ -159,6 +159,17 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                                 <AthleteBoardBoatSubline>
                                     {t('event.info.athleteBoard.startNumber')} {team.startNumber}
                                 </AthleteBoardBoatSubline>
+                                {/* Zwischenzeiten aus RaceClocker — nur wenn Zeiten überhaupt
+                                    gezeigt werden und das Boot nicht abgemeldet ist. */}
+                                {showTimes &&
+                                    !team.deregistered &&
+                                    (team.laps ?? []).length > 0 && (
+                                        <AthleteBoardBoatSubline>
+                                            {(team.laps ?? [])
+                                                .map(lap => `${lap.name} ${lap.timeString}`)
+                                                .join(' · ')}
+                                        </AthleteBoardBoatSubline>
+                                    )}
                             </AthleteBoardBoatRow>
                         ))}
                     </Fragment>

@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchTeamLapDto
 import java.util.UUID
 
 data class RunningMatchTeamInfo(
@@ -36,5 +37,7 @@ data class RunningMatchTeamInfo(
     val penaltyNote: String?,
     val failed: Boolean,
     val failedReason: String?,
-    val participants: List<UpcomingMatchParticipantInfo>
+    val participants: List<UpcomingMatchParticipantInfo>,
+    /** Zwischenzeiten dieses Boots, nachträglich gefüllt (EventInfoService.attachLaps). */
+    val laps: List<MatchTeamLapDto> = emptyList(),
 )
