@@ -75,6 +75,42 @@ object RaceClockerPollLogic {
         rows.any { it.start != null || it.hasResult }
 
     /**
+     * Ob der Feed den Ist-Start dieses Laufs zurückgenommen hat — die Gegenrichtung zu
+     * [startDetected], mit denselben Belegen, nur negiert: Nach einem Fehlstart zieht der
+     * Zeitnehmer in RaceClocker alle Zeiten zurück, jede Zeile steht wieder ohne gemessene
+     * Startzeit und ohne verwertbares Ergebnis da — der Feed behauptet, dieser Lauf sei nie
+     * losgegangen, und ready2race übernimmt diese Aussage, statt auf „Läuft" stehen zu bleiben.
+     *
+     * Die Randfälle sind Absicht, nicht Zufall:
+     * - **Leere [rows]**: kein Rückzug. Zugeordnete Zeilen gibt es dann nicht — der Feed KENNT
+     *   diesen Lauf schlicht (noch) nicht, und ein vom Schiedsrichter von Hand markierter Start
+     *   (markMatchStarted) darf einen leeren Feed überleben. Nur ein Feed, der den Lauf kennt und
+     *   ihn wieder auf ungestartet zeigt, zählt. (Der `NotInFeed`-Fall kehrt im Abruf schon vorher
+     *   um und erreicht diese Frage nie — die Leer-Bedingung hält die Regel trotzdem für sich
+     *   allein vollständig.)
+     * - **[anyStoredResult]**: kein Rückzug. Stehen in ready2race Zeiten, Plätze, Ausscheidungen
+     *   oder Strafzeiten, während der Feed nichts davon kennt, sind das Handstände — die nimmt der
+     *   Abruf grundsätzlich nicht zurück. Kamen die Stände dagegen aus dem Feed, hat sich mit dem
+     *   Rückzug der Fingerabdruck geändert, und der bestehende Reset-Pfad
+     *   (`resetRaceClockerResults` in `applyRaceClockerRows`) räumt Ergebnisse UND Ist-Start in
+     *   einem Zug ab — dieser Zweig hier deckt allein den ergebnislosen Fehlstart ab, bei dem der
+     *   Fingerabdruck unverändert bleiben kann, und baut die Reset-Logik nicht nach.
+     * - **[existingStartedAt] == null**: nichts zurückzunehmen.
+     *
+     * `activated_at` geht diesen Zweig nichts an: Der Lauf bleibt an den Start gerufen und steht
+     * nach dem Rückzug wieder „In Vorbereitung".
+     */
+    fun startRetracted(
+        rows: List<RaceClockerFeedRow>,
+        existingStartedAt: LocalDateTime?,
+        anyStoredResult: Boolean,
+    ): Boolean =
+        existingStartedAt != null &&
+            rows.isNotEmpty() &&
+            !startDetected(rows) &&
+            !anyStoredResult
+
+    /**
      * Der Ist-Start, den der Feed für einen bereits aktivierten Lauf hergibt — null, wenn er schon
      * einen hat oder der Feed keinen kennt.
      *

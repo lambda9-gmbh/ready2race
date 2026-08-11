@@ -421,6 +421,22 @@ object RaceClockerPollService {
             logger.info { "RaceClocker meldet den Ist-Start von Lauf ${candidate.matchId}." }
         }
 
+        // Die Gegenrichtung zum Stempel darüber, und aus demselben Grund VOR der
+        // Fingerabdruck-Abkürzung: Ein zurückgezogener Feed kann exakt so aussehen wie der Stand,
+        // unter dem der Fingerabdruck zuletzt gemerkt wurde (alle Zeilen „Not started" — etwa wenn
+        // der Start von Hand markiert war oder Start und Rückzug in dieselbe Taktlücke fielen).
+        // Dann liefe der Takt für immer in die Abkürzung, `applyRaceClockerRows` samt seinem
+        // Reset-Pfad würde nie wieder gerufen, und der Lauf stünde dauerhaft auf „Läuft", obwohl
+        // RaceClocker ihn längst zurückgezogen hat. Was als Rückzug zählt (und was ausdrücklich
+        // nicht), entscheidet [RaceClockerPollLogic.startRetracted].
+        !retractStartIfWithdrawn(
+            matchId = candidate.matchId,
+            startedAt = candidate.startedAt,
+            assigned = assigned,
+            teams = entry.teams,
+            now = now,
+        )
+
         // Unverändert seit dem letzten Abruf: nichts schreiben.
         val fingerprint = RaceClockerPollLogic.fingerprint(assigned)
         if (fingerprints[candidate.matchId] == fingerprint) return@comprehension KIO.ok(MatchOutcome())
@@ -452,6 +468,44 @@ object RaceClockerPollService {
             fingerprints[candidate.matchId] = fingerprint
         }
         KIO.ok(MatchOutcome(errorCode = write.errorCode))
+    }
+
+    /**
+     * Nimmt den Ist-Start zurück, wenn der Feed ihn zurückgezogen hat — das Schreibstück zur
+     * Entscheidung in [RaceClockerPollLogic.startRetracted] (dort stehen Regel und Randfälle).
+     *
+     * [teams] liefert die Handstand-Frage: Trägt irgendein Boot in ready2race Zeit, Platz,
+     * Ausscheidung oder Strafzeit, greift der Rückzug hier NICHT — entweder sind es Handeingaben
+     * (die der Abruf nie anfasst), oder die Stände kamen aus dem Feed, dann hat sich der
+     * Fingerabdruck geändert und der Reset-Pfad in `applyRaceClockerRows` räumt sie samt Ist-Start
+     * ohnehin ab. `activated_at` bleibt in jedem Fall stehen: Der Lauf ist weiter an den Start
+     * gerufen und zeigt danach wieder „In Vorbereitung".
+     *
+     * `internal` statt `private`, damit der Datenbank-Test den Poll-Schreibweg selbst fahren kann;
+     * einziger produktiver Aufrufer ist [writeMatch].
+     */
+    internal fun retractStartIfWithdrawn(
+        matchId: UUID,
+        startedAt: LocalDateTime?,
+        assigned: List<RaceClockerFeedRow>,
+        teams: List<CompetitionMatchTeamWithRegistration>,
+        now: LocalDateTime,
+    ): App<Nothing, Boolean> = KIO.comprehension {
+        val anyStoredResult = teams.any {
+            it.timeString != null || it.place != null || it.failed || it.penaltySeconds != null
+        }
+        if (!RaceClockerPollLogic.startRetracted(assigned, startedAt, anyStoredResult)) {
+            return@comprehension KIO.ok(false)
+        }
+
+        !CompetitionMatchRepo.update(matchId) {
+            this.startedAt = null
+            updatedBy = SYSTEM_USER
+            updatedAt = now
+        }.orDie()
+        logger.info { "RaceClocker meldet den Rückzug des Starts von Lauf $matchId - wieder in Vorbereitung." }
+
+        KIO.ok(true)
     }
 
     private data class WriteOutcome(
