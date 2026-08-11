@@ -2189,12 +2189,18 @@ object CompetitionExecutionService {
         val matches = round.matches.sortedBy { it.startTime }
         !KIO.failOn(matches.isEmpty()) { CompetitionExecutionError.MatchNotFound }
 
+        // Freilose fahren nicht und tauchen im RaceClocker nie auf - sie gehören nicht in den
+        // Sammelexport der Runde (Wunsch vom 11.08.2026). Ein einzelnes Freilos-Boot als Startliste
+        // zu exportieren, hieße dem Zeitnahme-System einen Lauf anzukündigen, den es nie sieht.
+        val byeByMatch = !MatchByeService.byeByMatch(eventId, competitionId)
+
         val out = ByteArrayOutputStream()
         var first = true
         var identifier = ""
 
         !matches.traverse { m ->
             KIO.comprehension {
+                if (byeByMatch.containsKey(m.competitionSetupMatch)) return@comprehension unit
                 val record = !CompetitionMatchRepo.getForStartList(m.competitionSetupMatch).orDie()
                     .onNullFail { CompetitionExecutionError.MatchNotFound }
                 if (record.teams!!.isEmpty()) return@comprehension unit
