@@ -66,9 +66,12 @@ const BoardMatchSlotElement = ({
                 // Umgebungen (direkte Sonne am Steg) — bewusst als Filter statt je
                 // Farbstelle, damit alle Karten-Bestandteile denselben Modus tragen.
                 filter: element.contrastColors === false ? 'grayscale(1)' : undefined,
-                // Ohne autoFit bleibt die Schrift in voller Größe; ein volles Feld darf
-                // dann abgeschnitten werden statt zu schrumpfen.
-                overflow: element.autoFit === false ? 'auto' : undefined,
+                // Immer scrollbar statt abgeschnitten: „Automatisch verkleinern" schrumpft die
+                // Karte bis zur Untergrenze (MIN_DENSITY_SCALE, elementScale/contentScale);
+                // reicht auch das nicht, wird gescrollt, statt den Rest zu verstecken (Rückmeldung
+                // vom 11.08.2026). Ohne autoFit bleibt die Schrift voll groß und scrollt sofort,
+                // sobald das Feld nicht reicht.
+                overflow: 'auto',
             }}>
             <AthleteBoardColumnCard title={title} emptyText={emptyText}>
                 {content?.match ? (
