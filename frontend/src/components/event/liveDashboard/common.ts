@@ -349,6 +349,24 @@ export const nextUpEntry = (
 }
 
 /**
+ * Ziel-scrollTop, das ein Element mittig in seinen Scroll-Container stellt — das rechnerische
+ * Gegenstück zu `scrollIntoView({block: 'center'})`, nur eben auf einen einzigen Container
+ * bezogen statt auf alle scrollbaren Vorfahren. `elementTop` ist die Oberkante des Elements im
+ * Scroll-Inhalt des Containers (nicht im Viewport). Begrenzt auf den fahrbaren Bereich, damit
+ * Einträge am Anfang und Ende der Liste nicht überschießen.
+ */
+export const centeredScrollTop = (
+    elementTop: number,
+    elementHeight: number,
+    containerClientHeight: number,
+    containerScrollHeight: number,
+): number => {
+    const centered = elementTop - (containerClientHeight - elementHeight) / 2
+    const maxScrollTop = Math.max(0, containerScrollHeight - containerClientHeight)
+    return Math.min(Math.max(0, centered), maxScrollTop)
+}
+
+/**
  * Rennnummer und Kurzname eines Wettkampfs, z. B. "17 CM 4x+" — dieselbe Zusammensetzung wie
  * `competitionTag` im Zeitplan-Tab, hier für die DTOs des Boards. Leer, wo beides fehlt: bei
  * Programmpunkten und bei Wettkämpfen ohne gepflegten Kurznamen und ohne Nummer.

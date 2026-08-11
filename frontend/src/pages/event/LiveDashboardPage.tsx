@@ -42,6 +42,7 @@ import {
 } from '@components/event/liveDashboard/LiveDashboardColumns.tsx'
 import {
     buildLiveDashboardTimeline,
+    centeredScrollTop,
     dashboardCrew,
     dashboardEntryDomIdCandidates,
     dashboardScope,
@@ -86,6 +87,30 @@ const useCrewRequested = (): boolean => {
         return () => window.removeEventListener('resize', onResize)
     }, [])
     return requested
+}
+
+/**
+ * Der nächste Vorfahr, der selbst scrollt — breit ist das die „Läufe"-Spalte (overflowY: auto),
+ * schmal gibt es keinen und das Fenster übernimmt (dann null). Die Prüfung auf
+ * scrollHeight > clientHeight lässt Boxen aus, die zwar overflow gesetzt haben, aber mit ihrem
+ * Inhalt wachsen — etwa den Seitenrahmen, dessen overflowX: hidden das berechnete overflowY auf
+ * auto hebt, ohne dass er je scrollt. body/html bleiben außen vor: dort scrollt das Fenster, und
+ * dafür ist scrollIntoView der richtige Weg.
+ */
+const scrollContainerOf = (el: HTMLElement): HTMLElement | null => {
+    for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+        if (parent === document.body || parent === document.documentElement) {
+            return null
+        }
+        const overflowY = window.getComputedStyle(parent).overflowY
+        if (
+            (overflowY === 'auto' || overflowY === 'scroll') &&
+            parent.scrollHeight > parent.clientHeight
+        ) {
+            return parent
+        }
+    }
+    return null
 }
 
 export type LiveDashboardPageProps = {
@@ -280,7 +305,30 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
         if (!el) {
             return
         }
-        el.scrollIntoView({behavior: 'smooth', block: 'center'})
+        const container = scrollContainerOf(el)
+        if (container) {
+            // Nur die Spalte scrollen: scrollIntoView nähme alle scrollbaren Vorfahren mit, also
+            // auch das Fenster — Kopfzeile und Zeitstrahl rutschten dabei aus dem Bild (der
+            // gemeldete Sprung des Zeitplans nach dem Klick). Deshalb die Mitte selbst rechnen
+            // und gezielt einen einzigen Container fahren.
+            const elementTop =
+                el.getBoundingClientRect().top -
+                container.getBoundingClientRect().top +
+                container.scrollTop
+            container.scrollTo({
+                top: centeredScrollTop(
+                    elementTop,
+                    el.offsetHeight,
+                    container.clientHeight,
+                    container.scrollHeight,
+                ),
+                behavior: 'smooth',
+            })
+        } else {
+            // Schmal scrollt keine Spalte in sich selbst — hier ist das Fenster der richtige
+            // (und einzige) Scroller, scrollIntoView tut also genau das Gewollte.
+            el.scrollIntoView({behavior: 'smooth', block: 'center'})
+        }
         el.animate(
             [{backgroundColor: theme.palette.action.selected}, {backgroundColor: 'transparent'}],
             {duration: 1200, easing: 'ease-out'},

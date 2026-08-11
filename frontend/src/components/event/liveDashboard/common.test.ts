@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest'
 import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
     buildLiveDashboardTimeline,
+    centeredScrollTop,
     competitionLabel,
     crewMemberLabel,
     dashboardCrew,
@@ -608,5 +609,31 @@ describe('dashboardMatchStatus', () => {
 
     it('lässt einen gewöhnlichen Lauf ohne Freilos', () => {
         expect(dashboardMatchStatus(match({})).bye).toBeUndefined()
+    })
+})
+
+describe('centeredScrollTop', () => {
+    // Spalte: 800 hoch, Inhalt 10000, Karte 200 hoch — die Karte mittig heißt: 300 Luft
+    // darüber und darunter.
+    it('stellt ein Element in der Mitte des Containers', () => {
+        expect(centeredScrollTop(5000, 200, 800, 10000)).toBe(4700)
+    })
+
+    it('überschießt am Listenanfang nicht ins Negative', () => {
+        expect(centeredScrollTop(100, 200, 800, 10000)).toBe(0)
+    })
+
+    it('hält am Listenende am maximalen scrollTop an', () => {
+        // max = 10000 - 800 = 9200; mittig wären 9500
+        expect(centeredScrollTop(9800, 200, 800, 10000)).toBe(9200)
+    })
+
+    it('bleibt bei 0, wenn der Inhalt in den Container passt', () => {
+        expect(centeredScrollTop(100, 200, 800, 600)).toBe(0)
+    })
+
+    it('richtet ein Element, das höher ist als der Container, an dessen Oberkante über der Mitte aus', () => {
+        // (800 - 1000) / 2 = -100 -> Oberkante 100 über der Container-Oberkante
+        expect(centeredScrollTop(5000, 1000, 800, 10000)).toBe(5100)
     })
 })
