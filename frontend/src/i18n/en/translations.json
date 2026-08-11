@@ -1286,7 +1286,10 @@
         },
         "override": {
           "label": "Set separately for this competition",
-          "hint": "Off: the competition follows the event and picks up every later change there. On: it gets values of its own – only useful if it has a race of its own in the timing system."
+          "hint": "Applies to the timing system and the file formats. Off: the competition follows the event and picks up every later change there. On: it gets values of its own. The race assignment above is not affected — it always belongs to the competition."
+        },
+        "raceSection": {
+          "title": "This competition's races"
         },
         "presets": {
           "title": "File formats",

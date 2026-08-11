@@ -163,16 +163,20 @@ describe('overridesTiming', () => {
         ).toBe(false)
     })
 
-    it('zählt auch eine einzelne eigene Rennen-Anwahl als Abweichung', () => {
-        // Teil-Override: System geerbt, aber ein eigenes Läufe-Rennen. Der Schalter im Tab muss
-        // dafür an sein, sonst würde die Anwahl beim nächsten Speichern still verschwinden.
+    it('zählt eine Rennen-Anwahl NICHT als Abweichung', () => {
+        // Rennen werden seit dem 11.08.2026 immer pro Wettkampf zugewiesen - es gibt keine
+        // Veranstaltungs-Voreinstellung mehr, von der sie abweichen könnten. Zählte die Anwahl hier
+        // als Abweichung, stünde der Schalter bei JEDEM zugewiesenen Wettkampf an; wer ihn dann
+        // ausschaltet, löscht die Zuordnung, die am Rennen vergeben wurde (genau der Fehler vom
+        // 11.08.2026 abends: acht Wettkämpfe verloren so ihr Zeitfahren-Rennen).
         expect(
             overridesTiming({
                 ...emptyTimingForm,
                 eventTimingSystem: 'RACECLOCKER',
                 raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
+                raceQualification: {id: timeTrialRace, label: 'Timetrials'},
             }),
-        ).toBe(true)
+        ).toBe(false)
     })
 
     it('zählt ein eigenes Dateiformat als Abweichung', () => {

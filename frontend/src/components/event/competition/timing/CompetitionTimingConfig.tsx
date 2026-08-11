@@ -146,6 +146,12 @@ const CompetitionTimingConfig = () => {
      * Einschalten füllt alle Felder mit dem, was gerade gilt — man weicht von einem Stand ab, statt
      * vor leeren Feldern zu stehen. Ausschalten leert sie wieder; das ist die einzige Art, das Erben
      * zurückzubekommen, und der Schalter macht sie sichtbar statt sie zu verstecken.
+     *
+     * Die Rennen-Anwahl fasst der Schalter NICHT an — in keine Richtung. Sie ist kein Override,
+     * sondern die Zuordnung dieses Wettkampfs zu einem RaceClocker-Rennen, und dieselbe Zuordnung
+     * wird auch am Rennen selbst vergeben (RaceClockerRaceAssignments). Würde das Ausschalten sie
+     * leeren, löschte ein Klick hier die Arbeit aus der anderen Ansicht: genau das ist am Abend des
+     * 11.08.2026 passiert, und danach meldete der Tab „keine Rennen angewählt".
      */
     const toggleOverride = (checked: boolean) => {
         setOverride(checked)
@@ -170,8 +176,6 @@ const CompetitionTimingConfig = () => {
             )
         } else {
             formContext.setValue('timingSystem', 'NONE')
-            formContext.setValue('raceQualification', null)
-            formContext.setValue('raceRounds', null)
             formContext.setValue('startlistConfigQualification', null)
             formContext.setValue('startlistConfigRounds', null)
             formContext.setValue('resultImportConfig', null)
@@ -249,6 +253,38 @@ const CompetitionTimingConfig = () => {
                         </Typography>
                     </Box>
 
+                    {/* Die Rennen-Anwahl steht ÜBER dem Überschreiben-Schalter und außerhalb seiner
+                        Reichweite: Sie ist keine Abweichung von der Veranstaltung, sondern die
+                        Zuordnung dieses Wettkampfs zu einem RaceClocker-Rennen. Dieselbe Zuordnung
+                        lässt sich umgekehrt am Rennen anhaken (RaceClockerRaceAssignments) — beide
+                        Wege schreiben dieselben zwei Spalten, deshalb darf der Schalter sie nicht
+                        anfassen (Fehler vom 11.08.2026). */}
+                    {effectiveSystem === 'RACECLOCKER' && (
+                        <Stack spacing={4}>
+                            <Box>
+                                <Typography variant={'subtitle2'}>
+                                    <Trans i18nKey={'event.competition.timing.raceSection.title'} />
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    <Trans i18nKey={'event.competition.timing.raceclockerHint'} />
+                                </Typography>
+                            </Box>
+                            <FormInputAutocomplete
+                                name={'raceQualification'}
+                                options={raceOptions ?? []}
+                                loading={racesPending}
+                                label={t('event.competition.timing.raceQualification')}
+                            />
+                            <FormInputAutocomplete
+                                name={'raceRounds'}
+                                options={raceOptions ?? []}
+                                loading={racesPending}
+                                label={t('event.competition.timing.raceRounds')}
+                            />
+                            <Divider />
+                        </Stack>
+                    )}
+
                     <Box>
                         <FormControlLabel
                             control={
@@ -294,26 +330,6 @@ const CompetitionTimingConfig = () => {
                                 },
                             ]}
                         />
-                    )}
-
-                    {override && effectiveSystem === 'RACECLOCKER' && (
-                        <Stack spacing={4}>
-                            <Alert variant={'outlined'} severity={'info'}>
-                                <Trans i18nKey={'event.competition.timing.raceclockerHint'} />
-                            </Alert>
-                            <FormInputAutocomplete
-                                name={'raceQualification'}
-                                options={raceOptions ?? []}
-                                loading={racesPending}
-                                label={t('event.competition.timing.raceQualification')}
-                            />
-                            <FormInputAutocomplete
-                                name={'raceRounds'}
-                                options={raceOptions ?? []}
-                                loading={racesPending}
-                                label={t('event.competition.timing.raceRounds')}
-                            />
-                        </Stack>
                     )}
 
                     {override && effectiveSystem !== 'NONE' && (

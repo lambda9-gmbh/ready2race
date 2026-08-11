@@ -1286,7 +1286,10 @@
         },
         "override": {
           "label": "Für diesen Wettkampf abweichend einstellen",
-          "hint": "Aus: der Wettkampf folgt der Veranstaltung und übernimmt jede spätere Änderung dort. An: er bekommt eigene Werte — sinnvoll nur, wenn er ein eigenes Rennen im Zeitnahme-System hat."
+          "hint": "Gilt für Zeitnahme-System und Dateiformate. Aus: der Wettkampf folgt der Veranstaltung und übernimmt jede spätere Änderung dort. An: er bekommt eigene Werte. Die Rennen-Zuordnung oben bleibt davon unberührt — sie gehört immer zum Wettkampf."
+        },
+        "raceSection": {
+          "title": "Rennen dieses Wettkampfs"
         },
         "presets": {
           "title": "Dateiformate",

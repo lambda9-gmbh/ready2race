@@ -1286,7 +1286,10 @@
         },
         "override": {
           "label": "Angiv separat for denne konkurrence",
-          "hint": "Fra: konkurrencen følger arrangementet og overtager enhver senere ændring der. Til: den får sine egne værdier – kun relevant, hvis den har sit eget løb i tidtagningssystemet."
+          "hint": "Gælder tidtagningssystem og filformater. Fra: konkurrencen følger arrangementet og overtager enhver senere ændring der. Til: den får sine egne værdier. Løbstildelingen ovenfor berøres ikke – den hører altid til konkurrencen."
+        },
+        "raceSection": {
+          "title": "Denne konkurrences løb"
         },
         "presets": {
           "title": "Filformater",

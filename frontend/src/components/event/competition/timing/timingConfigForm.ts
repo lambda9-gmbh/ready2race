@@ -58,14 +58,18 @@ export const effectiveTimingSystem = (form: TimingForm): TimingFormSystem =>
     form.timingSystem !== 'NONE' ? form.timingSystem : form.eventTimingSystem
 
 /**
- * Weicht der Wettkampf von der Veranstaltung ab? Genau dann, wenn er selbst etwas gesetzt hat — auch
- * ein einzelnes eigenes Feld zählt, denn es zeigt auf ein anderes Rennen oder auf andere Spalten als
- * die Voreinstellung. Der „Überschreiben"-Schalter im Tab steht danach.
+ * Weicht der Wettkampf von der Veranstaltung ab? Genau dann, wenn er System oder ein Dateiformat
+ * selbst gesetzt hat — nur diese erbt er, nur bei diesen gibt es etwas zu überschreiben. Der
+ * „Überschreiben"-Schalter im Tab steht danach.
+ *
+ * Die RaceClocker-Rennen stehen bewusst NICHT mehr in dieser Liste: sie werden seit dem 11.08.2026
+ * immer pro Wettkampf zugewiesen (im Tab oder umgekehrt am Rennen), eine Voreinstellung der
+ * Veranstaltung gibt es nicht. Zählten sie mit, stünde der Schalter bei jedem zugeordneten Wettkampf
+ * an, und sein Ausschalten löschte die Zuordnung — genau so verloren am Abend des 11.08.2026 acht
+ * Wettkämpfe der Coastal-Regatta ihr Zeitfahren-Rennen.
  */
 export const overridesTiming = (form: TimingForm): boolean =>
     form.timingSystem !== 'NONE' ||
-    form.raceQualification !== null ||
-    form.raceRounds !== null ||
     form.startlistConfigQualification !== null ||
     form.startlistConfigRounds !== null ||
     form.resultImportConfig !== null
