@@ -745,6 +745,14 @@ const EventSchedule = () => {
                                                                 </Tooltip>
                                                             )}
                                                         </Box>
+                                                        {/*
+                                                            Die Lebenszyklus-Aktionen standen bis zum 11.08.2026 zusammen
+                                                            in EINEM 30-px-Slot; bei einem aktivierten, noch nicht
+                                                            gestarteten Lauf sind es aber drei Knöpfe gleichzeitig
+                                                            (Läuft festhalten, Deaktivieren, Beenden) — sie überlappten
+                                                            sich und die Nachbarzeilen. Jetzt hat jede Aktion ihren
+                                                            eigenen festen Slot, wie die übrigen Spalten auch.
+                                                        */}
                                                         <Box sx={actionSlotSx}>
                                                             {/*
                                                                 Ein Freilos wird nicht gefahren: Aktivieren ergibt dort
@@ -792,6 +800,8 @@ const EventSchedule = () => {
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
                                                             {slot.state === 'LINKED' &&
                                                                 !slot.matchFinishedAt &&
                                                                 slot.matchActivatedAt != null && (
@@ -808,6 +818,8 @@ const EventSchedule = () => {
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}
+                                                        </Box>
+                                                        <Box sx={actionSlotSx}>
                                                             {slot.state === 'LINKED' &&
                                                                 (slot.bye
                                                                     ? !slot.matchFinishedAt
