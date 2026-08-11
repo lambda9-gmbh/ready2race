@@ -757,6 +757,9 @@ import type {
     GetEventScheduleData,
     GetEventScheduleError,
     GetEventScheduleResponse,
+    DownloadEventStartlistsData,
+    DownloadEventStartlistsError,
+    DownloadEventStartlistsResponse,
     CreateScheduleSlotData,
     CreateScheduleSlotError,
     CreateScheduleSlotResponse,
@@ -4197,6 +4200,22 @@ export const getEventSchedule = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule',
+    })
+}
+
+/**
+ * Bulk start list export for the whole event: the first created round of every competition (or, in delta mode, every created match missing in RaceClocker), either as a ZIP with one CSV per competition (file names like the round export) or as one big CSV sorted by start time across all competitions.
+ */
+export const downloadEventStartlists = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadEventStartlistsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadEventStartlistsResponse,
+        DownloadEventStartlistsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/startlists',
     })
 }
 

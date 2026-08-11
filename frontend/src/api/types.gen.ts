@@ -1744,6 +1744,11 @@ export type EventScheduleSlotDto = {
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
 
 /**
+ * Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer needs, one race per competition), CSV writes one big file sorted by start time (what RaceClocker needs, one race carrying all waves).
+ */
+export type EventStartlistFileType = 'ZIP' | 'CSV'
+
+/**
  * Event-wide timing defaults. Timing system and the file-format presets live here once and every competition without its own values inherits them. The race selection is NOT here - it is assigned per race on each competition (RaceClockerRaceAssignments), no event-wide default.
  *
  */
@@ -7379,6 +7384,27 @@ export type GetEventScheduleData = {
 export type GetEventScheduleResponse = EventScheduleDto
 
 export type GetEventScheduleError = ApiError
+
+export type DownloadEventStartlistsData = {
+    path: {
+        eventId: string
+    }
+    query: {
+        fileType: EventStartlistFileType
+        /**
+         * Delta export (default false): fetch each competition's configured RaceClocker race feed server-side and export only matches whose match team ids do not appear in the feed's 'Extra info'. Competitions without an assigned race are excluded. An unreachable race fails the whole export with a structured error instead of a silent partial export.
+         */
+        onlyMissingInRaceClocker?: boolean
+        /**
+         * Skip bye matches (default true). Matches flagged as 'bye must race' (competition_match.bye_must_race) are ALWAYS exported, overriding this flag - they are raced and need their wave in the timing tooling.
+         */
+        skipByes?: boolean
+    }
+}
+
+export type DownloadEventStartlistsResponse = Blob | File
+
+export type DownloadEventStartlistsError = BadRequestError | ApiError
 
 export type CreateScheduleSlotData = {
     body: UpsertScheduleSlotRequest

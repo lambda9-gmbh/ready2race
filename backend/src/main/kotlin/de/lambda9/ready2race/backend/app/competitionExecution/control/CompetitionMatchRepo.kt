@@ -109,6 +109,32 @@ object CompetitionMatchRepo {
     }
 
     /**
+     * Die Wettkämpfe einer Veranstaltung für den Startlisten-Sammelexport: Kennung (Dateiname und
+     * Reihenfolge der ZIP-Einträge) und das angewählte RaceClocker-Rennen (Delta-Abgleich, null =
+     * keines angewählt). Sortiert nach Kennung, damit die ZIP-Einträge in Programmreihenfolge
+     * liegen.
+     */
+    fun getForBulkStartlistExport(eventId: UUID) = Jooq.query {
+        select(
+            COMPETITION.ID,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            RACECLOCKER_RACE.RESULTS_URL,
+        )
+            .from(COMPETITION)
+            .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .leftJoin(RACECLOCKER_RACE).on(RACECLOCKER_RACE.ID.eq(COMPETITION.RACECLOCKER_RACE))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .orderBy(COMPETITION_PROPERTIES.IDENTIFIER)
+            .fetch { record ->
+                Triple(
+                    record[COMPETITION.ID]!!,
+                    record[COMPETITION_PROPERTIES.IDENTIFIER]!!,
+                    record[RACECLOCKER_RACE.RESULTS_URL],
+                )
+            }
+    }
+
+    /**
      * Welches Spalten-Preset die Startliste dieses Laufs bekommt: das eine Preset des Wettkampfs,
      * mit der Veranstaltung als Vorgabe. Die frühere Weiche nach Rundenart ist mit den
      * RaceClocker-Startarten entfallen (11.08.2026) — jede Runde exportiert dieselben Spalten.

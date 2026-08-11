@@ -6863,6 +6863,61 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/schedule/startlists:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: fileType
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventStartlistFileType'
+      - name: skipByes
+        in: query
+        required: false
+        description: >-
+          Skip bye matches (default true). Matches flagged as 'bye must race'
+          (competition_match.bye_must_race) are ALWAYS exported, overriding this flag - they are
+          raced and need their wave in the timing tooling.
+        schema:
+          type: boolean
+      - name: onlyMissingInRaceClocker
+        in: query
+        required: false
+        description: >-
+          Delta export (default false): fetch each competition's configured RaceClocker race feed
+          server-side and export only matches whose match team ids do not appear in the feed's
+          'Extra info'. Competitions without an assigned race are excluded. An unreachable race
+          fails the whole export with a structured error instead of a silent partial export.
+        schema:
+          type: boolean
+    get:
+      operationId: downloadEventStartlists
+      description: >-
+        Bulk start list export for the whole event: the first created round of every competition
+        (or, in delta mode, every created match missing in RaceClocker), either as a ZIP with one
+        CSV per competition (file names like the round export) or as one big CSV sorted by start
+        time across all competitions.
+      responses:
+        200:
+          description: The start list file (ZIP or CSV, depending on fileType)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/schedule/slot:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -12973,6 +13028,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpdateCompetitionMatchTeamRequest'
+
+    EventStartlistFileType:
+      type: string
+      description: >-
+        Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer
+        needs, one race per competition), CSV writes one big file sorted by start time (what
+        RaceClocker needs, one race carrying all waves).
+      enum:
+        - ZIP
+        - CSV
 
     UpdateMatchByeMustRaceRequest:
       type: object

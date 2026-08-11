@@ -96,6 +96,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.collections.sortedBy
 import de.lambda9.ready2race.backend.validation.fold
 
@@ -2241,6 +2243,204 @@ object CompetitionExecutionService {
                 bytes = out.toByteArray(),
             )
         )
+    }
+
+    /**
+     * Der Plan des Startlisten-Sammelexports (Zeitplan-Tab): je Wettkampf die zu exportierenden
+     * Läufe, ohne schon CSV zu bauen - so bleibt der Delta-Abgleich dazwischenschaltbar.
+     *
+     * [allRounds] = false ist der initiale Fall: je Wettkampf die ERSTE gesetzte Runde - das, was
+     * vor dem ersten Start ins Zeitnahme-System importiert wird. true (Delta) nimmt alle bereits
+     * gesetzten Runden; welche davon exportiert werden, entscheidet danach der Feed-Abgleich.
+     *
+     * [skipByes] lässt Freilose weg - außer denen mit "muss gefahren werden" (bye_must_race), die
+     * IMMER exportiert werden: Sie werden gefahren und brauchen ihre Welle im Zeitnahme-System.
+     */
+    fun eventStartlistPlan(
+        eventId: UUID,
+        allRounds: Boolean,
+        skipByes: Boolean,
+    ): App<ServiceError, List<BulkStartlistCompetition>> = KIO.comprehension {
+        val competitions = !CompetitionMatchRepo.getForBulkStartlistExport(eventId).orDie()
+        val byeByMatch = !MatchByeService.byeByMatch(eventId)
+
+        competitions.traverse { (competitionId, identifier, raceUrl) ->
+            KIO.comprehension {
+                val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+                val sorted = sortRounds(setupRounds).filter { it.matches.isNotEmpty() }
+                val rounds = if (allRounds) sorted else listOfNotNull(sorted.firstOrNull())
+
+                // Nach Startzeit sortiert: `round.matches` kommt aus einem array_agg ohne
+                // Ordnung - ohne die Sortierung wäre die Reihenfolge des Plans dem Zufall der
+                // Aggregation überlassen.
+                val matches = rounds.flatMap { round ->
+                    round.matches
+                        .filter { match ->
+                            val bye = byeByMatch[match.competitionSetupMatch]
+                            bye == null || bye.mustRace || !skipByes
+                        }
+                        .map { match ->
+                            BulkStartlistMatch(
+                                setupMatchId = match.competitionSetupMatch,
+                                startTime = match.startTime,
+                                roundName = round.setupRoundName,
+                                matchTeamIds = match.teams.map { it.id },
+                            )
+                        }
+                }.sortedWith(compareBy(nullsLast()) { it.startTime })
+
+                KIO.ok(
+                    BulkStartlistCompetition(
+                        competitionId = competitionId,
+                        identifier = identifier,
+                        raceUrl = raceUrl,
+                        matches = matches,
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * Baut aus dem Plan die Download-Datei.
+     *
+     * [feedsByUrl] != null ist der Delta-Modus: je Rennen die bereits geholten Feed-Zeilen -
+     * exportiert wird nur, was dort fehlt ([RaceClockerAssignmentLogic.matchInFeed]). Ein
+     * Wettkampf ohne angewähltes Rennen fällt im Delta komplett heraus: Es gibt kein Rennen, in
+     * dem seine Wellen fehlen könnten, und keins, in das sie importiert würden.
+     *
+     * Getrennt vom Holen ([downloadEventStartlists]), damit der Bau gegen Fixture-Feeds prüfbar
+     * ist - dasselbe Muster wie applyRaceClockerRows gegenüber updateMatchResultFromRaceClocker.
+     */
+    fun buildEventStartlists(
+        plan: List<BulkStartlistCompetition>,
+        fileType: EventStartlistFileType,
+        feedsByUrl: Map<String, List<RaceClockerFeedRow>>? = null,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        val filtered = plan.map { competition ->
+            if (feedsByUrl == null) {
+                competition
+            } else {
+                val rows = competition.raceUrl?.let { feedsByUrl[it] }
+                if (rows == null) {
+                    competition.copy(matches = emptyList())
+                } else {
+                    competition.copy(
+                        matches = competition.matches.filter {
+                            !RaceClockerAssignmentLogic.matchInFeed(rows, it.matchTeamIds)
+                        }
+                    )
+                }
+            }
+        }
+
+        val fileNameDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+
+        when (fileType) {
+            EventStartlistFileType.CSV -> {
+                // Eine große Datei: nach Startzeit über alle Wettkämpfe sortiert - die Reihenfolge,
+                // in der die Wellen gefahren werden. Kopfzeile nur einmal, wie beim Runden-Export.
+                val out = ByteArrayOutputStream()
+                var first = true
+                !filtered.flatMap { it.matches }
+                    .sortedWith(compareBy(nullsLast()) { it.startTime })
+                    .traverse { m ->
+                        KIO.comprehension {
+                            val appended = !appendMatchCsv(m.setupMatchId, out, writeHeader = first)
+                            if (appended != null) first = false
+                            unit
+                        }
+                    }
+
+                KIO.ok(
+                    ApiResponse.File(
+                        name = "startLists-$fileNameDate.csv",
+                        bytes = out.toByteArray(),
+                    )
+                )
+            }
+
+            EventStartlistFileType.ZIP -> {
+                // Eine CSV je Wettkampf, Dateinamen wie beim Runden-Export. Spannt ein Wettkampf im
+                // Delta mehrere Runden auf, bleibt nur die Kennung - ein Rundenname wäre gelogen.
+                val zipBytes = ByteArrayOutputStream()
+                val zip = ZipOutputStream(zipBytes)
+
+                !filtered.traverse { competition ->
+                    KIO.comprehension {
+                        val out = ByteArrayOutputStream()
+                        var first = true
+                        val exportedRounds = mutableSetOf<String>()
+                        !competition.matches
+                            .sortedWith(compareBy(nullsLast()) { it.startTime })
+                            .traverse { m ->
+                                KIO.comprehension {
+                                    val appended = !appendMatchCsv(m.setupMatchId, out, writeHeader = first)
+                                    if (appended != null) {
+                                        first = false
+                                        exportedRounds += m.roundName
+                                    }
+                                    unit
+                                }
+                            }
+                        // Wettkämpfe ohne exportierten Lauf (keine Runde gesetzt, alles Freilose,
+                        // im Delta vollständig vorhanden) bekommen keinen leeren ZIP-Eintrag.
+                        if (exportedRounds.isEmpty()) return@comprehension unit
+
+                        val entryName = exportedRounds.singleOrNull()
+                            ?.let { "startList-${competition.identifier}-$it.csv" }
+                            ?: "startList-${competition.identifier}.csv"
+                        zip.putNextEntry(ZipEntry(entryName))
+                        zip.write(out.toByteArray())
+                        zip.closeEntry()
+                        unit
+                    }
+                }
+
+                zip.finish()
+                KIO.ok(
+                    ApiResponse.File(
+                        name = "startLists-$fileNameDate.zip",
+                        bytes = zipBytes.toByteArray(),
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * Startlisten-Sammelexport am Zeitplan-Tab: alles, was ins Zeitnahme-System importiert werden
+     * muss, in einem Download - statt Wettkampf für Wettkampf über die Durchführungsseite.
+     *
+     * Das Holen der Feeds steht hier, der Bau in [buildEventStartlists] (Begründung dort). Im
+     * Delta-Modus wird je angewähltem Rennen genau einmal geholt - dieselbe Fetch-Maschinerie wie
+     * beim automatischen Abruf, samt Host-Allowlist. Ein nicht erreichbares Rennen reißt den
+     * GANZEN Export mit einem strukturierten Fehler ([RaceClockerError.Unreachable]): Ein
+     * Teilexport ohne Hinweis würde fehlende Wellen verschweigen, und verschwiegen fehlt am
+     * Renntag genau die eine, auf die es ankommt.
+     */
+    suspend fun CallComprehensionScope.downloadEventStartlists(
+        eventId: UUID,
+        fileType: EventStartlistFileType,
+        skipByes: Boolean,
+        onlyMissingInRaceClocker: Boolean,
+    ): App<ServiceError, ApiResponse.File> {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val plan = !eventStartlistPlan(eventId, allRounds = onlyMissingInRaceClocker, skipByes = skipByes)
+
+        val feeds = if (onlyMissingInRaceClocker) {
+            val fetched = mutableMapOf<String, List<RaceClockerFeedRow>>()
+            for (rawUrl in plan.mapNotNull { it.raceUrl }.distinct()) {
+                val url = !RaceClockerFeed.normalizeUrl(rawUrl)
+                fetched[rawUrl] = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
+            }
+            fetched
+        } else {
+            null
+        }
+
+        return buildEventStartlists(plan, fileType, feeds)
     }
 
     /**

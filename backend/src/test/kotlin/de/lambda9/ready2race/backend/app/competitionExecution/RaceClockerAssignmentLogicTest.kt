@@ -146,4 +146,40 @@ class RaceClockerAssignmentLogicTest {
 
         assertTrue(result.isEmpty())
     }
+
+    // --- matchInFeed: die Delta-Frage des Startlisten-Sammelexports ---
+
+    /** Vorhanden ist ein Lauf nur über seine Lauf-Mannschafts-Kennung in "Extra info". */
+    @Test
+    fun matchInFeedMatchesOnMatchTeamId() {
+        val matchTeamId = UUID.randomUUID()
+
+        assertTrue(
+            RaceClockerAssignmentLogic.matchInFeed(
+                rows = listOf(row(ids = listOf(UUID.randomUUID(), matchTeamId))),
+                matchTeamIds = listOf(matchTeamId),
+            )
+        )
+        assertTrue(
+            !RaceClockerAssignmentLogic.matchInFeed(
+                rows = listOf(row(ids = listOf(UUID.randomUUID()))),
+                matchTeamIds = listOf(matchTeamId),
+            )
+        )
+    }
+
+    /**
+     * Zeilen ohne Kennungen belegen nichts: Fehlt das UUID-Mapping im Feed, gilt der Lauf als
+     * fehlend und wird exportiert - lieber eine Welle doppelt angeboten als still ausgelassen
+     * (der Wellenname als Zweitkriterium ist bewusst nicht gebaut, siehe KDoc von matchInFeed).
+     */
+    @Test
+    fun rowsWithoutIdsNeverProvePresence() {
+        assertTrue(
+            !RaceClockerAssignmentLogic.matchInFeed(
+                rows = listOf(row(name = "Boot ohne Mapping"), row(name = "Noch eins")),
+                matchTeamIds = listOf(UUID.randomUUID()),
+            )
+        )
+    }
 }
