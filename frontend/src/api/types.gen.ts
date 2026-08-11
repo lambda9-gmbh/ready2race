@@ -8229,6 +8229,42 @@ export type DownloadAwardCeremonySheetsResponse = Blob | File
 
 export type DownloadAwardCeremonySheetsError = BadRequestError | ApiError
 
+export type DownloadResultListData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Je Wertungskategorie ein eigener Abschnitt statt des Gesamtfelds. Vorgabe true.
+         */
+        byRatingCategory?: boolean
+        /**
+         * Nur dieser Wettkampf. Jeder Abschnitt kostet eine Platzberechnung, deshalb ist die Einschränkung mehr als ein Anzeigefilter.
+         */
+        competitionId?: string
+        /**
+         * Mit Crew-Aufstellung (Namen je Boot). Vorgabe true.
+         */
+        crew?: boolean
+        /**
+         * Nur die Plätze 1 bis 3 statt aller platzierten Boote. Vorgabe false.
+         */
+        podiumOnly?: boolean
+        /**
+         * Schriftgrad - POSTING (Aushang, groß) oder CEREMONY (wie der Bogen). Vorgabe POSTING.
+         */
+        size?: 'POSTING' | 'CEREMONY'
+        /**
+         * Mit Zeiten und Zeitstrafen. Vorgabe true.
+         */
+        times?: boolean
+    }
+}
+
+export type DownloadResultListResponse = Blob | File
+
+export type DownloadResultListError = BadRequestError | ApiError
+
 export type DownloadAwardCertificatesForCompetitionData = {
     path: {
         competitionId: string

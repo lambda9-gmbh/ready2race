@@ -5,6 +5,8 @@ import de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonyPdf
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyCandidate
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyCandidateParticipant
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonySheet
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.ResultListOptions
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.ResultListSize
 import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RankedEntry
 import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryRanking
 import org.apache.pdfbox.Loader
@@ -141,6 +143,10 @@ class AwardCeremonyPdfTest {
         textOfPage(bytes, page).lines().map { it.trim() }.filter { it.isNotEmpty() }
 
     private fun pageCount(bytes: ByteArray): Int = Loader.loadPDF(bytes).use { it.numberOfPages }
+
+    /** Der Text aller Seiten - für Bögen, die im Aushang-Schriftgrad auf mehrere Blätter wachsen. */
+    private fun allText(bytes: ByteArray): String =
+        (1..pageCount(bytes)).joinToString("\n") { textOfPage(bytes, it) }
 
     private fun occurrences(text: String, part: String): Int = text.split(part).size - 1
 
@@ -518,5 +524,153 @@ class AwardCeremonyPdfTest {
         )
 
         assertContains(textOfPage(bytes, 1), "Meldender Verein: Ruderverein Meldestelle")
+    }
+
+    // --- Ergebnisliste: der Bogen ist nur noch ein Preset des einen Generators -----------------
+
+    /** Der Aushang mit allen Bestandteilen - was die Schalter wegnehmen, prüfen die Fälle unten. */
+    private fun postingOptions(
+        includeCrew: Boolean = true,
+        includeTimes: Boolean = true,
+        footerLine: String? = null,
+    ) = ResultListOptions(
+        heading = "ERGEBNISLISTE",
+        includeCrew = includeCrew,
+        includeTimes = includeTimes,
+        podiumOnly = false,
+        byRatingCategory = true,
+        size = ResultListSize.POSTING,
+        footerLine = footerLine,
+    )
+
+    /**
+     * Das Abwärtskompatibilitäts-Versprechen, ausgesprochen als Test: der alte Einstieg und das
+     * Siegerehrungs-Preset setzen Seite für Seite denselben Text. Zusammen mit den unveränderten
+     * Bogen-Tests oben (die den Inhalt selbst festnageln) ist das der Beleg, dass der Umbau die
+     * heutige Ausgabe nicht angefasst hat.
+     */
+    @Test
+    fun theCeremonyPresetPrintsTheSamePagesAsTheLegacyEntry() {
+        val sheets = listOf(mixedSheet(crewSize = 4), sheet("18-NC", null), sharedSecondWithFourMixedEights())
+
+        val legacy = AwardCeremonyPdf.render(sheets)
+        val preset = AwardCeremonyPdf.render(sheets, ResultListOptions.ceremony)
+
+        val pages = pageCount(legacy)
+        assertEquals(pages, pageCount(preset))
+        (1..pages).forEach { page ->
+            assertEquals(textOfPage(legacy, page), textOfPage(preset, page), "Seite $page weicht ab")
+        }
+    }
+
+    @Test
+    fun theHeadingFollowsTheOptions() {
+        val bytes = AwardCeremonyPdf.render(listOf(sheet("17-NC", "Masters A")), postingOptions())
+
+        val text = textOfPage(bytes, 1)
+        assertContains(text, "ERGEBNISLISTE")
+        assertFalse(text.contains("SIEGEREHRUNG"), "Der Aushang ist keine Siegerehrung")
+    }
+
+    /** Crew aus: die Namenszeilen verschwinden, Boot und Verein bleiben - und das Blatt wird kürzer. */
+    @Test
+    fun withoutCrewTheNameLinesDisappear() {
+        val sheets = listOf(mixedSheet(crewSize = 9))
+
+        val with = AwardCeremonyPdf.render(sheets, postingOptions())
+        val without = AwardCeremonyPdf.render(sheets, postingOptions(includeCrew = false))
+
+        val text = (1..pageCount(without)).joinToString("\n") { textOfPage(without, it) }
+        assertEquals(0, occurrences(text, "(1990, Ruderin)"), "Ohne Crew-Aufstellung darf kein Name stehen")
+        assertContains(text, "Startnummer 3")
+
+        // Die Zeilenzahl ist die Metrik des Schalters: neun Personen je Boot weniger müssen sich
+        // im Umfang niederschlagen, sonst hat der Schalter nur Text versteckt statt Platz geschaffen.
+        val linesWith = (1..pageCount(with)).sumOf { linesOfPage(with, it).size }
+        val linesWithout = (1..pageCount(without)).sumOf { linesOfPage(without, it).size }
+        assertTrue(
+            linesWithout < linesWith,
+            "Ohne Crew müssen es weniger Zeilen sein ($linesWithout vs. $linesWith)",
+        )
+    }
+
+    /** Zeiten aus: weder Zeit noch Zeitstrafe - eine Strafe ohne Zeit daneben läse sich wie ein Ergebnis. */
+    @Test
+    fun withoutTimesNeitherTimeNorPenaltyIsPrinted() {
+        val sheets = listOf(mixedSheet(crewSize = 4))
+
+        // Über alle Blätter gelesen: im Aushang-Schriftgrad darf der Bogen auf mehrere Seiten
+        // wachsen, und die Zusicherung gilt für jede davon.
+        val text = allText(AwardCeremonyPdf.render(sheets, postingOptions(includeTimes = false)))
+        assertFalse(text.contains("4:12,7"), "Ohne Zeiten darf keine Zeit stehen")
+        assertFalse(text.contains("Zeitstrafe"), "Ohne Zeiten darf auch keine Zeitstrafe stehen")
+
+        // Gegenprobe am selben Bogen: mit Zeiten stehen beide da - sonst bewiese der Fall oben
+        // nur, dass die Vorrichtung gar keine Zeiten enthält. Die Strafe wird ohne die Klammer
+        // gesucht: in der schmalen Spalte darf der Grund umbrechen.
+        val withTimes = allText(AwardCeremonyPdf.render(sheets, postingOptions()))
+        assertContains(withTimes, "4:12,7")
+        assertContains(withTimes, "Zeitstrafe +10 s")
+        assertContains(withTimes, "(Frühstart)")
+    }
+
+    /**
+     * Der Aushang-Schriftgrad ist eine andere Maßtabelle, kein anderer Text: dasselbe volle Blatt,
+     * das der Bogen auf eine Seite presst, braucht als Aushang mehr Platz. Dazu die Metrik an der
+     * Tabelle selbst - auch der lesbare Boden der Aushang-Leiter liegt über dem des Bogens, sonst
+     * schrumpfte der Aushang unter Druck doch wieder auf Pult-Größe.
+     */
+    @Test
+    fun thePostingSizeSetsVisiblyLargerThanTheCeremonySize() {
+        val sheets = listOf(mixedSheet(crewSize = 9))
+
+        val ceremonyPages = pageCount(AwardCeremonyPdf.render(sheets, ResultListOptions.ceremony))
+        val postingPages = pageCount(
+            AwardCeremonyPdf.render(
+                sheets,
+                postingOptions().copy(podiumOnly = true),
+            )
+        )
+        assertEquals(1, ceremonyPages, "Voraussetzung: der Bogen presst das volle Blatt auf eine Seite")
+        assertTrue(
+            postingPages > ceremonyPages,
+            "Der Aushang muss größer setzen - gleicher Inhalt, mehr Seiten ($postingPages)",
+        )
+
+        val posting = AwardCeremonyPdf.sizesFor(ResultListSize.POSTING)
+        val ceremony = AwardCeremonyPdf.sizesFor(ResultListSize.CEREMONY)
+        assertTrue(posting.rankNumber > ceremony.rankNumber, "Die Rangzahl trägt den Aushang")
+        assertTrue(posting.clubLine > ceremony.clubLine, "Die Vereinszeile trägt den Aushang")
+        assertTrue(
+            posting.scales.last().nameSize > ceremony.scales.last().nameSize,
+            "Auch der lesbare Boden der Aushang-Leiter liegt über dem des Bogens",
+        )
+    }
+
+    /**
+     * Die Fußzeile mit dem Stand gehört auf *jedes* Blatt, auch auf Fortsetzungen: am Brett hängt
+     * womöglich nur die zweite Seite noch, und genau der muss man ihr Alter ansehen können.
+     */
+    @Test
+    fun theFooterWithTheStandTimestampReachesEveryPage() {
+        val footer = "Küstenregatta Kiel — Stand: 14.08.2026, 17:42"
+        val bytes = AwardCeremonyPdf.render(
+            listOf(sharedSecondWithFourMixedEights()),
+            ResultListOptions.ceremony.copy(footerLine = footer),
+        )
+
+        val pages = pageCount(bytes)
+        assertTrue(pages > 1, "Der Aufbau sprengt auch die unterste Stufe")
+        (1..pages).forEach { page ->
+            assertContains(textOfPage(bytes, page), "Stand: 14.08.2026, 17:42", message = "Seite $page trägt keinen Stand")
+        }
+    }
+
+    /** Ohne Fußzeile in den Optionen bleibt das Blatt frei davon - der Bogen kennt keinen Stand. */
+    @Test
+    fun withoutAFooterLineNoStandIsPrinted() {
+        val bytes = AwardCeremonyPdf.render(listOf(sheet("17-NC", "Masters A")))
+
+        assertFalse(textOfPage(bytes, 1).contains("Stand:"), "Der klassische Bogen trägt keinen Stand")
     }
 }

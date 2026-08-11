@@ -947,6 +947,9 @@ import type {
     DownloadAwardCeremonySheetsData,
     DownloadAwardCeremonySheetsError,
     DownloadAwardCeremonySheetsResponse,
+    DownloadResultListData,
+    DownloadResultListError,
+    DownloadResultListResponse,
     DownloadAwardCertificatesForCompetitionData,
     DownloadAwardCertificatesForCompetitionError,
     DownloadAwardCertificatesForCompetitionResponse,
@@ -5105,6 +5108,22 @@ export const downloadAwardCeremonySheets = <ThrowOnError extends boolean = false
     >({
         ...options,
         url: '/event/{eventId}/awardCeremony/pdf',
+    })
+}
+
+/**
+ * Die Ergebnisliste als druckfertiges PDF, in der Regel zum Aushängen - dieselbe Datenbasis und dieselbe Ergebnisregel wie der Siegerehrungsbogen (nur bestätigte Platzierungen), aber mit wählbaren Bestandteilen. Jedes Blatt trägt eine Fußzeile mit Veranstaltung und Stand-Zeitstempel, damit veraltete Aushänge erkennbar sind. Fehlende Parameter fallen auf die Aushang-Vorgaben zurück.
+ */
+export const downloadResultList = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadResultListData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadResultListResponse,
+        DownloadResultListError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/resultList/pdf',
     })
 }
 

@@ -2880,6 +2880,32 @@
       }
     }
   },
+  "resultList": {
+    "download": {
+      "button": "Ergebnisliste",
+      "title": "Ergebnisliste drucken",
+      "action": "Herunterladen",
+      "hint": "Zum Aushängen oder fürs Pult — die Bestandteile sind frei wählbar, die Vorlage belegt sie nur vor. Jede Seite trägt einen Stand-Zeitstempel. Gedruckt werden nur bestätigte Platzierungen.",
+      "preset": {
+        "label": "Vorlage",
+        "posting": "Aushang",
+        "ceremony": "Siegerehrung"
+      },
+      "options": {
+        "crew": "Mannschaftsaufstellung (Namen je Boot)",
+        "times": "Zeiten und Zeitstrafen",
+        "podiumOnly": "Nur die Plätze 1 bis 3",
+        "byRatingCategory": "Je Wertungskategorie ein Abschnitt",
+        "largePrint": "Große Schrift (Aushang)"
+      },
+      "error": {
+        "noResults": "Es gibt noch keine bestätigten Platzierungen für diese Ergebnisliste.",
+        "competitionNotInEvent": "Dieser Wettkampf gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.",
+        "isChallengeEvent": "Für eine Challenge-Veranstaltung gibt es keine Ergebnislisten — dort werden keine Läufe gefahren und keine Plätze vergeben.",
+        "unexpected": "Die Ergebnisliste konnte nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
+      }
+    }
+  },
   "myEvent": {
     "tab": "Mein Event",
     "hint": "Scanne den QR-Code auf deinem Band, um deine Läufe und Ergebnisse zu sehen.",

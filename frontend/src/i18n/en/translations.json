@@ -2884,6 +2884,32 @@
       }
     }
   },
+  "resultList": {
+    "download": {
+      "button": "Result list",
+      "title": "Print result list",
+      "action": "Download",
+      "hint": "For the notice board or the podium — pick the parts you need; the preset only pre-selects them. Every page carries an as-of timestamp. Only confirmed placements are printed.",
+      "preset": {
+        "label": "Preset",
+        "posting": "Notice board",
+        "ceremony": "Award ceremony"
+      },
+      "options": {
+        "crew": "Crew line-up (names per boat)",
+        "times": "Times and time penalties",
+        "podiumOnly": "Places 1 to 3 only",
+        "byRatingCategory": "One section per rating category",
+        "largePrint": "Large print (notice board)"
+      },
+      "error": {
+        "noResults": "There are no confirmed placements for this result list yet.",
+        "competitionNotInEvent": "This competition does not belong to this event. Please reload the page.",
+        "isChallengeEvent": "A challenge event has no result lists — there are no runs and no placements.",
+        "unexpected": "The result list could not be created. Please reload the page and try again."
+      }
+    }
+  },
   "myEvent": {
     "tab": "My Event",
     "hint": "Scan the QR code on your wristband to see your races and results.",

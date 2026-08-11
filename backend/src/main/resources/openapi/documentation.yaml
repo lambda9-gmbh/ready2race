@@ -8736,6 +8736,81 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/resultList/pdf:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: downloadResultList
+      description: >-
+        Die Ergebnisliste als druckfertiges PDF, in der Regel zum Aushängen - dieselbe Datenbasis
+        und dieselbe Ergebnisregel wie der Siegerehrungsbogen (nur bestätigte Platzierungen),
+        aber mit wählbaren Bestandteilen. Jedes Blatt trägt eine Fußzeile mit Veranstaltung und
+        Stand-Zeitstempel, damit veraltete Aushänge erkennbar sind. Fehlende Parameter fallen auf
+        die Aushang-Vorgaben zurück.
+      parameters:
+        - in: query
+          name: competitionId
+          description: >-
+            Nur dieser Wettkampf. Jeder Abschnitt kostet eine Platzberechnung, deshalb ist die
+            Einschränkung mehr als ein Anzeigefilter.
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: crew
+          description: Mit Crew-Aufstellung (Namen je Boot). Vorgabe true.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: times
+          description: Mit Zeiten und Zeitstrafen. Vorgabe true.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: podiumOnly
+          description: Nur die Plätze 1 bis 3 statt aller platzierten Boote. Vorgabe false.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: byRatingCategory
+          description: Je Wertungskategorie ein eigener Abschnitt statt des Gesamtfelds. Vorgabe true.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: size
+          description: Schriftgrad - POSTING (Aushang, groß) oder CEREMONY (wie der Bogen). Vorgabe POSTING.
+          required: false
+          schema:
+            type: string
+            enum: [ POSTING, CEREMONY ]
+      responses:
+        200:
+          description: Result list successfully rendered
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/competition/{competitionId}/awardCertificates:
     parameters:
       - $ref: '#/components/parameters/eventId'
