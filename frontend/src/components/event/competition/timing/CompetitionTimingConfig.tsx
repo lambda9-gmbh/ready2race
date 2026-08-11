@@ -76,8 +76,8 @@ const CompetitionTimingConfig = () => {
         },
     )
 
-    // Die Rennen der Veranstaltung: Der Wettkampf wählt daraus aus und zeigt zugleich an, WAS er
-    // erben würde — beides braucht die Namen, die nur diese Liste kennt.
+    // Die Rennen der Veranstaltung: Der Wettkampf wählt sein eigenes Rennen daraus aus. Ein
+    // Veranstaltungs-Default gibt es nicht mehr; die Zuordnung ist entweder hier oder am Rennen.
     const {data: raceOptions, pending: racesPending} = useFetch(
         signal => getRaceClockerRaces({signal, path: {eventId}}),
         {
@@ -154,11 +154,8 @@ const CompetitionTimingConfig = () => {
                 'timingSystem',
                 eventSystem !== 'NONE' ? eventSystem : 'RACECLOCKER',
             )
-            formContext.setValue(
-                'raceQualification',
-                configOption(raceOptions, formValues.eventRaceQualification),
-            )
-            formContext.setValue('raceRounds', configOption(raceOptions, formValues.eventRaceRounds))
+            // Rennen erben nicht von der Veranstaltung; sie werden hier (oder am Rennen) gezielt
+            // zugewiesen und starten deshalb leer.
             formContext.setValue(
                 'startlistConfigQualification',
                 configOption(startListConfigs, formValues.eventStartlistConfigQualification),
@@ -218,23 +215,13 @@ const CompetitionTimingConfig = () => {
                             {t(systemLabelKeys[eventSystem])}
                         </Typography>
                         {eventSystem === 'RACECLOCKER' && (
-                            <>
-                                <Typography variant={'body2'} color={'text.secondary'}>
-                                    {t('event.competition.timing.raceQualification')}:{' '}
-                                    {configName(raceOptions, formValues.eventRaceQualification)}
-                                </Typography>
-                                <Typography variant={'body2'} color={'text.secondary'}>
-                                    {t('event.competition.timing.raceRounds')}:{' '}
-                                    {configName(raceOptions, formValues.eventRaceRounds)}
-                                </Typography>
-                                <Typography variant={'body2'} color={'text.secondary'}>
-                                    {t('event.competition.timing.startlistQualification')}:{' '}
-                                    {configName(
-                                        startListConfigs,
-                                        formValues.eventStartlistConfigQualification,
-                                    )}
-                                </Typography>
-                            </>
+                            <Typography variant={'body2'} color={'text.secondary'}>
+                                {t('event.competition.timing.startlistQualification')}:{' '}
+                                {configName(
+                                    startListConfigs,
+                                    formValues.eventStartlistConfigQualification,
+                                )}
+                            </Typography>
                         )}
                         {eventSystem !== 'NONE' && (
                             <>

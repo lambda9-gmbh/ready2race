@@ -7,15 +7,10 @@ export type EventTimingFormSystem = TimingSystem | 'NONE'
 export type EventTimingForm = {
     timingSystem: EventTimingFormSystem
     /**
-     * Das voreingestellte RaceClocker-Rennen je Rundenart. Angewählt statt eingetippt: die Rennen
-     * gehören der Veranstaltung und tragen ihre Adresse genau einmal.
-     */
-    raceQualification: AutocompleteOption
-    raceRounds: AutocompleteOption
-    /**
      * Startlisten-Export und Rennergebnisse-Import wie im Wettkampf (Migration V202608071300). Sie
-     * stehen hier, weil alle Wettkämpfe einer Regatta in dieselben Rennen im Fremdsystem exportieren
-     * und deshalb dieselben Spalten brauchen; abweichende Bootsklassen scheren im Wettkampf aus.
+     * stehen hier, weil alle Wettkämpfe einer Regatta dieselben Spalten brauchen; abweichende
+     * Bootsklassen scheren im Wettkampf aus. Die RaceClocker-Rennen dagegen werden pro Wettkampf
+     * zugewiesen (RaceClockerRaceAssignments) — die Veranstaltung hat dafür keine Voreinstellung.
      */
     startlistConfigQualification: AutocompleteOption
     startlistConfigRounds: AutocompleteOption
@@ -33,8 +28,6 @@ export type EventTimingForm = {
 
 export const emptyEventTimingForm: EventTimingForm = {
     timingSystem: 'NONE',
-    raceQualification: null,
-    raceRounds: null,
     startlistConfigQualification: null,
     startlistConfigRounds: null,
     resultImportConfig: null,
@@ -47,8 +40,6 @@ export const emptyEventTimingForm: EventTimingForm = {
 
 export const mapDtoToEventTimingForm = (dto: EventTimingConfigDto): EventTimingForm => ({
     timingSystem: dto.timingSystem ?? 'NONE',
-    raceQualification: dto.raceQualification ? {id: dto.raceQualification, label: ''} : null,
-    raceRounds: dto.raceRounds ? {id: dto.raceRounds, label: ''} : null,
     // Wie im Wettkampf-Formular: nur die ID, das Label füllt die Komponente aus den geladenen Listen.
     startlistConfigQualification: dto.startlistConfigQualification
         ? {id: dto.startlistConfigQualification, label: ''}
@@ -75,8 +66,6 @@ export const mapEventTimingFormToRequest = (form: EventTimingForm): EventTimingC
 
     return {
         timingSystem: form.timingSystem === 'NONE' ? null : form.timingSystem,
-        raceQualification: raceClocker ? (form.raceQualification?.id ?? null) : null,
-        raceRounds: raceClocker ? (form.raceRounds?.id ?? null) : null,
         // Nur RaceClocker kennt die Zweiteilung Zeitfahren/Läufe; Webscorer füllt allein den Runden-Slot.
         startlistConfigQualification: raceClocker
             ? (form.startlistConfigQualification?.id ?? null)

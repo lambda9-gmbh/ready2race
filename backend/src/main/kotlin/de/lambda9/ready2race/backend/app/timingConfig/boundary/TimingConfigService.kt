@@ -48,8 +48,6 @@ object TimingConfigService {
                     resultImportConfig = competition.resultImportConfig,
                     hasQualificationRound = hasQualificationRound,
                     eventTimingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
-                    eventRaceQualification = event.raceclockerRaceQualification,
-                    eventRaceRounds = event.raceclockerRaceRounds,
                     eventStartlistConfigQualification = event.startlistConfigQualification,
                     eventStartlistConfigRounds = event.startlistConfigRounds,
                     eventResultImportConfig = event.resultImportConfig,
@@ -71,8 +69,6 @@ object TimingConfigService {
             ApiResponse.Dto(
                 EventTimingConfigDto(
                     timingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
-                    raceQualification = event.raceclockerRaceQualification,
-                    raceRounds = event.raceclockerRaceRounds,
                     startlistConfigQualification = event.startlistConfigQualification,
                     startlistConfigRounds = event.startlistConfigRounds,
                     resultImportConfig = event.resultImportConfig,
@@ -99,12 +95,8 @@ object TimingConfigService {
         val event = !EventRepo.get(eventId).orDie()
             .onNullFail { EventError.NotFound }
 
-        !ensureRacesBelongToEvent(eventId, request.raceQualification, request.raceRounds)
-
         !EventRepo.update(event) {
             timingSystem = request.timingSystem?.name
-            raceclockerRaceQualification = request.raceQualification
-            raceclockerRaceRounds = request.raceRounds
             startlistConfigQualification = request.startlistConfigQualification
             startlistConfigRounds = request.startlistConfigRounds
             resultImportConfig = request.resultImportConfig

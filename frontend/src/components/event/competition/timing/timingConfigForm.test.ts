@@ -30,11 +30,11 @@ describe('mapDtoToTimingForm', () => {
     it('übernimmt die Zeitnahme-Voreinstellung der Veranstaltung', () => {
         const form = mapDtoToTimingForm({
             eventTimingSystem: 'RACECLOCKER',
-            eventRaceRounds: shortCourseRace,
+            eventStartlistConfigRounds: roundsPreset,
         })
 
         expect(form.eventTimingSystem).toBe('RACECLOCKER')
-        expect(form.eventRaceRounds).toBe(shortCourseRace)
+        expect(form.eventStartlistConfigRounds).toBe(roundsPreset)
         // Ein alter Server ohne die Felder darf nicht als „erbt etwas" gelesen werden.
         expect(mapDtoToTimingForm({}).eventTimingSystem).toBe('NONE')
     })
@@ -203,17 +203,6 @@ describe('timingConfigWarnings', () => {
         expect(warnings).toEqual(['raceRounds'])
     })
 
-    it('mahnt ein Rennen nicht an, das von der Veranstaltung kommt', () => {
-        const warnings = timingConfigWarnings({
-            ...emptyTimingForm,
-            eventTimingSystem: 'RACECLOCKER',
-            eventRaceRounds: shortCourseRace,
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
-        })
-
-        expect(warnings).toEqual([])
-    })
-
     it('mahnt bei geerbtem RaceClocker ohne Anwahl trotzdem an', () => {
         // Sonst bliebe der einzige Hinweis auf eine halbfertige Veranstaltungs-Vorgabe aus, weil
         // der Wettkampf selbst „nichts gesetzt" hat.
@@ -230,7 +219,8 @@ describe('timingConfigWarnings', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             eventTimingSystem: 'RACECLOCKER',
-            eventRaceRounds: shortCourseRace,
+            // Rennen ist Pflicht pro Wettkampf; der Startlisten-Export erbt von der Veranstaltung.
+            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
             eventStartlistConfigRounds: roundsPreset,
         })
 
@@ -241,8 +231,9 @@ describe('timingConfigWarnings', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             eventTimingSystem: 'RACECLOCKER',
-            eventRaceQualification: timeTrialRace,
-            eventRaceRounds: shortCourseRace,
+            // Rennen werden pro Wettkampf zugewiesen, die Formate erbt der Wettkampf.
+            raceQualification: {id: timeTrialRace, label: 'Timetrials'},
+            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
             eventStartlistConfigQualification: qualificationPreset,
             eventStartlistConfigRounds: roundsPreset,
             hasQualificationRound: true,

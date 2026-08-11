@@ -4,15 +4,15 @@ import java.util.UUID
 
 /**
  * Die Zeitnahme-Voreinstellung einer Veranstaltung: gilt fuer alle Wettkaempfe ohne eigene Werte
- * (siehe [TimingConfigDto] - dort sind die Wettkampf-Spalten der Override). Sie umfasst dieselben
- * Felder wie der Wettkampf, weil in der Praxis einer Regatta alle Wettkaempfe in dieselben Rennen
- * im Fremdsystem exportiert werden - System, beide Ergebnis-Adressen sowie Startlisten-Export und
- * Rennergebnisse-Import.
+ * (siehe [TimingConfigDto] - dort sind die Wettkampf-Spalten der Override). System, Startlisten-
+ * Export und Rennergebnisse-Import werden von allen Wettkaempfen einer Regatta geteilt.
+ *
+ * Die konkrete Rennen-Zuordnung (Zeitfahren-/Laeufe-Rennen) steht dagegen NICHT mehr hier: sie wird
+ * seit dem 11.08.2026 ausschliesslich pro Rennen am Wettkampf gesetzt (RaceClockerRaceAssignments),
+ * ein Veranstaltungs-Default dafuer entfaellt.
  */
 data class EventTimingConfigDto(
     val timingSystem: TimingSystem?,
-    val raceQualification: UUID?,
-    val raceRounds: UUID?,
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,

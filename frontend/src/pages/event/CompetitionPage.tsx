@@ -36,6 +36,7 @@ import CompetitionRegistrationTeams from '@components/event/competition/registra
 import {format} from 'date-fns'
 import CompetitionNavigation from '@components/event/competition/CompetitionNavigation.tsx'
 import {CompetitionTab} from '@components/event/competition/common.ts'
+import {useDocumentTitle} from '@utils/useDocumentTitle.ts'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -101,6 +102,8 @@ const CompetitionPage = () => {
             deps: [eventId, competitionId, reloadData],
         },
     )
+
+    useDocumentTitle(competitionData?.properties.name, eventData?.name)
 
     const tabProps = (tab: CompetitionTab) => a11yProps('competition', tab)
 

@@ -84,6 +84,7 @@ import AwardCertificateDialog from '@components/awardCertificate/AwardCertificat
 import CheckSeverityDialog from '@components/event/liveDashboard/CheckSeverityDialog.tsx'
 import WorkspacePremium from '@mui/icons-material/WorkspacePremium'
 import SplitButton from '@components/SplitButton.tsx'
+import {useDocumentTitle} from '@utils/useDocumentTitle.ts'
 
 const EVENT_TABS = [
     'general',
@@ -127,8 +128,11 @@ const EventPage = () => {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
             }
         },
+
         deps: [eventId, lastRequested],
     })
+
+    useDocumentTitle(data?.name)
 
     const documentAdministrationProps = useEntityAdministration<EventDocumentDto>(
         t('event.document.document'),
