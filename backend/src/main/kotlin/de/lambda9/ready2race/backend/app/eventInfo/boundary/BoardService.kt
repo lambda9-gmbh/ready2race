@@ -137,7 +137,16 @@ object BoardService {
                         .data.map { it.toAthleteBoardMatch(now, showCountdown = true, includeDetails = details) }
                 ) { it.startTime }
                 val results =
-                    (!EventInfoService.getLatestMatchResults(eventId, needs.resultsLimit, null, clubShortNames))
+                    // confirmedOnly: die „Letztes Ergebnis"-Kachel zeigt nur beendete Läufe —
+                    // ein voll gewerteter, unbeendeter läuft nebenan noch als „Im Rennen" mit
+                    // Live-Stand und würde sonst doppelt erscheinen (Begründung am Parameter).
+                    (!EventInfoService.getLatestMatchResults(
+                        eventId,
+                        needs.resultsLimit,
+                        null,
+                        clubShortNames,
+                        confirmedOnly = true,
+                    ))
                         .data.map { it.toAthleteBoardResult() }
 
                 // „Weiter kommen N Boote → Finale": matchId IST die Setup-Lauf-Id; die

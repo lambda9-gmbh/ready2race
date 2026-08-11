@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamLapRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.control.toLiveMatchInfo
@@ -67,9 +68,20 @@ object EventInfoService {
         limit: Int,
         competitionId: UUID?,
         clubShortNames: ClubShortNameSettings,
+        // Nur für die Kachel-Boards (BoardService): deren „Letztes Ergebnis"-Kachel zeigt
+        // ausschließlich beendete Läufe, unabhängig vom Sichtbarkeitsmodus der Veranstaltung.
+        // Ein voll gewerteter, unbeendeter Lauf läuft dort noch in der „Im Rennen"-Kachel mit
+        // Live-Zeiten mit — erst die Schiedsrichter-Entscheidung verschiebt ihn herüber, sonst
+        // doppeln sich die beiden Kacheln (Nutzerwunsch vom 11.08.2026). Alle anderen Aufrufer
+        // (öffentliche Ergebnisseite, Kiosk) behalten die Visibility-Weiche unverändert.
+        confirmedOnly: Boolean = false,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
 
-        val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
+        // FINISHED_ONLY ist in CompetitionMatchRepo.getMatchResults exakt „finished_at gesetzt" —
+        // das Erzwingen dieser Stufe IST die Nur-Bestätigt-Auswahl, ohne zweite Repo-Weiche.
+        val visibility =
+            if (confirmedOnly) PublicResultsVisibility.FINISHED_ONLY
+            else !EventRepo.getPublicResultsVisibility(eventId).orDie()
         val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit, visibility).orDie()
 
         val result = matches.map { match ->

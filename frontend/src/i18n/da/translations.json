@@ -1569,6 +1569,7 @@
         "unscheduled": "Tid ikke fastsat",
         "failed": "ikke placeret",
         "startedAt": "startet {{time}}",
+        "awaitingReferee": "Målgang komplet — afventer dommerafgørelse",
         "preparing": "under forberedelse",
         "penalty": "inkl. {{seconds}} s tidsstraf",
         "deregistered": "afmeldt",

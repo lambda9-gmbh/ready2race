@@ -82,6 +82,18 @@ export const sortRunningTeams = <
 }
 
 /**
+ * „Zieleinlauf komplett": jedes Boot der Aufstellung eines laufenden Laufs hat ein Ergebnis —
+ * Platz/Zeit oder gescheitert (DNS/DNF/DSQ). Der Lauf wartet dann nur noch auf die
+ * Schiedsrichter-Entscheidung (Beenden), erst die verschiebt ihn in „Letztes Ergebnis".
+ *
+ * Dieselbe Auslegung wie `LiveDashboardLogic.teamHasResult` im Backend, so wie sie dort für
+ * laufende Läufe angewandt wird (Conversions, `deregistered = false`): mehr als Platz und
+ * Gescheitert-Status weiß über ein laufendes Feld auch das Schiedsrichter-Dashboard nicht.
+ */
+export const finishComplete = (teams: {place?: number | null; failed?: boolean}[]): boolean =>
+    teams.length > 0 && teams.every(team => team.place != null || team.failed === true)
+
+/**
  * Welche Form der Vereinskette in der Zeile steht. Die Entscheidung trifft die Breite des
  * Bildschirms, nicht der Inhalt: am Steg hängt ein großer Schirm, in der Hand ein Telefon.
  */

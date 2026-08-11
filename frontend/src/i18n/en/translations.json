@@ -1569,6 +1569,7 @@
         "unscheduled": "Time open",
         "failed": "not classified",
         "startedAt": "started {{time}}",
+        "awaitingReferee": "Finish complete — awaiting referee decision",
         "preparing": "in preparation",
         "penalty": "incl. {{seconds}} s penalty",
         "deregistered": "withdrawn",

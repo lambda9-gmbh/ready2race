@@ -1569,6 +1569,7 @@
         "unscheduled": "Zeit offen",
         "failed": "nicht gewertet",
         "startedAt": "gestartet {{time}}",
+        "awaitingReferee": "Zieleinlauf komplett — wartet auf Schiedsrichter-Entscheidung",
         "preparing": "in Vorbereitung",
         "penalty": "inkl. {{seconds}} s Zeitstrafe",
         "deregistered": "abgemeldet",
