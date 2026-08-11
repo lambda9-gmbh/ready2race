@@ -58,7 +58,9 @@ const BoardCeremonyElement = ({element, view}: BoardCeremonyElementProps) => {
                 {ceremony?.ratingCategoryName ? ` — ${ceremony.ratingCategoryName}` : ''}
             </Typography>
 
-            <Box sx={{minHeight: 0, overflow: 'hidden', display: 'grid', alignContent: 'start'}}>
+            {/* Scrollen statt Abschneiden: ein langes Siegerfeld bleibt per Scroll
+                erreichbar, statt hinter der Zellkante zu verschwinden. */}
+            <Box sx={{minHeight: 0, overflow: 'auto', display: 'grid', alignContent: 'start'}}>
                 {!ceremony || ceremony.ranks.length === 0 ? (
                     <Typography
                         sx={{fontSize: scaled('0.85rem', '1.2vw', '1.8rem')}}

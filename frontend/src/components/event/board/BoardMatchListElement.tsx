@@ -110,7 +110,9 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                 color="text.secondary">
                 {title}
             </Typography>
-            <Box sx={{minHeight: 0, overflow: 'hidden'}}>
+            {/* Scrollen statt Abschneiden: passt die Liste nicht in die Zelle, bleibt
+                der Rest per Scroll erreichbar, statt kommentarlos zu verschwinden. */}
+            <Box sx={{minHeight: 0, overflow: 'auto'}}>
                 {rows.length === 0 ? (
                     <Typography
                         sx={{fontSize: scaled('0.85rem', '1.2vw', '1.8rem')}}

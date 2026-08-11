@@ -513,15 +513,13 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                     </Stack>
 
                     {/* Die Kacheln im selben Raster wie auf dem Bildschirm — der Editor
-                        ist damit zugleich die Vorschau der Anordnung. */}
+                        ist damit zugleich die Vorschau der Anordnung. Wie die Bühne gilt
+                        das Raster auf jeder Viewportbreite, ohne Breakpoint-Fallback. */}
                     <Box
                         sx={{
                             display: 'grid',
                             gap: 2,
-                            gridTemplateColumns: {
-                                xs: '1fr',
-                                md: `repeat(${columns}, minmax(0, 1fr))`,
-                            },
+                            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
                         }}>
                         {config.tiles.map((tile, tileIndex) => {
                             const position = placement.positions[tileIndex]
@@ -531,14 +529,8 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                     variant="outlined"
                                     sx={{
                                         p: 1.5,
-                                        gridColumn: {
-                                            xs: 'auto',
-                                            md: `${position.column} / span ${position.colSpan}`,
-                                        },
-                                        gridRow: {
-                                            xs: 'auto',
-                                            md: `${position.row} / span ${position.rowSpan}`,
-                                        },
+                                        gridColumn: `${position.column} / span ${position.colSpan}`,
+                                        gridRow: `${position.row} / span ${position.rowSpan}`,
                                     }}>
                                     <Stack gap={1.5}>
                                         <Stack direction="row" alignItems="center" gap={1}>

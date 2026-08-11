@@ -11,9 +11,11 @@ interface BoardRendererProps {
 /**
  * Das Raster eines Boards: `columns` Spalten, die Kacheln fließen mit ihren
  * Spannweiten (colSpan/rowSpan) in Reihenfolge hinein — dieselbe Anordnung, die der
- * Editor als Vorschau zeigt ([gridPlacement]). Ab lg gilt das Scroll-Verbot der alten
- * Bühne — das Raster passt sich der Höhe an, statt überzulaufen; darunter stapeln die
- * Kacheln und die Seite scrollt wie jede andere.
+ * Editor als Vorschau zeigt ([gridPlacement]). Das konfigurierte Raster gilt auf jeder
+ * Viewportbreite — es gibt bewusst keinen Breakpoint-Fallback, der die Kacheln stapelt
+ * (ein iPad quer lag mit 1180px knapp unter lg und verlor das Raster). Wird eine Zelle
+ * inhaltlich zu klein, scrollt sie innen ([overflow: auto] je Zelle), statt dass das
+ * Layout kollabiert; für schmale Geräte ist ein eigenes 1-Spalten-Board der Weg.
  */
 const BoardRenderer = ({view, now}: BoardRendererProps) => {
     const columns = view.config.columns ?? 3
@@ -22,14 +24,14 @@ const BoardRenderer = ({view, now}: BoardRendererProps) => {
     return (
         <Box
             sx={{
-                height: {xs: 'auto', lg: '100%'},
+                height: '100%',
                 minHeight: 0,
                 display: 'grid',
                 gap: 'clamp(0.4rem, 0.7vw, 1rem)',
                 p: 'clamp(0.5rem, 1vw, 1.5rem)',
-                gridTemplateColumns: {xs: '1fr', lg: `repeat(${columns}, minmax(0, 1fr))`},
-                gridTemplateRows: {xs: 'none', lg: `repeat(${rows}, minmax(0, 1fr))`},
-                overflow: {xs: 'auto', lg: 'hidden'},
+                gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+                overflow: 'hidden',
             }}>
             {view.config.tiles.map((tile, index) => {
                 const position = positions[index]
@@ -39,13 +41,13 @@ const BoardRenderer = ({view, now}: BoardRendererProps) => {
                         sx={{
                             minHeight: 0,
                             minWidth: 0,
+                            // Passt der Inhalt trotz minimaler Dichte nicht in die Zelle,
+                            // scrollt die Zelle selbst — nie die ganze Seite.
+                            overflow: 'auto',
                             // Explizite Platzierung statt Auto-Flow: so zeigen Bühne und
                             // Editor-Vorschau garantiert dieselbe Anordnung.
-                            gridColumn: {
-                                xs: 'auto',
-                                lg: `${position.column} / span ${position.colSpan}`,
-                            },
-                            gridRow: {xs: 'auto', lg: `${position.row} / span ${position.rowSpan}`},
+                            gridColumn: `${position.column} / span ${position.colSpan}`,
+                            gridRow: `${position.row} / span ${position.rowSpan}`,
                         }}>
                         <BoardTileView
                             tile={tile}

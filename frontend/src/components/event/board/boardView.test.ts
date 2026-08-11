@@ -81,6 +81,17 @@ describe('gridPlacement', () => {
         const {rows} = gridPlacement([tile(3, 1), tile(3, 2)], 3)
         expect(rows).toBe(3)
     })
+
+    // Der Editor erlaubt bis zu 4 Spalten (MAX_COLUMNS); mit dem immer aktiven Raster
+    // muss auch das volle 4×4 sauber platziert werden — 16 Kacheln, keine Lücke.
+    test('ein volles 4×4-Raster platziert alle 16 Kacheln lückenlos', () => {
+        const tiles = Array.from({length: 16}, () => tile())
+        const {rows, positions} = gridPlacement(tiles, 4)
+        expect(rows).toBe(4)
+        expect(positions.map(p => [p.column, p.row])).toEqual(
+            Array.from({length: 16}, (_, i) => [(i % 4) + 1, Math.floor(i / 4) + 1]),
+        )
+    })
 })
 
 describe('slotForElement', () => {
