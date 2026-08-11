@@ -27,13 +27,23 @@ object ClubShortNameLogic {
     // und nicht in der Tabelle. Was in der Tabelle steht, ist nur die Angabe, ob sie greifen.
     private val BRACKETED_WITH_DIGIT = Regex("""\s*\([^)]*\d[^)]*\)""")
 
+    // Ein Gründungsjahr steht mitunter als Spanne: "von 1875/1905", "HANSA 1879/83". Ohne die
+    // Fortsetzung bliebe der zweite Jahrgang als "/1905" stehen.
+    private const val YEARS = """\d{4}(?:\s*[/-]\s*\d{2,4})*"""
+
     private val FOUNDING_YEARS = listOf(
-        Regex("""\s*\bvon\s+\d{4}\b""", RegexOption.IGNORE_CASE),
-        Regex("""\s*\bv\.\s*\d{4}\b""", RegexOption.IGNORE_CASE),
+        Regex("""\s*\bvon\s+$YEARS\b""", RegexOption.IGNORE_CASE),
+        Regex("""\s*\bv\.\s*$YEARS\b""", RegexOption.IGNORE_CASE),
         // Nachgestellte Jahreszahl, z.B. "München 1972". Zuletzt, damit "von 1889" nicht als
         // blanke Jahreszahl behandelt wird und das "von" stehenbleibt.
-        Regex("""\s+\d{4}\b"""),
+        Regex("""\s+$YEARS\b"""),
     )
+
+    // Was eine gestrichene Jahreszahl oder Rechtsform zurücklassen kann: ein Trennstrich, hinter
+    // dem nichts mehr steht als ein weiterer Strich oder das Ende ("Arkona Berlin - 1879 - e.V."
+    // wurde zu "Arkona Berlin - -"). Ein Strich *zwischen* zwei Namensteilen - "Allemannia -
+    // Leuphana Universität Lüneburg" - hat rechts von sich Text und bleibt deshalb stehen.
+    private val DANGLING_SEPARATOR = Regex("""\s+[-–—]+(?=\s*[-–—]|\s*$)""")
 
     /**
      * Kurzform eines Vereinsnamens für die Listenansicht. [rules] greifen in ihrer Reihenfolge -
@@ -53,6 +63,7 @@ object ClubShortNameLogic {
         }
 
         return processed
+            .replace(DANGLING_SEPARATOR, "")
             .replace(Regex("""\s{2,}"""), " ")
             .replace(Regex("""\s+,"""), ",")
             .trim()
