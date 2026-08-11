@@ -1974,6 +1974,11 @@
           "running": "Igangværende løb",
           "schedule": "Dagsprogram"
         },
+        "scheduleMode": {
+          "label": "Udsnit",
+          "follow": "Løbende udsnit",
+          "full": "Hele dagen (kan scrolles)"
+        },
         "titleCurrent": "I løb nu",
         "titleNext": "Næste løb",
         "titleUpcoming": "Om {{count}} løb",

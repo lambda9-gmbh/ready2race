@@ -13828,6 +13828,13 @@ components:
         - RUNNING
         - SCHEDULE
 
+    BoardScheduleMode:
+      type: string
+      description: "SCHEDULE only: FOLLOW = moving window around now (default), FULL = the whole day, the tile scrolls instead"
+      enum:
+        - FOLLOW
+        - FULL
+
     BoardElement:
       type: object
       description: "One element of a tile. Deliberately flat: which fields are required per type is enforced by the backend validation"
@@ -13870,6 +13877,8 @@ components:
           nullable: true
         listMode:
           $ref: '#/components/schemas/BoardListMode'
+        scheduleMode:
+          $ref: '#/components/schemas/BoardScheduleMode'
         limit:
           type: integer
           minimum: 1

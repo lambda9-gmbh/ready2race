@@ -1980,6 +1980,11 @@
           "running": "Laufende Läufe",
           "schedule": "Tagesprogramm"
         },
+        "scheduleMode": {
+          "label": "Ausschnitt",
+          "follow": "Mitlaufender Ausschnitt",
+          "full": "Ganzer Tag (scrollbar)"
+        },
         "titleCurrent": "Im Rennen",
         "titleNext": "Als Nächstes",
         "titleUpcoming": "In {{count}} Läufen",

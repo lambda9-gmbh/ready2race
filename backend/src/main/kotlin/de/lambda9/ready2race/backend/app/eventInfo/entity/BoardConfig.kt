@@ -42,6 +42,14 @@ enum class BoardElementType { MATCH, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY }
 enum class BoardListMode { UPCOMING, RESULTS, RUNNING, SCHEDULE }
 
 /**
+ * Wie eine Tagesprogramm-Kachel (MATCH_LIST mit SCHEDULE) ihren Ausschnitt wählt:
+ * FOLLOW = mitlaufendes Fenster um „jetzt" (bisheriges Verhalten, [limit] deckelt),
+ * FULL = der ganze Tag ohne Zuschnitt — die Kachel scrollt stattdessen.
+ * Fehlt das Feld (Alt-Konfigurationen), gilt FOLLOW.
+ */
+enum class BoardScheduleMode { FOLLOW, FULL }
+
+/**
  * Ein Element einer Kachel. Bewusst flach statt sealed: das Schema geht 1:1 durch das
  * handgepflegte OpenAPI-YAML und den hey-api-Generator, die mit einem Discriminator
  * beide mehr Reibung als Nutzen erzeugen. Welche Felder je [type] Pflicht sind,
@@ -69,6 +77,8 @@ data class BoardElement(
     // MATCH_LIST
     val listMode: BoardListMode? = null,
     val limit: Int? = null,
+    /** Nur für [BoardListMode.SCHEDULE]: mitlaufender Ausschnitt oder ganzer Tag — siehe [BoardScheduleMode]. */
+    val scheduleMode: BoardScheduleMode? = null,
     /** Wettkampf-Kürzel (short_name) statt des vollen Namens — für schmale Listen. */
     val useShortNames: Boolean? = null,
     // AWARD_CEREMONY: die Ehrung (Wettkampf + optionale Wertung), deren Podium die Kachel zeigt.

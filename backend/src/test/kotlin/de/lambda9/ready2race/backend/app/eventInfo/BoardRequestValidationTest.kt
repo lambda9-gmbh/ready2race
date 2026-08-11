@@ -110,6 +110,31 @@ class BoardRequestValidationTest {
         assertNotEquals(ValidationResult.Valid, request(listElement(BoardListMode.UPCOMING, 21)).validate())
     }
 
+    // scheduleMode wählt den Tagesprogramm-Zuschnitt (FOLLOW/FULL) — nur dort erlaubt;
+    // fehlend bleibt gültig, damit Alt-Konfigurationen unverändert weiterlaufen.
+    @Test
+    fun scheduleModeIsOnlyValidOnScheduleLists() {
+        fun listElement(mode: BoardListMode, scheduleMode: BoardScheduleMode?) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(
+                    elements = listOf(
+                        BoardElement(
+                            type = BoardElementType.MATCH_LIST,
+                            listMode = mode,
+                            limit = 5,
+                            scheduleMode = scheduleMode,
+                        )
+                    )
+                )
+            ),
+        )
+        assertEquals(ValidationResult.Valid, request(listElement(BoardListMode.SCHEDULE, null)).validate())
+        assertEquals(ValidationResult.Valid, request(listElement(BoardListMode.SCHEDULE, BoardScheduleMode.FOLLOW)).validate())
+        assertEquals(ValidationResult.Valid, request(listElement(BoardListMode.SCHEDULE, BoardScheduleMode.FULL)).validate())
+        assertNotEquals(ValidationResult.Valid, request(listElement(BoardListMode.UPCOMING, BoardScheduleMode.FULL)).validate())
+    }
+
     @Test
     fun aTextElementNeedsText() {
         val config = BoardConfig(

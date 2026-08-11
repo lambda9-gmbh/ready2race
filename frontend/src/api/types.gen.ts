@@ -455,6 +455,7 @@ export type BoardElement = {
     showAdvancement?: boolean | null
     showRegisteringClub?: boolean | null
     listMode?: BoardListMode
+    scheduleMode?: BoardScheduleMode
     limit?: number | null
     useShortNames?: boolean | null
     competitionId?: string | null
@@ -476,6 +477,11 @@ export type BoardListDto = {
 }
 
 export type BoardListMode = 'UPCOMING' | 'RESULTS' | 'RUNNING' | 'SCHEDULE'
+
+/**
+ * SCHEDULE only: FOLLOW = moving window around now (default), FULL = the whole day, the tile scrolls instead
+ */
+export type BoardScheduleMode = 'FOLLOW' | 'FULL'
 
 /**
  * One place on the day's timeline. At most one of match and result is set; both empty means the slot exists but is unoccupied

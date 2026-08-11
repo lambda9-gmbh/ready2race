@@ -1984,6 +1984,11 @@
           "running": "Running matches",
           "schedule": "Day program"
         },
+        "scheduleMode": {
+          "label": "View",
+          "follow": "Moving window around now",
+          "full": "Whole day (scrollable)"
+        },
         "titleCurrent": "Racing now",
         "titleNext": "Up next",
         "titleUpcoming": "In {{count}} matches",

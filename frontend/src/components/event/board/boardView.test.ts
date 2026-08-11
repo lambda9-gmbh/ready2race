@@ -218,6 +218,35 @@ describe('programForElement', () => {
     test('andere Modi haben kein Programm', () => {
         expect(programForElement(v, {type: 'MATCH_LIST', listMode: 'UPCOMING', limit: 4})).toBeNull()
     })
+
+    // FOLLOW explizit gesetzt verhält sich wie das Alt-Verhalten ohne Feld.
+    test('scheduleMode FOLLOW schneidet wie ohne Feld zu', () => {
+        const program = programForElement(v, {
+            type: 'MATCH_LIST',
+            listMode: 'SCHEDULE',
+            scheduleMode: 'FOLLOW',
+            limit: 4,
+        })
+        expect(program?.map(e => e.startTime)).toEqual(['08:30', '09:00', '09:30', '10:00'])
+    })
+
+    // FULL: ganzer Tag ohne Zuschnitt — auch das Limit greift nicht, die Kachel scrollt.
+    test('scheduleMode FULL liefert den ganzen Tag und ignoriert das Limit', () => {
+        const program = programForElement(v, {
+            type: 'MATCH_LIST',
+            listMode: 'SCHEDULE',
+            scheduleMode: 'FULL',
+            limit: 2,
+        })
+        expect(program?.map(e => e.startTime)).toEqual([
+            '08:00',
+            '08:30',
+            '09:00',
+            '09:30',
+            '10:00',
+            '10:30',
+        ])
+    })
 })
 
 describe('elementScale', () => {

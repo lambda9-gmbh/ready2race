@@ -121,7 +121,9 @@ export const ceremonyForElement = (
 const PROGRAM_FINISHED_CONTEXT = 2
 
 /**
- * Der Ausschnitt des Tagesprogramms für ein Listen-Element: zentriert um „jetzt" —
+ * Der Ausschnitt des Tagesprogramms für ein Listen-Element. Zwei Modi (scheduleMode):
+ * FULL liefert den ganzen Tag ohne Zuschnitt — die Kachel scrollt stattdessen.
+ * FOLLOW (Default, auch für Alt-Konfigurationen ohne das Feld) zentriert um „jetzt" —
  * ein paar beendete Läufe als Kontext, dann Laufendes und Anstehendes bis zum Limit.
  * Der Server liefert bewusst den ganzen Tag; erst hier wird zugeschnitten, damit
  * dieselbe Antwort Kacheln mit verschiedenen Limits bedienen kann.
@@ -132,6 +134,9 @@ export const programForElement = (
 ): BoardProgramEntry[] | null => {
     if (element.type !== 'MATCH_LIST' || element.listMode !== 'SCHEDULE') return null
     const program = view.lists.find(l => l.mode === 'SCHEDULE')?.program ?? []
+    // FULL ignoriert auch das Limit: „ganzer Tag" heißt ganzer Tag, der gespeicherte
+    // Limit-Wert bleibt nur für einen späteren Rückwechsel auf FOLLOW erhalten.
+    if (element.scheduleMode === 'FULL') return program
     const limit = element.limit ?? program.length
     const firstOpen = program.findIndex(e => e.state !== 'FINISHED')
     const start = firstOpen === -1

@@ -75,6 +75,11 @@ data class BoardRequest(
                         if (limit == null || limit < BoardLimits.MIN_LIST_LIMIT || limit > BoardLimits.MAX_LIST_LIMIT) {
                             errors += "$at: MATCH_LIST needs limit in ${BoardLimits.MIN_LIST_LIMIT}..${BoardLimits.MAX_LIST_LIMIT}"
                         }
+                        // scheduleMode steuert nur den Tagesprogramm-Zuschnitt; auf anderen
+                        // Listen wäre er ein stiller Konfigurationsfehler.
+                        if (element.scheduleMode != null && element.listMode != BoardListMode.SCHEDULE) {
+                            errors += "$at: scheduleMode requires listMode SCHEDULE"
+                        }
                     }
 
                     BoardElementType.TEXT -> {

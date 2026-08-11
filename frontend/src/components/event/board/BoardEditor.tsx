@@ -33,6 +33,7 @@ import {
     BoardElementType,
     BoardListMode,
     BoardRequest,
+    BoardScheduleMode,
     BoardTile,
 } from '@api/types.gen'
 import {gridPlacement} from './boardView'
@@ -328,6 +329,11 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             updateElement(tileIndex, elementIndex, {
                                 ...element,
                                 listMode: e.target.value as BoardListMode,
+                                // scheduleMode gehört nur zum Tagesprogramm — beim Wechsel
+                                // auf eine andere Liste abräumen, sonst lehnt die
+                                // Backend-Validierung die Konfiguration ab.
+                                scheduleMode:
+                                    e.target.value === 'SCHEDULE' ? element.scheduleMode : undefined,
                             })
                         }>
                         <MenuItem value="UPCOMING">
@@ -343,6 +349,29 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             {t('event.boards.element.listMode.schedule')}
                         </MenuItem>
                     </TextField>
+                    {/* Nur das Tagesprogramm hat zwei Zuschnitt-Modi: mitlaufendes Fenster
+                        um „jetzt" (FOLLOW, Default und Alt-Verhalten) oder der ganze Tag,
+                        wobei die Kachel scrollt (FULL). */}
+                    {element.listMode === 'SCHEDULE' && (
+                        <TextField
+                            select
+                            size="small"
+                            label={t('event.boards.element.scheduleMode.label')}
+                            value={element.scheduleMode ?? 'FOLLOW'}
+                            onChange={e =>
+                                updateElement(tileIndex, elementIndex, {
+                                    ...element,
+                                    scheduleMode: e.target.value as BoardScheduleMode,
+                                })
+                            }>
+                            <MenuItem value="FOLLOW">
+                                {t('event.boards.element.scheduleMode.follow')}
+                            </MenuItem>
+                            <MenuItem value="FULL">
+                                {t('event.boards.element.scheduleMode.full')}
+                            </MenuItem>
+                        </TextField>
+                    )}
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -358,23 +387,28 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         }
                         label={t('event.boards.element.useShortNames')}
                     />
-                    <Box>
-                        <Typography variant="caption" color="text.secondary">
-                            {t('event.boards.element.limit')}: {element.limit ?? 10}
-                        </Typography>
-                        <Slider
-                            size="small"
-                            value={element.limit ?? 10}
-                            min={1}
-                            max={20}
-                            onChange={(_, value) =>
-                                updateElement(tileIndex, elementIndex, {
-                                    ...element,
-                                    limit: value as number,
-                                })
-                            }
-                        />
-                    </Box>
+                    {/* Bei FULL wird das Limit ausgeblendet statt genullt: der Wert bleibt
+                        gespeichert (das Backend verlangt ihn ohnehin) und gilt wieder,
+                        sobald jemand auf FOLLOW zurückwechselt. */}
+                    {!(element.listMode === 'SCHEDULE' && element.scheduleMode === 'FULL') && (
+                        <Box>
+                            <Typography variant="caption" color="text.secondary">
+                                {t('event.boards.element.limit')}: {element.limit ?? 10}
+                            </Typography>
+                            <Slider
+                                size="small"
+                                value={element.limit ?? 10}
+                                min={1}
+                                max={20}
+                                onChange={(_, value) =>
+                                    updateElement(tileIndex, elementIndex, {
+                                        ...element,
+                                        limit: value as number,
+                                    })
+                                }
+                            />
+                        </Box>
+                    )}
                 </Stack>
             )}
 
