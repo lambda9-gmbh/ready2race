@@ -1709,6 +1709,21 @@
         "note": "Note: {{note}}",
         "none": "Ingen krav tildelt"
       },
+      "notes": {
+        "title": "Noter",
+        "indicator_one": "{{count}} note",
+        "indicator_other": "{{count}} noter",
+        "empty": "Ingen noter til denne båd.",
+        "inputLabel": "Ny note",
+        "placeholder": "f.eks. rørt en bøje",
+        "add": "Tilføj",
+        "byAt": "{{author}} · {{time}}",
+        "unknownAuthor": "Ukendt",
+        "delete": "Slet note",
+        "deleteConfirm": "Slet denne note? ”{{note}}”",
+        "error": "Noten kunne ikke gemmes.",
+        "deleteError": "Noten kunne ikke slettes."
+      },
       "timeCheck": {
         "TOO_EARLY": "Opfyldt for tidligt",
         "LATE": "Opfyldt sent",

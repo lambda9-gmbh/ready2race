@@ -62,6 +62,20 @@ export const dashboardCrew = (windowWidth: number): boolean => windowWidth >= CR
 export const teamShowsCrew = (team: Pick<LiveDashboardTeamDto, 'crew'>): boolean =>
     team.crew != null && team.crew.length > 0
 
+/**
+ * Anzahl der Schiedsrichter-Notizen eines Boots - der Marker auf der Karte erscheint nur, wenn es
+ * welche gibt. `notes` ist im generierten Typ optional, ältere Server-Antworten lassen es weg.
+ */
+export const teamNoteCount = (team: Pick<LiveDashboardTeamDto, 'notes'>): number =>
+    (team.notes ?? []).length
+
+/**
+ * Ob ein Notiz-Text abgeschickt werden kann - Leerraum zählt nicht. Dieselbe Regel wie im Backend
+ * (Validator `notBlank`, DB-Check `btrim(note) <> ''`): der Knopf soll gar nicht erst anbieten,
+ * was der Server ohnehin ablehnt.
+ */
+export const canSubmitNote = (text: string): boolean => text.trim() !== ''
+
 /** Eine Person in der Crew-Zeile: `Meier · RC Bergedorf (Ste.)`, Rolle und Verein je optional. */
 export const crewMemberLabel = (member: LiveDashboardCrewMemberDto): string => {
     const name = [member.lastName, member.clubShort].filter(Boolean).join(' · ')

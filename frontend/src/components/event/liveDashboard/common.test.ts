@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest'
 import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
     buildLiveDashboardTimeline,
+    canSubmitNote,
     competitionLabel,
     crewMemberLabel,
     dashboardCrew,
@@ -17,6 +18,7 @@ import {
     pendingSlotLabel,
     shortenClubChain,
     teamHasResult,
+    teamNoteCount,
     teamsInDisplayOrder,
     teamShowsClubLine,
     teamShowsCrew,
@@ -608,5 +610,37 @@ describe('dashboardMatchStatus', () => {
 
     it('lässt einen gewöhnlichen Lauf ohne Freilos', () => {
         expect(dashboardMatchStatus(match({})).bye).toBeUndefined()
+    })
+})
+
+describe('teamNoteCount', () => {
+    it('zählt die Notizen eines Boots', () => {
+        expect(
+            teamNoteCount(
+                team({
+                    notes: [
+                        {id: '1', note: 'Boje berührt', createdAt: '2026-08-14T10:00:00'},
+                        {id: '2', note: 'geklärt', createdAt: '2026-08-14T10:05:00'},
+                    ],
+                }),
+            ),
+        ).toBe(2)
+    })
+
+    it('liefert 0, wenn der Server das Feld weglässt — der Marker bleibt weg', () => {
+        expect(teamNoteCount(team({}))).toBe(0)
+        expect(teamNoteCount(team({notes: []}))).toBe(0)
+    })
+})
+
+describe('canSubmitNote', () => {
+    it('lässt echten Text durch', () => {
+        expect(canSubmitNote('Boje berührt')).toBe(true)
+    })
+
+    it('sperrt leeren Text und reinen Leerraum — dieselbe Regel wie notBlank im Backend', () => {
+        expect(canSubmitNote('')).toBe(false)
+        expect(canSubmitNote('   ')).toBe(false)
+        expect(canSubmitNote('\n\t')).toBe(false)
     })
 })

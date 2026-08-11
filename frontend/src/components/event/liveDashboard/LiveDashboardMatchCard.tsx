@@ -1,6 +1,7 @@
 import {Fragment} from 'react'
 import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
+import StickyNote2OutlinedIcon from '@mui/icons-material/StickyNote2Outlined'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
@@ -16,6 +17,7 @@ import {
     crewMemberLabel,
     dashboardMatchStatus,
     matchControls,
+    teamNoteCount,
     matchHasResults,
     openResultTeams,
     pendingSlotLabel,
@@ -444,6 +446,27 @@ const LiveDashboardMatchCard = ({
                                                     'event.liveDashboard.substitution.short',
                                                 )}
                                             />
+                                        )}
+                                        {/*
+                                            Schiedsrichter-Notizen zu diesem Boot - derselbe Platz
+                                            wie der Ummeldungs-Marker daneben: ein Zeichen an der
+                                            Zeile, die Notizen selbst stehen im Detail-Dialog.
+                                            Nur wenn es welche gibt; eine Null hätte nichts zu sagen.
+                                        */}
+                                        {teamNoteCount(team) > 0 && (
+                                            <Stack
+                                                direction="row"
+                                                spacing={0.25}
+                                                alignItems="center"
+                                                sx={{flexShrink: 0, color: 'info.dark'}}
+                                                title={t('event.liveDashboard.notes.indicator', {
+                                                    count: teamNoteCount(team),
+                                                })}>
+                                                <StickyNote2OutlinedIcon sx={{fontSize: 20}} />
+                                                <Typography variant="caption" fontWeight={700}>
+                                                    {teamNoteCount(team)}
+                                                </Typography>
+                                            </Stack>
                                         )}
                                     </Stack>
                                     {showCrew && (

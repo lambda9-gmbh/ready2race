@@ -2231,6 +2231,10 @@ export type LiveDashboardTeamDto = {
      * split times from RaceClocker, in mark order; empty when the race records none
      */
     laps?: Array<MatchTeamLapDto>
+    /**
+     * referee notes on this boat, oldest first - communication between referees, not scoring; only part of this internal poll, never of the public endpoints
+     */
+    notes?: Array<MatchTeamNoteDto>
 }
 
 /**
@@ -2420,6 +2424,26 @@ export type MatchTeamLapDto = {
      * Cumulative race time at this mark, formatted for display (e.g. '1:05.5')
      */
     timeString: string
+}
+
+/**
+ * A referee note on a boat in a match ('touched a buoy'). Append-only: entries are immutable, a correction is delete plus re-add.
+ */
+export type MatchTeamNoteDto = {
+    id: string
+    note: string
+    createdAt: string
+    /**
+     * display name of the author; null when the account was deleted
+     */
+    author?: string | null
+}
+
+export type MatchTeamNoteRequest = {
+    /**
+     * must not be blank
+     */
+    note: string
 }
 
 export type MyEventDto = {
@@ -7362,6 +7386,32 @@ export type GetLiveDashboardTeamDetailData = {
 export type GetLiveDashboardTeamDetailResponse = LiveDashboardTeamDetailDto
 
 export type GetLiveDashboardTeamDetailError = ApiError
+
+export type AddLiveDashboardTeamNoteData = {
+    body: MatchTeamNoteRequest
+    path: {
+        eventId: string
+        matchId: string
+        teamId: string
+    }
+}
+
+export type AddLiveDashboardTeamNoteResponse = string
+
+export type AddLiveDashboardTeamNoteError = ApiError | UnprocessableEntityError
+
+export type DeleteLiveDashboardTeamNoteData = {
+    path: {
+        eventId: string
+        matchId: string
+        noteId: string
+        teamId: string
+    }
+}
+
+export type DeleteLiveDashboardTeamNoteResponse = void
+
+export type DeleteLiveDashboardTeamNoteError = ApiError
 
 export type GetCheckSeverityConfigData = {
     path: {

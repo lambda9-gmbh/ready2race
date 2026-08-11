@@ -1709,6 +1709,21 @@
         "note": "Notiz: {{note}}",
         "none": "Keine Bedingungen zugewiesen"
       },
+      "notes": {
+        "title": "Notizen",
+        "indicator_one": "{{count}} Notiz",
+        "indicator_other": "{{count}} Notizen",
+        "empty": "Keine Notizen zu diesem Boot.",
+        "inputLabel": "Neue Notiz",
+        "placeholder": "z. B. Boje berührt",
+        "add": "Hinzufügen",
+        "byAt": "{{author}} · {{time}}",
+        "unknownAuthor": "Unbekannt",
+        "delete": "Notiz löschen",
+        "deleteConfirm": "Diese Notiz löschen? „{{note}}“",
+        "error": "Die Notiz konnte nicht gespeichert werden.",
+        "deleteError": "Die Notiz konnte nicht gelöscht werden."
+      },
       "timeCheck": {
         "TOO_EARLY": "Zu früh erfüllt",
         "LATE": "Spät erfüllt",
