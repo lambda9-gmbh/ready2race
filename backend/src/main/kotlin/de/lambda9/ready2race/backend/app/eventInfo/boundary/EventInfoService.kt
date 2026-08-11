@@ -58,8 +58,12 @@ object EventInfoService {
         eventId: UUID,
         limit: Int = 10,
         competitionId: UUID?,
+        // "Mein Event" holt das Feld GENAU EINES Laufs. Derselbe Endpoint, dieselbe
+        // Sichtbarkeitsregel: ein Lauf, den die Ergebnisseite nicht zeigt, kommt auch hier
+        // als leere Liste zurück.
+        matchId: UUID? = null,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
-        getLatestMatchResults(eventId, limit, competitionId, !clubShortNames())
+        getLatestMatchResults(eventId, limit, competitionId, !clubShortNames(), matchId)
     }
 
     internal fun getLatestMatchResults(
@@ -67,10 +71,11 @@ object EventInfoService {
         limit: Int,
         competitionId: UUID?,
         clubShortNames: ClubShortNameSettings,
+        matchId: UUID? = null,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
 
         val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
-        val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit, visibility).orDie()
+        val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit, visibility, matchId).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!

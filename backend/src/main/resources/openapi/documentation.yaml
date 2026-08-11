@@ -6449,6 +6449,13 @@ paths:
         schema:
           type: string
           format: uuid
+      - in: query
+        name: matchId
+        required: false
+        description: "Restricts the response to the field of one single match (used by My Event) - the visibility rule stays the same, an unreleased match answers with an empty list"
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: getLatestMatchResults
       parameters:
@@ -14820,6 +14827,11 @@ components:
         matchId:
           type: string
           format: uuid
+        teamId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "The own boat's registration - matches teamId of the teams in /latest-match-results, used to mark the own boat in the full field"
         competitionName:
           type: string
         categoryName:

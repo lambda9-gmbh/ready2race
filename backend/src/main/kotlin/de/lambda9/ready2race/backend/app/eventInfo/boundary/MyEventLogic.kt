@@ -36,6 +36,8 @@ object MyEventLogic {
      */
     data class RawMatch(
         val matchId: UUID,
+        /** Die eigene Meldung in diesem Lauf — wird nur am Ergebnis nach außen gereicht. */
+        val teamId: UUID?,
         val competitionName: String,
         val categoryName: String?,
         val roundName: String?,
@@ -152,6 +154,7 @@ object MyEventLogic {
 
     private fun RawMatch.toResultDto() = MyEventResultDto(
         matchId = matchId,
+        teamId = teamId,
         competitionName = competitionName,
         categoryName = categoryName,
         roundName = roundName,

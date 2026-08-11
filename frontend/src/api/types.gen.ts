@@ -2491,6 +2491,10 @@ export type MyEventRequirementDto = {
 
 export type MyEventResultDto = {
     matchId: string
+    /**
+     * The own boat's registration - matches teamId of the teams in /latest-match-results, used to mark the own boat in the full field
+     */
+    teamId?: string | null
     competitionName: string
     categoryName?: string | null
     roundName?: string | null
@@ -7240,6 +7244,10 @@ export type GetLatestMatchResultsData = {
     query: {
         competitionId?: string
         limit: number
+        /**
+         * Restricts the response to the field of one single match (used by My Event) - the visibility rule stays the same, an unreleased match answers with an empty list
+         */
+        matchId?: string
     }
 }
 

@@ -30,14 +30,16 @@ fun Route.eventInfo() {
                 }
             }
 
-            // Get latest match results
+            // Get latest match results. matchId grenzt auf das Feld eines einzelnen Laufs
+            // ein ("Mein Event") - die Sichtbarkeitsregel bleibt dieselbe wie ohne Filter.
             get("/latest-match-results") {
                 call.respondComprehension {
                     val eventId = !pathParam("eventId", uuid)
                     val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
                     val competitionId = !optionalQueryParam("competitionId", uuid)
+                    val matchId = !optionalQueryParam("matchId", uuid)
 
-                    EventInfoService.getLatestMatchResults(eventId, limit, competitionId)
+                    EventInfoService.getLatestMatchResults(eventId, limit, competitionId, matchId)
                 }
             }
 

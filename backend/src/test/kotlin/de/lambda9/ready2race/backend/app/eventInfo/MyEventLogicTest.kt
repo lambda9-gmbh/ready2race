@@ -27,6 +27,7 @@ class MyEventLogicTest {
         deregistered: Boolean = false,
     ) = MyEventLogic.RawMatch(
         matchId = UUID.randomUUID(),
+        teamId = UUID.randomUUID(),
         competitionName = "Wettkampf",
         categoryName = null,
         roundName = null,

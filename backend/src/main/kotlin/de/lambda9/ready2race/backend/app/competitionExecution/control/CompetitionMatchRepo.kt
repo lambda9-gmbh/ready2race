@@ -186,6 +186,10 @@ object CompetitionMatchRepo {
         competitionId: UUID?,
         limit: Int,
         visibility: PublicResultsVisibility,
+        // Auf EINEN Lauf eingegrenzt ("Mein Event" öffnet das Feld des angetippten Laufs).
+        // Bewusst ein Filter in derselben Abfrage statt eines eigenen Selects: so kann ein
+        // einzelner Lauf gar nicht an der Sichtbarkeitsregel oben vorbeikommen.
+        matchId: UUID? = null,
     ) = Jooq.query {
         // Kein Boot mehr ohne Ergebnis: abgemeldete und ausgeschiedene Boote zählen nicht mit,
         // für sie kommt keins mehr (dieselbe Auslegung wie LiveDashboardLogic.teamHasResult).
@@ -255,6 +259,9 @@ object CompetitionMatchRepo {
             .apply {
                 if (competitionId != null) {
                     and(COMPETITION.ID.eq(competitionId))
+                }
+                if (matchId != null) {
+                    and(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(matchId))
                 }
             }
             .orderBy(COMPETITION_MATCH.UPDATED_AT.desc())

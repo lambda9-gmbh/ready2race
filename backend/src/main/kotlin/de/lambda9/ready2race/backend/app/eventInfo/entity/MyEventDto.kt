@@ -57,6 +57,12 @@ data class MyEventTeamMemberDto(
 
 data class MyEventResultDto(
     val matchId: UUID,
+    /**
+     * Die Meldung des eigenen Bootes — derselbe Schlüssel wie `teamId` in den Mannschaften
+     * von `/latest-match-results`. Darüber markiert "Mein Event" das eigene Boot, wenn es
+     * das komplette Feld des Laufs nachlädt.
+     */
+    val teamId: UUID?,
     val competitionName: String,
     val categoryName: String?,
     val roundName: String?,

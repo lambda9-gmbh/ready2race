@@ -268,6 +268,7 @@ object MyEventService {
 
         return MyEventLogic.RawMatch(
             matchId = matchId,
+            teamId = first.get("registration_id", UUID::class.java),
             competitionName = first.get("competition_name", String::class.java) ?: "",
             categoryName = first.get("category_name", String::class.java),
             roundName = first.get("round_name", String::class.java),
