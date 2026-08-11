@@ -33,6 +33,7 @@ import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollLog
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollService
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
+import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerResultsXls
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
@@ -773,6 +774,49 @@ object CompetitionExecutionService {
         noData
     }
 
+    /**
+     * Der Notfallweg zum Live-Abruf: eine von RaceClocker heruntergeladene Ergebnis-xlsx auf einen
+     * Lauf schreiben, wenn am Steg das Netz fehlt. Liest das „Results"-Blatt
+     * ([RaceClockerResultsXls]) und reicht die Zeilen durch dieselbe Schreiblogik wie der Live-Abruf
+     * ([applyRaceClockerRows]) — Zuordnung über die R2R-Kennung aus „Extra info", Platz aus den
+     * Zeiten, Duplikat- und Reset-Prüfung inklusive.
+     *
+     * Der automatische Abruf wird dabei pausiert (wie beim Tabellen-Upload): Wer von Hand eine Datei
+     * einspielt, hat das letzte Wort, sonst überschriebe der nächste Takt es wieder. Freigabe über
+     * „Automatik wieder aufnehmen".
+     *
+     * Bewusste Grenze: Die xlsx trägt weder Startzeiten noch Zwischenzeiten, deshalb löscht dieser
+     * Import einen zuvor vom Live-Abruf geschriebenen Boot-Start und dessen Runden — die Datei ist im
+     * Moment des Imports die Quelle der Wahrheit.
+     */
+    fun importRaceClockerResultsFile(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        file: File,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val match = !checkUpdateMatchResult(competitionId, matchId, byeError = RaceClockerError.MatchIsBye)
+        !pauseRaceClockerAutoPull(matchId)
+
+        val target = !CompetitionMatchRepo.getForRaceClockerPull(matchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        val rows = when (val result = RaceClockerResultsXls.parse(file.bytes)) {
+            is RaceClockerResultsXls.ParseResult.Ok -> result.rows
+            RaceClockerResultsXls.ParseResult.Invalid ->
+                !KIO.fail(CompetitionExecutionError.ResultUploadError.FileError)
+        }
+
+        !applyRaceClockerRows(match, matchId, target, rows, userId)
+
+        !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
+
+        noData
+    }
+
     fun updateMatchResultByFile(
         eventId: UUID,
         competitionId: UUID,
@@ -1154,6 +1198,11 @@ object CompetitionExecutionService {
         // aus dem Feed geschrieben sind sie bei unveränderter Reihenfolge dieselben.
         !applyLanesFromFeed(matchId, rowsByTeam.mapValues { (_, matchedRows) -> matchedRows.single() }, userId)
 
+        // Zwischenzeiten stehen wie die Bahnen vor beiden Riegeln: Sie kommen, während die Boote
+        // noch fahren, und eine in RaceClocker korrigierte Marke soll ankommen, ohne dass ein Boot
+        // erst im Ziel sein muss. Je Takt werden die Runden eines Boots vollständig ersetzt.
+        !applyLapsFromFeed(matchId, rowsByTeam.mapValues { (_, matchedRows) -> matchedRows.single() }, userId)
+
         // Neustart in RaceClocker: keine Zeile trägt mehr eine gemessene Startzeit oder ein Ergebnis.
         // Der Zeitnehmer setzt eine Welle zurück, wenn ein Start ungültig war; der Feed sagt danach,
         // dieser Lauf sei nie gefahren, und ready2race übernimmt diese Aussage - sonst stünden Zeiten
@@ -1167,6 +1216,18 @@ object CompetitionExecutionService {
         if (!RaceClockerPollLogic.startDetected(rowsByTeam.values.flatten())) {
             return@comprehension resetRaceClockerResults(matchId, rowsByTeam.keys, userId)
         }
+
+        // Einzelne Rücknahme: Die Welle läuft weiter (Start erkannt), aber eine zugeordnete Zeile
+        // hat kein verwertbares Ergebnis mehr, obwohl bei uns eines steht - der Zeitnehmer hat eine
+        // versehentlich genommene Zeit in RaceClocker wieder entfernt (beobachtet am 10.08.2026).
+        // Solange der Abruf läuft, ist RaceClocker die Quelle der Wahrheit - die Zeit geht mit.
+        //
+        // Ausgeschiedene Boote ([failed]) bleiben ausdrücklich stehen: Eine vom Schiedsrichter von
+        // Hand eingetragene Ausscheidung hat im Feed nie ein Ergebnis, und genau sie schützt der
+        // Riegel weiter unten seit jeher. Der Preis: Eine in RaceClocker zurückgenommene DNF-Wertung
+        // muss auch bei uns von Hand zurückgenommen werden.
+        val removedResults = rowsByTeam.filterValues { !it.single().hasResult }.keys
+        !retractRemovedResults(matchId, removedResults, userId)
 
         // Crews without a usable result are skipped rather than treated as an error, so the pull can
         // be repeated as the heat progresses. "Ohne Ergebnis" heißt hier: weder Zeit noch echte
@@ -1190,11 +1251,13 @@ object CompetitionExecutionService {
         // Startzeit unter den zugeordneten Booten überschreibt started_at bedingungslos, auch wenn
         // dort schon ein manueller Stempel steht (z. B. von LiveDashboardService.markMatchStarted) -
         // gleiche Regel wie beim Penalty-Überschreiben oben.
+        // Der Tag kommt NICHT vom geplanten Renntag: läuft ein Rennen an einem anderen Tag als
+        // geplant, stünde der Stempel Tage daneben (siehe RaceClockerPollLogic.stampOnNearestDay -
+        // dieselbe Regel wie beim vorgezogenen Stempel im Poll-Job).
         val earliestStart = RaceClockerFeedRow.earliestStart(rowsByTeam.values.flatten())
         if (earliestStart != null) {
-            val raceDay = match.startTime?.toLocalDate() ?: LocalDate.now()
             !CompetitionMatchRepo.update(matchId) {
-                startedAt = raceDay.atTime(earliestStart)
+                startedAt = RaceClockerPollLogic.stampOnNearestDay(earliestStart, LocalDateTime.now())
                 updatedBy = userId
                 updatedAt = LocalDateTime.now()
             }.orDie()
@@ -1245,6 +1308,55 @@ object CompetitionExecutionService {
      * bleibt ebenfalls unangetastet - ein Schiedsrichter hat den Lauf an den Start gerufen, und dass
      * die Zeitnahme neu aufsetzt, nimmt ihm diese Entscheidung nicht ab.
      */
+    /**
+     * Nimmt Zeiten und Plätze einzelner Boote zurück, deren Feed-Zeile kein verwertbares Ergebnis
+     * mehr trägt - das Gegenstück zu [resetRaceClockerResults] für den Fall, dass nur EINE Zeit in
+     * RaceClocker entfernt wurde, während die Welle weiterläuft.
+     *
+     * Ausgeschiedene Boote ([CompetitionMatchTeamRecord.failed]) bleiben unangetastet - eine von
+     * Hand eingetragene Ausscheidung hat im Feed nie ein Ergebnis und wäre sonst bei jedem Abruf
+     * wieder weg. Boote ohne gespeicherte Zeit und ohne Platz sind der Normalfall "noch auf dem
+     * Wasser" und werden gar nicht erst angefasst.
+     */
+    private fun retractRemovedResults(
+        matchId: UUID,
+        registrationIds: Set<UUID>,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        val now = LocalDateTime.now()
+
+        !registrationIds.toList().traverse { registrationId ->
+            KIO.comprehension {
+                val record = !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(matchId, registrationId).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+
+                val hasStoredResult =
+                    record.timecode != null || record.place != null || record.penaltySeconds != null
+                if (record.failed == true || !hasStoredResult) return@comprehension noData
+
+                !TimecodeRepo.delete(record.id).orDie()
+
+                logger.info {
+                    "RaceClocker hat das Ergebnis von Boot $registrationId in Lauf $matchId zurückgenommen."
+                }
+
+                !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
+                    place = null
+                    placesCalculated = false
+                    timecode = null
+                    penaltySeconds = null
+                    penaltyNote = null
+                    updatedBy = userId
+                    updatedAt = now
+                }.orDie()
+
+                noData
+            }
+        }
+
+        noData
+    }
+
     private fun resetRaceClockerResults(
         matchId: UUID,
         registrationIds: Set<UUID>,
@@ -1261,6 +1373,9 @@ object CompetitionExecutionService {
                 // ausdrücklich geleert, damit hier nicht zwei Stellen dasselbe zusagen müssen.
                 !TimecodeRepo.delete(record.id).orDie()
 
+                // Ein Lauf, der laut Feed nie gefahren ist, hat auch keine Zwischenzeiten mehr.
+                !CompetitionMatchTeamLapRepo.deleteByTeam(record.id!!).orDie()
+
                 CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
                     place = null
                     placesCalculated = false
@@ -1269,6 +1384,7 @@ object CompetitionExecutionService {
                     timecode = null
                     penaltySeconds = null
                     penaltyNote = null
+                    startedAt = null
                     updatedBy = userId
                     updatedAt = now
                 }.orDie()
@@ -1297,6 +1413,71 @@ object CompetitionExecutionService {
      * (competition_match, start_number) index while reassigning; teams that the feed does not cover
      * keep a unique number after the highest imported one.
      */
+    /**
+     * Schreibt den gemessenen Start des einzelnen Boots und seine Zwischenzeiten (Split-Spalten)
+     * aus dem Feed.
+     *
+     * Der Boot-Start trägt die "wer ist schon unterwegs?"-Anzeige beim Zeitfahren (Einzelstarts):
+     * dort startet jedes Boot einzeln, und `competition_match.started_at` sagt nur, dass IRGENDWER
+     * gestartet ist. Zwischenzeiten werden je Marke als kumulierte Fahrzeit seit dem gemessenen
+     * Start der ZEILE gespeichert - bei Wellenstarts ist das der Wellenstart, bei Einzelstarts der
+     * eigene. Läuft eine Marke über Mitternacht, korrigiert ein Tagessprung die Differenz -
+     * dieselbe Datumsregel wie `RaceClockerPollLogic.stampOnNearestDay`.
+     *
+     * Beides wird je Takt vollständig aus dem Feed ersetzt: eine in RaceClocker zurückgenommene
+     * Startzeit oder Marke verschwindet auch hier wieder.
+     */
+    private fun applyLapsFromFeed(
+        matchId: UUID,
+        rowByRegistration: Map<UUID, RaceClockerFeedRow>,
+        userId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+        val allMatchTeamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+        val now = LocalDateTime.now()
+
+        !allMatchTeamRecords.traverse { team ->
+            KIO.comprehension {
+                val row = rowByRegistration[team.competitionRegistration]
+                    ?: return@comprehension KIO.unit
+                val start = row.start
+
+                val newStartedAt = start?.let { RaceClockerPollLogic.stampOnNearestDay(it, now) }
+                if (team.startedAt != newStartedAt) {
+                    !CompetitionMatchTeamRepo.update(team) {
+                        startedAt = newStartedAt
+                        updatedBy = userId
+                        updatedAt = now
+                    }.orDie()
+                }
+
+                !CompetitionMatchTeamLapRepo.deleteByTeam(team.id!!).orDie()
+
+                if (start != null) {
+                    val records = row.laps.mapIndexed { index, lap ->
+                        var millis = java.time.Duration.between(start, lap.time).toMillis()
+                        if (millis < 0) millis += java.time.Duration.ofDays(1).toMillis()
+                        CompetitionMatchTeamLapRecord(
+                            id = UUID.randomUUID(),
+                            competitionMatchTeam = team.id!!,
+                            position = index + 1,
+                            name = lap.name,
+                            lapMillis = millis,
+                            createdAt = now,
+                            createdBy = userId,
+                        )
+                    }
+                    if (records.isNotEmpty()) {
+                        !CompetitionMatchTeamLapRepo.create(records).orDie()
+                    }
+                }
+
+                KIO.unit
+            }
+        }
+
+        KIO.unit
+    }
+
     private fun applyLanesFromFeed(
         matchId: UUID,
         rowByRegistration: Map<UUID, RaceClockerFeedRow>,
@@ -1362,6 +1543,77 @@ object CompetitionExecutionService {
         teams: List<CompetitionMatchTeamWithRegistration>,
         waveName: String?,
     ): List<RaceClockerFeedRow> = assignFeedRows(rows, teams, waveName).values.flatten()
+
+    /**
+     * Der „Läuft"-Klick des Regattabüros: hält den Ist-Start fest, identisch zu
+     * `LiveDashboardService.markMatchStarted` (idempotent, aktiviert nebenbei). Er liegt zusätzlich
+     * auf der Durchführungs-Route, weil der Ist-Start keine Schiedsrichter-Exklusivität ist —
+     * das Büro stellt denselben Sachverhalt fest, nur von seinem Arbeitsplatz aus.
+     */
+    fun markMatchStarted(
+        eventId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+        !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        !CompetitionMatchRepo.update(matchId) {
+            if (startedAt == null) {
+                startedAt = LocalDateTime.now()
+            }
+            if (activatedAt == null) {
+                activatedAt = LocalDateTime.now()
+            }
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
+    }
+
+    /**
+     * Nimmt das Beenden eines Laufs zurück (`finished_at` weg) — der Weg zurück aus einem
+     * versehentlichen Beenden-Klick, auch für ein versehentlich quittiertes Freilos.
+     *
+     * Erlaubt nur in der jüngsten Runde: dieselbe Sperre wie bei Ergebniskorrekturen. Ist aus dem
+     * Beenden bereits eine Folgerunde entstanden, muss die wie bei jeder Korrektur zuerst gelöscht
+     * werden — die Rücknahme rollt bewusst nichts davon zurück, sie nimmt nur den Stempel.
+     * Aktivierung und Ist-Start bleiben ebenfalls stehen: Was tatsächlich passiert ist, bleibt
+     * festgehalten; der Lauf kehrt in den Zustand „läuft/wartet auf Beenden" zurück.
+     */
+    fun reopenMatch(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }.none { it.id == matchId }) {
+            CompetitionExecutionError.MatchNotFound
+        }
+
+        // Nicht checkUpdateMatchResult: Das würde Freilose abweisen, und gerade deren Quittierung
+        // soll rücknehmbar sein. Die Rundensperre selbst ist dieselbe.
+        val currentRound = getCurrentAndNextRound(setupRounds).first
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
+        val match = currentRound.matches.find { it.competitionSetupMatch == matchId }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
+
+        !KIO.failOn(match.finishedAt == null) { CompetitionExecutionError.MatchNotFinished }
+
+        !CompetitionMatchRepo.update(matchId) {
+            finishedAt = null
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        logger.info { "Beenden von Lauf $matchId zurückgenommen." }
+
+        noData
+    }
 
     fun updateMatchActivation(
         matchId: UUID,
@@ -1913,6 +2165,65 @@ object CompetitionExecutionService {
         )
     }
 
+    /**
+     * Die Startliste einer GANZEN Runde als eine CSV - ein Schwung für den Import ins
+     * Zeitnahme-System statt Lauf für Lauf. Die Wellen unterscheidet RaceClocker über die
+     * Wellenname-Spalte, die jede Zeile ohnehin trägt; die Kopfzeile schreibt nur die erste
+     * Partie. Bewusst nur CSV: Die PDF-Startliste ist ein Aushang je Lauf, kein Importformat.
+     *
+     * Läufe ohne Mannschaften werden übersprungen statt den Export zu reißen; ein Lauf ohne
+     * geplante Startzeit reißt ihn dagegen wie beim Einzel-Export - ohne Zeit gibt es keinen
+     * brauchbaren Wellennamen.
+     */
+    fun downloadRoundStartlist(
+        eventId: UUID,
+        competitionId: UUID,
+        setupRoundId: UUID,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        val round = setupRounds.find { it.setupRoundId == setupRoundId }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.RoundNotFound)
+
+        val matches = round.matches.sortedBy { it.startTime }
+        !KIO.failOn(matches.isEmpty()) { CompetitionExecutionError.MatchNotFound }
+
+        val out = ByteArrayOutputStream()
+        var first = true
+        var identifier = ""
+
+        !matches.traverse { m ->
+            KIO.comprehension {
+                val record = !CompetitionMatchRepo.getForStartList(m.competitionSetupMatch).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchNotFound }
+                if (record.teams!!.isEmpty()) return@comprehension unit
+                !KIO.failOn(record.startTime == null) { CompetitionExecutionError.StartTimeNotSet }
+
+                val data = !CompetitionMatchData.fromPersisted(record)
+                identifier = data.competition.identifier
+
+                val target = !CompetitionMatchRepo.getStartListConfigTarget(m.competitionSetupMatch).orDie()
+                    .onNullFail { CompetitionExecutionError.MatchNotFound }
+                val configId = !KIO.failOnNull(target.configId) { StartListConfigError.NotConfigured }
+                val config = !StartListConfigRepo.get(configId).orDie()
+                    .onNullFail { StartListConfigError.NotFound }
+
+                out.write(buildCsv(data, config, includeHeader = first && config.noHeader != true))
+                first = false
+
+                unit
+            }
+        }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "startList-$identifier-${round.setupRoundName}.csv",
+                bytes = out.toByteArray(),
+            )
+        )
+    }
+
     fun getCompetitionPlaceCSV(
         competitionId: UUID,
     ): App<ServiceError, File> = KIO.comprehension {
@@ -2193,13 +2504,18 @@ object CompetitionExecutionService {
     fun buildCsv(
         data: CompetitionMatchData,
         config: StartlistExportConfigRecord,
+        /**
+         * Für den Runden-Export ([downloadRoundStartlist]): Nur die erste Partie schreibt die
+         * Kopfzeile, die folgenden hängen nur Zeilen an - eine Datei, ein Header.
+         */
+        includeHeader: Boolean = config.noHeader != true,
     ): ByteArray {
 
         val bytes = ByteArrayOutputStream().use { out ->
             CSV.write(
                 out,
                 data.teams.sortedBy { it.startNumber },
-                writeHeader = config.noHeader != true,
+                writeHeader = includeHeader,
             ) {
                 // Columns carrying the stable team identifier. They are the source of truth for
                 // re-matching results on import, independent of the (externally editable) start number.

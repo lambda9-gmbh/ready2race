@@ -126,9 +126,28 @@ const TeamDialog = ({
                 darunter noch einmal steht.
             */}
             <DialogTitle sx={{pr: 6}}>
-                {[team.startNumber != null ? `#${team.startNumber}` : null, team.teamName]
+                {/*
+                    Der Mannschaftsname ist bei Vereinen mit mehreren Booten nur ein Zähler der
+                    Form „#2" (Platzhalter aus CompetitionRegistrationService). Zusammen mit der
+                    Startnummer davor stand dann „#1 — #2" im Titel und las sich wie „Lauf 1 bis 2"
+                    (beobachtet am 10.08.2026). Ist der Name so ein Zähler, wird er zu „Boot 2"
+                    ausgeschrieben; ein echter Name bleibt, wie er ist. Die Startnummer bekommt ihr
+                    Wort, damit die beiden Zahlen nicht mehr gleich aussehen.
+                */}
+                {[
+                    team.startNumber != null
+                        ? t('event.liveDashboard.team.startNumberLabel', {
+                              number: team.startNumber,
+                          })
+                        : null,
+                    team.teamName != null && /^#\d+$/.test(team.teamName)
+                        ? t('event.liveDashboard.team.boatLabel', {
+                              number: team.teamName.slice(1),
+                          })
+                        : team.teamName,
+                ]
                     .filter(Boolean)
-                    .join(' — ')}
+                    .join(' · ')}
                 <IconButton onClick={onClose} sx={{position: 'absolute', right: 8, top: 8}}>
                     <CloseIcon />
                 </IconButton>
@@ -227,10 +246,12 @@ const TeamDialog = ({
                                 useFlexGap>
                                 <Typography variant="subtitle1">
                                     {p.firstName} {p.lastName}
-                                    {p.namedRole && (
+                                    {/* Jahrgang und Rolle hinter dem Namen - der Jahrgang gehört
+                                        zur Ansage (Wunsch von Lea, 10.08.2026). */}
+                                    {(p.year != null || p.namedRole) && (
                                         <Typography component="span" variant="body2" color="text.secondary">
                                             {' '}
-                                            ({p.namedRole})
+                                            ({[p.year, p.namedRole].filter(Boolean).join(', ')})
                                         </Typography>
                                     )}
                                 </Typography>

@@ -21,4 +21,15 @@ data class CompetitionMatchTeamDto(
     /** Zeitstrafe in Sekunden; die Ergebniszeit enthält sie bereits. */
     val penaltySeconds: Int?,
     val penaltyNote: String?,
+    /**
+     * Zwischenzeiten aus RaceClocker, in der Reihenfolge der Marken auf der Strecke. Leer, wenn
+     * das Rennen keine Split-Spalten führt.
+     */
+    val laps: List<MatchTeamLapDto> = emptyList(),
+)
+
+/** Eine Zwischenzeit: Spaltenname aus RaceClocker und kumulierte Fahrzeit als Anzeige-Text. */
+data class MatchTeamLapDto(
+    val name: String,
+    val timeString: String,
 )

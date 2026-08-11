@@ -276,7 +276,9 @@
         "export": "Eksportér skabelon",
         "exportHint": "Pakken indeholder PDF, pladsholdere og den gemte skrifttype.",
         "import": "Importér skabelon",
-        "importSucceeded": "Skabelon importeret"
+        "importSucceeded": "Skabelon importeret",
+        "importTypeFromFile": "Overtag type fra filen",
+        "importAssignHint": "Hvis der endnu ikke er tilknyttet en skabelon til typen, sættes den importerede automatisk som aktiv skabelon."
       },
       "placeholder": {
         "available": "Tilgængelige pladsholdere",
@@ -1049,7 +1051,13 @@
           "activated": "Ved start",
           "availableMatches": "Tilgængelige kampe",
           "noRunningMatches": "Ingen kampe kører i øjeblikket",
-          "noAvailableMatches": "Ingen kampe klar til start"
+          "noAvailableMatches": "Ingen kampe klar til start",
+          "control": {
+            "activate": "Aktiver løb",
+            "deactivate": "Deaktiver løb",
+            "markStarted": "I gang",
+            "reopen": "Fortryd afslutning"
+          }
         },
         "running": {
           "error": {
@@ -1103,7 +1111,8 @@
           "type": {
             "form": "med indtastningsformular",
             "XLS": "som XLS-fil",
-            "RACECLOCKER": "hent fra RaceClocker"
+            "RACECLOCKER": "hent fra RaceClocker",
+            "RACECLOCKER_FILE": "fra RaceClocker (fil)"
           },
           "error": {
             "notConfigured": "Der er ikke registreret et resultatimportpreset for denne konkurrence. Angiv det venligst under fanen \"Tidtagning\".",
@@ -1182,6 +1191,10 @@
               "resume": "Genoptag automatisk hentning",
               "resumed": "Den automatiske hentning er aktiv igen.",
               "duplicateTeams": "RaceClocker har dublerede besætninger. Hentning med knappen viser hvilke."
+            },
+            "file": {
+              "notInFile": "Filen indeholder ingen både fra dette løb — blev startlisten eksporteret til RaceClocker med R2R-id?",
+              "imported": "Resultater importeret fra RaceClocker-filen."
             }
           }
         },
@@ -1213,7 +1226,8 @@
           "error": {
             "missingStartTime": "Der er endnu ikke sat en starttid for denne kamp.",
             "notConfigured": "Der er ikke registreret et startlistepreset for denne konkurrence. Angiv det venligst under fanen \"Tidtagning\"."
-          }
+          },
+          "downloadRound": "Hent rundens startliste (CSV)"
         },
         "substitution": {
           "substitutions": "Ombytninger",
@@ -1529,6 +1543,13 @@
         "invalidUrl": "Adressen skal ligge på raceclocker.com.",
         "saved": "Løb gemt.",
         "deleted": "Løb slettet."
+      },
+      "assignments": {
+        "title": "Tildel konkurrencer pr. løb",
+        "hint": "Omvendt af valget i konkurrencen: markér her, hvilke konkurrencer der bruger hvert løb. En konkurrence hører til præcis ét løb pr. rundetype — markerer du den her, flytter den fra et andet. Umarkerede konkurrencer arver stævnets standard.",
+        "forQualification": "Gælder for kvalifikationen af",
+        "forRounds": "Gælder for løbene af",
+        "saved": "Tildeling gemt."
       }
     },
     "info": {
@@ -1677,7 +1698,10 @@
         "inArenaAt": "i arenaen {{time}}",
         "notInArena": "Ikke i arenaen",
         "clubs": "Klubber",
-        "crew": "Besætning"
+        "crew": "Besætning",
+        "startedAt": "startet {{time}}",
+        "startNumberLabel": "Startnummer {{number}}",
+        "boatLabel": "Båd {{number}}"
       },
       "requirement": {
         "checkedAt": "Opfyldt {{time}}",
@@ -1768,6 +1792,7 @@
       "activateConfirm": "Aktiver løb „{{label}}“ kl. {{time}} nu?",
       "activateAnyway": "Aktiver alligevel",
       "finish": "Afslut løb",
+      "acknowledgeBye": "Kvittér oversidder",
       "finishConfirm": "Afslut løb „{{label}}“ kl. {{time}} nu? Hvis stævnet skifter automatisk videre, aktiveres de næste løb.",
       "finishAnyway": "Afslut alligevel",
       "refereeModeWarning": "Dommertilstand er aktiv: løb aktiveres og afsluttes normalt af en dommer via dommer-dashboardet. Et indgreb herfra omgår denne vej.",
@@ -1853,7 +1878,14 @@
         "slotNotLinked": "Der findes endnu ikke et løb til denne slot. Opret først runden under Konkurrence → Afvikling, derefter kan løbet aktiveres og afsluttes.",
         "setupMatchAlreadyPlanned": "Dette løb er allerede planlagt i en anden slot. Genindlæs tidsplanen, og vælg et løb, der endnu ikke er planlagt.",
         "unexpected": "Handlingen kunne ikke udføres. Genindlæs tidsplanen, og prøv igen."
-      }
+      },
+      "markStarted": "I gang — registrér reel start",
+      "deactivate": "Deaktiver løb",
+      "deactivateConfirm": "Deaktiver løb „{{label}}“ kl. {{time}}? Den reelle start slettes, og den automatiske hentning sættes på pause.",
+      "reopen": "Fortryd afslutning",
+      "reopenConfirm": "Fortryd afslutningen af „{{label}}“ kl. {{time}}? Aktivering, reel start og resultater bevares; en allerede oprettet efterfølgende runde skal muligvis slettes først.",
+      "allDays": "Alle stævnedage",
+      "unskipShiftHint": "Aflysningen er ophævet. Hvis dagen blev rykket frem, kan den flyttes tilbage her."
     },
     "results": {
       "download": "Download tidligere resultater",
@@ -1946,6 +1978,7 @@
         "emptyCurrent": "Intet løb i gang",
         "emptyUpcoming": "Ingen flere planlagte løb",
         "emptyPast": "Endnu intet resultat",
+        "textRequired": "Tekst må ikke være tom",
         "useShortNames": "Brug løbsforkortelser",
         "ceremonyTitle": "Præmieoverrækkelse",
         "ceremonyPick": "Overrækkelse",

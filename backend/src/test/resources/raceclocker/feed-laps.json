@@ -1,0 +1,119 @@
+[
+ {
+  "Name": "Enya Freudenberg, Anna Louisa Kollster, Gunnar Kock, Niklas  Meyer, Julia Schütrumpf",
+  "Rank": "1",
+  "Bib number": "1",
+  "Club": "Renngemeinschaft",
+  "Category": "CMix4x+ · Deutsche Meisterschaft Wertung",
+  "CategoryDistance": null,
+  "Wave": "08:00 | 8 CMix4x+ | Vorlauf 1 DM",
+  "WaveDistance": null,
+  "Age": "0",
+  "Gender": "",
+  "Custom": "",
+  "Handicap": "1.000",
+  "ExtraInfo": [
+   [
+    "8b3363ac-2983-4baf-81ce-e6fc400c3ab4",
+    "8b3363ac-2983-4baf-81ce-e6fc400c3ab4"
+   ]
+  ],
+  "Start": "22:32:09.6",
+  "Runde 1": "22:32:47.7",
+  "Runde 2": "22:33:15.1",
+  "Split 3": "00:00:00.0",
+  "Split 4": "00:00:00.0",
+  "Finish": "22:34:03.8",
+  "Result": "00:01:54.2",
+  "Result in seconds": "114.2",
+  "Handicap Result in seconds": "",
+  "Penalty": "0",
+  "Penalty note": ""
+ },
+ {
+  "Name": "Sarah-Ann  Kronemann, Leonard  Tiedtke, Jonas  Christiansen, Katharina  Hessenauer, Kathleen Lin",
+  "Rank": "3",
+  "Bib number": "3",
+  "Club": "Renngemeinschaft",
+  "Category": "CMix4x+ · Deutsche Meisterschaft Wertung",
+  "CategoryDistance": null,
+  "Wave": "08:00 | 8 CMix4x+ | Vorlauf 1 DM",
+  "WaveDistance": null,
+  "Age": "0",
+  "Gender": "",
+  "Custom": "",
+  "Handicap": "1.000",
+  "ExtraInfo": [
+   [
+    "8b3363ac-2983-4baf-81ce-e6fc400c3ab4",
+    "3f35ed6c-aafb-4b81-8823-29443bc15f33"
+   ]
+  ],
+  "Start": "22:32:09.6",
+  "Runde 1": "22:32:49.1",
+  "Runde 2": "22:33:16.6",
+  "Split 3": "00:00:00.0",
+  "Split 4": "00:00:00.0",
+  "Finish": "00:00:00.0",
+  "Result": "DNF",
+  "Result in seconds": "0",
+  "Handicap Result in seconds": "",
+  "Penalty": "0",
+  "Penalty note": ""
+ },
+ {
+  "Name": "Leslie Matthiesen, Celina Grunwald, Lewin Weychardt, Ilka  Selmer, Sebastian Mayer ",
+  "Rank": "17",
+  "Bib number": "7",
+  "Club": "Renngemeinschaft",
+  "Category": "CMix4x+ · Deutsche Meisterschaft Wertung",
+  "CategoryDistance": null,
+  "Wave": "15:30 | 8 CMix4x+ | Finale",
+  "WaveDistance": null,
+  "Age": "0",
+  "Gender": "",
+  "Custom": "",
+  "Handicap": "1.000",
+  "ExtraInfo": [
+   [
+    "c3a5238c-2a9f-46da-9be3-868a4dec6fdf",
+    "b7beb924-f132-40be-ad04-e8a371a9fca3"
+   ]
+  ],
+  "Start": "22:46:08.6",
+  "Runde 1": "00:00:00.0",
+  "Runde 2": "00:00:00.0",
+  "Split 3": "00:00:00.0",
+  "Split 4": "00:00:00.0",
+  "Finish": "00:00:00.0",
+  "Result": "DNS",
+  "Result in seconds": "0",
+  "Handicap Result in seconds": "",
+  "Penalty": "0",
+  "Penalty note": ""
+ },
+ {
+  "RaceInfo": {
+   "Name": "TEST CRF 2026 Läufe Sonntag",
+   "Date": "2026-08-16",
+   "Sport": "Rowing",
+   "StartType": "Wave starts (2 splits)",
+   "Distance": "6",
+   "DistanceUnit": "km",
+   "Splits": "2",
+   "Location": {
+    "Longitude": "9.43179",
+    "Latitude": "54.81163"
+   },
+   "URL": "",
+   "HasCategories": true,
+   "HasBibNumbers": true,
+   "HasAge": false,
+   "HasGender": false,
+   "HasClubNames": true,
+   "HasHandicaps": false,
+   "HasCustom": false,
+   "CustomLabel": "Custom"
+  }
+ }
+]

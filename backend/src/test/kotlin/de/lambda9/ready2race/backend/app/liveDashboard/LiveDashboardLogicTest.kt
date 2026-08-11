@@ -27,25 +27,37 @@ class LiveDashboardLogicTest {
     // --- teamInArenaAt ---
 
     @Test
-    fun inArenaWhenWholeCrewCheckedIn() {
+    fun inArenaSinceTheFirstCheckedInCrewMember() {
         val scans = listOf(
             "ENTRY" to start.minusMinutes(10),
             "ENTRY" to start.minusMinutes(8),
             "ENTRY" to start.minusMinutes(12),
         )
-        assertEquals(start.minusMinutes(8), LiveDashboardLogic.teamInArenaAt(scans))
+        assertEquals(start.minusMinutes(12), LiveDashboardLogic.teamInArenaAt(scans))
     }
 
     @Test
-    fun notInArenaWhenAnyCrewMemberMissingOrCheckedOut() {
-        // Eine Person nie gescannt
-        assertNull(
-            LiveDashboardLogic.teamInArenaAt(listOf("ENTRY" to start, null))
+    fun aSingleCheckedInPersonPutsTheBoatInTheArena() {
+        // Der Fall vom 10.08.2026: Von einer Fünfer-Crew wird nur eine Person gescannt - das Boot
+        // ist trotzdem draußen. Nicht gescannte Personen ändern daran nichts.
+        assertEquals(
+            start,
+            LiveDashboardLogic.teamInArenaAt(listOf("ENTRY" to start, null, null, null, null))
         )
-        // Eine Person wieder ausgecheckt (letzter Scan EXIT) - zurück am Steg
-        assertNull(
+        // Wer zuletzt ausgecheckt ist, zählt nicht - aber die eingecheckte Person trägt das Boot.
+        assertEquals(
+            start,
             LiveDashboardLogic.teamInArenaAt(listOf("ENTRY" to start, "EXIT" to start.plusMinutes(1)))
         )
+    }
+
+    @Test
+    fun notInArenaWhenNobodyIsCheckedIn() {
+        // Alle wieder ausgecheckt oder nie gescannt
+        assertNull(
+            LiveDashboardLogic.teamInArenaAt(listOf("EXIT" to start, null))
+        )
+        assertNull(LiveDashboardLogic.teamInArenaAt(listOf(null, null)))
     }
 
     @Test

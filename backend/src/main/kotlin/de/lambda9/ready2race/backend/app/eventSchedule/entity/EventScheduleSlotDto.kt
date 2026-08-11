@@ -66,6 +66,15 @@ data class UnplannedSetupMatchDto(
     val competitionShortName: String?,
     val roundName: String,
     val matchName: String?,
+    /**
+     * Lauf-Zustand, sofern die Runde schon gesetzt ist - alle null, solange es den Lauf noch
+     * nicht gibt. Die nicht verplanten Läufe sind vor allem Dauer-Freilose; ihr Status
+     * (offen/quittiert) gehört in den Zeitplan sichtbar gemacht.
+     */
+    val matchActivatedAt: java.time.LocalDateTime? = null,
+    val matchStartedAt: java.time.LocalDateTime? = null,
+    val matchFinishedAt: java.time.LocalDateTime? = null,
+    val bye: de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto? = null,
 )
 
 data class EventScheduleDto(

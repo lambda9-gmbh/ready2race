@@ -850,6 +850,10 @@ export type CompetitionMatchTeamDto = {
      */
     penaltySeconds?: number
     penaltyNote?: string
+    /**
+     * Intermediate marks from RaceClocker, in on-course order; empty for races without split columns
+     */
+    laps?: Array<MatchTeamLapDto>
 }
 
 export type CompetitionPropertiesDto = {
@@ -885,6 +889,24 @@ export type CompetitionPropertiesRequest = {
     setupTemplate?: string
     challengeConfig?: CompetitionChallengeConfigRequest
     ratingCategoryRequired: boolean
+}
+
+export type CompetitionRaceAssignmentDto = {
+    competitionId: string
+    identifier: string
+    name: string
+    /**
+     * Whether the competition's setup even has a qualification round
+     */
+    hasQualificationRound: boolean
+    /**
+     * Explicitly chosen qualification race; null means it inherits the event default
+     */
+    raceQualification?: string | null
+    /**
+     * Explicitly chosen rounds race; null means it inherits the event default
+     */
+    raceRounds?: string | null
 }
 
 export type CompetitionRegistrationDto = {
@@ -2188,6 +2210,10 @@ export type LiveDashboardTeamDto = {
      */
     categoryPlace?: number | null
     time?: string | null
+    /**
+     * The measured start of this boat from the timing tooling - answers 'who is already under way?' in individual-start time trials while no finish time exists yet
+     */
+    startedAt?: string | null
     failed: boolean
     failedReason?: string | null
     penaltySeconds?: number | null
@@ -2394,6 +2420,17 @@ export type MatchTeamInfo = {
     clubName?: string | null
     result?: string | null
     rank?: number | null
+}
+
+export type MatchTeamLapDto = {
+    /**
+     * The split column's name as the timekeeper labelled it in RaceClocker (e.g. 'Runde 1')
+     */
+    name: string
+    /**
+     * Cumulative race time at this mark, formatted for display (e.g. '1:05.5')
+     */
+    timeString: string
 }
 
 export type MyEventDto = {
@@ -2665,6 +2702,10 @@ export type ParticipantInfo = {
     participantId: string
     firstName: string
     lastName: string
+    /**
+     * Year of birth, shown behind the name in result displays
+     */
+    year?: number | null
     namedRole?: string | null
     externalClubName?: string
 }
@@ -2966,6 +3007,17 @@ export type QrCodeParticipantUpdate = {
 export type QrCodePublicResponse = {
     eventId: string
     type?: QrCodeDtoType
+}
+
+export type RaceClockerRaceAssignmentsRequest = {
+    /**
+     * Competitions that use this race for their qualification
+     */
+    qualificationCompetitions: Array<string>
+    /**
+     * Competitions that use this race for their remaining rounds
+     */
+    roundsCompetitions: Array<string>
 }
 
 export type RaceClockerRaceDto = {
@@ -3517,6 +3569,13 @@ export type UnplannedSetupMatchDto = {
     competitionIdentifier?: string | null
     roundName: string
     matchName?: string | null
+    /**
+     * Match state, present once the round is materialized - mostly relevant for permanent byes whose open/acknowledged state should be visible in the schedule
+     */
+    matchActivatedAt?: string | null
+    matchStartedAt?: string | null
+    matchFinishedAt?: string | null
+    bye?: MatchByeDto | null
 }
 
 export type UnprocessableEntityError = ApiError & {
@@ -4768,6 +4827,42 @@ export type UpdateMatchActivationResponse = void
 
 export type UpdateMatchActivationError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type DownloadRoundStartListData = {
+    path: {
+        competitionId: string
+        eventId: string
+        setupRoundId: string
+    }
+}
+
+export type DownloadRoundStartListResponse = Blob | File
+
+export type DownloadRoundStartListError = BadRequestError | ApiError
+
+export type MarkMatchStartedFromExecutionData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type MarkMatchStartedFromExecutionResponse = void
+
+export type MarkMatchStartedFromExecutionError = BadRequestError | ApiError
+
+export type ReopenMatchData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type ReopenMatchResponse = void
+
+export type ReopenMatchError = BadRequestError | ApiError
+
 export type UpdateMatchResultsData = {
     body: UpdateCompetitionMatchResultRequest
     path: {
@@ -4801,6 +4896,28 @@ export type AddRaceClockerRaceData = {
 export type AddRaceClockerRaceResponse = string
 
 export type AddRaceClockerRaceError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRaceClockerCompetitionAssignmentsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRaceClockerCompetitionAssignmentsResponse = Array<CompetitionRaceAssignmentDto>
+
+export type GetRaceClockerCompetitionAssignmentsError = BadRequestError | ApiError
+
+export type SetRaceClockerRaceAssignmentsData = {
+    body: RaceClockerRaceAssignmentsRequest
+    path: {
+        eventId: string
+        raceId: string
+    }
+}
+
+export type SetRaceClockerRaceAssignmentsResponse = void
+
+export type SetRaceClockerRaceAssignmentsError = BadRequestError | ApiError
 
 export type UpdateRaceClockerRaceData = {
     body: RaceClockerRaceRequest
@@ -6372,6 +6489,12 @@ export type ImportGapDocumentTemplateData = {
          */
         file: Blob | File
     }
+    query?: {
+        /**
+         * Overrides the document type claimed by the package manifest. After the import, the template is auto-assigned as the active template of its type if none is assigned yet.
+         */
+        documentType?: GapDocumentType
+    }
 }
 
 export type ImportGapDocumentTemplateResponse = string
@@ -7610,6 +7733,21 @@ export type UploadResultFileData = {
 export type UploadResultFileResponse = void
 
 export type UploadResultFileError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UploadRaceClockerResultFileData = {
+    body: {
+        files: Array<Blob | File>
+    }
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UploadRaceClockerResultFileResponse = void
+
+export type UploadRaceClockerResultFileError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type CheckQrCodeData = {
     path: {

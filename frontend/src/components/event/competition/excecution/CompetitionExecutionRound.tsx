@@ -10,7 +10,6 @@ import {
     Box,
     Card,
     Divider,
-    FormControlLabel,
     Stack,
     Table,
     TableBody,
@@ -27,9 +26,11 @@ import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {teamNameSuffix} from '@utils/helpers.ts'
-import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
+import {Dispatch, Fragment, SetStateAction, SyntheticEvent, useRef} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
+    markMatchStartedFromExecution,
+    reopenMatch,
     skipScheduleRound,
     updateMatchActivation,
 } from '@api/sdk.gen.ts'
@@ -37,7 +38,6 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
-import Checkbox from '@mui/material/Checkbox'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {roundHasNothingToRace} from '@components/event/competition/excecution/roundCancellation.ts'
 import {matchesOnDisplay} from '@components/event/competition/excecution/roundDeletion.ts'
@@ -67,10 +67,14 @@ type Props = {
     handleAccordionExpandedChange: (accordionIndex: number, isExpanded: boolean) => void
     smallScreenLayout: boolean
     setResultImportMatch: Dispatch<SetStateAction<string | null>>
+    /** Notfallweg: eine heruntergeladene RaceClocker-Ergebnis-xlsx auf den Lauf schreiben. */
+    handleUploadRaceClockerFile: (competitionMatchId: string, file: File) => Promise<void>
     pullRaceClockerResults: (competitionMatchId: string) => Promise<void>
     resumeRaceClockerAutoPull: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
     handleDownloadStartListCSV: (competitionMatchId: string) => Promise<void>
+    /** Die ganze Runde als eine CSV (eine Kopfzeile, Wellen über die Wellenname-Spalte). */
+    handleDownloadRoundStartList: (setupRoundId: string) => Promise<void>
     /**
      * Das EFFEKTIVE Zeitnahmesystem des Wettkampfs (`effectiveTimingSystem`), also einschließlich
      * dessen, was er von der Veranstaltung erbt — nicht seine eigene Spalte. Daran hängt unter
@@ -87,10 +91,12 @@ const CompetitionExecutionRound = ({
     submitting,
     smallScreenLayout,
     setResultImportMatch,
+    handleUploadRaceClockerFile,
     pullRaceClockerResults,
     resumeRaceClockerAutoPull,
     handleDownloadStartListPDF,
     handleDownloadStartListCSV,
+    handleDownloadRoundStartList,
     timingSystem,
     ...props
 }: Props) => {
@@ -98,6 +104,11 @@ const CompetitionExecutionRound = ({
     const feedback = useFeedback()
     const theme = useTheme()
     const now = useNow()
+
+    // Versteckter Datei-Wähler für den RaceClocker-Notfall-Import: der Menüpunkt merkt sich den
+    // Lauf und klickt den Input; erst die Auswahl löst den Upload aus.
+    const raceClockerFileInputRef = useRef<HTMLInputElement>(null)
+    const raceClockerFileMatchId = useRef<string | null>(null)
 
     // Die Zählerleiste fasst zusammen, was die Chips darunter einzeln sagen — bei einer einzigen
     // Lauf-Karte wäre das bloße Wiederholung, deshalb bleibt sie dort leer (siehe roundCounterChips).
@@ -192,6 +203,46 @@ const CompetitionExecutionRound = ({
      * er setzt `activated_at`, der Ist-Start kommt aus der Zeitnahme oder aus dem „Läuft"-Knopf im
      * Schiedsrichter-Dashboard.
      */
+    /** Ist-Start aus dem Büro — idempotent, aktiviert nebenbei (siehe Backend-KDoc). */
+    const handleMarkStarted = async (match: CompetitionMatchDto) => {
+        props.setSubmitting(true)
+        const {error} = await markMatchStartedFromExecution({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+        })
+        props.setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('event.competition.execution.running.error.update'))
+        } else {
+            feedback.success(t('event.competition.execution.running.success'))
+            props.reloadRoundDto()
+        }
+    }
+
+    /** Beenden zurücknehmen — nur in der jüngsten Runde, der Server prüft das nochmal. */
+    const handleReopen = async (match: CompetitionMatchDto) => {
+        props.setSubmitting(true)
+        const {error} = await reopenMatch({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+        })
+        props.setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('event.competition.execution.running.error.update'))
+        } else {
+            feedback.success(t('event.competition.execution.running.success'))
+            props.reloadRoundDto()
+        }
+    }
+
     const handleToggleActivation = async (match: CompetitionMatchDto) => {
         // Check if match has no places set
         const hasPlacesSet = match.teams.some(
@@ -334,6 +385,16 @@ const CompetitionExecutionRound = ({
                         ))}
                     </Stack>
                 )}
+                {filteredMatches.length > 0 && (
+                    <Box>
+                        <LoadingButton
+                            pending={submitting}
+                            variant={'outlined'}
+                            onClick={() => handleDownloadRoundStartList(round.setupRoundId)}>
+                            {t('event.competition.execution.startList.downloadRound')}
+                        </LoadingButton>
+                    </Box>
+                )}
                 <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
                     {filteredMatches.map((match, matchIndex) => (
                         <Card
@@ -379,23 +440,77 @@ const CompetitionExecutionRound = ({
                                             {match.startTimeOffset} {t('common.form.seconds')}
                                         </Typography>
                                     )}
-                                    {/* Only show toggle if match has no places set */}
-                                    {!match.teams.some(
-                                        team => team.place !== null && team.place !== undefined,
-                                    ) && (
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={match.activatedAt != null}
-                                                    onChange={() => handleToggleActivation(match)}
-                                                    disabled={submitting}
-                                                />
-                                            }
-                                            label={t(
-                                                'event.competition.execution.match.activated',
+                                    {/*
+                                        Status-Verwaltung statt des früheren „Am Start"-Hakens: Das
+                                        Regattabüro kann jeden Übergang von hier setzen — an den
+                                        Start rufen, zurücknehmen, den Ist-Start feststellen und
+                                        ein versehentliches Beenden zurücknehmen —, ohne den Umweg
+                                        über das Schiedsrichter-Dashboard. Die Knöpfe zeigen nur
+                                        die Übergänge, die der aktuelle Zustand hergibt.
+                                    */}
+                                    <Stack
+                                        direction={'row'}
+                                        spacing={1}
+                                        useFlexGap
+                                        sx={{flexWrap: 'wrap'}}>
+                                        {match.finishedAt == null &&
+                                            match.activatedAt == null &&
+                                            !match.teams.some(
+                                                team =>
+                                                    team.place !== null &&
+                                                    team.place !== undefined,
+                                            ) && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    pending={submitting}
+                                                    onClick={() =>
+                                                        handleToggleActivation(match)
+                                                    }>
+                                                    {t(
+                                                        'event.competition.execution.match.control.activate',
+                                                    )}
+                                                </LoadingButton>
                                             )}
-                                        />
-                                    )}
+                                        {match.finishedAt == null &&
+                                            match.activatedAt != null && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    pending={submitting}
+                                                    onClick={() =>
+                                                        handleToggleActivation(match)
+                                                    }>
+                                                    {t(
+                                                        'event.competition.execution.match.control.deactivate',
+                                                    )}
+                                                </LoadingButton>
+                                            )}
+                                        {match.finishedAt == null &&
+                                            match.activatedAt != null &&
+                                            match.startedAt == null && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    pending={submitting}
+                                                    onClick={() => handleMarkStarted(match)}>
+                                                    {t(
+                                                        'event.competition.execution.match.control.markStarted',
+                                                    )}
+                                                </LoadingButton>
+                                            )}
+                                        {match.finishedAt != null && roundIndex === 0 && (
+                                            <LoadingButton
+                                                size={'small'}
+                                                variant={'outlined'}
+                                                pending={submitting}
+                                                onClick={() => handleReopen(match)}>
+                                                {t(
+                                                    'event.competition.execution.match.control.reopen',
+                                                )}
+                                            </LoadingButton>
+                                        )}
+                                    </Stack>
                                 </Stack>
                                 <Stack direction={'column'} spacing={1}>
                                     {/* Status oben rechts: Checkbox und farbiger Rahmen bleiben,
@@ -496,6 +611,10 @@ const CompetitionExecutionRound = ({
                                                     case 'RACECLOCKER':
                                                         await pullRaceClockerResults(match.id)
                                                         break
+                                                    case 'RACECLOCKER_FILE':
+                                                        raceClockerFileMatchId.current = match.id
+                                                        raceClockerFileInputRef.current?.click()
+                                                        break
                                                 }
                                             }}
                                             items={matchResultOptions(timingSystem).map(
@@ -512,6 +631,22 @@ const CompetitionExecutionRound = ({
                                             )}
                                         />
                                     )}
+                                    <input
+                                        ref={raceClockerFileInputRef}
+                                        type={'file'}
+                                        accept={'.xlsx'}
+                                        style={{display: 'none'}}
+                                        onChange={async e => {
+                                            const file = e.target.files?.[0]
+                                            const matchId = raceClockerFileMatchId.current
+                                            // Zurücksetzen, damit dieselbe Datei erneut gewählt
+                                            // werden kann (onChange feuert sonst nicht wieder).
+                                            e.target.value = ''
+                                            if (file && matchId) {
+                                                await handleUploadRaceClockerFile(matchId, file)
+                                            }
+                                        }}
+                                    />
                                     {match.pairingsRecalculatedAt && (
                                         <Typography variant={'caption'} color={'warning.main'}>
                                             {t('event.competition.execution.pairingsRecalculated')}
@@ -656,6 +791,24 @@ const CompetitionExecutionRound = ({
                                                     </TableCell>
                                                     <TableCell width="20%">
                                                         {team.timeString}
+                                                        {/*
+                                                            Zwischenzeiten unter der Endzeit statt in eigenen
+                                                            Spalten: die Zahl der Marken ist je Rennen frei
+                                                            (0-4) und die Namen vergibt der Zeitnehmer - eine
+                                                            feste Spaltenstruktur gäbe es nicht.
+                                                        */}
+                                                        {(team.laps ?? []).length > 0 && (
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="textSecondary">
+                                                                {(team.laps ?? [])
+                                                                    .map(
+                                                                        lap =>
+                                                                            `${lap.name} ${lap.timeString}`,
+                                                                    )
+                                                                    .join(' · ')}
+                                                            </Typography>
+                                                        )}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

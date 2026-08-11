@@ -420,4 +420,45 @@ class RaceClockerFeedTest {
             assertNull(exit.getOrNull(), "should be rejected: $body")
         }
     }
+
+    // --- Zwischenzeiten (Split-Spalten) ---
+    //
+    // Aufgezeichnet vom echten Feed raceclocker.com/7aa7e86d?json=1 (TEST CRF 2026 Läufe Sonntag,
+    // 10.08.2026): ein Wellenrennen mit zwei benannten Marken ("Runde 1", "Runde 2") und zwei
+    // ungenutzten Platzhalter-Spalten ("Split 3", "Split 4" - immer 00:00:00.0).
+
+    @Test
+    fun lapColumnsAreReadInFeedOrderAndPlaceholdersAreDropped() {
+        val timed = feed("feed-laps").first()
+
+        assertEquals(
+            listOf(
+                "Runde 1" to LocalTime.of(22, 32, 47, 700_000_000),
+                "Runde 2" to LocalTime.of(22, 33, 15, 100_000_000),
+            ),
+            timed.laps.map { it.name to it.time },
+            "expected exactly the two taken marks, without the 00:00:00.0 placeholder columns",
+        )
+    }
+
+    @Test
+    fun lapsOfADnfRowAreStillRead() {
+        // Ein DNF nach der zweiten Marke: die gefahrenen Marken bleiben Teil der Wahrheit.
+        val dnf = feed("feed-laps")[1]
+        assertEquals(listOf("Runde 1", "Runde 2"), dnf.laps.map { it.name })
+    }
+
+    @Test
+    fun aRowWithoutAnyTakenMarkHasNoLaps() {
+        val dns = feed("feed-laps")[2]
+        assertTrue(dns.laps.isEmpty())
+    }
+
+    @Test
+    fun fixedTimeColumnsAreNeverReadAsLaps() {
+        // Start und Finish sind selbst Tageszeit-Stempel - sie dürfen nicht als Marken auftauchen.
+        feed("feed-laps").forEach { row ->
+            assertTrue(row.laps.none { it.name.lowercase() in setOf("start", "startzeit", "finish", "ziel") })
+        }
+    }
 }

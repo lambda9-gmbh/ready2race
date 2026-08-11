@@ -87,6 +87,7 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT.ID.`as`("participant_id"),
                 PARTICIPANT.FIRSTNAME,
                 PARTICIPANT.LASTNAME,
+                PARTICIPANT.YEAR,
                 PARTICIPANT.EXTERNAL,
                 PARTICIPANT.EXTERNAL_CLUB_NAME,
                 PARTICIPANT_CLUB.NAME.`as`(PARTICIPANT_CLUB_NAME),

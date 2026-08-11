@@ -2,8 +2,59 @@ import { defineConfig, Plugin } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tsconfigPaths from "vite-tsconfig-paths";
 import { VitePWA } from 'vite-plugin-pwa'
+import type { ManifestOptions } from 'vite-plugin-pwa'
 import { mkdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+
+/**
+ * Das Web-App-Manifest der Helfer-App - als eigene Konstante, weil es zwei Abnehmer hat: den
+ * Produktions-Build über vite-plugin-pwa und den Dev-Server über [serveManifestInDev].
+ */
+const appManifest: Partial<ManifestOptions> = {
+  name: 'Ready2Race',
+  short_name: 'R2R',
+  // Der Plan wollte gar keine Sprache setzen, weil die App Deutsch, Englisch und Dänisch
+  // kann. vite-plugin-pwa trägt dann aber 'en' ein - für eine deutsche Regatta die
+  // schlechteste der drei. Die Oberfläche selbst bleibt davon unberührt und folgt
+  // weiterhin der Spracherkennung.
+  lang: 'de',
+  // Mit Schrägstrich am Ende: '/app' liegt formal NICHT innerhalb von '/app/'. Der Browser
+  // verwirft dann den Scope und setzt ihn auf das Verzeichnis der Startadresse, also '/' -
+  // die installierte App würde Navigationen der gesamten Herkunft an sich ziehen,
+  // einschließlich /board, /results und der Verwaltungsoberfläche.
+  start_url: '/app/',
+  scope: '/app/',
+  display: 'standalone',
+  background_color: '#ffffff',
+  theme_color: '#4d9f85',
+  icons: [
+    {src: '/app/icon-192.png', sizes: '192x192', type: 'image/png'},
+    {src: '/app/icon-512.png', sizes: '512x512', type: 'image/png'},
+    {src: '/app/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable'},
+  ],
+}
+
+/**
+ * Liefert das Manifest auch im Dev-Server aus.
+ *
+ * vite-plugin-pwa schreibt das Manifest nur beim Build; im Dev-Betrieb beantwortete der
+ * SPA-Fallback die Adresse mit der index.html - ein ungültiges Manifest, und Chrome machte aus
+ * "Zum Startbildschirm hinzufügen" eine bloße Verknüpfung auf die gerade offene Seite statt
+ * einer App, die unter /app/ startet (beobachtet am 10.08.2026 beim LAN-Test über den
+ * Dev-Server). Die Symbole liegen als echte Dateien in public/app/ und brauchen keine Hilfe.
+ * Einen Service Worker gibt es im Dev-Betrieb weiterhin nicht - Chrome installiert auch ohne;
+ * nur offline kann die Dev-Fassung nichts, und das soll sie auch nicht.
+ */
+const serveManifestInDev = (): Plugin => ({
+  name: 'r2r-serve-manifest-in-dev',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use('/app/manifest.webmanifest', (_req, res) => {
+      res.setHeader('Content-Type', 'application/manifest+json')
+      res.end(JSON.stringify(appManifest))
+    })
+  },
+})
 
 /**
  * Legt den gebauten Service Worker nach dist/app/ um.
@@ -86,31 +137,10 @@ export default defineConfig({
         // sucht der Worker seine Dateien unter /app/assets/ statt unter /assets/.
         modifyURLPrefix: {'': '/'},
       },
-      manifest: {
-        name: 'Ready2Race',
-        short_name: 'R2R',
-        // Der Plan wollte gar keine Sprache setzen, weil die App Deutsch, Englisch und Dänisch
-        // kann. vite-plugin-pwa trägt dann aber 'en' ein - für eine deutsche Regatta die
-        // schlechteste der drei. Die Oberfläche selbst bleibt davon unberührt und folgt
-        // weiterhin der Spracherkennung.
-        lang: 'de',
-        // Mit Schrägstrich am Ende: '/app' liegt formal NICHT innerhalb von '/app/'. Der Browser
-        // verwirft dann den Scope und setzt ihn auf das Verzeichnis der Startadresse, also '/' -
-        // die installierte App würde Navigationen der gesamten Herkunft an sich ziehen,
-        // einschließlich /board, /results und der Verwaltungsoberfläche.
-        start_url: '/app/',
-        scope: '/app/',
-        display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#4d9f85',
-        icons: [
-          {src: '/app/icon-192.png', sizes: '192x192', type: 'image/png'},
-          {src: '/app/icon-512.png', sizes: '512x512', type: 'image/png'},
-          {src: '/app/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable'},
-        ],
-      },
+      manifest: appManifest,
     }),
     moveServiceWorkerToApp(),
+    serveManifestInDev(),
   ],
   server: {
     host: '0.0.0.0',

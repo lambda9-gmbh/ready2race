@@ -1,4 +1,4 @@
-import {EventScheduleSlotDto, MatchStatusDto} from '@api/types.gen.ts'
+import {EventScheduleSlotDto, MatchStatusDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
 
 /**
  * Die Farben, die die Oberflächen tatsächlich vergeben — eine Teilmenge von MUIs `ChipProps`,
@@ -264,6 +264,36 @@ export const roundCounterChips = (statuses: MatchStatusDto[], minMatches = 2): M
  * UNSCHEDULED kann hier nicht entstehen: ein Slot hat immer eine Startzeit, sonst stünde er nicht
  * im Zeitplan.
  */
+/**
+ * Der Lauf-Status eines NICHT verplanten Laufs - dieselbe Zweig-Reihenfolge wie [slotMatchStatus].
+ *
+ * Die nicht verplanten Läufe sind vor allem Dauer-Freilose; ob so eines noch quittiert werden
+ * muss ("Freilos · offen" vs. "quittiert"), soll die Tabelle zeigen. Ohne gesetzten Lauf und ohne
+ * Freilos-Kennzeichen gibt es nichts abzuleiten -> null, die Zelle bleibt leer. Team-Zähler stehen
+ * hier nicht zur Verfügung; die Teilwertungs-Ablesung entfällt damit bewusst.
+ */
+export const unplannedMatchStatus = (match: UnplannedSetupMatchDto): MatchStatusDto | null => {
+    const hasMatchState =
+        match.matchActivatedAt != null || match.matchStartedAt != null || match.matchFinishedAt != null
+    if (!hasMatchState && !match.bye) return null
+
+    const state = match.matchActivatedAt
+        ? match.matchStartedAt
+            ? 'RUNNING'
+            : 'PREPARING'
+        : match.matchFinishedAt
+          ? 'FINISHED'
+          : 'UNSCHEDULED'
+
+    return {
+        state,
+        startedAt: match.matchStartedAt ?? undefined,
+        teamsTotal: 0,
+        teamsScored: 0,
+        bye: match.bye,
+    }
+}
+
 export const slotMatchStatus = (slot: EventScheduleSlotDto): MatchStatusDto | null => {
     if (!slot.matchId) return null
 

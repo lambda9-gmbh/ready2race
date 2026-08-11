@@ -62,7 +62,17 @@ const NAV_MODE_STORAGE_KEY = 'competition_nav_mode'
 const storedNavMode = (): NavMode =>
     localStorage.getItem(NAV_MODE_STORAGE_KEY) === 'schedule' ? 'schedule' : 'competitions'
 
+/**
+ * Untergrenze der Leistenbreite; auf breiten Schirmen wächst sie mit (siehe RAIL_WIDTH_SX).
+ * Die festen 240px schnitten dort jeden Zeitplan-Eintrag ab, während rechts Platz brachlag
+ * (beobachtet am 10.08.2026).
+ */
 const LIST_WIDTH = 240
+/**
+ * Die mitwachsende Breite der Leiste: ein Fünftel des Fensters, gedeckelt - die Inhalte rechts
+ * behalten Vorfahrt, aber „Zeitfahren – Z…" bei freiem Platz daneben muss nicht sein.
+ */
+const RAIL_WIDTH_SX = {width: 'clamp(240px, 20vw, 380px)'}
 /** Abstand der mitlaufenden Leiste zum Fensterrand, in Pixeln. */
 const STICKY_TOP = 16
 
@@ -433,7 +443,7 @@ const CompetitionNavigation = ({
                         ref={railRef}
                         variant={'outlined'}
                         sx={{
-                            width: LIST_WIDTH,
+                            ...RAIL_WIDTH_SX,
                             flex: 'none',
                             position: 'sticky',
                             top: `${STICKY_TOP}px`,

@@ -177,6 +177,15 @@ import type {
     UpdateMatchActivationData,
     UpdateMatchActivationError,
     UpdateMatchActivationResponse,
+    DownloadRoundStartListData,
+    DownloadRoundStartListError,
+    DownloadRoundStartListResponse,
+    MarkMatchStartedFromExecutionData,
+    MarkMatchStartedFromExecutionError,
+    MarkMatchStartedFromExecutionResponse,
+    ReopenMatchData,
+    ReopenMatchError,
+    ReopenMatchResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -186,6 +195,12 @@ import type {
     AddRaceClockerRaceData,
     AddRaceClockerRaceError,
     AddRaceClockerRaceResponse,
+    GetRaceClockerCompetitionAssignmentsData,
+    GetRaceClockerCompetitionAssignmentsError,
+    GetRaceClockerCompetitionAssignmentsResponse,
+    SetRaceClockerRaceAssignmentsData,
+    SetRaceClockerRaceAssignmentsError,
+    SetRaceClockerRaceAssignmentsResponse,
     UpdateRaceClockerRaceData,
     UpdateRaceClockerRaceError,
     UpdateRaceClockerRaceResponse,
@@ -814,6 +829,9 @@ import type {
     UploadResultFileData,
     UploadResultFileError,
     UploadResultFileResponse,
+    UploadRaceClockerResultFileData,
+    UploadRaceClockerResultFileError,
+    UploadRaceClockerResultFileResponse,
     CheckQrCodeData,
     CheckQrCodeError,
     CheckQrCodeResponse,
@@ -1618,6 +1636,50 @@ export const updateMatchActivation = <ThrowOnError extends boolean = false>(
     })
 }
 
+/**
+ * The start list of a whole round as one CSV (single header, waves told apart by the wave-name column) - one import into the timing tooling instead of one per match
+ */
+export const downloadRoundStartList = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadRoundStartListData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadRoundStartListResponse,
+        DownloadRoundStartListError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/round/{setupRoundId}/startList',
+    })
+}
+
+/**
+ * Records the real start of the match (idempotent) and activates it if it was not - the office-side counterpart of the referee dashboard's 'running' button
+ */
+export const markMatchStartedFromExecution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<MarkMatchStartedFromExecutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        MarkMatchStartedFromExecutionResponse,
+        MarkMatchStartedFromExecutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/mark-started',
+    })
+}
+
+/**
+ * Takes back the finish stamp of a finished match in the latest round - activation, real start and results stay untouched
+ */
+export const reopenMatch = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ReopenMatchData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<ReopenMatchResponse, ReopenMatchError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reopen',
+    })
+}
+
 export const updateMatchResults = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<UpdateMatchResultsData, ThrowOnError>,
 ) => {
@@ -1657,6 +1719,38 @@ export const addRaceClockerRace = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/raceclocker-race',
+    })
+}
+
+/**
+ * The reverse view: every competition of the event with its explicit RaceClocker race choice (null = inherits the event default), for assigning competitions from the race side.
+ */
+export const getRaceClockerCompetitionAssignments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRaceClockerCompetitionAssignmentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRaceClockerCompetitionAssignmentsResponse,
+        GetRaceClockerCompetitionAssignmentsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/raceclocker-race/competition-assignments',
+    })
+}
+
+/**
+ * Set which competitions use this race (reverse assignment). Checking a competition here moves it away from another race - the last click wins; unchecking a competition that pointed here falls back to inheriting the event default.
+ */
+export const setRaceClockerRaceAssignments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetRaceClockerRaceAssignmentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SetRaceClockerRaceAssignmentsResponse,
+        SetRaceClockerRaceAssignmentsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/raceclocker-race/{raceId}/assignments',
     })
 }
 
@@ -4430,6 +4524,27 @@ export const uploadResultFile = <ThrowOnError extends boolean = false>(
             ...options?.headers,
         },
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file',
+    })
+}
+
+/**
+ * Offline fallback to the live pull: import a RaceClocker results xlsx (Results sheet) onto a match - team resolved via the R2R id in 'Extra info', place computed from times. Pauses the automatic pull like the plain file upload.
+ */
+export const uploadRaceClockerResultFile = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UploadRaceClockerResultFileData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UploadRaceClockerResultFileResponse,
+        UploadRaceClockerResultFileError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file/raceclocker',
     })
 }
 

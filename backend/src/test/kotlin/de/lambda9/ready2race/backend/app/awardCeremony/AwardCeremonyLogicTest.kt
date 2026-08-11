@@ -44,6 +44,7 @@ class AwardCeremonyLogicTest {
     ) = AwardCeremonyCandidateParticipant(
         firstName = firstName,
         lastName = lastName,
+        year = 1990,
         role = role,
         external = external,
         externalClubName = externalClubName,

@@ -300,7 +300,9 @@ object AwardCeremonyPdf {
                 block(padding = Padding(top = 4f)) {
                     entry.team.athletes.forEach { athlete ->
                         text(fontSize = scale.nameSize) {
-                            val name = "${athlete.name} (${athlete.role})"
+                            // Jahrgang hinter dem Namen: die Sprecherin liest ihn mit vor, und
+                            // bei Altersklassen-Wertungen gehört er zur Ehrung dazu.
+                            val name = "${athlete.name} (${athlete.year}, ${athlete.role})"
                             athlete.club?.let { "$name — $it" } ?: name
                         }
                     }

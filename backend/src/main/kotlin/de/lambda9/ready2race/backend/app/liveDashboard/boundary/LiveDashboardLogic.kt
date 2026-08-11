@@ -96,24 +96,28 @@ object LiveDashboardLogic {
      * Fall erreicht ein Lauf mit einer Abmeldung nie den Zustand [LiveDashboardMatchState.FINISHED].
      */
     /**
-     * Wann ist die Mannschaft in die Arena gegangen? Ein Boot gilt als "in der Arena", wenn
-     * JEDE bekannte Person der Crew zuletzt eingecheckt ist (letzter Scan = ENTRY am Steg) -
-     * dann zählt der späteste dieser Scans als Ablegezeit. Das Einchecken IST die Anmeldung
-     * in die Arena; das Auschecken (EXIT) meldet die zurückgekehrte Crew wieder ab. Fehlt auch
-     * nur ein Scan oder ist jemand schon wieder ausgecheckt, ist das Boot nicht (mehr)
-     * vollständig draußen -> null. Ohne bekannte Crew lässt sich nichts belegen -> ebenfalls
-     * null; die Anzeige behandelt null bei aktivem Lauf als Fehler, denn genau dann muss das
-     * Boot draußen sein.
+     * Wann ist die Mannschaft in die Arena gegangen? Ein Boot gilt als "in der Arena", sobald
+     * MINDESTENS EINE Person der Crew zuletzt eingecheckt ist (letzter Scan = ENTRY am Steg) -
+     * dann zählt der früheste dieser Scans als Ablegezeit. Das Einchecken IST die Anmeldung
+     * in die Arena; das Auschecken (EXIT) meldet die Person wieder ab.
+     *
+     * Bis zum 10.08.2026 galt die strenge Regel (JEDE bekannte Person zuletzt ENTRY). Am Steg
+     * hat sie sich nicht bewährt: Wird von einer Fünfer-Crew nur eine Person gescannt, stand das
+     * Boot trotz sichtbar belegter Arena auf "Nicht in der Arena" - und die Ampel im Team-Dialog
+     * auf Rot. Ein einziger Scan ist der Beleg, dass die Crew unterwegs ist; Vollständigkeit der
+     * Scans ist Disziplin-, nicht Wahrheitsfrage.
+     *
+     * Ist niemand (mehr) eingecheckt oder gibt es keine bekannte Crew -> null; die Anzeige
+     * behandelt null bei aktivem Lauf als Fehler, denn genau dann muss das Boot draußen sein.
      *
      * [lastScans] enthält je Crew-Mitglied den letzten Scan (scanType zu Zeitpunkt) oder null,
      * wenn die Person nie gescannt wurde.
      */
     fun teamInArenaAt(lastScans: List<Pair<String, LocalDateTime>?>): LocalDateTime? =
-        if (lastScans.isNotEmpty() && lastScans.all { it?.first == ParticipantScanType.ENTRY.name }) {
-            lastScans.maxOf { it!!.second }
-        } else {
-            null
-        }
+        lastScans
+            .filterNotNull()
+            .filter { it.first == ParticipantScanType.ENTRY.name }
+            .minOfOrNull { it.second }
 
     fun teamHasResult(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
         deregistered || place != null || failed

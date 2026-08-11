@@ -225,7 +225,12 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                     primary={
                                                                         participant.firstName +
                                                                         ' ' +
-                                                                        participant.lastName
+                                                                        participant.lastName +
+                                                                        // Jahrgang hinter dem Namen
+                                                                        // (Wunsch von Lea, 10.08.2026)
+                                                                        (participant.year != null
+                                                                            ? ` (${participant.year})`
+                                                                            : '')
                                                                     }
                                                                     secondary={
                                                                         <>

@@ -47,6 +47,13 @@ data class RaceClockerFeedRow(
     /** Time penalty in seconds, already included in [result]. */
     val penaltySeconds: Int?,
     val penaltyNote: String?,
+    /**
+     * The intermediate marks (lap/split columns) of this row, in feed column order. RaceClocker
+     * lets the timekeeper name these columns freely ("Runde 1", "Split 3", ...) and writes each as
+     * a time-of-day stamp of the moment the crew passed the mark; the placeholder `00:00:00.0`
+     * (= not taken) is already filtered out by the parser. Empty for races without split columns.
+     */
+    val laps: List<RaceClockerLapMark> = emptyList(),
 ) {
     val isTime: Boolean get() = result != null && timecodePattern.matches(result.trim())
 

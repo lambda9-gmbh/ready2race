@@ -1,5 +1,6 @@
 import {
     createNextCompetitionRound,
+    downloadRoundStartList,
     downloadStartList,
     getTimingConfig,
     pullMatchResultsFromRaceClocker,
@@ -8,6 +9,7 @@ import {
     getEventSchedule,
     updateMatchData,
     updateMatchResults,
+    uploadRaceClockerResultFile,
     uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {
@@ -419,6 +421,37 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
         }
     }
 
+    /** Die ganze Runde als eine CSV - ein Import ins Zeitnahme-System statt Lauf für Lauf. */
+    const handleDownloadRoundStartList = async (setupRoundId: string) => {
+        const {data, error, response} = await downloadRoundStartList({
+            path: {
+                eventId,
+                competitionId,
+                setupRoundId,
+            },
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            if (error.status.value === 409) {
+                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
+            } else if (
+                error.status.value === 400 &&
+                error.errorCode === 'STARTLIST_CONFIG_NOT_CONFIGURED'
+            ) {
+                feedback.error(t('event.competition.execution.startList.error.notConfigured'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(new Blob([data]))
+            anchor.download = getFilename(response) ?? `startList-round-${setupRoundId}.csv`
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
     const handlePullRaceClockerResults = async (competitionMatchId: string) => {
         setSubmitting(true)
         const {error} = await pullMatchResultsFromRaceClocker({
@@ -450,6 +483,29 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
             feedback.error(t('common.error.unexpected'))
         } else {
             feedback.success(t('event.competition.execution.results.raceclocker.poll.resumed'))
+            setReloadData(!reloadData)
+        }
+    }
+
+    /** Notfallweg: RaceClocker-Ergebnis-xlsx auf den Lauf schreiben (eigener Parser fürs Results-Blatt). */
+    const handleUploadRaceClockerFile = async (competitionMatchId: string, file: File) => {
+        setSubmitting(true)
+        const {error} = await uploadRaceClockerResultFile({
+            path: {eventId, competitionId, competitionMatchId},
+            body: {files: [file]},
+        })
+        setSubmitting(false)
+
+        if (error) {
+            if (error.status.value === 400 && error.errorCode === 'RACECLOCKER_MATCH_NOT_IN_FEED') {
+                feedback.error(t('event.competition.execution.results.raceclocker.file.notInFile'))
+            } else if (error.status.value === 400 && error.errorCode === 'FILE_ERROR') {
+                feedback.error(t('common.error.upload.FILE_ERROR'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.file.imported'))
             setReloadData(!reloadData)
         }
     }
@@ -947,6 +1003,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                         }
                         smallScreenLayout={smallScreenLayout}
                         setResultImportMatch={setResultImportMatch}
+                        handleUploadRaceClockerFile={handleUploadRaceClockerFile}
                         pullRaceClockerResults={handlePullRaceClockerResults}
                         resumeRaceClockerAutoPull={handleResumeRaceClockerAutoPull}
                         handleDownloadStartListPDF={matchId =>
@@ -955,6 +1012,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                         handleDownloadStartListCSV={matchId =>
                             handleDownloadStartList(matchId, 'CSV')
                         }
+                        handleDownloadRoundStartList={handleDownloadRoundStartList}
                         /* Das effektive System, nicht die eigene Spalte des Wettkampfs: Setzt die
                            Veranstaltung RaceClocker und erben ihre Wettkämpfe es, ist
                            `timingConfig.timingSystem` null — der Abruf-Status samt „Automatik wieder

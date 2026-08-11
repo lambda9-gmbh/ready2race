@@ -233,8 +233,21 @@ object GapDocumentTemplateService {
      * Legt aus einem Austauschpaket eine neue Vorlage an. Bewusst über [createTemplate], damit der
      * Import genau dieselben Prüfungen durchläuft wie ein normaler Upload und nicht an ihnen vorbei.
      */
+    /**
+     * [typeOverride] überstimmt den Typ aus dem Manifest - die Zip behauptet nur, was sie ist,
+     * und wer importiert, soll das korrigieren können. Die Platzhalter-Validierung in
+     * [createTemplate] läuft gegen den effektiven Typ; ein unpassender Override scheitert also
+     * mit derselben Meldung wie beim Anlegen von Hand.
+     *
+     * Nach dem Import wird die Vorlage automatisch als aktive Vorlage ihres Typs eingehängt,
+     * wenn dort noch keine hinterlegt ist: Wer ein Siegerurkunden-Paket importiert, will es fast
+     * immer auch benutzen - und stand sonst vor "Für Siegerurkunden ist keine Vorlage
+     * hinterlegt", obwohl der Import gelungen war (beobachtet am 10.08.2026). Eine bereits
+     * aktive Vorlage wird ausdrücklich NICHT verdrängt.
+     */
     fun importTemplate(
         pkg: File,
+        typeOverride: GapDocumentType? = null,
     ): App<GapDocumentTemplateError, ApiResponse.Created> = KIO.comprehension {
         val content = when (val result = GapDocumentTemplatePackage.read(pkg.bytes)) {
             is GapDocumentTemplatePackage.ReadResult.Ok -> result.content
@@ -244,11 +257,25 @@ object GapDocumentTemplateService {
                 !KIO.fail(GapDocumentTemplateError.UnsupportedPackageVersion)
         }
 
+        val request = typeOverride
+            ?.let { content.request.copy(type = it) }
+            ?: content.request
+
         val id = !createTemplate(
             file = File(content.name, content.pdf),
-            request = content.request,
+            request = request,
             font = content.font,
         )
+
+        val assigned = !GapDocumentTemplateUsageRepo.all().orDie()
+        if (assigned.none { it.type == request.type.name }) {
+            !GapDocumentTemplateUsageRepo.upsert(
+                GapDocumentTemplateUsageRecord(
+                    type = request.type.name,
+                    template = id,
+                )
+            ).orDie()
+        }
 
         KIO.ok(ApiResponse.Created(id))
     }

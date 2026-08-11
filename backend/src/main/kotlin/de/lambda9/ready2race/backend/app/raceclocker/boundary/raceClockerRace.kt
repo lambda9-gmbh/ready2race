@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.raceclocker.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceAssignmentsRequest
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pathParam
@@ -29,6 +30,16 @@ fun Route.raceClockerRace() {
                 RaceClockerRaceService.addRace(eventId, user.id!!, body)
             }
         }
+        // Die umgekehrte Sicht: alle Wettkämpfe mit ihrer Anwahl, damit die Oberfläche am Rennen
+        // die Wettkämpfe anhaken kann.
+        get("/competition-assignments") {
+            call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+
+                RaceClockerRaceService.getCompetitionAssignments(eventId)
+            }
+        }
         route("/{raceId}") {
             put {
                 call.respondComprehension {
@@ -38,6 +49,23 @@ fun Route.raceClockerRace() {
 
                     val body = !receiveKIO(RaceClockerRaceRequest.example)
                     RaceClockerRaceService.updateRace(eventId, raceId, user.id!!, body)
+                }
+            }
+            // Zuordnung dieses Rennens setzen (umgedreht): die angehakten Wettkämpfe je Rundenart.
+            put("/assignments") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val raceId = !pathParam("raceId", uuid)
+
+                    val body = !receiveKIO(RaceClockerRaceAssignmentsRequest.example)
+                    RaceClockerRaceService.setRaceAssignments(
+                        eventId = eventId,
+                        raceId = raceId,
+                        userId = user.id!!,
+                        qualificationCompetitions = body.qualificationCompetitions,
+                        roundsCompetitions = body.roundsCompetitions,
+                    )
                 }
             }
             delete {

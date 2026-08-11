@@ -10,10 +10,10 @@ import {useCallback, useEffect, useState} from 'react'
  * `storage` feuert nur in ANDEREN Tabs, zwei gleichzeitig sichtbare Umschalter im selben Tab liefen
  * sonst auseinander.
  *
- * Solange NICHT umgeschaltet wurde, entscheidet die Oberfläche selbst ([fallback]): Das Board
- * startet in der Kurzform — am Steg zählt, welches Rennen dran ist, nicht wie es ausgeschrieben
- * heißt —, der Zeitplan-Tab bei den vollen Namen. Ein Klick ist eine Ansage und gilt ab dann für
- * beide Seiten; nur die Vorbelegung ist getrennt.
+ * Solange NICHT umgeschaltet wurde, entscheidet die Oberfläche selbst ([fallback]). Seit dem
+ * 11.08.2026 starten beide Seiten in der Kurzform — am Steg wie im Büro zählt, welches Rennen
+ * dran ist, nicht wie es ausgeschrieben heißt. Ein Klick ist eine Ansage und gilt ab dann für
+ * beide Seiten.
  */
 const STORAGE_KEY = 'schedule_short_labels'
 const CHANGE_EVENT = 'r2r:short-labels'

@@ -1,5 +1,5 @@
 import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
-import {GapDocumentTemplateDto} from '@api/types.gen.ts'
+import {GapDocumentTemplateDto, GapDocumentType} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import EntityTable from '@components/EntityTable.tsx'
@@ -12,7 +12,20 @@ import {
 } from '@api/sdk.gen.ts'
 import {FileDownload, Preview} from '@mui/icons-material'
 import {useRef, useState} from 'react'
-import {Link} from '@mui/material'
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    FormControl,
+    InputLabel,
+    Link,
+    MenuItem,
+    Select,
+    Stack,
+    Typography,
+} from '@mui/material'
 import GapDocumentTemplatePreviewDialog from '@components/gapDocumentTemplate/GapDocumentTemplatePreviewDialog.tsx'
 import SelectFileButton from '@components/SelectFileButton.tsx'
 import {useFeedback} from '@utils/hooks.ts'
@@ -63,12 +76,23 @@ const GapDocumentTemplateTable = (props: BaseEntityTableProps<GapDocumentTemplat
         }
     }
 
+    // Die gewählte Datei wartet im Zustand, bis der Typ bestätigt ist: Das Manifest der Zip
+    // behauptet nur, was sie ist - beim Import soll das sichtbar und überstimmbar sein
+    // (Wunsch vom 10.08.2026). '' heißt "Typ aus der Datei übernehmen".
+    const [importFile, setImportFile] = useState<File | null>(null)
+    const [importType, setImportType] = useState<GapDocumentType | ''>('')
+
     // Der Import liefert nur die Id der neuen Vorlage zurück (kein vollständiges Dto) und die
     // Tabelle kennt keinen Weg, den Bearbeiten-Dialog für eine bloße Id zu öffnen (openDialog
     // erwartet ein vollständiges GapDocumentTemplateDto, es gibt keinen Einzel-Abruf per Id). Statt
     // dessen wird die Tabelle neu geladen, damit die importierte Vorlage in der Liste erscheint.
-    const handleImport = async (file: File) => {
-        const {data, error} = await importGapDocumentTemplate({body: {file}})
+    const handleImport = async () => {
+        if (!importFile) return
+        const {data, error} = await importGapDocumentTemplate({
+            body: {file: importFile},
+            query: importType !== '' ? {documentType: importType} : undefined,
+        })
+        setImportFile(null)
         if (error || !data) {
             const key = error ? documentTemplateErrorKey(error) : undefined
             feedback.error(key ? t(key) : t('common.error.unexpected'))
@@ -124,11 +148,57 @@ const GapDocumentTemplateTable = (props: BaseEntityTableProps<GapDocumentTemplat
                 deleteRequest={deleteRequest}
                 customEntityActions={customEntityActions}
                 customTableActions={
-                    <SelectFileButton accept={'.zip'} onSelected={handleImport}>
+                    <SelectFileButton
+                        accept={'.zip'}
+                        onSelected={file => {
+                            setImportType('')
+                            setImportFile(file)
+                        }}>
                         {t('gap.document.template.import')}
                     </SelectFileButton>
                 }
             />
+            <Dialog open={importFile !== null} onClose={() => setImportFile(null)} fullWidth>
+                <DialogTitle>{t('gap.document.template.import')}</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{mt: 1}}>
+                        <Typography variant={'body2'} color={'text.secondary'}>
+                            {importFile?.name}
+                        </Typography>
+                        <FormControl fullWidth>
+                            <InputLabel id={'import-type-label'}>
+                                {t('gap.document.template.type')}
+                            </InputLabel>
+                            <Select
+                                labelId={'import-type-label'}
+                                label={t('gap.document.template.type')}
+                                value={importType}
+                                onChange={e =>
+                                    setImportType(e.target.value as GapDocumentType | '')
+                                }>
+                                <MenuItem value={''}>
+                                    {t('gap.document.template.importTypeFromFile')}
+                                </MenuItem>
+                                <MenuItem value={'AWARD_CERTIFICATE'}>
+                                    {t('gap.document.template.types.AWARD_CERTIFICATE')}
+                                </MenuItem>
+                                <MenuItem value={'CERTIFICATE_OF_PARTICIPATION'}>
+                                    {t('gap.document.template.types.CERTIFICATE_OF_PARTICIPATION')}
+                                </MenuItem>
+                            </Select>
+                        </FormControl>
+                        <Typography variant={'body2'} color={'text.secondary'}>
+                            {t('gap.document.template.importAssignHint')}
+                        </Typography>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setImportFile(null)}>{t('common.cancel')}</Button>
+                    <Button variant={'contained'} onClick={handleImport}>
+                        {t('gap.document.template.import')}
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <GapDocumentTemplatePreviewDialog
                 open={showPreview}
                 onClose={handleClosePreview}

@@ -28,6 +28,7 @@ class AwardCeremonyPdfTest {
         AwardCeremonyCandidateParticipant(
             firstName = firstName,
             lastName = lastName,
+            year = 1990,
             role = "Ruderin",
             external = false,
             externalClubName = null,
@@ -244,7 +245,7 @@ class AwardCeremonyPdfTest {
 
         val first = textOfPage(bytes, 1)
         assertContains(first, "Startnummer 3")
-        assertContains(first, "Ruderin9 Nachname9 (Ruderin)")
+        assertContains(first, "Ruderin9 Nachname9 (1990, Ruderin)")
     }
 
     /**
@@ -323,7 +324,7 @@ class AwardCeremonyPdfTest {
             val text = textOfPage(bytes, page)
             assertEquals(
                 occurrences(text, "Startnummer") * 9,
-                occurrences(text, "(Ruderin)"),
+                occurrences(text, "(1990, Ruderin)"),
                 "Seite $page zerreißt einen Rangblock",
             )
         }

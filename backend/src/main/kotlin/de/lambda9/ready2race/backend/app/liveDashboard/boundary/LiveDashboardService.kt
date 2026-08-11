@@ -204,6 +204,7 @@ object LiveDashboardService {
                                 millisecondPrecision = timePrecision,
                             ).toString()
                         },
+                        startedAt = first.get("team_started_at", LocalDateTime::class.java),
                         failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                         failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
                         penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],

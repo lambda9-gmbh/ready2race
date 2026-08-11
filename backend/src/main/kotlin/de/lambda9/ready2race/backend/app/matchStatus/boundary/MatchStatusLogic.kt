@@ -116,8 +116,8 @@ object MatchStatusLogic {
      *
      * [roundCrewScans] enthält je Lauf der Runde je Mannschaft die letzten Scans ihrer Crew, in
      * der Reihenfolge der Läufe. Ob eine einzelne Mannschaft draußen ist, entscheidet unverändert
-     * [LiveDashboardLogic.teamInArenaAt] (jede bekannte Person zuletzt EXIT) - dieselbe Regel wie
-     * im Schiedsrichter-Dashboard, an genau einem Ort.
+     * [LiveDashboardLogic.teamInArenaAt] (mindestens eine Person zuletzt ENTRY) - dieselbe Regel
+     * wie im Schiedsrichter-Dashboard, an genau einem Ort.
      *
      * Der Null-Fall ist der wichtigere Teil (Abschnitt 6 der Spec): hatte in der ganzen Runde
      * KEINE Person je einen Scan, läuft die Veranstaltung ohne Check-in. Dann ist 0 keine Aussage,

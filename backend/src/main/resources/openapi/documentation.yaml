@@ -1561,6 +1561,91 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/round/{setupRoundId}/startList:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: setupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadRoundStartList
+      description: "The start list of a whole round as one CSV (single header, waves told apart by the wave-name column) - one import into the timing tooling instead of one per match"
+      responses:
+        200:
+          description: The start list file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/mark-started:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: markMatchStartedFromExecution
+      description: "Records the real start of the match (idempotent) and activates it if it was not - the office-side counterpart of the referee dashboard's 'running' button"
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reopen:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: reopenMatch
+      description: "Takes back the finish stamp of a finished match in the latest round - activation, real start and results stay untouched"
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -1640,6 +1725,62 @@ paths:
           $ref: '#/components/responses/409'
         422:
           $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/raceclocker-race/competition-assignments:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getRaceClockerCompetitionAssignments
+      description: "The reverse view: every competition of the event with its explicit RaceClocker race choice (null = inherits the event default), for assigning competitions from the race side."
+      responses:
+        200:
+          description: Competition assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionRaceAssignmentDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/raceclocker-race/{raceId}/assignments:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: raceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: setRaceClockerRaceAssignments
+      description: "Set which competitions use this race (reverse assignment). Checking a competition here moves it away from another race - the last click wins; unchecking a competition that pointed here falls back to inheriting the event default."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaceClockerRaceAssignmentsRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/raceclocker-race/{raceId}:
@@ -4688,6 +4829,13 @@ paths:
   /gapDocumentTemplate/import:
     post:
       operationId: importGapDocumentTemplate
+      parameters:
+        - name: documentType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/GapDocumentType'
+          description: "Overrides the document type claimed by the package manifest. After the import, the template is auto-assigned as the active template of its type if none is assigned yet."
       requestBody:
         required: true
         content:
@@ -7358,6 +7506,49 @@ paths:
           format: uuid
     put:
       operationId: uploadResultFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file/raceclocker:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: uploadRaceClockerResultFile
+      description: "Offline fallback to the live pull: import a RaceClocker results xlsx (Results sheet) onto a match - team resolved via the R2R id in 'Extra info', place computed from times. Pauses the automatic pull like the plain file upload."
       requestBody:
         required: true
         content:
@@ -12707,6 +12898,24 @@ components:
           description: "Time penalty in seconds; the result time already includes it"
         penaltyNote:
           type: string
+        laps:
+          type: array
+          description: "Intermediate marks from RaceClocker, in on-course order; empty for races without split columns"
+          items:
+            $ref: '#/components/schemas/MatchTeamLapDto'
+
+    MatchTeamLapDto:
+      type: object
+      required:
+        - name
+        - timeString
+      properties:
+        name:
+          type: string
+          description: "The split column's name as the timekeeper labelled it in RaceClocker (e.g. 'Runde 1')"
+        timeString:
+          type: string
+          description: "Cumulative race time at this mark, formatted for display (e.g. '1:05.5')"
 
     UpdateCompetitionMatchRequest:
       type: object
@@ -13377,6 +13586,48 @@ components:
       type: string
       enum: [INDIVIDUAL, WAVE]
 
+    CompetitionRaceAssignmentDto:
+      type: object
+      required: [competitionId, identifier, name, hasQualificationRound]
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+        hasQualificationRound:
+          type: boolean
+          description: "Whether the competition's setup even has a qualification round"
+        raceQualification:
+          type: string
+          format: uuid
+          nullable: true
+          description: "Explicitly chosen qualification race; null means it inherits the event default"
+        raceRounds:
+          type: string
+          format: uuid
+          nullable: true
+          description: "Explicitly chosen rounds race; null means it inherits the event default"
+
+    RaceClockerRaceAssignmentsRequest:
+      type: object
+      required: [qualificationCompetitions, roundsCompetitions]
+      properties:
+        qualificationCompetitions:
+          type: array
+          description: "Competitions that use this race for their qualification"
+          items:
+            type: string
+            format: uuid
+        roundsCompetitions:
+          type: array
+          description: "Competitions that use this race for their remaining rounds"
+          items:
+            type: string
+            format: uuid
+
     EventTimingConfigRequest:
       type: object
       description: >
@@ -13784,6 +14035,10 @@ components:
           type: string
         lastName:
           type: string
+        year:
+          type: integer
+          nullable: true
+          description: "Year of birth, shown behind the name in result displays"
         namedRole:
           type: string
           nullable: true
@@ -15053,6 +15308,11 @@ components:
         time:
           type: string
           nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "The measured start of this boat from the timing tooling - answers 'who is already under way?' in individual-start time trials while no finish time exists yet"
         failed:
           type: boolean
         failedReason:
@@ -15475,6 +15735,23 @@ components:
           type: string
         matchName:
           type: string
+          nullable: true
+        matchActivatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Match state, present once the round is materialized - mostly relevant for permanent byes whose open/acknowledged state should be visible in the schedule"
+        matchStartedAt:
+          type: string
+          format: date-time
+          nullable: true
+        matchFinishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        bye:
+          allOf:
+            - $ref: '#/components/schemas/MatchByeDto'
           nullable: true
 
     EventScheduleDto:
