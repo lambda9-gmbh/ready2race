@@ -9,6 +9,7 @@ import BoardRenderer from '@components/event/board/BoardRenderer'
 import {useBoardViewData} from '@components/event/board/useBoardViewData'
 import {useServerClock} from '@components/event/info/athleteBoard/useServerClock'
 import {boardDisplayRoute} from '@routes'
+import {useDocumentTitle} from '@utils/useDocumentTitle.ts'
 
 const STALE_AFTER_MISSED_INTERVALS = 2
 
@@ -27,6 +28,7 @@ const BoardDisplayPage = () => {
         eventId,
         boardId,
     )
+    useDocumentTitle(data?.eventName)
     const now = useServerClock(data?.serverTime)
 
     const [fullscreen, setFullscreen] = useState(false)

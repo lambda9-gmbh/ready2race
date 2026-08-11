@@ -59,6 +59,7 @@ import {MatchResultStatus} from '@utils/matchResultStatus.ts'
 import {liveDashboardErrorKey} from '@components/event/liveDashboard/liveDashboardError.ts'
 import {readCachedRead, writeCachedRead} from '@pwa/readCache.ts'
 import {describeStale} from '@components/event/liveDashboard/staleState.ts'
+import {useDocumentTitle} from '@utils/useDocumentTitle.ts'
 
 /** The dashboard payload carries no server clock of its own (unlike the athlete board), so the
  * now-marker ticks off the local clock every 30s - plenty for a position on a day-long axis. */
@@ -101,6 +102,7 @@ export type LiveDashboardPageProps = {
 
 const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps) => {
     const {t} = useTranslation()
+    useDocumentTitle(t('event.liveDashboard.title'))
     const feedback = useFeedback()
     const {confirmAction} = useConfirmation()
     const user = useUser()
