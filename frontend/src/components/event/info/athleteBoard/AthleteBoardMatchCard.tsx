@@ -17,6 +17,7 @@ import {
     formatShortDate,
     isSameDay,
     scaled,
+    sortRunningTeams,
 } from './common'
 
 /**
@@ -222,6 +223,10 @@ const AthleteBoardMatchCard = ({
     // mitzulaufen und Breite zu verbrauchen.
     const showLiveResult = variant === 'running' && showTimes
 
+    // Nur wenn die Zwischenstände auch zu sehen sind, wird nach ihnen sortiert — eine
+    // umsortierte Liste ohne sichtbare Zeiten wäre vom Steg aus nicht zu deuten.
+    const teams = showLiveResult ? sortRunningTeams(match.teams) : match.teams
+
     return (
         <>
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
@@ -297,8 +302,8 @@ const AthleteBoardMatchCard = ({
                     {t('event.info.pendingRound')}
                 </Typography>
             ) : (
-                <AthleteBoardBoatList rows={match.teams.map(() => 'boat')}>
-                    {match.teams.map((team, index) => (
+                <AthleteBoardBoatList rows={teams.map(() => 'boat')}>
+                    {teams.map((team, index) => (
                         <AthleteBoardBoatRow
                             // Die Startnummer ist je Lauf eindeutig (Index
                             // `starting_position_unique_in_match`) und nie leer, trägt den

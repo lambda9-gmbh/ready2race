@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {TFunction} from 'i18next'
-import {COUNTDOWN_MAX_SECONDS, formatRemaining, isSameDay, scaled, teamLabel} from './common'
+import {COUNTDOWN_MAX_SECONDS, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
 
 // Gibt den letzten Abschnitt des Schlüssels zurück, damit die Erwartungen unabhängig
 // von den echten Übersetzungen lesbar bleiben: "…hoursUnit" -> "hoursUnit".
@@ -97,5 +97,46 @@ describe('scaled', () => {
         expect(scaled('1rem', '2vw', '3rem')).toBe(
             'calc(var(--ab-scale, 1) * clamp(1rem, 2vw, 3rem))',
         )
+    })
+})
+
+describe('sortRunningTeams', () => {
+    const team = (
+        startNumber: number,
+        place: number | null = null,
+        failed = false,
+        timeString: string | null = null,
+    ) => ({startNumber, place, failed, timeString})
+
+    // Der Auslöser (11.08.2026, Zeitfahren am Prod-Abzug): Startreihenfolge 1–8, Plätze
+    // kreuz und quer daneben — sobald Zwischenstände da sind, zählt die Platzierung.
+    test('mit Zwischenständen sortiert die Platzierung, DNF/DQ ans Ende', () => {
+        const sorted = sortRunningTeams([
+            team(1, 1, false, '0:02:04.3'),
+            team(2, 4, false, '0:05:27.3'),
+            team(3, 3, false, '0:05:21.2'),
+            team(4, 5, false, '0:05:39.9'),
+            team(5, null, true),
+            team(6, 2, false, '0:04:41.2'),
+            team(7, null, true),
+            team(8, null, true),
+        ])
+        expect(sorted.map(t => t.startNumber)).toEqual([1, 6, 3, 2, 4, 5, 7, 8])
+    })
+
+    test('ohne jedes Teilergebnis bleibt die Startreihenfolge', () => {
+        const teams = [team(3), team(1), team(2)]
+        expect(sortRunningTeams(teams).map(t => t.startNumber)).toEqual([3, 1, 2])
+    })
+
+    // Noch fahrende Boote (ohne Platz, nicht ausgeschieden) stehen zwischen den
+    // Gewerteten und den Ausgeschiedenen, in Startreihenfolge.
+    test('noch fahrende Boote stehen hinter den gewerteten, vor DNF/DQ', () => {
+        const sorted = sortRunningTeams([
+            team(1),
+            team(2, 1, false, '0:04:00.0'),
+            team(3, null, true),
+        ])
+        expect(sorted.map(t => t.startNumber)).toEqual([2, 1, 3])
     })
 })
