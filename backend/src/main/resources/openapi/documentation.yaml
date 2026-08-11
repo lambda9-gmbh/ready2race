@@ -7480,6 +7480,49 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file/raceclocker:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: uploadRaceClockerResultFile
+      description: "Offline fallback to the live pull: import a RaceClocker results xlsx (Results sheet) onto a match - team resolved via the R2R id in 'Extra info', place computed from times. Pauses the automatic pull like the plain file upload."
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /app/{qrCodeId}:
     parameters:
       - name: qrCodeId

@@ -205,6 +205,56 @@ fun Route.competitionExecution() {
                 }
             }
 
+            // Notfallweg zum Live-Abruf: eine von RaceClocker heruntergeladene Ergebnis-xlsx
+            // einspielen, wenn am Steg das Netz fehlt. Eigener Parser fürs „Results"-Blatt.
+            put("/results-file/raceclocker") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    val multiPartData = receiveMultipart()
+
+                    var upload: File? = null
+                    var done = false
+                    while (!done) {
+                        val part = multiPartData.readPart()
+                        if (part == null) {
+                            done = true
+                        } else {
+                            when (part) {
+                                is PartData.FileItem -> {
+                                    if (upload == null) {
+                                        upload = File(
+                                            part.originalFileName!!,
+                                            part.provider().toByteArray(),
+                                        )
+                                    } else {
+                                        !KIO.fail(RequestError.File.Multiple)
+                                    }
+                                }
+
+                                else -> {}
+                            }
+                            part.dispose()
+                        }
+                    }
+
+                    val file = !KIO.failOnNull(upload) { RequestError.File.Missing }
+
+                    !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
+
+                    CompetitionExecutionService.importRaceClockerResultsFile(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        file = file,
+                        userId = user.id!!,
+                    )
+                }
+            }
+
             post("/results/from-raceclocker") {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)

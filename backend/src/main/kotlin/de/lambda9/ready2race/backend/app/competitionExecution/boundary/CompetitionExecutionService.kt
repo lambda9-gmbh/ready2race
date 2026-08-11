@@ -33,6 +33,7 @@ import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollLog
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollService
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
+import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerResultsXls
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerFeedRow
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
@@ -768,6 +769,49 @@ object CompetitionExecutionService {
 
         // Ein Lauf kann beendet sein und erst mit dieser Eingabe vollständig gewertet werden -
         // dann ist das Ergebnis der letzte fehlende Baustein der Runde.
+        !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
+
+        noData
+    }
+
+    /**
+     * Der Notfallweg zum Live-Abruf: eine von RaceClocker heruntergeladene Ergebnis-xlsx auf einen
+     * Lauf schreiben, wenn am Steg das Netz fehlt. Liest das „Results"-Blatt
+     * ([RaceClockerResultsXls]) und reicht die Zeilen durch dieselbe Schreiblogik wie der Live-Abruf
+     * ([applyRaceClockerRows]) — Zuordnung über die R2R-Kennung aus „Extra info", Platz aus den
+     * Zeiten, Duplikat- und Reset-Prüfung inklusive.
+     *
+     * Der automatische Abruf wird dabei pausiert (wie beim Tabellen-Upload): Wer von Hand eine Datei
+     * einspielt, hat das letzte Wort, sonst überschriebe der nächste Takt es wieder. Freigabe über
+     * „Automatik wieder aufnehmen".
+     *
+     * Bewusste Grenze: Die xlsx trägt weder Startzeiten noch Zwischenzeiten, deshalb löscht dieser
+     * Import einen zuvor vom Live-Abruf geschriebenen Boot-Start und dessen Runden — die Datei ist im
+     * Moment des Imports die Quelle der Wahrheit.
+     */
+    fun importRaceClockerResultsFile(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        file: File,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val match = !checkUpdateMatchResult(competitionId, matchId, byeError = RaceClockerError.MatchIsBye)
+        !pauseRaceClockerAutoPull(matchId)
+
+        val target = !CompetitionMatchRepo.getForRaceClockerPull(matchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        val rows = when (val result = RaceClockerResultsXls.parse(file.bytes)) {
+            is RaceClockerResultsXls.ParseResult.Ok -> result.rows
+            RaceClockerResultsXls.ParseResult.Invalid ->
+                !KIO.fail(CompetitionExecutionError.ResultUploadError.FileError)
+        }
+
+        !applyRaceClockerRows(match, matchId, target, rows, userId)
+
         !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
 
         noData
