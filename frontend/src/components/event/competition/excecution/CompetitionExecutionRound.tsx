@@ -31,9 +31,11 @@ import {
     deleteCurrentCompetitionExecutionRound,
     markMatchStartedFromExecution,
     reopenMatch,
+    resetMatch,
     skipScheduleRound,
     updateMatchActivation,
 } from '@api/sdk.gen.ts'
+import {matchErrorText} from '@components/event/competition/excecution/executionError.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
@@ -221,6 +223,56 @@ const CompetitionExecutionRound = ({
             feedback.success(t('event.competition.execution.running.success'))
             props.reloadRoundDto()
         }
+    }
+
+    /**
+     * Lauf zurücksetzen: leert den Ausführungszustand (Ist-Start, Zeiten, Plätze, Rundenzeiten),
+     * behält aber Aufstellung, Bahnen und die Kennungen der Boote — die RaceClocker-Zuordnung
+     * bleibt gültig. Nur in der jüngsten Runde; hat die Folgerunde schon Läufe, lehnt der Server
+     * mit einem eigenen Fehlercode ab (siehe executionError.ts).
+     */
+    const handleResetMatch = async (match: CompetitionMatchDto) => {
+        confirmAction(
+            async () => {
+                props.setSubmitting(true)
+                const {error} = await resetMatch({
+                    path: {
+                        eventId: eventId,
+                        competitionId: competitionId,
+                        competitionMatchId: match.id,
+                    },
+                })
+                props.setSubmitting(false)
+                if (error) {
+                    const text = matchErrorText(error)
+                    feedback.error(
+                        text === undefined
+                            ? t('event.competition.execution.resetMatch.error')
+                            : t(text.key, text.values),
+                    )
+                } else {
+                    feedback.success(t('event.competition.execution.resetMatch.success'))
+                }
+                props.reloadRoundDto()
+            },
+            {
+                title: t('event.competition.execution.resetMatch.confirmation.title'),
+                content: (
+                    <Stack spacing={2}>
+                        <Typography color={'error.main'} sx={{fontWeight: 'bold'}}>
+                            {t('event.competition.execution.resetMatch.confirmation.warning')}
+                        </Typography>
+                        <Typography>
+                            {t('event.competition.execution.resetMatch.confirmation.keeps')}
+                        </Typography>
+                        <Typography sx={{fontWeight: 'bold'}}>
+                            {t('event.competition.execution.resetMatch.confirmation.question')}
+                        </Typography>
+                    </Stack>
+                ),
+                okText: t('event.competition.execution.resetMatch.action'),
+            },
+        )
     }
 
     /** Beenden zurücknehmen — nur in der jüngsten Runde, der Server prüft das nochmal. */
@@ -510,6 +562,30 @@ const CompetitionExecutionRound = ({
                                                 )}
                                             </LoadingButton>
                                         )}
+                                        {/* Nur anbieten, wenn es etwas zurückzusetzen gibt —
+                                            ein unberührter Lauf bekäme sonst einen Knopf, der
+                                            nichts tut. */}
+                                        {roundIndex === 0 &&
+                                            (match.activatedAt != null ||
+                                                match.startedAt != null ||
+                                                match.finishedAt != null ||
+                                                match.teams.some(
+                                                    team =>
+                                                        team.place != null ||
+                                                        team.failed ||
+                                                        team.timeString != null,
+                                                )) && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    color={'error'}
+                                                    pending={submitting}
+                                                    onClick={() => handleResetMatch(match)}>
+                                                    {t(
+                                                        'event.competition.execution.resetMatch.action',
+                                                    )}
+                                                </LoadingButton>
+                                            )}
                                     </Stack>
                                 </Stack>
                                 <Stack direction={'column'} spacing={1}>

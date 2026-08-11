@@ -186,6 +186,9 @@ import type {
     ReopenMatchData,
     ReopenMatchError,
     ReopenMatchResponse,
+    ResetMatchData,
+    ResetMatchError,
+    ResetMatchResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -1677,6 +1680,18 @@ export const reopenMatch = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).put<ReopenMatchResponse, ReopenMatchError, ThrowOnError>({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reopen',
+    })
+}
+
+/**
+ * Resets a single match to 'never raced': clears activation, real start, finish stamp, places, times, penalties and laps while keeping the line-up, lanes and all row UUIDs (external timing references stay valid). Only allowed while the following round has no created matches yet.
+ */
+export const resetMatch = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResetMatchData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<ResetMatchResponse, ResetMatchError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reset',
     })
 }
 

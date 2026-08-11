@@ -1615,6 +1615,103 @@ object CompetitionExecutionService {
         noData
     }
 
+    /**
+     * Setzt einen einzelnen Lauf in den Zustand „nie gefahren" zurück, ohne seine Zeilen zu
+     * löschen - die Alternative zum Löschen der ganzen Runde, wenn nur EIN Lauf neu gefahren
+     * werden muss.
+     *
+     * Der Punkt ist der Erhalt der UUIDs: `deleteCurrentRound` legt beim Neuerstellen neue
+     * `competition_match_team`-Zeilen an, und deren Kennungen stecken in RaceClocker-Extra-infos,
+     * exportierten Startlisten und allen Verweisen darauf. Dieser Weg behält die Zeilen und leert
+     * nur, was aus dem gefahrenen Rennen stammt.
+     *
+     * Geleert wird der Ausführungszustand:
+     * - `competition_match`: `activated_at`, `started_at`, `finished_at`, dazu die Abruf-Vermerke
+     *   `raceclocker_auto_paused_at` und `raceclocker_poll_error` - ein zurückgesetzter Lauf soll
+     *   ohne weiteren Handgriff wieder automatisch abgerufen werden. `raceclocker_polled_at`
+     *   bleibt: es beschreibt den Job, nicht den Lauf.
+     * - `competition_match_team`: Platz, Ausscheidung ([CompetitionMatchTeamRecord.failed] samt
+     *   Grund), Zeit (Timecode-Zeile wird gelöscht), Strafzeit, Boot-Start und alle Rundenzeiten -
+     *   genau die Felder, die [updateMatchResult] und [applyParsedTeamResults] schreiben.
+     *
+     * Stehen bleibt die Struktur: Aufstellung, Bahnen (`start_number`), geplante Startzeit und
+     * `pairings_recalculated_at`. Auch [CompetitionMatchTeamRecord.out] bleibt - es markiert das
+     * Ausscheiden aus einer FRÜHEREN Runde (gesetzt bei der Rundenerzeugung aus
+     * `deregistered || out || failed` der Vorrunde), ist also kein Ergebnis dieses Laufs.
+     *
+     * Erlaubt nur, solange die Folgerunde noch keine erzeugten Läufe hat - dieselbe Stromrichtung
+     * wie [deleteCurrentRound]. Danach hat das Ergebnis die nächste Runde gesät, und der Weg führt
+     * wie bei jeder Korrektur über das Löschen der Folgerunde ([ResetBlockedByNextRound]).
+     *
+     * Bewusst ohne [checkUpdateMatchResult]: Das würde Freilose abweisen (wie bei [reopenMatch]),
+     * und auch ein versehentlich quittiertes Freilos soll sich zurücksetzen lassen.
+     */
+    fun resetMatch(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }.none { it.id == matchId }) {
+            CompetitionExecutionError.MatchNotFound
+        }
+
+        val currentRound = getCurrentAndNextRound(setupRounds).first
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
+        currentRound.matches.find { it.competitionSetupMatch == matchId }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.ResetBlockedByNextRound)
+
+        val now = LocalDateTime.now()
+        val teams = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+
+        !teams.traverse { team ->
+            KIO.comprehension {
+                // Der Fremdschlüssel steht auf `on delete set null`; die Spalte wird unten trotzdem
+                // ausdrücklich geleert - dasselbe Muster wie in [resetRaceClockerResults].
+                !TimecodeRepo.delete(team.id).orDie()
+                !CompetitionMatchTeamLapRepo.deleteByTeam(team.id).orDie()
+
+                !CompetitionMatchTeamRepo.update(team) {
+                    place = null
+                    placesCalculated = false
+                    failed = false
+                    failedReason = null
+                    timecode = null
+                    penaltySeconds = null
+                    penaltyNote = null
+                    startedAt = null
+                    updatedBy = userId
+                    updatedAt = now
+                }.orDie()
+
+                unit
+            }
+        }
+
+        !CompetitionMatchRepo.update(matchId) {
+            activatedAt = null
+            startedAt = null
+            finishedAt = null
+            raceclockerAutoPausedAt = null
+            raceclockerPollError = null
+            updatedBy = userId
+            updatedAt = now
+        }.orDie()
+
+        // Der Job merkt sich je Lauf den zuletzt geschriebenen Stand und schreibt nichts, solange
+        // der Feed unverändert ist. Nach dem Reset beschreibt dieser Merkposten nicht mehr, was in
+        // der Datenbank steht - ohne das Vergessen bliebe der Lauf leer, bis sich in RaceClocker
+        // irgendwann eine Zeile ändert (gleiche Falle wie bei [resumeRaceClockerAutoPull]).
+        RaceClockerPollService.forget(matchId)
+
+        logger.info { "Lauf $matchId zurückgesetzt - Ausführungszustand geleert, Aufstellung und Kennungen bleiben." }
+
+        noData
+    }
+
     fun updateMatchActivation(
         matchId: UUID,
         userId: UUID,
