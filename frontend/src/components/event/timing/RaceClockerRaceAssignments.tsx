@@ -18,10 +18,10 @@ type Props = {
 
 /**
  * Die umgedrehte Zuordnung: statt sich durch jeden Wettkampf zu klicken, hakt man am Rennen die
- * Wettkämpfe an (Wunsch vom 10.08.2026). Je Rennen zwei Mehrfachauswahlen — „gilt für Qualifikation"
- * und „gilt für Läufe". Ein Wettkampf, der bei einem Rennen angehakt wird, wandert von einem anderen
- * hierher (der letzte Klick gewinnt); abgewählt hat er kein Rennen mehr. Die Regel selbst rechnet das
- * Backend.
+ * Wettkämpfe an (Wunsch vom 10.08.2026). Je Rennen EINE Mehrfachauswahl — ein Wettkampf hat genau
+ * ein Rennen für alle seine Runden (seit dem 11.08.2026, RaceClocker kennt keine Startarten mehr).
+ * Ein Wettkampf, der bei einem Rennen angehakt wird, wandert von einem anderen hierher (der letzte
+ * Klick gewinnt); abgewählt hat er kein Rennen mehr. Die Regel selbst rechnet das Backend.
  *
  * Nach jeder Änderung wird die Liste vom Server neu geladen — nur so bildet sich das „Verschieben"
  * (der Wettkampf verschwindet dann beim anderen Rennen) ohne lokale Sonderlogik ab.
@@ -44,26 +44,19 @@ const RaceClockerRaceAssignments = ({eventId, races, onChanged}: Props) => {
     const label = (c: CompetitionRaceAssignmentDto) => `${c.identifier} ${c.name}`
 
     const byRace = useMemo(() => {
-        const map = new Map<string, {qualification: CompetitionRaceAssignmentDto[]; rounds: CompetitionRaceAssignmentDto[]}>()
-        for (const race of races) map.set(race.id, {qualification: [], rounds: []})
+        const map = new Map<string, CompetitionRaceAssignmentDto[]>()
+        for (const race of races) map.set(race.id, [])
         for (const c of assignments ?? []) {
-            if (c.raceQualification && map.has(c.raceQualification))
-                map.get(c.raceQualification)!.qualification.push(c)
-            if (c.raceRounds && map.has(c.raceRounds)) map.get(c.raceRounds)!.rounds.push(c)
+            if (c.race && map.has(c.race)) map.get(c.race)!.push(c)
         }
         return map
     }, [assignments, races])
 
-    const save = async (
-        raceId: string,
-        qualification: CompetitionRaceAssignmentDto[],
-        rounds: CompetitionRaceAssignmentDto[],
-    ) => {
+    const save = async (raceId: string, competitions: CompetitionRaceAssignmentDto[]) => {
         const {error} = await setRaceClockerRaceAssignments({
             path: {eventId, raceId},
             body: {
-                qualificationCompetitions: qualification.map(c => c.competitionId),
-                roundsCompetitions: rounds.map(c => c.competitionId),
+                competitions: competitions.map(c => c.competitionId),
             },
         })
         if (error) {
@@ -78,9 +71,6 @@ const RaceClockerRaceAssignments = ({eventId, races, onChanged}: Props) => {
     if (pending && !assignments) return <Throbber />
     if (!assignments || assignments.length === 0 || races.length === 0) return null
 
-    // Nur Wettkämpfe mit Qualifikationsrunde in der Qualifikations-Liste — die anderen haben keine.
-    const qualificationOptions = assignments.filter(c => c.hasQualificationRound)
-
     return (
         <Box>
             <Typography variant={'subtitle2'} gutterBottom>
@@ -90,52 +80,28 @@ const RaceClockerRaceAssignments = ({eventId, races, onChanged}: Props) => {
                 {t('event.timing.assignments.hint')}
             </Typography>
             <Stack spacing={3} sx={{mt: 2}}>
-                {races.map(race => {
-                    const current = byRace.get(race.id) ?? {qualification: [], rounds: []}
-                    return (
-                        <Box key={race.id}>
-                            <Typography variant={'body2'} fontWeight={600} gutterBottom>
-                                {race.name}
-                            </Typography>
-                            <Stack spacing={2}>
-                                <Autocomplete
-                                    multiple
-                                    size={'small'}
-                                    options={qualificationOptions}
-                                    getOptionLabel={label}
-                                    isOptionEqualToValue={(a, b) =>
-                                        a.competitionId === b.competitionId
-                                    }
-                                    value={current.qualification}
-                                    onChange={(_, value) => save(race.id, value, current.rounds)}
-                                    renderInput={params => (
-                                        <TextField
-                                            {...params}
-                                            label={t('event.timing.assignments.forQualification')}
-                                        />
-                                    )}
+                {races.map(race => (
+                    <Box key={race.id}>
+                        <Typography variant={'body2'} fontWeight={600} gutterBottom>
+                            {race.name}
+                        </Typography>
+                        <Autocomplete
+                            multiple
+                            size={'small'}
+                            options={assignments}
+                            getOptionLabel={label}
+                            isOptionEqualToValue={(a, b) => a.competitionId === b.competitionId}
+                            value={byRace.get(race.id) ?? []}
+                            onChange={(_, value) => save(race.id, value)}
+                            renderInput={params => (
+                                <TextField
+                                    {...params}
+                                    label={t('event.timing.assignments.competitions')}
                                 />
-                                <Autocomplete
-                                    multiple
-                                    size={'small'}
-                                    options={assignments}
-                                    getOptionLabel={label}
-                                    isOptionEqualToValue={(a, b) =>
-                                        a.competitionId === b.competitionId
-                                    }
-                                    value={current.rounds}
-                                    onChange={(_, value) => save(race.id, current.qualification, value)}
-                                    renderInput={params => (
-                                        <TextField
-                                            {...params}
-                                            label={t('event.timing.assignments.forRounds')}
-                                        />
-                                    )}
-                                />
-                            </Stack>
-                        </Box>
-                    )
-                })}
+                            )}
+                        />
+                    </Box>
+                ))}
             </Stack>
         </Box>
     )

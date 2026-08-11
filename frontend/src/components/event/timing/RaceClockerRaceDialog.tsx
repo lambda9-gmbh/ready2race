@@ -5,39 +5,32 @@ import {Stack} from '@mui/material'
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
-import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 import {useFeedback} from '@utils/hooks.ts'
 import {addRaceClockerRace, updateRaceClockerRace} from '@api/sdk.gen.ts'
-import {ApiError, RaceClockerRaceDto, RaceClockerStartMode} from '@api/types.gen.ts'
+import {ApiError, RaceClockerRaceDto} from '@api/types.gen.ts'
 
 type Form = {
     name: string
     resultsUrl: string
-    startMode: RaceClockerStartMode
     capturesLaps: boolean
 }
 
 const defaultValues: Form = {
     name: '',
     resultsUrl: '',
-    // Der häufigere Fall: Ein Zeitfahren-Rennen legt eine Regatta höchstens einmal an, Läufe-Rennen
-    // dagegen für jede Strecke.
-    startMode: 'WAVE',
     capturesLaps: false,
 }
 
 const mapFormToRequest = (form: Form) => ({
     name: form.name.trim(),
     resultsUrl: form.resultsUrl.trim(),
-    startMode: form.startMode,
     capturesLaps: form.capturesLaps,
 })
 
 const mapDtoToForm = (dto: RaceClockerRaceDto): Form => ({
     name: dto.name,
     resultsUrl: dto.resultsUrl,
-    startMode: dto.startMode,
     capturesLaps: dto.capturesLaps,
 })
 
@@ -105,17 +98,6 @@ const RaceClockerRaceDialog = (
             <Stack spacing={4}>
                 <FormInputText name={'name'} label={t('event.timing.races.name')} required />
                 <FormInputText name={'resultsUrl'} label={t('event.timing.races.url')} required />
-                <FormInputRadioButtonGroup
-                    name={'startMode'}
-                    label={t('event.timing.races.startMode')}
-                    options={[
-                        {
-                            id: 'INDIVIDUAL',
-                            label: t('event.timing.races.startModes.INDIVIDUAL'),
-                        },
-                        {id: 'WAVE', label: t('event.timing.races.startModes.WAVE')},
-                    ]}
-                />
                 <FormInputSwitch
                     name={'capturesLaps'}
                     label={t('event.timing.races.capturesLaps')}

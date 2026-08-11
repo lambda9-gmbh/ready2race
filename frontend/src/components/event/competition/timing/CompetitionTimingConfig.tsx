@@ -163,12 +163,8 @@ const CompetitionTimingConfig = () => {
             // Rennen erben nicht von der Veranstaltung; sie werden hier (oder am Rennen) gezielt
             // zugewiesen und starten deshalb leer.
             formContext.setValue(
-                'startlistConfigQualification',
-                configOption(startListConfigs, formValues.eventStartlistConfigQualification),
-            )
-            formContext.setValue(
-                'startlistConfigRounds',
-                configOption(startListConfigs, formValues.eventStartlistConfigRounds),
+                'startlistConfig',
+                configOption(startListConfigs, formValues.eventStartlistConfig),
             )
             formContext.setValue(
                 'resultImportConfig',
@@ -176,8 +172,7 @@ const CompetitionTimingConfig = () => {
             )
         } else {
             formContext.setValue('timingSystem', 'NONE')
-            formContext.setValue('startlistConfigQualification', null)
-            formContext.setValue('startlistConfigRounds', null)
+            formContext.setValue('startlistConfig', null)
             formContext.setValue('resultImportConfig', null)
         }
     }
@@ -218,24 +213,11 @@ const CompetitionTimingConfig = () => {
                             {t('event.competition.timing.system')}:{' '}
                             {t(systemLabelKeys[eventSystem])}
                         </Typography>
-                        {eventSystem === 'RACECLOCKER' && (
-                            <Typography variant={'body2'} color={'text.secondary'}>
-                                {t('event.competition.timing.startlistQualification')}:{' '}
-                                {configName(
-                                    startListConfigs,
-                                    formValues.eventStartlistConfigQualification,
-                                )}
-                            </Typography>
-                        )}
                         {eventSystem !== 'NONE' && (
                             <>
                                 <Typography variant={'body2'} color={'text.secondary'}>
-                                    {t(
-                                        eventSystem === 'RACECLOCKER'
-                                            ? 'event.competition.timing.startlistRounds'
-                                            : 'event.competition.timing.startlist',
-                                    )}
-                                    : {configName(startListConfigs, formValues.eventStartlistConfigRounds)}
+                                    {t('event.competition.timing.startlist')}:{' '}
+                                    {configName(startListConfigs, formValues.eventStartlistConfig)}
                                 </Typography>
                                 <Typography variant={'body2'} color={'text.secondary'}>
                                     {t('event.competition.timing.resultImport')}:{' '}
@@ -257,7 +239,7 @@ const CompetitionTimingConfig = () => {
                         Reichweite: Sie ist keine Abweichung von der Veranstaltung, sondern die
                         Zuordnung dieses Wettkampfs zu einem RaceClocker-Rennen. Dieselbe Zuordnung
                         lässt sich umgekehrt am Rennen anhaken (RaceClockerRaceAssignments) — beide
-                        Wege schreiben dieselben zwei Spalten, deshalb darf der Schalter sie nicht
+                        Wege schreiben dieselbe Spalte, deshalb darf der Schalter sie nicht
                         anfassen (Fehler vom 11.08.2026). */}
                     {effectiveSystem === 'RACECLOCKER' && (
                         <Stack spacing={4}>
@@ -270,16 +252,10 @@ const CompetitionTimingConfig = () => {
                                 </Typography>
                             </Box>
                             <FormInputAutocomplete
-                                name={'raceQualification'}
+                                name={'race'}
                                 options={raceOptions ?? []}
                                 loading={racesPending}
-                                label={t('event.competition.timing.raceQualification')}
-                            />
-                            <FormInputAutocomplete
-                                name={'raceRounds'}
-                                options={raceOptions ?? []}
-                                loading={racesPending}
-                                label={t('event.competition.timing.raceRounds')}
+                                label={t('event.competition.timing.race')}
                             />
                             <Divider />
                         </Stack>
@@ -347,23 +323,11 @@ const CompetitionTimingConfig = () => {
                                     <Trans i18nKey={'event.competition.timing.presets.hint'} />
                                 </Typography>
                             </Box>
-                            {effectiveSystem === 'RACECLOCKER' && (
-                                <FormInputAutocomplete
-                                    name={'startlistConfigQualification'}
-                                    options={startListConfigs ?? []}
-                                    loading={startListConfigsPending}
-                                    label={t('event.competition.timing.startlistQualification')}
-                                />
-                            )}
                             <FormInputAutocomplete
-                                name={'startlistConfigRounds'}
+                                name={'startlistConfig'}
                                 options={startListConfigs ?? []}
                                 loading={startListConfigsPending}
-                                label={t(
-                                    effectiveSystem === 'RACECLOCKER'
-                                        ? 'event.competition.timing.startlistRounds'
-                                        : 'event.competition.timing.startlist',
-                                )}
+                                label={t('event.competition.timing.startlist')}
                             />
                             {/* Die RaceClocker-Presets exportieren ohne Kopfzeile, weil RaceClocker
                                 eine solche Zeile als Teilnehmer importiert. Der Spaltenmapper zeigt
