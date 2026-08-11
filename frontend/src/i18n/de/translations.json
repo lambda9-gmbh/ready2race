@@ -1295,9 +1295,7 @@
           "title": "Dateiformate",
           "hint": "Welche Spalten exportiert und importiert werden. Abweichend nur nötig, wenn dieser Wettkampf in ein anderes Rennen im Zeitnahme-System läuft."
         },
-        "raceclockerHint": "RaceClocker-Rennen werden in den Einstellungen der Veranstaltung angelegt. Wählen Sie hier das Rennen dieses Wettkampfs für die Qualifikation und für die Läufe — dieselbe Zuordnung lässt sich auch umgekehrt am Rennen anhaken.",
-        "startlistQualification": "Startlisten Export Qualifikation",
-        "startlistRounds": "Startlisten Export Läufe",
+        "raceclockerHint": "RaceClocker-Rennen werden in den Einstellungen der Veranstaltung angelegt. Wählen Sie hier das eine Rennen dieses Wettkampfs — es gilt für die Qualifikation und alle übrigen Runden. Dieselbe Zuordnung lässt sich auch umgekehrt am Rennen anhaken.",
         "startlist": "Startlisten Export",
         "resultImport": "Rennergebnisse Import",
         "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
@@ -1308,16 +1306,13 @@
         },
         "incomplete": {
           "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
-          "startlistRounds": "Es fehlt der Startlisten Export – ohne ihn lässt sich keine Startliste als CSV exportieren.",
-          "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt der Startlisten Export für die Qualifikation – ohne ihn lässt sich für die Qualifikation keine Startliste exportieren.",
-          "link": "Zu den Zeitnahme-Einstellungen",
-          "raceRounds": "Es ist kein Rennen für die Läufe angewählt – ohne eines lassen sich keine Ergebnisse aus RaceClocker holen.",
-          "raceQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es ist kein Zeitfahren-Rennen angewählt – ohne eines lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen."
+          "startlist": "Es fehlt der Startlisten Export – ohne ihn lässt sich keine Startliste als CSV exportieren.",
+          "race": "Es ist kein Rennen angewählt – ohne eines lassen sich keine Ergebnisse aus RaceClocker holen.",
+          "link": "Zu den Zeitnahme-Einstellungen"
         },
         "saved": "Zeitnahme-Einstellungen gespeichert",
         "invalid": "Bitte wählen Sie ein Rennen dieser Veranstaltung aus.",
-        "raceQualification": "Rennen für Qualifikationsrunden",
-        "raceRounds": "Rennen für die Läufe"
+        "race": "RaceClocker-Rennen"
       },
       "places": {
         "places": "Platzierungen",
@@ -1494,7 +1489,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und haken Sie darunter je Rennen an, welche Wettkämpfe es für die Qualifikation und welche für die Läufe nutzen.",
+      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Langstrecke“ und „Kurzstrecke“ — und haken Sie darunter je Rennen an, welche Wettkämpfe es nutzen. Jeder Wettkampf fährt alle seine Runden in einem Rennen.",
       "autoPull": {
         "enabled": "Ergebnisse automatisch abrufen",
         "hint": "Läuft ein Lauf, holt der Server die Ergebnisse im schnellen Takt. Bevorstehende Läufe werden im langsamen Takt beobachtet, um ihren Start zu erkennen; beendete Läufe gar nicht.",
@@ -1503,8 +1498,6 @@
         "watchBefore": "Beobachten ab (Minuten vor der geplanten Startzeit)",
         "watchAfter": "Beobachten bis (Minuten nach der geplanten Startzeit)"
       },
-      "startlistQualification": "Startlisten Export Qualifikation",
-      "startlistRounds": "Startlisten Export Läufe",
       "startlist": "Startlisten Export",
       "resultImport": "Rennergebnisse Import",
       "formatsHint": {
@@ -1518,8 +1511,7 @@
         "title": "Wettkämpfe mit eigener Zeitnahme",
         "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
         "system": "eigenes System",
-        "startlistQualification": "eigener Startlisten Export Qualifikation",
-        "startlistRounds": "eigener Startlisten Export",
+        "startlist": "eigener Startlisten Export",
         "resultImport": "eigener Rennergebnisse Import"
       },
       "races": {
@@ -1529,11 +1521,6 @@
         "edit": "Rennen bearbeiten",
         "name": "Name",
         "url": "Ergebnis-Adresse",
-        "startMode": "Startart",
-        "startModes": {
-          "INDIVIDUAL": "Einzelstarts (Zeitfahren)",
-          "WAVE": "Start in mehreren Läufen"
-        },
         "capturesLaps": "Erfasst Rundenzeiten",
         "none": "Noch kein Rennen angelegt.",
         "deleteConfirm": "„{{name}}“ löschen? Solange noch ein Wettkampf darauf zeigt, lässt es sich nicht löschen — hake die Zuordnung vorher unten ab.",
@@ -1545,9 +1532,8 @@
       },
       "assignments": {
         "title": "Wettkämpfe je Rennen zuordnen",
-        "hint": "Umgekehrt zur Anwahl im Wettkampf: Hake hier je Rennen an, welche Wettkämpfe es nutzen. Ein Wettkampf hängt je Rundenart an genau einem Rennen — hakst du ihn hier an, wandert er von einem anderen hierher. Nicht angehakte Wettkämpfe haben für diese Rundenart kein Rennen.",
-        "forQualification": "Gilt für die Qualifikation von",
-        "forRounds": "Gilt für die Läufe von",
+        "hint": "Umgekehrt zur Anwahl im Wettkampf: Hake hier je Rennen an, welche Wettkämpfe es nutzen. Ein Wettkampf hängt mit allen seinen Runden an genau einem Rennen — hakst du ihn hier an, wandert er von einem anderen hierher. Nicht angehakte Wettkämpfe haben kein Rennen.",
+        "competitions": "Gilt für",
         "saved": "Zuordnung gespeichert."
       }
     },

@@ -3,13 +3,11 @@ package de.lambda9.ready2race.backend.app.raceclocker.entity
 /**
  * Wo ein Lauf in RaceClocker zu finden ist.
  *
- * Eine Veranstaltung führt benannte Rennen; Veranstaltung und Wettkampf wählen daraus je eines für
- * die Qualifikationsrunden und eines für alle übrigen Runden ([qualificationRace] / [roundsRace]).
- * [isQualification] entscheidet, welches für DIESEN Lauf gilt.
- *
- * Diese Anwahl ist eine Angabe, keine Garantie: Nichts hindert daran, eine als Zeitfahren gefahrene
- * Runde nicht als Qualifikation zu markieren. Deshalb bleibt das jeweils andere Rennen der Rückfall
- * — geholt wird es allerdings erst, wenn der Lauf im angewählten nicht auftaucht.
+ * Eine Veranstaltung führt benannte Rennen, und jeder Wettkampf wählt daraus genau EINES — für die
+ * Qualifikation und alle übrigen Runden gemeinsam. Die frühere Zweiteilung (Zeitfahren-Rennen für
+ * die Qualifikation, Läufe-Rennen für den Rest, mit dem jeweils anderen als Rückfall) ist mit dem
+ * RaceClocker-Update vom 11.08.2026 entfallen: Dort gibt es keine Startarten mehr, ein Rennen trägt
+ * alle Runden.
  */
 data class RaceClockerMatchTarget(
     /**
@@ -18,30 +16,21 @@ data class RaceClockerMatchTarget(
      * RaceClocker-Wellenname. Nur für Startlisten ohne Lauf-Kennung nötig.
      */
     val waveName: String?,
-    val isQualification: Boolean,
-    val qualificationRace: RaceClockerRaceRef?,
-    val roundsRace: RaceClockerRaceRef?,
+    /** Das angewählte Rennen dieses Wettkampfs — null, solange keines zugewiesen ist. */
+    val race: RaceClockerRaceRef?,
 ) {
-    val race: RaceClockerRaceRef? get() = if (isQualification) qualificationRace else roundsRace
-
-    val alternateRace: RaceClockerRaceRef? get() = if (isQualification) roundsRace else qualificationRace
-
     val resultsUrl: String? get() = race?.resultsUrl
 
     /**
-     * Null, wenn es kein anderes Rennen gibt — oder wenn beide Anwahlen auf dieselbe Adresse zeigen.
-     * Entdoppelt wird über die Adresse und nicht über die Kennung, weil geholt wird, was die Adresse
-     * hergibt: Ein zweiter Abruf derselben Adresse brächte dieselbe Antwort.
+     * Höchstens ein Eintrag — als Liste geführt, weil Abruf und Fehlermeldung
+     * ([de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerError.MatchNotInFeed])
+     * listenförmig bleiben: Die Schnittstelle nach außen ändert sich damit nicht, nur ihre Länge.
      */
-    val alternateResultsUrl: String? get() = alternateRace?.resultsUrl?.takeIf { it != resultsUrl }
-
-    /** Angewähltes Rennen zuerst, damit eine richtige Anwahl genau einen Abruf kostet. */
-    val candidateUrls: List<String> get() = listOfNotNull(resultsUrl, alternateResultsUrl)
+    val candidateUrls: List<String> get() = listOfNotNull(resultsUrl)
 
     /**
-     * Dieselbe Reihenfolge wie [candidateUrls], aber lesbar. Die Fehlermeldung braucht das: „Lauf im
+     * Dieselbe Form wie [candidateUrls], aber lesbar. Die Fehlermeldung braucht das: „Lauf im
      * Rennen Kurzstrecke nicht gefunden" ist am Renntag brauchbar, eine nackte URL nicht.
      */
-    val candidateRaceNames: List<String>
-        get() = listOfNotNull(race, alternateRace?.takeIf { alternateResultsUrl != null }).map { it.name }
+    val candidateRaceNames: List<String> get() = listOfNotNull(race?.name)
 }

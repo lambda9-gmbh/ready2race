@@ -1103,20 +1103,11 @@ object CompetitionExecutionService {
         val target = !CompetitionMatchRepo.getForRaceClockerPull(matchId).orDie()
             .onNullFail { CompetitionExecutionError.MatchNotFound }
 
-        val urls = target.candidateUrls
-        if (urls.isEmpty()) return KIO.fail(RaceClockerError.UrlMissing)
+        // Genau ein Rennen je Wettkampf (11.08.2026) - gibt es keines, gibt es nichts zu holen.
+        val rawUrl = target.resultsUrl ?: return KIO.fail(RaceClockerError.UrlMissing)
 
-        val teams = match.teams.filter { !it.deregistered }
-
-        // The round type only decides which race to look into *first*. Is a round timed as a time trial
-        // without being marked as a qualification round (or the other way around), the match is simply
-        // found in the other race instead of failing with a misleading error.
-        var rows: List<RaceClockerFeedRow> = emptyList()
-        for (rawUrl in urls) {
-            val url = !RaceClockerFeed.normalizeUrl(rawUrl)
-            rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
-            if (assignFeedRows(rows, teams, target.waveName).isNotEmpty()) break
-        }
+        val url = !RaceClockerFeed.normalizeUrl(rawUrl)
+        val rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
 
         return applyRaceClockerRows(match, matchId, target, rows, userId)
     }

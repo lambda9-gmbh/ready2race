@@ -62,7 +62,6 @@ object RaceClockerRaceService {
                 event = eventId,
                 name = name,
                 resultsUrl = url,
-                startMode = request.startMode.name,
                 capturesLaps = request.capturesLaps,
                 position = position,
                 createdAt = now,
@@ -89,7 +88,6 @@ object RaceClockerRaceService {
         !RACECLOCKER_RACE.update({
             this.name = name
             resultsUrl = url
-            startMode = request.startMode.name
             capturesLaps = request.capturesLaps
             updatedBy = userId
             updatedAt = LocalDateTime.now()
@@ -102,8 +100,8 @@ object RaceClockerRaceService {
 
     /**
      * Löschen entwertet die Anwahl, statt sie zu blockieren (`on delete set null` in der Migration).
-     * Ein Wettkampf, der auf das gelöschte Rennen zeigte, erbt danach wieder die Voreinstellung der
-     * Veranstaltung — und ein Lauf ohne jedes Rennen wird vom Abruf still übersprungen.
+     * Ein Wettkampf, der auf das gelöschte Rennen zeigte, hat danach kein Rennen mehr — und ein
+     * Lauf ohne Rennen wird vom Abruf still übersprungen.
      */
     fun deleteRace(eventId: UUID, raceId: UUID): App<ServiceError, ApiResponse.NoData> =
         KIO.comprehension {
@@ -126,16 +124,13 @@ object RaceClockerRaceService {
 
     /**
      * Setzt die Zuordnung EINES Rennens neu (umgedreht: am Rennen die Wettkämpfe anhaken). Die
-     * „verschieben"-Regel rechnet [RaceClockerAssignmentPlan]; hier steht nur das Schreiben. Beide
-     * Rundenarten in einem Zug, damit ein Wettkampf, der bei diesem Rennen für Qualifikation UND
-     * Läufe angehakt ist, in einem Aufruf beides bekommt.
+     * „verschieben"-Regel rechnet [RaceClockerAssignmentPlan]; hier steht nur das Schreiben.
      */
     fun setRaceAssignments(
         eventId: UUID,
         raceId: UUID,
         userId: UUID,
-        qualificationCompetitions: List<UUID>,
-        roundsCompetitions: List<UUID>,
+        competitions: List<UUID>,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         val belongs = !RaceClockerRaceRepo.belongsToEvent(raceId, eventId).orDie()
         if (!belongs) return@comprehension KIO.fail(RaceClockerRaceError.NotFound)
@@ -144,23 +139,16 @@ object RaceClockerRaceService {
         val known = assignments.map { it.competitionId }.toSet()
 
         // Nur bekannte Wettkämpfe der Veranstaltung — ein untergeschobener Fremd-Id darf nichts setzen.
-        val qualiChanges = RaceClockerAssignmentPlan.changes(
+        val changes = RaceClockerAssignmentPlan.changes(
             raceId = raceId,
-            selected = qualificationCompetitions.filter { it in known }.toSet(),
-            current = assignments.associate { it.competitionId to it.raceQualification },
-        )
-        val roundsChanges = RaceClockerAssignmentPlan.changes(
-            raceId = raceId,
-            selected = roundsCompetitions.filter { it in known }.toSet(),
-            current = assignments.associate { it.competitionId to it.raceRounds },
+            selected = competitions.filter { it in known }.toSet(),
+            current = assignments.associate { it.competitionId to it.race },
         )
 
         val now = LocalDateTime.now()
-        val touched = qualiChanges.keys + roundsChanges.keys
-        !touched.toList().traverse { competitionId ->
+        !changes.keys.toList().traverse { competitionId ->
             CompetitionRepo.update(competitionId) {
-                if (competitionId in qualiChanges) raceclockerRaceQualification = qualiChanges[competitionId]
-                if (competitionId in roundsChanges) raceclockerRaceRounds = roundsChanges[competitionId]
+                raceclockerRace = changes[competitionId]
                 updatedBy = userId
                 updatedAt = now
             }.orDie()

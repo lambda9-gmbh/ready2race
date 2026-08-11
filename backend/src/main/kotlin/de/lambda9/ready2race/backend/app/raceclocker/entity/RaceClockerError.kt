@@ -8,9 +8,8 @@ import io.ktor.http.*
 sealed interface RaceClockerError : ServiceError {
 
     /**
-     * Neither RaceClocker race is selected for this competition. Which of the two a round would use no
-     * longer matters here: the pull falls back to the other race anyway, so it only gives up when both
-     * are missing.
+     * No RaceClocker race is selected for this competition - since 2026-08-11 a competition has
+     * exactly one race for all of its rounds, so there is nothing to fall back to.
      */
     data object UrlMissing : RaceClockerError
 
@@ -21,12 +20,13 @@ sealed interface RaceClockerError : ServiceError {
     data class MalformedFeed(val reason: String) : RaceClockerError
 
     /**
-     * None of the selected races contains a row for any team of this match. Either the start list for
-     * this heat has not been imported into RaceClocker yet, or it was exported before the round was
+     * The selected race contains no row for any team of this match. Either the start list for this
+     * heat has not been imported into RaceClocker yet, or it was exported before the round was
      * re-created and carries identifiers that no longer exist.
      *
-     * [raceNames] rides along because a race name is what an operator can act on at the regatta; a
-     * bare URL is not.
+     * [urls] and [raceNames] stay list-shaped (with at most one entry each) so the error payload
+     * keeps its wire format; the race name is what an operator can act on at the regatta, a bare
+     * URL is not.
      */
     data class MatchNotInFeed(val urls: List<String>, val raceNames: List<String>) : RaceClockerError
 

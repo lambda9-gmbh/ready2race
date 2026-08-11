@@ -25,7 +25,15 @@ data class RaceClockerFeedRow(
      */
     val rank: Int?,
     val bib: Int?,
-    /** `null` for time trial races, which have no waves. */
+    /**
+     * `null` when the feed carries no wave column.
+     *
+     * ABSICHTLICH TOLERANT: RaceClocker hat die Unterscheidung Zeitfahren/Läufe zwar abgeschafft
+     * (11.08.2026), aber der Parser bleibt gegenüber BEIDEN Feed-Formen nachsichtig - mit und ohne
+     * Wellen-Spalte. Das ist die bewusste Rückfalltür: Sollte ein Feed (Altbestand, Export einer
+     * alten Startliste, Rolle rückwärts bei RaceClocker) wieder ohne Welle ankommen, darf das den
+     * Abruf nicht reißen; die Zuordnung fällt dann schlicht auf die Kennungen in [ids] zurück.
+     */
     val wave: String?,
     /**
      * Every UUID found in RaceClocker's "Extra info" - a match team id, a registration id, or both,

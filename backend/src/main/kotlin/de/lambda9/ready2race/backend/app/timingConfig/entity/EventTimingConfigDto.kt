@@ -13,8 +13,7 @@ import java.util.UUID
  */
 data class EventTimingConfigDto(
     val timingSystem: TimingSystem?,
-    val startlistConfigQualification: UUID?,
-    val startlistConfigRounds: UUID?,
+    val startlistConfig: UUID?,
     val resultImportConfig: UUID?,
     val autoPull: Boolean,
     val intervalActiveSeconds: Int,

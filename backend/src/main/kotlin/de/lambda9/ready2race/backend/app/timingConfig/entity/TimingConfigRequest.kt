@@ -11,16 +11,14 @@ import java.util.UUID
  */
 data class TimingConfigRequest(
     val timingSystem: TimingSystem?,
-    /** Das angewählte RaceClocker-Rennen je Rundenart; null heißt „erbt von der Veranstaltung". */
-    val raceQualification: UUID?,
-    val raceRounds: UUID?,
-    val startlistConfigQualification: UUID?,
-    val startlistConfigRounds: UUID?,
+    /** Das eine angewählte RaceClocker-Rennen; null heißt „kein Rennen zugewiesen". */
+    val race: UUID?,
+    val startlistConfig: UUID?,
     val resultImportConfig: UUID?,
 ) : Validatable {
 
     /**
-     * Nichts zu prüfen: Die Adressen liegen nicht mehr hier, sondern am Rennen, und ob ein
+     * Nichts zu prüfen: Die Adresse liegt nicht mehr hier, sondern am Rennen, und ob ein
      * angewähltes Rennen zu dieser Veranstaltung gehört, kann nur der Service beantworten -- er
      * kennt die Veranstaltung, dieses Objekt nicht.
      */
@@ -31,10 +29,8 @@ data class TimingConfigRequest(
         val example
             get() = TimingConfigRequest(
                 timingSystem = TimingSystem.RACECLOCKER,
-                raceQualification = UUID.randomUUID(),
-                raceRounds = UUID.randomUUID(),
-                startlistConfigQualification = UUID.randomUUID(),
-                startlistConfigRounds = UUID.randomUUID(),
+                race = UUID.randomUUID(),
+                startlistConfig = UUID.randomUUID(),
                 resultImportConfig = UUID.randomUUID(),
             )
     }

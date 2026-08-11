@@ -904,17 +904,9 @@ export type CompetitionRaceAssignmentDto = {
     identifier: string
     name: string
     /**
-     * Whether the competition's setup even has a qualification round
+     * The one selected race; null means no race is assigned
      */
-    hasQualificationRound: boolean
-    /**
-     * Explicitly chosen qualification race; null means it inherits the event default
-     */
-    raceQualification?: string | null
-    /**
-     * Explicitly chosen rounds race; null means it inherits the event default
-     */
-    raceRounds?: string | null
+    race?: string | null
 }
 
 export type CompetitionRegistrationDto = {
@@ -1194,7 +1186,7 @@ export type CompetitionTemplateDto = {
 }
 
 /**
- * A competition that overrides the event-wide timing defaults. Only the inheritable fields are listed; the column presets are per competition anyway and therefore no deviation. A null timingSystem with a URL set is a partial override - the competition inherits the system and has a race of its own.
+ * A competition that overrides the event-wide timing defaults. Only the inheritable fields are listed - system, start list export and result import. The race selection is no deviation: it is always assigned per competition, there is no event default to deviate from.
  *
  */
 export type CompetitionTimingDeviationDto = {
@@ -1202,8 +1194,7 @@ export type CompetitionTimingDeviationDto = {
     identifier: string
     name: string
     timingSystem?: TimingSystem | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
 }
 
@@ -1758,8 +1749,7 @@ export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' 
  */
 export type EventTimingConfigDto = {
     timingSystem?: TimingSystem | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
     /**
      * Whether the background job pulls results for this event on its own.
@@ -1793,8 +1783,7 @@ export type EventTimingConfigDto = {
  */
 export type EventTimingConfigRequest = {
     timingSystem?: TimingSystem | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
     /**
      * Whether the background job pulls results for this event on its own.
@@ -3000,20 +2989,15 @@ export type QrCodePublicResponse = {
 
 export type RaceClockerRaceAssignmentsRequest = {
     /**
-     * Competitions that use this race for their qualification
+     * Competitions that use this race for all of their rounds
      */
-    qualificationCompetitions: Array<string>
-    /**
-     * Competitions that use this race for their remaining rounds
-     */
-    roundsCompetitions: Array<string>
+    competitions: Array<string>
 }
 
 export type RaceClockerRaceDto = {
     id: string
     name: string
     resultsUrl: string
-    startMode: RaceClockerStartMode
     capturesLaps: boolean
     position: number
 }
@@ -3021,11 +3005,8 @@ export type RaceClockerRaceDto = {
 export type RaceClockerRaceRequest = {
     name: string
     resultsUrl: string
-    startMode: RaceClockerStartMode
     capturesLaps: boolean
 }
-
-export type RaceClockerStartMode = 'INDIVIDUAL' | 'WAVE'
 
 export type RatingCategoriesToEventRequest = {
     ratingCategories: Array<RatingCategoryToEventRequest>
@@ -3473,33 +3454,19 @@ export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'
 export type TimingConfigDto = {
     timingSystem?: TimingSystem | null
     /**
-     * The selected RaceClocker race for qualification rounds.
+     * The one selected RaceClocker race of this competition - qualification and all other rounds alike.
      */
-    raceQualification?: string | null
-    /**
-     * The selected RaceClocker race for all other rounds.
-     */
-    raceRounds?: string | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    race?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
-    /**
-     * Whether this competition's setup contains a qualification round. Read-only; it comes along with the timing config because both the timing tab and the execution tab already load it, and both need to know whether the qualification start list preset and the qualification race are required at all.
-     *
-     */
-    hasQualificationRound?: boolean
     /**
      * Event-wide default timing system; the competition inherits it while its own field is null.
      */
     eventTimingSystem?: TimingSystem | null
     /**
-     * Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
+     * Event-wide default start list export; inherited while the competition's own field is null.
      */
-    eventStartlistConfigQualification?: string | null
-    /**
-     * Event-wide default start list export for the other rounds; inherited while the competition's own field is null.
-     */
-    eventStartlistConfigRounds?: string | null
+    eventStartlistConfig?: string | null
     /**
      * Event-wide default race results import; inherited while the competition's own field is null.
      */
@@ -3507,21 +3474,16 @@ export type TimingConfigDto = {
 }
 
 /**
- * Every field is optional - the RaceClocker races only exist shortly before the regatta, so an incomplete configuration must be storable. Both race ids must belong to this competition's event; the service rejects a race from another event.
+ * Every field is optional - the RaceClocker races only exist shortly before the regatta, so an incomplete configuration must be storable. The race id must belong to this competition's event; the service rejects a race from another event.
  *
  */
 export type TimingConfigRequest = {
     timingSystem?: TimingSystem | null
     /**
-     * The selected RaceClocker race for qualification rounds.
+     * The one selected RaceClocker race - qualification and all other rounds alike.
      */
-    raceQualification?: string | null
-    /**
-     * The selected RaceClocker race for all other rounds.
-     */
-    raceRounds?: string | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    race?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
 }
 

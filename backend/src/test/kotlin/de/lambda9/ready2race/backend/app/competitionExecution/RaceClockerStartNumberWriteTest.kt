@@ -63,9 +63,7 @@ class RaceClockerStartNumberWriteTest {
     /** Ein Lauf ohne Wellenbezeichnung — die Zuordnung läuft über die IDs, nicht über die Welle. */
     private val target = RaceClockerMatchTarget(
         waveName = null,
-        isQualification = false,
-        qualificationRace = null,
-        roundsRace = RaceClockerRaceRef(UUID.randomUUID(), "Kurzstrecke", "https://www.raceclocker.com/heats"),
+        race = RaceClockerRaceRef(UUID.randomUUID(), "Kurzstrecke", "https://www.raceclocker.com/heats"),
     )
 
     private data class SeededTeam(

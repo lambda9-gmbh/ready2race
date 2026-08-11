@@ -1295,9 +1295,7 @@
           "title": "Filformater",
           "hint": "Hvilke kolonner der eksporteres og importeres. Kun nødvendigt separat, hvis denne konkurrence kører ind i et andet løb i tidtagningssystemet."
         },
-        "raceclockerHint": "RaceClocker-løb oprettes i stævnets indstillinger. Vælg denne konkurrences løb til kvalifikation og til alle øvrige runder her — den samme tildeling kan også sættes omvendt, ved løbet.",
-        "startlistQualification": "Startliste-eksport til kvalifikation",
-        "startlistRounds": "Startliste-eksport til øvrige runder",
+        "raceclockerHint": "RaceClocker-løb oprettes i stævnets indstillinger. Vælg denne konkurrences ene løb her — det gælder for kvalifikationen og alle øvrige runder. Den samme tildeling kan også sættes omvendt, ved løbet.",
         "startlist": "Startliste-eksport",
         "resultImport": "Løbsresultater-import",
         "importHint": "RaceClocker-skabelonerne eksporterer uden overskriftsrække, fordi RaceClocker ellers importerer den som deltager. Tilknyt derfor kolonnerne efter deres rækkefølge ved import i RaceClocker – især den interne id til \"Extra info\".",
@@ -1308,16 +1306,13 @@
         },
         "incomplete": {
           "title": "Denne tidtagning er endnu ikke klar til brug",
-          "startlistRounds": "Startlistepresettet mangler – uden det kan der ikke eksporteres en startliste som CSV.",
-          "startlistQualification": "Denne konkurrence har en kvalifikationsrunde, men startlistepresettet til kvalifikationen mangler – uden det kan der ikke eksporteres en startliste til kvalifikationen.",
-          "link": "Gå til tidtagningsindstillingerne",
-          "raceRounds": "Der er ikke valgt et løb til heatene – uden et kan der ikke hentes resultater fra RaceClocker.",
-          "raceQualification": "Denne konkurrence har en kvalifikationsrunde, men der er ikke valgt et enkeltstart-løb – uden et kan der ikke hentes resultater fra RaceClocker til kvalifikationen."
+          "startlist": "Startlistepresettet mangler – uden det kan der ikke eksporteres en startliste som CSV.",
+          "race": "Der er ikke valgt et løb – uden et kan der ikke hentes resultater fra RaceClocker.",
+          "link": "Gå til tidtagningsindstillingerne"
         },
         "saved": "Tidtagningsindstillinger gemt",
         "invalid": "Vælg venligst et løb, der hører til dette stævne.",
-        "raceQualification": "Løb til kvalifikationsrunder",
-        "raceRounds": "Løb til alle øvrige runder"
+        "race": "RaceClocker-løb"
       },
       "places": {
         "places": "Placeringer",
@@ -1494,7 +1489,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker-løb hører til stævnet, ikke til den enkelte konkurrence. Opret hvert løb én gang her — for eksempel „Time trials“, „Langdistance“ og „Kortdistance“ — og markér nedenfor pr. løb, hvilke konkurrencer der bruger det til kvalifikationsrunder, og hvilke til alle øvrige runder.",
+      "raceclockerHint": "RaceClocker-løb hører til stævnet, ikke til den enkelte konkurrence. Opret hvert løb én gang her — for eksempel „Langdistance“ og „Kortdistance“ — og markér nedenfor pr. løb, hvilke konkurrencer der bruger det. Hver konkurrence kører alle sine runder i ét løb.",
       "autoPull": {
         "enabled": "Hent resultater automatisk",
         "hint": "Når et heat er i gang, henter serveren resultaterne i det hurtige interval. Kommende heats overvåges i det langsomme interval for at opdage deres start; afsluttede heats hentes ikke.",
@@ -1503,8 +1498,6 @@
         "watchBefore": "Overvåg fra (minutter før planlagt start)",
         "watchAfter": "Overvåg til (minutter efter planlagt start)"
       },
-      "startlistQualification": "Startliste-eksport til kvalifikation",
-      "startlistRounds": "Startliste-eksport til øvrige runder",
       "startlist": "Startliste-eksport",
       "resultImport": "Løbsresultater-import",
       "formatsHint": {
@@ -1518,8 +1511,7 @@
         "title": "Konkurrencer med egen tidtagning",
         "none": "Ingen konkurrence afviger – alle følger denne standard.",
         "system": "eget system",
-        "startlistQualification": "egen startliste-eksport til kvalifikation",
-        "startlistRounds": "egen startliste-eksport",
+        "startlist": "egen startliste-eksport",
         "resultImport": "egen løbsresultater-import"
       },
       "races": {
@@ -1529,11 +1521,6 @@
         "edit": "Rediger løb",
         "name": "Navn",
         "url": "Resultatadresse",
-        "startMode": "Starttype",
-        "startModes": {
-          "INDIVIDUAL": "Individuelle starter (tidsløb)",
-          "WAVE": "Start i flere heat"
-        },
         "capturesLaps": "Registrerer omgangstider",
         "none": "Endnu intet løb oprettet.",
         "deleteConfirm": "Slet „{{name}}“? Så længe en konkurrence stadig peger på det, kan det ikke slettes — fjern tildelingen nedenfor først.",
@@ -1545,9 +1532,8 @@
       },
       "assignments": {
         "title": "Tildel konkurrencer pr. løb",
-        "hint": "Omvendt af valget i konkurrencen: markér her, hvilke konkurrencer der bruger hvert løb. En konkurrence hører til præcis ét løb pr. rundetype — markerer du den her, flytter den fra et andet. Umarkerede konkurrencer har intet løb for den rundetype.",
-        "forQualification": "Gælder for kvalifikationen af",
-        "forRounds": "Gælder for løbene af",
+        "hint": "Omvendt af valget i konkurrencen: markér her, hvilke konkurrencer der bruger hvert løb. En konkurrence hører med alle sine runder til præcis ét løb — markerer du den her, flytter den fra et andet. Umarkerede konkurrencer har intet løb.",
+        "competitions": "Gælder for",
         "saved": "Tildeling gemt."
       }
     },
