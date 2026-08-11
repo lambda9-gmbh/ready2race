@@ -166,6 +166,12 @@ data class LiveDashboardTeamDto(
      * Dieselben Laps, die auch die Boards zeigen; das Dashboard listet sie in der Zeile mit.
      */
     val laps: List<MatchTeamLapDto> = emptyList(),
+    /**
+     * Schiedsrichter-Notizen zu diesem Boot, älteste zuerst - Kommunikation zwischen
+     * Schiedsrichtern, keine Wertung. Nur hier im internen Dashboard-Poll; die öffentlichen
+     * eventInfo-/Board-Endpunkte bekommen sie bewusst nicht.
+     */
+    val notes: List<MatchTeamNoteDto> = emptyList(),
 )
 
 /** Was der Detail-Dialog zusätzlich braucht; wird einzeln je Mannschaft geladen. */
