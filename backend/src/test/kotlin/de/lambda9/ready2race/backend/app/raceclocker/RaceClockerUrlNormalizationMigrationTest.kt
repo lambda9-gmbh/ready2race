@@ -67,22 +67,18 @@ class RaceClockerUrlNormalizationMigrationTest {
                     racesWithUrl(conn, "7c854955"),
                 )
 
-                // Zeiger auf das gelöschte Duplikat sind auf die Überlebende umgehängt; Zeiger auf
-                // unbeteiligte Rennen stehen unverändert.
-                assertEquals(
-                    soloId to wwwTwinId,
-                    queryPair(
-                        conn,
-                        "select raceclocker_race_qualification, raceclocker_race_rounds " +
-                            "from ready2race.event where id = ?",
-                        eventId,
-                    ),
-                )
+                // Zeiger auf das gelöschte Duplikat sind auf die Überlebende umgehängt. Die alten
+                // Spaltenpaare existieren am Ende der Kette nicht mehr: V202608111200 überträgt die
+                // Veranstaltungs-Vorgabe auf den Wettkampf, V202608111500 faltet die Paare auf EIN
+                // `competition.raceclocker_race` (coalesce, Läufe-Rennen gewinnt) und lässt die
+                // Veranstaltungs-Spalten ersatzlos fallen. Also steht hier der Endzustand: Der
+                // Wettkampf zeigt auf die überlebende www-Zeile - das umgehängte Läufe-Rennen
+                // gewinnt gegen das Zeitfahren-Rennen der Veranstaltung.
                 assertEquals(
                     wwwTwinId,
                     querySingleUuid(
                         conn,
-                        "select raceclocker_race_rounds from ready2race.competition where id = ?",
+                        "select raceclocker_race from ready2race.competition where id = ?",
                         competitionId,
                     ),
                 )
@@ -173,15 +169,6 @@ class RaceClockerUrlNormalizationMigrationTest {
                         add(rs.getObject(1, UUID::class.java) to rs.getString(2))
                     }
                 }
-            }
-        }
-
-    private fun queryPair(conn: Connection, sql: String, id: UUID): Pair<UUID?, UUID?> =
-        conn.prepareStatement(sql).use { stmt ->
-            stmt.setObject(1, id)
-            stmt.executeQuery().use { rs ->
-                rs.next()
-                rs.getObject(1, UUID::class.java) to rs.getObject(2, UUID::class.java)
             }
         }
 

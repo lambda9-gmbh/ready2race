@@ -2,10 +2,8 @@ package de.lambda9.ready2race.backend.app.raceclocker.control
 
 import de.lambda9.ready2race.backend.app.raceclocker.entity.CompetitionRaceAssignmentDto
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceDto
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerStartMode
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
-import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
 import de.lambda9.ready2race.backend.database.generated.tables.references.RACECLOCKER_RACE
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -18,7 +16,6 @@ object RaceClockerRaceRepo {
             RACECLOCKER_RACE.ID,
             RACECLOCKER_RACE.NAME,
             RACECLOCKER_RACE.RESULTS_URL,
-            RACECLOCKER_RACE.START_MODE,
             RACECLOCKER_RACE.CAPTURES_LAPS,
             RACECLOCKER_RACE.POSITION,
         )
@@ -31,7 +28,6 @@ object RaceClockerRaceRepo {
                     id = it[RACECLOCKER_RACE.ID]!!,
                     name = it[RACECLOCKER_RACE.NAME]!!,
                     resultsUrl = it[RACECLOCKER_RACE.RESULTS_URL]!!,
-                    startMode = RaceClockerStartMode.valueOf(it[RACECLOCKER_RACE.START_MODE]!!),
                     capturesLaps = it[RACECLOCKER_RACE.CAPTURES_LAPS]!!,
                     position = it[RACECLOCKER_RACE.POSITION]!!,
                 )
@@ -39,26 +35,16 @@ object RaceClockerRaceRepo {
     }
 
     /**
-     * Alle Wettkämpfe einer Veranstaltung mit ihrer expliziten RaceClocker-Anwahl — die Datenbasis
-     * für die umgekehrte Zuordnung (am Rennen die Wettkämpfe anhaken). `hasQualificationRound`
-     * kommt als EXISTS mit, damit die Oberfläche die Qualifikations-Liste nur mit Wettkämpfen füllt,
-     * die überhaupt eine Qualifikationsrunde fahren.
+     * Alle Wettkämpfe einer Veranstaltung mit ihrer RaceClocker-Anwahl — die Datenbasis für die
+     * umgekehrte Zuordnung (am Rennen die Wettkämpfe anhaken). Ein Wettkampf hängt an genau einem
+     * Rennen für alle seine Runden; eine getrennte Qualifikations-Liste gibt es nicht mehr.
      */
     fun getCompetitionAssignments(eventId: UUID) = Jooq.query {
         select(
             COMPETITION.ID,
             COMPETITION_PROPERTIES.IDENTIFIER,
             COMPETITION_PROPERTIES.NAME,
-            COMPETITION.RACECLOCKER_RACE_QUALIFICATION,
-            COMPETITION.RACECLOCKER_RACE_ROUNDS,
-            DSL.field(
-                DSL.exists(
-                    selectOne()
-                        .from(COMPETITION_SETUP_ROUND)
-                        .where(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
-                        .and(COMPETITION_SETUP_ROUND.IS_QUALIFICATION.isTrue)
-                )
-            ).`as`("has_qualification_round"),
+            COMPETITION.RACECLOCKER_RACE,
         )
             .from(COMPETITION)
             .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
@@ -69,9 +55,7 @@ object RaceClockerRaceRepo {
                     competitionId = it[COMPETITION.ID]!!,
                     identifier = it[COMPETITION_PROPERTIES.IDENTIFIER]!!,
                     name = it[COMPETITION_PROPERTIES.NAME]!!,
-                    hasQualificationRound = it.get("has_qualification_round", Boolean::class.java) == true,
-                    raceQualification = it[COMPETITION.RACECLOCKER_RACE_QUALIFICATION],
-                    raceRounds = it[COMPETITION.RACECLOCKER_RACE_ROUNDS],
+                    race = it[COMPETITION.RACECLOCKER_RACE],
                 )
             }
     }

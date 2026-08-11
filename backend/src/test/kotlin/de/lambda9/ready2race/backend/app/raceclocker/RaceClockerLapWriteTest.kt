@@ -33,9 +33,7 @@ class RaceClockerLapWriteTest {
 
     private val target = RaceClockerMatchTarget(
         waveName = "08:50 Vorlauf 2 DM",
-        isQualification = false,
-        qualificationRace = null,
-        roundsRace = RaceClockerRaceRef(
+        race = RaceClockerRaceRef(
             UUID.randomUUID(),
             "Langstrecke",
             "https://www.raceclocker.com/7aa7e86d",

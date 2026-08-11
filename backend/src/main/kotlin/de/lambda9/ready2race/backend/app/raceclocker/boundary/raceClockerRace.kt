@@ -51,7 +51,7 @@ fun Route.raceClockerRace() {
                     RaceClockerRaceService.updateRace(eventId, raceId, user.id!!, body)
                 }
             }
-            // Zuordnung dieses Rennens setzen (umgedreht): die angehakten Wettkämpfe je Rundenart.
+            // Zuordnung dieses Rennens setzen (umgedreht): die angehakten Wettkämpfe.
             put("/assignments") {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
@@ -63,8 +63,7 @@ fun Route.raceClockerRace() {
                         eventId = eventId,
                         raceId = raceId,
                         userId = user.id!!,
-                        qualificationCompetitions = body.qualificationCompetitions,
-                        roundsCompetitions = body.roundsCompetitions,
+                        competitions = body.competitions,
                     )
                 }
             }

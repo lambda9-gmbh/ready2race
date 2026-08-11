@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerRaceService
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceError
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRequest
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerStartMode
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceclockerRaceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
@@ -38,7 +37,6 @@ class RaceClockerRaceServiceTest {
                 event = eventId,
                 name = "Läufe",
                 resultsUrl = url,
-                startMode = RaceClockerStartMode.WAVE.name,
                 capturesLaps = false,
                 position = 1,
                 createdAt = now,
@@ -51,7 +49,6 @@ class RaceClockerRaceServiceTest {
     private fun request(url: String) = RaceClockerRaceRequest(
         name = "Kurzstrecke",
         resultsUrl = url,
-        startMode = RaceClockerStartMode.WAVE,
         capturesLaps = false,
     )
 

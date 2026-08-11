@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerStartMode
 import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
@@ -15,6 +14,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventScheduleSlotRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceclockerRaceRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistExportConfigRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
@@ -24,6 +24,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.COMPET
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_SCHEDULE_SLOT
 import de.lambda9.ready2race.backend.database.generated.tables.references.RACECLOCKER_RACE
+import de.lambda9.ready2race.backend.database.generated.tables.references.STARTLIST_EXPORT_CONFIG
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.testing.kio.TestComprehensionScope
@@ -33,7 +34,6 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * [RaceClockerPollRepo.getCandidates] gegen eine echte Datenbank.
@@ -48,14 +48,12 @@ class RaceClockerPollRepoTest {
 
     private val now: LocalDateTime = LocalDateTime.of(2026, 8, 14, 10, 0)
 
-    private val heatsUrl = "https://www.raceclocker.com/heats"
-    private val timeTrialUrl = "https://www.raceclocker.com/time-trial"
+    private val raceUrl = "https://www.raceclocker.com/race"
 
     private fun TestComprehensionScope<JEnv>.insertRace(
         eventId: UUID,
         name: String,
         url: String,
-        startMode: RaceClockerStartMode,
         position: Int,
     ): UUID {
         val raceId = UUID.randomUUID()
@@ -65,7 +63,6 @@ class RaceClockerPollRepoTest {
                 event = eventId,
                 name = name,
                 resultsUrl = url,
-                startMode = startMode.name,
                 capturesLaps = false,
                 position = position,
                 createdAt = now,
@@ -75,26 +72,52 @@ class RaceClockerPollRepoTest {
         return raceId
     }
 
+    private fun TestComprehensionScope<JEnv>.insertStartlistConfig(name: String): UUID {
+        val configId = UUID.randomUUID()
+        !STARTLIST_EXPORT_CONFIG.insert(
+            StartlistExportConfigRecord(
+                id = configId,
+                name = name,
+                createdAt = now,
+                updatedAt = now,
+            )
+        )
+        return configId
+    }
+
+    /** Was der Seed hinterlassen hat - die Kennungen, an denen die Tests ziehen. */
+    private data class Seeded(
+        val eventId: UUID,
+        val competitionId: UUID,
+        val raceId: UUID?,
+        val matchId: UUID,
+        /** Nur belegt, wenn zusätzlich eine Qualifikationsrunde angelegt wurde. */
+        val qualificationMatchId: UUID?,
+    )
+
     /**
-     * Eine Veranstaltung mit genau einem Lauf, so knapp wie die Joins von `getCandidates` es
-     * zulassen: Veranstaltung, Wettkampf, Eigenschaften, Ablauf, Runde, Setup-Lauf, Lauf.
-     * Mannschaften braucht die Abfrage nicht - sie zählt keine Boote.
+     * Eine Veranstaltung mit einem Wettkampf und einem Lauf, so knapp wie die Joins von
+     * `getCandidates` es zulassen: Veranstaltung, Wettkampf, Eigenschaften, Ablauf, Runde,
+     * Setup-Lauf, Lauf. Mannschaften braucht die Abfrage nicht - sie zählt keine Boote.
+     *
+     * Der Wettkampf wählt genau EIN Rennen an (`raceclocker_race`), das für Qualifikation und alle
+     * übrigen Runden gemeinsam gilt. Mit [withQualificationRound] kommt eine Qualifikationsrunde
+     * samt eigenem Lauf dazu - der Beleg, dass beide Runden auf demselben Rennen landen.
      */
     private fun TestComprehensionScope<JEnv>.seed(
         eventTimingSystem: String? = TimingSystem.RACECLOCKER.name,
         competitionTimingSystem: String? = null,
-        // Die Rennen werden pro Wettkampf zugewiesen; eine Veranstaltungs-Voreinstellung gibt es
-        // nicht mehr. null heißt: dieser Wettkampf hat für die Rundenart kein Rennen angewählt.
-        heatsResultsUrl: String? = heatsUrl,
-        timeTrialResultsUrl: String? = timeTrialUrl,
-        isQualification: Boolean = false,
+        raceResultsUrl: String? = raceUrl,
+        withQualificationRound: Boolean = false,
+        eventStartlistConfig: UUID? = null,
+        competitionStartlistConfig: UUID? = null,
         activated: Boolean = true,
         startedAt: LocalDateTime? = null,
         finishedAt: LocalDateTime? = null,
         autoPausedAt: LocalDateTime? = null,
         slotSkippedAt: LocalDateTime? = null,
         withSlot: Boolean = false,
-    ): Pair<UUID, UUID> {
+    ): Seeded {
         val eventId = UUID.randomUUID()
         val competitionId = UUID.randomUUID()
         val propertiesId = UUID.randomUUID()
@@ -109,17 +132,12 @@ class RaceClockerPollRepoTest {
                 updatedAt = now,
                 timingSystem = eventTimingSystem,
                 raceclockerAutoPull = true,
+                startlistConfig = eventStartlistConfig,
             )
         )
 
-        // Die Rennen gehören der Veranstaltung; der Wettkampf zeigt darauf. Ein Veranstaltungs-
-        // Default existiert nicht mehr - wählt der Wettkampf nichts an, bleibt die Spalte null.
-        val ttRaceId = timeTrialResultsUrl?.let {
-            insertRace(eventId, "Zeitfahren", it, RaceClockerStartMode.INDIVIDUAL, 1)
-        }
-        val heatsRaceId = heatsResultsUrl?.let {
-            insertRace(eventId, "Laeufe", it, RaceClockerStartMode.WAVE, 2)
-        }
+        // Die Rennen gehören der Veranstaltung; der Wettkampf zeigt auf genau eines davon.
+        val raceId = raceResultsUrl?.let { insertRace(eventId, "Kurzstrecke", it, 1) }
 
         !COMPETITION.insert(
             CompetitionRecord(
@@ -128,8 +146,8 @@ class RaceClockerPollRepoTest {
                 createdAt = now,
                 updatedAt = now,
                 timingSystem = competitionTimingSystem,
-                raceclockerRaceQualification = ttRaceId,
-                raceclockerRaceRounds = heatsRaceId,
+                raceclockerRace = raceId,
+                startlistConfig = competitionStartlistConfig,
             )
         )
 
@@ -159,7 +177,7 @@ class RaceClockerPollRepoTest {
                 required = true,
                 useDefaultSeeding = true,
                 placesOption = CompetitionSetupPlacesOption.EQUAL.name,
-                isQualification = isQualification,
+                isQualification = false,
             )
         )
 
@@ -186,6 +204,45 @@ class RaceClockerPollRepoTest {
             )
         )
 
+        // Die Qualifikationsrunde ist Turnierstruktur (Setzung, Weiterkommen) - für die Zeitnahme
+        // ist sie seit dem 11.08.2026 keine Weiche mehr: ihr Lauf hängt am selben Rennen.
+        var qualificationMatchId: UUID? = null
+        if (withQualificationRound) {
+            val qualiRoundId = UUID.randomUUID()
+            qualificationMatchId = UUID.randomUUID()
+
+            !COMPETITION_SETUP_ROUND.insert(
+                CompetitionSetupRoundRecord(
+                    id = qualiRoundId,
+                    competitionSetup = propertiesId,
+                    nextRound = roundId,
+                    name = "Qualifikation",
+                    required = true,
+                    useDefaultSeeding = true,
+                    placesOption = CompetitionSetupPlacesOption.EQUAL.name,
+                    isQualification = true,
+                )
+            )
+            !COMPETITION_SETUP_MATCH.insert(
+                CompetitionSetupMatchRecord(
+                    id = qualificationMatchId,
+                    competitionSetupRound = qualiRoundId,
+                    weighting = 1,
+                    name = "Zeitlauf 1",
+                    executionOrder = 1,
+                )
+            )
+            !COMPETITION_MATCH.insert(
+                CompetitionMatchRecord(
+                    competitionSetupMatch = qualificationMatchId,
+                    startTime = now.minusHours(2),
+                    createdAt = now,
+                    updatedAt = now,
+                    activatedAt = if (activated) now else null,
+                )
+            )
+        }
+
         if (withSlot || slotSkippedAt != null) {
             !EVENT_SCHEDULE_SLOT.insert(
                 EventScheduleSlotRecord(
@@ -200,26 +257,27 @@ class RaceClockerPollRepoTest {
             )
         }
 
-        return eventId to matchId
+        return Seeded(eventId, competitionId, raceId, matchId, qualificationMatchId)
     }
 
     @Test
     fun aRunningMatchOfARaceClockerEventIsACandidate() = testComprehension {
-        val (eventId, matchId) = seed()
+        val seeded = seed()
 
-        val candidates = !RaceClockerPollRepo.getCandidates(eventId)
+        val candidates = !RaceClockerPollRepo.getCandidates(seeded.eventId)
 
         val candidate = candidates.singleOrNull()
         assertNotNull(candidate, "Der Lauf hätte als Kandidat zurückkommen müssen, kam aber nicht: $candidates")
-        assertEquals(matchId, candidate.matchId)
+        assertEquals(seeded.matchId, candidate.matchId)
         assertNotNull(candidate.activatedAt)
         assertEquals(now, candidate.startTime)
         // Die Wellenbezeichnung entsteht wie beim Startlisten-Export aus Startzeit, Wettkampf
         // (Rennnummer und Kürzel) und Laufname - hier zugleich der Beleg, dass die beiden
         // Wettkampf-Spalten aus competition_properties in der Projektion ankommen.
         assertEquals("10:00 | 1 JM4x | Lauf 1", candidate.target.waveName)
-        assertEquals(heatsUrl, candidate.target.roundsRace?.resultsUrl)
-        assertEquals(timeTrialUrl, candidate.target.qualificationRace?.resultsUrl)
+        assertEquals(raceUrl, candidate.target.race?.resultsUrl)
+        assertEquals("Kurzstrecke", candidate.target.race?.name)
+        assertEquals(listOf(raceUrl), candidate.target.candidateUrls)
     }
 
     /**
@@ -230,12 +288,11 @@ class RaceClockerPollRepoTest {
      */
     @Test
     fun anActivatedMatchIsReportedWithoutARealStartUntilOneIsStamped() = testComprehension {
-        val (preparingEventId, _) = seed()
-        val preparing = (!RaceClockerPollRepo.getCandidates(preparingEventId)).single()
+        val preparing = (!RaceClockerPollRepo.getCandidates(seed().eventId)).single()
         assertNotNull(preparing.activatedAt)
         assertEquals(null, preparing.startedAt)
 
-        val (runningEventId, _) = seed(startedAt = now.plusMinutes(2))
+        val runningEventId = seed(startedAt = now.plusMinutes(2)).eventId
         val running = (!RaceClockerPollRepo.getCandidates(runningEventId)).single()
         assertEquals(now.plusMinutes(2), running.startedAt)
     }
@@ -243,7 +300,7 @@ class RaceClockerPollRepoTest {
     /** Der Job beendet nie einen Lauf und fasst einen beendeten auch nicht mehr an. */
     @Test
     fun aFinishedMatchIsExcluded() = testComprehension {
-        val (eventId, _) = seed(finishedAt = now)
+        val eventId = seed(finishedAt = now).eventId
 
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
     }
@@ -251,7 +308,7 @@ class RaceClockerPollRepoTest {
     /** Wer von Hand eingetragen hat, hat das letzte Wort - bis er den Lauf wieder freigibt. */
     @Test
     fun aPausedMatchIsExcluded() = testComprehension {
-        val (eventId, _) = seed(autoPausedAt = now)
+        val eventId = seed(autoPausedAt = now).eventId
 
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
     }
@@ -264,7 +321,7 @@ class RaceClockerPollRepoTest {
      */
     @Test
     fun aCompetitionOverridingTheTimingSystemIsExcluded() = testComprehension {
-        val (eventId, _) = seed(competitionTimingSystem = TimingSystem.WEBSCORER.name)
+        val eventId = seed(competitionTimingSystem = TimingSystem.WEBSCORER.name).eventId
 
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
     }
@@ -272,15 +329,15 @@ class RaceClockerPollRepoTest {
     /** Ohne Zeitnahmesystem - der Zustand jeder Bestandsveranstaltung - gibt es nichts abzurufen. */
     @Test
     fun anEventWithoutATimingSystemHasNoCandidates() = testComprehension {
-        val (eventId, _) = seed(eventTimingSystem = null)
+        val eventId = seed(eventTimingSystem = null).eventId
 
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
     }
 
     /** Ohne ein angewähltes Rennen gibt es nichts, das man abfragen könnte. */
     @Test
-    fun aMatchWithoutAnySelectedRaceIsExcluded() = testComprehension {
-        val (eventId, _) = seed(heatsResultsUrl = null, timeTrialResultsUrl = null)
+    fun aMatchWithoutASelectedRaceIsExcluded() = testComprehension {
+        val eventId = seed(raceResultsUrl = null).eventId
 
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
     }
@@ -291,7 +348,7 @@ class RaceClockerPollRepoTest {
      */
     @Test
     fun aMatchOnASkippedScheduleSlotIsExcluded() = testComprehension {
-        val (eventId, _) = seed(slotSkippedAt = now)
+        val eventId = seed(slotSkippedAt = now).eventId
 
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
     }
@@ -299,55 +356,33 @@ class RaceClockerPollRepoTest {
     /** Ein vorhandener, aber nicht abgesagter Slot ändert nichts. */
     @Test
     fun aMatchOnALiveScheduleSlotStaysACandidate() = testComprehension {
-        val (eventId, matchId) = seed(withSlot = true)
+        val seeded = seed(withSlot = true)
 
-        assertEquals(listOf(matchId), (!RaceClockerPollRepo.getCandidates(eventId)).map { it.matchId })
+        assertEquals(listOf(seeded.matchId), (!RaceClockerPollRepo.getCandidates(seeded.eventId)).map { it.matchId })
     }
 
     /**
-     * Die Anwahl je Rundenart, festgenagelt: der Wettkampf zeigt auf sein Läufe- und sein
-     * Zeitfahren-Rennen, jedes für sich - dieselbe Anwahl wie beim Knopf
-     * (`CompetitionMatchRepo.getForRaceClockerPull`). Läse die Abfrage die Spalten vertauscht oder
-     * aus dem falschen Alias, zöge der Job seine Ergebnisse aus dem falschen Rennen, und zwar
-     * lautlos. Eine Veranstaltungs-Voreinstellung, von der geerbt würde, gibt es nicht mehr.
+     * DER Kern des Umbaus vom 11.08.2026, gegen echtes Postgres festgenagelt: Der Lauf einer
+     * Qualifikationsrunde und der Lauf einer Folgerunde desselben Wettkampfs landen auf DEMSELBEN
+     * Rennen. Die Rundenart ist Turnierstruktur geblieben (`competition_setup_round
+     * .is_qualification`), aber keine Weiche für die Rennwahl mehr - vorher hätte die
+     * Qualifikation ihr eigenes Zeitfahren-Rennen zuerst versucht.
      */
     @Test
-    fun aCompetitionResolvesItsOwnRacesPerRoundType() = testComprehension {
-        val ownHeats = "https://www.raceclocker.com/competition-heats"
-        val (eventId, _) = seed(heatsResultsUrl = ownHeats)
+    fun aQualificationAndAFollowingRoundShareTheSameRace() = testComprehension {
+        val seeded = seed(withQualificationRound = true)
 
-        val candidate = (!RaceClockerPollRepo.getCandidates(eventId)).single()
+        val candidates = !RaceClockerPollRepo.getCandidates(seeded.eventId)
+        assertEquals(2, candidates.size, "Beide Läufe hätten Kandidaten sein müssen: $candidates")
 
-        assertEquals(ownHeats, candidate.target.roundsRace?.resultsUrl)
-        assertEquals(timeTrialUrl, candidate.target.qualificationRace?.resultsUrl)
-        // Und für eine Runde, die keine Qualifikation ist, ist die Läufe-Adresse die erste Wahl.
-        assertEquals(listOf(ownHeats, timeTrialUrl), candidate.target.candidateUrls)
-    }
+        val byMatch = candidates.associateBy { it.matchId }
+        val qualification = byMatch.getValue(seeded.qualificationMatchId!!)
+        val following = byMatch.getValue(seeded.matchId)
 
-    /**
-     * Wählt der Wettkampf nur eine Rundenart an, bleibt die andere leer - ohne Rückfall auf eine
-     * Veranstaltungs-Voreinstellung, die es nicht mehr gibt.
-     */
-    @Test
-    fun aCompetitionCanSelectOnlyTheRoundsRace() = testComprehension {
-        val (eventId, _) = seed(timeTrialResultsUrl = null)
-
-        val candidate = (!RaceClockerPollRepo.getCandidates(eventId)).single()
-
-        assertEquals(heatsUrl, candidate.target.roundsRace?.resultsUrl)
-        assertEquals(null, candidate.target.qualificationRace)
-        assertEquals(listOf(heatsUrl), candidate.target.candidateUrls)
-    }
-
-    /** Die Qualifikationsrunde dreht die Reihenfolge um: Zeitfahren zuerst, Läufe als Rückfall. */
-    @Test
-    fun aQualificationRoundTriesTheTimeTrialRaceFirst() = testComprehension {
-        val (eventId, _) = seed(isQualification = true)
-
-        val candidate = (!RaceClockerPollRepo.getCandidates(eventId)).single()
-
-        assertTrue(candidate.target.isQualification)
-        assertEquals(listOf(timeTrialUrl, heatsUrl), candidate.target.candidateUrls)
+        assertEquals(seeded.raceId, qualification.target.race?.id)
+        assertEquals(seeded.raceId, following.target.race?.id)
+        assertEquals(listOf(raceUrl), qualification.target.candidateUrls)
+        assertEquals(listOf(raceUrl), following.target.candidateUrls)
     }
 
     /** Ein anderer Veranstaltungs-Filter darf nichts durchlassen. */
@@ -365,7 +400,7 @@ class RaceClockerPollRepoTest {
      */
     @Test
     fun aDeletedRaceLeavesTheMatchWithoutASelection() = testComprehension {
-        val (eventId, _) = seed()
+        val eventId = seed().eventId
 
         !RACECLOCKER_RACE.delete { EVENT.eq(eventId) }
 
@@ -374,27 +409,52 @@ class RaceClockerPollRepoTest {
 
     /**
      * Der Knopf-Weg liest dieselbe Anwahl wie der Job, aber über eine eigene Abfrage mit eigener
-     * Join-Kette (`CompetitionMatchRepo.getForRaceClockerPull`). Zwei Aliase derselben Tabelle sind
-     * genau die Konstruktion, bei der ein Lesefehler stumm bleibt: Die Abfrage liefert etwas, nur
-     * eben aus dem falschen Alias. Deshalb steht auch sie einmal gegen echtes Postgres.
+     * Join-Kette (`CompetitionMatchRepo.getForRaceClockerPull`). Auch sie steht einmal gegen
+     * echtes Postgres - und auch hier gilt: Qualifikations- und Folgerunden-Lauf desselben
+     * Wettkampfs zeigen auf dasselbe Rennen.
      */
     @Test
     fun theButtonPathReadsTheSameSelectionAsTheJob() = testComprehension {
-        val ownHeats = "https://www.raceclocker.com/competition-heats"
-        val (_, matchId) = seed(heatsResultsUrl = ownHeats)
+        val seeded = seed(withQualificationRound = true)
 
-        val target = !CompetitionMatchRepo.getForRaceClockerPull(matchId)
+        val following = !CompetitionMatchRepo.getForRaceClockerPull(seeded.matchId)
+        val qualification = !CompetitionMatchRepo.getForRaceClockerPull(seeded.qualificationMatchId!!)
 
-        assertNotNull(target)
+        assertNotNull(following)
+        assertNotNull(qualification)
         // Derselbe Wellenname wie beim Job - beide Abfragen muessen ihn gleich bauen, sonst findet
         // der eine Weg die Welle und der andere nicht.
-        assertEquals("10:00 | 1 JM4x | Lauf 1", target.waveName)
-        // Beide Rennen sind die Anwahl des Wettkampfs, jedes für sich.
-        assertEquals(ownHeats, target.roundsRace?.resultsUrl)
-        assertEquals(timeTrialUrl, target.qualificationRace?.resultsUrl)
-        // Und die Namen kommen aus dem jeweils richtigen Alias, nicht zweimal aus demselben.
-        assertEquals("Laeufe", target.roundsRace?.name)
-        assertEquals("Zeitfahren", target.qualificationRace?.name)
-        assertEquals(listOf(ownHeats, timeTrialUrl), target.candidateUrls)
+        assertEquals("10:00 | 1 JM4x | Lauf 1", following.waveName)
+        assertEquals(seeded.raceId, following.race?.id)
+        assertEquals(seeded.raceId, qualification.race?.id)
+        assertEquals("Kurzstrecke", following.race?.name)
+        assertEquals(listOf(raceUrl), following.candidateUrls)
+    }
+
+    /**
+     * Das Startlisten-Preset ist seit dem 11.08.2026 ebenfalls eindimensional: eines je Wettkampf,
+     * mit der Veranstaltung als Vorgabe (coalesce). Beide Läufe - Qualifikation wie Folgerunde -
+     * bekommen dasselbe Preset; die frühere Weiche nach Rundenart ist weg.
+     */
+    @Test
+    fun theStartListConfigIsSharedAcrossRoundTypesAndInheritsFromTheEvent() = testComprehension {
+        val eventConfig = insertStartlistConfig("Veranstaltungs-Preset")
+        val ownConfig = insertStartlistConfig("Eigenes Preset")
+
+        // Erbt: kein eigenes Preset am Wettkampf.
+        val inheriting = seed(withQualificationRound = true, eventStartlistConfig = eventConfig)
+        assertEquals(eventConfig, (!CompetitionMatchRepo.getStartListConfigTarget(inheriting.matchId))?.configId)
+        assertEquals(
+            eventConfig,
+            (!CompetitionMatchRepo.getStartListConfigTarget(inheriting.qualificationMatchId!!))?.configId,
+        )
+
+        // Eigener Wert schlägt die Vorgabe.
+        val overriding = seed(eventStartlistConfig = eventConfig, competitionStartlistConfig = ownConfig)
+        assertEquals(ownConfig, (!CompetitionMatchRepo.getStartListConfigTarget(overriding.matchId))?.configId)
+
+        // Nichts konfiguriert: null heißt "kein Preset", nicht "Lauf nicht gefunden".
+        val unconfigured = seed()
+        assertEquals(null, (!CompetitionMatchRepo.getStartListConfigTarget(unconfigured.matchId))?.configId)
     }
 }

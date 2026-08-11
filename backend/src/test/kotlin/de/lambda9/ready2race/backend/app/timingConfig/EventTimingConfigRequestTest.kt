@@ -21,8 +21,7 @@ class EventTimingConfigRequestTest {
         watchAfterMinutes: Int = 120,
     ) = EventTimingConfigRequest(
         timingSystem = TimingSystem.RACECLOCKER,
-        startlistConfigQualification = null,
-        startlistConfigRounds = null,
+        startlistConfig = null,
         resultImportConfig = null,
         autoPull = true,
         intervalActiveSeconds = intervalActiveSeconds,
