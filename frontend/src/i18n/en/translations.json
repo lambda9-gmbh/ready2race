@@ -84,6 +84,7 @@
     },
     "ok": "Ok",
     "save": "Save",
+    "settings": "Settings",
     "saveAndNew": "Save and new",
     "saveAndNext": "Save and next",
     "search": "Search",
@@ -671,6 +672,13 @@
       "label": "Keep the execution page up to date automatically",
       "seconds": "Interval in seconds",
       "hint": "The execution page picks up times, results, matches, round changes and check-ins in the background at the configured interval — without reloading the page. Allowed are 5 to 60 seconds, 5 by default. The sync rests while a dialog is open."
+    },
+    "settings": {
+      "device": "This device",
+      "event": "Event",
+      "openExecutionInNewTab": "Open “Go to execution” in a new window",
+      "shortLabels": "Short names instead of full competition names",
+      "compact": "Compact view"
     },
     "invoice": {
       "prefix": "Invoice prefix",
