@@ -83,6 +83,53 @@ class MyEventServiceTest {
     }
 
     @Test
+    fun publicNoteIsDeliveredAndInternalDescriptionIsNot() = testComprehension {
+        // Wie beim Notiz-Test darunter gegen das ausgelieferte JSON geprüft: die interne
+        // Arbeitsanweisung darf in keinem Feld der Antwort auftauchen, egal wo sie ein
+        // späterer Umbau einhängt. Der öffentliche Text dagegen muss ankommen.
+        val fixture = !MyEventFixture.create()
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
+        val json = ObjectMapper().findAndRegisterModules().writeValueAsString(response.dto)
+        assertTrue(json.contains(fixture.publicNote))
+        assertFalse(json.contains(fixture.internalDescription))
+    }
+
+    @Test
+    fun checkWindowIsDerivedFromTheFirstFutureStart() = testComprehension {
+        // Die Bedingung trägt 120/15 Minuten (Fixture); der einzige künftige Start der Person
+        // ist ihr eigener Lauf. Erwartet wird gegen dessen Startzeit aus derselben Antwort
+        // gerechnet — so kürzt sich die Zeitstempel-Genauigkeit der Datenbank heraus.
+        val fixture = !MyEventFixture.create()
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.participantQrCode)
+        val start = response.dto.upcoming.first { it.matchId == fixture.ownMatchId }.startTime!!
+        val requirement = response.dto.requirements.first { it.name == fixture.publicRequirementName }
+        assertEquals(start.minusMinutes(120), requirement.checkFrom)
+        assertEquals(start.minusMinutes(15), requirement.checkUntil)
+    }
+
+    @Test
+    fun requirementWithoutWindowHasNoCheckWindow() = testComprehension {
+        // Die Steuerprüfung trägt keine Minutenangaben — ein erfundenes Fenster stünde als
+        // falsche Ansage auf dem Telefon.
+        val fixture = !MyEventFixture.create()
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.coxQrCode)
+        val requirement = response.dto.requirements.first { it.name == fixture.coxRequirementName }
+        assertEquals(null, requirement.checkFrom)
+        assertEquals(null, requirement.checkUntil)
+    }
+
+    @Test
+    fun withoutAFutureStartThereIsNoCheckWindow() = testComprehension {
+        // Nur gemeldet, kein Lauf gesetzt: die Bedingung gilt, aber es gibt keinen Start, an
+        // dem ein Fenster hängen könnte.
+        val fixture = !MyEventFixture.create()
+        val response = !MyEventService.getMyEvent(fixture.eventId, fixture.walkOnQrCode)
+        val requirement = response.dto.requirements.first { it.name == fixture.publicRequirementName }
+        assertEquals(null, requirement.checkFrom)
+        assertEquals(null, requirement.checkUntil)
+    }
+
+    @Test
     fun internalNoteNeverLeavesTheServer() = testComprehension {
         // Gegen die ausgelieferte JSON-Darstellung geprüft, nicht gegen die Datenklasse:
         // ein später ergänztes Feld oder eine eingebettete Struktur würde die Notiz sonst

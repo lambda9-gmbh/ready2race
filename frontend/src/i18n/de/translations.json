@@ -2075,6 +2075,8 @@
     "publiclyVisible": "Für Teilnehmende sichtbar (Mein Event)",
     "checkEarliestMinutesBefore": "Frühestens (Minuten vor Start)",
     "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
+    "publicNote": "Öffentlicher Hinweis (Mein Event)",
+    "publicNoteHint": "Wird den Athletinnen und Athleten wörtlich angezeigt — die Beschreibung darüber bleibt intern.",
     "namedParticipantRequirements": {
       "title": "Named Participant Bedingungen",
       "description": "Verwalten Sie spezifische Bedingungen für Named Participants",
@@ -2896,6 +2898,9 @@
     "requirementFulfilled": "erledigt",
     "requirementOpen": "offen",
     "requirementOptional": "freiwillig",
+    "requirementCheckBetween": "Erledigen zwischen {{from}} und {{until}}",
+    "requirementCheckFrom": "Erledigen ab {{from}}",
+    "requirementCheckUntil": "Erledigen bis {{until}}",
     "remove": "Eintrag entfernen",
     "lane": "Startposition",
     "team": "Mannschaft",

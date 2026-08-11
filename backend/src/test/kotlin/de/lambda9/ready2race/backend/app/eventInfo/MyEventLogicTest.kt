@@ -214,4 +214,56 @@ class MyEventLogicTest {
         )
         assertEquals(listOf(timed.matchId, timeless.matchId), split.results.map { it.matchId })
     }
+
+    // Erledigungsfenster der Bedingungen: Bezugsgröße ist der erste KÜNFTIGE Start. Die
+    // Kandidatenliste kommt aus split.upcoming und kann deshalb auch überfällige und
+    // abgemeldete Läufe enthalten — beide dürfen das Fenster nicht setzen.
+
+    private fun upcoming(entries: List<MyEventLogic.RawMatch>) = MyEventLogic.split(
+        entries = entries,
+        now = now,
+        visibility = PublicResultsVisibility.FINISHED_ONLY,
+        showCountdown = true,
+    ).upcoming
+
+    @Test
+    fun firstFutureStartIsTheEarliestFutureOne() {
+        val matches = upcoming(
+            listOf(
+                raw(startTime = now.plusHours(3)),
+                raw(startTime = now.plusMinutes(45)),
+            )
+        )
+        assertEquals(now.plusMinutes(45), MyEventLogic.firstFutureStart(matches, now))
+    }
+
+    @Test
+    fun overdueAndDeregisteredStartsDoNotCount() {
+        // Der überfällige 09-Uhr-Lauf steht noch in upcoming, liegt aber in der Vergangenheit;
+        // der abgemeldete findet für diese Person nicht statt.
+        val matches = upcoming(
+            listOf(
+                raw(startTime = now.minusHours(1)),
+                raw(startTime = now.plusMinutes(30), deregistered = true),
+                raw(startTime = now.plusHours(2)),
+            )
+        )
+        assertEquals(now.plusHours(2), MyEventLogic.firstFutureStart(matches, now))
+    }
+
+    @Test
+    fun noFutureStartMeansNoWindow() {
+        val matches = upcoming(listOf(raw(startTime = now.minusHours(1))))
+        assertEquals(null, MyEventLogic.firstFutureStart(matches, now))
+        assertEquals(null, MyEventLogic.checkWindowBound(null, 120))
+    }
+
+    @Test
+    fun windowBoundIsMinutesBeforeTheStart() {
+        val start = now.plusHours(2)
+        assertEquals(start.minusMinutes(120), MyEventLogic.checkWindowBound(start, 120))
+        // Ohne Minutenangabe gibt es keine Grenze — ein erfundenes Fenster wäre schlimmer
+        // als keins.
+        assertEquals(null, MyEventLogic.checkWindowBound(start, null))
+    }
 }

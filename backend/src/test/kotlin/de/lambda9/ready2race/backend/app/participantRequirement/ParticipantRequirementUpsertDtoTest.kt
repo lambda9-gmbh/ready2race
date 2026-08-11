@@ -11,6 +11,7 @@ class ParticipantRequirementUpsertDtoTest {
     private fun dto(earliest: Int?, latest: Int?) = ParticipantRequirementUpsertDto(
         name = "Waage",
         description = null,
+        publicNote = null,
         optional = false,
         checkInApp = false,
         publiclyVisible = false,

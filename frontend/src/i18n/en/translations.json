@@ -2079,6 +2079,8 @@
     "publiclyVisible": "Visible to participants (My Event)",
     "checkEarliestMinutesBefore": "Earliest (minutes before start)",
     "checkLatestMinutesBefore": "Latest (minutes before start)",
+    "publicNote": "Public note (My Event)",
+    "publicNoteHint": "Shown verbatim to the athletes — the description above stays internal.",
     "namedParticipantRequirements": {
       "title": "Named Participant Requirements",
       "description": "Manage specific requirements for named participants",
@@ -2900,6 +2902,9 @@
     "requirementFulfilled": "done",
     "requirementOpen": "open",
     "requirementOptional": "optional",
+    "requirementCheckBetween": "Complete between {{from}} and {{until}}",
+    "requirementCheckFrom": "Complete from {{from}}",
+    "requirementCheckUntil": "Complete by {{until}}",
     "remove": "Remove entry",
     "lane": "Start position",
     "team": "Team",

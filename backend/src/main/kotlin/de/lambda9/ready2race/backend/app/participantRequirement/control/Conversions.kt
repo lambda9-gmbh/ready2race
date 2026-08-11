@@ -24,6 +24,7 @@ fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): IO<Nothing, Particip
                 id = UUID.randomUUID(),
                 name = name,
                 description = description,
+                publicNote = publicNote,
                 optional = optional ?: false,
                 checkInApp = checkInApp ?: false,
                 publiclyVisible = publiclyVisible ?: false,
@@ -44,6 +45,7 @@ fun ParticipantRequirementRecord.toDto(): IO<Nothing, ParticipantRequirementDto>
         id = id,
         name = name,
         description = description,
+        publicNote = publicNote,
         optional = optional,
         checkInApp = checkInApp ?: false,
         // jOOQ generiert die Spalte trotz NOT-NULL-Constraint als Boolean?, wie auch bei
@@ -76,6 +78,7 @@ fun ParticipantRequirementForEventRecord.toRequirementDto() =
         id = id!!,
         name = name!!,
         description = description,
+        publicNote = publicNote,
         optional = optional!!,
         checkInApp = checkInApp ?: false,
         publiclyVisible = publiclyVisible ?: false,

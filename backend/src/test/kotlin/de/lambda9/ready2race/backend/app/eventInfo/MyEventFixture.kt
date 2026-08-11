@@ -71,6 +71,10 @@ object MyEventFixture {
         val foreignMatchId: UUID,
         val unscheduledCompetitionId: UUID,
         val publicRequirementName: String,
+        /** Der öffentliche Text der freigegebenen Bedingung — er DARF nach außen. */
+        val publicNote: String,
+        /** Die interne Arbeitsanweisung derselben Bedingung — sie darf es NICHT. */
+        val internalDescription: String,
         val deregisteredTeamName: String,
         val coxQrCode: String,
         val coxRequirementName: String,
@@ -94,6 +98,11 @@ object MyEventFixture {
         val strangerId: UUID,
         val strangerName: String,
         val strangerQrCode: String,
+        /**
+         * Nur im zweiten Wettkampf gemeldet, der keinen Lauf hat — eine Person ohne künftigen
+         * Start, an der sich das ausbleibende Erledigungsfenster prüfen lässt.
+         */
+        val walkOnQrCode: String,
     )
 
     fun create(): JIO<Fixture> = Jooq.query {
@@ -145,6 +154,8 @@ object MyEventFixture {
         // Nirgends gemeldet: sie steht nur dann in einem Boot, wenn sie eingewechselt wird.
         val reserveName = "Ida Ersatz $tag"
         val reserveId = insertParticipant(clubId, "Ida", "Ersatz $tag", now)
+        // Nur im Wettkampf ohne Lauf gemeldet: gemeldet ja, künftiger Start nein.
+        val walkOnId = insertParticipant(clubId, "Ole", "Ohnelauf $tag", now)
 
         val eventRegistrationId = UUID.randomUUID()
         insertInto(EVENT_REGISTRATION).set(
@@ -181,6 +192,7 @@ object MyEventFixture {
         insertCrew(ownRegistrationId, coxRoleId, coxId)
         insertCrew(foreignRegistrationId, namedParticipantId, strangerId)
         insertCrew(unscheduledRegistrationId, namedParticipantId, participantId)
+        insertCrew(unscheduledRegistrationId, namedParticipantId, walkOnId)
         insertCrew(deregisteredRegistrationId, namedParticipantId, participantId)
 
         val participantQrCode = insertParticipantQrCode(eventId, participantId, "teilnehmer-$tag", now)
@@ -188,6 +200,7 @@ object MyEventFixture {
         val teamMateQrCode = insertParticipantQrCode(eventId, teamMateId, "mitfahrerin-$tag", now)
         val strangerQrCode = insertParticipantQrCode(eventId, strangerId, "fremd-$tag", now)
         val reserveQrCode = insertParticipantQrCode(eventId, reserveId, "ersatz-$tag", now)
+        val walkOnQrCode = insertParticipantQrCode(eventId, walkOnId, "ohnelauf-$tag", now)
 
         // Helfer-Code: derselbe Aufbau, nur zeigt er auf einen app_user. Er muss genauso ins
         // Leere laufen wie ein erfundener Code.
@@ -223,8 +236,21 @@ object MyEventFixture {
         insertMatchTeam(foreignMatchId, foreignRegistrationId, now)
 
         val publicRequirementName = "Startberechtigung $tag"
+        val publicNote = "Es sind 2,5 kg Zusatzgewicht mitzuführen ($tag)"
+        val internalDescription = "interne-arbeitsanweisung-$tag"
         val publicRequirementId =
-            insertRequirement(eventId, publicRequirementName, publiclyVisible = true, now = now)
+            insertRequirement(
+                eventId,
+                publicRequirementName,
+                publiclyVisible = true,
+                now = now,
+                description = internalDescription,
+                publicNote = publicNote,
+                // Das Erledigungsfenster: frühestens 120, spätestens 15 Minuten vor dem
+                // ersten künftigen Start.
+                checkEarliestMinutesBefore = 120,
+                checkLatestMinutesBefore = 15,
+            )
         insertRequirement(eventId, "Interne Prüfung $tag", publiclyVisible = false, now = now)
 
         // Freigegeben, aber nur für die Steuerfrau: darf bei der Ruderin nicht auftauchen.
@@ -258,6 +284,8 @@ object MyEventFixture {
             foreignMatchId = foreignMatchId,
             unscheduledCompetitionId = unscheduledCompetitionId,
             publicRequirementName = publicRequirementName,
+            publicNote = publicNote,
+            internalDescription = internalDescription,
             deregisteredTeamName = deregisteredTeamName,
             coxQrCode = coxQrCode,
             coxRequirementName = coxRequirementName,
@@ -276,6 +304,7 @@ object MyEventFixture {
             strangerId = strangerId,
             strangerName = strangerName,
             strangerQrCode = strangerQrCode,
+            walkOnQrCode = walkOnQrCode,
         )
     }
 
@@ -498,16 +527,24 @@ object MyEventFixture {
         publiclyVisible: Boolean,
         now: LocalDateTime,
         namedParticipantId: UUID? = null,
+        description: String? = null,
+        publicNote: String? = null,
+        checkEarliestMinutesBefore: Int? = null,
+        checkLatestMinutesBefore: Int? = null,
     ): UUID {
         val id = UUID.randomUUID()
         insertInto(PARTICIPANT_REQUIREMENT).set(
             ParticipantRequirementRecord(
                 id = id,
                 name = name,
+                description = description,
+                publicNote = publicNote,
                 optional = false,
                 createdAt = now,
                 updatedAt = now,
                 publiclyVisible = publiclyVisible,
+                checkEarliestMinutesBefore = checkEarliestMinutesBefore,
+                checkLatestMinutesBefore = checkLatestMinutesBefore,
             )
         ).execute()
 

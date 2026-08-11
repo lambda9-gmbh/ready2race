@@ -11211,6 +11211,10 @@ components:
           type: string
         description:
           type: string
+        publicNote:
+          type: string
+          nullable: true
+          description: "Public, athlete-facing text shown on My Event - separate from the internal description"
         optional:
           type: boolean
         checkInApp:
@@ -11295,6 +11299,10 @@ components:
           type: string
         description:
           type: string
+        publicNote:
+          type: string
+          nullable: true
+          description: "Public, athlete-facing text shown on My Event - separate from the internal description"
         optional:
           type: boolean
         checkInApp:
@@ -14891,13 +14899,24 @@ components:
           format: uuid
         name:
           type: string
-        description:
+        publicNote:
           type: string
           nullable: true
+          description: "Public, athlete-facing text. The internal description is deliberately never delivered here."
         optional:
           type: boolean
         fulfilled:
           type: boolean
+        checkFrom:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Earliest moment the requirement can be checked - first future start minus checkEarliestMinutesBefore; null without a window or a future start"
+        checkUntil:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Latest moment, analogous from checkLatestMinutesBefore"
 
     MyEventDto:
       type: object

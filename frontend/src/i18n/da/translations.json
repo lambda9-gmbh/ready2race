@@ -2069,6 +2069,8 @@
     "publiclyVisible": "Synlig for deltagere (Min begivenhed)",
     "checkEarliestMinutesBefore": "Tidligst (minutter før start)",
     "checkLatestMinutesBefore": "Senest (minutter før start)",
+    "publicNote": "Offentlig bemærkning (Min begivenhed)",
+    "publicNoteHint": "Vises ordret for atleterne — beskrivelsen ovenfor forbliver intern.",
     "namedParticipantRequirements": {
       "title": "Named Participant-betingelser",
       "description": "Administrer specifikke betingelser for Named Participants",
@@ -2890,6 +2892,9 @@
     "requirementFulfilled": "klaret",
     "requirementOpen": "mangler",
     "requirementOptional": "frivillig",
+    "requirementCheckBetween": "Skal klares mellem {{from}} og {{until}}",
+    "requirementCheckFrom": "Skal klares fra {{from}}",
+    "requirementCheckUntil": "Skal klares senest {{until}}",
     "remove": "Fjern post",
     "lane": "Startposition",
     "team": "Hold",

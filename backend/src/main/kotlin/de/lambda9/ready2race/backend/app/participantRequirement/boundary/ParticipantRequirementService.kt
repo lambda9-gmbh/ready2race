@@ -330,6 +330,7 @@ object ParticipantRequirementService {
         ParticipantRequirementRepo.update(participantRequirementId) {
             name = request.name
             description = request.description
+            publicNote = request.publicNote
             optional = request.optional ?: false
             checkInApp = request.checkInApp ?: false
             publiclyVisible = request.publiclyVisible ?: false

@@ -15,6 +15,24 @@ export type MyEventBlock =
 export const openRequirements = (requirements: MyEventRequirementDto[]): MyEventRequirementDto[] =>
     requirements.filter(r => !r.fulfilled && !r.optional)
 
+export type RequirementWindow = {from?: string; until?: string}
+
+/**
+ * Das Erledigungsfenster einer Bedingung, oder null, wenn keine Zeile gezeigt werden soll.
+ * Erfüllte Bedingungen bekommen keins: „Erledigen zwischen 06:30 und 07:30" unter einem
+ * grünen Haken liest sich wie eine noch offene Aufgabe. Der Server liefert die Grenzen
+ * einzeln — jede fehlt, wenn ihre Minutenangabe oder der künftige Start fehlt.
+ */
+export const requirementWindow = (r: MyEventRequirementDto): RequirementWindow | null => {
+    if (r.fulfilled) {
+        return null
+    }
+    if (!r.checkFrom && !r.checkUntil) {
+        return null
+    }
+    return {from: r.checkFrom ?? undefined, until: r.checkUntil ?? undefined}
+}
+
 /**
  * Zur Anzeige gehört alles, was noch aussteht oder schon gelaufen ist. Ist davon nichts da,
  * bleibt die ganze Ansicht leer — dann und nur dann trägt eine Leermeldung die Seite.
