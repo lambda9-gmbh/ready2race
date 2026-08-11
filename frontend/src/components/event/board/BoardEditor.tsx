@@ -42,7 +42,8 @@ const MAX_OFFSET = 6
 const MIN_ROTATION_SECONDS = 3
 const MIN_REFRESH_SECONDS = 3
 const MAX_COLUMNS = 4
-const MAX_TILES = 12
+// 16, damit ein volles 4×4-Raster aus 1×1-Kacheln möglich ist (wie BoardLimits.MAX_TILES).
+const MAX_TILES = 16
 const MAX_ROW_SPAN = 3
 
 const defaultElement = (): BoardElement => ({

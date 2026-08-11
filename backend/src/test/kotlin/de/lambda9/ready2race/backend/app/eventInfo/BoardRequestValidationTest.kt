@@ -42,8 +42,9 @@ class BoardRequestValidationTest {
     @Test
     fun tileCountIsBounded() {
         assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = emptyList())).validate())
-        assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(13))).validate())
-        assertEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(12))).validate())
+        assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(17))).validate())
+        // 16 = volles 4×4-Raster aus 1×1-Kacheln — der Anlass für die Grenze.
+        assertEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(16))).validate())
     }
 
     @Test

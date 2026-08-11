@@ -17,7 +17,9 @@ object BoardLimits {
     const val DEFAULT_ROTATION_INTERVAL_SECONDS = 10
     const val MIN_COLUMNS = 1
     const val MAX_COLUMNS = 4
-    const val MAX_TILES = 12
+    // 16 statt anfangs 12: mit 4 Spalten (MAX_COLUMNS) soll ein volles 4×4-Raster aus
+    // lauter 1×1-Kacheln möglich sein.
+    const val MAX_TILES = 16
     const val MAX_ROW_SPAN = 3
 }
 
