@@ -363,7 +363,25 @@ class RaceClockerFeedTest {
         // What keeps this endpoint from being an SSRF lever is the host allowlist, not the scheme.
         val url = RaceClockerFeed.normalizeUrl("http://www.raceclocker.com/7c854955").unsafeRunSync().getOrNull()
         assertNotNull(url)
-        assertEquals("https://www.raceclocker.com/7c854955", url.toString())
+        assertEquals("https://raceclocker.com/7c854955", url.toString())
+    }
+
+    /**
+     * Both hosts serve the same feed, but as strings they differ - and a race's uniqueness per event
+     * and the pull's de-duplication both hang on that string. Without folding them together, the www
+     * and apex forms would be two races answering identically: two requests per tick for one result,
+     * which is the waste this whole change exists to remove.
+     */
+    @Test
+    fun theWwwHostIsFoldedIntoTheApex() {
+        val withWww = RaceClockerFeed.normalizeUrl("https://www.raceclocker.com/7c854955")
+            .unsafeRunSync().getOrNull()
+        val withoutWww = RaceClockerFeed.normalizeUrl("https://raceclocker.com/7c854955")
+            .unsafeRunSync().getOrNull()
+
+        assertNotNull(withWww)
+        assertNotNull(withoutWww)
+        assertEquals(withoutWww.toString(), withWww.toString())
     }
 
     @Test
@@ -400,6 +418,47 @@ class RaceClockerFeedTest {
         listOf("not json", "{\"RaceInfo\":{}}").forEach { body ->
             val exit = RaceClockerFeed.parse(body).unsafeRunSync()
             assertNull(exit.getOrNull(), "should be rejected: $body")
+        }
+    }
+
+    // --- Zwischenzeiten (Split-Spalten) ---
+    //
+    // Aufgezeichnet vom echten Feed raceclocker.com/7aa7e86d?json=1 (TEST CRF 2026 Läufe Sonntag,
+    // 10.08.2026): ein Wellenrennen mit zwei benannten Marken ("Runde 1", "Runde 2") und zwei
+    // ungenutzten Platzhalter-Spalten ("Split 3", "Split 4" - immer 00:00:00.0).
+
+    @Test
+    fun lapColumnsAreReadInFeedOrderAndPlaceholdersAreDropped() {
+        val timed = feed("feed-laps").first()
+
+        assertEquals(
+            listOf(
+                "Runde 1" to LocalTime.of(22, 32, 47, 700_000_000),
+                "Runde 2" to LocalTime.of(22, 33, 15, 100_000_000),
+            ),
+            timed.laps.map { it.name to it.time },
+            "expected exactly the two taken marks, without the 00:00:00.0 placeholder columns",
+        )
+    }
+
+    @Test
+    fun lapsOfADnfRowAreStillRead() {
+        // Ein DNF nach der zweiten Marke: die gefahrenen Marken bleiben Teil der Wahrheit.
+        val dnf = feed("feed-laps")[1]
+        assertEquals(listOf("Runde 1", "Runde 2"), dnf.laps.map { it.name })
+    }
+
+    @Test
+    fun aRowWithoutAnyTakenMarkHasNoLaps() {
+        val dns = feed("feed-laps")[2]
+        assertTrue(dns.laps.isEmpty())
+    }
+
+    @Test
+    fun fixedTimeColumnsAreNeverReadAsLaps() {
+        // Start und Finish sind selbst Tageszeit-Stempel - sie dürfen nicht als Marken auftauchen.
+        feed("feed-laps").forEach { row ->
+            assertTrue(row.laps.none { it.name.lowercase() in setOf("start", "startzeit", "finish", "ziel") })
         }
     }
 }

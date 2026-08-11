@@ -9,8 +9,9 @@ export type TimingFormSystem = 'NONE' | 'RACECLOCKER' | 'WEBSCORER'
 
 export type TimingForm = {
     timingSystem: TimingFormSystem
-    timeTrialResultsUrl: string
-    heatsResultsUrl: string
+    /** Das angewählte Rennen je Rundenart; null heißt „kein Rennen zugewiesen". */
+    raceQualification: AutocompleteOption
+    raceRounds: AutocompleteOption
     startlistConfigQualification: AutocompleteOption
     startlistConfigRounds: AutocompleteOption
     resultImportConfig: AutocompleteOption
@@ -23,27 +24,33 @@ export type TimingForm = {
      */
     hasQualificationRound: boolean
     /**
-     * Ebenfalls nur mitgeführt: die Zeitnahme-Voreinstellung der Veranstaltung. Die RaceClocker-Rennen
-     * werden pro Veranstaltung angelegt, deshalb erben Wettkämpfe System und URLs von dort, solange die
-     * eigenen Felder leer sind. Die Oberfläche zeigt damit an, WAS geerbt würde, und die Warnungen
-     * rechnen auf den effektiven Werten ([effectiveTimingSystem]) statt auf den lokalen.
+     * Ebenfalls nur mitgeführt: die Zeitnahme-Voreinstellung der Veranstaltung. Wettkämpfe erben
+     * System und die beiden Dateiformate von dort, solange die eigenen Felder leer sind — die
+     * RaceClocker-Rennen dagegen werden pro Wettkampf zugewiesen und nicht geerbt. Die Oberfläche
+     * zeigt an, WAS geerbt würde, und die Warnungen rechnen auf den effektiven Werten statt auf den
+     * lokalen.
+     *
+     * Die Formate stehen hier als blanke ID: den Namen schlägt die Komponente in den geladenen
+     * Listen nach, damit dieses Modul ohne Netz testbar bleibt.
      */
     eventTimingSystem: TimingFormSystem
-    eventTimeTrialResultsUrl: string
-    eventHeatsResultsUrl: string
+    eventStartlistConfigQualification: string
+    eventStartlistConfigRounds: string
+    eventResultImportConfig: string
 }
 
 export const emptyTimingForm: TimingForm = {
     timingSystem: 'NONE',
-    timeTrialResultsUrl: '',
-    heatsResultsUrl: '',
+    raceQualification: null,
+    raceRounds: null,
     startlistConfigQualification: null,
     startlistConfigRounds: null,
     resultImportConfig: null,
     hasQualificationRound: false,
     eventTimingSystem: 'NONE',
-    eventTimeTrialResultsUrl: '',
-    eventHeatsResultsUrl: '',
+    eventStartlistConfigQualification: '',
+    eventStartlistConfigRounds: '',
+    eventResultImportConfig: '',
 }
 
 /** Wettkampf-Wert vor Veranstaltungs-Voreinstellung — dieselbe Regel wie das Backend (coalesce). */
@@ -51,13 +58,26 @@ export const effectiveTimingSystem = (form: TimingForm): TimingFormSystem =>
     form.timingSystem !== 'NONE' ? form.timingSystem : form.eventTimingSystem
 
 /**
+ * Weicht der Wettkampf von der Veranstaltung ab? Genau dann, wenn er selbst etwas gesetzt hat — auch
+ * ein einzelnes eigenes Feld zählt, denn es zeigt auf ein anderes Rennen oder auf andere Spalten als
+ * die Voreinstellung. Der „Überschreiben"-Schalter im Tab steht danach.
+ */
+export const overridesTiming = (form: TimingForm): boolean =>
+    form.timingSystem !== 'NONE' ||
+    form.raceQualification !== null ||
+    form.raceRounds !== null ||
+    form.startlistConfigQualification !== null ||
+    form.startlistConfigRounds !== null ||
+    form.resultImportConfig !== null
+
+/**
  * Die Preset-Felder kommen als reine UUID aus dem Backend. Das Label füllt die Komponente nach, sobald
  * die Preset-Listen geladen sind — hier steht nur die ID, damit diese Funktion ohne Netz testbar bleibt.
  */
 export const mapDtoToTimingForm = (dto: TimingConfigDto): TimingForm => ({
     timingSystem: dto.timingSystem ?? 'NONE',
-    timeTrialResultsUrl: dto.timeTrialResultsUrl ?? '',
-    heatsResultsUrl: dto.heatsResultsUrl ?? '',
+    raceQualification: dto.raceQualification ? {id: dto.raceQualification, label: ''} : null,
+    raceRounds: dto.raceRounds ? {id: dto.raceRounds, label: ''} : null,
     startlistConfigQualification: dto.startlistConfigQualification
         ? {id: dto.startlistConfigQualification, label: ''}
         : null,
@@ -67,11 +87,10 @@ export const mapDtoToTimingForm = (dto: TimingConfigDto): TimingForm => ({
     resultImportConfig: dto.resultImportConfig ? {id: dto.resultImportConfig, label: ''} : null,
     hasQualificationRound: dto.hasQualificationRound ?? false,
     eventTimingSystem: dto.eventTimingSystem ?? 'NONE',
-    eventTimeTrialResultsUrl: dto.eventTimeTrialResultsUrl ?? '',
-    eventHeatsResultsUrl: dto.eventHeatsResultsUrl ?? '',
+    eventStartlistConfigQualification: dto.eventStartlistConfigQualification ?? '',
+    eventStartlistConfigRounds: dto.eventStartlistConfigRounds ?? '',
+    eventResultImportConfig: dto.eventResultImportConfig ?? '',
 })
-
-const trimmedOrNull = (value: string): string | null => value.trim() || null
 
 /**
  * Felder, die für das gewählte System nicht sichtbar sind, werden bewusst geleert statt durchgereicht:
@@ -86,8 +105,8 @@ export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest =>
 
     return {
         timingSystem: form.timingSystem === 'NONE' ? null : form.timingSystem,
-        timeTrialResultsUrl: raceClocker ? trimmedOrNull(form.timeTrialResultsUrl) : null,
-        heatsResultsUrl: raceClocker ? trimmedOrNull(form.heatsResultsUrl) : null,
+        raceQualification: raceClocker ? (form.raceQualification?.id ?? null) : null,
+        raceRounds: raceClocker ? (form.raceRounds?.id ?? null) : null,
         startlistConfigQualification: raceClocker
             ? (form.startlistConfigQualification?.id ?? null)
             : null,
@@ -97,15 +116,15 @@ export const mapTimingFormToRequest = (form: TimingForm): TimingConfigRequest =>
 }
 
 export type TimingWarning =
-    | 'heatsUrl'
-    | 'timeTrialUrl'
+    | 'raceRounds'
+    | 'raceQualification'
     | 'startlistRounds'
     | 'startlistQualification'
 
 /**
  * Was fehlt, um die Zeitnahme benutzen zu können.
  *
- * Die Zeitfahren-URL und das Qualifikations-Preset hängen an [TimingForm.hasQualificationRound]: ein
+ * Das Zeitfahren-Rennen und das Qualifikations-Preset hängen an [TimingForm.hasQualificationRound]: ein
  * Wettkampf ohne Qualifikationsrunde braucht beides nie, und eine Warnung, die dort dauerhaft steht,
  * wird ignoriert. Hat er eine, sind beide genauso Pflicht wie die übrigen Felder — sonst antwortet der
  * Startlisten-Export mit STARTLIST_CONFIG_NOT_CONFIGURED und der Lauf-Pull findet keine Ergebnisse,
@@ -120,20 +139,25 @@ export const timingConfigWarnings = (form: TimingForm): TimingWarning[] => {
     if (system === 'NONE') return []
 
     const raceClocker = system === 'RACECLOCKER'
-    const heatsUrl = form.heatsResultsUrl.trim() || form.eventHeatsResultsUrl.trim()
-    const timeTrialUrl = form.timeTrialResultsUrl.trim() || form.eventTimeTrialResultsUrl.trim()
+    // Rennen werden pro Wettkampf zugewiesen, nicht von der Veranstaltung geerbt.
+    const raceRounds = form.raceRounds?.id
+    const raceQualification = form.raceQualification?.id
+    // Auch die Formate können von der Veranstaltung kommen — dann fehlen sie nicht.
+    const startlistRounds = form.startlistConfigRounds?.id || form.eventStartlistConfigRounds
+    const startlistQualification =
+        form.startlistConfigQualification?.id || form.eventStartlistConfigQualification
 
     const warnings: TimingWarning[] = []
-    if (raceClocker && !heatsUrl) {
-        warnings.push('heatsUrl')
+    if (raceClocker && !raceRounds) {
+        warnings.push('raceRounds')
     }
-    if (raceClocker && form.hasQualificationRound && !timeTrialUrl) {
-        warnings.push('timeTrialUrl')
+    if (raceClocker && form.hasQualificationRound && !raceQualification) {
+        warnings.push('raceQualification')
     }
-    if (!form.startlistConfigRounds) {
+    if (!startlistRounds) {
         warnings.push('startlistRounds')
     }
-    if (raceClocker && form.hasQualificationRound && !form.startlistConfigQualification) {
+    if (raceClocker && form.hasQualificationRound && !startlistQualification) {
         warnings.push('startlistQualification')
     }
     return warnings

@@ -22,6 +22,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
+        <!--
+          Opt-in-Schalter fuer schnellere Entwicklungslaeufe. Standard bleibt false, der
+          Auslieferungsbau (./mvnw package) ist damit unveraendert. Mit -DskipCodegen=true
+          ueberspringen flyway:migrate und jooq-codegen:generate; das ist nur sinnvoll,
+          wenn target/generated-sources/jooq schon einmal erzeugt wurde (also kein clean
+          dazwischen lag) und sich das DB-Schema seither nicht geaendert hat.
+        -->
+        <skipCodegen>false</skipCodegen>
+
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
 
@@ -291,6 +300,34 @@
         </resources>
 
         <plugins>
+            <!--
+              jOOQ registriert target/generated-sources/jooq als Compile-Quellwurzel nur
+              als Nebeneffekt seines generate-Goals. Wird das Goal via skipCodegen
+              uebersprungen, fehlt diese Quellwurzel und der inkrementelle Kotlin-Compiler
+              faellt auf einen teureren Pfad zurueck (Bau wird langsamer statt schneller).
+              build-helper meldet die Quellwurzel darum unabhaengig vom Codegen an; im
+              Normalbau ist es ein No-op (Maven dedupliziert Quellwurzeln), im Skip-Bau
+              haelt es den inkrementellen Compiler warm.
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-jooq-generated-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/jooq</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -365,6 +402,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <skip>${skipCodegen}</skip>
                     <url>${database.url}</url>
                     <user>${database.user}</user>
                     <password>${database.password}</password>
@@ -407,6 +445,8 @@
                 <!-- Specify the plugin configuration.
                 The configuration format is the same as for the standalone code generator -->
                 <configuration>
+
+                    <skip>${skipCodegen}</skip>
 
                     <!-- JDBC connection parameters -->
                     <jdbc>

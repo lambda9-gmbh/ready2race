@@ -6,6 +6,7 @@ data class CompetitionPropertiesDto(
     val identifier: String,
     val name: String,
     val shortName: String?,
+    val checkInOutRequired: Boolean,
     val description: String?,
     val competitionCategory: CompetitionCategoryDto?,
     val namedParticipants: List<NamedParticipantForCompetitionDto>,

@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.GapDocumentTem
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toDto
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toGapPlaceholders
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toRecord
+import de.lambda9.ready2race.backend.app.documentTemplate.control.toRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignedTemplateId
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateDto
@@ -31,6 +32,7 @@ import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.pdf.checkValidFont
+import de.lambda9.ready2race.backend.pdf.checkValidPdf
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -65,7 +67,16 @@ object GapDocumentTemplateService {
         file: File,
         request: GapDocumentTemplateRequest,
         font: File?,
-    ): App<GapDocumentTemplateError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<GapDocumentTemplateError, ApiResponse.NoData> =
+        createTemplate(file, request, font).map { ApiResponse.NoData }
+
+    private fun createTemplate(
+        file: File,
+        request: GapDocumentTemplateRequest,
+        font: File?,
+    ): App<GapDocumentTemplateError, UUID> = KIO.comprehension {
+
+        !KIO.failOn(!checkValidPdf(file.bytes)) { GapDocumentTemplateError.InvalidPdf }
 
         !KIO.failOn(!GapDocumentTemplateLogic.placeholdersFitOnSinglePage(request.type, request.placeholders)) {
             GapDocumentTemplateError.PlaceholderPageNotSupported
@@ -76,6 +87,9 @@ object GapDocumentTemplateService {
         }
 
         if (font != null && font.bytes.isNotEmpty()) {
+            !KIO.failOn(!GapDocumentTemplateLogic.hasValidFontExtension(font.name)) {
+                GapDocumentTemplateError.InvalidFont
+            }
             !KIO.failOn(!checkValidFont(font.bytes)) { GapDocumentTemplateError.InvalidFont }
         }
 
@@ -104,7 +118,7 @@ object GapDocumentTemplateService {
             ).orDie()
         }
 
-        noData
+        KIO.ok(id)
 
     }
 
@@ -123,6 +137,9 @@ object GapDocumentTemplateService {
         }
 
         if (font != null && font.bytes.isNotEmpty()) {
+            !KIO.failOn(!GapDocumentTemplateLogic.hasValidFontExtension(font.name)) {
+                GapDocumentTemplateError.InvalidFont
+            }
             !KIO.failOn(!checkValidFont(font.bytes)) { GapDocumentTemplateError.InvalidFont }
         }
 
@@ -178,6 +195,105 @@ object GapDocumentTemplateService {
         )
     }
 
+    /**
+     * Die Vorlage als Austauschpaket: PDF, Platzhalter und Schrift in einer Datei, damit dieselbe
+     * Einrichtung in einer anderen Instanz nicht von Hand nachgebaut werden muss.
+     */
+    fun exportTemplate(
+        id: UUID,
+    ): App<GapDocumentTemplateError, ApiResponse.File> = KIO.comprehension {
+        val pdf = !GapDocumentTemplateDataRepo.getData(id).orDie().onNullFail { GapDocumentTemplateError.NotFound }
+        val template = !GapDocumentTemplateRepo.get(id).orDie().onNullDie("foreign key constraint")
+        val fontRecord = !GapDocumentTemplateFontRepo.get(id).orDie()
+
+        val placeholders = template.placeholders!!.toList().map { it!!.toDto().toRequest() }
+
+        val bytes = GapDocumentTemplatePackage.write(
+            GapDocumentTemplatePackage.Content(
+                name = template.name!!,
+                request = GapDocumentTemplateRequest(
+                    type = GapDocumentType.valueOf(template.type!!),
+                    placeholders = placeholders,
+                    fontName = template.fontName,
+                ),
+                pdf = pdf,
+                font = fontRecord?.let { File(it.fileName, it.data) },
+            )
+        )
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "${template.name!!.substringBeforeLast('.')}.r2rtpl.zip",
+                bytes = bytes,
+            )
+        )
+    }
+
+    /**
+     * Legt aus einem Austauschpaket eine neue Vorlage an. Bewusst über [createTemplate], damit der
+     * Import genau dieselben Prüfungen durchläuft wie ein normaler Upload und nicht an ihnen vorbei.
+     */
+    /**
+     * [typeOverride] überstimmt den Typ aus dem Manifest - die Zip behauptet nur, was sie ist,
+     * und wer importiert, soll das korrigieren können. Die Platzhalter-Validierung in
+     * [createTemplate] läuft gegen den effektiven Typ; ein unpassender Override scheitert also
+     * mit derselben Meldung wie beim Anlegen von Hand.
+     *
+     * Nach dem Import wird die Vorlage automatisch als aktive Vorlage ihres Typs eingehängt,
+     * wenn dort noch keine hinterlegt ist: Wer ein Siegerurkunden-Paket importiert, will es fast
+     * immer auch benutzen - und stand sonst vor "Für Siegerurkunden ist keine Vorlage
+     * hinterlegt", obwohl der Import gelungen war (beobachtet am 10.08.2026). Eine bereits
+     * aktive Vorlage wird ausdrücklich NICHT verdrängt.
+     */
+    fun importTemplate(
+        pkg: File,
+        typeOverride: GapDocumentType? = null,
+    ): App<GapDocumentTemplateError, ApiResponse.Created> = KIO.comprehension {
+        val content = when (val result = GapDocumentTemplatePackage.read(pkg.bytes)) {
+            is GapDocumentTemplatePackage.ReadResult.Ok -> result.content
+            GapDocumentTemplatePackage.ReadResult.Invalid ->
+                !KIO.fail(GapDocumentTemplateError.InvalidPackage)
+            GapDocumentTemplatePackage.ReadResult.UnsupportedVersion ->
+                !KIO.fail(GapDocumentTemplateError.UnsupportedPackageVersion)
+        }
+
+        val request = typeOverride
+            ?.let { content.request.copy(type = it) }
+            ?: content.request
+
+        val id = !createTemplate(
+            file = File(content.name, content.pdf),
+            request = request,
+            font = content.font,
+        )
+
+        val assigned = !GapDocumentTemplateUsageRepo.all().orDie()
+        if (assigned.none { it.type == request.type.name }) {
+            !GapDocumentTemplateUsageRepo.upsert(
+                GapDocumentTemplateUsageRecord(
+                    type = request.type.name,
+                    template = id,
+                )
+            ).orDie()
+        }
+
+        KIO.ok(ApiResponse.Created(id))
+    }
+
+    /** Die hinterlegte Schrift, damit der Editor die Vorschau in derselben Schrift zeichnen kann. */
+    fun downloadFont(
+        id: UUID,
+    ): App<GapDocumentTemplateError, ApiResponse.File> = KIO.comprehension {
+        val font = !GapDocumentTemplateFontRepo.get(id).orDie().onNullFail { GapDocumentTemplateError.NotFound }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = font.fileName,
+                bytes = font.data,
+            )
+        )
+    }
+
     fun getPreview(
         id: UUID
     ): App<GapDocumentTemplateError, ApiResponse.File> = KIO.comprehension {
@@ -211,8 +327,13 @@ object GapDocumentTemplateService {
         place = "1. Platz",
         competitionName = "CF 1x Frauen-Einer",
         competitionShortName = "CF 1x",
-        clubName = "Ruderklub Flensburg",
+        // Eine Kette statt eines einzelnen Vereins: seit dem 09.08.2026 trägt das Feld die Vereine
+        // aller Athleten eines Bootes, bei der CRF 2026 in 42 von 100 Meldungen mehr als einen.
+        // Ein kurzes Beispiel hier hätte die Vorschau zu einem Versprechen gemacht, das die
+        // gedruckte Urkunde nicht hält - der Kasten hat feste Maße und der Renderer bricht nicht um.
+        clubName = "Ruderklub Flensburg / Rostocker Ruderclub / Ruderclub Nürtingen",
         teamName = "Flensburg I",
+        ratingCategory = "Meisterschaften",
         eventDate = "16.–17. August 2026",
         eventLocation = "Flensburg",
     )

@@ -17,7 +17,7 @@ class CompressionTest {
     /**
      * Roughly the shape of a live dashboard payload: large and highly repetitive.
      */
-    private val largeJson = """{"matches":[${(1..200).joinToString(",") { """{"id":$it,"name":"Lauf $it","currentlyRunning":false}""" }}]}"""
+    private val largeJson = """{"matches":[${(1..200).joinToString(",") { """{"id":$it,"name":"Lauf $it","state":"UPCOMING"}""" }}]}"""
 
     private fun ApplicationTestBuilder.setup() {
         application {

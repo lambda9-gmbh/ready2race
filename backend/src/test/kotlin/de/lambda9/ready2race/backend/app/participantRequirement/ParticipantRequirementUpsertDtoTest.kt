@@ -13,6 +13,7 @@ class ParticipantRequirementUpsertDtoTest {
         description = null,
         optional = false,
         checkInApp = false,
+        publiclyVisible = false,
         checkEarliestMinutesBefore = earliest,
         checkLatestMinutesBefore = latest,
     )

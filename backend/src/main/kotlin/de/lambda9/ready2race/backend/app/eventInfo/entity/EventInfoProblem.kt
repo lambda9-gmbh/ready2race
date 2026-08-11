@@ -6,15 +6,15 @@ import io.ktor.http.*
 import java.util.UUID
 
 sealed interface EventInfoProblem : ServiceError {
-    data class InfoViewConfigurationNotFound(val id: UUID) : EventInfoProblem
+    data class BoardNotFound(val id: UUID) : EventInfoProblem
     data class EventNotFound(val eventId: UUID) : EventInfoProblem
     data class InvalidFilter(val filterMessage: String) : EventInfoProblem
-    data class InvalidViewConfiguration(val configMessage: String) : EventInfoProblem
+    data class QrCodeNotFound(val qrCode: String) : EventInfoProblem
 
     override fun respond(): ApiError = when (this) {
-        is InfoViewConfigurationNotFound -> ApiError(
+        is BoardNotFound -> ApiError(
             status = HttpStatusCode.NotFound,
-            message = "Info view configuration with id $id not found"
+            message = "Board with id $id not found"
         )
 
         is EventNotFound -> ApiError(
@@ -27,9 +27,12 @@ sealed interface EventInfoProblem : ServiceError {
             message = "Invalid filter: $filterMessage"
         )
 
-        is InvalidViewConfiguration -> ApiError(
-            status = HttpStatusCode.BadRequest,
-            message = "Invalid view configuration: $configMessage"
+        is QrCodeNotFound -> ApiError(
+            status = HttpStatusCode.NotFound,
+            // Bewusst dieselbe Antwort für "gibt es nicht", "gehört zu einer anderen
+            // Veranstaltung" und "gehört zu einer Helferrolle": eine unterscheidbare
+            // Meldung würde verraten, welche Codes existieren.
+            message = "No participant found for this code"
         )
     }
 }

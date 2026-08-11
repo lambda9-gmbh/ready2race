@@ -8,7 +8,7 @@ import {RequestResult} from '@hey-api/client-fetch'
 import {Check, Close, CreditCardOff, Download, Payment} from '@mui/icons-material'
 import {downloadInvoice, setInvoicePaid} from '@api/sdk.gen.ts'
 import {ReactNode, useRef} from 'react'
-import {Box, Link, Tooltip} from '@mui/material'
+import {Box, Link, Stack, Tooltip, Typography} from '@mui/material'
 import {useFeedback} from '@utils/hooks.ts'
 import {format} from 'date-fns'
 import {updateInvoiceGlobal} from '@authorization/privileges.ts'
@@ -41,6 +41,28 @@ const InvoiceTable = (props: Props) => {
             headerName: t('invoice.invoiceNumber'),
             minWidth: 150,
             flex: 1,
+        },
+        {
+            field: 'billedToOrganization',
+            headerName: t('invoice.billedTo'),
+            minWidth: 200,
+            flex: 1,
+            renderCell: ({row}) => {
+                // Bei nur einem Vereinsverwalter steht dessen Name in billedToName - haeufig ist das
+                // der Vereinsname selbst, dann waere die zweite Zeile eine Dopplung.
+                const organization = row.billedToOrganization ?? row.billedToName
+                const name = row.billedToName !== organization ? row.billedToName : undefined
+                return (
+                    <Stack>
+                        <Typography>{organization ?? '-'}</Typography>
+                        {name && (
+                            <Typography variant={'caption'} color={'text.secondary'}>
+                                {name}
+                            </Typography>
+                        )}
+                    </Stack>
+                )
+            },
         },
         {
             field: 'totalAmount',

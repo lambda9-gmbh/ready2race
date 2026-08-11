@@ -30,7 +30,13 @@ import {
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
-import {Forward, InfoOutlined, PlayCircleOutlined, SportsScoreOutlined} from '@mui/icons-material'
+import {
+    Forward,
+    InfoOutlined,
+    PlayCircleOutlined,
+    SportsScoreOutlined,
+    TuneOutlined,
+} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
 import {useMemo, useRef, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
@@ -75,8 +81,10 @@ import RatingCategoriesForEvent from '@components/ratingCategory/RatingCategorie
 import EventTimingConfig from '@components/event/timing/EventTimingConfig.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import AwardCertificateDialog from '@components/awardCertificate/AwardCertificateDialog.tsx'
+import CheckSeverityDialog from '@components/event/liveDashboard/CheckSeverityDialog.tsx'
 import WorkspacePremium from '@mui/icons-material/WorkspacePremium'
 import SplitButton from '@components/SplitButton.tsx'
+import {useDocumentTitle} from '@utils/useDocumentTitle.ts'
 
 const EVENT_TABS = [
     'general',
@@ -113,14 +121,18 @@ const EventPage = () => {
 
     const [manageRunningMatchesOpen, setManageRunningMatchesOpen] = useState(false)
     const [awardCertificateDialogOpen, setAwardCertificateDialogOpen] = useState(false)
+    const [checkSeverityOpen, setCheckSeverityOpen] = useState(false)
     const {data, pending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
             }
         },
+
         deps: [eventId, lastRequested],
     })
+
+    useDocumentTitle(data?.name)
 
     const documentAdministrationProps = useEntityAdministration<EventDocumentDto>(
         t('event.document.document'),
@@ -445,6 +457,16 @@ const EventPage = () => {
                                                 {t('event.liveDashboard.open')}
                                             </Button>
                                         </Link>
+                                        {user.checkPrivilege(updateEventGlobal) && (
+                                            <Button
+                                                startIcon={<TuneOutlined />}
+                                                variant="outlined"
+                                                fullWidth
+                                                sx={{mt: 1}}
+                                                onClick={() => setCheckSeverityOpen(true)}>
+                                                {t('event.liveDashboard.checkSeverity.manage')}
+                                            </Button>
+                                        )}
                                     </Card>
                                 )}
                             </Stack>
@@ -540,6 +562,13 @@ const EventPage = () => {
                 <ManageRunningMatchesDialog
                     open={manageRunningMatchesOpen}
                     onClose={() => setManageRunningMatchesOpen(false)}
+                    eventId={eventId}
+                />
+            )}
+            {checkSeverityOpen && (
+                <CheckSeverityDialog
+                    open={checkSeverityOpen}
+                    onClose={() => setCheckSeverityOpen(false)}
                     eventId={eventId}
                 />
             )}

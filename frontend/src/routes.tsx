@@ -23,16 +23,18 @@ import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
 import EventsPage from './pages/event/EventsPage.tsx'
 import EventPage, {EventTab} from './pages/event/EventPage.tsx'
-import CompetitionPage, {CompetitionTab} from './pages/event/CompetitionPage.tsx'
+import CompetitionPage from './pages/event/CompetitionPage.tsx'
+import {CompetitionTab} from './components/event/competition/common.ts'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import EventInfoPage from './pages/event/EventInfoPage.tsx'
 import AthleteBoardPage from './pages/event/AthleteBoardPage.tsx'
+import BoardDisplayPage from './pages/event/BoardDisplayPage.tsx'
 import LiveDashboardPage from './pages/event/LiveDashboardPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
 import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
-import ClubsPage from './pages/club/ClubsPage.tsx'
+import ClubsPage, {ClubTab} from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
 import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx'
@@ -48,6 +50,7 @@ import QrAssignPage from './pages/app/QrAssignPage.tsx'
 import AppLoginPage from './pages/app/AppLoginPage.tsx'
 import ForbiddenPage from './pages/app/ForbiddenPage.tsx'
 import AppFunctionSelectPage from './pages/app/AppFunctionSelectPage.tsx'
+import AppDashboardPage from './pages/app/AppDashboardPage.tsx'
 import EventRegistrationPage from './pages/eventRegistration/EventRegistrationPage.tsx'
 import InvoicesPage from './pages/InvoicePage.tsx'
 import ResultsPage from './pages/results/ResultsPage.tsx'
@@ -315,7 +318,10 @@ export const eventInfoRoute = createRoute({
 export const eventLiveDashboardRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'liveDashboard',
-    component: () => <LiveDashboardPage />,
+    component: function EventLiveDashboard() {
+        const {eventId} = eventLiveDashboardRoute.useParams()
+        return <LiveDashboardPage eventId={eventId} />
+    },
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, readLiveDashboardGlobal)
     },
@@ -376,7 +382,9 @@ export const clubsIndexRoute = createRoute({
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
+    validateSearch: validateTabSearch<ClubTab>,
 })
+
 
 export const administrationRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
@@ -455,6 +463,15 @@ export const appFunctionSelectRoute = createRoute({
     },
 })
 
+export const appDashboardRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: 'dashboard',
+    component: () => <AppDashboardPage />,
+    beforeLoad: ({context}) => {
+        checkAuthApp(context)
+    },
+})
+
 export const invoicesRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
     path: 'invoices',
@@ -480,6 +497,9 @@ export const resultsEventRoute = createRoute({
     getParentRoute: () => resultsRoute,
     path: '/event/$eventId',
     component: () => <ResultsPage />,
+    validateSearch: (search: {tab?: string} & SearchSchemaInput) => ({
+        tab: search.tab === 'my-event' ? ('my-event' as const) : undefined,
+    }),
 })
 
 export const resultsQRCodeRoute = createRoute({
@@ -496,10 +516,18 @@ export const challengeRoute = createRoute({
 
 // Öffentliche Route ohne App-Layout: fest montierte Athletenbildschirme und
 // Athleten-Handys brauchen weder Kopfleiste noch Seitenleiste noch Anmeldung.
+// Bestands-URL der alten Athleten-Anzeige — leitet auf das erste Board um.
 export const athleteBoardRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'board/$eventId',
     component: () => <AthleteBoardPage />,
+})
+
+// Die Anzeige eines konkreten Boards, ebenfalls öffentlich und ohne App-Layout.
+export const boardDisplayRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'board/$eventId/$boardId',
+    component: () => <BoardDisplayPage />,
 })
 
 const routeTree = rootRoute.addChildren([
@@ -537,11 +565,13 @@ const routeTree = rootRoute.addChildren([
         qrParticipantRoute,
         qrAssignRoute,
         appFunctionSelectRoute,
+        appDashboardRoute,
         appForbiddenRoute,
     ]),
     resultsRoute.addChildren([resultsIndexRoute, resultsQRCodeRoute, resultsEventRoute]),
     mobileRoute.addChildren([challengeRoute]),
     athleteBoardRoute,
+    boardDisplayRoute,
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath

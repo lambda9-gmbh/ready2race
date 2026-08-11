@@ -8,6 +8,7 @@ import CellTowerOutlinedIcon from '@mui/icons-material/CellTowerOutlined'
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import PersonIcon from '@mui/icons-material/Person'
 import PercentIcon from '@mui/icons-material/Percent'
+import PersonPinIcon from '@mui/icons-material/PersonPin'
 import {resultsEventRoute} from '@routes'
 import ResultsLiveMatches from '@components/results/ResultsLiveMatches.tsx'
 import {useTranslation} from 'react-i18next'
@@ -18,8 +19,9 @@ import Throbber from '@components/Throbber.tsx'
 import ResultsConfigurationTopBar from '@components/results/ResultsConfigurationTopBar.tsx'
 import ResultsClubRanking from '@components/results/ResultsClubRanking.tsx'
 import ResultsIndividualRanking from '@components/results/ResultsIndividualRanking.tsx'
+import {MyEventPanel} from '@components/results/myEvent/MyEventPanel.tsx'
 
-const RESULTS_TABS = ['latest-results', 'live', 'upcoming'] as const
+const RESULTS_TABS = ['latest-results', 'live', 'my-event'] as const
 export type ResultsTab = (typeof RESULTS_TABS)[number]
 
 const CHALLENGE_RESULTS_TABS = ['club', 'individual', 'relative'] as const
@@ -38,7 +40,12 @@ const ResultsPage = () => {
         null,
     )
 
-    const [activeResultsTab, setActiveResultsTab] = useState<ResultsTab>('latest-results')
+    // Der QR-Einstieg leitet mit ?tab=my-event weiter, damit der Reiter "Mein Event"
+    // gleich offen ist, statt hinter "Aktuelle Ergebnisse" zu verschwinden.
+    const {tab: tabFromSearch} = resultsEventRoute.useSearch()
+    const [activeResultsTab, setActiveResultsTab] = useState<ResultsTab>(
+        tabFromSearch === 'my-event' ? 'my-event' : 'latest-results',
+    )
     const switchResultsTab = (tab: ResultsTab) => {
         setCompetitionSelected(null)
         setActiveResultsTab(tab)
@@ -102,6 +109,13 @@ const ResultsPage = () => {
                             sx={{flex: 1, maxWidth: 'unset'}}
                             {...resultsTabProps('live')}
                         />
+                        <Tab
+                            label={t('myEvent.tab')}
+                            icon={<PersonPinIcon />}
+                            iconPosition={smallScreenLayout ? 'top' : 'start'}
+                            sx={{flex: 1, maxWidth: 'unset'}}
+                            {...resultsTabProps('my-event')}
+                        />
                     </TabSelectionContainer>
                 ) : (
                     <TabSelectionContainer
@@ -142,6 +156,9 @@ const ResultsPage = () => {
                     </TabPanel>
                     <TabPanel index={'live'} activeTab={activeResultsTab}>
                         <ResultsLiveMatches eventId={eventId} />
+                    </TabPanel>
+                    <TabPanel index={'my-event'} activeTab={activeResultsTab}>
+                        <MyEventPanel eventId={eventId} />
                     </TabPanel>
                 </>
             ) : (

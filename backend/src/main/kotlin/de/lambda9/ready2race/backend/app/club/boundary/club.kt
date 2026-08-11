@@ -30,6 +30,11 @@ fun Route.club() {
             call.respondComprehension {
                 val user = !authenticate(Privilege.CreateClubGlobal)
                 val payload = !receiveKIO(ClubUpsertDto.example)
+                // Die Kurzform hängt am Vereins*namen* und wirkt damit über diesen einen
+                // Datensatz hinaus - für sie gilt dasselbe Recht wie auf der Pflegeseite.
+                if (payload.shortName != null) {
+                    !authenticate(Privilege.UpdateClubGlobal)
+                }
                 ClubService.addClub(payload, user.id!!)
 
             }
@@ -73,6 +78,11 @@ fun Route.club() {
                     val id = !pathParam("clubId", uuid)
                     val payload = !receiveKIO(ClubUpsertDto.example)
                     if (scope == Privilege.Scope.OWN && id != user.club) {
+                        KIO.fail(AuthError.PrivilegeMissing)
+                    } else if (payload.shortName != null && scope != Privilege.Scope.GLOBAL) {
+                        // Den eigenen Verein umbenennen darf, wer ihn verwaltet. Die Kurzform
+                        // hängt aber am Namen und wird auch von Gastruderern anderer Vereine
+                        // getragen - sie zu setzen bleibt bei UpdateClubGlobal.
                         KIO.fail(AuthError.PrivilegeMissing)
                     } else {
                         ClubService.updateClub(payload, user.id!!, id)

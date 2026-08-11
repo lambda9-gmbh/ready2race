@@ -19,7 +19,9 @@ const match = (teams: CompetitionMatchTeamDto[]): CompetitionMatchDto => ({
     teams,
     weighting: 1,
     executionOrder: 1,
-    currentlyRunning: false,
+    activatedAt: null,
+    skipped: false,
+    status: {state: 'UPCOMING', teamsTotal: teams.length, teamsScored: 0},
 })
 
 describe('roundHasNothingToRace', () => {

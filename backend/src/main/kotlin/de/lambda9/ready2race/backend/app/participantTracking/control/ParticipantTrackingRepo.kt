@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.ParticipantTrackingView
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantTrackingChangeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantTrackingRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantTrackingViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
@@ -29,7 +30,30 @@ object ParticipantTrackingRepo {
     }
 
     /**
-     * Alle Scans der Veranstaltung (Live-Dashboard: "ist das Boot auf dem Wasser?") - der
+     * Der Rohsatz eines Eintrags. Die Korrektur schreibt auf die Tabelle, nicht auf die Sicht -
+     * und braucht dafür auch `participant` und `event`, um zu prüfen, ob der Eintrag überhaupt zu
+     * der Person und der Veranstaltung im Pfad gehört.
+     */
+    fun findById(trackingId: UUID) = PARTICIPANT_TRACKING.selectOne { ID.eq(trackingId) }
+
+    fun update(trackingId: UUID, f: ParticipantTrackingRecord.() -> Unit) =
+        PARTICIPANT_TRACKING.update(f) { ID.eq(trackingId) }
+
+    fun insertChange(record: ParticipantTrackingChangeRecord) =
+        PARTICIPANT_TRACKING_CHANGE.insertReturning(record) { ID }
+
+    /** Die Änderungsspur einer Person, jüngste zuerst - so liest der Dialog sie auch. */
+    fun changes(participantId: UUID, eventId: UUID) = Jooq.query {
+        with(PARTICIPANT_TRACKING_CHANGE_VIEW) {
+            selectFrom(this)
+                .where(PARTICIPANT_ID.eq(participantId).and(EVENT_ID.eq(eventId)))
+                .orderBy(CREATED_AT.desc())
+                .fetch()
+        }
+    }
+
+    /**
+     * Alle Scans der Veranstaltung (Live-Dashboard: "ist das Boot in der Arena?") - der
      * Aufrufer reduziert auf den letzten Scan je Person.
      */
     fun getScansByEvent(eventId: UUID) = Jooq.query {

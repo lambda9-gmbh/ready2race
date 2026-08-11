@@ -97,6 +97,20 @@ fun Route.participantRequirementForEvent() {
             }
         }
 
+        route("/open/export") {
+            get {
+                call.respondComprehension {
+                    // Bewusst global: die Liste führt Gemeldete aller Vereine, ein
+                    // Vereinsvertreter darf sie nicht ziehen.
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val requirementId = !optionalQueryParam("requirementId", uuid)
+
+                    ParticipantRequirementService.exportOpenRequirements(eventId, requirementId)
+                }
+            }
+        }
+
         route("/approve") {
             post {
                 call.respondComprehension {

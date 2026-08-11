@@ -8,7 +8,11 @@ import {useEntityAdministration} from '@utils/hooks.ts'
 import {CompetitionDto, EventDayDto} from '@api/types.gen.ts'
 import {Trans, useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {Stack} from '@mui/material'
+import {Box, Button, Stack} from '@mui/material'
+import EmojiEvents from '@mui/icons-material/EmojiEvents'
+import AwardCeremonyDialog from '@components/awardCeremony/AwardCeremonyDialog.tsx'
+import {eventRoute} from '@routes'
+import {useState} from 'react'
 
 type Props = {
     isChallengeEvent: boolean
@@ -17,6 +21,8 @@ type Props = {
 const CompetitionsAndEventDays = (props: Props) => {
     const {t} = useTranslation()
     const user = useUser()
+    const {eventId} = eventRoute.useParams()
+    const [awardCeremonyDialogOpen, setAwardCeremonyDialogOpen] = useState(false)
 
     const competitionAdministrationProps = useEntityAdministration<CompetitionDto>(
         t('event.competition.competition'),
@@ -68,6 +74,19 @@ const CompetitionsAndEventDays = (props: Props) => {
             />
             {!props.isChallengeEvent && user.checkPrivilege(readEventGlobal) && (
                 <>
+                    <Box sx={{alignSelf: 'flex-end'}}>
+                        <Button
+                            variant={'contained'}
+                            startIcon={<EmojiEvents />}
+                            onClick={() => setAwardCeremonyDialogOpen(true)}>
+                            {t('awardCeremony.download.button')}
+                        </Button>
+                    </Box>
+                    <AwardCeremonyDialog
+                        open={awardCeremonyDialogOpen}
+                        onClose={() => setAwardCeremonyDialogOpen(false)}
+                        eventId={eventId}
+                    />
                     <EventDayTable
                         {...eventDayAdministrationProps.table}
                         title={t('event.eventDay.eventDays')}

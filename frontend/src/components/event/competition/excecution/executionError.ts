@@ -43,7 +43,7 @@ const matchKeys = {
     teamsNotMatching: 'event.competition.execution.error.teamsNotMatching',
 } as const
 
-const raceClockerKeys = {
+export const raceClockerKeys = {
     urlMissing: 'event.competition.execution.results.raceclocker.error.urlMissing',
     urlInvalid: 'event.competition.execution.results.raceclocker.error.urlInvalid',
     unreachable: 'event.competition.execution.results.raceclocker.error.unreachable',
@@ -53,11 +53,18 @@ const raceClockerKeys = {
     matchIsBye: 'event.competition.execution.results.raceclocker.error.matchIsBye',
 } as const
 
+// Separate key for poll duplicate teams — the button's message has {{teams}} with crew names from the API,
+// but the background job stores only the error code without details, so no teams list is available.
+export const raceClockerPollKeys = {
+    duplicateTeams: 'event.competition.execution.results.raceclocker.poll.duplicateTeams',
+} as const
+
 export type ExecutionErrorKey =
     | (typeof substitutionKeys)[keyof typeof substitutionKeys]
     | (typeof challengeKeys)[keyof typeof challengeKeys]
     | (typeof matchKeys)[keyof typeof matchKeys]
     | (typeof raceClockerKeys)[keyof typeof raceClockerKeys]
+    | (typeof raceClockerPollKeys)[keyof typeof raceClockerPollKeys]
 
 /** Ein übersetzbarer Meldungstext: i18n-Key plus die Werte, die er einsetzt. */
 export type ExecutionErrorText = {
@@ -174,8 +181,15 @@ export const raceClockerErrorText = (error: ExecutionApiError): ExecutionErrorTe
         case 'RACECLOCKER_MALFORMED_FEED':
             return {key: raceClockerKeys.unreachable}
 
-        case 'RACECLOCKER_MATCH_NOT_IN_FEED':
-            return {key: raceClockerKeys.matchNotInFeed}
+        case 'RACECLOCKER_MATCH_NOT_IN_FEED': {
+            // Der Rennenname statt der nackten Adresse: „im Rennen Kurzstrecke nicht gefunden" ist
+            // am Renntag eine Handlungsanweisung, eine URL ist es nicht.
+            const details = (error.details as Record<string, unknown> | undefined) ?? {}
+            return {
+                key: raceClockerKeys.matchNotInFeed,
+                values: {races: asStringArray(details.races).join(', ')},
+            }
+        }
 
         case 'RACECLOCKER_DUPLICATE_TEAMS': {
             const details = (error.details as Record<string, unknown> | undefined) ?? {}

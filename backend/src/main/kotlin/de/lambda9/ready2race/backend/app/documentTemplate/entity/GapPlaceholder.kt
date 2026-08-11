@@ -31,6 +31,12 @@ data class GapPlaceholderValues(
     val competitionShortName: String? = null,
     val clubName: String? = null,
     val teamName: String? = null,
+    /**
+     * Die Wertungskategorie. Nur gefüllt, wenn der Urkunden-Export es ausdrücklich verlangt
+     * ([de.lambda9.ready2race.backend.app.certificate.entity.AwardCertificateOptions.printRatingCategory]) —
+     * sonst bleibt der Platzhalter leer und die Urkunde sieht aus wie bisher.
+     */
+    val ratingCategory: String? = null,
     val eventDate: String? = null,
     val eventLocation: String? = null,
 )

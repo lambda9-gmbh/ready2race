@@ -215,6 +215,8 @@ const CsvImportWizard = ({open, onClose, config, onComplete}: Props) => {
                     <CsvImportWizardStep3
                         config={config}
                         valueMappings={valueMappings}
+                        parsedData={parsedData}
+                        columnMappings={columnMappings}
                         onMappingsChange={setValueMappings}
                     />
                 )

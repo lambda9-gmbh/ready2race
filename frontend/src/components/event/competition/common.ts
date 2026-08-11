@@ -6,10 +6,22 @@ import {
     CompetitionSetupTemplateOverviewDto,
 } from '@api/types.gen.ts'
 
+const COMPETITION_TABS = [
+    'general',
+    'registrations',
+    'teams',
+    'setup',
+    'execution',
+    'timing',
+    'places',
+] as const
+export type CompetitionTab = (typeof COMPETITION_TABS)[number]
+
 export type CompetitionForm = {
     identifier: string
     name: string
     shortName: string
+    checkInOutRequired: boolean
     description: string
     competitionCategory: AutocompleteOption
     namedParticipants: {
@@ -37,6 +49,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
     identifier: '',
     name: '',
     shortName: '',
+    checkInOutRequired: true,
     description: '',
     competitionCategory: null,
     namedParticipants: [],
@@ -57,6 +70,7 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
         identifier: formData.identifier,
         name: formData.name,
         shortName: takeIfNotEmpty(formData.shortName),
+        checkInOutRequired: formData.checkInOutRequired,
         description: takeIfNotEmpty(formData.description),
         competitionCategory: takeIfNotEmpty(formData.competitionCategory?.id),
         namedParticipants: formData.namedParticipants.map(value => ({
@@ -94,6 +108,7 @@ export function mapCompetitionPropertiesToCompetitionForm(
         identifier: dto.identifier,
         name: dto.name,
         shortName: dto.shortName ?? '',
+        checkInOutRequired: dto.checkInOutRequired,
         description: dto.description ?? '',
         competitionCategory: dto.competitionCategory
             ? {

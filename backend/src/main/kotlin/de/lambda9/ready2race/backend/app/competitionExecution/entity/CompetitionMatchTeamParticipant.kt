@@ -13,5 +13,10 @@ data class CompetitionMatchTeamParticipant(
     val year: Int,
     val gender: Gender,
     val external: Boolean?,
-    val externalClubName: String?
+    val externalClubName: String?,
+    /**
+     * Der eigene Verein dieser Person. Bei Gastruderern ([external]) leer - dort steht der Verein
+     * als Freitext in [externalClubName]. Ausdrücklich nicht der meldende Verein der Mannschaft.
+     */
+    val clubName: String?,
 )

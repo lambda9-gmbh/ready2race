@@ -81,6 +81,23 @@ fun GapDocumentPlaceholderRecord.toDto() =
         staticText = staticText,
     )
 
+/** Für den Export: derselbe Platzhalter ohne die Datenbank-Id, wie ihn ein Erstellen/Aktualisieren annimmt. */
+fun GapDocumentPlaceholderDto.toRequest() =
+    GapDocumentPlaceholderRequest(
+        name = name,
+        type = type,
+        page = page,
+        relLeft = relLeft,
+        relTop = relTop,
+        relWidth = relWidth,
+        relHeight = relHeight,
+        textAlign = textAlign,
+        fontSize = fontSize,
+        bold = bold,
+        italic = italic,
+        staticText = staticText,
+    )
+
 fun GapDocumentTemplateViewRecord.toDto() =
     GapDocumentTemplateDto(
         id = id!!,

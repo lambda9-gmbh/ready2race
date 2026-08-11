@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignGapDocume
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
-import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateError
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentTemplateViewSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.GapDocumentType
@@ -24,10 +23,6 @@ import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
-
-/** Grobe Vorprüfung des Font-Uploads anhand der Dateiendung, bevor der Inhalt gelesen wird. */
-private fun hasValidFontExtension(fileName: String): Boolean =
-    fileName.substringAfterLast('.', "").lowercase() in setOf("ttf", "otf")
 
 /** Ergebnis von [readGapDocumentTemplateMultipart]: die rohen, noch ungeprüften Teile des Requests. */
 private data class GapDocumentTemplateMultipart(
@@ -95,6 +90,35 @@ private suspend fun CallComprehensionScope.readGapDocumentTemplateMultipart(
     return GapDocumentTemplateMultipart(templateFile, fontFile, request)
 }
 
+/** Liest genau einen Datei-Teil; mehrere Dateien oder gar keine sind ein Fehler. */
+private suspend fun CallComprehensionScope.readSingleFilePart(
+    multiPartData: MultiPartData,
+): File {
+    var file: File? = null
+
+    var done = false
+    while (!done) {
+        val part = multiPartData.readPart()
+        if (part == null) {
+            done = true
+        } else {
+            if (part is PartData.FileItem) {
+                if (file == null) {
+                    file = File(
+                        part.originalFileName ?: "",
+                        part.provider().toByteArray(),
+                    )
+                } else {
+                    !KIO.fail(RequestError.File.Multiple)
+                }
+            }
+            part.dispose()
+        }
+    }
+
+    return !KIO.failOnNull(file) { RequestError.File.Missing }
+}
+
 fun Route.documentTemplate() {
 
     route("/gapDocumentTemplate") {
@@ -115,12 +139,23 @@ fun Route.documentTemplate() {
 
                 val request = !KIO.failOnNull(parsed.request) { RequestError.BodyMissing(GapDocumentTemplateRequest.example) }
                 val file = !KIO.failOnNull(parsed.templateFile) { RequestError.File.Missing }
-                !KIO.failOn(!checkValidPdf(file.bytes)) { RequestError.File.UnsupportedType }
-                if (parsed.fontFile != null && parsed.fontFile.bytes.isNotEmpty()) {
-                    !KIO.failOn(!hasValidFontExtension(parsed.fontFile.name)) { GapDocumentTemplateError.InvalidFont }
-                }
 
                 GapDocumentTemplateService.addTemplate(file, request, parsed.fontFile)
+            }
+        }
+
+        post("/import") {
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateEventGlobal)
+
+                // Der Typ aus dem Manifest ist nur eine Behauptung der Datei - wer importiert,
+                // darf ihn überstimmen (Wunsch vom 10.08.2026: beim Import anwählbar machen).
+                val typeOverride = !optionalQueryParam("documentType", enum<GapDocumentType>())
+
+                val multiPartData = call.receiveMultipart()
+                val pkg = readSingleFilePart(multiPartData)
+
+                GapDocumentTemplateService.importTemplate(pkg, typeOverride)
             }
         }
 
@@ -134,9 +169,6 @@ fun Route.documentTemplate() {
                     val parsed = readGapDocumentTemplateMultipart(multiPartData, acceptTemplateFile = false)
 
                     val payload = !KIO.failOnNull(parsed.request) { RequestError.BodyMissing(GapDocumentTemplateRequest.example) }
-                    if (parsed.fontFile != null && parsed.fontFile.bytes.isNotEmpty()) {
-                        !KIO.failOn(!hasValidFontExtension(parsed.fontFile.name)) { GapDocumentTemplateError.InvalidFont }
-                    }
 
                     GapDocumentTemplateService.updateTemplate(id, payload, parsed.fontFile)
                 }
@@ -163,6 +195,22 @@ fun Route.documentTemplate() {
                     !authenticate(Privilege.ReadEventGlobal)
                     val id = !pathParam("gapDocumentTemplateId", uuid)
                     GapDocumentTemplateService.getPreview(id)
+                }
+            }
+
+            get("/export") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("gapDocumentTemplateId", uuid)
+                    GapDocumentTemplateService.exportTemplate(id)
+                }
+            }
+
+            get("/font") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("gapDocumentTemplateId", uuid)
+                    GapDocumentTemplateService.downloadFont(id)
                 }
             }
         }

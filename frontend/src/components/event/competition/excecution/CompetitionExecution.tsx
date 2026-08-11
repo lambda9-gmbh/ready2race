@@ -1,12 +1,15 @@
 import {
     createNextCompetitionRound,
+    downloadRoundStartList,
     downloadStartList,
     getTimingConfig,
     pullMatchResultsFromRaceClocker,
+    resumeRaceClockerAutoPull,
     getCompetitionExecutionProgress,
     getEventSchedule,
     updateMatchData,
     updateMatchResults,
+    uploadRaceClockerResultFile,
     uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {
@@ -14,6 +17,7 @@ import {
     AlertTitle,
     Box,
     Checkbox,
+    Chip,
     Divider,
     InputAdornment,
     Link,
@@ -33,13 +37,13 @@ import {
 import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {Trans, useTranslation} from 'react-i18next'
-import {BaseSyntheticEvent, Fragment, useMemo, useRef, useState} from 'react'
+import {BaseSyntheticEvent, Fragment, useEffect, useMemo, useRef, useState} from 'react'
 import {format} from 'date-fns'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {Controller, FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {getFilename, groupBy, shuffle} from '@utils/helpers.ts'
+import {getFilename, groupBy, shuffle, teamNameSuffix} from '@utils/helpers.ts'
 import {
     formatFailedReason,
     MatchResultStatus,
@@ -48,9 +52,9 @@ import {
 } from '@utils/matchResultStatus.ts'
 import {
     CompetitionExecutionCanNotCreateRoundReason,
+    CompetitionExecutionProgressDto,
     CompetitionMatchDto,
     CompetitionMatchTeamDto,
-    CompetitionRoundDto,
     StartListFileType,
 } from '@api/types.gen.ts'
 import CompetitionExecutionMatchDialog from '@components/event/competition/excecution/CompetitionExecutionMatchDialog.tsx'
@@ -61,9 +65,11 @@ import WarningIcon from '@mui/icons-material/Warning'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
 import MoreTimeOutlinedIcon from '@mui/icons-material/MoreTimeOutlined'
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
+import SyncProblemIcon from '@mui/icons-material/SyncProblem'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
 import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
+import RoundProgressionSetting from '@components/event/competition/excecution/RoundProgressionSetting.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
@@ -76,12 +82,19 @@ import {
 import {
     mapDtoToTimingForm,
     timingConfigWarnings,
+    effectiveTimingSystem,
 } from '@components/event/competition/timing/timingConfigForm.ts'
 import {
     ExecutionApiError,
     matchErrorText,
     raceClockerErrorText,
 } from '@components/event/competition/excecution/executionError.ts'
+import {raceableMatches} from '@components/event/competition/excecution/byeMatches.ts'
+import {
+    AutoRefreshConfig,
+    refreshIntervalMs,
+    syncStatus,
+} from '@components/event/competition/excecution/autoRefresh.ts'
 
 type EnterResultsTeam = {
     registrationId: string
@@ -105,7 +118,16 @@ const statusLabelKeys = {
     DSQ: 'event.competition.execution.results.status.DSQ',
 } as const satisfies Record<MatchResultStatus, string>
 
-const CompetitionExecution = () => {
+type Props = {
+    /**
+     * Der automatische Abgleich, wie ihn die Veranstaltung vorgibt. Als Prop und nicht als eigener
+     * Abruf: Die Seite über dieser hier hat die Veranstaltung ohnehin schon geladen, und eine
+     * Einstellung, die sich am Renntag nicht ändert, verdient keinen zweiten Request.
+     */
+    autoRefresh: AutoRefreshConfig
+}
+
+const CompetitionExecution = ({autoRefresh}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const theme = useTheme()
@@ -120,6 +142,13 @@ const CompetitionExecution = () => {
     const [submitting, setSubmitting] = useState(false)
 
     const [reloadData, setReloadData] = useState(false)
+
+    // Die drei Dialoge stehen hier oben, weil der automatische Abgleich sie kennen muss: Solange
+    // einer offen ist, ruht der Takt (siehe `paused` weiter unten). Ihre Öffnen/Schließen-Helfer
+    // bleiben unten bei den Formularen, zu denen sie gehören.
+    const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
+    const [resultsDialogOpen, setResultsDialogOpen] = useState(false)
+    const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false)
 
     // Läufe, deren Startzeit über den Zeitplan (Tab Zeitplan) gepflegt wird — für sie bleibt das
     // Startzeit-Feld hier read-only, damit die Kette (Task 10) nicht durch eine hier eingegebene
@@ -147,7 +176,30 @@ const CompetitionExecution = () => {
     // Dieselbe Prüfung wie im Zeitnahme-Tab, damit beide Stellen nicht auseinanderlaufen.
     const timingWarnings = timingConfig ? timingConfigWarnings(mapDtoToTimingForm(timingConfig)) : []
 
-    const {data: progressDto, pending: progressDtoPending} = useFetch(
+    /**
+     * Der zuletzt erfolgreich geladene Stand. Er liegt hier und nicht in `useFetch`, weil der
+     * dortige Fehlerzweig die Daten auf `null` setzt — bei laufendem Abgleich hieße das: ein
+     * WLAN-Aussetzer am Steg räumt die Seite leer. Gehalten wird stattdessen der letzte gute
+     * Stand, daneben steht der Verbindungshinweis. Dasselbe Vorgehen wie im
+     * Schiedsrichter-Board (LiveDashboardPage).
+     */
+    const [progressDto, setProgressDto] = useState<CompetitionExecutionProgressDto | null>(null)
+    /** Wann sich dieser Stand zuletzt geändert hat — nicht, wann zuletzt gefragt wurde. */
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+    /** Fehlgeschlagene Abrufe seit dem letzten erfolgreichen — 0 heißt: Verbindung steht. */
+    const [failures, setFailures] = useState(0)
+    /** Stand der letzten Antwort; spart den Rumpf, solange sich nichts geändert hat. */
+    const etagRef = useRef<string | null>(null)
+
+    // Solange ein Dialog offen ist, ruht der Takt: Ein Abgleich würde unter der Hand die Liste
+    // verschieben, auf der die Eingabe gerade steht. Das Umschalten hängt im Abruf an den `deps`,
+    // also holt das Schließen den aktuellen Stand sofort nach — genau dann, wenn der
+    // Schiedsrichter wieder auf die Liste schaut. Beim Öffnen kostet es einen Abruf; der bringt
+    // die frischesten Daten in den Dialog und ist damit keiner zu viel.
+    const anyDialogOpen = resultsDialogOpen || editMatchDialogOpen || resultImportMatch !== null
+    const autoReloadInterval = refreshIntervalMs(autoRefresh, anyDialogOpen)
+
+    const {pending: progressDtoPending, reload: reloadProgress} = useFetch(
         signal =>
             getCompetitionExecutionProgress({
                 signal,
@@ -155,17 +207,59 @@ const CompetitionExecution = () => {
                     eventId: eventId,
                     competitionId: competitionId,
                 },
+                // Unverändert? Dann antwortet der Server mit 304 und ohne Rumpf, und die Seite
+                // rührt ihren State nicht an. 'no-store' hält den Browser-Cache aus der Bedingung
+                // heraus, sonst beantwortet er sie selbst.
+                headers: etagRef.current ? {'If-None-Match': etagRef.current} : undefined,
+                cache: 'no-store',
             }),
         {
-            onResponse: ({error}) => {
-                if (error) {
-                    feedback.error(t('event.competition.execution.progress.error'))
+            autoReloadInterval,
+            onResponse: ({data, error, response}) => {
+                if (response.status === 304) {
+                    // Unverändert: Hier wird bewusst nichts gesetzt außer dem Verbindungszustand,
+                    // und der nur, wenn er sich unterscheidet — React verwirft ein useState mit
+                    // demselben Wert. Im Ruhezustand rendert die Seite also gar nicht neu, und
+                    // Scrollposition wie aufgeklappte Runden bleiben, wo sie sind. Auch die
+                    // Uhrzeit unten bleibt stehen: Sie sagt, von wann die Daten sind, nicht wann
+                    // zuletzt jemand nachgefragt hat.
+                    setFailures(0)
+                    return
                 }
+                if (error !== undefined || data === undefined) {
+                    // Kein Snackbar im Takt: Bei stehendem Netz stünde alle fünf Sekunden einer
+                    // auf dem Schirm. Beim ersten Laden gibt es ihn weiter, da ist er die einzige
+                    // Rückmeldung.
+                    if (autoReloadInterval === undefined) {
+                        feedback.error(t('event.competition.execution.progress.error'))
+                    }
+                    setFailures(prev => prev + 1)
+                    return
+                }
+                etagRef.current = response.headers.get('ETag')
+                setProgressDto(data)
+                setLastUpdated(new Date())
+                setFailures(0)
                 handleAccordionExpandedChange()
             },
-            deps: [eventId, competitionId, reloadData],
+            // Ein abgebrochener Request (Seitenwechsel) landet hier nicht — useFetch prüft das
+            // Abort-Signal. Was hier ankommt, ist ein echter Netzfehler.
+            onPanic: () => {
+                setFailures(prev => prev + 1)
+            },
+            deps: [eventId, competitionId, reloadData, autoReloadInterval],
         },
     )
+
+    // Zurück im Netz: nicht bis zum nächsten Takt warten. Der Browser meldet das selbst, und beim
+    // Abgleich im Minutentakt ist das der Unterschied zwischen "sofort" und "irgendwann".
+    useEffect(() => {
+        window.addEventListener('online', reloadProgress)
+        return () => window.removeEventListener('online', reloadProgress)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    const connection = syncStatus({failures, hasData: progressDto !== null})
     /**
      * Warum die Ergebnis- oder Laufdaten-Eingabe abgelehnt wurde. [fallbackKey] ist die bisherige
      * Sammelmeldung der jeweiligen Maske und greift nur noch für Gründe ohne eigenen Code.
@@ -202,14 +296,8 @@ const CompetitionExecution = () => {
         setReloadData(!reloadData)
     }
 
-    const matchesFiltered = (round: CompetitionRoundDto): CompetitionMatchDto[] => {
-        return round.matches
-            .filter(match => match.teams.length > 0 && (match.teams.length > 1 || round.required))
-            .sort((a, b) => a.executionOrder - b.executionOrder)
-    }
-
     const currentRound = progressDto?.rounds[progressDto?.rounds.length - 1]
-    const currentRoundMatches = currentRound ? matchesFiltered(currentRound) : undefined
+    const currentRoundMatches = currentRound ? raceableMatches(currentRound) : undefined
 
     const resultsFormContext = useForm<EnterResultsForm>({
         values: {
@@ -292,7 +380,6 @@ const CompetitionExecution = () => {
             })
     }
 
-    const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
     const showMatchResultImportConfigDialog = resultImportMatch !== null
     const closeMatchResultImportConfigDialog = () => setResultImportMatch(null)
 
@@ -334,6 +421,37 @@ const CompetitionExecution = () => {
         }
     }
 
+    /** Die ganze Runde als eine CSV - ein Import ins Zeitnahme-System statt Lauf für Lauf. */
+    const handleDownloadRoundStartList = async (setupRoundId: string) => {
+        const {data, error, response} = await downloadRoundStartList({
+            path: {
+                eventId,
+                competitionId,
+                setupRoundId,
+            },
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            if (error.status.value === 409) {
+                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
+            } else if (
+                error.status.value === 400 &&
+                error.errorCode === 'STARTLIST_CONFIG_NOT_CONFIGURED'
+            ) {
+                feedback.error(t('event.competition.execution.startList.error.notConfigured'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(new Blob([data]))
+            anchor.download = getFilename(response) ?? `startList-round-${setupRoundId}.csv`
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
     const handlePullRaceClockerResults = async (competitionMatchId: string) => {
         setSubmitting(true)
         const {error} = await pullMatchResultsFromRaceClocker({
@@ -350,6 +468,44 @@ const CompetitionExecution = () => {
             feedback.error(text === undefined ? t('common.error.unexpected') : t(text.key, text.values))
         } else {
             feedback.success(t('event.competition.execution.results.raceclocker.success'))
+            setReloadData(!reloadData)
+        }
+    }
+
+    const handleResumeRaceClockerAutoPull = async (competitionMatchId: string) => {
+        setSubmitting(true)
+        const {error} = await resumeRaceClockerAutoPull({
+            path: {eventId, competitionId, competitionMatchId},
+        })
+        setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.poll.resumed'))
+            setReloadData(!reloadData)
+        }
+    }
+
+    /** Notfallweg: RaceClocker-Ergebnis-xlsx auf den Lauf schreiben (eigener Parser fürs Results-Blatt). */
+    const handleUploadRaceClockerFile = async (competitionMatchId: string, file: File) => {
+        setSubmitting(true)
+        const {error} = await uploadRaceClockerResultFile({
+            path: {eventId, competitionId, competitionMatchId},
+            body: {files: [file]},
+        })
+        setSubmitting(false)
+
+        if (error) {
+            if (error.status.value === 400 && error.errorCode === 'RACECLOCKER_MATCH_NOT_IN_FEED') {
+                feedback.error(t('event.competition.execution.results.raceclocker.file.notInFile'))
+            } else if (error.status.value === 400 && error.errorCode === 'FILE_ERROR') {
+                feedback.error(t('common.error.upload.FILE_ERROR'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else {
+            feedback.success(t('event.competition.execution.results.raceclocker.file.imported'))
             setReloadData(!reloadData)
         }
     }
@@ -479,7 +635,6 @@ const CompetitionExecution = () => {
         setReloadData(!reloadData)
     }
 
-    const [resultsDialogOpen, setResultsDialogOpen] = useState(false)
     const openResultsDialog = (matchIndex: number) => {
         if (currentRoundMatches) {
             setResultsDialogOpen(true)
@@ -609,10 +764,9 @@ const CompetitionExecution = () => {
         },
     })
 
-    const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false)
     const openEditMatchDialog = (roundIndex: number, matchIndex: number) => {
         const round = sortedRounds?.[roundIndex]
-        const selectedMatch = round ? matchesFiltered(round)[matchIndex] : null
+        const selectedMatch = round ? raceableMatches(round)[matchIndex] : null
         if (selectedMatch) {
             setEditMatchDialogOpen(true)
             editMatchFormContext.reset(mapMatchDtoToEditMatchForm(selectedMatch))
@@ -741,6 +895,34 @@ const CompetitionExecution = () => {
 
     return progressDto && sortedRounds ? (
         <Box>
+            {/* Der Abgleich meldet sich nur, wenn er läuft — bei abgeschalteter Automatik hätte
+                eine Uhrzeit hier nichts zu sagen. Rechtsbündig und klein: Der Hinweis soll
+                auffallen, wenn die Verbindung weg ist, und sonst nicht im Weg stehen. */}
+            {autoRefresh.enabled && (lastUpdated !== null || connection === 'stale') && (
+                <Stack
+                    direction={'row'}
+                    spacing={1}
+                    alignItems={'center'}
+                    justifyContent={'flex-end'}
+                    sx={{mt: 1}}>
+                    {connection === 'stale' && (
+                        <Chip
+                            size={'small'}
+                            variant={'outlined'}
+                            color={'warning'}
+                            icon={<SyncProblemIcon />}
+                            label={t('event.competition.execution.autoRefresh.disconnected')}
+                        />
+                    )}
+                    {lastUpdated && (
+                        <Typography variant={'caption'} color={'text.secondary'} noWrap>
+                            {t('event.competition.execution.autoRefresh.lastUpdated', {
+                                time: format(lastUpdated, t('format.timeWithSeconds')),
+                            })}
+                        </Typography>
+                    )}
+                </Stack>
+            )}
             {timingWarnings.length > 0 && (
                 <Alert variant={'outlined'} severity={'warning'} sx={{my: 2}}>
                     <AlertTitle>
@@ -757,36 +939,50 @@ const CompetitionExecution = () => {
                 </Alert>
             )}
             {!allRoundsCreated && (
-                <Box sx={{my: 2, display: 'flex', alignItems: 'center'}}>
-                    <LoadingButton
-                        pending={submitting}
-                        disabled={progressDto.canNotCreateRoundReasons.length > 0}
-                        variant={'contained'}
-                        onClick={handleCreateNextRound}>
-                        {t('event.competition.execution.nextRound.create')}
-                    </LoadingButton>
-                    {progressDto.canNotCreateRoundReasons.length > 0 && (
-                        <HtmlTooltip
-                            placement={'right'}
-                            title={
-                                <Stack spacing={1} p={1}>
-                                    {progressDto.canNotCreateRoundReasons.map((reason, idx) => (
-                                        <Fragment key={reason}>
-                                            <Stack direction={'row'} spacing={1}>
-                                                <WarningIcon color={'warning'} />
-                                                <Typography>{getReasonText(reason)}</Typography>
-                                            </Stack>
-                                            {idx <
-                                                progressDto.canNotCreateRoundReasons.length - 1 && (
-                                                <Divider />
-                                            )}
-                                        </Fragment>
-                                    ))}
-                                </Stack>
-                            }>
-                            <Info sx={{ml: 1}} color={'info'} fontSize={'small'} />
-                        </HtmlTooltip>
-                    )}
+                <Box
+                    sx={{
+                        my: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 2,
+                    }}>
+                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+                        <LoadingButton
+                            pending={submitting}
+                            disabled={progressDto.canNotCreateRoundReasons.length > 0}
+                            variant={'contained'}
+                            onClick={handleCreateNextRound}>
+                            {t('event.competition.execution.nextRound.create')}
+                        </LoadingButton>
+                        {progressDto.canNotCreateRoundReasons.length > 0 && (
+                            <HtmlTooltip
+                                placement={'right'}
+                                title={
+                                    <Stack spacing={1} p={1}>
+                                        {progressDto.canNotCreateRoundReasons.map(
+                                            (reason, idx) => (
+                                                <Fragment key={reason}>
+                                                    <Stack direction={'row'} spacing={1}>
+                                                        <WarningIcon color={'warning'} />
+                                                        <Typography>
+                                                            {getReasonText(reason)}
+                                                        </Typography>
+                                                    </Stack>
+                                                    {idx <
+                                                        progressDto.canNotCreateRoundReasons
+                                                            .length -
+                                                            1 && <Divider />}
+                                                </Fragment>
+                                            ),
+                                        )}
+                                    </Stack>
+                                }>
+                                <Info sx={{ml: 1}} color={'info'} fontSize={'small'} />
+                            </HtmlTooltip>
+                        )}
+                    </Box>
+                    <RoundProgressionSetting />
                 </Box>
             )}
             <Stack spacing={6}>
@@ -795,7 +991,7 @@ const CompetitionExecution = () => {
                         key={round.setupRoundId}
                         round={round}
                         roundIndex={roundIndex}
-                        filteredMatches={matchesFiltered(round)}
+                        filteredMatches={raceableMatches(round)}
                         reloadRoundDto={() => setReloadData(!reloadData)}
                         setSubmitting={setSubmitting}
                         submitting={submitting}
@@ -807,14 +1003,26 @@ const CompetitionExecution = () => {
                         }
                         smallScreenLayout={smallScreenLayout}
                         setResultImportMatch={setResultImportMatch}
+                        handleUploadRaceClockerFile={handleUploadRaceClockerFile}
                         pullRaceClockerResults={handlePullRaceClockerResults}
+                        resumeRaceClockerAutoPull={handleResumeRaceClockerAutoPull}
                         handleDownloadStartListPDF={matchId =>
                             handleDownloadStartList(matchId, 'PDF')
                         }
                         handleDownloadStartListCSV={matchId =>
                             handleDownloadStartList(matchId, 'CSV')
                         }
-                        timingSystem={timingConfig?.timingSystem}
+                        handleDownloadRoundStartList={handleDownloadRoundStartList}
+                        /* Das effektive System, nicht die eigene Spalte des Wettkampfs: Setzt die
+                           Veranstaltung RaceClocker und erben ihre Wettkämpfe es, ist
+                           `timingConfig.timingSystem` null — der Abruf-Status samt „Automatik wieder
+                           aufnehmen" verschwände dann genau dort, wo die Automatik läuft. Dieselbe
+                           Auflösung wie bei den Warnungen oben. */
+                        timingSystem={
+                            timingConfig
+                                ? effectiveTimingSystem(mapDtoToTimingForm(timingConfig))
+                                : 'NONE'
+                        }
                     />
                 ))}
             </Stack>
@@ -904,7 +1112,7 @@ const CompetitionExecution = () => {
                                                                         variant={'body2'}>
                                                                         {`${t('club.registeredBy')} ` +
                                                                             team.clubName +
-                                                                            ` | ${team.name}`}
+                                                                            teamNameSuffix(team.name)}
                                                                     </Typography>
                                                                     <Typography
                                                                         color={'textSecondary'}
@@ -1225,7 +1433,7 @@ const CompetitionExecution = () => {
                                                                     variant={'body2'}>
                                                                     {`${t('club.registeredBy')} ` +
                                                                         team.clubName +
-                                                                        ` | ${team.name}`}
+                                                                        teamNameSuffix(team.name)}
                                                                 </Typography>
                                                                 <Typography
                                                                     color={'textSecondary'}
@@ -1261,6 +1469,12 @@ const CompetitionExecution = () => {
             />
             <Link ref={downloadRef} display={'none'}></Link>
         </Box>
+    ) : connection === 'error' ? (
+        // Nie etwas angekommen: Hier gibt es keinen letzten guten Stand zu halten, also sagt es
+        // die Seite deutlich statt endlos zu drehen.
+        <Alert severity={'error'} sx={{my: 2}}>
+            {t('event.competition.execution.progress.error')}
+        </Alert>
     ) : (
         progressDtoPending && <Throbber />
     )

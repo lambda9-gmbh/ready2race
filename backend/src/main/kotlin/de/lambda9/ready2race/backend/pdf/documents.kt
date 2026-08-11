@@ -19,7 +19,7 @@ import java.awt.geom.AffineTransform
 import java.io.IOException
 import java.text.Normalizer
 
-private class GapFonts(
+internal class GapFonts(
     val regular: PDFont,
     val bold: PDFont,
     val italic: PDFont,
@@ -189,6 +189,73 @@ private fun PDFont.canEncodeSafely(text: String): Boolean = try {
     false
 }
 
+/**
+ * Die Breite eines Textes in genau der Schrift und Größe, in der der Renderer ihn setzt - die
+ * Messung, auf die sich [GapTextWrap] stützt.
+ *
+ * Sie liegt hier und nicht im DOCX-Renderer, obwohl beide sie brauchen: PDFBox ist die einzige
+ * Stelle im Projekt, die Schriftmaße kennt. Der DOCX-Pfad misst also mit PDFBox und *setzt* mit
+ * Word - nur so kommen beide Formate auf dieselben Zeilen. Überließe man Word den Umbruch, sähe
+ * dieselbe Urkunde je nach Format anders aus.
+ *
+ * Gemessen wird der Text nach derselben Bereinigung, die [drawAddition] vor dem Zeichnen anwendet:
+ * ein nicht kodierbares Zeichen wird zu "?" oder zu mehreren ASCII-Zeichen und ändert damit die
+ * Breite.
+ */
+class GapTextWidths private constructor(
+    private val ownedDocument: PDDocument?,
+    private val fonts: GapFonts,
+) : AutoCloseable {
+
+    fun width(text: String, fontSize: Float, bold: Boolean, italic: Boolean): Float {
+        val font = fonts.forStyle(bold, italic)
+        return font.getStringWidth(text.sanitizeNonPrintable().sanitizeForFont(font)) / 1000 * fontSize
+    }
+
+    override fun close() {
+        ownedDocument?.close()
+    }
+
+    companion object {
+
+        /**
+         * Für Aufrufer ohne eigenes PDF-Dokument (der DOCX-Renderer). Eine eingebettete Schrift
+         * hängt in PDFBox immer an einem Dokument; das wird hier angelegt und von [close] wieder
+         * freigegeben.
+         */
+        fun of(font: ByteArray?): GapTextWidths {
+            val doc = PDDocument()
+            return GapTextWidths(doc, GapFonts.load(doc, font))
+        }
+
+        /** Für den PDF-Renderer, der seine Schriften ohnehin schon geladen hat. */
+        internal fun of(fonts: GapFonts): GapTextWidths = GapTextWidths(null, fonts)
+    }
+}
+
+/**
+ * Die Platzhalter einer Seite, deren Inhalt in Zeilen zerlegt ist, die in ihre Kästen passen.
+ *
+ * Der gemeinsame Aufsatzpunkt beider Renderer: PDF und DOCX rufen diese Funktion vor dem Setzen
+ * auf, mit derselben Schrift und derselben Seitengröße, und bekommen damit dieselben Zeilen.
+ * Sie sitzt bewusst *in* den Renderern statt bei ihren Aufrufern - Siegerurkunde,
+ * Teilnahmeurkunde und Vorlagenvorschau müssten sich sonst jede für sich daran erinnern.
+ */
+fun List<AdditionalText>.wrappedToBoxes(
+    pageWidth: Float,
+    pageHeight: Float,
+    widths: GapTextWidths,
+): List<AdditionalText> = map { addition ->
+    val boxWidth = pageWidth * addition.relWidth.toFloat()
+    val fontSize = addition.gapFontSize(pageHeight * addition.relHeight.toFloat())
+
+    addition.copy(
+        content = GapTextWrap.wrap(addition.content, boxWidth) {
+            widths.width(it, fontSize, addition.bold, addition.italic)
+        }
+    )
+}
+
 private fun drawAddition(
     doc: PDDocument,
     page: PDPage,
@@ -270,15 +337,19 @@ fun gapDocuments(
     val layerUtil = if (withBackground) LayerUtility(result) else null
     val templateForm = layerUtil?.importPageAsForm(templateDoc, templatePage)
 
-    pages.forEachIndexed { index, additions ->
-        val page = PDPage(format)
-        result.addPage(page)
+    GapTextWidths.of(fonts).use { widths ->
+        pages.forEachIndexed { index, additions ->
+            val page = PDPage(format)
+            result.addPage(page)
 
-        if (layerUtil != null && templateForm != null) {
-            layerUtil.appendFormAsLayer(page, templateForm, AffineTransform(), "template-layer-$index")
+            if (layerUtil != null && templateForm != null) {
+                layerUtil.appendFormAsLayer(page, templateForm, AffineTransform(), "template-layer-$index")
+            }
+
+            additions.filter { it.page == 1 }
+                .wrappedToBoxes(format.width, format.height, widths)
+                .forEach { drawAddition(result, page, it, fonts) }
         }
-
-        additions.filter { it.page == 1 }.forEach { drawAddition(result, page, it, fonts) }
     }
 
     result
@@ -295,11 +366,19 @@ fun document(
     val pdf = Loader.loadPDF(original)
     val fonts = GapFonts.load(pdf, null)
 
-    additions.forEach { addition ->
-        if (addition.page > pdf.numberOfPages) {
-            return@forEach
+    GapTextWidths.of(fonts).use { widths ->
+        additions.forEach { addition ->
+            if (addition.page > pdf.numberOfPages) {
+                return@forEach
+            }
+            // Seitenweise, weil eine Teilnahmeurkunden-Vorlage mehrseitig sein darf und ihre
+            // Seiten verschieden groß sein können.
+            val page = pdf.getPage(addition.page - 1)
+            val wrapped = listOf(addition)
+                .wrappedToBoxes(page.mediaBox.width, page.mediaBox.height, widths)
+                .single()
+            drawAddition(pdf, page, wrapped, fonts)
         }
-        drawAddition(pdf, pdf.getPage(addition.page - 1), addition, fonts)
     }
 
     return pdf

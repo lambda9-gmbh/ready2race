@@ -51,59 +51,89 @@ fun Route.eventInfo() {
                 }
             }
 
-            // Alles, was die Athleten-Anzeige braucht, in einer Antwort.
-            // Öffentlich wie die drei Endpoints darüber — bewusst ohne authenticate.
-            get("/athlete-board") {
+            // Der Tab "Live" der öffentlichen Ergebnisanzeige: aktivierte UND anstehende Läufe,
+            // jeder mit seinem Zustand. Öffentlich wie die Endpoints darüber.
+            get("/live-matches") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+                    val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
+
+                    EventInfoService.getLiveMatches(eventId, limit)
+                }
+            }
+
+            // Boards sind öffentlich abrufbar wie die Anzeigen darüber: montierte
+            // Bildschirme und Athleten-Handys laden ihre URL ohne Anmeldung. Die
+            // Kurzliste trägt die Umleitung der alten Athleten-Board-URL.
+            get("/boards") {
                 call.respondComprehension {
                     val eventId = !pathParam("eventId", uuid)
 
-                    EventInfoService.getAthleteBoard(eventId)
+                    BoardService.getBoardNames(eventId)
+                }
+            }
+
+            // Alles, was die Anzeige eines Boards braucht, in einer Antwort.
+            get("/board/{boardId}") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+                    val boardId = !pathParam("boardId", uuid)
+
+                    BoardService.getBoardView(eventId, boardId)
+                }
+            }
+
+            // Persönliches Dashboard, erreichbar über den QR-Code am Teilnehmerband.
+            // Öffentlich wie die Anzeigen darüber; welche Felder ein anonymer Aufruf sieht,
+            // entscheidet ausschließlich MyEventService.
+            get("/my-event/{qrCode}") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+                    val qrCode = !pathParam("qrCode")
+
+                    MyEventService.getMyEvent(eventId, qrCode)
                 }
             }
         }
     }
 
-    route("/event/{eventId}/info-views") {
-        // Get all info views for an event
+    route("/event/{eventId}/boards") {
+        // Alle Boards einer Veranstaltung, mit voller Konfiguration (Verwaltungsmaske).
         get {
             call.respondComprehension {
                 val user = !authenticate(Privilege.ReadEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
-                val includeInactive = !call.optionalQueryParam("includeInactive") { it.toBoolean() }
 
-                EventInfoService.getInfoViews(eventId, includeInactive ?: false)
+                BoardService.getBoards(eventId)
             }
         }
 
-        // Create new info view
         post {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
-                val request = !receiveKIO(InfoViewConfigurationRequest.example)
+                val request = !receiveKIO(BoardRequest.example)
 
-                EventInfoService.createInfoView(eventId, request)
+                BoardService.createBoard(eventId, request)
             }
         }
 
-        // Update info view
-        put("/{viewId}") {
+        put("/{boardId}") {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateEventGlobal)
-                val viewId = !pathParam("viewId", uuid)
-                val request = !receiveKIO(InfoViewConfigurationRequest.example)
+                val boardId = !pathParam("boardId", uuid)
+                val request = !receiveKIO(BoardRequest.example)
 
-                EventInfoService.updateInfoView(viewId, request)
+                BoardService.updateBoard(boardId, request)
             }
         }
 
-        // Delete info view
-        delete("/{viewId}") {
+        delete("/{boardId}") {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateEventGlobal)
-                val viewId = !pathParam("viewId", uuid)
+                val boardId = !pathParam("boardId", uuid)
 
-                EventInfoService.deleteInfoView(viewId)
+                BoardService.deleteBoard(boardId)
             }
         }
     }

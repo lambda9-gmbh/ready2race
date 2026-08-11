@@ -61,6 +61,30 @@ data class ShiftScheduleRequest(
     }
 }
 
+/**
+ * Das Vorziehen hinter einem entfallenen Slot. Bewusst nur der Bis-Slot: Startpunkt und Delta leitet
+ * der Server aus dem entfallenen Slot ab (siehe `EventScheduleService.advanceAfterSkippedSlot`),
+ * statt sie sich vom Client sagen zu lassen - die Regel, welche Zeit eine Absage freigibt, gehört
+ * zum Zeitplan und nicht in den Dialog, der sie anbietet.
+ */
+data class AdvanceScheduleRequest(
+    val targetSlotId: UUID,
+    val dryRun: Boolean,
+) : Validatable {
+
+    // Ob der Ziel-Slot zum vorziehbaren Block gehört, weiß erst der Service mit der Slot-Liste in
+    // der Hand - hier gibt es nichts zu prüfen, was nicht schon der Typ sichert.
+    override fun validate(): ValidationResult = ValidationResult.Valid
+
+    companion object {
+        val example
+            get() = AdvanceScheduleRequest(
+                targetSlotId = UUID.randomUUID(),
+                dryRun = true,
+            )
+    }
+}
+
 data class ShiftPreviewEntryDto(
     val slotId: UUID,
     val oldStartTime: LocalDateTime,

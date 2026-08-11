@@ -1,9 +1,7 @@
 import {useState} from 'react'
 import {
+    Box,
     Button,
-    Card,
-    CardContent,
-    CardHeader,
     DialogActions,
     DialogContent,
     DialogTitle,
@@ -15,7 +13,12 @@ import {
     Stack,
     Typography,
 } from '@mui/material'
-import {Add as AddIcon, Delete as DeleteIcon} from '@mui/icons-material'
+import {
+    Add as AddIcon,
+    ArrowDownward as ArrowDownwardIcon,
+    ArrowUpward as ArrowUpwardIcon,
+    Delete as DeleteIcon,
+} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks'
 import {
@@ -23,6 +26,7 @@ import {
     getRatingCategories,
     getRatingCategoriesForEvent,
     removeRatingCategoryFromEvent,
+    updateRatingCategoryOrderForEvent,
 } from '@api/sdk.gen'
 import {RatingCategoryToEventDto} from '@api/types.gen'
 import Throbber from '@components/Throbber'
@@ -124,66 +128,112 @@ const RatingCategoriesForEvent = () => {
         )
     }
 
+    /**
+     * Verschiebt eine Kategorie um eine Stelle. Geschickt wird immer die vollstaendige
+     * Reihenfolge - so kann eine zweite offene Konfigurationsseite keine halbvertauschte
+     * Reihenfolge hinterlassen.
+     */
+    const handleMove = async (index: number, direction: -1 | 1) => {
+        if (!assignedCategories) return
+
+        const order = assignedCategories.map(it => it.ratingCategory.id)
+        const target = index + direction
+        if (target < 0 || target >= order.length) return
+        ;[order[index], order[target]] = [order[target], order[index]]
+
+        setSubmitting(true)
+        const {error} = await updateRatingCategoryOrderForEvent({
+            path: {eventId},
+            body: {ratingCategories: order},
+        })
+        setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else {
+            reload()
+        }
+    }
+
     const availableCategories =
         allCategories?.data.filter(
             cat => !assignedCategories?.some(assigned => assigned.ratingCategory.id === cat.id),
         ) ?? []
 
     if (loadingAssigned || loadingAll) {
-        return (
-            <Card>
-                <CardContent>
-                    <Throbber />
-                </CardContent>
-            </Card>
-        )
+        return <Throbber />
     }
 
     return (
         <>
-            <Card sx={{maxWidth: 500}}>
-                <CardHeader
-                    title={t('event.ratingCategory.title')}
-                    action={
-                        <IconButton
-                            onClick={() => setDialogOpen(true)}
-                            className="cursor-pointer"
-                            disabled={availableCategories.length === 0}>
-                            <AddIcon />
-                        </IconButton>
-                    }
-                />
-                <CardContent>
-                    <List>
-                        {assignedCategories?.map(category => (
-                            <ListItem
-                                key={category.ratingCategory.id}
-                                secondaryAction={
+            {/* Blanker Abschnitt statt Karte: die Nachbarn im Einstellungen-Tab (Zeitnahme,
+                Dokumente, Teilnahmebedingungen) sind h2-Überschrift plus Inhalt darunter, und die
+                Anlegen-Schaltfläche sitzt dort rechts über der Liste — siehe EntityTable. */}
+            <Box>
+                <Typography variant={'h2'}>{t('event.ratingCategory.title')}</Typography>
+                <Box display={'flex'} justifyContent={'flex-end'} mb={1} pt={1}>
+                    <Button
+                        variant={'outlined'}
+                        startIcon={<AddIcon />}
+                        onClick={() => setDialogOpen(true)}
+                        disabled={availableCategories.length === 0}>
+                        {/* „zuweisen", nicht „anlegen": die Kategorien selbst entstehen in der
+                            Konfiguration, hier wird eine bestehende an die Veranstaltung gehängt. */}
+                        {t('event.ratingCategory.add.title')}
+                    </Button>
+                </Box>
+                {assignedCategories && assignedCategories.length > 1 && (
+                    <Typography variant={'body2'} color={'text.secondary'}>
+                        {t('event.ratingCategory.order.hint')}
+                    </Typography>
+                )}
+                <List sx={{maxWidth: 500}}>
+                    {assignedCategories?.map((category, index) => (
+                        <ListItem
+                            key={category.ratingCategory.id}
+                            secondaryAction={
+                                <Stack direction={'row'}>
+                                    <IconButton
+                                        edge="end"
+                                        title={t('event.ratingCategory.order.moveUp')}
+                                        disabled={submitting || index === 0}
+                                        onClick={() => handleMove(index, -1)}>
+                                        <ArrowUpwardIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        edge="end"
+                                        title={t('event.ratingCategory.order.moveDown')}
+                                        disabled={
+                                            submitting || index === assignedCategories.length - 1
+                                        }
+                                        onClick={() => handleMove(index, 1)}>
+                                        <ArrowDownwardIcon />
+                                    </IconButton>
                                     <IconButton
                                         edge="end"
                                         onClick={() => handleRemove(category)}
                                         className="cursor-pointer">
                                         <DeleteIcon />
                                     </IconButton>
-                                }>
-                                <ListItemText
-                                    primary={category.ratingCategory.name}
-                                    secondary={
-                                        category.yearFrom || category.yearTo
-                                            ? `${t('event.ratingCategory.yearFrom')}: ${category.yearFrom ?? '-'} | ${t('event.ratingCategory.yearTo')}: ${category.yearTo ?? '-'}`
-                                            : undefined
-                                    }
-                                />
-                            </ListItem>
-                        ))}
-                        {(!assignedCategories || assignedCategories.length === 0) && (
-                            <ListItem>
-                                <ListItemText primary={t('event.ratingCategory.noEntries')} />
-                            </ListItem>
-                        )}
-                    </List>
-                </CardContent>
-            </Card>
+                                </Stack>
+                            }>
+                            <ListItemText
+                                primary={category.ratingCategory.name}
+                                secondary={
+                                    category.yearFrom || category.yearTo
+                                        ? `${t('event.ratingCategory.yearFrom')}: ${category.yearFrom ?? '-'} | ${t('event.ratingCategory.yearTo')}: ${category.yearTo ?? '-'}`
+                                        : undefined
+                                }
+                            />
+                        </ListItem>
+                    ))}
+                    {(!assignedCategories || assignedCategories.length === 0) && (
+                        <ListItem>
+                            <ListItemText primary={t('event.ratingCategory.noEntries')} />
+                        </ListItem>
+                    )}
+                </List>
+            </Box>
 
             <BaseDialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm">
                 <DialogTitle>{t('event.ratingCategory.add.title')}</DialogTitle>
