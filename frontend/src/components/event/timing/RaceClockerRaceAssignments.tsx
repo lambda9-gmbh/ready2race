@@ -20,8 +20,8 @@ type Props = {
  * Die umgedrehte Zuordnung: statt sich durch jeden Wettkampf zu klicken, hakt man am Rennen die
  * Wettkämpfe an (Wunsch vom 10.08.2026). Je Rennen zwei Mehrfachauswahlen — „gilt für Qualifikation"
  * und „gilt für Läufe". Ein Wettkampf, der bei einem Rennen angehakt wird, wandert von einem anderen
- * hierher (der letzte Klick gewinnt); abgewählt fällt er auf „erbt die Voreinstellung" zurück. Die
- * Regel selbst rechnet das Backend.
+ * hierher (der letzte Klick gewinnt); abgewählt hat er kein Rennen mehr. Die Regel selbst rechnet das
+ * Backend.
  *
  * Nach jeder Änderung wird die Liste vom Server neu geladen — nur so bildet sich das „Verschieben"
  * (der Wettkampf verschwindet dann beim anderen Rennen) ohne lokale Sonderlogik ab.

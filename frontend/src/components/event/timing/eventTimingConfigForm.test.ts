@@ -37,17 +37,6 @@ describe('mapEventTimingFormToRequest', () => {
         expect(mapEventTimingFormToRequest(emptyEventTimingForm).timingSystem).toBeNull()
     })
 
-    it('verwirft die Rennen-Anwahl, wenn nicht RaceClocker gewählt ist', () => {
-        // Ein unsichtbar angewähltes Rennen, das alle Wettkämpfe erben, findet sonst niemand wieder.
-        const request = mapEventTimingFormToRequest({
-            ...emptyEventTimingForm,
-            timingSystem: 'WEBSCORER',
-            raceRounds: {id: '44444444-4444-4444-4444-444444444444', label: 'Kurzstrecke'},
-        })
-
-        expect(request.raceRounds).toBeNull()
-    })
-
     it('verwirft das Qualifikations-Format, wenn nicht RaceClocker gewählt ist', () => {
         // Webscorer kennt die Zweiteilung Zeitfahren/Läufe nicht und zeigt nur ein Export-Feld.
         const request = mapEventTimingFormToRequest({
@@ -73,28 +62,12 @@ describe('mapEventTimingFormToRequest', () => {
         expect(request.startlistConfigRounds).toBeNull()
         expect(request.resultImportConfig).toBeNull()
     })
-
-    it('gibt eine leere Anwahl als null weiter, nicht als Leerwert', () => {
-        // Ohne Zeitfahren-Rennen bleibt die Quali-Anwahl leer -- das ist der Normalfall einer
-        // Regatta ohne Zeitfahren und muss als "nicht angewählt" ankommen.
-        const request = mapEventTimingFormToRequest({
-            ...emptyEventTimingForm,
-            timingSystem: 'RACECLOCKER',
-            raceQualification: null,
-            raceRounds: {id: '44444444-4444-4444-4444-444444444444', label: 'Kurzstrecke'},
-        })
-
-        expect(request.raceQualification).toBeNull()
-        expect(request.raceRounds).toBe('44444444-4444-4444-4444-444444444444')
-    })
 })
 
 describe('automatischer Abruf', () => {
     it('übernimmt die Abruf-Einstellungen aus dem Dto', () => {
         const form = mapDtoToEventTimingForm({
             timingSystem: 'RACECLOCKER',
-            raceQualification: null,
-            raceRounds: null,
             startlistConfigQualification: null,
             startlistConfigRounds: null,
             resultImportConfig: null,

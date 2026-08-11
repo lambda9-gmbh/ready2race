@@ -63,20 +63,15 @@ object RaceClockerPollRepo {
         // mehrdeutig, weil sowohl competition.timing_system als auch event.timing_system in der
         // Join-Kette stehen.
         //
-        // Die Rennen selbst brauchen diesen Umweg nicht mehr: Sie kommen aus zwei getrennten Joins
-        // statt aus coalesce-Ausdrücken in der SELECT-Liste, und nur ihre Kennungen werden
-        // gecoalesct - Wettkampf-Anwahl vor Veranstaltungs-Voreinstellung.
+        // Die Rennen kommen aus zwei getrennten Joins statt aus coalesce-Ausdrücken in der
+        // SELECT-Liste. Anders als das Zeitnahme-System erben sie NICHT von der Veranstaltung: die
+        // Zuordnung ist pro Wettkampf (Wunsch vom 11.08.2026), deshalb steht hier direkt die
+        // Wettkampf-Spalte statt eines coalesce mit der Veranstaltung.
         val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM)
         val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
         val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")
-        val qualiRaceId = DSL.coalesce(
-            COMPETITION.RACECLOCKER_RACE_QUALIFICATION,
-            EVENT.RACECLOCKER_RACE_QUALIFICATION,
-        )
-        val roundsRaceId = DSL.coalesce(
-            COMPETITION.RACECLOCKER_RACE_ROUNDS,
-            EVENT.RACECLOCKER_RACE_ROUNDS,
-        )
+        val qualiRaceId = COMPETITION.RACECLOCKER_RACE_QUALIFICATION
+        val roundsRaceId = COMPETITION.RACECLOCKER_RACE_ROUNDS
 
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,

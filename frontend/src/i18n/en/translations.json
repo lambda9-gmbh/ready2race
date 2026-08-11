@@ -1292,7 +1292,7 @@
           "title": "File formats",
           "hint": "Which columns are exported and imported. Only needed separately if this competition runs into a different race in the timing system."
         },
-        "raceclockerHint": "RaceClocker races belong to the event, not to a single competition. Create each race once here — for example “Time trials”, “Long course” and “Short course” — and select below which one applies to qualification rounds and which to all other rounds. Competitions inherit that selection and can deviate deliberately.",
+        "raceclockerHint": "RaceClocker races are created in the event settings. Select this competition's race for qualification and for all other rounds here — the same assignment can also be ticked the other way round, at the race.",
         "startlistQualification": "Start list export for qualification",
         "startlistRounds": "Start list export for other rounds",
         "startlist": "Start list export",
@@ -1491,7 +1491,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker races belong to the event, not to a single competition. Create each race once here — for example “Time trials”, “Long course” and “Short course” — and select below which one applies to qualification rounds and which to all other rounds. Competitions inherit that selection and can deviate deliberately.",
+      "raceclockerHint": "RaceClocker races belong to the event, not to a single competition. Create each race once here — for example “Time trials”, “Long course” and “Short course” — and tick below, per race, which competitions use it for qualification rounds and which for all other rounds.",
       "autoPull": {
         "enabled": "Pull results automatically",
         "hint": "While a match is running, the server pulls its results at the fast interval. Upcoming matches are watched at the slow interval to detect their start; finished matches are not polled at all.",
@@ -1510,19 +1510,15 @@
         "3": " and apply to all events."
       },
       "saved": "Timing defaults saved",
-      "invalid": "Please select a race belonging to this event.",
+      "invalid": "The timing defaults could not be saved.",
       "deviations": {
         "title": "Competitions with their own timing",
         "none": "No competition deviates – all of them follow these defaults.",
         "system": "own system",
         "startlistQualification": "own start list export for qualification",
         "startlistRounds": "own start list export",
-        "resultImport": "own race results import",
-        "raceQualification": "own qualification race: {{name}}",
-        "raceRounds": "own race: {{name}}"
+        "resultImport": "own race results import"
       },
-      "raceQualification": "Race for qualification rounds",
-      "raceRounds": "Race for all other rounds",
       "races": {
         "title": "RaceClocker races",
         "hint": "Each race carries its results URL exactly once. The automatic pull only fetches the races currently being run.",
@@ -1537,7 +1533,7 @@
         },
         "capturesLaps": "Records lap times",
         "none": "No race created yet.",
-        "deleteConfirm": "Delete “{{name}}”? Competitions pointing at it will fall back to the event default.",
+        "deleteConfirm": "Delete “{{name}}”? As long as a competition still points at it, it cannot be deleted — untick the assignment below first.",
         "nameTaken": "A race with this name already exists.",
         "urlTaken": "A race with this results URL already exists.",
         "invalidUrl": "The URL must be on raceclocker.com.",
@@ -1546,7 +1542,7 @@
       },
       "assignments": {
         "title": "Assign competitions per race",
-        "hint": "The reverse of choosing in the competition: tick here which competitions use each race. A competition uses exactly one race per round type — ticking it here moves it away from another. Unticked competitions inherit the event default.",
+        "hint": "The reverse of choosing in the competition: tick here which competitions use each race. A competition uses exactly one race per round type — ticking it here moves it away from another. Unticked competitions have no race for that round type.",
         "forQualification": "Used for the qualification of",
         "forRounds": "Used for the rounds of",
         "saved": "Assignment saved."

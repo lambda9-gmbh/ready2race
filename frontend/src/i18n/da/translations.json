@@ -1292,7 +1292,7 @@
           "title": "Filformater",
           "hint": "Hvilke kolonner der eksporteres og importeres. Kun nødvendigt separat, hvis denne konkurrence kører ind i et andet løb i tidtagningssystemet."
         },
-        "raceclockerHint": "RaceClocker-løb hører til stævnet, ikke til den enkelte konkurrence. Opret hvert løb én gang her — for eksempel „Time trials“, „Langdistance“ og „Kortdistance“ — og vælg nedenfor, hvilket der gælder for kvalifikationsrunder, og hvilket for alle øvrige runder. Konkurrencer arver dette valg og kan afvige bevidst.",
+        "raceclockerHint": "RaceClocker-løb oprettes i stævnets indstillinger. Vælg denne konkurrences løb til kvalifikation og til alle øvrige runder her — den samme tildeling kan også sættes omvendt, ved løbet.",
         "startlistQualification": "Startliste-eksport til kvalifikation",
         "startlistRounds": "Startliste-eksport til øvrige runder",
         "startlist": "Startliste-eksport",
@@ -1491,7 +1491,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker-løb hører til stævnet, ikke til den enkelte konkurrence. Opret hvert løb én gang her — for eksempel „Time trials“, „Langdistance“ og „Kortdistance“ — og vælg nedenfor, hvilket der gælder for kvalifikationsrunder, og hvilket for alle øvrige runder. Konkurrencer arver dette valg og kan afvige bevidst.",
+      "raceclockerHint": "RaceClocker-løb hører til stævnet, ikke til den enkelte konkurrence. Opret hvert løb én gang her — for eksempel „Time trials“, „Langdistance“ og „Kortdistance“ — og markér nedenfor pr. løb, hvilke konkurrencer der bruger det til kvalifikationsrunder, og hvilke til alle øvrige runder.",
       "autoPull": {
         "enabled": "Hent resultater automatisk",
         "hint": "Når et heat er i gang, henter serveren resultaterne i det hurtige interval. Kommende heats overvåges i det langsomme interval for at opdage deres start; afsluttede heats hentes ikke.",
@@ -1510,19 +1510,15 @@
         "3": " og gælder for alle arrangementer."
       },
       "saved": "Tidtagningsstandard gemt",
-      "invalid": "Vælg venligst et løb, der hører til dette stævne.",
+      "invalid": "Tidtagningsstandarden kunne ikke gemmes.",
       "deviations": {
         "title": "Konkurrencer med egen tidtagning",
         "none": "Ingen konkurrence afviger – alle følger denne standard.",
         "system": "eget system",
         "startlistQualification": "egen startliste-eksport til kvalifikation",
         "startlistRounds": "egen startliste-eksport",
-        "resultImport": "egen løbsresultater-import",
-        "raceQualification": "eget kvalifikationsløb: {{name}}",
-        "raceRounds": "eget løb: {{name}}"
+        "resultImport": "egen løbsresultater-import"
       },
-      "raceQualification": "Løb til kvalifikationsrunder",
-      "raceRounds": "Løb til alle øvrige runder",
       "races": {
         "title": "RaceClocker-løb",
         "hint": "Hvert løb bærer sin resultatadresse præcis én gang. Den automatiske hentning henter kun de løb, der køres lige nu.",
@@ -1537,7 +1533,7 @@
         },
         "capturesLaps": "Registrerer omgangstider",
         "none": "Endnu intet løb oprettet.",
-        "deleteConfirm": "Slet „{{name}}“? Konkurrencer, der peger på det, falder tilbage til stævnets standard.",
+        "deleteConfirm": "Slet „{{name}}“? Så længe en konkurrence stadig peger på det, kan det ikke slettes — fjern tildelingen nedenfor først.",
         "nameTaken": "Der findes allerede et løb med dette navn.",
         "urlTaken": "Der findes allerede et løb med denne adresse.",
         "invalidUrl": "Adressen skal ligge på raceclocker.com.",
@@ -1546,7 +1542,7 @@
       },
       "assignments": {
         "title": "Tildel konkurrencer pr. løb",
-        "hint": "Omvendt af valget i konkurrencen: markér her, hvilke konkurrencer der bruger hvert løb. En konkurrence hører til præcis ét løb pr. rundetype — markerer du den her, flytter den fra et andet. Umarkerede konkurrencer arver stævnets standard.",
+        "hint": "Omvendt af valget i konkurrencen: markér her, hvilke konkurrencer der bruger hvert løb. En konkurrence hører til præcis ét løb pr. rundetype — markerer du den her, flytter den fra et andet. Umarkerede konkurrencer har intet løb for den rundetype.",
         "forQualification": "Gælder for kvalifikationen af",
         "forRounds": "Gælder for løbene af",
         "saved": "Tildeling gemt."

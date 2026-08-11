@@ -1292,7 +1292,7 @@
           "title": "Dateiformate",
           "hint": "Welche Spalten exportiert und importiert werden. Abweichend nur nötig, wenn dieser Wettkampf in ein anderes Rennen im Zeitnahme-System läuft."
         },
-        "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und wählen Sie darunter aus, welches für die Qualifikation und welches für die Läufe gilt. Wettkämpfe erben diese Anwahl und können gezielt abweichen.",
+        "raceclockerHint": "RaceClocker-Rennen werden in den Einstellungen der Veranstaltung angelegt. Wählen Sie hier das Rennen dieses Wettkampfs für die Qualifikation und für die Läufe — dieselbe Zuordnung lässt sich auch umgekehrt am Rennen anhaken.",
         "startlistQualification": "Startlisten Export Qualifikation",
         "startlistRounds": "Startlisten Export Läufe",
         "startlist": "Startlisten Export",
@@ -1491,7 +1491,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und wählen Sie darunter aus, welches für die Qualifikation und welches für die Läufe gilt. Wettkämpfe erben diese Anwahl und können gezielt abweichen.",
+      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und haken Sie darunter je Rennen an, welche Wettkämpfe es für die Qualifikation und welche für die Läufe nutzen.",
       "autoPull": {
         "enabled": "Ergebnisse automatisch abrufen",
         "hint": "Läuft ein Lauf, holt der Server die Ergebnisse im schnellen Takt. Bevorstehende Läufe werden im langsamen Takt beobachtet, um ihren Start zu erkennen; beendete Läufe gar nicht.",
@@ -1510,19 +1510,15 @@
         "3": " angelegt und gelten für alle Veranstaltungen."
       },
       "saved": "Zeitnahme-Voreinstellung gespeichert",
-      "invalid": "Bitte wählen Sie ein Rennen dieser Veranstaltung aus.",
+      "invalid": "Die Zeitnahme-Voreinstellung konnte nicht gespeichert werden.",
       "deviations": {
         "title": "Wettkämpfe mit eigener Zeitnahme",
         "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
         "system": "eigenes System",
         "startlistQualification": "eigener Startlisten Export Qualifikation",
         "startlistRounds": "eigener Startlisten Export",
-        "resultImport": "eigener Rennergebnisse Import",
-        "raceQualification": "eigenes Quali-Rennen: {{name}}",
-        "raceRounds": "eigenes Rennen: {{name}}"
+        "resultImport": "eigener Rennergebnisse Import"
       },
-      "raceQualification": "Rennen für Qualifikationsrunden",
-      "raceRounds": "Rennen für die Läufe",
       "races": {
         "title": "RaceClocker-Rennen",
         "hint": "Jedes Rennen trägt seine Ergebnis-Adresse genau einmal. Der automatische Abruf holt je Takt nur die Rennen, die gerade gefahren werden.",
@@ -1537,7 +1533,7 @@
         },
         "capturesLaps": "Erfasst Rundenzeiten",
         "none": "Noch kein Rennen angelegt.",
-        "deleteConfirm": "„{{name}}“ löschen? Wettkämpfe, die darauf zeigen, erben danach wieder die Voreinstellung.",
+        "deleteConfirm": "„{{name}}“ löschen? Solange noch ein Wettkampf darauf zeigt, lässt es sich nicht löschen — hake die Zuordnung vorher unten ab.",
         "nameTaken": "Es gibt schon ein Rennen mit diesem Namen.",
         "urlTaken": "Es gibt schon ein Rennen mit dieser Adresse.",
         "invalidUrl": "Die Adresse muss auf raceclocker.com liegen.",
@@ -1546,7 +1542,7 @@
       },
       "assignments": {
         "title": "Wettkämpfe je Rennen zuordnen",
-        "hint": "Umgekehrt zur Anwahl im Wettkampf: Hake hier je Rennen an, welche Wettkämpfe es nutzen. Ein Wettkampf hängt je Rundenart an genau einem Rennen — hakst du ihn hier an, wandert er von einem anderen hierher. Nicht angehakte Wettkämpfe erben die Voreinstellung der Veranstaltung.",
+        "hint": "Umgekehrt zur Anwahl im Wettkampf: Hake hier je Rennen an, welche Wettkämpfe es nutzen. Ein Wettkampf hängt je Rundenart an genau einem Rennen — hakst du ihn hier an, wandert er von einem anderen hierher. Nicht angehakte Wettkämpfe haben für diese Rundenart kein Rennen.",
         "forQualification": "Gilt für die Qualifikation von",
         "forRounds": "Gilt für die Läufe von",
         "saved": "Zuordnung gespeichert."

@@ -19,14 +19,12 @@ data class TimingConfigDto(
      */
     val hasQualificationRound: Boolean,
     /**
-     * Die Zeitnahme-Voreinstellung der Veranstaltung (Migrationen V202608062100 und V202608071300):
-     * RaceClocker-Rennen gehoeren der Veranstaltung, deshalb erben Wettkaempfe System, Rennen-Anwahl
-     * und die beiden Dateiformate von dort. Die Felder oben sind der lokale Override (null =
-     * geerbt); diese hier zeigen der Oberflaeche, WAS geerbt wuerde.
+     * Die Zeitnahme-Voreinstellung der Veranstaltung: System und die beiden Dateiformate erben
+     * Wettkaempfe von dort (null oben = geerbt); diese Felder zeigen der Oberflaeche, WAS geerbt
+     * wuerde. Die Rennen-Zuordnung erbt NICHT mehr (seit 11.08.2026 nur noch pro Rennen am
+     * Wettkampf, kein Veranstaltungs-Default) - deshalb kein eventRaceQualification/-Rounds hier.
      */
     val eventTimingSystem: TimingSystem?,
-    val eventRaceQualification: UUID?,
-    val eventRaceRounds: UUID?,
     val eventStartlistConfigQualification: UUID?,
     val eventStartlistConfigRounds: UUID?,
     val eventResultImportConfig: UUID?,

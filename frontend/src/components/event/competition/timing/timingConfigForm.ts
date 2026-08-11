@@ -9,7 +9,7 @@ export type TimingFormSystem = 'NONE' | 'RACECLOCKER' | 'WEBSCORER'
 
 export type TimingForm = {
     timingSystem: TimingFormSystem
-    /** Das angewählte Rennen je Rundenart; null heißt „erbt von der Veranstaltung". */
+    /** Das angewählte Rennen je Rundenart; null heißt „kein Rennen zugewiesen". */
     raceQualification: AutocompleteOption
     raceRounds: AutocompleteOption
     startlistConfigQualification: AutocompleteOption
@@ -24,18 +24,16 @@ export type TimingForm = {
      */
     hasQualificationRound: boolean
     /**
-     * Ebenfalls nur mitgeführt: die Zeitnahme-Voreinstellung der Veranstaltung. Alle Wettkämpfe einer
-     * Regatta exportieren in dieselben Rennen im Fremdsystem, deshalb erben sie System, Adressen und
-     * die beiden Dateiformate von dort, solange die eigenen Felder leer sind. Die Oberfläche zeigt
-     * damit an, WAS geerbt würde, und die Warnungen rechnen auf den effektiven Werten statt auf den
+     * Ebenfalls nur mitgeführt: die Zeitnahme-Voreinstellung der Veranstaltung. Wettkämpfe erben
+     * System und die beiden Dateiformate von dort, solange die eigenen Felder leer sind — die
+     * RaceClocker-Rennen dagegen werden pro Wettkampf zugewiesen und nicht geerbt. Die Oberfläche
+     * zeigt an, WAS geerbt würde, und die Warnungen rechnen auf den effektiven Werten statt auf den
      * lokalen.
      *
-     * Die drei Formate stehen hier als blanke ID: den Namen schlägt die Komponente in den geladenen
+     * Die Formate stehen hier als blanke ID: den Namen schlägt die Komponente in den geladenen
      * Listen nach, damit dieses Modul ohne Netz testbar bleibt.
      */
     eventTimingSystem: TimingFormSystem
-    eventRaceQualification: string
-    eventRaceRounds: string
     eventStartlistConfigQualification: string
     eventStartlistConfigRounds: string
     eventResultImportConfig: string
@@ -50,8 +48,6 @@ export const emptyTimingForm: TimingForm = {
     resultImportConfig: null,
     hasQualificationRound: false,
     eventTimingSystem: 'NONE',
-    eventRaceQualification: '',
-    eventRaceRounds: '',
     eventStartlistConfigQualification: '',
     eventStartlistConfigRounds: '',
     eventResultImportConfig: '',
@@ -91,8 +87,6 @@ export const mapDtoToTimingForm = (dto: TimingConfigDto): TimingForm => ({
     resultImportConfig: dto.resultImportConfig ? {id: dto.resultImportConfig, label: ''} : null,
     hasQualificationRound: dto.hasQualificationRound ?? false,
     eventTimingSystem: dto.eventTimingSystem ?? 'NONE',
-    eventRaceQualification: dto.eventRaceQualification ?? '',
-    eventRaceRounds: dto.eventRaceRounds ?? '',
     eventStartlistConfigQualification: dto.eventStartlistConfigQualification ?? '',
     eventStartlistConfigRounds: dto.eventStartlistConfigRounds ?? '',
     eventResultImportConfig: dto.eventResultImportConfig ?? '',
@@ -145,8 +139,9 @@ export const timingConfigWarnings = (form: TimingForm): TimingWarning[] => {
     if (system === 'NONE') return []
 
     const raceClocker = system === 'RACECLOCKER'
-    const raceRounds = form.raceRounds?.id || form.eventRaceRounds
-    const raceQualification = form.raceQualification?.id || form.eventRaceQualification
+    // Rennen werden pro Wettkampf zugewiesen, nicht von der Veranstaltung geerbt.
+    const raceRounds = form.raceRounds?.id
+    const raceQualification = form.raceQualification?.id
     // Auch die Formate können von der Veranstaltung kommen — dann fehlen sie nicht.
     const startlistRounds = form.startlistConfigRounds?.id || form.eventStartlistConfigRounds
     const startlistQualification =

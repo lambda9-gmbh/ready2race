@@ -31,12 +31,13 @@ import {
 
 /**
  * Was an einem Wettkampf abweicht — jedes gesetzte Feld einzeln, weil ein Teil-Override („erbt das
- * System, hat aber ein eigenes Läufe-Rennen") die häufigste und die am leichtesten zu übersehende
- * Abweichung ist.
+ * System, hat aber ein eigenes Startlisten-Format") die am leichtesten zu übersehende Abweichung
+ * ist. Die RaceClocker-Rennen stehen bewusst nicht mehr hier: sie werden pro Wettkampf zugewiesen
+ * (RaceClockerRaceAssignments) und haben keine Veranstaltungs-Voreinstellung, von der man abweichen
+ * könnte.
  *
- * Liefert fertige Texte statt Schlüssel, weil zwei davon den Rennennamen einsetzen müssen. Die
- * `as never`-Casts sind der Preis dafür: Die Schlüssel stehen hier nicht mehr als Literale, die der
- * i18n-Typ prüfen könnte.
+ * Die `as never`-Casts sind der Preis dafür, dass die Schlüssel hier zusammengesetzt und nicht als
+ * Literale stehen, die der i18n-Typ prüfen könnte.
  */
 const describeDeviation = (
     deviation: CompetitionTimingDeviationDto,
@@ -44,16 +45,6 @@ const describeDeviation = (
 ) =>
     [
         deviation.timingSystem ? t('event.timing.deviations.system' as never) : null,
-        // Beim Namen genannt statt nur „hat ein eigenes Rennen": Wer hier nachsieht, will wissen,
-        // WOHIN der Wettkampf zeigt.
-        deviation.raceQualificationName
-            ? t('event.timing.deviations.raceQualification' as never, {
-                  name: deviation.raceQualificationName,
-              })
-            : null,
-        deviation.raceRoundsName
-            ? t('event.timing.deviations.raceRounds' as never, {name: deviation.raceRoundsName})
-            : null,
         deviation.startlistConfigQualification
             ? t('event.timing.deviations.startlistQualification' as never)
             : null,
@@ -64,13 +55,13 @@ const describeDeviation = (
     ].filter(text => text !== null)
 
 /**
- * Die Zeitnahme-Voreinstellung einer Veranstaltung: ein RaceClocker-Rennen für die Zeitfahren und
- * eines für die Läufe, gemeinsam für alle Wettkämpfe.
+ * Die Zeitnahme-Voreinstellung einer Veranstaltung: Zeitnahme-System, Startlisten-Export und
+ * Ergebnis-Import, gemeinsam für alle Wettkämpfe.
  *
- * Sie steht hier und nicht im Wettkampf, weil die Rennen im Fremdsystem pro Veranstaltung angelegt
- * werden — dieselben zwei Adressen in zwanzig Wettkämpfen zu pflegen hieße, zwanzig Gelegenheiten
- * für einen Tippfehler zu schaffen, der erst am Renntag auffällt. Der Zeitnahme-Tab des Wettkampfs
- * bleibt als gezielter Override erhalten.
+ * Die RaceClocker-Rennen werden hier angelegt, aber nicht mehr voreingestellt — welcher Wettkampf
+ * in welches Rennen exportiert, wird pro Rennen angehakt (RaceClockerRaceAssignments), weil die
+ * umgekehrte Pflege bequemer ist als sich durch jeden Wettkampf zu klicken. Der Zeitnahme-Tab des
+ * Wettkampfs bleibt als gezielter Override für System und Formate erhalten.
  */
 const EventTimingConfig = () => {
     const {t} = useTranslation()
@@ -124,60 +115,19 @@ const EventTimingConfig = () => {
         },
     )
 
-    const raceOptions = (races ?? []).map(race => ({id: race.id, label: race.name}))
-
     const removeRace = async (race: RaceClockerRaceDto) => {
-        // Wer darauf zeigt, wird beim Namen genannt. „Wettkämpfe erben danach wieder" ist wahr,
-        // aber unbrauchbar, solange man nicht weiß, welche.
-        const affected = deviations
-            .filter(
-                d =>
-                    d.raceQualificationName === race.name || d.raceRoundsName === race.name,
-            )
-            .map(d => `${d.identifier} ${d.name}`)
-
-        const question = [
-            t('event.timing.races.deleteConfirm', {name: race.name}),
-            affected.length > 0 ? affected.join(', ') : null,
-        ]
-            .filter(line => line !== null)
-            .join('\n\n')
-
-        if (!confirm(question)) return
+        if (!confirm(t('event.timing.races.deleteConfirm', {name: race.name}))) return
 
         const {error} = await deleteRaceClockerRace({
             path: {eventId, raceId: race.id},
         })
         if (error) {
+            // Ein Rennen, das noch einem Wettkampf zugewiesen ist, lässt sich nicht löschen — die
+            // Zuordnung muss erst am Rennen abgehakt werden (RaceClockerRaceAssignments unten).
             feedback.error(t('common.error.unexpected'))
         } else {
             feedback.success(t('event.timing.races.deleted'))
             setRacesReloaded(Date.now())
-            // Die Anwahl im Formular zeigt sonst auf ein Rennen, das es nicht mehr gibt. Gezielt
-            // geleert statt das ganze Formular neu zu laden: Ein Neuladen würde jede nicht
-            // gespeicherte Eingabe daneben stillschweigend verwerfen.
-            if (formContext.getValues('raceQualification')?.id === race.id) {
-                formContext.setValue('raceQualification', null)
-            }
-            if (formContext.getValues('raceRounds')?.id === race.id) {
-                formContext.setValue('raceRounds', null)
-            }
-            // Nur die Rennen-Anwahl aus dem Eintrag nehmen, nicht den ganzen Eintrag: Ein
-            // Wettkampf mit zusätzlich eigenem System oder Preset weicht weiterhin ab und darf
-            // nicht aus der Liste verschwinden.
-            setDeviations(current =>
-                current
-                    .map(d => ({
-                        ...d,
-                        raceQualificationName:
-                            d.raceQualificationName === race.name
-                                ? undefined
-                                : d.raceQualificationName,
-                        raceRoundsName:
-                            d.raceRoundsName === race.name ? undefined : d.raceRoundsName,
-                    }))
-                    .filter(d => describeDeviation(d, t).length > 0),
-            )
         }
     }
 
@@ -323,18 +273,6 @@ const EventTimingConfig = () => {
                                 />
                             )}
 
-                            <FormInputAutocomplete
-                                name={'raceQualification'}
-                                options={raceOptions}
-                                loading={racesPending}
-                                label={t('event.timing.raceQualification')}
-                            />
-                            <FormInputAutocomplete
-                                name={'raceRounds'}
-                                options={raceOptions}
-                                loading={racesPending}
-                                label={t('event.timing.raceRounds')}
-                            />
                             <Divider />
                             <FormInputSwitch
                                 name={'autoPull'}
@@ -456,9 +394,9 @@ const EventTimingConfig = () => {
                         </SubmitButton>
                     </Box>
 
-                    {/* Die Reichweite dieser Voreinstellung: welche Wettkämpfe ihr nicht folgen.
-                        Ohne diese Liste ändert man hier eine Adresse und merkt erst am Renntag,
-                        dass drei Wettkämpfe weiterhin ins alte Rennen zeigen. */}
+                    {/* Die Reichweite dieser Voreinstellung: welche Wettkämpfe ihr bei System oder
+                        Dateiformat nicht folgen. Ohne diese Liste ändert man hier ein Format und
+                        merkt erst am Renntag, dass drei Wettkämpfe ein eigenes gesetzt haben. */}
                     <Divider />
                     <Box>
                         <Typography variant={'subtitle2'} gutterBottom>

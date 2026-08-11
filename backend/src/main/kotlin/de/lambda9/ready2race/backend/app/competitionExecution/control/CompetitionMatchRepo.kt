@@ -71,19 +71,15 @@ object CompetitionMatchRepo {
      * a real countdown in RaceClocker.
      */
     fun getForRaceClockerPull(id: UUID) = Jooq.query {
-        // Wettkampf-Anwahl vor Veranstaltungs-Voreinstellung (Migration V202608101100): die
-        // RaceClocker-Rennen gehören der Veranstaltung, einzelne Wettkämpfe können mit einer
-        // eigenen Anwahl ausscheren. Zwei Aliase, weil dieselbe Tabelle zweimal gebraucht wird.
+        // Die Zuordnung Wettkampf→Rennen steht ausschließlich am Wettkampf (seit dem 11.08.2026 nur
+        // noch über die Pro-Rennen-Anwahl im Zeitnahme-Tab der Veranstaltung gesetzt). Der frühere
+        // Veranstaltungs-Default ist entfallen: er duplizierte die Pro-Rennen-Zuordnung und ein
+        // nicht zugeordneter Wettkampf soll ehrlich „kein Rennen" sein, statt still zu erben.
+        // Zwei Aliase, weil dieselbe Tabelle zweimal gebraucht wird.
         val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
         val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")
-        val qualiRaceId = DSL.coalesce(
-            COMPETITION.RACECLOCKER_RACE_QUALIFICATION,
-            EVENT.RACECLOCKER_RACE_QUALIFICATION,
-        )
-        val roundsRaceId = DSL.coalesce(
-            COMPETITION.RACECLOCKER_RACE_ROUNDS,
-            EVENT.RACECLOCKER_RACE_ROUNDS,
-        )
+        val qualiRaceId = COMPETITION.RACECLOCKER_RACE_QUALIFICATION
+        val roundsRaceId = COMPETITION.RACECLOCKER_RACE_ROUNDS
 
         select(
             COMPETITION_SETUP_MATCH.NAME,
@@ -108,7 +104,6 @@ object CompetitionMatchRepo {
             .join(COMPETITION_PROPERTIES)
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-            .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
             .leftJoin(qualiRace).on(qualiRace.ID.eq(qualiRaceId))
             .leftJoin(roundsRace).on(roundsRace.ID.eq(roundsRaceId))
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))

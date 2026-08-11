@@ -3,25 +3,19 @@ package de.lambda9.ready2race.backend.app.timingConfig.entity
 import java.util.UUID
 
 /**
- * Ein Wettkampf, der die Zeitnahme-Voreinstellung seiner Veranstaltung nicht erbt, sondern eigene
- * Werte gesetzt hat. Alle sechs vererbbaren Felder stehen hier.
+ * Ein Wettkampf, der die Zeitnahme-Voreinstellung seiner Veranstaltung nicht erbt, sondern eigenes
+ * System oder eigene Dateiformate gesetzt hat.
  *
  * Gedacht für die Veranstaltungs-Ansicht: wer dort die Voreinstellung pflegt, soll sehen, welche
- * Wettkämpfe ihr nicht folgen — sonst ändert man die Adresse für alle und wundert sich am Renntag,
- * warum drei Wettkämpfe weiterhin ins alte Rennen zeigen. Ein leeres [timingSystem] mit eigener Rennen-Anwahl
- * ist ein Teil-Override und genauso gemeint: der Wettkampf erbt das System und hat ein eigenes Rennen.
+ * Wettkämpfe ihr nicht folgen. Die Rennen-Zuordnung steht bewusst NICHT mehr hier — sie wird seit
+ * dem 11.08.2026 pro Rennen zugewiesen und dort auch angezeigt (RaceClockerRaceAssignments), ein
+ * Veranstaltungs-Default existiert nicht mehr, von dem man abweichen könnte.
  */
 data class CompetitionTimingDeviationDto(
     val competitionId: UUID,
     val identifier: String,
     val name: String,
     val timingSystem: TimingSystem?,
-    /**
-     * Der NAME des abweichenden Rennens, nicht seine Kennung: Diese Liste wird gelesen, nicht
-     * weiterverarbeitet, und „Eigenes Rennen: Langstrecke" sagt einem Menschen etwas, eine UUID nicht.
-     */
-    val raceQualificationName: String?,
-    val raceRoundsName: String?,
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,

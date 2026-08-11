@@ -1194,14 +1194,6 @@ export type CompetitionTimingDeviationDto = {
     identifier: string
     name: string
     timingSystem?: TimingSystem | null
-    /**
-     * Name of the deviating race for qualification rounds - a name, not an id, because this list is read rather than processed.
-     */
-    raceQualificationName?: string | null
-    /**
-     * Name of the deviating race for all other rounds.
-     */
-    raceRoundsName?: string | null
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
@@ -1752,19 +1744,11 @@ export type EventScheduleSlotDto = {
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
 
 /**
- * Event-wide timing defaults. RaceClocker races belong to the event, so the timing system and the two race selections live here once and every competition without its own values inherits them. Column presets stay per competition - they depend on the concrete start list.
+ * Event-wide timing defaults. Timing system and the file-format presets live here once and every competition without its own values inherits them. The race selection is NOT here - it is assigned per race on each competition (RaceClockerRaceAssignments), no event-wide default.
  *
  */
 export type EventTimingConfigDto = {
     timingSystem?: TimingSystem | null
-    /**
-     * The selected RaceClocker race for qualification rounds.
-     */
-    raceQualification?: string | null
-    /**
-     * The selected RaceClocker race for all other rounds.
-     */
-    raceRounds?: string | null
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
@@ -1795,19 +1779,11 @@ export type EventTimingConfigDto = {
 }
 
 /**
- * The RaceClocker fields are optional, like the per-competition config. Both race ids must belong to this event. The five auto-pull fields are not optional - the database always has a value for them, and null here would ambiguously mean "leave unchanged".
+ * The RaceClocker fields are optional, like the per-competition config. The five auto-pull fields are not optional - the database always has a value for them, and null here would ambiguously mean "leave unchanged". The race selection is not here - it is assigned per race on each competition, no event-wide default.
  *
  */
 export type EventTimingConfigRequest = {
     timingSystem?: TimingSystem | null
-    /**
-     * The selected RaceClocker race for qualification rounds.
-     */
-    raceQualification?: string | null
-    /**
-     * The selected RaceClocker race for all other rounds.
-     */
-    raceRounds?: string | null
     startlistConfigQualification?: string | null
     startlistConfigRounds?: string | null
     resultImportConfig?: string | null
@@ -3503,14 +3479,6 @@ export type TimingConfigDto = {
      * Event-wide default timing system; the competition inherits it while its own field is null.
      */
     eventTimingSystem?: TimingSystem | null
-    /**
-     * Event-wide default race for qualification rounds; inherited while the competition's own field is null.
-     */
-    eventRaceQualification?: string | null
-    /**
-     * Event-wide default race for all other rounds; inherited while the competition's own field is null.
-     */
-    eventRaceRounds?: string | null
     /**
      * Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
      */

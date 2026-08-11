@@ -11,9 +11,6 @@ import java.util.UUID
  */
 data class EventTimingConfigRequest(
     val timingSystem: TimingSystem?,
-    /** Das voreingestellte RaceClocker-Rennen je Rundenart; Wettkämpfe erben es, solange sie nichts eigenes anwählen. */
-    val raceQualification: UUID?,
-    val raceRounds: UUID?,
     val startlistConfigQualification: UUID?,
     val startlistConfigRounds: UUID?,
     val resultImportConfig: UUID?,
@@ -62,8 +59,6 @@ data class EventTimingConfigRequest(
         val example
             get() = EventTimingConfigRequest(
                 timingSystem = TimingSystem.RACECLOCKER,
-                raceQualification = UUID.randomUUID(),
-                raceRounds = UUID.randomUUID(),
                 startlistConfigQualification = UUID.randomUUID(),
                 startlistConfigRounds = UUID.randomUUID(),
                 resultImportConfig = UUID.randomUUID(),
