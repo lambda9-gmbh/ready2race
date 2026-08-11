@@ -72,6 +72,16 @@ sealed interface EventScheduleError : ServiceError {
         val maxAdvanceMinutes: Long,
     ) : EventScheduleError
 
+    /**
+     * Nur beim Bereichs-Verschieben (PLUS_MINUTES_RANGE): der um X Minuten verzögerte Bereich würde
+     * den ersten Slot dahinter einholen. [latestStartTime] ist dessen Startzeit, [maxDelayMinutes]
+     * die größte Verzögerung, die noch ohne Überholen passt.
+     */
+    data class ShiftOvertakesFollower(
+        val latestStartTime: LocalDateTime,
+        val maxDelayMinutes: Long,
+    ) : EventScheduleError
+
     // --- Vorziehen nach einem entfallenen Slot ---
 
     /**
@@ -214,6 +224,17 @@ sealed interface EventScheduleError : ServiceError {
                 "maxAdvanceMinutes" to maxAdvanceMinutes,
             ),
             errorCode = ErrorCode.SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR,
+        )
+
+        is ShiftOvertakesFollower -> ApiError(
+            HttpStatusCode.UnprocessableEntity,
+            "Cannot delay past $latestStartTime without overtaking the following slot " +
+                "(at most $maxDelayMinutes minutes later)",
+            details = mapOf(
+                "latestStartTime" to latestStartTime.toString(),
+                "maxDelayMinutes" to maxDelayMinutes,
+            ),
+            errorCode = ErrorCode.SCHEDULE_SHIFT_OVERTAKES_FOLLOWER,
         )
 
         is SlotNotSkipped -> ApiError(

@@ -414,6 +414,15 @@ object EventScheduleLogic {
             ?.coerceAtLeast(0) ?: 0
 
     /**
+     * Die größte Verzögerung (Minuten), mit der der verschobene Bereich gerade noch VOR
+     * [followerStartTime] bleibt - der engste Abstand eines Slots des Bereichs zum ersten Slot
+     * dahinter. Für die Meldung von [de.lambda9.ready2race.backend.app.eventSchedule.entity.EventScheduleError.ShiftOvertakesFollower].
+     */
+    fun maxDelayBeforeFollower(entries: List<ShiftPreviewEntry>, followerStartTime: LocalDateTime): Long =
+        entries.minOfOrNull { Duration.between(it.oldStartTime, followerStartTime).toMinutes() - 1 }
+            ?.coerceAtLeast(0) ?: 0
+
+    /**
      * Der erste Slot, den die Verschiebung aus [day] hinausträgt - oder null, wenn alle im Renntag
      * bleiben. "Der erste" ist bewusst der zeitlich früheste Übertreter: er ist die Stelle, an der
      * der Nutzer die Verschiebung kappen muss, alle weiteren folgen ihm ohnehin.

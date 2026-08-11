@@ -12,6 +12,8 @@ const shiftKeys = {
     leavesRaceDayPlain: 'event.schedule.shift.error.leavesRaceDayPlain',
     overtakesPredecessor: 'event.schedule.shift.error.overtakesPredecessor',
     overtakesPredecessorPlain: 'event.schedule.shift.error.overtakesPredecessorPlain',
+    overtakesFollower: 'event.schedule.shift.error.overtakesFollower',
+    overtakesFollowerPlain: 'event.schedule.shift.error.overtakesFollowerPlain',
     compressionImpossible: 'event.schedule.shift.impossible',
     unexpected: 'event.schedule.shift.error.unexpected',
 } as const
@@ -152,6 +154,17 @@ export const shiftErrorText = (
                 : {
                       key: shiftKeys.overtakesPredecessor,
                       values: {earliest: ctx.formatTime(earliest), max},
+                  }
+        }
+
+        case 'SCHEDULE_SHIFT_OVERTAKES_FOLLOWER': {
+            const latest = asString(details.latestStartTime)
+            const max = asNumber(details.maxDelayMinutes)
+            return latest === undefined || max === undefined
+                ? {key: shiftKeys.overtakesFollowerPlain}
+                : {
+                      key: shiftKeys.overtakesFollower,
+                      values: {latest: ctx.formatTime(latest), max},
                   }
         }
     }

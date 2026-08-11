@@ -1828,9 +1828,11 @@
         "title": "Zeitplan anpassen",
         "fromSlot": "Start-Slot",
         "modePlus": "+X Minuten",
+        "modeRange": "Bereich verschieben",
         "modeSetTime": "Startzeit setzen",
         "modeCompress": "Aufholen bis",
         "targetSlot": "Ziel-Slot",
+        "toSlot": "Bis-Slot",
         "minutes": "Minuten",
         "newTime": "Neue Startzeit",
         "preview": "Vorschau",
@@ -1848,12 +1850,15 @@
           "leavesRaceDayPlain": "Die Verschiebung schiebt mindestens einen Slot über den Renntag hinaus. Bitte weniger weit verschieben; der Zeitplan des Folgetags wird getrennt angepasst.",
           "overtakesPredecessor": "So weit vorziehen ist nicht möglich: Der vorherige Slot beginnt um {{earliest}} und würde überholt. Höchstens {{max}} Minuten vorziehen — vor {{earliest}} darf kein verschobener Lauf starten.",
           "overtakesPredecessorPlain": "So weit vorziehen ist nicht möglich: Der verschobene Block würde den vorherigen Slot überholen. Bitte weniger weit vorziehen.",
+          "overtakesFollower": "So weit verzögern ist nicht möglich: Der nächste Slot dahinter beginnt um {{latest}} und würde eingeholt. Höchstens {{max}} Minuten verzögern — oder den Bis-Slot weiter nach hinten wählen.",
+          "overtakesFollowerPlain": "So weit verzögern ist nicht möglich: Der verschobene Bereich würde den ersten Slot dahinter einholen. Bitte weniger weit verzögern oder den Bis-Slot weiter hinten wählen.",
           "unexpected": "Die Verschiebung wurde abgelehnt. Bitte die Angaben im Formular prüfen und die Vorschau erneut ausführen."
         },
         "mode": "Methode",
         "delayMinutes": "Verzug (Minuten)",
         "help": {
           "plus": "Alle Slots ab dem gewählten Slot werden um die angegebenen Minuten verschoben (negativ = vorziehen).",
+          "range": "Nur die Slots vom Start-Slot bis einschließlich Bis-Slot werden um die angegebenen Minuten verschoben (negativ = vorziehen). Alles davor und dahinter behält seine Zeit.",
           "setTime": "Der gewählte Slot bekommt die neue Startzeit; alle folgenden Slots behalten ihre Abstände.",
           "compress": "Der angegebene Verzug wird bis zum Ziel-Slot aufgeholt: Die Abstände dazwischen werden verkürzt, der Ziel-Slot behält seine ursprüngliche Zeit."
         }

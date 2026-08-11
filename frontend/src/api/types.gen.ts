@@ -1394,6 +1394,7 @@ export type ErrorCode =
     | 'SCHEDULE_SHIFT_TARGET_INVALID'
     | 'SCHEDULE_SHIFT_LEAVES_RACE_DAY'
     | 'SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR'
+    | 'SCHEDULE_SHIFT_OVERTAKES_FOLLOWER'
     | 'SCHEDULE_ADVANCE_NO_DELTA'
     | 'SCHEDULE_SLOT_NOT_SKIPPED'
     | 'SCHEDULE_IMPORT_DUPLICATE_ROWS'
@@ -3243,7 +3244,7 @@ export type ScheduleImportResultDto = {
 
 export type Scope = 'OWN' | 'GLOBAL'
 
-export type ShiftMode = 'PLUS_MINUTES' | 'SET_TIME' | 'COMPRESS_TO_TARGET'
+export type ShiftMode = 'PLUS_MINUTES' | 'SET_TIME' | 'COMPRESS_TO_TARGET' | 'PLUS_MINUTES_RANGE'
 
 export type ShiftPreviewDto = {
     entries: Array<ShiftPreviewEntryDto>
@@ -3257,7 +3258,7 @@ export type ShiftPreviewEntryDto = {
 }
 
 /**
- * Field combination depends on mode: PLUS_MINUTES needs only minutes, SET_TIME only newTime, COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two.
+ * Field combination depends on mode: PLUS_MINUTES needs only minutes, SET_TIME only newTime, COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two, PLUS_MINUTES_RANGE needs minutes plus targetSlotId (the upper bound of the shifted range).
  */
 export type ShiftScheduleRequest = {
     fromSlotId: string

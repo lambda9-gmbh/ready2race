@@ -1832,9 +1832,11 @@
         "title": "Adjust schedule",
         "fromSlot": "Start slot",
         "modePlus": "+X minutes",
+        "modeRange": "Shift range",
         "modeSetTime": "Set start time",
         "modeCompress": "Catch up by",
         "targetSlot": "Target slot",
+        "toSlot": "Up to slot",
         "minutes": "Minutes",
         "newTime": "New start time",
         "preview": "Preview",
@@ -1852,12 +1854,15 @@
           "leavesRaceDayPlain": "The shift would move at least one slot past the end of the race day. Please shift by less; the next day's schedule is adjusted separately.",
           "overtakesPredecessor": "Cannot move that far ahead: the preceding slot starts at {{earliest}} and would be overtaken. Move up by at most {{max}} minutes — no shifted run may start before {{earliest}}.",
           "overtakesPredecessorPlain": "Cannot move that far ahead: the shifted block would overtake the preceding slot. Please move up by less.",
+          "overtakesFollower": "Cannot delay that far: the next slot after the range starts at {{latest}} and would be caught up. Delay by at most {{max}} minutes — or choose a later 'up to' slot.",
+          "overtakesFollowerPlain": "Cannot delay that far: the shifted range would catch up with the first slot after it. Please delay by less or choose a later 'up to' slot.",
           "unexpected": "The shift was rejected. Please check the values in the form and run the preview again."
         },
         "mode": "Method",
         "delayMinutes": "Delay (minutes)",
         "help": {
           "plus": "All slots from the selected slot onward are shifted by the given minutes (negative = move earlier).",
+          "range": "Only the slots from the start slot up to and including the 'up to' slot are shifted by the given minutes (negative = move earlier). Everything before and after keeps its time.",
           "setTime": "The selected slot gets the new start time; all following slots keep their gaps.",
           "compress": "The given delay is caught up by the target slot: the gaps in between are shortened, and the target slot keeps its original time."
         }

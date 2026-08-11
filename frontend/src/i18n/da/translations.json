@@ -1822,9 +1822,11 @@
         "title": "Juster tidsplan",
         "fromSlot": "Start-slot",
         "modePlus": "+X minutter",
+        "modeRange": "Flyt område",
         "modeSetTime": "Angiv starttid",
         "modeCompress": "Indhent til",
         "targetSlot": "Mål-slot",
+        "toSlot": "Til og med slot",
         "minutes": "Minutter",
         "newTime": "Ny starttid",
         "preview": "Forhåndsvisning",
@@ -1842,12 +1844,15 @@
           "leavesRaceDayPlain": "Forskydningen flytter mindst én slot ud over løbsdagen. Forskyd venligst mindre; den følgende dags tidsplan justeres separat.",
           "overtakesPredecessor": "Det er ikke muligt at rykke så langt frem: Den foregående slot begynder kl. {{earliest}} og ville blive overhalet. Ryk højst {{max}} minutter frem — intet forskudt løb må starte før {{earliest}}.",
           "overtakesPredecessorPlain": "Det er ikke muligt at rykke så langt frem: Den forskudte blok ville overhale den foregående slot. Ryk venligst mindre frem.",
+          "overtakesFollower": "Det er ikke muligt at forsinke så meget: Den næste slot efter området begynder kl. {{latest}} og ville blive indhentet. Forsink højst {{max}} minutter — eller vælg en senere „til og med“-slot.",
+          "overtakesFollowerPlain": "Det er ikke muligt at forsinke så meget: Det forskudte område ville indhente den første slot bagefter. Forsink venligst mindre, eller vælg en senere „til og med“-slot.",
           "unexpected": "Forskydningen blev afvist. Kontrollér venligst oplysningerne i formularen, og kør forhåndsvisningen igen."
         },
         "mode": "Metode",
         "delayMinutes": "Forsinkelse (minutter)",
         "help": {
           "plus": "Alle slots fra den valgte slot og frem flyttes med de angivne minutter (negativ = tidligere).",
+          "range": "Kun slots fra start-slotten til og med „til og med“-slotten flyttes med de angivne minutter (negativ = tidligere). Alt før og efter beholder sit tidspunkt.",
           "setTime": "Den valgte slot får den nye starttid; alle efterfølgende slots beholder deres afstande.",
           "compress": "Den angivne forsinkelse indhentes frem til mål-slotten: afstandene indimellem forkortes, mål-slotten beholder sit oprindelige tidspunkt."
         }
