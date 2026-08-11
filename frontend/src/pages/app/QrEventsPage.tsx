@@ -28,7 +28,9 @@ const QrEventsPage = () => {
         }
     }
     return (events &&
-        <Box sx={{width: 1, maxWidth: 600}}>
+        // mx: 'auto' zentriert die Spalte — das App-Layout streckt seine Kinder nur, auf dem
+        // Tablet klebte die auf 600px begrenzte Box sonst am linken Rand.
+        <Box sx={{width: 1, maxWidth: 600, mx: 'auto'}}>
             <Stack spacing={2} sx={{width: 1}}>
                 <Typography variant="h4" textAlign="center" gutterBottom>
                     {t('qrEvents.title')}
