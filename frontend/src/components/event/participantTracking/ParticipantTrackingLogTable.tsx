@@ -8,12 +8,16 @@ import {getParticipantTrackings} from '@api/sdk.gen.ts'
 import {useMemo, useState} from 'react'
 import {format} from 'date-fns'
 import EntityTable from '@components/EntityTable.tsx'
-import {Chip} from '@mui/material'
+import {Box, Chip, MenuItem, Select, Switch} from '@mui/material'
 import {GridActionsCellItem} from '@mui/x-data-grid'
 import {History} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal, updateLiveDashboardGlobal} from '@authorization/privileges.ts'
+import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import ParticipantTrackingDialog from './ParticipantTrackingDialog.tsx'
+
+// 'ALL' steht nur für die Auswahl "kein Filter" - der Request bekommt dann kein scanType.
+type ScanTypeFilter = 'ALL' | 'ENTRY' | 'EXIT'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -31,11 +35,27 @@ const ParticipantTrackingLogTable = (props: BaseEntityTableProps<ParticipantTrac
         user.checkPrivilege(updateLiveDashboardGlobal) || user.checkPrivilege(updateEventGlobal)
     const [tracked, setTracked] = useState<ParticipantTrackingDto | null>(null)
 
+    // Die beiden Filter über der Tabelle. Ihre Kombination ist der Sicherheits-Anwendungsfall
+    // "wer hat sich aufs Wasser abgemeldet und ist noch nicht zurück?": nur letzter Status +
+    // Abgemeldet. Das Backend filtert den Status NACH der Reduktion auf das jüngste Ereignis je
+    // Person - wer nach dem Abmelden wieder angemeldet wurde, taucht dann nicht mehr auf.
+    //
+    // EntityTable lädt nur auf seine eigenen deps (Pagination, Sortierung, Suche, lastRequested)
+    // neu - ein geänderter Filter allein löst also nichts aus. Deshalb ruft jede Filteränderung
+    // zusätzlich props.reloadData() auf (stößt lastRequested an), wie beim onlyUnverified-Filter
+    // in CompetitionRegistrationTeamTable. dataRequest liest beim Neuladen den frischen State.
+    const [onlyLatest, setOnlyLatest] = useState(false)
+    const [scanTypeFilter, setScanTypeFilter] = useState<ScanTypeFilter>('ALL')
+
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getParticipantTrackings({
             signal,
             path: {eventId},
-            query: {...paginationParameters},
+            query: {
+                ...paginationParameters,
+                onlyLatest,
+                scanType: scanTypeFilter === 'ALL' ? undefined : scanTypeFilter,
+            },
         })
     }
 
@@ -153,6 +173,50 @@ const ParticipantTrackingLogTable = (props: BaseEntityTableProps<ParticipantTrac
                 dataRequest={dataRequest}
                 entityName={t('event.registration.registration')}
                 mobileBreakpoint={'lg'}
+                customTableActions={
+                    <Box
+                        display={'flex'}
+                        justifyContent={'end'}
+                        alignItems={'center'}
+                        flexWrap={'wrap'}
+                        gap={2}>
+                        <FormInputLabel
+                            label={t('club.participant.tracking.filter.onlyLatest')}
+                            required={true}
+                            horizontal
+                            reverse>
+                            <Switch
+                                checked={onlyLatest}
+                                onChange={(_, checked) => {
+                                    setOnlyLatest(checked)
+                                    props.reloadData()
+                                }}
+                            />
+                        </FormInputLabel>
+                        <FormInputLabel
+                            label={t('club.participant.tracking.status')}
+                            required={true}
+                            horizontal>
+                            <Select
+                                size={'small'}
+                                value={scanTypeFilter}
+                                onChange={e => {
+                                    setScanTypeFilter(e.target.value as ScanTypeFilter)
+                                    props.reloadData()
+                                }}>
+                                <MenuItem value={'ALL'}>
+                                    {t('club.participant.tracking.filter.status.all')}
+                                </MenuItem>
+                                <MenuItem value={'ENTRY'}>
+                                    {t('club.participant.tracking.filter.status.entry')}
+                                </MenuItem>
+                                <MenuItem value={'EXIT'}>
+                                    {t('club.participant.tracking.filter.status.exit')}
+                                </MenuItem>
+                            </Select>
+                        </FormInputLabel>
+                    </Box>
+                }
                 customEntityActions={entity =>
                     mayEditTracking
                         ? [

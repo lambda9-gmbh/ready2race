@@ -2388,6 +2388,19 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - in: query
+          name: onlyLatest
+          required: false
+          description: "Reduces the log to the most recent event per participant. Defaults to false. The scanType filter is applied AFTER this reduction, so onlyLatest=true with scanType=EXIT answers \"who has checked out onto the water and is not back yet\"."
+          schema:
+            type: boolean
+        - in: query
+          name: scanType
+          required: false
+          description: "Only events with this status. Applied after the onlyLatest reduction."
+          schema:
+            type: string
+            enum: [ENTRY, EXIT]
       responses:
         200:
           description: ParticipantTracking page successfully retrieved
