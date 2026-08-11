@@ -1543,6 +1543,13 @@
         "invalidUrl": "Adressen skal ligge på raceclocker.com.",
         "saved": "Løb gemt.",
         "deleted": "Løb slettet."
+      },
+      "assignments": {
+        "title": "Tildel konkurrencer pr. løb",
+        "hint": "Omvendt af valget i konkurrencen: markér her, hvilke konkurrencer der bruger hvert løb. En konkurrence hører til præcis ét løb pr. rundetype — markerer du den her, flytter den fra et andet. Umarkerede konkurrencer arver stævnets standard.",
+        "forQualification": "Gælder for kvalifikationen af",
+        "forRounds": "Gælder for løbene af",
+        "saved": "Tildeling gemt."
       }
     },
     "info": {

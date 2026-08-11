@@ -1543,6 +1543,13 @@
         "invalidUrl": "The URL must be on raceclocker.com.",
         "saved": "Race saved.",
         "deleted": "Race deleted."
+      },
+      "assignments": {
+        "title": "Assign competitions per race",
+        "hint": "The reverse of choosing in the competition: tick here which competitions use each race. A competition uses exactly one race per round type — ticking it here moves it away from another. Unticked competitions inherit the event default.",
+        "forQualification": "Used for the qualification of",
+        "forRounds": "Used for the rounds of",
+        "saved": "Assignment saved."
       }
     },
     "info": {

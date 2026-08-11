@@ -195,6 +195,12 @@ import type {
     AddRaceClockerRaceData,
     AddRaceClockerRaceError,
     AddRaceClockerRaceResponse,
+    GetRaceClockerCompetitionAssignmentsData,
+    GetRaceClockerCompetitionAssignmentsError,
+    GetRaceClockerCompetitionAssignmentsResponse,
+    SetRaceClockerRaceAssignmentsData,
+    SetRaceClockerRaceAssignmentsError,
+    SetRaceClockerRaceAssignmentsResponse,
     UpdateRaceClockerRaceData,
     UpdateRaceClockerRaceError,
     UpdateRaceClockerRaceResponse,
@@ -1713,6 +1719,38 @@ export const addRaceClockerRace = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/raceclocker-race',
+    })
+}
+
+/**
+ * The reverse view: every competition of the event with its explicit RaceClocker race choice (null = inherits the event default), for assigning competitions from the race side.
+ */
+export const getRaceClockerCompetitionAssignments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRaceClockerCompetitionAssignmentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRaceClockerCompetitionAssignmentsResponse,
+        GetRaceClockerCompetitionAssignmentsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/raceclocker-race/competition-assignments',
+    })
+}
+
+/**
+ * Set which competitions use this race (reverse assignment). Checking a competition here moves it away from another race - the last click wins; unchecking a competition that pointed here falls back to inheriting the event default.
+ */
+export const setRaceClockerRaceAssignments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetRaceClockerRaceAssignmentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SetRaceClockerRaceAssignmentsResponse,
+        SetRaceClockerRaceAssignmentsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/raceclocker-race/{raceId}/assignments',
     })
 }
 

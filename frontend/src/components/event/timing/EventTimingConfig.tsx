@@ -15,6 +15,7 @@ import {
 } from '@api/sdk.gen.ts'
 import {CompetitionTimingDeviationDto, RaceClockerRaceDto} from '@api/types.gen.ts'
 import RaceClockerRaceDialog from './RaceClockerRaceDialog.tsx'
+import RaceClockerRaceAssignments from './RaceClockerRaceAssignments.tsx'
 import InlineLink from '@components/InlineLink.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
@@ -309,6 +310,18 @@ const EventTimingConfig = () => {
                                     <Trans i18nKey={'event.timing.races.add'} />
                                 </Button>
                             </Box>
+
+                            {/* Umgedrehte Zuordnung: am Rennen die Wettkämpfe anhaken, statt sich
+                                durch jeden Wettkampf zu klicken. Die Komponente lädt ihre Daten
+                                selbst neu; die Abweichungsliste unten ist nur informativ und zieht
+                                beim nächsten Speichern/Neuladen nach — bewusst kein Formular-Reset
+                                hier, der ungespeicherte Eingaben verwerfen würde. */}
+                            {(races ?? []).length > 0 && (
+                                <RaceClockerRaceAssignments
+                                    eventId={eventId}
+                                    races={races ?? []}
+                                />
+                            )}
 
                             <FormInputAutocomplete
                                 name={'raceQualification'}

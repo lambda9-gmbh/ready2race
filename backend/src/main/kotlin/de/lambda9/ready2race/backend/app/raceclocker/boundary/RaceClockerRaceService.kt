@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.raceclocker.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
@@ -21,6 +22,7 @@ import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNull
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -109,6 +111,63 @@ object RaceClockerRaceService {
             if (deleted == 0) return@comprehension KIO.fail(RaceClockerRaceError.NotFound)
             noData
         }
+
+    /**
+     * Die umgekehrte Sicht: alle Wettkämpfe der Veranstaltung mit ihrer expliziten Anwahl. Die
+     * Oberfläche hakt daraus am Rennen die Wettkämpfe an.
+     */
+    fun getCompetitionAssignments(
+        eventId: UUID,
+    ): App<ServiceError, ApiResponse.ListDto<de.lambda9.ready2race.backend.app.raceclocker.entity.CompetitionRaceAssignmentDto>> =
+        KIO.comprehension {
+            val assignments = !RaceClockerRaceRepo.getCompetitionAssignments(eventId).orDie()
+            KIO.ok(ApiResponse.ListDto(assignments))
+        }
+
+    /**
+     * Setzt die Zuordnung EINES Rennens neu (umgedreht: am Rennen die Wettkämpfe anhaken). Die
+     * „verschieben"-Regel rechnet [RaceClockerAssignmentPlan]; hier steht nur das Schreiben. Beide
+     * Rundenarten in einem Zug, damit ein Wettkampf, der bei diesem Rennen für Qualifikation UND
+     * Läufe angehakt ist, in einem Aufruf beides bekommt.
+     */
+    fun setRaceAssignments(
+        eventId: UUID,
+        raceId: UUID,
+        userId: UUID,
+        qualificationCompetitions: List<UUID>,
+        roundsCompetitions: List<UUID>,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        val belongs = !RaceClockerRaceRepo.belongsToEvent(raceId, eventId).orDie()
+        if (!belongs) return@comprehension KIO.fail(RaceClockerRaceError.NotFound)
+
+        val assignments = !RaceClockerRaceRepo.getCompetitionAssignments(eventId).orDie()
+        val known = assignments.map { it.competitionId }.toSet()
+
+        // Nur bekannte Wettkämpfe der Veranstaltung — ein untergeschobener Fremd-Id darf nichts setzen.
+        val qualiChanges = RaceClockerAssignmentPlan.changes(
+            raceId = raceId,
+            selected = qualificationCompetitions.filter { it in known }.toSet(),
+            current = assignments.associate { it.competitionId to it.raceQualification },
+        )
+        val roundsChanges = RaceClockerAssignmentPlan.changes(
+            raceId = raceId,
+            selected = roundsCompetitions.filter { it in known }.toSet(),
+            current = assignments.associate { it.competitionId to it.raceRounds },
+        )
+
+        val now = LocalDateTime.now()
+        val touched = qualiChanges.keys + roundsChanges.keys
+        !touched.toList().traverse { competitionId ->
+            CompetitionRepo.update(competitionId) {
+                if (competitionId in qualiChanges) raceclockerRaceQualification = qualiChanges[competitionId]
+                if (competitionId in roundsChanges) raceclockerRaceRounds = roundsChanges[competitionId]
+                updatedBy = userId
+                updatedAt = now
+            }.orDie()
+        }
+
+        noData
+    }
 
     /** Name und Adresse sind je Veranstaltung eindeutig; beides fällt hier auf, nicht erst als 500er. */
     private fun ensureFree(

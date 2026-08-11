@@ -1543,6 +1543,13 @@
         "invalidUrl": "Die Adresse muss auf raceclocker.com liegen.",
         "saved": "Rennen gespeichert.",
         "deleted": "Rennen gelöscht."
+      },
+      "assignments": {
+        "title": "Wettkämpfe je Rennen zuordnen",
+        "hint": "Umgekehrt zur Anwahl im Wettkampf: Hake hier je Rennen an, welche Wettkämpfe es nutzen. Ein Wettkampf hängt je Rundenart an genau einem Rennen — hakst du ihn hier an, wandert er von einem anderen hierher. Nicht angehakte Wettkämpfe erben die Voreinstellung der Veranstaltung.",
+        "forQualification": "Gilt für die Qualifikation von",
+        "forRounds": "Gilt für die Läufe von",
+        "saved": "Zuordnung gespeichert."
       }
     },
     "info": {

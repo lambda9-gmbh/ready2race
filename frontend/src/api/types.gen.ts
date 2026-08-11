@@ -808,6 +808,24 @@ export type CompetitionPropertiesRequest = {
     ratingCategoryRequired: boolean
 }
 
+export type CompetitionRaceAssignmentDto = {
+    competitionId: string
+    identifier: string
+    name: string
+    /**
+     * Whether the competition's setup even has a qualification round
+     */
+    hasQualificationRound: boolean
+    /**
+     * Explicitly chosen qualification race; null means it inherits the event default
+     */
+    raceQualification?: string | null
+    /**
+     * Explicitly chosen rounds race; null means it inherits the event default
+     */
+    raceRounds?: string | null
+}
+
 export type CompetitionRegistrationDto = {
     id: string
     name?: string
@@ -2907,6 +2925,17 @@ export type QrCodePublicResponse = {
     type?: QrCodeDtoType
 }
 
+export type RaceClockerRaceAssignmentsRequest = {
+    /**
+     * Competitions that use this race for their qualification
+     */
+    qualificationCompetitions: Array<string>
+    /**
+     * Competitions that use this race for their remaining rounds
+     */
+    roundsCompetitions: Array<string>
+}
+
 export type RaceClockerRaceDto = {
     id: string
     name: string
@@ -4781,6 +4810,28 @@ export type AddRaceClockerRaceData = {
 export type AddRaceClockerRaceResponse = string
 
 export type AddRaceClockerRaceError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRaceClockerCompetitionAssignmentsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRaceClockerCompetitionAssignmentsResponse = Array<CompetitionRaceAssignmentDto>
+
+export type GetRaceClockerCompetitionAssignmentsError = BadRequestError | ApiError
+
+export type SetRaceClockerRaceAssignmentsData = {
+    body: RaceClockerRaceAssignmentsRequest
+    path: {
+        eventId: string
+        raceId: string
+    }
+}
+
+export type SetRaceClockerRaceAssignmentsResponse = void
+
+export type SetRaceClockerRaceAssignmentsError = BadRequestError | ApiError
 
 export type UpdateRaceClockerRaceData = {
     body: RaceClockerRaceRequest
