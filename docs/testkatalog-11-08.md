@@ -1,7 +1,7 @@
 # Nachtschicht 10./11.08. — Was gebaut wurde und was du prüfen musst
 
 Alles liegt auf Branch `claude/peaceful-turing-49fccc` im Worktree `eager-khorana-00707f`
-(12 Commits über `feature/crf-2026`). Backend läuft auf Port **8102**, Frontend auf **5142**,
+(19 Commits über `feature/crf-2026`). Backend läuft auf Port **8102**, Frontend auf **5142**,
 eigene DB-Kopie `r2r_eager_khorana_00707f` (Stand des Testabends). Zwei neue Migrationen:
 **V202608110100** (Zwischenzeiten) und **V202608110200** (Boot-Start je Team).
 
@@ -103,21 +103,27 @@ Benutzer:innen, Athlet:innen).
 
 ---
 
-## Bewusst NICHT gebaut — brauchen deine Entscheidung
+## Nachgereicht am 11.08. (nach deinen Antworten)
 
-- **RaceClocker-Rennen → Wettkämpfe umdrehen (dein Punkt zum Screenshot):** eine neue
-  Mehrfachauswahl je Rennen. Zwei UX-Fragen sind offen, die ich nicht raten wollte: (a) wie
-  zeigt man, dass ein Wettkampf schon bei einem anderen Rennen hängt (Konflikt), (b) wie
-  unterscheidet man sichtbar „erbt von der Veranstaltung" vs. „explizit zugewiesen". Technisch
-  schreibt es nur die vorhandenen Override-Felder — kein neues Datenmodell. Sag mir die zwei
-  Antworten, dann baue ich es.
-- **RaceClocker-Ergebnisformat für den xlsx-Import:** Die `Results_TEST_CRF_2026`-Datei hat die
-  R2R-UUID in der Spalte „Extra info" im Format `uuid: uuid;` — nicht sauber als reine UUID. Ich
-  muss mit der echten Datei testen, wie der Parser die Spalte liest, bevor ich ein Preset anlege.
-  Der Live-Abruf (from-raceclocker) ist ohnehin der Hauptweg; der xlsx-Import ist der Notfallweg.
-- **Zeitnahme-Dropdown „sehr viele Formate":** In deiner DB stehen die Presets **doppelt**
-  (`RaceClocker Zeitfahren` 2×, `Webscorer` 2× …). Das ist Seed-Daten-Duplikat, kein Code —
-  vermutlich Seed zweimal eingespielt. Einmal die Duplikate löschen, dann ist die Liste kurz.
+- **RaceClocker-Rennen → Wettkämpfe umdrehen:** gebaut. Im Zeitnahme-Tab der Veranstaltung
+  jetzt je Rennen zwei Wettkampf-Listen („Gilt für die Qualifikation von" / „… die Läufe von").
+  Anhaken verschiebt den Wettkampf vom bisherigen Rennen hierher (letzter Klick gewinnt),
+  Abwählen fällt auf „erbt" zurück — die drei Semantiken sind end-to-end getestet. Die
+  Qualifikations-Liste zeigt nur Wettkämpfe mit Qualifikationsrunde.
+- **RaceClocker-xlsx-Import (Notfallweg):** gebaut. Im Ergebnis-eintragen-Menü „von RaceClocker
+  (Datei)". Liest das „Results"-Blatt, löst die Boote über die R2R-Kennung in „Extra info" auf,
+  Zeit aus „Result", Platz aus den Zeiten. **Wichtiger Befund:** die Datei, die du mir gabst,
+  wurde zu einem älteren Datenstand exportiert — ihre IDs stimmen nicht mit der jetzigen DB
+  überein, und einige Zeilen tragen `WellenID: WellenID` (Boot ohne gemappte R2R-ID). Der Import
+  greift nur, wenn die Startliste **mit gemappter ID-Spalte** nach RaceClocker exportiert wurde
+  (dieselbe Voraussetzung wie der Live-Abruf). Mit einer Datei, die echte DB-IDs trägt, habe ich
+  204 + korrekt gerechnete Plätze verifiziert.
+
+## Erledigt ohne Codeänderung
+
+- **Zeitnahme-Dropdown „sehr viele Formate":** Seed-Duplikate in deiner DB (`RaceClocker
+  Zeitfahren` 2×, `Webscorer` 2× …), kein Code. Du sagtest „in Ordnung" — einmal die Duplikate
+  löschen, dann ist die Liste kurz.
 
 ---
 
