@@ -38,6 +38,12 @@ object BoardLogic {
         val schedule: Boolean = false,
         /** Die Ehrungen aller Siegerehrungs-Elemente, dedupliziert. */
         val ceremonies: List<AwardCeremonyKeyRequest> = emptyList(),
+        /**
+         * Bedingungen je Person (Sprecher-Kachel MATCH_DETAIL). Bewusst ein eigenes Flag: die
+         * Auflösung kostet drei zusätzliche Abfragen je Board-Aufbau und die Nutzlast wächst je
+         * Person — das zahlt nur, wer die Kachel tatsächlich konfiguriert hat.
+         */
+        val requirements: Boolean = false,
     )
 
     /**
@@ -46,8 +52,10 @@ object BoardLogic {
      */
     fun dataNeeds(config: BoardConfig): BoardDataNeeds {
         val elements = config.tiles.flatMap { it.elements }
+        // Die Sprecher-Kachel wählt ihren Lauf über dieselbe Timeline wie MATCH — ihre Offsets
+        // zählen deshalb in dieselbe Slot-Menge.
         val offsets = elements
-            .filter { it.type == BoardElementType.MATCH }
+            .filter { it.type == BoardElementType.MATCH || it.type == BoardElementType.MATCH_DETAIL }
             .mapNotNull { it.offset }
             .toSet()
         val listLimits = elements
@@ -59,10 +67,13 @@ object BoardLogic {
         val maxPositive = offsets.filter { it > 0 }.maxOrNull() ?: 0
 
         val matchElements = elements.filter { it.type == BoardElementType.MATCH }
-        val crewDetails = matchElements.any {
+        // MATCH_DETAIL ist maximale Detailtiefe ohne Schalter: Crew-Details, Weiterkommens-Regel
+        // und Bedingungen sind dort immer an.
+        val matchDetail = elements.any { it.type == BoardElementType.MATCH_DETAIL }
+        val crewDetails = matchDetail || matchElements.any {
             it.showCrewDetails == true || it.showBirthYears == true || it.showRegisteringClub == true
         }
-        val advancement = matchElements.any { it.showAdvancement == true }
+        val advancement = matchDetail || matchElements.any { it.showAdvancement == true }
         val ceremonies = elements
             .filter { it.type == BoardElementType.AWARD_CEREMONY && it.competitionId != null }
             .map { AwardCeremonyKeyRequest(competitionId = it.competitionId!!, ratingCategoryId = it.ratingCategoryId) }
@@ -81,6 +92,7 @@ object BoardLogic {
             advancement = advancement,
             schedule = BoardListMode.SCHEDULE in listLimits,
             ceremonies = ceremonies,
+            requirements = matchDetail,
         )
     }
 

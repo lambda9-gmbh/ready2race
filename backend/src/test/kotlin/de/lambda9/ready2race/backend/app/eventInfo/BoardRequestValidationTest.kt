@@ -135,6 +135,38 @@ class BoardRequestValidationTest {
         assertNotEquals(ValidationResult.Valid, request(listElement(BoardListMode.UPCOMING, BoardScheduleMode.FULL)).validate())
     }
 
+    // Die Sprecher-Kachel: Slot-Wahl wie MATCH, aber nur als einzige Kachel des Boards —
+    // sie ist als Vollbild für den zweiten Bildschirm gedacht, nicht als Raster-Baustein.
+    @Test
+    fun aMatchDetailElementMustBeTheOnlyTile() {
+        fun detailTile(offset: Int? = 0) = BoardTile(
+            elements = listOf(BoardElement(type = BoardElementType.MATCH_DETAIL, offset = offset))
+        )
+        assertEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 1, tiles = listOf(detailTile()))).validate(),
+        )
+        // Spannweiten sind egal — nur Nachbarkacheln sind verboten.
+        assertEquals(
+            ValidationResult.Valid,
+            request(
+                BoardConfig(
+                    columns = 3,
+                    tiles = listOf(BoardTile(colSpan = 3, rowSpan = 2, elements = detailTile().elements)),
+                )
+            ).validate(),
+        )
+        assertNotEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 2, tiles = listOf(detailTile()) + tiles(1))).validate(),
+        )
+        // Und wie MATCH: ohne Offset kein Slot.
+        assertNotEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 1, tiles = listOf(detailTile(offset = null)))).validate(),
+        )
+    }
+
     @Test
     fun aTextElementNeedsText() {
         val config = BoardConfig(

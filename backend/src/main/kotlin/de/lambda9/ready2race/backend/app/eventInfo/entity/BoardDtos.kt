@@ -69,6 +69,18 @@ data class BoardRequest(
                         }
                     }
 
+                    BoardElementType.MATCH_DETAIL -> {
+                        // Dieselbe Slot-Wahl wie MATCH — und die Vollbild-Regel: die
+                        // Sprecher-Kachel duldet keine Nachbarkacheln (siehe BoardElementType).
+                        val offset = element.offset
+                        if (offset == null || offset < -BoardLimits.MAX_OFFSET || offset > BoardLimits.MAX_OFFSET) {
+                            errors += "$at: MATCH_DETAIL needs offset in -${BoardLimits.MAX_OFFSET}..${BoardLimits.MAX_OFFSET}"
+                        }
+                        if (config.tiles.size > 1) {
+                            errors += "$at: MATCH_DETAIL must be the only tile of the board"
+                        }
+                    }
+
                     BoardElementType.MATCH_LIST -> {
                         if (element.listMode == null) errors += "$at: MATCH_LIST needs listMode"
                         val limit = element.limit

@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest'
 import {AthleteBoardMatch, BoardElement, BoardTile, BoardViewDto} from '@api/types.gen'
 import {densityScale} from '../info/athleteBoard/boardLayout'
-import {ceremonyForElement, elementScale, gridPlacement, listForElement, programForElement, slotForElement} from './boardView'
+import {ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, slotForElement} from './boardView'
 
 const match = (id: string, boats = 4): AthleteBoardMatch =>
     ({
@@ -120,6 +120,27 @@ describe('slotForElement', () => {
 
     test('andere Elementtypen haben keinen Slot', () => {
         expect(slotForElement(v, {type: 'CLOCK'})).toBeNull()
+    })
+
+    // Die Sprecher-Kachel wählt über denselben Offset wie MATCH.
+    test('die Sprecher-Kachel greift denselben Slot wie MATCH', () => {
+        expect(slotForElement(v, {type: 'MATCH_DETAIL', offset: 0})?.match?.matchId).toBe('r1')
+    })
+})
+
+// Der Editor sperrt „Kachel hinzufügen", solange eine Sprecher-Kachel existiert —
+// die Vollbild-Regel des Backends soll in der Maske gar nicht erst verletzbar sein.
+describe('hasMatchDetail', () => {
+    test('findet die Sprecher-Kachel auch als Rotations-Element', () => {
+        expect(
+            hasMatchDetail([
+                {elements: [matchElement(0), {type: 'MATCH_DETAIL', offset: 0}]},
+            ]),
+        ).toBe(true)
+    })
+
+    test('ohne Sprecher-Kachel bleibt alles erlaubt', () => {
+        expect(hasMatchDetail([tile(), tile()])).toBe(false)
     })
 })
 

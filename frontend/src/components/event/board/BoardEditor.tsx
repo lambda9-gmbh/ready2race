@@ -15,6 +15,7 @@ import {
     TextField,
     ToggleButton,
     ToggleButtonGroup,
+    Tooltip,
     Typography,
 } from '@mui/material'
 import {
@@ -36,7 +37,7 @@ import {
     BoardScheduleMode,
     BoardTile,
 } from '@api/types.gen'
-import {gridPlacement} from './boardView'
+import {gridPlacement, hasMatchDetail} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
@@ -69,6 +70,9 @@ const elementForType = (type: BoardElementType): BoardElement => {
     switch (type) {
         case 'MATCH':
             return defaultElement()
+        case 'MATCH_DETAIL':
+            // Sprecher-Kachel: nur die Slot-Wahl — alle Details sind dort immer an.
+            return {type, offset: 0}
         case 'MATCH_LIST':
             return {type, listMode: 'UPCOMING', limit: 10, useShortNames: false}
         case 'CLOCK':
@@ -236,6 +240,14 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         )
                     }>
                     <MenuItem value="MATCH">{t('event.boards.element.type.match')}</MenuItem>
+                    {/* Die Sprecher-Kachel gilt nur als einzige Kachel des Boards
+                        (Backend-Validierung) — mit Nachbarn taucht sie gar nicht erst
+                        in der Auswahl auf. */}
+                    {(config.tiles.length === 1 || element.type === 'MATCH_DETAIL') && (
+                        <MenuItem value="MATCH_DETAIL">
+                            {t('event.boards.element.type.matchDetail')}
+                        </MenuItem>
+                    )}
                     <MenuItem value="MATCH_LIST">
                         {t('event.boards.element.type.matchList')}
                     </MenuItem>
@@ -316,6 +328,30 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         </Box>
                     </Box>
                 </Stack>
+            )}
+
+            {element.type === 'MATCH_DETAIL' && (
+                // Nur die Slot-Wahl wie bei MATCH — die Sprecher-Kachel kennt keine
+                // Abschalt-Optionen, sie zeigt immer die volle Detailtiefe.
+                <TextField
+                    select
+                    size="small"
+                    label={t('event.boards.element.offset')}
+                    value={element.offset ?? 0}
+                    onChange={e =>
+                        updateElement(tileIndex, elementIndex, {
+                            ...element,
+                            offset: Number(e.target.value),
+                        })
+                    }>
+                    {Array.from({length: MAX_OFFSET * 2 + 1}, (_, i) => i - MAX_OFFSET).map(
+                        offset => (
+                            <MenuItem key={offset} value={offset}>
+                                {offsetLabel(offset)}
+                            </MenuItem>
+                        ),
+                    )}
+                </TextField>
             )}
 
             {element.type === 'MATCH_LIST' && (
@@ -681,12 +717,28 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         })}
                     </Box>
 
-                    <Button
-                        startIcon={<AddIcon />}
-                        disabled={config.tiles.length >= MAX_TILES}
-                        onClick={() => setConfig({...config, tiles: [...config.tiles, defaultTile()]})}>
-                        {t('event.boards.tile.add')}
-                    </Button>
+                    {/* Solange eine Sprecher-Kachel existiert, gibt es keine zweite Kachel —
+                        der Tooltip erklärt das, statt den Knopf wortlos zu sperren. Das span
+                        ist nötig, weil ein disabled-Button keine Hover-Events feuert. */}
+                    <Tooltip
+                        title={
+                            hasMatchDetail(config.tiles)
+                                ? t('event.boards.tile.addDisabledMatchDetail')
+                                : ''
+                        }>
+                        <span>
+                            <Button
+                                startIcon={<AddIcon />}
+                                disabled={
+                                    config.tiles.length >= MAX_TILES || hasMatchDetail(config.tiles)
+                                }
+                                onClick={() =>
+                                    setConfig({...config, tiles: [...config.tiles, defaultTile()]})
+                                }>
+                                {t('event.boards.tile.add')}
+                            </Button>
+                        </span>
+                    </Tooltip>
                 </Stack>
             </DialogContent>
             <DialogActions>

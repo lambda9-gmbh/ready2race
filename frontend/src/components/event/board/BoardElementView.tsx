@@ -1,6 +1,7 @@
 import {BoardElement, BoardViewDto} from '@api/types.gen'
 import BoardCeremonyElement from './BoardCeremonyElement'
 import BoardClockElement from './BoardClockElement'
+import BoardMatchDetailElement from './BoardMatchDetailElement'
 import BoardMatchListElement from './BoardMatchListElement'
 import BoardMatchSlotElement from './BoardMatchSlotElement'
 import BoardTextElement from './BoardTextElement'
@@ -28,6 +29,15 @@ const BoardElementView = ({
                     element={element}
                     view={view}
                     now={now}
+                    effectiveColumns={effectiveColumns}
+                    heightFraction={heightFraction}
+                />
+            )
+        case 'MATCH_DETAIL':
+            return (
+                <BoardMatchDetailElement
+                    element={element}
+                    view={view}
                     effectiveColumns={effectiveColumns}
                     heightFraction={heightFraction}
                 />

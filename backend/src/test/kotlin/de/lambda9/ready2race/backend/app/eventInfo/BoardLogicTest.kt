@@ -127,5 +127,23 @@ class BoardLogicTest {
         assertEquals(1, needs.runningLimit)
         assertEquals(1, needs.upcomingLimit)
         assertEquals(1, needs.resultsLimit)
+        assertEquals(false, needs.requirements)
+    }
+
+    // Die Sprecher-Kachel: Offset zählt in die Slot-Menge, und die Detailtiefe (Crew,
+    // Weiterkommen, Bedingungen) ist ohne Schalter immer an.
+    @Test
+    fun dataNeedsOfMatchDetailForceFullDepth() {
+        val config = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(elements = listOf(BoardElement(type = BoardElementType.MATCH_DETAIL, offset = -1)))
+            ),
+        )
+        val needs = BoardLogic.dataNeeds(config)
+        assertEquals(setOf(-1), needs.offsets)
+        assertEquals(true, needs.crewDetails)
+        assertEquals(true, needs.advancement)
+        assertEquals(true, needs.requirements)
     }
 }

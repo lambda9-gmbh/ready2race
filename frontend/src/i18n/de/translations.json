@@ -1951,12 +1951,23 @@
         "addElement": "Element hinzufügen",
         "width": "Breite (Spalten)",
         "height": "Höhe (Zeilen)",
-        "add": "Kachel hinzufügen"
+        "add": "Kachel hinzufügen",
+        "addDisabledMatchDetail": "Die Sprecher-Kachel füllt das ganze Board — weitere Kacheln sind nicht möglich"
+      },
+      "detail": {
+        "status": {
+          "upcoming": "Bevorstehend",
+          "preparing": "In Vorbereitung",
+          "running": "Läuft",
+          "awaiting": "Wartet auf Schiedsrichter-Entscheidung",
+          "finished": "Beendet"
+        }
       },
       "element": {
         "type": {
           "label": "Elementtyp",
           "match": "Lauf",
+          "matchDetail": "Sprecher-Kachel (Vollbild)",
           "matchList": "Laufliste",
           "clock": "Uhr",
           "text": "Hinweistext",

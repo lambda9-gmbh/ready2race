@@ -13813,8 +13813,10 @@ components:
 
     BoardElementType:
       type: string
+      description: "MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile"
       enum:
         - MATCH
+        - MATCH_DETAIL
         - MATCH_LIST
         - CLOCK
         - TEXT
@@ -14308,6 +14310,23 @@ components:
         clubName:
           type: string
           nullable: true
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardRequirement'
+          description: "only filled for boards with a MATCH_DETAIL tile; server-side restricted to publicly visible requirements applicable to this person's role"
+
+    AthleteBoardRequirement:
+      type: object
+      description: "a participant requirement on the public announcer tile - deliberately just name and fulfilled state, never internal notes"
+      required:
+        - name
+        - fulfilled
+      properties:
+        name:
+          type: string
+        fulfilled:
+          type: boolean
 
     AthleteBoardTeam:
       type: object
@@ -14498,6 +14517,11 @@ components:
           items:
             $ref: '#/components/schemas/MatchTeamLapDto'
           description: "split times from RaceClocker, in mark order; empty when the race records none"
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardParticipant'
+          description: "the crew of this boat - only filled when a board element requests crew details (announcer tile)"
 
     AthleteBoardResult:
       type: object

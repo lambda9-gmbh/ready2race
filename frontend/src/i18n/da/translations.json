@@ -1945,12 +1945,23 @@
         "addElement": "Tilføj element",
         "width": "Bredde (kolonner)",
         "height": "Højde (rækker)",
-        "add": "Tilføj felt"
+        "add": "Tilføj felt",
+        "addDisabledMatchDetail": "Speaker-feltet fylder hele boardet — flere felter er ikke mulige"
+      },
+      "detail": {
+        "status": {
+          "upcoming": "Kommende",
+          "preparing": "Under forberedelse",
+          "running": "I gang",
+          "awaiting": "Afventer dommerafgørelse",
+          "finished": "Afsluttet"
+        }
       },
       "element": {
         "type": {
           "label": "Elementtype",
           "match": "Løb",
+          "matchDetail": "Speaker-felt (fuld skærm)",
           "matchList": "Løbsliste",
           "clock": "Ur",
           "text": "Infotekst",

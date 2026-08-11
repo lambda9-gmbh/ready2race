@@ -75,7 +75,8 @@ export const gridPlacement = (tiles: BoardTile[], columns: number): GridPlacemen
 }
 
 /**
- * Der Timeline-Slot eines Lauf-Elements. `null` heißt: die Antwort trägt diesen Offset
+ * Der Timeline-Slot eines Lauf-Elements (MATCH und die Sprecher-Kachel MATCH_DETAIL —
+ * beide wählen über denselben Offset). `null` heißt: die Antwort trägt diesen Offset
  * nicht (Konfiguration und Daten stammen aus verschiedenen Ständen) — die Kachel zeigt
  * dann ihren Leerzustand, statt einen falschen Slot zu greifen.
  */
@@ -83,9 +84,17 @@ export const slotForElement = (
     view: BoardViewDto,
     element: BoardElement,
 ): BoardMatchSlotDto | null =>
-    element.type === 'MATCH' && element.offset != null
+    (element.type === 'MATCH' || element.type === 'MATCH_DETAIL') && element.offset != null
         ? (view.slots.find(slot => slot.offset === element.offset) ?? null)
         : null
+
+/**
+ * Ob das Board eine Sprecher-Kachel (MATCH_DETAIL) enthält. Der Editor sperrt dann das
+ * Hinzufügen weiterer Kacheln — die Vollbild-Regel, die das Backend beim Speichern
+ * erzwingt, soll in der Maske gar nicht erst verletzbar sein.
+ */
+export const hasMatchDetail = (tiles: BoardTile[]): boolean =>
+    tiles.some(tile => tile.elements.some(element => element.type === 'MATCH_DETAIL'))
 
 /**
  * Die Daten eines Listen-Elements, auf sein eigenes Limit zugeschnitten. Der Server

@@ -1955,12 +1955,23 @@
         "addElement": "Add element",
         "width": "Width (columns)",
         "height": "Height (rows)",
-        "add": "Add tile"
+        "add": "Add tile",
+        "addDisabledMatchDetail": "The announcer tile fills the whole board — no further tiles are possible"
+      },
+      "detail": {
+        "status": {
+          "upcoming": "Upcoming",
+          "preparing": "Preparing",
+          "running": "Running",
+          "awaiting": "Awaiting referee decision",
+          "finished": "Finished"
+        }
       },
       "element": {
         "type": {
           "label": "Element type",
           "match": "Match",
+          "matchDetail": "Announcer tile (full screen)",
           "matchList": "Match list",
           "clock": "Clock",
           "text": "Notice",

@@ -205,6 +205,18 @@ export type AthleteBoardParticipant = {
     role?: string | null
     year?: number | null
     clubName?: string | null
+    /**
+     * only filled for boards with a MATCH_DETAIL tile; server-side restricted to publicly visible requirements applicable to this person's role
+     */
+    requirements?: Array<AthleteBoardRequirement>
+}
+
+/**
+ * a participant requirement on the public announcer tile - deliberately just name and fulfilled state, never internal notes
+ */
+export type AthleteBoardRequirement = {
+    name: string
+    fulfilled: boolean
 }
 
 export type AthleteBoardResult = {
@@ -269,6 +281,10 @@ export type AthleteBoardResultTeam = {
      * split times from RaceClocker, in mark order; empty when the race records none
      */
     laps?: Array<MatchTeamLapDto>
+    /**
+     * the crew of this boat - only filled when a board element requests crew details (announcer tile)
+     */
+    participants?: Array<AthleteBoardParticipant>
 }
 
 export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
@@ -464,7 +480,10 @@ export type BoardElement = {
     text?: string | null
 }
 
-export type BoardElementType = 'MATCH' | 'MATCH_LIST' | 'CLOCK' | 'TEXT' | 'AWARD_CEREMONY'
+/**
+ * MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile
+ */
+export type BoardElementType = 'MATCH' | 'MATCH_DETAIL' | 'MATCH_LIST' | 'CLOCK' | 'TEXT' | 'AWARD_CEREMONY'
 
 export type BoardListDto = {
     mode: BoardListMode
