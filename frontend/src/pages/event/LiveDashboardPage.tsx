@@ -15,7 +15,7 @@ import {
 } from '@mui/material'
 import LiveTvIcon from '@mui/icons-material/LiveTv'
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered'
-import {ShortText, Subject} from '@mui/icons-material'
+import {ArrowBack, ShortText, Subject} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
@@ -98,9 +98,16 @@ export type LiveDashboardPageProps = {
      * der Spezifikation stützt sich ausdrücklich auf den Betrieb am Steg.
      */
     cacheReads?: boolean
+    /**
+     * Zeigt links in der Kopfzeile einen Zurück-Pfeil. Nur die Helfer-App setzt das: in der
+     * installierten PWA (standalone, ohne Browser-Leiste) fehlt der Browser-Zurück-Knopf,
+     * ohne den Pfeil säße man im Dashboard fest (beobachtet am 10.08.2026). Ohne `onBack`
+     * (Verwaltungsoberfläche) bleibt die Kopfzeile unverändert.
+     */
+    onBack?: () => void
 }
 
-const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps) => {
+const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardPageProps) => {
     const {t} = useTranslation()
     useDocumentTitle(t('event.liveDashboard.title'))
     const feedback = useFeedback()
@@ -432,12 +439,36 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
                     justifyContent="space-between"
                     alignItems="baseline"
                     spacing={1}>
-                    <Typography
-                        variant="subtitle1"
-                        fontWeight={700}
-                        sx={{minWidth: 0, lineHeight: 1.2}}>
-                        {t('event.liveDashboard.title')}
-                    </Typography>
+                    {/* Ohne onBack bleibt die Kopfzeile exakt wie bisher — der Wrapper existiert
+                        nur, damit Pfeil und Titel zusammen als ein Flex-Kind links stehen. */}
+                    {onBack ? (
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={0.5}
+                            sx={{minWidth: 0}}>
+                            <IconButton
+                                size="small"
+                                onClick={onBack}
+                                aria-label={t('common.back')}
+                                sx={{flexShrink: 0}}>
+                                <ArrowBack fontSize="small" />
+                            </IconButton>
+                            <Typography
+                                variant="subtitle1"
+                                fontWeight={700}
+                                sx={{minWidth: 0, lineHeight: 1.2}}>
+                                {t('event.liveDashboard.title')}
+                            </Typography>
+                        </Stack>
+                    ) : (
+                        <Typography
+                            variant="subtitle1"
+                            fontWeight={700}
+                            sx={{minWidth: 0, lineHeight: 1.2}}>
+                            {t('event.liveDashboard.title')}
+                        </Typography>
+                    )}
                     <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
                         {/* Dieselbe Wahl wie am Spaltenkopf "Slot" im Zeitplan-Tab: wer die Rennen
                             am Kürzel liest, liest sie hier genauso. */}
