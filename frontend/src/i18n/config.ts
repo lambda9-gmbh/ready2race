@@ -80,5 +80,9 @@ i18next
         fallbackLng,
         interpolation: {
             skipOnVariables: false,
+            // React escaped beim Rendern selbst — ohne diese Option escaped i18next interpolierte
+            // Variablen zusätzlich und HTML-Entities wie &#x2F; erschienen als Klartext in Dialogen
+            // (z. B. „Steuerfrau&#x2F;mann" statt „Steuerfrau/mann").
+            escapeValue: false,
         },
     })
