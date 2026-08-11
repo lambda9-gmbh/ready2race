@@ -180,6 +180,9 @@ import type {
     DownloadRoundStartListData,
     DownloadRoundStartListError,
     DownloadRoundStartListResponse,
+    UpdateMatchByeMustRaceData,
+    UpdateMatchByeMustRaceError,
+    UpdateMatchByeMustRaceResponse,
     MarkMatchStartedFromExecutionData,
     MarkMatchStartedFromExecutionError,
     MarkMatchStartedFromExecutionResponse,
@@ -1649,6 +1652,22 @@ export const downloadRoundStartList = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/round/{setupRoundId}/startList',
+    })
+}
+
+/**
+ * Toggles 'must race' on a bye match (competition_match.bye_must_race). The match then operationally counts as a real race (start list exports, RaceClocker polling, the chain waits for it to be finished), while progression keeps bye semantics - the racing team moves on regardless of the measured time, which is displayed as out of competition.
+ */
+export const updateMatchByeMustRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchByeMustRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchByeMustRaceResponse,
+        UpdateMatchByeMustRaceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/bye-must-race',
     })
 }
 

@@ -26,5 +26,11 @@ data class CompetitionMatchWithTeams(
      * einmal gesetzt, wurde gelöscht und nach einer Ergebniskorrektur neu gerechnet.
      */
     val pairingsRecalculatedAt: LocalDateTime?,
+    /**
+     * Freilos "muss gefahren werden" (competition_match.bye_must_race): Der Lauf gilt operativ als
+     * echtes Rennen — Ergebnissperre und Folgerunden-Automatik behandeln ihn wie jeden Lauf. Ohne
+     * Freilos-Besetzung ist das Flag wirkungslos.
+     */
+    val byeMustRace: Boolean = false,
     val teams: List<CompetitionMatchTeamWithRegistration>
 )

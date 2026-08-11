@@ -1594,6 +1594,42 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/bye-must-race:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateMatchByeMustRace
+      description: >-
+        Toggles 'must race' on a bye match (competition_match.bye_must_race). The match then
+        operationally counts as a real race (start list exports, RaceClocker polling, the chain
+        waits for it to be finished), while progression keeps bye semantics - the racing team moves
+        on regardless of the measured time, which is displayed as out of competition.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMatchByeMustRaceRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/mark-started:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -12721,9 +12757,10 @@ components:
       type: object
       description: >-
         The bye of a match. Display only - it changes nothing about the chain, the result lock or
-        the automatic first place.
+        the automatic first place. Exception: mustRace makes the match operationally a real race.
       required:
         - cause
+        - mustRace
       properties:
         cause:
           $ref: '#/components/schemas/MatchByeCause'
@@ -12737,6 +12774,12 @@ components:
           description: >-
             The stored withdrawal reason - only when exactly one row is deregistered, because with
             several the mapping name -> reason would be a guess.
+        mustRace:
+          type: boolean
+          description: >-
+            'Must race' (competition_match.bye_must_race): the match stays a bye but is raced -
+            exports, polling and the chain treat it like any match, the measured time runs out of
+            competition.
 
     MatchStatusDto:
       type: object
@@ -12930,6 +12973,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpdateCompetitionMatchTeamRequest'
+
+    UpdateMatchByeMustRaceRequest:
+      type: object
+      description: >-
+        Toggles 'must race' on a bye match. Fairness rule of some rule books: even a boat without
+        an opponent races the course. Progression keeps bye semantics, the time is taken and shown
+        as out of competition.
+      required:
+        - mustRace
+      properties:
+        mustRace:
+          type: boolean
 
     UpdateCompetitionMatchActivationRequest:
       type: object

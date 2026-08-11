@@ -1032,6 +1032,11 @@
           "success": "Runde als entfallen markiert"
         },
         "teamsWithBye": "Teams mit Freilos",
+        "byeMustRace": {
+          "label": "Muss gefahren werden",
+          "hint": "Fairness: Die Athlet:innen fahren die Strecke trotz Freilos. Die Platzierung spielt keine Rolle – das Team kommt in jedem Fall weiter –, die Zeit wird genommen und außer Konkurrenz angezeigt.",
+          "success": "Gespeichert"
+        },
         "match": {
           "status": "Status",
           "startTime": "Startzeit",
@@ -1612,7 +1617,8 @@
       "bye": {
         "deregistration": "Freilos wegen Abmeldung – {{team}}",
         "deregistrationWithReason": "Freilos wegen Abmeldung – {{team}} ({{reason}})",
-        "noOpponent": "Freilos – keine Gegner:in in dieser Runde"
+        "noOpponent": "Freilos – keine Gegner:in in dieser Runde",
+        "mustRace": "wird gefahren – Zeit außer Konkurrenz"
       }
     },
     "liveDashboard": {

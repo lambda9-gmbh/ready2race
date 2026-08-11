@@ -115,7 +115,9 @@ export const matchStatusChip = (
     // Erst hier, nicht weiter oben: Was tatsächlich passiert, schlägt weiterhin alles. Ein Freilos,
     // das jemand aktiviert hat, zeigt „In Vorbereitung"/„Läuft" — die Anzeige behauptet nicht, es
     // passiere nichts, während in der Arena etwas passiert.
-    if (status.bye) {
+    // Ein Freilos mit „muss gefahren werden" (mustRace) bekommt KEINEN Freilos-Chip: Es wird
+    // gefahren, auf sein Ergebnis wartet jemand — die normalen Zustände sagen die Wahrheit.
+    if (status.bye && !status.bye.mustRace) {
         return byeChip(status)
     }
 

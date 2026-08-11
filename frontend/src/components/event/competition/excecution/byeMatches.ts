@@ -19,8 +19,16 @@ export const byeMatches = (round: CompetitionRoundDto): CompetitionMatchDto[] =>
 /**
  * Die Läufe, die als Karte erscheinen: alles, was kein Freilos ist und Mannschaften hat. Ein Lauf
  * ohne Mannschaften ist eine leere Hülle aus dem Turnierbaum und hat auf der Seite nichts verloren.
+ *
+ * Ein Freilos mit „muss gefahren werden" (`bye.mustRace`) bekommt BEIDES: seine Lauf-Karte (es
+ * wird gefahren, Startliste/Ergebnisse/Beenden laufen dort wie bei jedem Lauf) UND seinen Eintrag
+ * im Freilos-Panel (dort sitzt der Schalter, und dass es ein Freilos bleibt, soll sichtbar sein).
  */
 export const raceableMatches = (round: CompetitionRoundDto): CompetitionMatchDto[] =>
     round.matches
-        .filter(match => match.teams.length > 0 && match.status.bye == null)
+        .filter(
+            match =>
+                match.teams.length > 0 &&
+                (match.status.bye == null || match.status.bye.mustRace),
+        )
         .sort((a, b) => a.executionOrder - b.executionOrder)

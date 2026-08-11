@@ -707,7 +707,10 @@ const EventSchedule = () => {
                                                         variant={'caption'}
                                                         display={'block'}
                                                         sx={{color: 'text.secondary'}}>
-                                                        {translate(bye.key, bye.values)}
+                                                        {translate(bye.key, bye.values) +
+                                                            (bye.mustRace
+                                                                ? ` – ${translate('event.match.bye.mustRace')}`
+                                                                : '')}
                                                     </Typography>
                                                 )}
                                             </TableCell>

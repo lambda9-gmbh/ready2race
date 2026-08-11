@@ -638,7 +638,9 @@ object CompetitionExecutionService {
         val match = currentRound.matches.find { it.competitionSetupMatch == matchId }
             ?: return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
 
-        !KIO.failOn(!currentRound.required && match.teams.size == 1) { byeError }
+        // Ein Freilos mit "muss gefahren werden" nimmt Ergebnisse an wie jeder Lauf - die Zeit
+        // wird genommen (und "außer Konkurrenz" gezeigt), nur das Weiterkommen hängt nicht an ihr.
+        !KIO.failOn(!currentRound.required && match.teams.size == 1 && !match.byeMustRace) { byeError }
 
 
         KIO.ok(match)
@@ -2157,14 +2159,41 @@ object CompetitionExecutionService {
     }
 
     /**
+     * Hängt die Startlisten-Zeilen EINES Laufs an eine Sammel-CSV an - der gemeinsame Baustein von
+     * [downloadRoundStartlist] (eine Runde) und [buildEventStartlists] (die ganze Veranstaltung).
+     *
+     * Ein Lauf ohne Mannschaften wird übersprungen (Ergebnis null) statt den Export zu reißen; ein
+     * Lauf ohne geplante Startzeit reißt ihn dagegen wie beim Einzel-Export - ohne Zeit gibt es
+     * keinen brauchbaren Wellennamen. Die Kopfzeile schreibt nur der erste Lauf einer Datei
+     * ([writeHeader]), und auch nur, wenn das Spalten-Preset sie nicht abbestellt hat.
+     */
+    private fun appendMatchCsv(
+        setupMatchId: UUID,
+        out: ByteArrayOutputStream,
+        writeHeader: Boolean,
+    ): App<ServiceError, String?> = KIO.comprehension {
+        val record = !CompetitionMatchRepo.getForStartList(setupMatchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
+        if (record.teams!!.isEmpty()) return@comprehension KIO.ok(null)
+        !KIO.failOn(record.startTime == null) { CompetitionExecutionError.StartTimeNotSet }
+
+        val data = !CompetitionMatchData.fromPersisted(record)
+
+        val target = !CompetitionMatchRepo.getStartListConfigTarget(setupMatchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
+        val configId = !KIO.failOnNull(target.configId) { StartListConfigError.NotConfigured }
+        val config = !StartListConfigRepo.get(configId).orDie()
+            .onNullFail { StartListConfigError.NotFound }
+
+        out.write(buildCsv(data, config, includeHeader = writeHeader && config.noHeader != true))
+        KIO.ok(data.competition.identifier)
+    }
+
+    /**
      * Die Startliste einer GANZEN Runde als eine CSV - ein Schwung für den Import ins
      * Zeitnahme-System statt Lauf für Lauf. Die Wellen unterscheidet RaceClocker über die
      * Wellenname-Spalte, die jede Zeile ohnehin trägt; die Kopfzeile schreibt nur die erste
      * Partie. Bewusst nur CSV: Die PDF-Startliste ist ein Aushang je Lauf, kein Importformat.
-     *
-     * Läufe ohne Mannschaften werden übersprungen statt den Export zu reißen; ein Lauf ohne
-     * geplante Startzeit reißt ihn dagegen wie beim Einzel-Export - ohne Zeit gibt es keinen
-     * brauchbaren Wellennamen.
      */
     fun downloadRoundStartlist(
         eventId: UUID,
@@ -2183,6 +2212,8 @@ object CompetitionExecutionService {
         // Freilose fahren nicht und tauchen im RaceClocker nie auf - sie gehören nicht in den
         // Sammelexport der Runde (Wunsch vom 11.08.2026). Ein einzelnes Freilos-Boot als Startliste
         // zu exportieren, hieße dem Zeitnahme-System einen Lauf anzukündigen, den es nie sieht.
+        // Ausnahme "muss gefahren werden" (bye_must_race): Dieses Freilos wird gefahren und braucht
+        // seine Welle im Zeitnahme-System wie jeder Lauf.
         val byeByMatch = !MatchByeService.byeByMatch(eventId, competitionId)
 
         val out = ByteArrayOutputStream()
@@ -2191,23 +2222,14 @@ object CompetitionExecutionService {
 
         !matches.traverse { m ->
             KIO.comprehension {
-                if (byeByMatch.containsKey(m.competitionSetupMatch)) return@comprehension unit
-                val record = !CompetitionMatchRepo.getForStartList(m.competitionSetupMatch).orDie()
-                    .onNullFail { CompetitionExecutionError.MatchNotFound }
-                if (record.teams!!.isEmpty()) return@comprehension unit
-                !KIO.failOn(record.startTime == null) { CompetitionExecutionError.StartTimeNotSet }
+                val bye = byeByMatch[m.competitionSetupMatch]
+                if (bye != null && !bye.mustRace) return@comprehension unit
 
-                val data = !CompetitionMatchData.fromPersisted(record)
-                identifier = data.competition.identifier
-
-                val target = !CompetitionMatchRepo.getStartListConfigTarget(m.competitionSetupMatch).orDie()
-                    .onNullFail { CompetitionExecutionError.MatchNotFound }
-                val configId = !KIO.failOnNull(target.configId) { StartListConfigError.NotConfigured }
-                val config = !StartListConfigRepo.get(configId).orDie()
-                    .onNullFail { StartListConfigError.NotFound }
-
-                out.write(buildCsv(data, config, includeHeader = first && config.noHeader != true))
-                first = false
+                val appended = !appendMatchCsv(m.competitionSetupMatch, out, writeHeader = first)
+                if (appended != null) {
+                    identifier = appended
+                    first = false
+                }
 
                 unit
             }
@@ -2219,6 +2241,76 @@ object CompetitionExecutionService {
                 bytes = out.toByteArray(),
             )
         )
+    }
+
+    /**
+     * Schaltet "muss gefahren werden" an einem Freilos-Lauf um (competition_match.bye_must_race).
+     *
+     * Der Lauf gilt danach operativ als echtes Rennen: Startlisten-Exporte nehmen ihn mit, der
+     * RaceClocker-Abruf und die Ergebniseingabe behandeln ihn normal, und Folgerunden-Automatik
+     * wie Kette warten auf sein Beenden. Das Weiterkommen bleibt Freilos-Semantik - die eine
+     * fahrende Mannschaft steigt unabhängig von Zeit und Platz auf. Das trägt die Auslosung
+     * selbst: `createNewRound` setzt über die Plätze INNERHALB des Laufs, und in einem Lauf mit
+     * genau einer fahrenden Mannschaft kann jedes Ergebnis nur Platz 1 ergeben - die gemessene
+     * Zeit kann die Setzung also nicht verändern, sie läuft "außer Konkurrenz" in die Anzeige.
+     *
+     * Beim Einschalten wird ein bereits vergebener AUTOMATISCHER erster Platz zurückgenommen
+     * (erkennbar an Platz ohne Zeit und ohne Ausscheidung): Mit gesetztem Platz wäre der Lauf für
+     * Kette und Automatik schon "durch" (match_open = false), bevor er gefahren ist. Beim
+     * Ausschalten wird er unter denselben Bedingungen wieder vergeben - ein Freilos der ersten
+     * Runde, das durch eine Abmeldung entstand und nie einen automatischen Platz hatte, wird durch
+     * das Hin- und Herschalten damit auf den Normalzustand mit automatischem Platz 1 gehoben
+     * (bewusste Vereinfachung: der Unterschied ist dort nicht mehr rekonstruierbar).
+     */
+    fun updateByeMustRace(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateMatchByeMustRaceRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        val round = setupRounds.find { r -> r.matches.any { it.competitionSetupMatch == matchId } }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.MatchNotFound)
+        val match = round.matches.first { it.competitionSetupMatch == matchId }
+
+        // Nur ein Freilos kann "muss gefahren werden" - dieselbe Regel wie MatchStatusLogic.deriveBye:
+        // nicht verpflichtende Runde, genau eine nicht als `out` mitgeführte Mannschaft.
+        !KIO.failOn(round.required || match.teams.count { !it.out } != 1) { CompetitionExecutionError.MatchIsNoBye }
+
+        // Ein beendeter Lauf ist entschieden - erst das Beenden zurücknehmen, dann umschalten.
+        !KIO.failOn(match.finishedAt != null) { CompetitionExecutionError.MatchResultsLocked }
+
+        val racingTeam = match.teams.single { !it.out }
+        // Ein Platz ohne Zeit und ohne Ausscheidung ist der automatisch vergebene erste Platz -
+        // ein gemessenes oder von Hand eingetragenes Ergebnis wird hier nie angefasst.
+        val automaticPlaceOnly =
+            racingTeam.timeString == null && !racingTeam.failed && racingTeam.penaltySeconds == null
+
+        !CompetitionMatchRepo.update(matchId) {
+            byeMustRace = request.mustRace
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        if (request.mustRace && racingTeam.place != null && automaticPlaceOnly) {
+            !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, racingTeam.competitionRegistration) {
+                place = null
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
+        if (!request.mustRace && racingTeam.place == null && automaticPlaceOnly && match.startedAt == null) {
+            !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, racingTeam.competitionRegistration) {
+                place = 1
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
+
+        noData
     }
 
     fun getCompetitionPlaceCSV(

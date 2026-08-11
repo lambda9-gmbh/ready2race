@@ -26,10 +26,15 @@ object MatchByeRepo {
             COMPETITION_REGISTRATION.NAME.`as`("team_name"),
             COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
             COMPETITION_DEREGISTRATION.REASON.`as`("deregistration_reason"),
+            COMPETITION_MATCH.BYE_MUST_RACE.`as`("bye_must_race"),
         )
             .from(COMPETITION_MATCH_TEAM)
             .join(COMPETITION_SETUP_MATCH)
             .on(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            // Der Lauf zum Setup-Lauf: competition_match ist über competition_setup_match
+            // Primärschlüssel-gejoint - existiert die Team-Zeile, existiert auch der Lauf.
+            .join(COMPETITION_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_MATCH_TEAM.COMPETITION_MATCH))
             .join(COMPETITION_SETUP_ROUND)
             .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
             .join(COMPETITION_PROPERTIES)

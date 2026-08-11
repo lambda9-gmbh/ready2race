@@ -256,7 +256,10 @@ const LiveDashboardMatchCard = ({
                     {bye && (
                         <Box sx={{gridColumn: '1 / -1'}}>
                             <Typography variant="caption" sx={{color: 'grey.700'}}>
-                                {translate(bye.key, bye.values)}
+                                {translate(bye.key, bye.values) +
+                                    (bye.mustRace
+                                        ? ` – ${translate('event.match.bye.mustRace')}`
+                                        : '')}
                             </Typography>
                         </Box>
                     )}

@@ -31,6 +31,7 @@ object MatchByeService {
             .mapNotNull { (matchId, matchRows) ->
                 val bye = MatchStatusLogic.deriveBye(
                     roundRequired = matchRows.first().get("round_required", Boolean::class.java) == true,
+                    mustRace = matchRows.first().get("bye_must_race", Boolean::class.java) == true,
                     teams = matchRows.map { row ->
                         MatchByeTeam(
                             racing = row.get("team_out", Boolean::class.java) != true,

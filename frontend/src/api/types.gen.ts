@@ -2276,7 +2276,7 @@ export type ManualTrackingRequest = {
 export type MatchByeCause = 'DEREGISTRATION' | 'NO_OPPONENT'
 
 /**
- * The bye of a match. Display only - it changes nothing about the chain, the result lock or the automatic first place.
+ * The bye of a match. Display only - it changes nothing about the chain, the result lock or the automatic first place. Exception: mustRace makes the match operationally a real race.
  */
 export type MatchByeDto = {
     cause: MatchByeCause
@@ -2288,6 +2288,10 @@ export type MatchByeDto = {
      * The stored withdrawal reason - only when exactly one row is deregistered, because with several the mapping name -> reason would be a guess.
      */
     reason?: string | null
+    /**
+     * 'Must race' (competition_match.bye_must_race): the match stays a bye but is raced - exports, polling and the chain treat it like any match, the measured time runs out of competition.
+     */
+    mustRace: boolean
 }
 
 export type MatchForRunningStatusDto = {
@@ -3680,6 +3684,13 @@ export type UpdateGlobalConfigurationsRequest = {
     allowClubCreationOnRegistration: boolean
 }
 
+/**
+ * Toggles 'must race' on a bye match. Fairness rule of some rule books: even a boat without an opponent races the course. Progression keeps bye semantics, the time is taken and shown as out of competition.
+ */
+export type UpdateMatchByeMustRaceRequest = {
+    mustRace: boolean
+}
+
 export type UpdateQrCodeRequirementDto = {
     requirementId: string
     namedParticipantId?: string
@@ -4781,6 +4792,19 @@ export type DownloadRoundStartListData = {
 export type DownloadRoundStartListResponse = Blob | File
 
 export type DownloadRoundStartListError = BadRequestError | ApiError
+
+export type UpdateMatchByeMustRaceData = {
+    body: UpdateMatchByeMustRaceRequest
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UpdateMatchByeMustRaceResponse = void
+
+export type UpdateMatchByeMustRaceError = BadRequestError | ApiError
 
 export type MarkMatchStartedFromExecutionData = {
     path: {

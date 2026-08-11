@@ -1032,6 +1032,11 @@
           "success": "Runden er markeret som aflyst"
         },
         "teamsWithBye": "Hold med frirunde",
+        "byeMustRace": {
+          "label": "Skal gennemføres",
+          "hint": "Fairness: atleterne gennemfører distancen trods oversidderen. Placeringen er uden betydning – holdet går videre uanset – tiden tages og vises uden for konkurrence.",
+          "success": "Gemt"
+        },
         "match": {
           "status": "Status",
           "startTime": "Starttid",
@@ -1612,7 +1617,8 @@
       "bye": {
         "deregistration": "Oversidder efter afmelding – {{team}}",
         "deregistrationWithReason": "Oversidder efter afmelding – {{team}} ({{reason}})",
-        "noOpponent": "Oversidder – ingen modstander i denne runde"
+        "noOpponent": "Oversidder – ingen modstander i denne runde",
+        "mustRace": "gennemføres – tid uden for konkurrence"
       }
     },
     "liveDashboard": {

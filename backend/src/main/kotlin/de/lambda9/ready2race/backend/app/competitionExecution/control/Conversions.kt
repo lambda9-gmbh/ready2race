@@ -200,6 +200,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 raceClockerPollError = match.raceclockerPollError,
                 raceClockerAutoPausedAt = match.raceclockerAutoPausedAt,
                 pairingsRecalculatedAt = match.pairingsRecalculatedAt,
+                byeMustRace = match.byeMustRace ?: false,
                 teams = match.teams!!.filterNotNull().map { team ->
                     CompetitionMatchTeamWithRegistration(
                         id = team.id!!,

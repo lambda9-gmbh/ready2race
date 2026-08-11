@@ -31,7 +31,7 @@ const match = (state: LiveDashboardMatchState, bye = false): CompetitionMatchDto
             state,
             teamsTotal: teams.length,
             teamsScored: 0,
-            bye: bye ? {cause: 'NO_OPPONENT'} : null,
+            bye: bye ? {cause: 'NO_OPPONENT', mustRace: false} : null,
         },
     }
 }

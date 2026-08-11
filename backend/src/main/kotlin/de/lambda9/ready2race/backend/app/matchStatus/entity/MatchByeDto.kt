@@ -18,6 +18,11 @@ enum class MatchByeCause { DEREGISTRATION, NO_OPPONENT }
 /**
  * Das Freilos eines Laufs. Reine Anzeige: an der Lauf-Kette, an der Ergebnissperre und am
  * automatischen ersten Platz ändert dieser Datensatz nichts.
+ *
+ * Ausnahme [mustRace]: Das Flag (competition_match.bye_must_race) macht den Lauf operativ zu einem
+ * echten Rennen - Ergebnissperre, Folgerunden-Automatik und Startlisten-Export behandeln ihn dann
+ * wie jeden Lauf. Er bleibt trotzdem ein Freilos (dieses DTO bleibt gesetzt): Das Weiterkommen
+ * hängt nicht an der gemessenen Zeit, sie läuft "außer Konkurrenz".
  */
 data class MatchByeDto(
     val cause: MatchByeCause,
@@ -31,6 +36,8 @@ data class MatchByeDto(
      * die Zuordnung Name -> Grund geraten, und geraten wird hier nichts.
      */
     val reason: String?,
+    /** Muss trotz Freilos gefahren werden - die Zeit wird genommen und "außer Konkurrenz" gezeigt. */
+    val mustRace: Boolean = false,
 )
 
 /**

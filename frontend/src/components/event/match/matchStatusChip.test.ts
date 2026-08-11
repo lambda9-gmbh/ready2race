@@ -342,22 +342,39 @@ describe('slotMatchStatus beim Freilos', () => {
         }) as EventScheduleSlotDto
 
     it('trägt das Freilos in den Zeitplan-Status', () => {
-        const status = slotMatchStatus(slot({bye: {cause: 'NO_OPPONENT'}}))
-        expect(status?.bye).toEqual({cause: 'NO_OPPONENT'})
+        const status = slotMatchStatus(slot({bye: {cause: 'NO_OPPONENT', mustRace: false}}))
+        expect(status?.bye).toEqual({cause: 'NO_OPPONENT', mustRace: false})
         expect(matchStatusChip(status!, slot({}).startTime, NOW).labelKey).toBe(
             'event.match.status.bye.open',
         )
     })
 })
 
-const structuralBye: MatchByeDto = {cause: 'NO_OPPONENT'}
+const structuralBye: MatchByeDto = {cause: 'NO_OPPONENT', mustRace: false}
 const withdrawalBye: MatchByeDto = {
     cause: 'DEREGISTRATION',
     teamName: 'RV Hansa',
     reason: 'Krankheit',
+    mustRace: false,
 }
 
 describe('matchStatusChip beim Freilos', () => {
+    /**
+     * „Muss gefahren werden": kein Freilos-Chip - der Lauf wird gefahren, auf sein Ergebnis
+     * wartet jemand, also sagen die normalen Zustände die Wahrheit.
+     */
+    it('zeigt bei mustRace die normalen Zustände statt des Freilos-Chips', () => {
+        const mustRaceBye: MatchByeDto = {cause: 'NO_OPPONENT', mustRace: true}
+        expect(
+            matchStatusChip(status({state: 'UPCOMING', bye: mustRaceBye}), minutesAgo(1), NOW)
+                .labelKey,
+        ).toBe('event.match.status.upcoming')
+        expect(
+            matchStatusChip(status({state: 'FINISHED', bye: mustRaceBye}), minutesAgo(30), NOW)
+                .labelKey,
+        ).toBe('event.match.status.finished')
+    })
+
     it('sagt „offen", solange niemand quittiert hat', () => {
         const chip = matchStatusChip(
             status({state: 'AWAITING_FINISH', bye: structuralBye}),
