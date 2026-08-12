@@ -185,19 +185,23 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
                             backgroundColor: 'divider',
                         }}
                     />
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            left: `${mark.percent}%`,
-                            top: barHeight + 2,
-                            transform: axisLabelTransform(mark.percent),
-                            fontSize: '0.65rem',
-                            lineHeight: 1.2,
-                            color: 'text.secondary',
-                            whiteSpace: 'nowrap',
-                        }}>
-                        {format(new Date(mark.timeMs), t('format.time'))}
-                    </Box>
+                    {/* Läge das Stunden-Label unter dem Jetzt-Label, blieben von "22:00" nur
+                        angeschnittene Ziffern übrig — dann lieber gar keins, "jetzt" gewinnt. */}
+                    {(nowPercent == null || Math.abs(mark.percent - nowPercent) > 4) && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                left: `${mark.percent}%`,
+                                top: barHeight + 2,
+                                transform: axisLabelTransform(mark.percent),
+                                fontSize: '0.65rem',
+                                lineHeight: 1.2,
+                                color: 'text.secondary',
+                                whiteSpace: 'nowrap',
+                            }}>
+                            {format(new Date(mark.timeMs), t('format.time'))}
+                        </Box>
+                    )}
                 </Box>
             ))}
             {positioned.map(entry => {
