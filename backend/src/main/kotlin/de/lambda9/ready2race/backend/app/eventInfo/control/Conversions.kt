@@ -254,11 +254,16 @@ fun LatestMatchResultInfo.toAthleteBoardResult(
             deregistered = it.deregistered,
             deregisteredReason = it.deregisteredReason,
             laps = it.laps,
-            // Crew nur auf Anforderung (Sprecher-Kachel bzw. Crew-Details) — Ergebnis-Karten
-            // ohne Detailbedarf bleiben so schlank wie bisher.
-            participants = if (includeDetails) it.participants.map { p ->
+            // Meldender Verein wie bei der Lauf-Karte (RunningMatchTeamInfo.toAthleteBoardTeam):
+            // nur mit Detailbedarf geladen; ob er erscheint, entscheidet das Element
+            // (showRegisteringClub) auf dem Gerät.
+            registeringClub = if (includeDetails) it.clubName else null,
+            // Crew immer dabei — wie die Lauf-Karte (12.08.2026): dieselbe Kachel zeigte im
+            // Lauf die Besatzung und verlor sie mit dem Beenden. Jahrgang, getragener Verein
+            // und Bedingungen bleiben Detail-gated (toAthleteBoardParticipant).
+            participants = it.participants.map { p ->
                 p.toAthleteBoardParticipant(includeDetails, requirements[p.participantId] ?: emptyList())
-            } else emptyList(),
+            },
         )
     },
 )

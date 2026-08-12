@@ -14868,7 +14868,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AthleteBoardParticipant'
-          description: "the crew of this boat - only filled when a board element requests crew details (announcer tile)"
+          description: "the crew of this boat - always present like on the running card; birth year and worn club stay detail-gated"
+        registeringClub:
+          type: string
+          nullable: true
+          description: "registering club - only filled when a board element requests showRegisteringClub"
         startedAt:
           type: string
           format: date-time

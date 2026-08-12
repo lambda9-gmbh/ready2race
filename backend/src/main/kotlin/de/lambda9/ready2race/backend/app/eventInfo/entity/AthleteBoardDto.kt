@@ -191,11 +191,15 @@ data class AthleteBoardResultTeam(
     /** Zwischenzeiten wie bei [AthleteBoardTeam.laps]; leer, wenn das Rennen keine führt. */
     val laps: List<MatchTeamLapDto> = emptyList(),
     /**
-     * Aufstellung des Bootes — nur befüllt, wenn ein Board-Element Crew-Details anfordert
-     * (bis zur Sprecher-Kachel zeigten Ergebnis-Karten nie eine Crew; die Ergebnis-Quelle
-     * trägt die Personen längst, siehe `MatchResultTeamInfo.participants`).
+     * Aufstellung des Bootes — seit dem 12.08.2026 immer dabei, wie bei [AthleteBoardTeam]:
+     * dieselbe Kachel zeigte die Crew im laufenden Lauf und verlor sie mit dem Beenden.
+     * Jahrgang und getragener Verein der Personen bleiben Detail-gated
+     * ([AthleteBoardParticipant]); die Ergebnis-Quelle trägt die Personen ohnehin
+     * (`MatchResultTeamInfo.participants`).
      */
     val participants: List<AthleteBoardParticipant> = emptyList(),
+    /** Wie bei [AthleteBoardTeam.registeringClub]: nur befüllt, wenn ein Element es anfordert. */
+    val registeringClub: String? = null,
     /** Wie bei [AthleteBoardTeam.startedAt]: der gemessene Boot-Start, nur für die Sprecher-Kachel. */
     val startedAt: LocalDateTime? = null,
 )

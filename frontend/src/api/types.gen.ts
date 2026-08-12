@@ -282,9 +282,13 @@ export type AthleteBoardResultTeam = {
      */
     laps?: Array<MatchTeamLapDto>
     /**
-     * the crew of this boat - only filled when a board element requests crew details (announcer tile)
+     * the crew of this boat - always present like on the running card; birth year and worn club stay detail-gated
      */
     participants?: Array<AthleteBoardParticipant>
+    /**
+     * registering club - only filled when a board element requests showRegisteringClub
+     */
+    registeringClub?: string | null
     /**
      * measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element
      */

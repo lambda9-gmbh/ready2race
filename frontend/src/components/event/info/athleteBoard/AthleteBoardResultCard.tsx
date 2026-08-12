@@ -22,9 +22,22 @@ interface AthleteBoardResultCardProps {
     // Gründe ausgeschiedener/abgemeldeter Boote bleiben stehen, sonst wirkte die Zeile
     // wie ein unerklärtes Loch.
     showTimes?: boolean
+    // Dieselben Crew-Optionen wie die Lauf-Karte (AthleteBoardMatchCard) — die Kachel
+    // soll ihre Besatzungszeilen nicht verlieren, wenn der Lauf beendet wird (12.08.2026).
+    showCrew?: boolean
+    showCrewDetails?: boolean
+    showBirthYears?: boolean
+    showRegisteringClub?: boolean
 }
 
-const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCardProps) => {
+const AthleteBoardResultCard = ({
+    result,
+    showTimes = true,
+    showCrew = true,
+    showCrewDetails = false,
+    showBirthYears = false,
+    showRegisteringClub = false,
+}: AthleteBoardResultCardProps) => {
     const {t} = useTranslation()
 
     const teams = [...result.teams].sort((a, b) => {
@@ -171,6 +184,46 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                                 <AthleteBoardBoatSubline>
                                     {t('event.info.athleteBoard.startNumber')} {team.startNumber}
                                 </AthleteBoardBoatSubline>
+                                {/* Crew-Zeilen exakt wie auf der Lauf-Karte
+                                    (AthleteBoardMatchCard): einzeln mit Details für
+                                    Sprecherinnen, sonst die einzeilige Namensliste. */}
+                                {showCrewDetails && (team.participants ?? []).length > 0 ? (
+                                    <>
+                                        {(team.participants ?? []).map((p, i) => (
+                                            <AthleteBoardBoatSubline key={i}>
+                                                {[
+                                                    p.role ? `${p.name} (${p.role})` : p.name,
+                                                    p.clubName,
+                                                    showBirthYears && p.year != null
+                                                        ? t('event.info.athleteBoard.birthYear', {
+                                                              year: p.year,
+                                                          })
+                                                        : null,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </AthleteBoardBoatSubline>
+                                        ))}
+                                    </>
+                                ) : (
+                                    showCrew &&
+                                    (team.participants ?? []).length > 0 && (
+                                        <AthleteBoardBoatSubline>
+                                            {(team.participants ?? [])
+                                                .map(p =>
+                                                    p.role ? `${p.name} (${p.role})` : p.name,
+                                                )
+                                                .join(', ')}
+                                        </AthleteBoardBoatSubline>
+                                    )
+                                )}
+                                {showRegisteringClub && team.registeringClub && (
+                                    <AthleteBoardBoatSubline>
+                                        {t('event.info.athleteBoard.registeringClub', {
+                                            club: team.registeringClub,
+                                        })}
+                                    </AthleteBoardBoatSubline>
+                                )}
                                 {/* Zwischenzeiten aus RaceClocker — nur wenn Zeiten überhaupt
                                     gezeigt werden und das Boot nicht abgemeldet ist. */}
                                 {showTimes &&
