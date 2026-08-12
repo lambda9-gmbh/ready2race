@@ -143,12 +143,6 @@ object CompetitionExecutionService {
             // Number of teams placed into the round being created - used to resolve the bracket size N below.
             var justPlacedCount = 0
 
-            // Setzungszahlen der fahrenden (nicht `out`) Boote je erzeugtem Setup-Lauf — die
-            // Grundlage der Freilos-Benennung unten ([byeNumbersForRound]). Beide Pfade erheben
-            // sie, weil die Setzung einmal aus der Setzliste kommt (erste Runde) und einmal aus
-            // dem Setup-Platz (Folgerunde).
-            var racingSeedsByMatch: Map<UUID, List<Int?>> = emptyMap()
-
             // Die Setup-Lauf-Ids der Runde, die dieser Durchlauf erzeugt - Grundlage des Vermerks
             // unten. `createdSetupMatchIds` sammelt über alle Durchläufe hinweg und taugt dafür nicht.
             var createdThisRound: List<UUID> = emptyList()
@@ -214,14 +208,6 @@ object CompetitionExecutionService {
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
                 justPlacedCount = newTeamRecords.count { !it.out!! }
-
-                // Die Setzung eines Boots der ersten Runde ist seine Position in der Setzliste
-                // (index + 1: aktive Meldungen nach teamNumber, Abmeldungen dahinter) —
-                // newTeamRecords ist parallel zu sortedRegistrations gebaut, der Index passt.
-                racingSeedsByMatch = newTeamRecords
-                    .mapIndexed { index, record -> record to index + 1 }
-                    .filter { (record, _) -> !record.out!! }
-                    .groupBy({ (record, _) -> record.competitionMatch!! }, { (_, seed) -> seed as Int? })
 
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
@@ -308,13 +294,6 @@ object CompetitionExecutionService {
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
                 justPlacedCount = newTeamRecords.count { !it.out!! }
 
-                // In einer Folgerunde ist die Setzung der `seed` des Setup-Platzes, den das Boot
-                // besetzt — genau die Zahl, die MatchByeRepo später über ranking == startNumber
-                // zurückliest ("Freilos 1" auf Karte und Chip meint dann dieselbe Zahl wie hier).
-                racingSeedsByMatch = currentTeamsToParticipantId
-                    .filter { (prevTeam, _) -> !prevTeam.deregistered && !prevTeam.out && !prevTeam.failed }
-                    .groupBy({ it.second!!.competitionSetupMatch!! }, { it.second!!.seed })
-
                 // Carry over all substitutions to the new round
                 val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
                 val substitutionsRelevantForNextRound = currentRoundSubstitutions.map { record ->
@@ -341,7 +320,7 @@ object CompetitionExecutionService {
                     else -> bracketStart.matches.sumOf { match -> match.teams.count { !it.out } }
                 }
                 if (n > 0) {
-                    !applyMatchNamings(nextRound, n, byeNumbersForRound(nextRound, racingSeedsByMatch))
+                    !applyMatchNamings(nextRound, n)
                 }
             }
 
@@ -490,19 +469,6 @@ object CompetitionExecutionService {
      * Ein nie benannter Lauf kehrt zu seinem Setup-Namen zurück, ein Lauf ohne Setup-Namen zu
      * null (die Anzeigen fallen dann wie bisher auf den Rundennamen zurück).
      *
-     * Freilos-Läufe ([byeNumbers], Anforderung vom 12.08.2026) heißen dabei "Freilos <Nummer>"
-     * statt eines Namens aus dem Satz oder des Ausgangszustands: Der Benennungs-Satz beschreibt
-     * die Läufe, die stattfinden - ein Freilos findet nicht statt und soll überall genau als das
-     * lesbar sein (Zeitplan, Dashboard, Boards, Exporte, Wellennamen). Das Freilos gewinnt auch
-     * gegen eine zufällig passende Naming-Zeile: Die Konfiguration im Setup blendet Freilose je n
-     * ohnehin aus (`CompetitionSetupRoundNaming`), eine solche Zeile kann nur aus einem früheren
-     * Zustand (z. B. umgeschaltetem required-Schalter) stammen. Der Text ist bewusst deutsch und
-     * unübersetzt - er ist ein Datum wie die Namen aus dem Satz selbst ("VF1", "Vorlauf"), die
-     * Oberflächen übersetzen den Freilos-Chip daneben weiterhin je Sprache. Weil auch Freilose
-     * durch [CompetitionSetupMatchRepo.applyNaming] laufen, wird ihr Ausgangszustand genauso
-     * gesichert: Wird die Runde später mit mehr Booten neu erzeugt, kehrt ein wieder gefahrener
-     * Lauf zu Satz- oder Setup-Namen zurück, statt "Freilos" zu behalten.
-     *
      * Genau ein Aufrufer ([createNewRound]) - Automatik und Knopf laufen beide durch ihn, die
      * Anwendung bleibt wie bisher auf Nicht-Qualifikationsrunden mit n > 0 beschränkt
      * (Qualifikationsrunden werden nie umbenannt und können deshalb keinen Alt-Stand tragen).
@@ -510,56 +476,19 @@ object CompetitionExecutionService {
     private fun applyMatchNamings(
         round: CompetitionSetupRoundWithMatches,
         n: Int,
-        byeNumbers: Map<UUID, Int> = emptyMap(),
     ): App<Nothing, Unit> = KIO.comprehension {
         val namings = !CompetitionSetupMatchNamingRepo.getForRoundAndCount(round.setupRoundId, n).orDie()
 
         !round.setupMatches.toList().traverse { setupMatch ->
             val naming = namings.find { it.matchWeighting == setupMatch.weighting }
-            val byeName = byeNumbers[setupMatch.id]?.let { number -> "Freilos $number" }
             CompetitionSetupMatchRepo.applyNaming(
                 id = setupMatch.id,
-                name = byeName ?: naming?.name,
+                name = naming?.name,
                 executionOrder = naming?.executionOrder,
             ).orDie()
         }
 
         unit
-    }
-
-    /**
-     * Die Freilos-Nummern der soeben erzeugten Läufe einer Runde: Setup-Lauf-Id -> Nummer.
-     *
-     * Ein Freilos ist ein Lauf, in dem genau ein Boot fährt, in einer nicht verpflichtenden
-     * Runde - dieselbe Regel, nach der [MatchStatusLogic.deriveBye] die Anzeigen speist und nach
-     * der `automaticFirstPlace` in [createNewRound] den automatischen ersten Platz vergibt.
-     * [racingSeedsByMatch] trägt je erzeugtem Setup-Lauf die Setzungszahlen seiner fahrenden
-     * Boote; nicht erzeugte Läufe (weniger Meldungen als Läufe) fehlen in der Karte und bekommen
-     * keine Nummer.
-     *
-     * Die Nummer ist bevorzugt die Setzungszahl des fahrenden Boots: "Freilos 1" ist das Freilos
-     * des bestgesetzten Boots - dieselbe Zahl, die `MatchByeDto.seed` auf Chip und Freilos-Satz
-     * zeigt. Fehlt eine Setzung oder käme eine Nummer doppelt vor (defensiv - bei der Erzeugung
-     * ist die Setzung auf beiden Pfaden bekannt und je Runde eindeutig), werden stattdessen ALLE
-     * Freilose der Runde fortlaufend 1..k in weighting-Reihenfolge nummeriert: lieber lückenlos
-     * und deterministisch als halb Setzung, halb geraten.
-     */
-    internal fun byeNumbersForRound(
-        round: CompetitionSetupRoundWithMatches,
-        racingSeedsByMatch: Map<UUID, List<Int?>>,
-    ): Map<UUID, Int> {
-        if (round.required) return emptyMap()
-
-        val byes = round.setupMatches
-            .sortedBy { it.weighting }
-            .filter { racingSeedsByMatch[it.id]?.size == 1 }
-
-        val seeds = byes.map { racingSeedsByMatch.getValue(it.id!!).single() }
-        val allSeedsUsable = seeds.all { it != null } && seeds.distinct().size == seeds.size
-
-        return byes.mapIndexed { index, setupMatch ->
-            setupMatch.id!! to if (allSeedsUsable) seeds[index]!! else index + 1
-        }.toMap()
     }
 
     fun sortRounds(
