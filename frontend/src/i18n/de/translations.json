@@ -1951,6 +1951,7 @@
         "now": "Jetzt",
           "planned": "Geplant {{time}}",
           "started": "Gestartet {{time}}",
+          "expected": "Erwartet ~{{time}}",
         "state": {
           "finished": "Beendet",
           "preparing": "In Vorbereitung",

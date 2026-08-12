@@ -4,6 +4,7 @@ import {
     computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
+    computeTimelineProjection,
     dashboardEntriesForDay,
     dashboardMatchState,
     dayOf,
@@ -15,7 +16,10 @@ import {
     timelineSpan,
 } from './timelineIndicator.ts'
 
-const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): EventScheduleSlotDto => ({
+const slot = (
+    startTime: string,
+    over: Partial<EventScheduleSlotDto> = {},
+): EventScheduleSlotDto => ({
     id: crypto.randomUUID(),
     startTime,
     state: 'WAITING',
@@ -63,12 +67,22 @@ const pendingSlot = (over: Partial<PendingSlotDto> = {}): PendingSlotDto => ({
 describe('scheduleSlotState', () => {
     it('maps a finished slot regardless of its raw state', () => {
         expect(
-            scheduleSlotState(slot('2026-08-17T08:00:00', {state: 'LINKED', matchFinishedAt: '2026-08-17T08:20:00'})),
+            scheduleSlotState(
+                slot('2026-08-17T08:00:00', {
+                    state: 'LINKED',
+                    matchFinishedAt: '2026-08-17T08:20:00',
+                }),
+            ),
         ).toBe('finished')
     })
     it('maps a started-but-not-finished slot to running', () => {
         expect(
-            scheduleSlotState(slot('2026-08-17T08:00:00', {state: 'LINKED', matchStartedAt: '2026-08-17T08:01:00'})),
+            scheduleSlotState(
+                slot('2026-08-17T08:00:00', {
+                    state: 'LINKED',
+                    matchStartedAt: '2026-08-17T08:01:00',
+                }),
+            ),
         ).toBe('running')
     })
     it('maps an activated but not yet started slot to preparing', () => {
@@ -117,7 +131,13 @@ describe('scheduleSlotsToEntries', () => {
     it('maps slots to generic timeline entries preserving order', () => {
         const entries = scheduleSlotsToEntries([
             slot('2026-08-17T08:00:00', {durationMinutes: 10}),
-            slot('2026-08-17T09:00:00', {name: 'Pause', state: 'FREE', competitionName: null, roundName: null, matchName: null}),
+            slot('2026-08-17T09:00:00', {
+                name: 'Pause',
+                state: 'FREE',
+                competitionName: null,
+                roundName: null,
+                matchName: null,
+            }),
         ])
         expect(entries).toHaveLength(2)
         expect(entries[0].label).toBe('CM 1x – Achtelfinale – AF1')
@@ -193,7 +213,10 @@ describe('dashboardEntriesForDay', () => {
             [pendingSlot({startTime: '2026-08-17T09:30:00', name: null})],
             '2026-08-17',
         )
-        expect(entries.map(e => e.startTime)).toEqual(['2026-08-17T09:00:00', '2026-08-17T09:30:00'])
+        expect(entries.map(e => e.startTime)).toEqual([
+            '2026-08-17T09:00:00',
+            '2026-08-17T09:30:00',
+        ])
         expect(entries[0].state).toBe('running')
         expect(entries[1].state).toBe('waiting')
     })
@@ -360,10 +383,7 @@ describe('timelineSpan', () => {
 describe('computeHourMarks', () => {
     it('marks every full hour of a short span, first at 0 % and last at 100 %', () => {
         const marks = computeHourMarks(
-            scheduleSlotsToEntries([
-                slot('2026-08-17T08:00:00'),
-                slot('2026-08-17T10:00:00'),
-            ]),
+            scheduleSlotsToEntries([slot('2026-08-17T08:00:00'), slot('2026-08-17T10:00:00')]),
         )
         expect(marks.map(m => m.percent)).toEqual([0, 50, 100])
         expect(new Date(marks[1].timeMs).getHours()).toBe(9)
@@ -479,5 +499,103 @@ describe('computeNowMarkerPercent', () => {
             slot('2026-08-17T10:00:00'),
         ])
         expect(computeNowMarkerPercent(entries, new Date('2026-08-19T09:00:00'))).toBeNull()
+    })
+})
+
+describe('computeTimelineProjection', () => {
+    // Achse 08:00-10:00. Ein um 10 Minuten verspätet gestarteter Lauf plus zwei noch offene.
+    const entriesWithDelay = () =>
+        scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                state: 'LINKED',
+                durationMinutes: 20,
+                matchStartedAt: '2026-08-17T08:10:00',
+            }),
+            slot('2026-08-17T09:00:00', {state: 'LINKED', durationMinutes: 20}),
+            slot('2026-08-17T09:30:00', {state: 'WAITING', durationMinutes: 20}),
+        ])
+
+    it('places the actual-start layer at the real start on the same axis', () => {
+        const projection = computeTimelineProjection(
+            entriesWithDelay(),
+            new Date('2026-08-17T08:30:00'),
+        )
+        // 08:10 auf der Achse 08:00-10:00 = 8,33 %
+        const [actual] = [...projection.actualLeftPercent.values()]
+        expect(actual).toBeCloseTo((10 / 120) * 100, 5)
+    })
+
+    it('shifts pending entries by the latest start delay, as an expectation with the delay rule of the boards', () => {
+        const entries = entriesWithDelay()
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T08:30:00'))
+        expect(projection.delaySeconds).toBe(600)
+        // Beide offenen Einträge bekommen eine um 10 Minuten verschobene Andeutung.
+        expect(projection.expected.size).toBe(2)
+        const expected = projection.expected.get(entries[1].id)
+        expect(expected).toBeDefined()
+        expect(expected!.expectedStartMs).toBe(new Date('2026-08-17T09:10:00').getTime())
+        expect(expected!.leftPercent).toBeCloseTo((70 / 120) * 100, 5)
+    })
+
+    it('gives no expectation to entries whose expected start is already in the past', () => {
+        const entries = entriesWithDelay()
+        // 09:15: der 09:00-Eintrag wäre um 09:10 erwartet gewesen - die Andeutung ist widerlegt.
+        // Der 09:30-Eintrag (erwartet 09:40) behält seine.
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T09:15:00'))
+        expect(projection.expected.has(entries[1].id)).toBe(false)
+        expect(projection.expected.has(entries[2].id)).toBe(true)
+    })
+
+    it('suggests nothing while the schedule is on time (below one minute), same threshold as delayParts', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                state: 'LINKED',
+                matchStartedAt: '2026-08-17T08:00:30',
+            }),
+            slot('2026-08-17T09:00:00', {state: 'LINKED'}),
+        ])
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T08:30:00'))
+        expect(projection.expected.size).toBe(0)
+    })
+
+    it('suggests nothing when no entry has started yet', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {state: 'LINKED'}),
+            slot('2026-08-17T09:00:00', {state: 'LINKED'}),
+        ])
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T07:00:00'))
+        expect(projection.delaySeconds).toBeNull()
+        expect(projection.expected.size).toBe(0)
+        expect(projection.actualLeftPercent.size).toBe(0)
+    })
+
+    it('never projects finished, running or cancelled entries', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                state: 'LINKED',
+                matchStartedAt: '2026-08-17T08:10:00',
+                matchFinishedAt: '2026-08-17T08:20:00',
+            }),
+            slot('2026-08-17T09:00:00', {state: 'SKIPPED'}),
+        ])
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T08:30:00'))
+        expect(projection.expected.size).toBe(0)
+        // Der beendete Lauf behält seine Ist-Ebene - Soll/Ist bleibt auch rückblickend ablesbar.
+        expect(projection.actualLeftPercent.size).toBe(1)
+    })
+
+    it('clamps expected positions to the axis', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                state: 'LINKED',
+                matchStartedAt: '2026-08-17T09:30:00',
+            }),
+            slot('2026-08-17T08:50:00', {state: 'LINKED'}),
+        ])
+        // 90 Minuten Verzug schöbe den 08:50-Eintrag auf 10:20 - hinter das Achsenende 09:00...
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T09:31:00'))
+        const expected = projection.expected.get(entries[1].id)
+        expect(expected).toBeDefined()
+        expect(expected!.leftPercent).toBeLessThanOrEqual(100)
     })
 })

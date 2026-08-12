@@ -6,6 +6,7 @@ import {
     computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
+    computeTimelineProjection,
     labelFitsWidth,
     PositionedTimelineEntry,
     TimelineAppearance,
@@ -74,14 +75,23 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
     const positioned = computeTimelinePositions(entries)
     const hourMarks = computeHourMarks(entries)
     const nowPercent = computeNowMarkerPercent(entries, now)
+    // Soll vs. Ist: Ist-Start-Striche und die halbtransparente Erwartungs-Andeutung (siehe
+    // computeTimelineProjection — dort steht auch, warum das nur eine Andeutung sein darf).
+    const projection = computeTimelineProjection(entries, now)
     const rows = Math.max(...positioned.map(e => e.stackRow)) + 1
     const barHeight = rows * rowHeight + (rows - 1) * rowGap
 
     // Die Farbfamilien der Status-Chips (matchStatusChip.ChipColor), übersetzt in die Theme-
-    // Palette. 'default' hat dort keine eigene Palette — grau in zwei Stufen übernimmt die Rolle.
-    const chipPalette = (color: TimelineAppearance['color']): {main: string; light: string} =>
+    // Palette. 'default' hat dort keine eigene Palette — grau in drei Stufen übernimmt die Rolle.
+    const chipPalette = (
+        color: TimelineAppearance['color'],
+    ): {main: string; light: string; dark: string} =>
         color === 'default'
-            ? {main: theme.palette.grey[500], light: theme.palette.grey[400]}
+            ? {
+                  main: theme.palette.grey[500],
+                  light: theme.palette.grey[400],
+                  dark: theme.palette.grey[700],
+              }
             : theme.palette[color]
 
     /**
@@ -136,6 +146,18 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
                 <Typography variant={'caption'}>
                     {t('event.schedule.indicator.started', {
                         time: format(new Date(entry.actualStartTime), t('format.time')),
+                    })}
+                </Typography>
+            )}
+            {/* Die Erwartung trägt die Tilde aus gutem Grund: Sie ist die pauschale Verschiebung
+                um die aktuelle Verspätung, keine Prognose je Lauf (computeTimelineProjection). */}
+            {projection.expected.has(entry.id) && (
+                <Typography variant={'caption'}>
+                    {t('event.schedule.indicator.expected', {
+                        time: format(
+                            new Date(projection.expected.get(entry.id)!.expectedStartMs),
+                            t('format.time'),
+                        ),
                     })}
                 </Typography>
             )}
@@ -213,56 +235,97 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
                 // Kompakt gibt es gar keine Kürzel: die flachen Spuren des Dashboards sind
                 // Orientierung, keine Lesefläche.
                 const showLabel = density === 'full' && labelFitsWidth(shortLabel, blockPx)
+                const laneTop = entry.stackRow * (rowHeight + rowGap)
+                const actualLeft = projection.actualLeftPercent.get(entry.id)
+                const expected = projection.expected.get(entry.id)
                 return (
-                    <Tooltip key={entry.id} title={entryTooltip(entry)}>
-                        <ButtonBase
-                            onClick={() => onEntryClick?.(entry.id)}
-                            aria-label={`${entry.label}, ${format(new Date(entry.startTime), t('format.time'))}, ${stateLabel(entry)}`}
-                            sx={{
-                                position: 'absolute',
-                                left: `${entry.leftPercent}%`,
-                                width: `${entry.widthPercent}%`,
-                                top: entry.stackRow * (rowHeight + rowGap),
-                                height: rowHeight,
-                                borderRadius: 0.75,
-                                overflow: 'hidden',
-                                ...segmentSx(a),
-                                animation:
-                                    entry.state === 'running'
-                                        ? 'r2r-timeline-pulse 2s infinite'
-                                        : 'none',
-                                transition: 'filter 0.15s ease',
-                                '&:hover': {
-                                    filter: 'brightness(0.92)',
-                                },
-                                '&:focus-visible': {
-                                    outline: `2px solid ${theme.palette.primary.dark}`,
-                                    outlineOffset: 1,
-                                },
-                            }}>
-                            {showLabel && (
-                                <Box
-                                    component={'span'}
-                                    sx={{
-                                        fontSize: '0.65rem',
-                                        lineHeight: 1,
-                                        px: 0.5,
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        // Auf Füllungen die Kontrastfarbe der Palette, auf
-                                        // Umrissen die normale Textfarbe der Fläche.
-                                        color:
-                                            a.variant === 'outlined'
-                                                ? 'text.primary'
-                                                : theme.palette.getContrastText(
-                                                      a.muted ? pal.light : pal.main,
-                                                  ),
-                                    }}>
-                                    {shortLabel}
-                                </Box>
-                            )}
-                        </ButtonBase>
-                    </Tooltip>
+                    <Box key={entry.id} component={'span'}>
+                        {/* Die Andeutung, wo der Eintrag angesichts der aktuellen Verspätung zu
+                            erwarten ist — halbtransparent und nicht klickbar, die Zahl dazu
+                            steht (mit Tilde) im Tooltip des Plan-Blocks. */}
+                        {expected != null && (
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    left: `${expected.leftPercent}%`,
+                                    width: `${Math.min(entry.widthPercent, 100 - expected.leftPercent)}%`,
+                                    top: laneTop,
+                                    height: rowHeight,
+                                    borderRadius: 0.75,
+                                    backgroundColor: alpha(pal.main, 0.25),
+                                    border: `1px dashed ${alpha(pal.main, 0.6)}`,
+                                    pointerEvents: 'none',
+                                }}
+                            />
+                        )}
+                        <Tooltip title={entryTooltip(entry)}>
+                            <ButtonBase
+                                onClick={() => onEntryClick?.(entry.id)}
+                                aria-label={`${entry.label}, ${format(new Date(entry.startTime), t('format.time'))}, ${stateLabel(entry)}`}
+                                sx={{
+                                    position: 'absolute',
+                                    left: `${entry.leftPercent}%`,
+                                    width: `${entry.widthPercent}%`,
+                                    top: entry.stackRow * (rowHeight + rowGap),
+                                    height: rowHeight,
+                                    borderRadius: 0.75,
+                                    overflow: 'hidden',
+                                    ...segmentSx(a),
+                                    animation:
+                                        entry.state === 'running'
+                                            ? 'r2r-timeline-pulse 2s infinite'
+                                            : 'none',
+                                    transition: 'filter 0.15s ease',
+                                    '&:hover': {
+                                        filter: 'brightness(0.92)',
+                                    },
+                                    '&:focus-visible': {
+                                        outline: `2px solid ${theme.palette.primary.dark}`,
+                                        outlineOffset: 1,
+                                    },
+                                }}>
+                                {showLabel && (
+                                    <Box
+                                        component={'span'}
+                                        sx={{
+                                            fontSize: '0.65rem',
+                                            lineHeight: 1,
+                                            px: 0.5,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            // Auf Füllungen die Kontrastfarbe der Palette, auf
+                                            // Umrissen die normale Textfarbe der Fläche.
+                                            color:
+                                                a.variant === 'outlined'
+                                                    ? 'text.primary'
+                                                    : theme.palette.getContrastText(
+                                                          a.muted ? pal.light : pal.main,
+                                                      ),
+                                        }}>
+                                        {shortLabel}
+                                    </Box>
+                                )}
+                            </ButtonBase>
+                        </Tooltip>
+                        {/* Die Ist-Ebene: dünner Strich am unteren Rand der Spur, positioniert am
+                            tatsächlichen Start. Deckt er sich mit der Blockkante, wurde pünktlich
+                            gestartet — steht er daneben, ist GENAU DAS die Aussage. */}
+                        {actualLeft != null && (
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    left: `${actualLeft}%`,
+                                    width: `${Math.min(entry.widthPercent, 100 - actualLeft)}%`,
+                                    top: laneTop + rowHeight - 3,
+                                    height: 3,
+                                    borderRadius: 0.5,
+                                    backgroundColor: pal.dark,
+                                    pointerEvents: 'none',
+                                    zIndex: 1,
+                                }}
+                            />
+                        )}
+                    </Box>
                 )
             })}
             {/* Der Jetzt-Marker: rote Linie über die volle Fläche plus Uhrzeit-Label im

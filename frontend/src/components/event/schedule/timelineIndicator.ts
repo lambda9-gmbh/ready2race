@@ -3,6 +3,7 @@ import {EventScheduleSlotDto, LiveDashboardMatchDto, PendingSlotDto} from '@api/
 import {competitionTag, slotLabel} from './common.ts'
 import {isLiveMatch, pendingSlotLabel} from '@components/event/liveDashboard/common.ts'
 import {ChipColor} from '@components/event/match/matchStatusChip.ts'
+import {latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
 
 /**
  * Generic, display-only state a timeline segment can be in - independent of whether it came from
@@ -402,6 +403,89 @@ export const computeTimelinePositions = (entries: TimelineEntry[]): PositionedTi
         laneRightEdges[stackRow] = leftPercent + widthPercent
         return {...entry, leftPercent, widthPercent, stackRow}
     })
+}
+
+// ---- Soll vs. Ist -------------------------------------------------------------------------------
+
+/**
+ * Die Soll/Ist-Ebenen des Zeitstrahls, auf derselben Achse wie {@link computeTimelinePositions}:
+ *
+ * - [actualLeftPercent]: linke Kante der Ist-Start-Ebene je Eintrag, der tatsächlich gestartet
+ *   ist — der dünne Strich unter dem Plan-Block. Liegt er genau unter der Blockkante, wurde
+ *   pünktlich gestartet; steht er daneben, IST das die Soll/Ist-Aussage.
+ * - [expected]: die ANDEUTUNG, wo noch nicht gestartete Einträge angesichts der aktuellen
+ *   Verspätung zu erwarten sind. Bewusst nur eine Andeutung (die Komponente zeichnet sie
+ *   halbtransparent, der Tooltip sagt "erwartet ~"): Die Verschiebung ist die Verspätung des
+ *   zuletzt gestarteten Laufs (dieselbe Regel wie das Verspätungs-Element der Boards,
+ *   {@link latestStartDelaySeconds}) — keine Prognose je Lauf, und mehr Präzision wäre gelogen.
+ *
+ * Andeutungen gibt es nur, wenn überhaupt eine nennenswerte Abweichung vorliegt (>= 1 Minute,
+ * dieselbe Schwelle wie `delayParts`), nur für Einträge, die weder gestartet noch gelaufen noch
+ * abgesagt sind, und nur, wenn der erwartete Start noch in der Zukunft liegt — eine erwartete
+ * Zeit in der Vergangenheit wäre bereits widerlegt.
+ */
+export type TimelineProjection = {
+    actualLeftPercent: Map<string, number>
+    expected: Map<string, {leftPercent: number; expectedStartMs: number}>
+    delaySeconds: number | null
+}
+
+const emptyProjection = (): TimelineProjection => ({
+    actualLeftPercent: new Map(),
+    expected: new Map(),
+    delaySeconds: null,
+})
+
+/** Zustände, die noch einen Start vor sich haben — nur sie bekommen eine Erwartungs-Andeutung. */
+const PENDING_STATES: ReadonlySet<TimelineEntryState> = new Set([
+    'preparing',
+    'linked',
+    'waiting',
+    'free',
+])
+
+export const computeTimelineProjection = (
+    entries: TimelineEntry[],
+    now: Date,
+): TimelineProjection => {
+    const span = timelineSpan(entries)
+    if (span == null) {
+        return emptyProjection()
+    }
+    const spanMs = span.endMs - span.startMs
+    const toPercent = (ms: number): number =>
+        Math.min(100, Math.max(0, ((ms - span.startMs) / spanMs) * 100))
+
+    const projection = emptyProjection()
+    for (const entry of entries) {
+        if (entry.actualStartTime != null) {
+            projection.actualLeftPercent.set(
+                entry.id,
+                toPercent(new Date(entry.actualStartTime).getTime()),
+            )
+        }
+    }
+
+    projection.delaySeconds = latestStartDelaySeconds(
+        entries.map(e => ({startTime: e.startTime, startedAt: e.actualStartTime})),
+    )
+    if (projection.delaySeconds == null || Math.abs(projection.delaySeconds) < 60) {
+        return projection
+    }
+    for (const entry of entries) {
+        if (entry.actualStartTime != null || !PENDING_STATES.has(entry.state)) {
+            continue
+        }
+        const expectedStartMs = new Date(entry.startTime).getTime() + projection.delaySeconds * 1000
+        if (expectedStartMs < now.getTime()) {
+            continue
+        }
+        projection.expected.set(entry.id, {
+            leftPercent: toPercent(expectedStartMs),
+            expectedStartMs,
+        })
+    }
+    return projection
 }
 
 /**

@@ -1945,6 +1945,7 @@
         "now": "Nu",
           "planned": "Planlagt {{time}}",
           "started": "Startet {{time}}",
+          "expected": "Forventet ~{{time}}",
         "state": {
           "finished": "Afsluttet",
           "preparing": "Forbereder",

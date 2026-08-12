@@ -1955,6 +1955,7 @@
         "now": "Now",
           "planned": "Planned {{time}}",
           "started": "Started {{time}}",
+          "expected": "Expected ~{{time}}",
         "state": {
           "finished": "Finished",
           "preparing": "Preparing",
