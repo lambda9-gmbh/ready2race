@@ -2562,6 +2562,33 @@ object CompetitionExecutionService {
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
         val filtered = filterPlanAgainstFeeds(plan, feedsByUrl)
 
+        // Startzeit-Wächter über ALLE Läufe statt Abbruch beim ersten (appendMatchCsv bliebe als
+        // Rückhalt): Ein nacktes "StartTime not set" ohne Laufbezug ist am Renntag unbrauchbar
+        // (HAR-Beleg 12.08.2026). Der Export blockiert weiterhin laut, statt die Läufe still
+        // wegzulassen - eine unbemerkt unvollständige Startliste wäre gefährlicher als ein
+        // Fehler. Wer sie bewusst weglassen will, wählt sie in der Vorschau ab (matchIds).
+        // Läufe ohne Mannschaften zählen nicht: die überspringt der Bau ohnehin kommentarlos.
+        val withoutStartTime = filtered.flatMap { competition ->
+            competition.matches
+                .filter { it.startTime == null && it.matchTeamIds.isNotEmpty() }
+                .map { match ->
+                    CompetitionExecutionError.StartlistMatchWithoutStartTime(
+                        matchId = match.setupMatchId,
+                        competitionIdentifier = competition.identifier,
+                        competitionShortName = competition.shortName,
+                        competitionName = competition.name,
+                        roundName = match.roundName,
+                        matchName = match.matchName,
+                    )
+                }
+        // Deterministisch sortiert: Ohne Startzeit gibt der Plan keine Ordnung her (array_agg),
+        // und eine Fehlermeldung, die ihre Läufe bei jedem Aufruf anders reiht, liest sich wie
+        // eine andere Meldung.
+        }.sortedWith(compareBy({ it.competitionIdentifier }, { it.roundName }, { it.matchName ?: "" }))
+        !KIO.failOn(withoutStartTime.isNotEmpty()) {
+            CompetitionExecutionError.StartlistMatchesWithoutStartTime(withoutStartTime)
+        }
+
         val fileNameDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
 
         when (fileType) {

@@ -649,6 +649,51 @@ class EventStartlistBulkExportTest {
     }
 
     /**
+     * Läufe ohne geplante Startzeit blockieren den Export weiterhin (eine still unvollständige
+     * Startliste wäre gefährlicher als ein lauter Fehler) - aber der Fehler nennt jetzt ALLE
+     * betroffenen Läufe mit Wettkampf, Runde und Laufname statt eines nackten "StartTime not
+     * set". Nach der Abwahl über matchIds exportiert der Rest.
+     */
+    @Test
+    fun exportFailsNamingAllMatchesWithoutStartTimeAndExportsTheRestAfterDeselection() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        // Lauf 1 hat eine Startzeit, Lauf 2 und 3 nicht.
+        val competition = insertCompetition(
+            eventId, "1",
+            matchTeamCounts = listOf(2, 2, 2),
+            startOffsetsMinutes = listOf(0, null, null),
+        )
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+
+        val blocked = { index: Int ->
+            CompetitionExecutionError.StartlistMatchWithoutStartTime(
+                matchId = competition.matches[index].setupMatchId,
+                competitionIdentifier = "1",
+                competitionShortName = null,
+                competitionName = "Wettkampf 1",
+                roundName = "Vorlauf",
+                matchName = "Lauf ${index + 1}",
+            )
+        }
+        assertKIOFails(
+            CompetitionExecutionError.StartlistMatchesWithoutStartTime(listOf(blocked(1), blocked(2))),
+        ) {
+            CompetitionExecutionService.buildEventStartlists(plan, EventStartlistFileType.CSV)
+        }
+
+        // Abwahl der beiden über matchIds (die Schnittmenge): der Rest exportiert anstandslos.
+        val restricted = CompetitionExecutionService.restrictPlanToMatches(
+            plan,
+            setOf(competition.matches[0].setupMatchId),
+        )
+        val file = !CompetitionExecutionService.buildEventStartlists(restricted, EventStartlistFileType.CSV)
+        val csv = String((file as ApiResponse.File).bytes)
+        assertEquals(listOf("10:00:00", "10:00:00"), csvColumn(csv, "Start"))
+    }
+
+    /**
      * Der Schalter selbst: Einschalten nimmt den automatischen ersten Platz zurück (sonst wäre
      * der Lauf für Kette und Automatik schon "durch", bevor er gefahren ist), Ausschalten vergibt
      * ihn wieder. Ein gemessenes Ergebnis würde nie angefasst - siehe Service-KDoc.
