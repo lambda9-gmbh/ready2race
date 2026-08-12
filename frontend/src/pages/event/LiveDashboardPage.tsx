@@ -78,6 +78,7 @@ import {
     LiveDashboardTab,
     liveMatches,
     nextUpEntry,
+    scrollContainerOf,
     storedPollInterval,
 } from '@components/event/liveDashboard/common.ts'
 import ScheduleTimelineIndicator from '@components/event/schedule/ScheduleTimelineIndicator.tsx'
@@ -119,34 +120,10 @@ const useCrewRequested = (): boolean => {
 }
 
 /**
- * Der nächste Vorfahr, der selbst scrollt — breit ist das die „Läufe"-Spalte (overflowY: auto),
- * schmal gibt es keinen und das Fenster übernimmt (dann null). Die Prüfung auf
- * scrollHeight > clientHeight lässt Boxen aus, die zwar overflow gesetzt haben, aber mit ihrem
- * Inhalt wachsen — etwa den Seitenrahmen, dessen overflowX: hidden das berechnete overflowY auf
- * auto hebt, ohne dass er je scrollt. body/html bleiben außen vor: dort scrollt das Fenster, und
- * dafür ist scrollIntoView der richtige Weg.
- */
-const scrollContainerOf = (el: HTMLElement): HTMLElement | null => {
-    for (let parent = el.parentElement; parent; parent = parent.parentElement) {
-        if (parent === document.body || parent === document.documentElement) {
-            return null
-        }
-        const overflowY = window.getComputedStyle(parent).overflowY
-        if (
-            (overflowY === 'auto' || overflowY === 'scroll') &&
-            parent.scrollHeight > parent.clientHeight
-        ) {
-            return parent
-        }
-    }
-    return null
-}
-
-/**
  * Fährt eine Karte sanft in die Mitte ihrer Spalte — geteilt zwischen dem Klick auf den
  * Zeitstrahl und „Folge dem aktuellen Lauf". Breit scrollt gezielt nur die Spalte (siehe
- * scrollContainerOf und den Scroll-Sprung-Fix dort), schmal ist das Fenster der einzige
- * Scroller und scrollIntoView tut genau das Gewollte.
+ * scrollContainerOf in common.ts und den Scroll-Sprung-Fix dort), schmal ist das Fenster der
+ * einzige Scroller und scrollIntoView tut genau das Gewollte.
  */
 const centerCardInColumn = (el: HTMLElement): void => {
     const container = scrollContainerOf(el)
@@ -172,7 +149,6 @@ const centerCardInColumn = (el: HTMLElement): void => {
         el.scrollIntoView({behavior: 'smooth', block: 'center'})
     }
 }
-
 export type LiveDashboardPageProps = {
     eventId: string
     /**

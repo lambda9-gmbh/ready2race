@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {
     Box,
@@ -75,6 +75,7 @@ import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import {EventModeSelection, isSlotSelected, nextEventModeSelection} from './eventMode.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
 import {useFullWidthLayout} from '../../../layouts/fullWidthLayout.ts'
+import {debounce} from '@utils/debounce.ts'
 import {delayParts, latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
 import {
     matchStatusChip,
@@ -228,6 +229,13 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
     // leer starten, aber ein Re-Render (30-Sekunden-Abgleich!) soll die Auswahl nicht verlieren.
     const [eventModeSelection, setEventModeSelection] = useState<EventModeSelection>(null)
     useFullWidthLayout(eventMode)
+
+    // Änderungen aus der rechten Durchführung sofort links zeigen, statt auf den
+    // 30-Sekunden-Takt zu warten. Entprellt, damit Aktions-Serien („Speichern & weiter")
+    // keinen Abruf-Sturm auslösen; useMemo hält dieselbe Instanz über Re-Renders, sonst
+    // liefe jede Entprellung ins Leere. setLastRequested (in reload) ist stabil.
+    const reloadDebounced = useMemo(() => debounce(reload, 500), [])
+    useEffect(() => () => reloadDebounced.cancel(), [reloadDebounced])
 
     const now = useLocalClock(30_000)
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
@@ -724,6 +732,30 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                     rowRefs.current.delete(slot.id)
                                                 }
                                             }}
+                                            // Im Veranstaltungs-Modus lädt die GANZE Zeile die
+                                            // Durchführung rechts, nicht nur das kleine Symbol —
+                                            // aber nur bei Zeilen mit Wettkampfbezug, und nie,
+                                            // wenn der Klick eigentlich einem Element in der
+                                            // Zeile galt (Aktions-Icons, Links): deren Klicks
+                                            // steigen hierher auf, das closest() erkennt sie am
+                                            // Ziel und lässt sie ihren eigenen Zweck erfüllen.
+                                            onClick={
+                                                eventMode && slot.competitionId
+                                                    ? event => {
+                                                          const target =
+                                                              event.target as HTMLElement
+                                                          if (target.closest('button, a')) {
+                                                              return
+                                                          }
+                                                          setEventModeSelection(
+                                                              nextEventModeSelection(
+                                                                  eventModeSelection,
+                                                                  slot,
+                                                              ),
+                                                          )
+                                                      }
+                                                    : undefined
+                                            }
                                             sx={{
                                                 backgroundColor:
                                                     highlightedSlotId === slot.id ||
@@ -734,6 +766,16 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                         ? 'action.selected'
                                                         : undefined,
                                                 transition: 'background-color 0.3s ease',
+                                                // Nur im Modus und nur mit Wettkampf: die Zeile
+                                                // zeigt an, dass sie als Ganzes klickbar ist.
+                                                // Außerhalb des Modus bleibt alles wie bisher.
+                                                ...(eventMode &&
+                                                    slot.competitionId && {
+                                                        cursor: 'pointer',
+                                                        '&:hover': {
+                                                            backgroundColor: 'action.hover',
+                                                        },
+                                                    }),
                                             }}>
                                             <TableCell>
                                                 {format(new Date(slot.startTime), t('format.time'))}
@@ -1260,6 +1302,8 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                             key={eventModeSelection.competitionId}
                             eventId={eventId}
                             competitionId={eventModeSelection.competitionId}
+                            focusMatchId={eventModeSelection.matchId}
+                            onDataChanged={reloadDebounced}
                             autoRefresh={{
                                 enabled: event.executionAutoRefresh,
                                 seconds: event.executionAutoRefreshSeconds,

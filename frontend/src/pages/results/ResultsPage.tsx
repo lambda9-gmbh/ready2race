@@ -20,9 +20,7 @@ import ResultsConfigurationTopBar from '@components/results/ResultsConfiguration
 import ResultsClubRanking from '@components/results/ResultsClubRanking.tsx'
 import ResultsIndividualRanking from '@components/results/ResultsIndividualRanking.tsx'
 import {MyEventPanel} from '@components/results/myEvent/MyEventPanel.tsx'
-
-const RESULTS_TABS = ['latest-results', 'live', 'my-event'] as const
-export type ResultsTab = (typeof RESULTS_TABS)[number]
+import {initialResultsTab, ResultsTab} from './resultsTab.ts'
 
 const CHALLENGE_RESULTS_TABS = ['club', 'individual', 'relative'] as const
 export type ChallengeResultsTab = (typeof CHALLENGE_RESULTS_TABS)[number]
@@ -40,11 +38,12 @@ const ResultsPage = () => {
         null,
     )
 
-    // Der QR-Einstieg leitet mit ?tab=my-event weiter, damit der Reiter "Mein Event"
-    // gleich offen ist, statt hinter "Aktuelle Ergebnisse" zu verschwinden.
+    // Direkteinstieg über die URL (siehe resultsTab.ts): Der QR-Einstieg leitet mit
+    // ?tab=my-event weiter, QR-Aushänge zeigen mit ?tab=live direkt auf den Live-Reiter, und
+    // ?tab=results ist das ausgeschriebene Default-Ziel.
     const {tab: tabFromSearch} = resultsEventRoute.useSearch()
     const [activeResultsTab, setActiveResultsTab] = useState<ResultsTab>(
-        tabFromSearch === 'my-event' ? 'my-event' : 'latest-results',
+        initialResultsTab(tabFromSearch),
     )
     const switchResultsTab = (tab: ResultsTab) => {
         setCompetitionSelected(null)
