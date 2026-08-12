@@ -2,7 +2,7 @@ import {Box, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {BoardElement, BoardViewDto} from '@api/types.gen'
 import {scaled} from '../info/athleteBoard/common'
-import {formatPlaceOrdinal} from '@utils/placeOrdinal'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {ceremonyForElement} from './boardView'
 
 interface BoardCeremonyElementProps {
@@ -91,7 +91,7 @@ const BoardCeremonyElement = ({element, view}: BoardCeremonyElementProps) => {
                                     flexShrink: 0,
                                 }}>
                                 {/* Bei geteilten Rängen trägt nur das erste Boot die große Zahl. */}
-                                {rank.first ? formatPlaceOrdinal(rank.rank) : ''}
+                                {rank.first ? <PlaceOrdinal place={rank.rank} /> : ''}
                             </Typography>
                             <Box sx={{flex: 1, minWidth: 0}}>
                                 <Typography
