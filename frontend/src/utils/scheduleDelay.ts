@@ -19,6 +19,17 @@ export const delayParts = (seconds: number): {kind: DelayKind; minutes: number} 
 }
 
 /**
+ * Die Farbe der großen Zahl im Verspätungs-Element, je Lage (12.08.2026):
+ * Verzug warnfarben (Handlungsbedarf), „pünktlich" grün (alles gut — die Bestätigung,
+ * für die der Bildschirm hängt), Verfrühung bewusst dezent grau statt Info-Blau:
+ * ein früher Lauf ist kein Alarm, ein drittes Signalblau konkurrierte mit den
+ * primary-Chips der Nachbarkacheln, und im „Farben aus"-Graustufenmodus der Boards
+ * wäre Blau ohnehin nicht von Grau zu unterscheiden.
+ */
+export const delayColor = (kind: DelayKind): string =>
+    kind === 'late' ? 'warning.main' : kind === 'onTime' ? 'success.main' : 'text.secondary'
+
+/**
  * `started_at − start_time` des zuletzt (nach Ist-Start) gestarteten Eintrags — dieselbe
  * Auswahlregel wie im Backend: der zuletzt GESTARTETE zählt, nicht der zuletzt geplante.
  * Null, wenn noch nichts gestartet ist oder der zuletzt gestartete Eintrag keine geplante

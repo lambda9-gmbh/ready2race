@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest'
 import {AthleteBoardMatch, BoardElement, BoardTile, BoardViewDto} from '@api/types.gen'
 import {densityScale} from '../info/athleteBoard/boardLayout'
-import {ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, slotForElement, tileColor} from './boardView'
+import {boardColumns, ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, rowSizes, slotForElement, tileColor} from './boardView'
 
 const match = (id: string, boats = 4): AthleteBoardMatch =>
     ({
@@ -314,5 +314,84 @@ describe('tileColor', () => {
         expect(tileColor('C62828')).toBeUndefined()
         expect(tileColor('#C6282')).toBeUndefined()
         expect(tileColor('#GGHHII')).toBeUndefined()
+    })
+})
+
+describe('rowSizes', () => {
+    const tileOf = (types: BoardElement['type'][], colSpan = 1, rowSpan = 1): BoardTile => ({
+        colSpan,
+        rowSpan,
+        elements: types.map(type => ({type}) as BoardElement),
+    })
+
+    const sizesFor = (tiles: BoardTile[], columns: number) => {
+        const {rows, positions} = gridPlacement(tiles, columns)
+        return rowSizes(tiles, positions, rows)
+    }
+
+    // Der Anlass: eine Zeile, in der nur eine Uhr (oder die Verspätung) liegt,
+    // verschwendete als 1fr ein Drittel des Bildschirms.
+    test('eine reine Uhr/Verspätungs-Zeile wird kompakt', () => {
+        const sizes = sizesFor(
+            [tileOf(['MATCH'], 2), tileOf(['CLOCK']), tileOf(['DELAY'])],
+            2,
+        )
+        expect(sizes).toEqual(['1fr', 'auto'])
+    })
+
+    test('eine gemischte Zeile bleibt 1fr', () => {
+        const sizes = sizesFor([tileOf(['CLOCK']), tileOf(['MATCH'])], 2)
+        expect(sizes).toEqual(['1fr'])
+    })
+
+    // Rotation Uhr+Lauf in EINER Kachel: die Kachel ist Inhalt, nicht kompakt.
+    test('eine rotierende Kachel mit Lauf zählt als Inhalt', () => {
+        const sizes = sizesFor([tileOf(['CLOCK', 'MATCH'])], 1)
+        expect(sizes).toEqual(['1fr'])
+    })
+
+    // Eine Inhalts-Kachel, die per rowSpan auch die Uhr-Zeile überspannt, braucht
+    // ihre Höhe über die ganze Spannweite — beide Zeilen bleiben 1fr.
+    test('rowSpan über Inhalts- und Kompakt-Zeile macht beide 1fr', () => {
+        const sizes = sizesFor(
+            [tileOf(['MATCH'], 1, 2), tileOf(['CLOCK']), tileOf(['CLOCK'])],
+            2,
+        )
+        expect(sizes).toEqual(['1fr', '1fr'])
+    })
+
+    // Sonderfall Board nur aus Kompakt-Kacheln: alle Zeilen 'auto' — der Rest der
+    // Bildschirmhöhe bleibt leer, statt dass sich eine Uhr auf 100% aufbläst.
+    test('ohne Inhalts-Kacheln sind alle Zeilen auto', () => {
+        const sizes = sizesFor([tileOf(['CLOCK']), tileOf(['DELAY'])], 1)
+        expect(sizes).toEqual(['auto', 'auto'])
+    })
+})
+
+describe('boardColumns', () => {
+    const detailTile: BoardTile = {
+        colSpan: 1,
+        rowSpan: 1,
+        elements: [{type: 'MATCH_DETAIL', offset: 0} as BoardElement],
+    }
+
+    // Der Nutzer-Befund vom 12.08.2026: 3 Spalten + Sprecher-Kachel quetschte die
+    // Kachel in eine Spalte. Das Rendering ignoriert die Geometrie und heilt damit
+    // auch gespeicherte Fehlkonfigurationen — ohne neuen Validierungsfehler.
+    test('ein Sprecher-Board rendert immer einspaltig', () => {
+        expect(boardColumns({columns: 3, tiles: [detailTile]})).toBe(1)
+        expect(boardColumns({columns: 1, tiles: [detailTile]})).toBe(1)
+    })
+
+    test('normale Boards behalten ihre Spaltenwahl', () => {
+        expect(boardColumns({columns: 4, tiles: [tile(), tile()]})).toBe(4)
+        // Ohne Spaltenwahl gilt der alte Default.
+        expect(boardColumns({tiles: [tile()]})).toBe(3)
+    })
+
+    // Die Heilung gilt nur für das Vollbild-Board (einzige Kachel) — ein hypothetischer
+    // Altbestand mit Nachbarkacheln bleibt beim konfigurierten Raster.
+    test('mit Nachbarkacheln greift die Heilung nicht', () => {
+        expect(boardColumns({columns: 3, tiles: [detailTile, tile()]})).toBe(3)
     })
 })

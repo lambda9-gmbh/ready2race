@@ -5,6 +5,7 @@ import {getLatestMatchResults} from '@api/sdk.gen.ts'
 import {LatestMatchResultInfo, MyEventResultDto} from '@api/types.gen.ts'
 import AthleteBoardPenaltyNote from '@components/event/info/athleteBoard/AthleteBoardPenaltyNote.tsx'
 import {hasRatingCategories} from '@utils/ratingCategorySections.ts'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {boatLabel, displayPlace, fieldSections, FieldTeam} from './myEventField.ts'
 
 type MyEventResultFieldProps = {
@@ -48,7 +49,7 @@ const FieldRow = ({team}: {team: FieldTeam}) => {
                     flexShrink: 0,
                 }}
                 color={place != null ? 'text.primary' : 'text.secondary'}>
-                {place ?? '–'}
+                {place != null ? <PlaceOrdinal place={place} /> : '–'}
             </Typography>
             <Box sx={{flex: 1, minWidth: 0}}>
                 <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">

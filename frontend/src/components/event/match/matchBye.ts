@@ -16,17 +16,26 @@ export type ByeExplanation = {key: string; values?: Record<string, string>; must
  * zurück: „Freilos wegen Abmeldung —" ohne Namen behauptet eine Ursache und liefert sie nicht.
  * Dasselbe Prinzip wie im Backend, wo der Freitext-Grund bei mehreren Abmeldungen entfällt.
  */
+/**
+ * Die Setzungszahl als Interpolationswert für die `{{seed}}`-Platzhalter der Freilos-Texte:
+ * „Freilos 1" für das Boot, das als Erstes weiterkam, nacktes „Freilos" ohne Zahl. Das führende
+ * Leerzeichen steckt im WERT, nicht im Schlüssel - sonst stünde ohne Zahl ein doppeltes
+ * Leerzeichen im Satz.
+ */
+export const byeSeedValue = (bye: MatchByeDto): string => (bye.seed != null ? ` ${bye.seed}` : '')
+
 export const byeExplanation = (bye: MatchByeDto | null | undefined): ByeExplanation | null => {
     if (!bye) return null
     const mustRace = bye.mustRace || undefined
+    const seed = byeSeedValue(bye)
     if (bye.cause === 'DEREGISTRATION' && bye.teamName) {
         return bye.reason
             ? {
                   key: 'event.match.bye.deregistrationWithReason',
-                  values: {team: bye.teamName, reason: bye.reason},
+                  values: {team: bye.teamName, reason: bye.reason, seed},
                   mustRace,
               }
-            : {key: 'event.match.bye.deregistration', values: {team: bye.teamName}, mustRace}
+            : {key: 'event.match.bye.deregistration', values: {team: bye.teamName, seed}, mustRace}
     }
-    return {key: 'event.match.bye.noOpponent', mustRace}
+    return {key: 'event.match.bye.noOpponent', values: {seed}, mustRace}
 }

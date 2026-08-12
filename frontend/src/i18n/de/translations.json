@@ -1624,7 +1624,6 @@
         "minutesUnit": "min",
         "hoursUnit": "Std.",
         "secondsUnit": "s",
-        "place": "{{count}}.",
         "advancing": "Weiter kommen {{count}} Boote → {{round}}",
         "advancing_one": "Weiter kommt 1 Boot → {{round}}",
         "advancingUnsized": "Weiter geht es: {{round}}",
@@ -1647,9 +1646,9 @@
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Findet nicht statt",
         "bye": {
-          "open": "Freilos · offen",
-          "acknowledged": "Freilos · quittiert",
-          "cancelled": "Freilos · entfallen"
+          "open": "Freilos{{seed}} · offen",
+          "acknowledged": "Freilos{{seed}} · quittiert",
+          "cancelled": "Freilos{{seed}} · entfallen"
         },
         "counter": {
           "preparing": "{{n}} in Vorbereitung",
@@ -1660,10 +1659,11 @@
         }
       },
       "bye": {
-        "deregistration": "Freilos wegen Abmeldung – {{team}}",
-        "deregistrationWithReason": "Freilos wegen Abmeldung – {{team}} ({{reason}})",
-        "noOpponent": "Freilos – keine Gegner:in in dieser Runde",
-        "mustRace": "wird gefahren – Zeit außer Konkurrenz"
+        "deregistration": "Freilos{{seed}} wegen Abmeldung – {{team}}",
+        "deregistrationWithReason": "Freilos{{seed}} wegen Abmeldung – {{team}} ({{reason}})",
+        "noOpponent": "Freilos{{seed}} – keine Gegner:in in dieser Runde",
+        "mustRace": "wird gefahren – Zeit außer Konkurrenz",
+        "mustRaceExplanation": "Wird aus Fairness gefahren: gleiche Belastung wie die Konkurrenz. Die Zeit zählt nicht für das Weiterkommen."
       }
     },
     "liveDashboard": {
@@ -2042,6 +2042,7 @@
       "urlCopied": "URL kopiert",
       "name": "Name",
       "saveAndClose": "Speichern und Beenden",
+      "matchDetailFullscreen": "Die Sprecher-Kachel füllt immer das ganze Board — Spalten und Spannweiten wirken hier nicht",
       "notFound": "Board nicht gefunden",
       "tileCount": "{{count}} Kacheln",
       "tileCount_one": "1 Kachel",

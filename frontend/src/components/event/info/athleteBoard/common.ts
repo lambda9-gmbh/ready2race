@@ -57,14 +57,9 @@ export const formatRemaining = (seconds: number, t: TFunction): string => {
     return `${total % 60} ${t('event.info.athleteBoard.secondsUnit')}`
 }
 
-/**
- * Ein Platz als Ordnungszahl („1." / "1st" / „1."), sprachrichtig über die
- * Ordinal-Pluralregeln von i18next. Überall, wo ein Platz neben einer Startnummer
- * stehen kann, muss er als Ordnungszahl erscheinen — eine nackte „1" ist von der
- * Startnummer 1 nicht zu unterscheiden (Wunsch vom 10.08.2026, Handtest am Prod-Abzug).
- */
-export const formatPlace = (place: number, t: TFunction): string =>
-    t('event.info.athleteBoard.place', {count: place, ordinal: true})
+// Plätze als Ordnungszahlen formatiert seit dem 12.08.2026 `formatPlaceOrdinal`
+// (utils/placeOrdinal) — englische Suffixe für alle Sprachen, Begründung dort.
+// Die frühere i18n-Fassung (`formatPlace`) ist damit entfallen.
 
 /**
  * Reihenfolge der Boote im laufenden Lauf: Sobald Zwischenstände da sind, zählt die

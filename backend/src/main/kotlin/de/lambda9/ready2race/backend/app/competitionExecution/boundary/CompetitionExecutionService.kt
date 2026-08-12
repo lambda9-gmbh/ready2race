@@ -320,17 +320,7 @@ object CompetitionExecutionService {
                     else -> bracketStart.matches.sumOf { match -> match.teams.count { !it.out } }
                 }
                 if (n > 0) {
-                    val namings =
-                        !CompetitionSetupMatchNamingRepo.getForRoundAndCount(nextRound.setupRoundId, n).orDie()
-                    namings.forEach { naming ->
-                        nextRound.setupMatches.find { it.weighting == naming.matchWeighting }?.let { setupMatch ->
-                            !CompetitionSetupMatchRepo.updateNameAndOrder(
-                                setupMatch.id,
-                                naming.name,
-                                naming.executionOrder
-                            ).orDie()
-                        }
-                    }
+                    !applyMatchNamings(nextRound, n)
                 }
             }
 
@@ -458,6 +448,47 @@ object CompetitionExecutionService {
         ).orDie().onNullFail { CompetitionError.CompetitionNotFound }
 
         noData
+    }
+
+    /**
+     * Wendet den Benennungs-Satz für Bracket-Größe [n] auf ALLE Setup-Läufe der Runde an.
+     *
+     * Die Naming-Zeilen sind ABWEICHUNGEN vom Ausgangszustand je Bracket-Größe (KDoc der
+     * Migration V202606191000: "Only deviations from the default ... are stored"); der
+     * Ausgangszustand ist der im Setup konfigurierte Name samt Reihenfolge des Laufs. Bis zum
+     * 12.08.2026 wurden nur die Läufe angefasst, deren weighting im Satz für DIESES n vorkam -
+     * die übrigen behielten den Stand einer FRÜHEREN Anwendung (anderes n, vor dem Löschen und
+     * Neu-Erzeugen der Runde nach einer Abmeldung). Ergebnis waren Duplikate und Lücken:
+     * zweimal "VF1", kein "VF2" (Nutzer-Screenshots).
+     *
+     * Deshalb wird jetzt JEDER Setup-Lauf der Runde konsistent gemacht - auch wenn für dieses n
+     * gar kein Satz existiert ([namings] leer): Läufe mit passendem Naming bekommen dessen Werte
+     * (fehlende Teile fallen auf den Ausgangszustand zurück), alle anderen den Ausgangszustand
+     * selbst. Der ist beim ersten Überschreiben in base_name/base_execution_order gesichert
+     * worden ([CompetitionSetupMatchRepo.applyNaming], V202608121200) - erfunden wird nichts:
+     * Ein nie benannter Lauf kehrt zu seinem Setup-Namen zurück, ein Lauf ohne Setup-Namen zu
+     * null (die Anzeigen fallen dann wie bisher auf den Rundennamen zurück).
+     *
+     * Genau ein Aufrufer ([createNewRound]) - Automatik und Knopf laufen beide durch ihn, die
+     * Anwendung bleibt wie bisher auf Nicht-Qualifikationsrunden mit n > 0 beschränkt
+     * (Qualifikationsrunden werden nie umbenannt und können deshalb keinen Alt-Stand tragen).
+     */
+    private fun applyMatchNamings(
+        round: CompetitionSetupRoundWithMatches,
+        n: Int,
+    ): App<Nothing, Unit> = KIO.comprehension {
+        val namings = !CompetitionSetupMatchNamingRepo.getForRoundAndCount(round.setupRoundId, n).orDie()
+
+        !round.setupMatches.toList().traverse { setupMatch ->
+            val naming = namings.find { it.matchWeighting == setupMatch.weighting }
+            CompetitionSetupMatchRepo.applyNaming(
+                id = setupMatch.id,
+                name = naming?.name,
+                executionOrder = naming?.executionOrder,
+            ).orDie()
+        }
+
+        unit
     }
 
     fun sortRounds(

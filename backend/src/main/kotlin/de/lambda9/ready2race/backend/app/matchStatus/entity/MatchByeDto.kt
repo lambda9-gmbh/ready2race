@@ -38,6 +38,15 @@ data class MatchByeDto(
     val reason: String?,
     /** Muss trotz Freilos gefahren werden - die Zeit wird genommen und "außer Konkurrenz" gezeigt. */
     val mustRace: Boolean = false,
+    /**
+     * Die Setzungszahl der fahrenden Mannschaft - "Freilos 1" ist das Freilos des Bootes, das als
+     * Erstes ins Ziel kam und deshalb weiterkommt. Sie ist der `seed` des Setup-Platzes
+     * (competition_setup_participant), den die Mannschaft in diesem Lauf belegt (siehe
+     * [MatchByeRepo.getByeInputs]); null, wenn kein Setup-Platz zur Startnummer passt - etwa bei
+     * Erstrunden-Freilosen durch Abmeldung oder nachträglich umgetragenen Startnummern. Dann
+     * bleibt es beim nackten "Freilos".
+     */
+    val seed: Int? = null,
 )
 
 /**
@@ -52,4 +61,9 @@ data class MatchByeTeam(
     val name: String,
     val deregistered: Boolean,
     val deregistrationReason: String?,
+    /**
+     * Der `seed` des Setup-Platzes, den die Mannschaft belegt (siehe [MatchByeDto.seed]) -
+     * null, wenn keiner zur Startnummer passt.
+     */
+    val seed: Int? = null,
 )

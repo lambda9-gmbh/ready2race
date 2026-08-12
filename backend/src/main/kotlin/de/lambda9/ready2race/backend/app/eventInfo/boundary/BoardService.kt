@@ -15,6 +15,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.toNameDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
+import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchByeService
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
@@ -182,6 +183,15 @@ object BoardService {
                 var results = resultInfos.map {
                     it.toAthleteBoardResult(includeDetails = details, requirements = requirements)
                 }
+
+                // Freilos-Kennzeichnung für die öffentlichen Anzeigen — dieselbe Ableitung wie
+                // Zeitplan und Schiedsrichter-Dashboard (MatchByeService). matchId IST die
+                // Setup-Lauf-Id; Platzhalter-Zeilen treffen in der Karte schlicht nichts.
+                val byeByMatch = !MatchByeService.byeByMatch(eventId)
+                fun AthleteBoardMatch.withBye() =
+                    byeByMatch[matchId]?.let { copy(bye = it) } ?: this
+                running = running.map { it.withBye() }
+                upcoming = upcoming.map { it.withBye() }
 
                 // „Weiter kommen N Boote → Finale": matchId IST die Setup-Lauf-Id; die
                 // Platzhalter der Zeitstrahl-Slots treffen in der Abfrage schlicht nichts.

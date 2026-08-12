@@ -357,8 +357,8 @@ class MatchStatusLogicTest {
 
     // --- deriveBye ---
 
-    private fun racing(name: String = "RC Bergedorf") =
-        MatchByeTeam(racing = true, name = name, deregistered = false, deregistrationReason = null)
+    private fun racing(name: String = "RC Bergedorf", seed: Int? = null) =
+        MatchByeTeam(racing = true, name = name, deregistered = false, deregistrationReason = null, seed = seed)
 
     /** Aus der Vorrunde mitgeführt, aber nicht abgemeldet: ausgeschieden oder nicht weitergekommen. */
     private fun eliminated(name: String = "RV Hansa") =
@@ -413,6 +413,46 @@ class MatchStatusLogicTest {
             MatchByeDto(MatchByeCause.DEREGISTRATION, "RV Hansa", null),
             MatchStatusLogic.deriveBye(false, listOf(racing(), withdrawn("RV Hansa"))),
         )
+    }
+
+    // --- Setzungszahl im Freilos-Label ("Freilos 1") ---
+
+    /**
+     * Die Setzungszahl der fahrenden Mannschaft wandert ins DTO - "Freilos 1" ist das Freilos
+     * des Bootes, das als Erstes weiterkam. Die Zahl der nicht fahrenden Zeilen zählt nicht.
+     */
+    @Test
+    fun theRacingTeamsSeedTravelsIntoTheBye() {
+        val withSeed = MatchStatusLogic.deriveBye(
+            false,
+            listOf(
+                racing(seed = 1),
+                MatchByeTeam(
+                    racing = false,
+                    name = "RV Hansa",
+                    deregistered = false,
+                    deregistrationReason = null,
+                    seed = 8,
+                ),
+            ),
+        )
+        assertEquals(1, withSeed?.seed)
+
+        // Auch bei einer Abmeldung trägt das Label die Zahl des fahrenden Bootes.
+        val withdrawnOpponent = MatchStatusLogic.deriveBye(
+            false,
+            listOf(racing(seed = 3), withdrawn("RV Hansa", "Krankheit")),
+        )
+        assertEquals(3, withdrawnOpponent?.seed)
+    }
+
+    /**
+     * Ohne passenden Setup-Platz (Erstrunden-Freilos durch Abmeldung, umgetragene Startnummer)
+     * bleibt die Zahl null - das Label sagt dann schlicht "Freilos" statt zu raten.
+     */
+    @Test
+    fun withoutASeatTheSeedStaysNull() {
+        assertNull(MatchStatusLogic.deriveBye(false, listOf(racing()))?.seed)
     }
 
     /** Bei mehreren Abmeldungen wäre die Zuordnung Name -> Grund geraten. */

@@ -13,11 +13,28 @@ object CompetitionSetupMatchRepo {
 
     fun get(setupMatchId: UUID) = COMPETITION_SETUP_MATCH.selectOne { ID.eq(setupMatchId) }
 
-    // Overwrites name / execution order of a single setup match. Null arguments leave the respective field unchanged.
-    fun updateNameAndOrder(id: UUID, name: String?, executionOrder: Int?) = COMPETITION_SETUP_MATCH.update(
+    /**
+     * Wendet eine Benennungs-Abweichung auf einen Setup-Lauf an - oder setzt ihn zurück.
+     *
+     * [name]/[executionOrder] kommen aus dem Naming-Satz für die aktuelle Bracket-Größe und sind
+     * ABWEICHUNGEN vom Ausgangszustand (KDoc von `applyMatchNamings` im
+     * CompetitionExecutionService). Null heißt deshalb "keine Abweichung -> Ausgangszustand",
+     * nicht "Feld unverändert lassen": Genau das Unverändert-Lassen ließ Läufe den Namen einer
+     * FRÜHEREN Anwendung behalten (zweimal "VF1", kein "VF2").
+     *
+     * Der Ausgangszustand wird beim ersten Überschreiben in base_name/base_execution_order
+     * gesichert (V202608121200). base_execution_order ist zugleich der Marker "schon gesichert" -
+     * execution_order ist NOT NULL, base_name allein könnte einen null-Ausgangsnamen nicht von
+     * "nie gesichert" unterscheiden.
+     */
+    fun applyNaming(id: UUID, name: String?, executionOrder: Int?) = COMPETITION_SETUP_MATCH.update(
         f = {
-            if (name != null) this.name = name
-            if (executionOrder != null) this.executionOrder = executionOrder
+            if (baseExecutionOrder == null) {
+                baseName = this.name
+                baseExecutionOrder = this.executionOrder
+            }
+            this.name = name ?: baseName
+            this.executionOrder = executionOrder ?: baseExecutionOrder!!
         },
         condition = { ID.eq(id) },
     )

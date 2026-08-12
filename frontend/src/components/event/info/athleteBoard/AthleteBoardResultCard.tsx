@@ -13,6 +13,7 @@ import {
     BoatListRow,
 } from './AthleteBoardBoatRow'
 import {formatClockTime, scaled} from './common'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 
 interface AthleteBoardResultCardProps {
@@ -21,9 +22,22 @@ interface AthleteBoardResultCardProps {
     // Gründe ausgeschiedener/abgemeldeter Boote bleiben stehen, sonst wirkte die Zeile
     // wie ein unerklärtes Loch.
     showTimes?: boolean
+    // Dieselben Crew-Optionen wie die Lauf-Karte (AthleteBoardMatchCard) — die Kachel
+    // soll ihre Besatzungszeilen nicht verlieren, wenn der Lauf beendet wird (12.08.2026).
+    showCrew?: boolean
+    showCrewDetails?: boolean
+    showBirthYears?: boolean
+    showRegisteringClub?: boolean
 }
 
-const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCardProps) => {
+const AthleteBoardResultCard = ({
+    result,
+    showTimes = true,
+    showCrew = true,
+    showCrewDetails = false,
+    showBirthYears = false,
+    showRegisteringClub = false,
+}: AthleteBoardResultCardProps) => {
     const {t} = useTranslation()
 
     const teams = [...result.teams].sort((a, b) => {
@@ -122,12 +136,17 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                                 key={`${result.matchId}-${team.startNumber}`}
                                 index={index}
                                 // Der Platz innerhalb der Wertungskategorie — team.place bleibt der
-                                // Platz im Lauf und ist nur seine Grundlage. Seit dem 12.08.2026
-                                // als nackte große Zahl wie die Startnummer der Lauf-Karte
-                                // (Angleichung der beiden Karten, Nutzerwunsch); dass sie der
-                                // Platz und nicht die Startnummer ist, sagt die „Nr. N"-Zeile
-                                // klein darunter.
-                                leadNumber={team.categoryPlace ?? '–'}
+                                // Platz im Lauf und ist nur seine Grundlage. Als englisches
+                                // Ordinal „1st/2nd/3rd" (formatPlaceOrdinal, Nutzerentscheidung
+                                // 12.08.2026): die zwischenzeitlich nackte Zahl war von einer
+                                // Startnummer nicht zu unterscheiden.
+                                leadNumber={
+                                    team.categoryPlace != null ? (
+                                        <PlaceOrdinal place={team.categoryPlace} />
+                                    ) : (
+                                        '–'
+                                    )
+                                }
                                 trailing={
                                     // Ohne Zeiten bleibt die rechte Spalte den Booten
                                     // vorbehalten, die eine Erklärung brauchen.
@@ -167,6 +186,46 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                                 <AthleteBoardBoatSubline>
                                     {t('event.info.athleteBoard.startNumber')} {team.startNumber}
                                 </AthleteBoardBoatSubline>
+                                {/* Crew-Zeilen exakt wie auf der Lauf-Karte
+                                    (AthleteBoardMatchCard): einzeln mit Details für
+                                    Sprecherinnen, sonst die einzeilige Namensliste. */}
+                                {showCrewDetails && (team.participants ?? []).length > 0 ? (
+                                    <>
+                                        {(team.participants ?? []).map((p, i) => (
+                                            <AthleteBoardBoatSubline key={i}>
+                                                {[
+                                                    p.role ? `${p.name} (${p.role})` : p.name,
+                                                    p.clubName,
+                                                    showBirthYears && p.year != null
+                                                        ? t('event.info.athleteBoard.birthYear', {
+                                                              year: p.year,
+                                                          })
+                                                        : null,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </AthleteBoardBoatSubline>
+                                        ))}
+                                    </>
+                                ) : (
+                                    showCrew &&
+                                    (team.participants ?? []).length > 0 && (
+                                        <AthleteBoardBoatSubline>
+                                            {(team.participants ?? [])
+                                                .map(p =>
+                                                    p.role ? `${p.name} (${p.role})` : p.name,
+                                                )
+                                                .join(', ')}
+                                        </AthleteBoardBoatSubline>
+                                    )
+                                )}
+                                {showRegisteringClub && team.registeringClub && (
+                                    <AthleteBoardBoatSubline>
+                                        {t('event.info.athleteBoard.registeringClub', {
+                                            club: team.registeringClub,
+                                        })}
+                                    </AthleteBoardBoatSubline>
+                                )}
                                 {/* Zwischenzeiten aus RaceClocker — nur wenn Zeiten überhaupt
                                     gezeigt werden und das Boot nicht abgemeldet ist. */}
                                 {showTimes &&

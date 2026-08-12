@@ -198,6 +198,10 @@ export type AthleteBoardMatch = {
      * number of seats in the following round; null when the following round is an open field
      */
     advancingSeats?: number | null
+    /**
+     * the bye of this match, same derivation as schedule and referee dashboard - public boards need it mainly for must-race byes, where a second line explains why the boat races alone and that its time runs out of competition
+     */
+    bye?: MatchByeDto | null
 }
 
 export type AthleteBoardParticipant = {
@@ -282,9 +286,13 @@ export type AthleteBoardResultTeam = {
      */
     laps?: Array<MatchTeamLapDto>
     /**
-     * the crew of this boat - only filled when a board element requests crew details (announcer tile)
+     * the crew of this boat - always present like on the running card; birth year and worn club stay detail-gated
      */
     participants?: Array<AthleteBoardParticipant>
+    /**
+     * registering club - only filled when a board element requests showRegisteringClub
+     */
+    registeringClub?: string | null
     /**
      * measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element
      */
@@ -2378,6 +2386,10 @@ export type MatchByeDto = {
      * 'Must race' (competition_match.bye_must_race): the match stays a bye but is raced - exports, polling and the chain treat it like any match, the measured time runs out of competition.
      */
     mustRace: boolean
+    /**
+     * Seeding number of the racing team - 'Bye 1' is the bye of the boat that advanced first. It is the seed of the setup seat the team occupies in this match; null when no seat matches the start number (e.g. first-round byes created by a withdrawal), the label then stays a plain 'Bye'.
+     */
+    seed?: number | null
 }
 
 export type MatchForRunningStatusDto = {

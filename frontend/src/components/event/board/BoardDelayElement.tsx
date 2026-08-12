@@ -1,7 +1,7 @@
 import {Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {BoardViewDto} from '@api/types.gen'
-import {delayParts} from '@utils/scheduleDelay'
+import {delayColor, delayParts} from '@utils/scheduleDelay'
 
 interface BoardDelayElementProps {
     view: BoardViewDto
@@ -11,7 +11,8 @@ interface BoardDelayElementProps {
  * Verspätungs-Element: die aktuelle Abweichung vom Zeitplan, groß genug für die andere
  * Seite des Stegs — nach dem Vorbild der Uhr (BoardClockElement). Die Zahl kommt fertig
  * vom Server (`currentDelaySeconds`, Stand des zuletzt gestarteten Laufs); hier wird nur
- * gerundet und eingefärbt: Verspätung warnfarben, Verfrühung und „pünktlich" dezent.
+ * gerundet und semantisch eingefärbt (delayColor): Verzug warnfarben, „pünktlich" grün,
+ * Verfrühung dezent. Der Untertitel bleibt neutral.
  */
 const BoardDelayElement = ({view}: BoardDelayElementProps) => {
     const {t} = useTranslation()
@@ -42,7 +43,7 @@ const BoardDelayElement = ({view}: BoardDelayElementProps) => {
                     lineHeight: 1,
                     textAlign: 'center',
                 }}
-                color={parts?.kind === 'late' ? 'warning.main' : 'text.secondary'}>
+                color={parts ? delayColor(parts.kind) : 'text.secondary'}>
                 {label}
             </Typography>
             <Typography

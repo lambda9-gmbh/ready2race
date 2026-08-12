@@ -10,6 +10,7 @@ import {
 } from '@api/types.gen.ts'
 import AthleteBoardPenaltyNote from '@components/event/info/athleteBoard/AthleteBoardPenaltyNote.tsx'
 import {formatClockTime, formatRemaining} from '@components/event/info/athleteBoard/common.ts'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {useServerClock} from '@components/event/info/athleteBoard/useServerClock.ts'
 import {MyEventResultField} from './MyEventResultField.tsx'
 
@@ -338,7 +339,7 @@ export const MyEventResultList = ({results, eventId}: MyEventResultListProps) =>
                                     textAlign: 'center',
                                 }}
                                 color={result.place != null ? 'text.primary' : 'text.secondary'}>
-                                {result.place ?? '–'}
+                                {result.place != null ? <PlaceOrdinal place={result.place} /> : '–'}
                             </Typography>
                             <Box sx={{flex: 1, minWidth: 0}}>
                                 <Typography sx={{fontWeight: 600}}>
