@@ -5,14 +5,18 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.BoardRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.BOARD
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_TEAM
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.testing.testComprehension
+import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.JSONB
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -98,5 +102,69 @@ class BoardServiceTest {
         assertEquals(6, config.tiles.size)
         // Alt-Kacheln kennen keine Spannweiten: die Vorgabe 1 greift.
         assertTrue(config.tiles.all { it.colSpan == 1 && it.rowSpan == 1 })
+    }
+
+    /**
+     * Der gemessene Boot-Start (`competition_match_team.started_at`, Zeitfahren) folgt dem
+     * needs-Muster: die Sprecher-Kachel (MATCH_DETAIL) bekommt ihn je Boot, ein gewöhnliches
+     * MATCH-Board lässt ihn leer — dessen Poll-Nutzlast bleibt unverändert.
+     */
+    @Test
+    fun boatStartsOnlyReachTheAnnouncerTile() = testComprehension {
+        val fixture = !MyEventFixture.create()
+        val boatStart = LocalDateTime.of(2026, 8, 14, 10, 31, 4)
+        // Lauf aktivieren (Block „running") und dem Boot seinen eigenen Start stempeln —
+        // beim Zeitfahren kommt der je Zeile aus dem RaceClocker-Feed.
+        !Jooq.query {
+            update(COMPETITION_MATCH)
+                .set(COMPETITION_MATCH.ACTIVATED_AT, now)
+                .set(COMPETITION_MATCH.STARTED_AT, now)
+                .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(fixture.ownMatchId))
+                .execute()
+        }
+        !Jooq.query {
+            update(COMPETITION_MATCH_TEAM)
+                .set(COMPETITION_MATCH_TEAM.STARTED_AT, boatStart)
+                .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(fixture.ownMatchId))
+                .execute()
+        }
+
+        // Sprecher-Kachel: der Boot-Start steht am Team.
+        val detail = (!BoardService.createBoard(
+            fixture.eventId,
+            BoardRequest(
+                name = "Sprecherin",
+                config = BoardConfig(
+                    columns = 1,
+                    tiles = listOf(
+                        BoardTile(elements = listOf(BoardElement(type = BoardElementType.MATCH_DETAIL, offset = 0)))
+                    ),
+                ),
+            ),
+        )).dto
+        val detailTeam = (!BoardService.getBoardView(fixture.eventId, detail.id)).dto
+            .slots.single { it.offset == 0 }.match!!.teams.single()
+        assertEquals(boatStart, detailTeam.startedAt)
+
+        // Gewöhnliches MATCH-Board, sogar mit Crew-Details: das Feld bleibt leer.
+        val plain = (!BoardService.createBoard(
+            fixture.eventId,
+            BoardRequest(
+                name = "Steg",
+                config = BoardConfig(
+                    columns = 1,
+                    tiles = listOf(
+                        BoardTile(
+                            elements = listOf(
+                                BoardElement(type = BoardElementType.MATCH, offset = 0, showCrewDetails = true)
+                            )
+                        )
+                    ),
+                ),
+            ),
+        )).dto
+        val plainTeam = (!BoardService.getBoardView(fixture.eventId, plain.id)).dto
+            .slots.single { it.offset == 0 }.match!!.teams.single()
+        assertNull(plainTeam.startedAt)
     }
 }

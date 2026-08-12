@@ -102,6 +102,14 @@ data class AthleteBoardTeam(
      * Die Anzeige zeigt sie unter der Zeile, sobald sie da sind (Rückmeldung vom 11.08.2026).
      */
     val laps: List<MatchTeamLapDto> = emptyList(),
+    /**
+     * Gemessener Start DIESES Bootes (`competition_match_team.started_at`) — beim Zeitfahren
+     * starten die Boote versetzt, der Lauf-Start ([AthleteBoardMatch.actualStartTime]) sagt
+     * dann nichts über das einzelne Boot. Nur befüllt, wenn das Board eine Sprecher-Kachel
+     * (MATCH_DETAIL) hat — needs-Muster wie die Bedingungen; dank NON_NULL-Serialisierung
+     * bleibt die Poll-Nutzlast aller anderen Boards unverändert.
+     */
+    val startedAt: LocalDateTime? = null,
 )
 
 data class AthleteBoardParticipant(
@@ -188,4 +196,6 @@ data class AthleteBoardResultTeam(
      * trägt die Personen längst, siehe `MatchResultTeamInfo.participants`).
      */
     val participants: List<AthleteBoardParticipant> = emptyList(),
+    /** Wie bei [AthleteBoardTeam.startedAt]: der gemessene Boot-Start, nur für die Sprecher-Kachel. */
+    val startedAt: LocalDateTime? = null,
 )

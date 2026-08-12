@@ -3,11 +3,13 @@ package de.lambda9.ready2race.backend.app.eventInfo.control
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.BoardRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.BOARD
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_TEAM
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
+import java.time.LocalDateTime
 import java.util.UUID
 
 /** „Weiter kommen [seats] Boote → [nextRoundName]"; [seats] null bei Massenfeld-Folgerunde. */
@@ -72,6 +74,33 @@ object BoardRepo {
                         nextRoundName = r.get(nextRound.NAME),
                         seats = if (allSized) r.get(seatSum)?.toInt() else null,
                     )
+                }
+        }
+
+    /**
+     * Der gemessene Start je Boot (`competition_match_team.started_at`) für die
+     * Sprecher-Kachel — nur Boote mit Stempel. Schlüssel ist (Lauf, Startnummer), weil die
+     * Anzeige-DTOs keine Meldungs-IDs führen; die Startnummer ist je Lauf eindeutig und
+     * NOT NULL (Migration V202507040930). Beide `!!` lesen NOT-NULL-Spalten der führenden
+     * Tabelle bzw. eine per `isNotNull` gefilterte — Begründungsmuster wie bei
+     * `EventInfoService.getMatchResultTeams`.
+     */
+    fun boatStarts(matchIds: Collection<UUID>): JIO<Map<Pair<UUID, Int>, LocalDateTime>> =
+        Jooq.query {
+            if (matchIds.isEmpty()) return@query emptyMap()
+            select(
+                COMPETITION_MATCH_TEAM.COMPETITION_MATCH,
+                COMPETITION_MATCH_TEAM.START_NUMBER,
+                COMPETITION_MATCH_TEAM.STARTED_AT,
+            )
+                .from(COMPETITION_MATCH_TEAM)
+                .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.`in`(matchIds))
+                .and(COMPETITION_MATCH_TEAM.STARTED_AT.isNotNull)
+                .fetch()
+                .associate { r ->
+                    (r.get(COMPETITION_MATCH_TEAM.COMPETITION_MATCH)!! to
+                        r.get(COMPETITION_MATCH_TEAM.START_NUMBER)!!) to
+                        r.get(COMPETITION_MATCH_TEAM.STARTED_AT)!!
                 }
         }
 }

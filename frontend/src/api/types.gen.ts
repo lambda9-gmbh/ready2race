@@ -285,6 +285,10 @@ export type AthleteBoardResultTeam = {
      * the crew of this boat - only filled when a board element requests crew details (announcer tile)
      */
     participants?: Array<AthleteBoardParticipant>
+    /**
+     * measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element
+     */
+    startedAt?: string | null
 }
 
 export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
@@ -331,6 +335,10 @@ export type AthleteBoardTeam = {
      * split times from RaceClocker, in mark order; empty when the race records none
      */
     laps?: Array<MatchTeamLapDto>
+    /**
+     * measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element
+     */
+    startedAt?: string | null
 }
 
 export type AwardCeremonyAthlete = {
