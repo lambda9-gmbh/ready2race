@@ -40,7 +40,10 @@ import {
 } from '@api/sdk.gen.ts'
 import {matchErrorText} from '@components/event/competition/excecution/executionError.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {competitionRoute, eventRoute} from '@routes'
+import {
+    CompetitionScopeProps,
+    useCompetitionScope,
+} from '@components/event/competition/excecution/competitionScope.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
 import {failedLabel} from '@utils/matchResultStatus.ts'
@@ -59,7 +62,7 @@ import {
 import StatusChip from '@components/event/match/StatusChip.tsx'
 import {useNow} from '@components/event/match/useNow.ts'
 
-type Props = {
+type Props = CompetitionScopeProps & {
     round: CompetitionRoundDto
     roundIndex: number
     filteredMatches: CompetitionMatchDto[]
@@ -90,6 +93,8 @@ type Props = {
 }
 
 const CompetitionExecutionRound = ({
+    eventId: eventIdProp,
+    competitionId: competitionIdProp,
     round,
     roundIndex,
     filteredMatches,
@@ -122,8 +127,10 @@ const CompetitionExecutionRound = ({
     // Die Freilose der Runde — dieselbe Frage wie überall sonst, gestellt an `status.bye`.
     const byes = byeMatches(round)
 
-    const {eventId} = eventRoute.useParams()
-    const {competitionId} = competitionRoute.useParams()
+    const {eventId, competitionId} = useCompetitionScope({
+        eventId: eventIdProp,
+        competitionId: competitionIdProp,
+    })
 
     const {confirmAction} = useConfirmation()
 
@@ -492,6 +499,8 @@ const CompetitionExecutionRound = ({
                         </AccordionSummary>
                         <AccordionDetails>
                             <Substitutions
+                                eventId={eventId}
+                                competitionId={competitionId}
                                 reloadRoundDto={() => props.reloadRoundDto()}
                                 roundDto={round}
                                 roundIndex={roundIndex}

@@ -1,22 +1,28 @@
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getPossibleSubIns} from '@api/sdk.gen.ts'
-import {competitionRoute, eventRoute} from '@routes'
+import {
+    CompetitionScopeProps,
+    useCompetitionScope,
+} from '@components/event/competition/excecution/competitionScope.ts'
 import {ListSubheader, MenuItem, Select} from '@mui/material'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {Controller} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {groupBy} from '@utils/helpers.ts'
 
-type Props = {
+type Props = CompetitionScopeProps & {
     setupRoundId: string
     selectedParticipantOut: string | null
 }
-const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}: Props) => {
+const SubstitutionSelectParticipantIn = ({
+    setupRoundId,
+    selectedParticipantOut,
+    ...scope
+}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const {eventId} = eventRoute.useParams()
-    const {competitionId} = competitionRoute.useParams()
+    const {eventId, competitionId} = useCompetitionScope(scope)
     const {data: subInsData} = useFetch(
         signal =>
             getPossibleSubIns({
