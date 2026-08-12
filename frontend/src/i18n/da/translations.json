@@ -1829,7 +1829,8 @@
         "format": {
           "label": "Format",
           "zip": "ZIP – én CSV pr. konkurrence",
-          "csv": "Én stor CSV – sorteret efter starttid"
+          "csv": "Én stor CSV – sorteret efter starttid",
+          "pdf": "PDF – startlister som opslag/tilmeldingsresultat"
         },
         "skipByes": {
           "label": "Spring oversiddere over",

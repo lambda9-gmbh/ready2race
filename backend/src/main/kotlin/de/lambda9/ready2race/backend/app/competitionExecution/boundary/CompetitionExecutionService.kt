@@ -91,6 +91,9 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.apache.pdfbox.Loader
+import org.apache.pdfbox.multipdf.PDFMergerUtility
+import org.apache.pdfbox.pdmodel.PDDocument
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
@@ -2661,6 +2664,10 @@ object CompetitionExecutionService {
         plan: List<BulkStartlistCompetition>,
         fileType: EventStartlistFileType,
         feedsByUrl: Map<String, List<RaceClockerFeedRow>>? = null,
+        // Nur für PDF: die zugewiesene START_LIST-Vorlage der Veranstaltung - wie die Feeds vom
+        // Aufrufer geholt (downloadEventStartlists), damit der Bau gegen Fixtures prüfbar bleibt.
+        // null rendert die vorlagenlose Standard-Startliste, exakt wie der Einzel-Lauf-Export.
+        startListTemplate: PageTemplate? = null,
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
         val filtered = filterPlanAgainstFeeds(plan, feedsByUrl)
 
@@ -2762,6 +2769,44 @@ object CompetitionExecutionService {
                     )
                 )
             }
+
+            EventStartlistFileType.PDF -> {
+                // Eine Datei für Aushang bzw. (geändertes) Meldeergebnis: je Lauf die bekannte
+                // Einzel-Startlisten-PDF ([buildPdf], mit der zugewiesenen Vorlage), in
+                // Startzeit-Reihenfolge über alle Wettkämpfe aneinandergehängt - dieselbe
+                // Reihenfolge wie die große CSV. Läufe ohne Mannschaften werden wie dort
+                // kommentarlos übersprungen. Bewusst NICHT "meldeergebnis" im Dateinamen:
+                // REGISTRATION_REPORT ist ein eigener Dokumenttyp, der Name bliebe zweideutig.
+                val merged = PDDocument()
+                val merger = PDFMergerUtility()
+                !filtered.flatMap { it.matches }
+                    .sortedWith(compareBy(nullsLast()) { it.startTime })
+                    .traverse { m ->
+                        KIO.comprehension {
+                            val record = !CompetitionMatchRepo.getForStartList(m.setupMatchId).orDie()
+                                .onNullFail { CompetitionExecutionError.MatchNotFound }
+                            if (record.teams!!.isEmpty()) return@comprehension unit
+
+                            val data = !CompetitionMatchData.fromPersisted(record)
+                            val part = Loader.loadPDF(buildPdf(data, startListTemplate))
+                            // appendDocument kopiert die Seiten in das Sammeldokument - das
+                            // Teilstück kann danach zu, erst das Ganze wird gespeichert.
+                            merger.appendDocument(merged, part)
+                            part.close()
+                            unit
+                        }
+                    }
+
+                val out = ByteArrayOutputStream()
+                merged.save(out)
+                merged.close()
+                KIO.ok(
+                    ApiResponse.File(
+                        name = "startLists-$fileNameDate.pdf",
+                        bytes = out.toByteArray(),
+                    )
+                )
+            }
         }
     }
 
@@ -2807,7 +2852,17 @@ object CompetitionExecutionService {
             null
         }
 
-        return buildEventStartlists(restricted, fileType, feeds)
+        // Nur für PDF gebraucht und deshalb nur dort geholt. Keine Zuweisung (null) ist KEIN
+        // Fehler: buildPdf rendert dann die vorlagenlose Standard-Startliste - exakt das
+        // Verhalten des Einzel-Lauf-Exports, der Sammelexport ist nicht strenger.
+        val startListTemplate = if (fileType == EventStartlistFileType.PDF) {
+            !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, eventId).orDie()
+                .andThenNotNull { it.toPdfTemplate() }
+        } else {
+            null
+        }
+
+        return buildEventStartlists(restricted, fileType, feeds, startListTemplate)
     }
 
     /**

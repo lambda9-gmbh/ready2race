@@ -39,6 +39,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.STARTL
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.testing.kio.TestComprehensionScope
 import de.lambda9.ready2race.testing.testComprehension
+import org.apache.pdfbox.Loader
+import org.apache.pdfbox.text.PDFTextStripper
 import java.io.ByteArrayInputStream
 import java.time.LocalDateTime
 import java.util.UUID
@@ -691,6 +693,96 @@ class EventStartlistBulkExportTest {
         val file = !CompetitionExecutionService.buildEventStartlists(restricted, EventStartlistFileType.CSV)
         val csv = String((file as ApiResponse.File).bytes)
         assertEquals(listOf("10:00:00", "10:00:00"), csvColumn(csv, "Start"))
+    }
+
+    /** Der Text je Seite - Reihenfolge und Seitenzahl des Sammel-PDFs prüfbar machen. */
+    private fun pdfPageTexts(bytes: ByteArray): List<String> =
+        Loader.loadPDF(bytes).use { doc ->
+            (1..doc.numberOfPages).map { page ->
+                PDFTextStripper().apply {
+                    startPage = page
+                    endPage = page
+                }.getText(doc)
+            }
+        }
+
+    /**
+     * Der PDF-Sammelexport (Wunsch Regattabüro, 12.08.2026): je Lauf der Auswahl die bekannte
+     * Einzel-Startlisten-PDF als Seite, in Startzeit-Reihenfolge über alle Wettkämpfe - derselbe
+     * Plan wie bei ZIP/CSV. OHNE zugewiesene START_LIST-Vorlage rendert der Export die
+     * vorlagenlose Standard-Startliste (kein Fehler, kein 500er) - exakt das Verhalten des
+     * Einzel-Lauf-Exports; genau das belegt dieser Fall, denn hier ist keine Vorlage zugewiesen.
+     */
+    @Test
+    fun pdfConcatenatesStartlistsSortedByStartTimeAlsoWithoutAssignedTemplate() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        insertCompetition(
+            eventId, "1",
+            matchTeamCounts = listOf(2, 2),
+            startOffsetsMinutes = listOf(0, 10),
+        )
+        insertCompetition(eventId, "2", matchTeamCounts = listOf(2), startOffsetsMinutes = listOf(5))
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+        val file = !CompetitionExecutionService.buildEventStartlists(plan, EventStartlistFileType.PDF)
+
+        val pages = pdfPageTexts((file as ApiResponse.File).bytes)
+        // Eine Seite je Lauf, nach Startzeit über alle Wettkämpfe: 10:00 (W1), 10:05 (W2), 10:10 (W1).
+        assertEquals(3, pages.size, "Erwartet eine Seite je Lauf")
+        assertTrue(pages[0].contains("10:00:00") && pages[0].contains("Wettkampf 1"), pages[0])
+        assertTrue(pages[1].contains("10:05:00") && pages[1].contains("Wettkampf 2"), pages[1])
+        assertTrue(pages[2].contains("10:10:00") && pages[2].contains("Wettkampf 1"), pages[2])
+        assertTrue(file.name.endsWith(".pdf"), file.name)
+    }
+
+    /** Dieselben Regeln wie bei ZIP/CSV wirken auch im PDF: matchIds-Schnittmenge und Startzeit-Wächter. */
+    @Test
+    fun pdfHonorsMatchIdsIntersectionAndStartTimeGuard() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        val competition = insertCompetition(
+            eventId, "1",
+            matchTeamCounts = listOf(2, 2),
+            startOffsetsMinutes = listOf(0, 10),
+        )
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+
+        // Schnittmenge: nur Lauf 2 gewählt, dazu eine fremde Id - exportiert wird genau Lauf 2.
+        val restricted = CompetitionExecutionService.restrictPlanToMatches(
+            plan,
+            setOf(competition.matches[1].setupMatchId, UUID.randomUUID()),
+        )
+        val file = !CompetitionExecutionService.buildEventStartlists(restricted, EventStartlistFileType.PDF)
+        val pages = pdfPageTexts((file as ApiResponse.File).bytes)
+        assertEquals(1, pages.size)
+        assertTrue(pages[0].contains("10:10:00"), pages[0])
+
+        // Startzeit-Wächter: derselbe strukturierte Fehler wie bei CSV/ZIP, weil derselbe Plan
+        // durch denselben Bau läuft.
+        val second = insertCompetition(
+            eventId, "2",
+            matchTeamCounts = listOf(2),
+            startOffsetsMinutes = listOf(null),
+        )
+        val planWithNull = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+        assertKIOFails(
+            CompetitionExecutionError.StartlistMatchesWithoutStartTime(
+                listOf(
+                    CompetitionExecutionError.StartlistMatchWithoutStartTime(
+                        matchId = second.matches[0].setupMatchId,
+                        competitionIdentifier = "2",
+                        competitionShortName = null,
+                        competitionName = "Wettkampf 2",
+                        roundName = "Vorlauf",
+                        matchName = "Lauf 1",
+                    )
+                )
+            ),
+        ) {
+            CompetitionExecutionService.buildEventStartlists(planWithNull, EventStartlistFileType.PDF)
+        }
     }
 
     /**

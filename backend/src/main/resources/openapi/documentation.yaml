@@ -7073,12 +7073,13 @@ paths:
       operationId: downloadEventStartlists
       description: >-
         Bulk start list export for the whole event: the first created round of every competition
-        (or, in delta mode, every created match missing in RaceClocker), either as a ZIP with one
-        CSV per competition (file names like the round export) or as one big CSV sorted by start
-        time across all competitions.
+        (or, in delta mode, every created match missing in RaceClocker), as a ZIP with one CSV
+        per competition (file names like the round export), as one big CSV sorted by start time
+        across all competitions, or as one PDF concatenating the per-match start list PDFs in
+        the same order.
       responses:
         200:
-          description: The start list file (ZIP or CSV, depending on fileType)
+          description: The start list file (ZIP, CSV or PDF, depending on fileType)
           content:
             application/octet-stream:
               schema:
@@ -13386,10 +13387,13 @@ components:
       description: >-
         Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer
         needs, one race per competition), CSV writes one big file sorted by start time (what
-        RaceClocker needs, one race carrying all waves).
+        RaceClocker needs, one race carrying all waves), PDF concatenates the per-match start
+        list PDFs sorted by start time (notice board / registration report style; rendered with
+        the event's assigned START_LIST template, or the built-in layout when none is assigned).
       enum:
         - ZIP
         - CSV
+        - PDF
 
     EventStartlistPreviewMatchDto:
       type: object
