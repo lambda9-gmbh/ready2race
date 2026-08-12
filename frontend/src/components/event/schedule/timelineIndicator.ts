@@ -348,24 +348,101 @@ export const timelineSpan = (entries: TimelineEntry[]): TimelineSpan | null => {
 
 export type HourMark = {percent: number; timeMs: number}
 
+/** Achsenbeschriftung: 'full' = "08:00", 'hour' = nackte Stunde "8" — für schmale Flächen. */
+export type HourMarkFormat = 'full' | 'hour'
+
+export type HourMarkPlan = {marks: HourMark[]; format: HourMarkFormat; stepHours: number}
+
+// Dieselbe mittlere Zeichenbreite wie labelFitsWidth — eine Heuristik, ein Wert.
+const CHAR_PX = 6.5
+/** Mindestluft zwischen zwei benachbarten Achsenlabels, damit "nicht überlappend" auch so aussieht. */
+const AXIS_LABEL_GAP_PX = 12
+/** Zeichenbreite der beiden Formate: "08:00" = 5 Zeichen, nackte Stunde höchstens 2 ("22"). */
+const AXIS_LABEL_CHARS: Record<HourMarkFormat, number> = {full: 5, hour: 2}
+/** Das Jetzt-Label ("22:06") — fett gesetzt, deshalb etwas großzügiger geschätzt. */
+export const NOW_LABEL_PX = 5 * CHAR_PX + 4
+
+/** Geschätzte Pixelbreite eines Achsenlabels im jeweiligen Format. */
+export const axisLabelPx = (format: HourMarkFormat): number => AXIS_LABEL_CHARS[format] * CHAR_PX
+
 /**
- * Die beschrifteten Stundenmarken entlang der Achse. Die Schrittweite wächst mit der Spanne
- * (1 h, 2 h, 3 h, …), sodass höchstens ~10 Marken entstehen — mehr Beschriftung liefe auf
- * schmalen Flächen ineinander und sagte nichts, was die feineren Marken nicht auch sagen.
+ * Solange die Fläche noch nicht gemessen ist (erste Renderrunde, ResizeObserver feuert direkt
+ * danach), wird mit dieser Annahme geplant statt mit 0 — sonst begänne jede Achse im
+ * Extremschritt und spränge einen Frame später um.
  */
-export const computeHourMarks = (entries: TimelineEntry[]): HourMark[] => {
+export const FALLBACK_CONTAINER_PX = 1024
+
+/**
+ * Die beschrifteten Stundenmarken entlang der Achse — geplant gegen die tatsächlich verfügbare
+ * Breite statt gegen eine bloße Markenanzahl (Zeichenbreiten-Heuristik wie labelFitsWidth):
+ *
+ * 1. **Format:** Volle Uhrzeiten ("08:00") gibt es nur, wenn sie schon im STUNDENRASTER Platz
+ *    hätten — sonst nackte Stunden ("8"). Die Schwelle ist damit keine feste Pixelzahl, sondern
+ *    Pixel je Stunde: unter ~45 px/h (Handy mit üblichem Renntag) wird die Achse einstellig
+ *    beschriftet, wie vom Nutzer gewünscht.
+ * 2. **Schrittweite:** die kleinste aus 1/2/3/4/6/12/24 h, bei der das gewählte Format
+ *    kollisionsfrei nebeneinander passt (Labelbreite + Mindestluft) — lieber weniger Marken
+ *    als überlappende; notfalls bleiben nur Anfang und Ende.
+ */
+export const computeHourMarks = (entries: TimelineEntry[], containerPx: number): HourMarkPlan => {
     const span = timelineSpan(entries)
     if (span == null) {
-        return []
+        return {marks: [], format: 'full', stepHours: 1}
     }
+    const px = containerPx > 0 ? containerPx : FALLBACK_CONTAINER_PX
     const spanMs = span.endMs - span.startMs
-    const hours = spanMs / HOUR_MS
-    const step = [1, 2, 3, 4, 6, 12].find(s => hours / s <= 10) ?? 24
+    const spacingPx = (stepHours: number): number => px * ((stepHours * HOUR_MS) / spanMs)
+    const fits = (stepHours: number, format: HourMarkFormat): boolean =>
+        spacingPx(stepHours) >= axisLabelPx(format) + AXIS_LABEL_GAP_PX
+
+    const format: HourMarkFormat = fits(1, 'full') ? 'full' : 'hour'
+    const steps = [1, 2, 3, 4, 6, 12, 24]
+    const stepHours = steps.find(s => fits(s, format)) ?? 24
+
     const marks: HourMark[] = []
-    for (let timeMs = span.startMs; timeMs <= span.endMs; timeMs += step * HOUR_MS) {
+    for (let timeMs = span.startMs; timeMs <= span.endMs; timeMs += stepHours * HOUR_MS) {
         marks.push({percent: ((timeMs - span.startMs) / spanMs) * 100, timeMs})
     }
-    return marks
+    return {marks, format, stepHours}
+}
+
+/**
+ * Wie ein Achsenlabel an seiner Marke verankert wird: mittig, außer ein mittiges Label ragte
+ * links oder rechts aus der Fläche — dann klappt es nach innen ('start' am linken, 'end' am
+ * rechten Rand). Pixelgenau statt fester Prozent-Schwellen, damit auf schmalen Flächen auch
+ * Marken NAHE dem Rand (nicht nur exakt darauf) nicht angeschnitten werden.
+ */
+export const axisLabelAnchor = (
+    percent: number,
+    labelPx: number,
+    containerPx: number,
+): 'start' | 'center' | 'end' => {
+    const px = containerPx > 0 ? containerPx : FALLBACK_CONTAINER_PX
+    const center = (percent / 100) * px
+    if (center - labelPx / 2 < 0) {
+        return 'start'
+    }
+    if (center + labelPx / 2 > px) {
+        return 'end'
+    }
+    return 'center'
+}
+
+/**
+ * Verdeckt das Jetzt-Label ein Stundenlabel? In Pixeln gerechnet (halbe Breiten beider Labels
+ * plus halbe Mindestluft, Näherung über die Label-Mitten): "jetzt ist 22:06" gewinnt immer
+ * gegen die Stundenmarke daneben — auf schmalen Flächen entfallen so auch Nachbarn, die bei
+ * einer festen Prozent-Schwelle stehen blieben und hineinliefen.
+ */
+export const nowLabelHidesHourLabel = (
+    markPercent: number,
+    nowPercent: number,
+    markLabelPx: number,
+    containerPx: number,
+): boolean => {
+    const px = containerPx > 0 ? containerPx : FALLBACK_CONTAINER_PX
+    const distancePx = (Math.abs(markPercent - nowPercent) / 100) * px
+    return distancePx < (markLabelPx + NOW_LABEL_PX) / 2 + AXIS_LABEL_GAP_PX / 2
 }
 
 /**
