@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest'
-import {formatPlaceOrdinal} from './placeOrdinal'
+import {formatPlaceOrdinal, placeOrdinalParts} from './placeOrdinal'
 
 describe('formatPlaceOrdinal', () => {
     test('die drei Sonder-Suffixe', () => {
@@ -21,5 +21,24 @@ describe('formatPlaceOrdinal', () => {
         expect(formatPlaceOrdinal(22)).toBe('22nd')
         expect(formatPlaceOrdinal(23)).toBe('23rd')
         expect(formatPlaceOrdinal(111)).toBe('111th')
+    })
+})
+
+describe('placeOrdinalParts', () => {
+    // Dieselbe Suffix-Logik wie formatPlaceOrdinal, nur getrennt — für das
+    // hochgestellte Suffix in der großen Platz-Typografie.
+    test('trennt Ziffer und Suffix', () => {
+        expect(placeOrdinalParts(1)).toEqual({number: '1', suffix: 'st'})
+        expect(placeOrdinalParts(2)).toEqual({number: '2', suffix: 'nd'})
+        expect(placeOrdinalParts(3)).toEqual({number: '3', suffix: 'rd'})
+        expect(placeOrdinalParts(12)).toEqual({number: '12', suffix: 'th'})
+        expect(placeOrdinalParts(21)).toEqual({number: '21', suffix: 'st'})
+    })
+
+    test('bleibt deckungsgleich mit dem Text-Formatter', () => {
+        for (const place of [1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 111]) {
+            const parts = placeOrdinalParts(place)
+            expect(`${parts.number}${parts.suffix}`).toBe(formatPlaceOrdinal(place))
+        }
     })
 })

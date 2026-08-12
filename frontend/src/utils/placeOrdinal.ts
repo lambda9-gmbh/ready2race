@@ -7,18 +7,31 @@
  * Platzierung lesbar, während eine nackte Zahl von der Startnummer nicht zu
  * unterscheiden ist. Geteilt von Boards, Sprecher-Kachel und Mein-Event-Ansicht.
  */
-export const formatPlaceOrdinal = (place: number): string => {
+const ordinalSuffix = (place: number): string => {
     // 11–13 sind die englischen Ausnahmen: immer „th", egal welche Endziffer.
     const mod100 = Math.abs(place) % 100
-    if (mod100 >= 11 && mod100 <= 13) return `${place}th`
+    if (mod100 >= 11 && mod100 <= 13) return 'th'
     switch (Math.abs(place) % 10) {
         case 1:
-            return `${place}st`
+            return 'st'
         case 2:
-            return `${place}nd`
+            return 'nd'
         case 3:
-            return `${place}rd`
+            return 'rd'
         default:
-            return `${place}th`
+            return 'th'
     }
 }
+
+/** Als ein Textstück — für einzeilige Labels und Tooltips. */
+export const formatPlaceOrdinal = (place: number): string => `${place}${ordinalSuffix(place)}`
+
+/**
+ * Ziffer und Suffix getrennt — für die große Platz-Typografie, die das Suffix klein
+ * hochstellt (PlaceOrdinal-Komponente; Nutzer-Feedback vom 12.08.2026: „1st" in voller
+ * Größe wirkt klobig).
+ */
+export const placeOrdinalParts = (place: number): {number: string; suffix: string} => ({
+    number: `${place}`,
+    suffix: ordinalSuffix(place),
+})

@@ -20,7 +20,7 @@ import {
     scaled,
     sortRunningTeams,
 } from './common'
-import {formatPlaceOrdinal} from '@utils/placeOrdinal'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 
 /**
  * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits in der Arena,
@@ -385,9 +385,21 @@ const AthleteBoardMatchCard = ({
                                                 team.failed
                                                     ? (team.failedReason ??
                                                       t('event.info.athleteBoard.failed'))
-                                                    // Als Ordnungszahl, damit der Zwischenstand
-                                                    // nicht wie eine zweite Startnummer liest.
-                                                    : `${team.place != null ? `${formatPlaceOrdinal(team.place)} ` : ''}${team.timeString}`
+                                                    // Als Ordnungszahl (Suffix hochgestellt), damit
+                                                    // der Zwischenstand nicht wie eine zweite
+                                                    // Startnummer liest.
+                                                    : (
+                                                          <>
+                                                              {team.place != null && (
+                                                                  <>
+                                                                      <PlaceOrdinal
+                                                                          place={team.place}
+                                                                      />{' '}
+                                                                  </>
+                                                              )}
+                                                              {team.timeString}
+                                                          </>
+                                                      )
                                             }
                                         />
                                         <AthleteBoardPenaltyNote

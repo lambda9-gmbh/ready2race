@@ -1,3 +1,4 @@
+import {ReactNode} from 'react'
 import {Box, Chip, Stack, Typography} from '@mui/material'
 import {
     CheckCircle as CheckCircleIcon,
@@ -20,6 +21,7 @@ import {
     teamLabel,
 } from '../info/athleteBoard/common'
 import {byeExplanation} from '@components/event/match/matchBye.ts'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {formatPlaceOrdinal} from '@utils/placeOrdinal'
 import {elementScale, slotForElement} from './boardView'
 
@@ -153,7 +155,7 @@ const BoardMatchDetailElement = ({
         key: string,
         startNumber: number,
         team: AthleteBoardTeam | AthleteBoardResultTeam,
-        trailing: {label: string | null; muted: boolean},
+        trailing: {label: ReactNode; muted: boolean},
         subline: string | null,
         participants: AthleteBoardParticipant[],
         laps: string | null,
@@ -243,9 +245,16 @@ const BoardMatchDetailElement = ({
                       // Platz oft vor der übertragenen Zeit an und soll nicht darauf warten.
                       label: team.failed
                           ? (team.failedReason ?? t('event.info.athleteBoard.failed'))
-                          : team.place != null || team.timeString
-                            ? `${team.place != null ? `${formatPlaceOrdinal(team.place)} ` : ''}${team.timeString ?? ''}`.trim()
-                            : null,
+                          : team.place != null || team.timeString ? (
+                                <>
+                                    {team.place != null && (
+                                        <>
+                                            <PlaceOrdinal place={team.place} />{' '}
+                                        </>
+                                    )}
+                                    {team.timeString ?? ''}
+                                </>
+                            ) : null,
                       muted: team.failed,
                   },
                   team.registeringClub
@@ -270,8 +279,16 @@ const BoardMatchDetailElement = ({
                               : t('event.info.athleteBoard.deregistered')
                           : team.failed
                             ? (team.failedReason ?? t('event.info.athleteBoard.failed'))
-                            : `${team.place != null ? `${formatPlaceOrdinal(team.place)} ` : ''}${team.timeString ?? ''}`.trim() ||
-                              null,
+                            : team.place != null || team.timeString ? (
+                                <>
+                                    {team.place != null && (
+                                        <>
+                                            <PlaceOrdinal place={team.place} />{' '}
+                                        </>
+                                    )}
+                                    {team.timeString ?? ''}
+                                </>
+                            ) : null,
                       muted: team.failed || team.deregistered,
                   },
                   team.ratingCategory

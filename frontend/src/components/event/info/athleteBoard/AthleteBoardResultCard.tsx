@@ -13,7 +13,7 @@ import {
     BoatListRow,
 } from './AthleteBoardBoatRow'
 import {formatClockTime, scaled} from './common'
-import {formatPlaceOrdinal} from '@utils/placeOrdinal'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 
 interface AthleteBoardResultCardProps {
@@ -141,9 +141,11 @@ const AthleteBoardResultCard = ({
                                 // 12.08.2026): die zwischenzeitlich nackte Zahl war von einer
                                 // Startnummer nicht zu unterscheiden.
                                 leadNumber={
-                                    team.categoryPlace != null
-                                        ? formatPlaceOrdinal(team.categoryPlace)
-                                        : '–'
+                                    team.categoryPlace != null ? (
+                                        <PlaceOrdinal place={team.categoryPlace} />
+                                    ) : (
+                                        '–'
+                                    )
                                 }
                                 trailing={
                                     // Ohne Zeiten bleibt die rechte Spalte den Booten
