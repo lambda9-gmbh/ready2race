@@ -66,11 +66,12 @@ const UserProvider = ({children}: PropsWithChildren) => {
             if (res.status === 401 && userData.authStatus === 'authenticated') {
                 const isInApp = router.state.resolvedLocation.pathname.startsWith('/app')
                 await logout(isInApp)
-            } else if (res.ok && router.state.resolvedLocation.pathname.startsWith('/app')) {
-                // Nur aus der Helfer-App heraus: Sonst hielte jede Nutzung der
-                // Verwaltungsoberfläche im selben Browserprofil einen abgelegten Helfer-Token
-                // unbegrenzt am Leben, und die Sechs-Stunden-Grenze - die Abfederung für die
-                // Ablage auf dem Gerät - liefe ins Leere.
+            } else if (res.ok) {
+                // Beide Sitzungen liegen inzwischen mit Gleitfrist in localStorage, also schiebt
+                // jede erfolgreiche Antwort beide Fristen nach vorn - auch die der jeweils
+                // anderen Oberfläche im selben Browserprofil. Deren Frist kann dadurch dem
+                // Server vorauslaufen; das kostet aber nur den 401-Umweg, den die Frist sonst
+                // spart: Über die Gültigkeit entscheidet weiterhin allein der Server.
                 touchSessionToken()
             }
             return res
