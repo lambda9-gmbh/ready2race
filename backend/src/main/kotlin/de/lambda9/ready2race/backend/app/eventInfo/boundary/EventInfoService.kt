@@ -38,7 +38,13 @@ object EventInfoService {
     // getShowBreaksOnPublicBoards und EventScheduleRepo.getSlots. Der Schlüssel trägt [limit]
     // mit, weil verschiedene Aufrufer (künftig oder heute schon mit abweichender Seitengröße)
     // sonst den falsch bemessenen Stand eines anderen bekämen.
-    private data class CachedLiveMatches(val builtAt: LocalDateTime, val dto: ApiResponse.Dto<LiveMatchesDto>)
+    // [marker] ist der [EventChangeMarker]-Stand beim Bau: jede Schreibaktion an der
+    // Veranstaltung entwertet den Eintrag sofort, die TTL deckelt nur den Nichts-passiert-Fall.
+    private data class CachedLiveMatches(
+        val builtAt: LocalDateTime,
+        val marker: Long,
+        val dto: ApiResponse.Dto<LiveMatchesDto>,
+    )
 
     private val liveMatchesCache = ConcurrentHashMap<Pair<UUID, Int>, CachedLiveMatches>()
 
@@ -417,10 +423,14 @@ object EventInfoService {
         val now = LocalDateTime.now()
         val key = eventId to limit
 
+        // Markerstand VOR dem Bau lesen (siehe BoardService.getBoardView): ein Schreibzugriff
+        // mitten im Bau macht den Eintrag dann sofort wieder alt statt ihn TTL-lang zu halten.
+        val marker = EventChangeMarker.current(eventId)
+
         // Anders als beim Athleten-Board gibt es hier kein je Antwort frisches Feld wie
         // serverTime - der zwischengespeicherte Stand kann unverändert zurückgehen.
         val cached = liveMatchesCache[key]
-            ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
+            ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) && it.marker == marker }
 
         if (cached != null) {
             KIO.ok(cached.dto)
@@ -432,7 +442,8 @@ object EventInfoService {
             val activated = !getRunningMatches(eventId, limit, clubShortNames)
             val upcoming = !getUpcomingMatchesForBoard(eventId, limit, clubShortNames)
 
-            // Der Hinweis liegt mit im Zwischenspeicher - Änderung sichtbar nach TTL + Poll-Takt.
+            // Der Hinweis liegt mit im Zwischenspeicher - sein PUT bumpt den EventChangeMarker,
+            // die Änderung kommt also mit dem nächsten Poll.
             val notice = !EventRepo.getNotice(eventId).orDie()
 
             val dto = ApiResponse.Dto(
@@ -448,7 +459,7 @@ object EventInfoService {
 
             // Laufen mehrere Abrufe gleichzeitig in dieses Fenster, rechnen sie doppelt und der
             // letzte gewinnt - bei Millisekunden Rechenzeit je Eintrag kein Grund für ein Lock.
-            liveMatchesCache[key] = CachedLiveMatches(now, dto)
+            liveMatchesCache[key] = CachedLiveMatches(now, marker, dto)
 
             KIO.ok(dto)
         }

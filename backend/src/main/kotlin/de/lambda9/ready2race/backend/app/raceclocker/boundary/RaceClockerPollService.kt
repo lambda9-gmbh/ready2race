@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.entity.Competition
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchWithTeams
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollLogic.PollMode
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerFeed
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
@@ -261,6 +262,7 @@ object RaceClockerPollService {
         }
 
         var anyRunning = false
+        var anyWrote = false
         resolved.forEach { entry ->
             // Defekt-Vorgabe ist Failed, nicht NotInFeed: NotInFeed heißt „vor dem Start normal"
             // und würde einen Defekt als gesunden Abruf durchgehen lassen.
@@ -278,10 +280,19 @@ object RaceClockerPollService {
             // Der schnelle Takt hängt an der Aktivierung, nicht am Ist-Start: Ein Lauf am Start ist
             // genau der, dessen Startmeldung so früh wie möglich ankommen soll.
             anyRunning = anyRunning || entry.candidate.activatedAt != null || outcome.activated
+            anyWrote = anyWrote || outcome.wrote
 
             runIsolated(entry.candidate.matchId, Unit) {
                 RaceClockerPollRepo.recordPoll(entry.candidate.matchId, now, outcome.errorCode).orDie().map { }
             }
+        }
+
+        // Ein Bump je Takt reicht - die Veranstaltung ist hier ohnehin bekannt, keine Extra-Query.
+        // Die Abruf-Stempel (recordPoll) bumpen bewusst NICHT: sie beschreiben den Job, nicht den
+        // Lauf, und kein öffentliches Board zeigt sie - sonst wären die Zwischenspeicher bei
+        // laufender Automatik in jedem Takt kalt, obwohl sich an den Anzeigen nichts geändert hat.
+        if (anyWrote) {
+            EventChangeMarker.bump(event.eventId)
         }
 
         // Der Takt wird erst hier bestimmt, nicht aus der Momentaufnahme von oben: In der Schleife
@@ -327,6 +338,13 @@ object RaceClockerPollService {
         val errorCode: String? = null,
         /** Ob dieser Takt den Lauf aktiviert hat - er zählt dann schon als laufend. */
         val activated: Boolean = false,
+        /**
+         * Ob dieser Takt am Lauf etwas geschrieben hat, das die öffentlichen Anzeigen zeigen
+         * (Aktivierung, Ist-Start, Rückzug, Ergebnisse). Grundlage für den
+         * [EventChangeMarker]-Bump in [pollEvent] - im Ruhezustand (Fingerabdruck unverändert)
+         * bleibt es false, damit die Zwischenspeicher der Anzeigen warm bleiben.
+         */
+        val wrote: Boolean = false,
     )
 
     /**
@@ -393,7 +411,7 @@ object RaceClockerPollService {
                 updatedAt = now
             }.orDie()
             logger.info { "RaceClocker meldet den Start von Lauf ${candidate.matchId} - Lauf aktiviert." }
-            return@comprehension KIO.ok(MatchOutcome(activated = true))
+            return@comprehension KIO.ok(MatchOutcome(activated = true, wrote = true))
         }
 
         // Aktiviert, aber noch ohne Ist-Start: Der Lauf wurde von Hand oder von der Kette an den
@@ -412,6 +430,10 @@ object RaceClockerPollService {
             existingStartedAt = candidate.startedAt,
             now = now,
         )
+        // Sammelt die Schreibvorgänge VOR der Fingerabdruck-Abkürzung (Ist-Start, Rückzug) —
+        // auch sie müssen die Zwischenspeicher der Anzeigen entwerten, obwohl der Takt danach
+        // womöglich in die Abkürzung läuft.
+        var wroteStamp = false
         if (measuredStart != null) {
             !CompetitionMatchRepo.update(candidate.matchId) {
                 startedAt = measuredStart
@@ -419,6 +441,7 @@ object RaceClockerPollService {
                 updatedAt = now
             }.orDie()
             logger.info { "RaceClocker meldet den Ist-Start von Lauf ${candidate.matchId}." }
+            wroteStamp = true
         }
 
         // Die Gegenrichtung zum Stempel darüber, und aus demselben Grund VOR der
@@ -429,17 +452,20 @@ object RaceClockerPollService {
         // Reset-Pfad würde nie wieder gerufen, und der Lauf stünde dauerhaft auf „Läuft", obwohl
         // RaceClocker ihn längst zurückgezogen hat. Was als Rückzug zählt (und was ausdrücklich
         // nicht), entscheidet [RaceClockerPollLogic.startRetracted].
-        !retractStartIfWithdrawn(
+        val retracted = !retractStartIfWithdrawn(
             matchId = candidate.matchId,
             startedAt = candidate.startedAt,
             assigned = assigned,
             teams = entry.teams,
             now = now,
         )
+        wroteStamp = wroteStamp || retracted
 
         // Unverändert seit dem letzten Abruf: nichts schreiben.
         val fingerprint = RaceClockerPollLogic.fingerprint(assigned)
-        if (fingerprints[candidate.matchId] == fingerprint) return@comprehension KIO.ok(MatchOutcome())
+        if (fingerprints[candidate.matchId] == fingerprint) {
+            return@comprehension KIO.ok(MatchOutcome(wrote = wroteStamp))
+        }
 
         // `transact()`, weil der Job im Gegensatz zum Endpunkt keine mitgebrachte Transaktion hat:
         // `respondKIO` legt eine um den ganzen Aufruf, hier läuft jedes `!` für sich. Ohne die
@@ -461,13 +487,13 @@ object RaceClockerPollService {
 
             CompetitionExecutionService
                 .applyRaceClockerRows(match, candidate.matchId, candidate.target, rows, SYSTEM_USER)
-                .map { WriteOutcome(rememberFingerprint = true) }
+                .map { WriteOutcome(rememberFingerprint = true, wrote = true) }
         }.transact().recoverDefault { error -> failedWrite(candidate.matchId, error) }
 
         if (write.rememberFingerprint) {
             fingerprints[candidate.matchId] = fingerprint
         }
-        KIO.ok(MatchOutcome(errorCode = write.errorCode))
+        KIO.ok(MatchOutcome(errorCode = write.errorCode, wrote = wroteStamp || write.wrote))
     }
 
     /**
@@ -513,8 +539,13 @@ object RaceClockerPollService {
         /**
          * Ob der Fingerabdruck jetzt den Stand in der Datenbank beschreibt. Nur dann darf er
          * gemerkt werden - sonst überspränge der nächste Takt eine Änderung, die nie ankam.
+         *
+         * Bewusst getrennt von [wrote]: der tote NoResults-Zweig in [failedWrite] merkt den
+         * Fingerabdruck, obwohl die Transaktion zurückgerollt ist - er darf keinen Bump auslösen.
          */
         val rememberFingerprint: Boolean,
+        /** Ob die Transaktion tatsächlich etwas geschrieben hat (Bahnen, Zeiten, Plätze). */
+        val wrote: Boolean = false,
     )
 
     /**
