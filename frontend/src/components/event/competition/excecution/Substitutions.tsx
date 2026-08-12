@@ -16,7 +16,10 @@ import {
     useTheme,
 } from '@mui/material'
 import {CompetitionRoundDto, SubstitutionDto, SubstitutionParticipantDto} from '@api/types.gen.ts'
-import {competitionRoute, eventRoute} from '@routes'
+import {
+    CompetitionScopeProps,
+    useCompetitionScope,
+} from '@components/event/competition/excecution/competitionScope.ts'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {addSubstitution, deleteSubstitution, getPossibleSubOuts} from '@api/sdk.gen.ts'
 import {Fragment, useState} from 'react'
@@ -55,7 +58,7 @@ export type ParticipantOptionGroup = {
     }[]
 }
 
-type Props = {
+type Props = CompetitionScopeProps & {
     reloadRoundDto: () => void
     roundDto: CompetitionRoundDto
     roundIndex: number
@@ -66,14 +69,13 @@ type Form = {
     participantOut: string
     reason: string
 }
-const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
+const Substitutions = ({reloadRoundDto, roundDto, roundIndex, ...scope}: Props) => {
     const feedback = useFeedback()
     const {t} = useTranslation()
     const theme = useTheme()
     const user = useUser()
 
-    const {eventId} = eventRoute.useParams()
-    const {competitionId} = competitionRoute.useParams()
+    const {eventId, competitionId} = useCompetitionScope(scope)
 
     const {confirmAction} = useConfirmation()
 
@@ -389,6 +391,8 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                         </FormInputLabel>
                                         {participantOutValue && (
                                             <SubstitutionSelectParticipantIn
+                                                eventId={eventId}
+                                                competitionId={competitionId}
                                                 setupRoundId={roundDto.setupRoundId}
                                                 selectedParticipantOut={participantOutValue}
                                             />

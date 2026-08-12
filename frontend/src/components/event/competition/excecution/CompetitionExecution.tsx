@@ -34,7 +34,6 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material'
-import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {Trans, useTranslation} from 'react-i18next'
 import {BaseSyntheticEvent, Fragment, useEffect, useMemo, useRef, useState} from 'react'
@@ -95,6 +94,10 @@ import {
     refreshIntervalMs,
     syncStatus,
 } from '@components/event/competition/excecution/autoRefresh.ts'
+import {
+    CompetitionScopeProps,
+    useCompetitionScope,
+} from '@components/event/competition/excecution/competitionScope.ts'
 
 type EnterResultsTeam = {
     registrationId: string
@@ -118,7 +121,7 @@ const statusLabelKeys = {
     DSQ: 'event.competition.execution.results.status.DSQ',
 } as const satisfies Record<MatchResultStatus, string>
 
-type Props = {
+type Props = CompetitionScopeProps & {
     /**
      * Der automatische Abgleich, wie ihn die Veranstaltung vorgibt. Als Prop und nicht als eigener
      * Abruf: Die Seite über dieser hier hat die Veranstaltung ohnehin schon geladen, und eine
@@ -127,7 +130,7 @@ type Props = {
     autoRefresh: AutoRefreshConfig
 }
 
-const CompetitionExecution = ({autoRefresh}: Props) => {
+const CompetitionExecution = ({autoRefresh, ...scope}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const theme = useTheme()
@@ -136,8 +139,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
 
     const smallScreenLayout = useMediaQuery(`(max-width:${theme.breakpoints.values.md}px)`)
 
-    const {eventId} = eventRoute.useParams()
-    const {competitionId} = competitionRoute.useParams()
+    const {eventId, competitionId} = useCompetitionScope(scope)
 
     const [submitting, setSubmitting] = useState(false)
 
@@ -846,7 +848,7 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                     {t(
                         'event.competition.execution.nextRound.reasons.registrationsNotFinalized.textStart',
                     )}
-                    <InlineLink to={'/event/$eventId'} search={{tab: 'registrations'}}>
+                    <InlineLink to={'/event/$eventId'} params={{eventId}} search={{tab: 'registrations'}}>
                         {t(
                             'event.competition.execution.nextRound.reasons.registrationsNotFinalized.link',
                         )}
@@ -933,7 +935,12 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                             {t(`event.competition.timing.incomplete.${warning}`)}
                         </Typography>
                     ))}
-                    <InlineLink from={competitionIndexRoute.fullPath} search={{tab: 'timing'}}>
+                    {/* Absolut statt relativ zur Wettkampf-Route: eingebettet im Zeitplan-Tab
+                        (Veranstaltungs-Modus) gibt es kein `from`, das hier passen würde. */}
+                    <InlineLink
+                        to={'/event/$eventId/competition/$competitionId'}
+                        params={{eventId, competitionId}}
+                        search={{tab: 'timing'}}>
                         <Trans i18nKey={'event.competition.timing.incomplete.link'} />
                     </InlineLink>
                 </Alert>
@@ -982,13 +989,15 @@ const CompetitionExecution = ({autoRefresh}: Props) => {
                             </HtmlTooltip>
                         )}
                     </Box>
-                    <RoundProgressionSetting />
+                    <RoundProgressionSetting eventId={eventId} competitionId={competitionId} />
                 </Box>
             )}
             <Stack spacing={6}>
                 {sortedRounds.map((round, roundIndex) => (
                     <CompetitionExecutionRound
                         key={round.setupRoundId}
+                        eventId={eventId}
+                        competitionId={competitionId}
                         round={round}
                         roundIndex={roundIndex}
                         filteredMatches={raceableMatches(round)}

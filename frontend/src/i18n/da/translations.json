@@ -1949,6 +1949,15 @@
       },
       "allPlanned": "Alle planlagte løb er allerede indsat.",
       "goToExecution": "Til gennemførelse",
+      "eventMode": {
+        "enable": "Slå arrangement-tilstand til: tidsplan og gennemførelse side om side",
+        "disable": "Slå arrangement-tilstand fra",
+        "tooSmall": "Arrangement-tilstand kræver en bred skærm — dette vindue er for smalt til det.",
+        "loadHint": "Indlæser gennemførelsen ved siden af tidsplanen. Enhedsindstillingen “Åbn i nyt vindue” gælder ikke i arrangement-tilstand.",
+        "close": "Luk gennemførelsen",
+        "empty": "Vælg et løb — dets gennemførelse vises her ved siden af tidsplanen.",
+        "execution": "Gennemførelse"
+      },
       "indicator": {
         "now": "Nu",
         "state": {

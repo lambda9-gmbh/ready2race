@@ -12,6 +12,12 @@ import {useCallback, useEffect, useState} from 'react'
 
 /** Öffnet der Sprung „Zur Durchführung" aus dem Zeitplan in einem neuen Fenster? */
 export const EXECUTION_NEW_TAB_KEY = 'schedule_execution_new_tab'
+/**
+ * Veranstaltungs-Modus des Zeitplan-Tabs: Zeitplan und Durchführung nebeneinander statt des
+ * Sprungs auf die Wettkampf-Seite. Geräte-lokal, weil die Wahl am Arbeitsplatz hängt — der
+ * Leitstand-Rechner im Regattabüro arbeitet so, das Tablet am Steg nicht.
+ */
+export const SCHEDULE_EVENT_MODE_KEY = 'schedule_event_mode'
 /** Kompakte Darstellung des Schiedsrichter-Boards (dichtere Karten, kleinere Schrift). */
 export const DASHBOARD_COMPACT_KEY = 'live_dashboard_compact'
 

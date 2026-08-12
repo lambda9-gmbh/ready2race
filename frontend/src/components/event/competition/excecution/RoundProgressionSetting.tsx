@@ -2,8 +2,11 @@ import {Box, Stack, Typography} from '@mui/material'
 import {FormContainer, useForm, useWatch} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useState} from 'react'
-import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {
+    CompetitionScopeProps,
+    useCompetitionScope,
+} from '@components/event/competition/excecution/competitionScope.ts'
 import {getRoundProgressionConfig, updateRoundProgressionConfig} from '@api/sdk.gen.ts'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
@@ -36,12 +39,11 @@ const choiceLabelKeys = {
  * mitziehen, ohne auf Speichern zu warten; dafür wird `effectiveFromChoice` auf die aktuelle
  * Formularauswahl angewandt statt auf den geladenen Wert.
  */
-const RoundProgressionSetting = () => {
+const RoundProgressionSetting = (scope: CompetitionScopeProps) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const {eventId} = eventRoute.useParams()
-    const {competitionId} = competitionRoute.useParams()
+    const {eventId, competitionId} = useCompetitionScope(scope)
 
     const [submitting, setSubmitting] = useState(false)
     const [eventDefault, setEventDefault] = useState(false)
