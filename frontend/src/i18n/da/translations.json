@@ -1951,7 +1951,8 @@
           "linked": "Tilknyttet",
           "waiting": "Løb ikke sat endnu",
           "free": "Programpunkt",
-          "skipped": "Sprunget over"
+          "skipped": "Sprunget over",
+          "bye": "Oversidder"
         }
       },
       "error": {

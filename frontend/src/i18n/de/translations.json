@@ -1957,7 +1957,8 @@
           "linked": "Verknüpft",
           "waiting": "Lauf noch nicht gesetzt",
           "free": "Programmpunkt",
-          "skipped": "Übersprungen"
+          "skipped": "Übersprungen",
+          "bye": "Freilos"
         }
       },
       "error": {

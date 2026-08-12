@@ -10,6 +10,7 @@ import {
     resolveDashboardDay,
     scheduleSlotsToEntries,
     scheduleSlotState,
+    timelineEntryAppearance,
     timelineSpan,
 } from './timelineIndicator.ts'
 
@@ -195,6 +196,88 @@ describe('resolveDashboardDay', () => {
     it('falls back to today when there is nothing running or upcoming', () => {
         const day = resolveDashboardDay([], [], new Date('2026-08-20T00:00:00'))
         expect(day).toBe('2026-08-20')
+    })
+})
+
+describe('timelineEntryAppearance', () => {
+    it('carries the same color semantics as the status chips', () => {
+        // matchStatusChip: beendet = success, läuft = primary, in Vorbereitung = info,
+        // wartet auf Beenden = warning — der Balken darf nichts anderes behaupten.
+        expect(timelineEntryAppearance('finished')).toMatchObject({
+            color: 'success',
+            variant: 'filled',
+            muted: true,
+        })
+        expect(timelineEntryAppearance('running')).toMatchObject({color: 'primary', muted: false})
+        expect(timelineEntryAppearance('preparing')).toMatchObject({color: 'info'})
+        expect(timelineEntryAppearance('awaitingFinish')).toMatchObject({color: 'warning'})
+    })
+
+    it('draws pending entries as outlines, dashed while the race is not set yet', () => {
+        expect(timelineEntryAppearance('linked')).toMatchObject({
+            variant: 'outlined',
+            dashed: false,
+        })
+        expect(timelineEntryAppearance('waiting')).toMatchObject({
+            variant: 'outlined',
+            dashed: true,
+        })
+    })
+
+    it('strikes cancelled entries through and keeps them muted, like the cancelled chip', () => {
+        expect(timelineEntryAppearance('skipped')).toMatchObject({
+            strikeThrough: true,
+            muted: true,
+            color: 'default',
+        })
+    })
+
+    it('hatches program items - nobody races there', () => {
+        expect(timelineEntryAppearance('free')).toMatchObject({hatched: true, color: 'default'})
+    })
+
+    it('hatches byes and mirrors the bye chip colors: open = info, acknowledged = success, cancelled = struck', () => {
+        expect(timelineEntryAppearance('linked', true)).toMatchObject({
+            hatched: true,
+            color: 'info',
+        })
+        expect(timelineEntryAppearance('finished', true)).toMatchObject({
+            hatched: true,
+            color: 'success',
+            muted: true,
+        })
+        expect(timelineEntryAppearance('skipped', true)).toMatchObject({
+            hatched: true,
+            strikeThrough: true,
+        })
+    })
+
+    it('lets an activated or running bye look like any other race - what happens beats the bye', () => {
+        expect(timelineEntryAppearance('running', true)).toMatchObject({
+            hatched: false,
+            color: 'primary',
+        })
+        expect(timelineEntryAppearance('preparing', true)).toMatchObject({
+            hatched: false,
+            color: 'info',
+        })
+    })
+})
+
+describe('bye flag on entries', () => {
+    it('marks non-racing byes from schedule slots and dashboard matches, but not must-race byes', () => {
+        const bye = {cause: 'DEREGISTERED', mustRace: false} as const
+        const mustRace = {cause: 'DEREGISTERED', mustRace: true} as const
+        expect(scheduleSlotsToEntries([slot('2026-08-17T08:00:00', {bye})])[0].bye).toBe(true)
+        expect(scheduleSlotsToEntries([slot('2026-08-17T08:00:00', {bye: mustRace})])[0].bye).toBe(
+            false,
+        )
+        const entries = dashboardEntriesForDay(
+            [match({bye}), match({bye: mustRace})],
+            [],
+            '2026-08-17',
+        )
+        expect(entries.map(e => e.bye)).toEqual([true, false])
     })
 })
 

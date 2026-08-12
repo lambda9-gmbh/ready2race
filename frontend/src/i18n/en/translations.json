@@ -1961,7 +1961,8 @@
           "linked": "Linked",
           "waiting": "Race not set yet",
           "free": "Program item",
-          "skipped": "Skipped"
+          "skipped": "Skipped",
+          "bye": "Bye"
         }
       },
       "error": {

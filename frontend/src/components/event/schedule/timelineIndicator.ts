@@ -2,6 +2,7 @@ import {format} from 'date-fns'
 import {EventScheduleSlotDto, LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {slotLabel} from './common.ts'
 import {isLiveMatch, pendingSlotLabel} from '@components/event/liveDashboard/common.ts'
+import {ChipColor} from '@components/event/match/matchStatusChip.ts'
 
 /**
  * Generic, display-only state a timeline segment can be in - independent of whether it came from
@@ -27,6 +28,12 @@ export type TimelineEntry = {
     state: TimelineEntryState
     label: string
     durationMinutes?: number | null
+    /**
+     * Freilos, das nicht gefahren wird (`mustRace` gefahrene Freilose zählen NICHT — sie sind
+     * echte Läufe, siehe matchStatusChip): bekommt auf dem Balken die Schraffur, weil hier
+     * niemand auf ein Ergebnis wartet.
+     */
+    bye?: boolean
 }
 
 export type PositionedTimelineEntry = TimelineEntry & {
@@ -82,6 +89,7 @@ export const scheduleSlotsToEntries = (slots: EventScheduleSlotDto[]): TimelineE
         state: scheduleSlotState(slot),
         label: slotLabel(slot),
         durationMinutes: slot.durationMinutes,
+        bye: slot.bye != null && !slot.bye.mustRace,
     }))
 
 // ---- Referee dashboard: LiveDashboardMatchDto + PendingSlotDto --------------------------------
@@ -133,6 +141,7 @@ export const dashboardEntriesForDay = (
             startTime: m.startTime,
             state: dashboardMatchState(m),
             label: m.matchName ?? m.roundName ?? m.competitionName,
+            bye: m.bye != null && !m.bye.mustRace,
         }))
     const slotEntries: TimelineEntry[] = pendingSlots
         .filter(s => dayOf(s.startTime) === day)
@@ -170,6 +179,84 @@ export const resolveDashboardDay = (
         return dayOf(upcoming)
     }
     return format(now, 'yyyy-MM-dd')
+}
+
+// ---- Aussehen der Segmente ----------------------------------------------------------------------
+
+/**
+ * Wie ein Segment gezeichnet wird — als Datensatz statt als Farbe, nach demselben Muster wie
+ * {@link MatchChip}: die Komponente übersetzt [color] über die Theme-Palette und malt. So trägt
+ * der Balken exakt dieselbe Farbsemantik wie die Status-Chips daneben, auf beiden Flächen
+ * (Zeitplan-Tab und Schiedsrichter-Dashboard rendern dieselbe Komponente).
+ */
+export type TimelineAppearance = {
+    /** Farbfamilie mit der Bedeutung der Status-Chips (matchStatusChip): primary = läuft usw. */
+    color: ChipColor
+    /** Anstehendes wird als Umriss gezeichnet, Geschehenes/Geschehendes gefüllt. */
+    variant: 'filled' | 'outlined'
+    /** Gestrichelter Umriss: der Lauf ist noch gar nicht gesetzt (Runde nicht materialisiert). */
+    dashed: boolean
+    /** Gedämpfte Füllung: erledigt bzw. entfallen — Vergangenes soll nicht mehr leuchten. */
+    muted: boolean
+    /** Nur „Abgesagt/Übersprungen": bleibt sichtbar, gilt aber nicht mehr (wie beim Chip). */
+    strikeThrough: boolean
+    /** Schraffur: hier fährt niemand — Programmpunkte und (nicht gefahrene) Freilose. */
+    hatched: boolean
+}
+
+const appearance = (over: Partial<TimelineAppearance>): TimelineAppearance => ({
+    color: 'default',
+    variant: 'filled',
+    dashed: false,
+    muted: false,
+    strikeThrough: false,
+    hatched: false,
+    ...over,
+})
+
+/**
+ * Die Farb-/Muster-Entscheidung für ein Segment, deckungsgleich mit `matchStatusChip`:
+ * beendet = success (gedämpft), läuft = primary, in Vorbereitung = info, wartet auf Beenden =
+ * warning, anstehend = Umriss, abgesagt = durchgestrichen. Freilos und Programmpunkt tragen
+ * zusätzlich die Schraffur — dort wartet niemand auf ein Ergebnis.
+ *
+ * Die Freilos-Vorrangregel ist ebenfalls die des Chips: Was tatsächlich passiert, schlägt das
+ * Freilos — ein aktiviertes/fahrendes Freilos sieht aus wie jeder andere Lauf. Ein quittiertes
+ * bleibt gedämpft-grün (wie „Freilos · quittiert"), ein entfallenes durchgestrichen, ein offenes
+ * info-blau (wie „Freilos · offen").
+ */
+export const timelineEntryAppearance = (
+    state: TimelineEntryState,
+    bye = false,
+): TimelineAppearance => {
+    if (bye && state !== 'running' && state !== 'preparing') {
+        if (state === 'finished') {
+            return appearance({color: 'success', muted: true, hatched: true})
+        }
+        if (state === 'skipped') {
+            return appearance({muted: true, strikeThrough: true, hatched: true})
+        }
+        return appearance({color: 'info', hatched: true})
+    }
+    switch (state) {
+        case 'finished':
+            return appearance({color: 'success', muted: true})
+        case 'running':
+            return appearance({color: 'primary'})
+        case 'preparing':
+            return appearance({color: 'info'})
+        case 'awaitingFinish':
+            return appearance({color: 'warning'})
+        case 'waiting':
+            return appearance({variant: 'outlined', dashed: true})
+        case 'linked':
+            return appearance({variant: 'outlined'})
+        case 'skipped':
+            return appearance({muted: true, strikeThrough: true})
+        case 'free':
+        default:
+            return appearance({muted: true, hatched: true})
+    }
 }
 
 // ---- Positionsrechnung ------------------------------------------------------------------------

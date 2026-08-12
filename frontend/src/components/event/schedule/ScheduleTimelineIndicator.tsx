@@ -1,12 +1,13 @@
-import {ButtonBase, Box, Tooltip, useTheme} from '@mui/material'
+import {alpha, ButtonBase, Box, Tooltip, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
     computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
+    TimelineAppearance,
+    timelineEntryAppearance,
     TimelineEntry,
-    TimelineEntryState,
 } from './timelineIndicator.ts'
 
 type Props = {
@@ -48,36 +49,41 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
     const rows = Math.max(...positioned.map(e => e.stackRow)) + 1
     const barHeight = rows * ROW_HEIGHT + (rows - 1) * ROW_GAP
 
-    const stateColor = (state: TimelineEntryState): string => {
-        switch (state) {
-            case 'finished':
-                return theme.palette.success.main
-            case 'running':
-                return theme.palette.primary.main
-            // Eigener Ton für den Lauf am Start, aber bewusst nicht `info.main`: den trägt schon
-            // "wartet auf Beenden", und zwei gleich eingefärbte Balken nebeneinander wären keine
-            // Unterscheidung mehr. Der helle Ton bleibt in derselben Farbfamilie wie der
-            // "In Vorbereitung"-Chip (MUI-Farbe `info`).
-            case 'preparing':
-                return theme.palette.info.light
-            // Eigener Ton, weder "läuft" noch "beendet": der Lauf ist gewertet, aber der
-            // Beenden-Klick fehlt noch - auf dem Balken soll genau das auffallen.
-            case 'awaitingFinish':
-                return theme.palette.info.main
-            case 'waiting':
-                return theme.palette.warning.main
-            case 'linked':
-                return theme.palette.action.disabledBackground
-            case 'skipped':
-                return theme.palette.grey[400]
-            case 'free':
-            default:
-                return theme.palette.grey[300]
+    // Die Farbfamilien der Status-Chips (matchStatusChip.ChipColor), übersetzt in die Theme-
+    // Palette. 'default' hat dort keine eigene Palette — grau in zwei Stufen übernimmt die Rolle.
+    const chipPalette = (color: TimelineAppearance['color']): {main: string; light: string} =>
+        color === 'default'
+            ? {main: theme.palette.grey[500], light: theme.palette.grey[400]}
+            : theme.palette[color]
+
+    /**
+     * Ein {@link TimelineAppearance}-Datensatz als sx-Eigenschaften: gefüllt oder als Umriss,
+     * gedämpft über die helle Palettenstufe, die Schraffur als halbtransparente Papier-Streifen
+     * über der Füllung (funktioniert damit auf jeder Farbe und in jedem Theme).
+     */
+    const segmentSx = (a: TimelineAppearance) => {
+        const pal = chipPalette(a.color)
+        const fill = a.muted ? pal.light : pal.main
+        return {
+            backgroundColor: a.variant === 'outlined' ? 'transparent' : fill,
+            backgroundImage: a.hatched
+                ? `repeating-linear-gradient(45deg, ${alpha(theme.palette.background.paper, 0.55)} 0 4px, transparent 4px 9px)`
+                : 'none',
+            border:
+                a.variant === 'outlined'
+                    ? `1px ${a.dashed ? 'dashed' : 'solid'} ${theme.palette.text.secondary}`
+                    : 'none',
+            textDecoration: a.strikeThrough ? 'line-through' : 'none',
+            opacity: a.strikeThrough ? 0.65 : 1,
         }
     }
 
-    const stateLabel = (state: TimelineEntryState): string =>
-        t(`event.schedule.indicator.state.${state}`)
+    // Dieselbe Vorrangregel wie timelineEntryAppearance: ein aktiviertes/fahrendes Freilos
+    // spricht wie ein normaler Lauf, alle anderen Freilose sagen, was sie sind.
+    const stateLabel = (entry: TimelineEntry): string =>
+        entry.bye && entry.state !== 'running' && entry.state !== 'preparing'
+            ? t('event.schedule.indicator.state.bye')
+            : t(`event.schedule.indicator.state.${entry.state}`)
 
     return (
         <Box
@@ -135,10 +141,10 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
             {positioned.map(entry => (
                 <Tooltip
                     key={entry.id}
-                    title={`${entry.label} · ${format(new Date(entry.startTime), t('format.time'))} · ${stateLabel(entry.state)}`}>
+                    title={`${entry.label} · ${format(new Date(entry.startTime), t('format.time'))} · ${stateLabel(entry)}`}>
                     <ButtonBase
                         onClick={() => onEntryClick?.(entry.id)}
-                        aria-label={`${entry.label}, ${format(new Date(entry.startTime), t('format.time'))}, ${stateLabel(entry.state)}`}
+                        aria-label={`${entry.label}, ${format(new Date(entry.startTime), t('format.time'))}, ${stateLabel(entry)}`}
                         sx={{
                             position: 'absolute',
                             left: `${entry.leftPercent}%`,
@@ -146,10 +152,7 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
                             top: entry.stackRow * (ROW_HEIGHT + ROW_GAP),
                             height: ROW_HEIGHT,
                             borderRadius: 0.75,
-                            backgroundColor: entry.state === 'linked' ? 'transparent' : stateColor(entry.state),
-                            border: entry.state === 'linked' ? `1px solid ${theme.palette.primary.main}` : 'none',
-                            textDecoration: entry.state === 'skipped' ? 'line-through' : 'none',
-                            opacity: entry.state === 'skipped' ? 0.6 : 1,
+                            ...segmentSx(timelineEntryAppearance(entry.state, entry.bye)),
                             animation: entry.state === 'running' ? 'r2r-timeline-pulse 2s infinite' : 'none',
                             transition: 'filter 0.15s ease',
                             '&:hover': {
