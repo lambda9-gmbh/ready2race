@@ -24,6 +24,7 @@ import {
     openResultTeams,
     pendingSlotLabel,
     shortenClubChain,
+    showsSeverityIcon,
     teamShowsClubLine,
     teamShowsCrew,
     teamsInDisplayOrder,
@@ -648,7 +649,19 @@ const LiveDashboardMatchCard = ({
                                         </Box>
                                     </>
                                 )}
-                                <SeverityIcon severity={team.severity} />
+                                {/*
+                                    „Nur kritische Prüfungen zeigen": OK/Warnung/Neutral treten
+                                    ab, nur CRITICAL bleibt stehen (die verdichtete Severity je
+                                    Boot kommt fertig bewertet aus dem Backend, siehe
+                                    LiveDashboardTeamDto.severity). Die leere Box hält die
+                                    Icon-Spalte des Grids besetzt, damit Zeilen mit und ohne
+                                    Icon bündig bleiben.
+                                */}
+                                {showsSeverityIcon(team.severity, detail.criticalChecksOnly) ? (
+                                    <SeverityIcon severity={team.severity} />
+                                ) : (
+                                    <Box />
+                                )}
                             </Box>
                         </Fragment>
                     )

@@ -1710,7 +1710,15 @@
         "followCurrent": "Folge dem aktuellen Lauf",
         "display": "Anzeige",
         "notePreview": "Notiz-Vorschau an der Bootszeile",
-        "showCrew": "Aufstellung anzeigen"
+        "showCrew": "Aufstellung anzeigen",
+        "readability": "Lesbarkeit",
+        "fontSize": {
+          "label": "Schriftgröße",
+          "normal": "Normal",
+          "large": "Groß",
+          "xlarge": "Sehr groß"
+        },
+        "criticalChecksOnly": "Nur kritische Prüfungen zeigen"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",

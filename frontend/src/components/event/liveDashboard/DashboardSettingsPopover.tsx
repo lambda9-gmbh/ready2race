@@ -3,15 +3,19 @@ import {useTranslation} from 'react-i18next'
 import SettingsPopover, {SettingsSection} from '@components/SettingsPopover.tsx'
 import {
     dashboardCompetitionFilterKey,
+    DASHBOARD_CRITICAL_CHECKS_ONLY_KEY,
     DASHBOARD_FOLLOW_CURRENT_KEY,
+    DASHBOARD_FONT_SCALE_KEY,
     DASHBOARD_HIDE_FINISHED_KEY,
     DASHBOARD_NOTE_PREVIEW_KEY,
     DASHBOARD_ONLY_TODAY_KEY,
     DASHBOARD_SHOW_CREW_KEY,
+    useDeviceChoice,
     useDeviceFlag,
     useDeviceList,
 } from '@components/event/deviceSettings.ts'
 import {
+    DASHBOARD_FONT_SCALES,
     DashboardCompetitionOption,
     KEEP_FINISHED_CONTEXT,
     POLL_INTERVAL_OPTIONS_MS,
@@ -36,9 +40,13 @@ type Props = {
 
 /**
  * Das Einstellungs-Popover des Schiedsrichter-Boards — dasselbe Zahnrad-Muster wie am
- * Zeitplan-Tab, hier durchgehend geräte-lokal. Seit dem 12.08.2026 in Abschnitten: „Dieses Gerät"
- * (Abruftakt), „Fokus" (Wettkampf-Filter, Tagesfilter, Beendete, Folgen), dazu kommen Anzeige und
- * Lesbarkeit. Die Schalter der neuen Abschnitte lesen und schreiben ihre Werte selbst über die
+ * Zeitplan-Tab, hier durchgehend geräte-lokal. Seit dem 12.08.2026 in vier Abschnitten:
+ * „Fokus" (Wettkampf-Filter, Tagesfilter, Beendete, Folgen), „Anzeige" (Kurznamen,
+ * Notiz-Vorschau, Aufstellung), „Lesbarkeit" (Kompaktmodus, Schriftgröße, Prüfungs-Icons) und
+ * „Dieses Gerät" (Abruftakt). Der Kompaktmodus steht bewusst bei der Schriftgröße: die beiden
+ * verrechnen sich (siehe dashboardTypographySizes) und gehören nebeneinander bedient.
+ *
+ * Die Schalter der neuen Abschnitte lesen und schreiben ihre Werte selbst über die
  * deviceSettings-Hooks — die Seite liest dieselben Schlüssel, das Fenster-Ereignis hält beide
  * synchron, ohne dass jeder Wert einzeln durchgereicht werden muss.
  */
@@ -71,6 +79,14 @@ const DashboardSettingsPopover = ({
     const [notePreview, setNotePreview] = useDeviceFlag(DASHBOARD_NOTE_PREVIEW_KEY, true)
     const [showCrew, setShowCrew] = useDeviceFlag(DASHBOARD_SHOW_CREW_KEY, true)
 
+    // --- Lesbarkeit: Schriftstufe und Icon-Dosierung -------------------------------------------
+    const [fontScale, setFontScale] = useDeviceChoice(
+        DASHBOARD_FONT_SCALE_KEY,
+        'normal',
+        DASHBOARD_FONT_SCALES,
+    )
+    const [criticalOnly, setCriticalOnly] = useDeviceFlag(DASHBOARD_CRITICAL_CHECKS_ONLY_KEY, false)
+
     const optionLabelById = new Map(
         competitionOptions.map(option => [option.competitionId, option.label]),
     )
@@ -84,33 +100,6 @@ const DashboardSettingsPopover = ({
 
     return (
         <SettingsPopover open={open} onOpenChange={onOpenChange}>
-            <SettingsSection title={t('event.settings.device')}>
-                <FormControlLabel
-                    control={<Switch checked={shortLabels} onChange={toggleShortLabels} />}
-                    label={t('event.settings.shortLabels')}
-                />
-                <FormControlLabel
-                    control={
-                        <Switch checked={compact} onChange={(_, checked) => setCompact(checked)} />
-                    }
-                    label={t('event.settings.compact')}
-                />
-                <TextField
-                    select
-                    size={'small'}
-                    label={t('event.liveDashboard.refresh.label')}
-                    value={pollIntervalMs}
-                    onChange={e => handleIntervalChange(Number(e.target.value))}
-                    sx={{mt: 1}}>
-                    {POLL_INTERVAL_OPTIONS_MS.map(option => (
-                        <MenuItem key={option} value={option}>
-                            {t('event.liveDashboard.refresh.everySeconds', {
-                                seconds: option / 1000,
-                            })}
-                        </MenuItem>
-                    ))}
-                </TextField>
-            </SettingsSection>
             <SettingsSection title={t('event.liveDashboard.settings.focus')}>
                 {/* Mehrfachauswahl; leer heißt „alle". Die Optionen kommen aus den gerade
                     vorhandenen Läufen — eine gespeicherte Wahl, deren Wettkampf hier fehlt,
@@ -187,6 +176,10 @@ const DashboardSettingsPopover = ({
             </SettingsSection>
             <SettingsSection title={t('event.liveDashboard.settings.display')}>
                 <FormControlLabel
+                    control={<Switch checked={shortLabels} onChange={toggleShortLabels} />}
+                    label={t('event.settings.shortLabels')}
+                />
+                <FormControlLabel
                     control={
                         <Switch
                             checked={notePreview}
@@ -205,6 +198,57 @@ const DashboardSettingsPopover = ({
                     }
                     label={t('event.liveDashboard.settings.showCrew')}
                 />
+            </SettingsSection>
+            <SettingsSection title={t('event.liveDashboard.settings.readability')}>
+                <FormControlLabel
+                    control={
+                        <Switch checked={compact} onChange={(_, checked) => setCompact(checked)} />
+                    }
+                    label={t('event.settings.compact')}
+                />
+                {/* Neben dem Kompaktmodus, nicht statt seiner: Kompakt verdichtet, die Stufe
+                    skaliert — „kompakt + groß" ist am Steg die übliche Kombination. */}
+                <TextField
+                    select
+                    size={'small'}
+                    label={t('event.liveDashboard.settings.fontSize.label')}
+                    value={fontScale}
+                    onChange={e =>
+                        setFontScale(e.target.value as (typeof DASHBOARD_FONT_SCALES)[number])
+                    }
+                    sx={{mt: 1}}>
+                    {DASHBOARD_FONT_SCALES.map(scale => (
+                        <MenuItem key={scale} value={scale}>
+                            {t(`event.liveDashboard.settings.fontSize.${scale}`)}
+                        </MenuItem>
+                    ))}
+                </TextField>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={criticalOnly}
+                            onChange={(_, checked) => setCriticalOnly(checked)}
+                        />
+                    }
+                    label={t('event.liveDashboard.settings.criticalChecksOnly')}
+                />
+            </SettingsSection>
+            <SettingsSection title={t('event.settings.device')}>
+                <TextField
+                    select
+                    size={'small'}
+                    label={t('event.liveDashboard.refresh.label')}
+                    value={pollIntervalMs}
+                    onChange={e => handleIntervalChange(Number(e.target.value))}
+                    sx={{mt: 1}}>
+                    {POLL_INTERVAL_OPTIONS_MS.map(option => (
+                        <MenuItem key={option} value={option}>
+                            {t('event.liveDashboard.refresh.everySeconds', {
+                                seconds: option / 1000,
+                            })}
+                        </MenuItem>
+                    ))}
+                </TextField>
             </SettingsSection>
         </SettingsPopover>
     )

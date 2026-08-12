@@ -566,6 +566,8 @@ export type LiveDashboardDetailSettings = {
     notePreview: boolean
     /** Crew-Zeilen (Aufstellung) zeigen — aus ist radikaler als der Kompaktmodus. */
     showCrew: boolean
+    /** An den Bootszeilen nur noch Prüfungs-Icons mit Severity CRITICAL (siehe showsSeverityIcon). */
+    criticalChecksOnly: boolean
 }
 
 /**

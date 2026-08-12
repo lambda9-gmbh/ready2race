@@ -42,12 +42,15 @@ import DashboardSettingsPopover from '@components/event/liveDashboard/DashboardS
 import {useShortLabels} from '@components/event/shortLabels.ts'
 import {
     DASHBOARD_COMPACT_KEY,
+    DASHBOARD_CRITICAL_CHECKS_ONLY_KEY,
     DASHBOARD_FOLLOW_CURRENT_KEY,
+    DASHBOARD_FONT_SCALE_KEY,
     DASHBOARD_HIDE_FINISHED_KEY,
     DASHBOARD_NOTE_PREVIEW_KEY,
     DASHBOARD_ONLY_TODAY_KEY,
     DASHBOARD_SHOW_CREW_KEY,
     dashboardCompetitionFilterKey,
+    useDeviceChoice,
     useDeviceFlag,
     useDeviceList,
 } from '@components/event/deviceSettings.ts'
@@ -59,11 +62,13 @@ import {
 import {
     buildLiveDashboardTimeline,
     centeredScrollTop,
+    DASHBOARD_FONT_SCALES,
     dashboardCompetitionOptions,
     dashboardCrew,
     dashboardEntryDomId,
     dashboardEntryDomIdCandidates,
     dashboardScope,
+    dashboardTypographySizes,
     filterMatchesByCompetitions,
     filterPendingSlotsByCompetitions,
     filterTimelineEntriesForDay,
@@ -216,7 +221,11 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
     // Der Detailgrad der Bootszeilen — als Bündel an die Karten durchgereicht.
     const [notePreview] = useDeviceFlag(DASHBOARD_NOTE_PREVIEW_KEY, true)
     const [showCrewDetails] = useDeviceFlag(DASHBOARD_SHOW_CREW_KEY, true)
-    const detail = {notePreview, showCrew: showCrewDetails}
+    const [criticalChecksOnly] = useDeviceFlag(DASHBOARD_CRITICAL_CHECKS_ONLY_KEY, false)
+    const detail = {notePreview, showCrew: showCrewDetails, criticalChecksOnly}
+    // Lesbarkeit: dreistufige Schriftgröße NEBEN dem Kompaktmodus — beide landen im selben
+    // Karten-Wrapper und verrechnen sich dort (siehe dashboardTypographySizes).
+    const [fontScale] = useDeviceChoice(DASHBOARD_FONT_SCALE_KEY, 'normal', DASHBOARD_FONT_SCALES)
     // Das Popover wird von außen gesteuert, damit auch der Filter-Chip es öffnen kann.
     const [settingsOpen, setSettingsOpen] = useState(false)
     const cacheUserId = user.loggedIn ? user.id : ''
@@ -554,6 +563,8 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
     }
 
     const staleState = describeStale(lastUpdated?.getTime() ?? null, stale, now.getTime())
+    // Null im Normalzustand — der Wrapper unten spannt dann gar keine CSS-Regeln auf.
+    const typographySizes = dashboardTypographySizes(compact, fontScale)
 
     const actions: LiveDashboardActions = {
         onTeamClick: handleTeamClick,
@@ -711,9 +722,13 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
                         onEntryClick={scrollToTimelineEntry}
                     />
                 )}
-                {/* Kompakt ist eine reine CSS-Stufe über den Karten: dichteres Karten-Padding und
-                    eine Schriftgröße kleiner je Variante. Die Karten selbst wissen davon nichts —
-                    ihre Zeilenlogik (Container-Queries, Spalten) bleibt unangetastet.
+                {/* Kompakt und Schriftgröße sind eine reine CSS-Stufe über den Karten: Kompakt
+                    verdichtet das Karten-Padding, und die Schriftgrößen der drei Typography-
+                    Varianten kommen fertig verrechnet aus dashboardTypographySizes — Kompakt
+                    liefert die kleineren Basen, die Schriftstufe den Faktor darauf, „kompakt +
+                    groß" funktioniert also zusammen statt sich auszuschließen. Die Karten selbst
+                    wissen davon nichts — ihre Zeilenlogik (Container-Queries, Spalten) bleibt
+                    unangetastet.
                     Die drei Eingabe-Events pausieren das automatische Nachführen („Folge dem
                     aktuellen Lauf") — jedes Wischen, Scrollen oder Antippen in den Listen zählt
                     als „hier liest gerade jemand selbst". */}
@@ -721,16 +736,20 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
                     onWheel={markManualScroll}
                     onTouchStart={markManualScroll}
                     onPointerDown={markManualScroll}
-                    sx={
-                        compact
+                    sx={{
+                        ...(compact
+                            ? {'& .MuiCardContent-root': {p: 0.75, '&:last-child': {pb: 0.5}}}
+                            : undefined),
+                        ...(typographySizes
                             ? {
-                                  '& .MuiCardContent-root': {p: 0.75, '&:last-child': {pb: 0.5}},
-                                  '& .MuiTypography-subtitle1': {fontSize: '0.875rem'},
-                                  '& .MuiTypography-body2': {fontSize: '0.8rem'},
-                                  '& .MuiTypography-caption': {fontSize: '0.7rem'},
+                                  '& .MuiTypography-subtitle1': {
+                                      fontSize: typographySizes.subtitle1,
+                                  },
+                                  '& .MuiTypography-body2': {fontSize: typographySizes.body2},
+                                  '& .MuiTypography-caption': {fontSize: typographySizes.caption},
                               }
-                            : undefined
-                    }>
+                            : undefined),
+                    }}>
                     {wide ? (
                         <Box
                             sx={{

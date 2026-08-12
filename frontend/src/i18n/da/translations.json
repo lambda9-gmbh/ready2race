@@ -1710,7 +1710,15 @@
         "followCurrent": "Følg det aktuelle løb",
         "display": "Visning",
         "notePreview": "Notat-forhåndsvisning ved bådlinjen",
-        "showCrew": "Vis opstilling"
+        "showCrew": "Vis opstilling",
+        "readability": "Læsbarhed",
+        "fontSize": {
+          "label": "Skriftstørrelse",
+          "normal": "Normal",
+          "large": "Stor",
+          "xlarge": "Meget stor"
+        },
+        "criticalChecksOnly": "Vis kun kritiske kontroller"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Resultater komplette — venter på afslutning",

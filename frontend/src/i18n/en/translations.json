@@ -1714,7 +1714,15 @@
         "followCurrent": "Follow the current race",
         "display": "Display",
         "notePreview": "Note preview on the boat row",
-        "showCrew": "Show line-up"
+        "showCrew": "Show line-up",
+        "readability": "Readability",
+        "fontSize": {
+          "label": "Font size",
+          "normal": "Normal",
+          "large": "Large",
+          "xlarge": "Extra large"
+        },
+        "criticalChecksOnly": "Show only critical checks"
       },
       "penaltyIncluded": "incl. {{seconds}} s",
       "resultsCompleteWaiting": "Results complete — waiting to finish",
