@@ -1711,7 +1711,10 @@
         },
         "onlyToday": "Show only the current race day",
         "hideFinished": "Hide finished races (last {{count}} stay)",
-        "followCurrent": "Follow the current race"
+        "followCurrent": "Follow the current race",
+        "display": "Display",
+        "notePreview": "Note preview on the boat row",
+        "showCrew": "Show line-up"
       },
       "penaltyIncluded": "incl. {{seconds}} s",
       "resultsCompleteWaiting": "Results complete — waiting to finish",

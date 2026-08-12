@@ -44,7 +44,9 @@ import {
     DASHBOARD_COMPACT_KEY,
     DASHBOARD_FOLLOW_CURRENT_KEY,
     DASHBOARD_HIDE_FINISHED_KEY,
+    DASHBOARD_NOTE_PREVIEW_KEY,
     DASHBOARD_ONLY_TODAY_KEY,
+    DASHBOARD_SHOW_CREW_KEY,
     dashboardCompetitionFilterKey,
     useDeviceFlag,
     useDeviceList,
@@ -211,6 +213,10 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
     const [onlyToday] = useDeviceFlag(DASHBOARD_ONLY_TODAY_KEY, true)
     const [hideFinished] = useDeviceFlag(DASHBOARD_HIDE_FINISHED_KEY, false)
     const [followCurrent] = useDeviceFlag(DASHBOARD_FOLLOW_CURRENT_KEY, false)
+    // Der Detailgrad der Bootszeilen — als Bündel an die Karten durchgereicht.
+    const [notePreview] = useDeviceFlag(DASHBOARD_NOTE_PREVIEW_KEY, true)
+    const [showCrewDetails] = useDeviceFlag(DASHBOARD_SHOW_CREW_KEY, true)
+    const detail = {notePreview, showCrew: showCrewDetails}
     // Das Popover wird von außen gesteuert, damit auch der Filter-Chip es öffnen kann.
     const [settingsOpen, setSettingsOpen] = useState(false)
     const cacheUserId = user.loggedIn ? user.id : ''
@@ -571,6 +577,7 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
             loaded={dashboard !== null}
             actions={actions}
             shortLabels={shortLabels}
+            detail={detail}
         />
     )
     const matchListColumn = (
@@ -586,6 +593,7 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
             }
             actions={actions}
             shortLabels={shortLabels}
+            detail={detail}
         />
     )
 

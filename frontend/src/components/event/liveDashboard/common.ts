@@ -556,6 +556,19 @@ export const followTargetMatchId = (matches: LiveDashboardMatchDto[]): string | 
     null
 
 /**
+ * Der Detailgrad der Karten, gebündelt durchgereicht (Seite → Spalten → Karte) wie die
+ * [LiveDashboardActions]: die Werte kommen aus den deviceSettings-Schlüsseln, die Karte selbst
+ * kennt nur noch das Ergebnis. Ein Bündel statt einzelner Props, damit jede weitere Einstellung
+ * nicht drei Komponenten-Signaturen gleichzeitig aufbohrt.
+ */
+export type LiveDashboardDetailSettings = {
+    /** Jüngste Schiedsrichter-Notiz einzeilig an der Bootszeile (zusätzlich zu Icon+Zähler). */
+    notePreview: boolean
+    /** Crew-Zeilen (Aufstellung) zeigen — aus ist radikaler als der Kompaktmodus. */
+    showCrew: boolean
+}
+
+/**
  * Die jüngste Schiedsrichter-Notiz eines Boots für die einzeilige Vorschau an der Bootszeile —
  * `notes` kommt vom Server älteste zuerst (siehe LiveDashboardTeamDto), die jüngste ist also die
  * letzte. Null ohne Notizen; die Vorschau erscheint dann gar nicht.

@@ -1707,7 +1707,10 @@
         },
         "onlyToday": "Nur den aktuellen Renntag zeigen",
         "hideFinished": "Beendete ausblenden (die letzten {{count}} bleiben)",
-        "followCurrent": "Folge dem aktuellen Lauf"
+        "followCurrent": "Folge dem aktuellen Lauf",
+        "display": "Anzeige",
+        "notePreview": "Notiz-Vorschau an der Bootszeile",
+        "showCrew": "Aufstellung anzeigen"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",

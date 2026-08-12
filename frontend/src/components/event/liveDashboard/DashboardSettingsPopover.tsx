@@ -5,7 +5,9 @@ import {
     dashboardCompetitionFilterKey,
     DASHBOARD_FOLLOW_CURRENT_KEY,
     DASHBOARD_HIDE_FINISHED_KEY,
+    DASHBOARD_NOTE_PREVIEW_KEY,
     DASHBOARD_ONLY_TODAY_KEY,
+    DASHBOARD_SHOW_CREW_KEY,
     useDeviceFlag,
     useDeviceList,
 } from '@components/event/deviceSettings.ts'
@@ -64,6 +66,10 @@ const DashboardSettingsPopover = ({
     const [onlyToday, setOnlyToday] = useDeviceFlag(DASHBOARD_ONLY_TODAY_KEY, true)
     const [hideFinished, setHideFinished] = useDeviceFlag(DASHBOARD_HIDE_FINISHED_KEY, false)
     const [followCurrent, setFollowCurrent] = useDeviceFlag(DASHBOARD_FOLLOW_CURRENT_KEY, false)
+
+    // --- Anzeige: der Detailgrad der Bootszeilen, beides standardmäßig an ----------------------
+    const [notePreview, setNotePreview] = useDeviceFlag(DASHBOARD_NOTE_PREVIEW_KEY, true)
+    const [showCrew, setShowCrew] = useDeviceFlag(DASHBOARD_SHOW_CREW_KEY, true)
 
     const optionLabelById = new Map(
         competitionOptions.map(option => [option.competitionId, option.label]),
@@ -177,6 +183,27 @@ const DashboardSettingsPopover = ({
                         />
                     }
                     label={t('event.liveDashboard.settings.followCurrent')}
+                />
+            </SettingsSection>
+            <SettingsSection title={t('event.liveDashboard.settings.display')}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={notePreview}
+                            onChange={(_, checked) => setNotePreview(checked)}
+                        />
+                    }
+                    label={t('event.liveDashboard.settings.notePreview')}
+                />
+                {/* Radikaler als der Kompaktmodus: aus heißt, die Crew-Zeilen fehlen ganz. */}
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={showCrew}
+                            onChange={(_, checked) => setShowCrew(checked)}
+                        />
+                    }
+                    label={t('event.liveDashboard.settings.showCrew')}
                 />
             </SettingsSection>
         </SettingsPopover>

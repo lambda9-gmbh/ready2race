@@ -1707,7 +1707,10 @@
         },
         "onlyToday": "Vis kun den aktuelle løbsdag",
         "hideFinished": "Skjul afsluttede løb (de seneste {{count}} bliver)",
-        "followCurrent": "Følg det aktuelle løb"
+        "followCurrent": "Følg det aktuelle løb",
+        "display": "Visning",
+        "notePreview": "Notat-forhåndsvisning ved bådlinjen",
+        "showCrew": "Vis opstilling"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Resultater komplette — venter på afslutning",

@@ -16,6 +16,8 @@ import {
     competitionLabel,
     crewMemberLabel,
     dashboardMatchStatus,
+    latestTeamNote,
+    LiveDashboardDetailSettings,
     matchControls,
     teamNoteCount,
     matchHasResults,
@@ -63,6 +65,8 @@ type Props = {
     raceClockerAutoPull?: boolean
     /** Rennen am Kürzel statt am ausgeschriebenen Wettkampfnamen (geteilt mit dem Zeitplan-Tab). */
     shortLabels: boolean
+    /** Detailgrad der Bootszeilen (Notiz-Vorschau, Aufstellung) — geräte-lokal eingestellt. */
+    detail: LiveDashboardDetailSettings
 }
 
 const LiveDashboardMatchCard = ({
@@ -74,6 +78,7 @@ const LiveDashboardMatchCard = ({
     onResumeAutoPull,
     raceClockerAutoPull = false,
     shortLabels,
+    detail,
 }: Props) => {
     const {t} = useTranslation()
 
@@ -322,7 +327,11 @@ const LiveDashboardMatchCard = ({
                 {teams.map((team, index) => {
                     const substituted = team.substituted
                     const showClubLine = teamShowsClubLine(team)
-                    const showCrew = teamShowsCrew(team)
+                    // Die Aufstellung nur, wenn die Daten sie tragen UND die Einstellung sie
+                    // will — „Aufstellung anzeigen" (aus) räumt die Karten radikaler auf als
+                    // der Kompaktmodus, der nur verdichtet.
+                    const showCrew = teamShowsCrew(team) && detail.showCrew
+                    const notePreview = detail.notePreview ? latestTeamNote(team) : null
                     const heading = headingBeforeTeam.get(team.teamId)
 
                     return (
@@ -472,6 +481,22 @@ const LiveDashboardMatchCard = ({
                                             </Stack>
                                         )}
                                     </Stack>
+                                    {/*
+                                        Die jüngste Notiz als einzeilige Vorschau direkt an der
+                                        Zeile — zusätzlich zum Icon+Zähler oben, der weiterhin
+                                        sagt, WIE VIELE es sind. Einzeilig und ellipsiert: die
+                                        Vorschau soll ein Blickfang sein, kein zweiter Dialog;
+                                        den vollen Text zeigt wie bisher der Detail-Dialog.
+                                    */}
+                                    {notePreview && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            noWrap
+                                            sx={{color: 'info.dark', fontStyle: 'italic'}}>
+                                            {notePreview.note}
+                                        </Typography>
+                                    )}
                                     {showCrew && (
                                         <Typography
                                             variant="caption"

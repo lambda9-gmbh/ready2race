@@ -3,7 +3,11 @@ import {useTranslation} from 'react-i18next'
 import {LiveDashboardMatchDto} from '@api/types.gen.ts'
 import {MatchResultStatus} from '@utils/matchResultStatus.ts'
 import LiveDashboardMatchCard, {LiveDashboardPendingSlotCard} from './LiveDashboardMatchCard.tsx'
-import {dashboardEntryDomId, LiveDashboardTimelineEntry} from './common.ts'
+import {
+    dashboardEntryDomId,
+    LiveDashboardDetailSettings,
+    LiveDashboardTimelineEntry,
+} from './common.ts'
 
 /**
  * Die Handlungen, die beide Spalten an ihre Karten durchreichen.
@@ -33,12 +37,15 @@ const TimelineEntryCard = ({
     column,
     actions,
     shortLabels,
+    detail,
 }: {
     entry: LiveDashboardTimelineEntry
     column: 'live' | 'list'
     actions: LiveDashboardActions
     /** Rennen am Kürzel statt am ausgeschriebenen Namen - geteilt mit dem Zeitplan-Tab. */
     shortLabels: boolean
+    /** Detailgrad der Karten (Notiz-Vorschau, Aufstellung) — siehe LiveDashboardDetailSettings. */
+    detail: LiveDashboardDetailSettings
 }) =>
     entry.kind === 'match' ? (
         <Box id={dashboardEntryDomId(entry.match.matchId, column)}>
@@ -51,6 +58,7 @@ const TimelineEntryCard = ({
                 onResumeAutoPull={actions.onResumeAutoPull}
                 raceClockerAutoPull={actions.raceClockerAutoPull}
                 shortLabels={shortLabels}
+                detail={detail}
             />
         </Box>
     ) : (
@@ -72,6 +80,7 @@ type LiveColumnProps = {
     loaded: boolean
     actions: LiveDashboardActions
     shortLabels: boolean
+    detail: LiveDashboardDetailSettings
 }
 
 /** Was jetzt eine Handlung verlangt: die laufenden Läufe, ersatzweise "Als Nächstes". */
@@ -81,6 +90,7 @@ export const LiveColumn = ({
     loaded,
     actions,
     shortLabels,
+    detail,
 }: LiveColumnProps) => {
     const {t} = useTranslation()
 
@@ -96,6 +106,7 @@ export const LiveColumn = ({
                     column="live"
                     actions={actions}
                     shortLabels={shortLabels}
+                    detail={detail}
                 />
             ))}
             {currentMatches.length === 0 && nextEntry && (
@@ -108,6 +119,7 @@ export const LiveColumn = ({
                         column="live"
                         actions={actions}
                         shortLabels={shortLabels}
+                        detail={detail}
                     />
                 </>
             )}
@@ -123,6 +135,7 @@ type MatchListColumnProps = {
     empty: boolean
     actions: LiveDashboardActions
     shortLabels: boolean
+    detail: LiveDashboardDetailSettings
 }
 
 /** Die vollständige Liste zum Selbstbedienen: Zeitplan zuerst, unplanmäßige Läufe darunter. */
@@ -132,6 +145,7 @@ export const MatchListColumn = ({
     empty,
     actions,
     shortLabels,
+    detail,
 }: MatchListColumnProps) => {
     const {t} = useTranslation()
 
@@ -144,6 +158,7 @@ export const MatchListColumn = ({
                     column="list"
                     actions={actions}
                     shortLabels={shortLabels}
+                    detail={detail}
                 />
             ))}
             {unscheduledMatches.length > 0 && (
@@ -158,6 +173,7 @@ export const MatchListColumn = ({
                             column="list"
                             actions={actions}
                             shortLabels={shortLabels}
+                            detail={detail}
                         />
                     ))}
                 </>
