@@ -381,7 +381,11 @@ describe('matchStatusChip beim Freilos', () => {
             minutesAgo(30),
             NOW,
         )
-        expect(chip).toEqual({labelKey: 'event.match.status.bye.open', color: 'info'})
+        expect(chip).toEqual({
+            labelKey: 'event.match.status.bye.open',
+            values: {seed: ''},
+            color: 'info',
+        })
     })
 
     /** „Überfällig" würde ein Ergebnis einfordern, auf das niemand wartet. */
@@ -410,7 +414,11 @@ describe('matchStatusChip beim Freilos', () => {
             minutesAgo(30),
             NOW,
         )
-        expect(chip).toEqual({labelKey: 'event.match.status.bye.acknowledged', color: 'success'})
+        expect(chip).toEqual({
+            labelKey: 'event.match.status.bye.acknowledged',
+            values: {seed: ''},
+            color: 'success',
+        })
     })
 
     it('sagt „entfallen" und streicht durch, wenn der Slot abgesagt ist', () => {
@@ -421,8 +429,24 @@ describe('matchStatusChip beim Freilos', () => {
         )
         expect(chip).toEqual({
             labelKey: 'event.match.status.bye.cancelled',
+            values: {seed: ''},
             color: 'default',
             strikeThrough: true,
+        })
+    })
+
+    /** Die Setzungszahl landet im Chip-Label: "Freilos 1 · offen". */
+    it('trägt die Setzungszahl in den Chip', () => {
+        const seededBye: MatchByeDto = {cause: 'NO_OPPONENT', mustRace: false, seed: 1}
+        const chip = matchStatusChip(
+            status({state: 'AWAITING_FINISH', bye: seededBye}),
+            minutesAgo(30),
+            NOW,
+        )
+        expect(chip).toEqual({
+            labelKey: 'event.match.status.bye.open',
+            values: {seed: ' 1'},
+            color: 'info',
         })
     })
 

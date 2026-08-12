@@ -109,15 +109,27 @@ object MatchStatusLogic {
         if (roundRequired) return null
         if (teams.count { it.racing } != 1) return null
 
+        // Die Setzungszahl der EINEN fahrenden Mannschaft - "Freilos 1" ist das Freilos des
+        // Bootes, das als Erstes weiterkam. Null (kein passender Setup-Platz) lässt das Label
+        // beim nackten "Freilos".
+        val seed = teams.single { it.racing }.seed
+
         val withdrawn = teams.filter { !it.racing && it.deregistered }
         if (withdrawn.isEmpty()) {
-            return MatchByeDto(MatchByeCause.NO_OPPONENT, teamName = null, reason = null, mustRace = mustRace)
+            return MatchByeDto(
+                MatchByeCause.NO_OPPONENT,
+                teamName = null,
+                reason = null,
+                mustRace = mustRace,
+                seed = seed,
+            )
         }
         return MatchByeDto(
             cause = MatchByeCause.DEREGISTRATION,
             teamName = withdrawn.joinToString(", ") { it.name },
             reason = withdrawn.singleOrNull()?.deregistrationReason,
             mustRace = mustRace,
+            seed = seed,
         )
     }
 

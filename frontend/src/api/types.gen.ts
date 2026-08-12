@@ -2370,6 +2370,10 @@ export type MatchByeDto = {
      * 'Must race' (competition_match.bye_must_race): the match stays a bye but is raced - exports, polling and the chain treat it like any match, the measured time runs out of competition.
      */
     mustRace: boolean
+    /**
+     * Seeding number of the racing team - 'Bye 1' is the bye of the boat that advanced first. It is the seed of the setup seat the team occupies in this match; null when no seat matches the start number (e.g. first-round byes created by a withdrawal), the label then stays a plain 'Bye'.
+     */
+    seed?: number | null
 }
 
 export type MatchForRunningStatusDto = {
