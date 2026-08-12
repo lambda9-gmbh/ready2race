@@ -748,6 +748,12 @@ import type {
     GetLiveDashboardTeamDetailData,
     GetLiveDashboardTeamDetailError,
     GetLiveDashboardTeamDetailResponse,
+    AddLiveDashboardTeamNoteData,
+    AddLiveDashboardTeamNoteError,
+    AddLiveDashboardTeamNoteResponse,
+    DeleteLiveDashboardTeamNoteData,
+    DeleteLiveDashboardTeamNoteError,
+    DeleteLiveDashboardTeamNoteResponse,
     GetCheckSeverityConfigData,
     GetCheckSeverityConfigError,
     GetCheckSeverityConfigResponse,
@@ -4152,6 +4158,38 @@ export const getLiveDashboardTeamDetail = <ThrowOnError extends boolean = false>
     >({
         ...options,
         url: '/event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}',
+    })
+}
+
+/**
+ * Adds a referee note to this boat ('touched a buoy'). Notes are communication between referees, not scoring; they are append-only - a correction is delete plus re-add, so no locking is needed and two concurrent authors simply produce two entries. Same privilege as the other referee actions (finish/start/activation).
+ */
+export const addLiveDashboardTeamNote = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddLiveDashboardTeamNoteData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddLiveDashboardTeamNoteResponse,
+        AddLiveDashboardTeamNoteError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}/note',
+    })
+}
+
+/**
+ * Deletes a referee note. Allowed for everyone with the referee write privilege, not only the author - the notes are a tool for internal exchange, and a wrong note must be removable while its author is out on the water.
+ */
+export const deleteLiveDashboardTeamNote = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteLiveDashboardTeamNoteData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteLiveDashboardTeamNoteResponse,
+        DeleteLiveDashboardTeamNoteError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}/note/{noteId}',
     })
 }
 

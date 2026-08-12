@@ -15,6 +15,7 @@ import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainSer
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.control.CheckSeverityRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo
+import de.lambda9.ready2race.backend.app.liveDashboard.control.MatchTeamNoteRepo
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.*
 import de.lambda9.ready2race.backend.app.matchStatus.boundary.MatchByeService
 import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
@@ -29,6 +30,7 @@ import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryR
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionCheckSeverityRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.MatchTeamNoteRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
@@ -296,12 +298,19 @@ object LiveDashboardService {
 
             val matches = !matchRecords.traverse { match -> buildMatchDto(match) }
 
-            // Zwischenzeiten je Boot nachtragen - eine Abfrage für alle Läufe des Dashboards, danach
-            // je Lauf/Meldung zugeordnet. Erst hier, nicht in buildTeamDto, damit es nicht je Boot
-            // eine eigene Abfrage wird.
-            val lapsByTeam = !CompetitionMatchTeamLapRepo.getByMatches(matches.map { it.matchId }.toSet()).orDie()
-            val matchesWithLaps = if (lapsByTeam.isEmpty()) matches else matches.map { m ->
-                m.copy(teams = m.teams.map { t -> t.copy(laps = lapsByTeam[m.matchId to t.teamId] ?: emptyList()) })
+            // Zwischenzeiten und Notizen je Boot nachtragen - je eine Abfrage für alle Läufe des
+            // Dashboards, danach je Lauf/Meldung zugeordnet. Erst hier, nicht in buildTeamDto,
+            // damit es nicht je Boot eine eigene Abfrage wird.
+            val matchIds = matches.map { it.matchId }.toSet()
+            val lapsByTeam = !CompetitionMatchTeamLapRepo.getByMatches(matchIds).orDie()
+            val notesByTeam = !MatchTeamNoteRepo.getByMatches(matchIds).orDie()
+            val matchesWithLaps = if (lapsByTeam.isEmpty() && notesByTeam.isEmpty()) matches else matches.map { m ->
+                m.copy(teams = m.teams.map { t ->
+                    t.copy(
+                        laps = lapsByTeam[m.matchId to t.teamId] ?: emptyList(),
+                        notes = notesByTeam[m.matchId to t.teamId] ?: emptyList(),
+                    )
+                })
             }
 
             val pendingSlots = getPendingSlots(slotRecords, matchesWithLaps.map { it.matchId }.toSet())
@@ -633,6 +642,79 @@ object LiveDashboardService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
+
+        noData
+    }
+
+    /**
+     * Hängt eine Notiz an ein Boot in einem Lauf - direkter Austausch zwischen Schiedsrichtern
+     * über das Dashboard ("Boje berührt"), keine Wertung. [teamId] ist wie überall im Dashboard
+     * die Meldungs-Kennung; die Boots-Zeile dazu löst [MatchTeamNoteRepo.findTeamRowId] auf.
+     *
+     * Append-only: Es gibt kein Ändern, eine Korrektur ist Löschen + neu anlegen. So braucht es
+     * kein Sperren - schreiben zwei Schiedsrichter gleichzeitig, entstehen zwei Einträge.
+     */
+    fun createTeamNote(
+        eventId: UUID,
+        matchId: UUID,
+        teamId: UUID,
+        userId: UUID,
+        request: MatchTeamNoteRequest,
+    ): App<LiveDashboardError, ApiResponse.Created> = KIO.comprehension {
+        val exists = !EventRepo.exists(eventId).orDie()
+        if (!exists) {
+            return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
+        }
+
+        val teamRowId = !MatchTeamNoteRepo.findTeamRowId(eventId, matchId, teamId).orDie()
+            ?: return@comprehension KIO.fail(LiveDashboardError.TeamNotFound(teamId))
+
+        val noteId = UUID.randomUUID()
+        !MatchTeamNoteRepo.create(
+            MatchTeamNoteRecord(
+                id = noteId,
+                competitionMatchTeam = teamRowId,
+                // Getrimmt gespeichert, damit der DB-Check (btrim <> '') und die Anzeige dasselbe
+                // sehen - der Validator hat Leerraum-only bereits abgewiesen.
+                note = request.note.trim(),
+                createdAt = LocalDateTime.now(),
+                createdBy = userId,
+            )
+        ).orDie()
+
+        KIO.ok(ApiResponse.Created(noteId))
+    }
+
+    /**
+     * Löscht eine Notiz - erlaubt für alle mit demselben Schreibrecht, nicht nur für die Autorin:
+     * Die Notizen sind ein Werkzeug für den internen Austausch, und eine falsche Notiz muss auch
+     * dann entfernbar sein, wenn die Autorin gerade auf dem Wasser ist.
+     */
+    fun deleteTeamNote(
+        eventId: UUID,
+        matchId: UUID,
+        teamId: UUID,
+        noteId: UUID,
+    ): App<LiveDashboardError, ApiResponse.NoData> = KIO.comprehension {
+        val exists = !EventRepo.exists(eventId).orDie()
+        if (!exists) {
+            return@comprehension KIO.fail(LiveDashboardError.EventNotFound(eventId))
+        }
+
+        // Erst die Zuordnung prüfen, dann löschen: eine erratene Kennung darf nicht quer über
+        // Läufe oder Veranstaltungen löschen. Der Team-Check läuft über denselben Pfad wie das
+        // Anlegen und deckt damit auch die Veranstaltung ab.
+        val teamRowId = !MatchTeamNoteRepo.findTeamRowId(eventId, matchId, teamId).orDie()
+        if (teamRowId == null) {
+            return@comprehension KIO.fail(LiveDashboardError.TeamNotFound(teamId))
+        }
+
+        val belongsToTeam = !MatchTeamNoteRepo.existsForTeam(noteId, matchId, teamId).orDie()
+        if (!belongsToTeam) {
+            return@comprehension KIO.fail(LiveDashboardError.NoteNotFound(noteId))
+        }
+
+        !MatchTeamNoteRepo.delete(noteId).orDie()
 
         noData
     }

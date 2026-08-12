@@ -19,6 +19,8 @@ import {ShortText, Subject} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
+    addLiveDashboardTeamNote,
+    deleteLiveDashboardTeamNote,
     finishLiveDashboardMatch,
     getEventTimingConfig,
     getLiveDashboard,
@@ -357,6 +359,32 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
         dashboardData.reload()
     }
 
+    /**
+     * Notiz an ein Boot hängen - Kommunikation zwischen Schiedsrichtern, keine Wertung. Der
+     * Dialog wartet auf das Promise, bevor er sein Eingabefeld leert; der anschließende Reload
+     * bringt die neue Notiz über den Poll in team.notes.
+     */
+    const handleAddNote = async (matchId: string, teamId: string, note: string) => {
+        const {error} = await addLiveDashboardTeamNote({
+            path: {eventId, matchId, teamId},
+            body: {note},
+        })
+        if (error) {
+            feedback.error(t('event.liveDashboard.notes.error'))
+        }
+        dashboardData.reload()
+    }
+
+    const handleDeleteNote = async (matchId: string, teamId: string, noteId: string) => {
+        const {error} = await deleteLiveDashboardTeamNote({
+            path: {eventId, matchId, teamId, noteId},
+        })
+        if (error) {
+            feedback.error(t('event.liveDashboard.notes.deleteError'))
+        }
+        dashboardData.reload()
+    }
+
     const handleSkipSlot = (slotId: string, label: string, time: string) => {
         confirmAction(
             async () => {
@@ -555,6 +583,12 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
                 matchId={selectedTeamRef?.matchId ?? null}
                 eventId={eventId}
                 onClose={() => setSelectedTeamRef(null)}
+                // Dasselbe Muster wie die fünf Schreibaktionen oben: bei veraltetem Stand
+                // entfallen die Handler, und der Dialog zeigt die Notizen nur noch an.
+                onAddNote={mayControl && !staleState.actionsLocked ? handleAddNote : undefined}
+                onDeleteNote={
+                    mayControl && !staleState.actionsLocked ? handleDeleteNote : undefined
+                }
             />
             {/* Nur schmal: breit stehen beide Ansichten nebeneinander, eine über die ganze
                 Fensterbreite geklebte Telefonleiste hätte dort nichts zu schalten. */}

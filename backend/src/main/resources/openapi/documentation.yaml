@@ -6795,6 +6795,80 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}/note:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: addLiveDashboardTeamNote
+      description: "Adds a referee note to this boat ('touched a buoy'). Notes are communication between referees, not scoring; they are append-only - a correction is delete plus re-add, so no locking is needed and two concurrent authors simply produce two entries. Same privilege as the other referee actions (finish/start/activation)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchTeamNoteRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}/note/{noteId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: noteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteLiveDashboardTeamNote
+      description: "Deletes a referee note. Allowed for everyone with the referee write privilege, not only the author - the notes are a tool for internal exchange, and a wrong note must be removable while its author is out on the water."
+      responses:
+        204:
+          description: Note deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/checkSeverity:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -15385,6 +15459,41 @@ components:
           items:
             $ref: '#/components/schemas/MatchTeamLapDto'
           description: "split times from RaceClocker, in mark order; empty when the race records none"
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTeamNoteDto'
+          description: "referee notes on this boat, oldest first - communication between referees, not scoring; only part of this internal poll, never of the public endpoints"
+
+    MatchTeamNoteDto:
+      type: object
+      description: "A referee note on a boat in a match ('touched a buoy'). Append-only: entries are immutable, a correction is delete plus re-add."
+      required:
+        - id
+        - note
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        author:
+          type: string
+          nullable: true
+          description: "display name of the author; null when the account was deleted"
+
+    MatchTeamNoteRequest:
+      type: object
+      required:
+        - note
+      properties:
+        note:
+          type: string
+          description: "must not be blank"
 
     LiveDashboardTeamDetailDto:
       type: object

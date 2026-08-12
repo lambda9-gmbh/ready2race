@@ -1,5 +1,6 @@
 import {
     Box,
+    Button,
     Chip,
     CircularProgress,
     Dialog,
@@ -12,11 +13,13 @@ import {
     ListItemIcon,
     ListItemText,
     Stack,
+    TextField,
     Typography,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import EditIcon from '@mui/icons-material/Edit'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import {useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
@@ -24,9 +27,10 @@ import {LiveDashboardRequirementStatusDto, LiveDashboardTeamDto} from '@api/type
 import {getLiveDashboardTeamDetail} from '@api/sdk.gen.ts'
 import {useFetch} from '@utils/hooks.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {updateEventGlobal, updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import ParticipantTrackingDialog from '@components/event/participantTracking/ParticipantTrackingDialog.tsx'
-import {formatMinutes, severityChipColor} from './common.ts'
+import {canSubmitNote, formatMinutes, severityChipColor} from './common.ts'
 import SeverityIcon from './SeverityIcon.tsx'
 
 type Props = {
@@ -35,6 +39,14 @@ type Props = {
     matchId: string | null
     eventId: string
     onClose: () => void
+    /**
+     * Nur gesetzt, wenn geschrieben werden darf UND der Stand aktuell ist — dasselbe
+     * `actionsLocked`-Muster wie bei den fünf Schreibaktionen der Karten (siehe
+     * LiveDashboardPage): ohne Handler verschwinden Eingabefeld und Lösch-Knöpfe, die Liste
+     * bleibt lesbar.
+     */
+    onAddNote?: (matchId: string, teamId: string, note: string) => Promise<void>
+    onDeleteNote?: (matchId: string, teamId: string, noteId: string) => Promise<void>
 }
 
 /**
@@ -42,9 +54,16 @@ type Props = {
  * erst hier gebraucht. Geladen wird einmal beim Öffnen — Teilnahmebedingungen werden am Zelt
  * abgehakt und ändern sich während eines Laufs praktisch nicht.
  */
-const LiveDashboardTeamDialog = ({team, matchId, eventId, onClose}: Props) =>
+const LiveDashboardTeamDialog = ({team, matchId, eventId, onClose, onAddNote, onDeleteNote}: Props) =>
     team === null || matchId === null ? null : (
-        <TeamDialog team={team} matchId={matchId} eventId={eventId} onClose={onClose} />
+        <TeamDialog
+            team={team}
+            matchId={matchId}
+            eventId={eventId}
+            onClose={onClose}
+            onAddNote={onAddNote}
+            onDeleteNote={onDeleteNote}
+        />
     )
 
 const TeamDialog = ({
@@ -52,11 +71,15 @@ const TeamDialog = ({
     matchId,
     eventId,
     onClose,
+    onAddNote,
+    onDeleteNote,
 }: {
     team: LiveDashboardTeamDto
     matchId: string
     eventId: string
     onClose: () => void
+    onAddNote?: (matchId: string, teamId: string, note: string) => Promise<void>
+    onDeleteNote?: (matchId: string, teamId: string, noteId: string) => Promise<void>
 }) => {
     const {t} = useTranslation()
     const user = useUser()
@@ -65,6 +88,26 @@ const TeamDialog = ({
     const mayEditTracking =
         user.checkPrivilege(updateLiveDashboardGlobal) || user.checkPrivilege(updateEventGlobal)
     const [tracked, setTracked] = useState<{id: string; name: string} | null>(null)
+    const {confirmAction} = useConfirmation()
+    const [noteText, setNoteText] = useState('')
+    // Sperrt Feld und Knopf, solange die Notiz unterwegs ist - ein doppelter Klick würde sonst
+    // zwei gleiche Einträge anlegen (append-only: der Server fasst nichts zusammen).
+    const [noteSubmitting, setNoteSubmitting] = useState(false)
+
+    const notes = team.notes ?? []
+
+    const submitNote = async () => {
+        if (!onAddNote || !canSubmitNote(noteText) || noteSubmitting) {
+            return
+        }
+        setNoteSubmitting(true)
+        try {
+            await onAddNote(matchId, team.teamId, noteText.trim())
+            setNoteText('')
+        } finally {
+            setNoteSubmitting(false)
+        }
+    }
 
     const {data: detail, pending, reload} = useFetch(
         signal =>
@@ -231,6 +274,99 @@ const TeamDialog = ({
                             />
                         )}
                     </Stack>
+                    {/*
+                        Notizen zwischen Schiedsrichtern ("Boje berührt") - Kommunikation, keine
+                        Wertung, deshalb ein eigener Abschnitt und kein Chip bei den Wertungen
+                        oben. Die Liste kommt aus dem Sekunden-Poll (team.notes) und zieht nach
+                        dem Anlegen/Löschen über den Dashboard-Reload nach; lesbar für alle mit
+                        Dashboard-Zugriff, schreibbar nur mit Handler (actionsLocked-Muster).
+                    */}
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                            {t('event.liveDashboard.notes.title')}
+                        </Typography>
+                        {notes.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                                {t('event.liveDashboard.notes.empty')}
+                            </Typography>
+                        ) : (
+                            <List dense disablePadding>
+                                {notes.map(note => (
+                                    <ListItem
+                                        key={note.id}
+                                        disableGutters
+                                        secondaryAction={
+                                            onDeleteNote && (
+                                                <IconButton
+                                                    edge="end"
+                                                    size="small"
+                                                    aria-label={t(
+                                                        'event.liveDashboard.notes.delete',
+                                                    )}
+                                                    onClick={() =>
+                                                        confirmAction(
+                                                            async () =>
+                                                                onDeleteNote(
+                                                                    matchId,
+                                                                    team.teamId,
+                                                                    note.id,
+                                                                ),
+                                                            {
+                                                                content: t(
+                                                                    'event.liveDashboard.notes.deleteConfirm',
+                                                                    {note: note.note},
+                                                                ),
+                                                                okText: t('common.delete'),
+                                                            },
+                                                        )
+                                                    }>
+                                                    <DeleteOutlineIcon fontSize="small" />
+                                                </IconButton>
+                                            )
+                                        }>
+                                        <ListItemText
+                                            primary={note.note}
+                                            secondary={t('event.liveDashboard.notes.byAt', {
+                                                author:
+                                                    note.author ??
+                                                    t('event.liveDashboard.notes.unknownAuthor'),
+                                                time: format(
+                                                    new Date(note.createdAt),
+                                                    t('format.datetime'),
+                                                ),
+                                            })}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+                        {onAddNote && (
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="flex-start"
+                                sx={{mt: 1}}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    multiline
+                                    maxRows={3}
+                                    label={t('event.liveDashboard.notes.inputLabel')}
+                                    placeholder={t('event.liveDashboard.notes.placeholder')}
+                                    value={noteText}
+                                    onChange={e => setNoteText(e.target.value)}
+                                    disabled={noteSubmitting}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    onClick={submitNote}
+                                    disabled={!canSubmitNote(noteText) || noteSubmitting}>
+                                    {t('event.liveDashboard.notes.add')}
+                                </Button>
+                            </Stack>
+                        )}
+                        <Divider sx={{mt: 1.5}} />
+                    </Box>
                     {pending && detail === null && (
                         <Box display="flex" justifyContent="center" py={2}>
                             <CircularProgress />

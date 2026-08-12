@@ -1705,6 +1705,21 @@
         "note": "Note: {{note}}",
         "none": "No requirements assigned"
       },
+      "notes": {
+        "title": "Notes",
+        "indicator_one": "{{count}} note",
+        "indicator_other": "{{count}} notes",
+        "empty": "No notes on this boat.",
+        "inputLabel": "New note",
+        "placeholder": "e.g. touched a buoy",
+        "add": "Add",
+        "byAt": "{{author}} · {{time}}",
+        "unknownAuthor": "Unknown",
+        "delete": "Delete note",
+        "deleteConfirm": "Delete this note? “{{note}}”",
+        "error": "The note could not be saved.",
+        "deleteError": "The note could not be deleted."
+      },
       "timeCheck": {
         "TOO_EARLY": "Fulfilled too early",
         "LATE": "Fulfilled late",
