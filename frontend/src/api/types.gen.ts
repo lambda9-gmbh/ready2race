@@ -483,7 +483,14 @@ export type BoardElement = {
 /**
  * MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile
  */
-export type BoardElementType = 'MATCH' | 'MATCH_DETAIL' | 'MATCH_LIST' | 'CLOCK' | 'TEXT' | 'AWARD_CEREMONY' | 'DELAY'
+export type BoardElementType =
+    | 'MATCH'
+    | 'MATCH_DETAIL'
+    | 'MATCH_LIST'
+    | 'CLOCK'
+    | 'TEXT'
+    | 'AWARD_CEREMONY'
+    | 'DELAY'
 
 export type BoardListDto = {
     mode: BoardListMode
@@ -496,11 +503,6 @@ export type BoardListDto = {
 }
 
 export type BoardListMode = 'UPCOMING' | 'RESULTS' | 'RUNNING' | 'SCHEDULE'
-
-/**
- * SCHEDULE only: FOLLOW = moving window around now (default), FULL = the whole day, the tile scrolls instead
- */
-export type BoardScheduleMode = 'FOLLOW' | 'FULL'
 
 /**
  * One place on the day's timeline. At most one of match and result is set; both empty means the slot exists but is unoccupied
@@ -535,6 +537,11 @@ export type BoardRequest = {
     name: string
     config: BoardConfig
 }
+
+/**
+ * SCHEDULE only: FOLLOW = moving window around now (default), FULL = the whole day, the tile scrolls instead
+ */
+export type BoardScheduleMode = 'FOLLOW' | 'FULL'
 
 export type BoardTile = {
     rotationIntervalSeconds?: number
