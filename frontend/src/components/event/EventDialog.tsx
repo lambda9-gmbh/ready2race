@@ -8,7 +8,6 @@ import {useForm} from 'react-hook-form-mui'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {useCallback} from 'react'
 import {
-    ChainProgressionMode,
     CreateEventRequest,
     EventDto,
     MatchResultType,
@@ -19,13 +18,7 @@ import {addEvent, updateEvent} from '@api/sdk.gen.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import FormInputDate from '@components/form/input/FormInputDate.tsx'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
-import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {
-    AUTO_REFRESH_DEFAULT_SECONDS,
-    AUTO_REFRESH_MAX_SECONDS,
-    AUTO_REFRESH_MIN_SECONDS,
-    clampRefreshSeconds,
-} from '@components/event/competition/excecution/autoRefresh.ts'
+import {AUTO_REFRESH_DEFAULT_SECONDS} from '@components/event/competition/excecution/autoRefresh.ts'
 
 type EventForm = {
     name: string
@@ -44,13 +37,11 @@ type EventForm = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
-    chainProgressionMode: ChainProgressionMode
-    autoCreateFollowingRounds: boolean
+    // Die Durchführungs-Einstellungen (chainProgressionMode, autoCreateFollowingRounds,
+    // executionAutoRefresh) fehlen hier bewusst: Sie werden seit dem 11.08.2026 im
+    // Einstellungs-Popover des Zeitplan-Tabs gepflegt (siehe ScheduleSettingsPopover).
     showBreaksOnPublicBoards: boolean
     publicResultsVisibility: PublicResultsVisibility
-    executionAutoRefresh: boolean
-    /** Als Text, weil FormInputNumber auf FormInputText sitzt; umgerechnet wird beim Absenden. */
-    executionAutoRefreshSeconds: string
 }
 
 const addAction = (formData: EventForm) => {
@@ -62,7 +53,7 @@ const addAction = (formData: EventForm) => {
 const editAction = (formData: EventForm, entity: EventDto) => {
     return updateEvent({
         path: {eventId: entity.id},
-        body: mapFormToUpdateRequest(formData, entity.challengeEvent),
+        body: mapFormToUpdateRequest(formData, entity),
     })
 }
 
@@ -86,18 +77,11 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         allowSelfSubmission: false,
         submissionNeedsVerification: false,
         allowParticipantSelfRegistration: false,
-        chainProgressionMode: 'DEAKTIVIERT',
-        autoCreateFollowingRounds: false,
         showBreaksOnPublicBoards: false,
         publicResultsVisibility: 'FINISHED_ONLY',
-        executionAutoRefresh: true,
-        executionAutoRefreshSeconds: String(AUTO_REFRESH_DEFAULT_SECONDS),
     }
 
     const formContext = useForm<EventForm>()
-
-    // Das Sekundenfeld hat nichts zu sagen, solange die Automatik aus ist.
-    const autoRefreshWatch = formContext.watch('executionAutoRefresh')
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
@@ -105,11 +89,6 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
 
     const challengeEventWatch = formContext.watch('challengeEvent')
     const challengeResultTypes = [{id: 'DISTANCE', label: 'Distance (m)'}]
-    const chainProgressionModes: {id: ChainProgressionMode; label: string}[] = [
-        {id: 'SCHIEDSRICHTER', label: t('event.chainProgressionMode.SCHIEDSRICHTER')},
-        {id: 'REGATTABUERO', label: t('event.chainProgressionMode.REGATTABUERO')},
-        {id: 'DEAKTIVIERT', label: t('event.chainProgressionMode.DEAKTIVIERT')},
-    ]
     const publicResultsVisibilities: {id: PublicResultsVisibility; label: string}[] = [
         {id: 'FINISHED_ONLY', label: t('event.publicResultsVisibility.FINISHED_ONLY')},
         {id: 'RESULTS_COMPLETE', label: t('event.publicResultsVisibility.RESULTS_COMPLETE')},
@@ -184,23 +163,6 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     name={`allowParticipantSelfRegistration`}
                     label={t('event.allowParticipantSelfRegistration')}
                 />
-                <FormInputSelect
-                    label={t('event.chainProgressionMode.label')}
-                    required={true}
-                    name="chainProgressionMode"
-                    options={chainProgressionModes}
-                    fullWidth
-                />
-                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
-                    {t('event.chainProgressionMode.hint')}
-                </Typography>
-                <FormInputCheckbox
-                    name={`autoCreateFollowingRounds`}
-                    label={t('event.autoCreateFollowingRounds.label')}
-                />
-                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
-                    {t('event.autoCreateFollowingRounds.hint')}
-                </Typography>
                 <FormInputCheckbox
                     name={`showBreaksOnPublicBoards`}
                     label={t('event.showBreaksOnPublicBoards')}
@@ -218,22 +180,6 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                 <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
                     {t('event.publicResultsVisibility.hint')}
                 </Typography>
-                <FormInputCheckbox
-                    name={'executionAutoRefresh'}
-                    label={t('event.executionAutoRefresh.label')}
-                />
-                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
-                    {t('event.executionAutoRefresh.hint')}
-                </Typography>
-                <FormInputNumber
-                    name={'executionAutoRefreshSeconds'}
-                    label={t('event.executionAutoRefresh.seconds')}
-                    min={AUTO_REFRESH_MIN_SECONDS}
-                    max={AUTO_REFRESH_MAX_SECONDS}
-                    integer
-                    required={autoRefreshWatch}
-                    disabled={!autoRefreshWatch}
-                />
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate
@@ -263,19 +209,16 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         allowSelfSubmission: formData.allowSelfSubmission,
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
-        chainProgressionMode: formData.chainProgressionMode,
-        autoCreateFollowingRounds: formData.autoCreateFollowingRounds,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
-        executionAutoRefresh: formData.executionAutoRefresh,
-        // Der Takt bleibt auch bei abgeschalteter Automatik gespeichert — dann ist das Feld
-        // gesperrt und kann leer stehen. Begrenzt statt roh übernommen, damit ein leeres oder
-        // krummes Feld nicht als 0 beim Server ankommt, wo es nur abgelehnt würde.
-        executionAutoRefreshSeconds: clampRefreshSeconds(Number(formData.executionAutoRefreshSeconds)),
+        // Die Durchführungs-Einstellungen gehören zum Zeitplan-Popover; eine neue Veranstaltung
+        // startet mit den Server-Voreinstellungen (der Modus-Default liegt beim Backend).
+        executionAutoRefresh: true,
+        executionAutoRefreshSeconds: AUTO_REFRESH_DEFAULT_SECONDS,
     }
 }
 
-function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): UpdateEventRequest {
+function mapFormToUpdateRequest(formData: EventForm, entity: EventDto): UpdateEventRequest {
     return {
         name: formData.name,
         description: takeIfNotEmpty(formData.description),
@@ -288,19 +231,18 @@ function mapFormToUpdateRequest(formData: EventForm, challengeEvent: boolean): U
         paymentDueBy: takeIfNotEmpty(formData.paymentDueBy),
         latePaymentDueBy: takeIfNotEmpty(formData.latePaymentDueBy),
         mixedTeamTerm: takeIfNotEmpty(formData.mixedTeamTerm),
-        challengeResultType: challengeEvent ? formData.challengeResultType : undefined,
+        challengeResultType: entity.challengeEvent ? formData.challengeResultType : undefined,
         allowSelfSubmission: formData.allowSelfSubmission,
         submissionNeedsVerification: formData.submissionNeedsVerification,
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
-        chainProgressionMode: formData.chainProgressionMode,
-        autoCreateFollowingRounds: formData.autoCreateFollowingRounds,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
-        executionAutoRefresh: formData.executionAutoRefresh,
-        // Der Takt bleibt auch bei abgeschalteter Automatik gespeichert — dann ist das Feld
-        // gesperrt und kann leer stehen. Begrenzt statt roh übernommen, damit ein leeres oder
-        // krummes Feld nicht als 0 beim Server ankommt, wo es nur abgelehnt würde.
-        executionAutoRefreshSeconds: clampRefreshSeconds(Number(formData.executionAutoRefreshSeconds)),
+        // Nicht Teil dieses Dialogs (siehe ScheduleSettingsPopover) — der Endpunkt kennt aber
+        // kein Teil-Update, also gehen die gespeicherten Werte unverändert mit.
+        chainProgressionMode: entity.chainProgressionMode,
+        autoCreateFollowingRounds: entity.autoCreateFollowingRounds,
+        executionAutoRefresh: entity.executionAutoRefresh,
+        executionAutoRefreshSeconds: entity.executionAutoRefreshSeconds,
     }
 }
 
@@ -322,14 +264,8 @@ function mapDtoToForm(dto: EventDto): EventForm {
         allowSelfSubmission: dto.allowSelfSubmission,
         submissionNeedsVerification: dto.submissionNeedsVerification,
         allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
-        chainProgressionMode: dto.chainProgressionMode ?? 'DEAKTIVIERT',
-        autoCreateFollowingRounds: dto.autoCreateFollowingRounds ?? false,
         showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards ?? false,
         publicResultsVisibility: dto.publicResultsVisibility ?? 'FINISHED_ONLY',
-        executionAutoRefresh: dto.executionAutoRefresh ?? true,
-        executionAutoRefreshSeconds: String(
-            clampRefreshSeconds(dto.executionAutoRefreshSeconds),
-        ),
     }
 }
 

@@ -28,9 +28,7 @@ import {
     OpenInNew,
     PlayArrow,
     Replay,
-    ShortText,
     Stop,
-    Subject,
     Undo,
 } from '@mui/icons-material'
 import {format} from 'date-fns'
@@ -47,7 +45,7 @@ import {
     unskipScheduleSlot,
     updateMatchActivation,
 } from '@api/sdk.gen.ts'
-import {EventScheduleSlotDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
+import {EventDto, EventScheduleSlotDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
@@ -64,6 +62,7 @@ import {
 } from './common.ts'
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
 import {useShortLabels} from '@components/event/shortLabels.ts'
+import {EXECUTION_NEW_TAB_KEY, useDeviceFlag} from '@components/event/deviceSettings.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import {delayParts, latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
 import {
@@ -73,6 +72,7 @@ import {
 } from '@components/event/match/matchStatusChip.ts'
 import {byeExplanation} from '@components/event/match/matchBye.ts'
 import ScheduleStartlistExportButton from './ScheduleStartlistExportButton.tsx'
+import ScheduleSettingsPopover from './ScheduleSettingsPopover.tsx'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 import ScheduleAdvanceDialog from './ScheduleAdvanceDialog.tsx'
@@ -145,7 +145,14 @@ const stateChipProps = (
     }
 }
 
-const EventSchedule = () => {
+type Props = {
+    /** Die geladene Veranstaltung — das Einstellungs-Popover schreibt seine Felder an ihr fest. */
+    event: EventDto
+    /** Lädt die Event-Daten der Seite neu, nachdem das Popover gespeichert hat. */
+    reloadEvent: () => void
+}
+
+const EventSchedule = ({event, reloadEvent}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const user = useUser()
@@ -189,8 +196,14 @@ const EventSchedule = () => {
 
     // Geteilt mit dem Schiedsrichter-Board (siehe shortLabels.ts). Seit dem 11.08.2026 startet
     // auch der Zeitplan in der Kurzform - die vollen Wettkampfnamen sprengten jede Zeile, und wer
-    // sie will, schaltet einmal um und behält das überall.
+    // sie will, schaltet einmal um und behält das überall. Umgeschaltet wird seit dem 11.08.2026
+    // im Einstellungs-Popover der Kopfzeile statt am Spaltenkopf "Slot".
     const [shortLabels, toggleShortLabels] = useShortLabels(true)
+
+    // Geräte-lokal (siehe deviceSettings.ts): ob der Sprung "Zur Durchführung" ein neues Fenster
+    // öffnet. Am Regattatag lebt der Zeitplan oft auf einem eigenen Bildschirm - der Sprung soll
+    // ihn dann nicht wegnavigieren.
+    const [openExecutionInNewTab, setOpenExecutionInNewTab] = useDeviceFlag(EXECUTION_NEW_TAB_KEY)
 
     const now = useLocalClock(30_000)
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
@@ -544,17 +557,31 @@ const EventSchedule = () => {
                         />
                     )}
                 </Stack>
-                {canEdit && (
-                    <Stack direction={'row'} spacing={2}>
-                        <ScheduleStartlistExportButton eventId={eventId} />
-                        <Button variant={'outlined'} onClick={openImportDialog}>
-                            {t('event.schedule.import')}
-                        </Button>
-                        <Button variant={'outlined'} startIcon={<Add />} onClick={openAddDialog}>
-                            {t('event.schedule.addSlot')}
-                        </Button>
-                    </Stack>
-                )}
+                <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                    {canEdit && (
+                        <>
+                            <ScheduleStartlistExportButton eventId={eventId} />
+                            <Button variant={'outlined'} onClick={openImportDialog}>
+                                {t('event.schedule.import')}
+                            </Button>
+                            <Button
+                                variant={'outlined'}
+                                startIcon={<Add />}
+                                onClick={openAddDialog}>
+                                {t('event.schedule.addSlot')}
+                            </Button>
+                        </>
+                    )}
+                    <ScheduleSettingsPopover
+                        event={event}
+                        reloadEvent={reloadEvent}
+                        canEdit={canEdit}
+                        shortLabels={shortLabels}
+                        toggleShortLabels={toggleShortLabels}
+                        openExecutionInNewTab={openExecutionInNewTab}
+                        setOpenExecutionInNewTab={setOpenExecutionInNewTab}
+                    />
+                </Stack>
             </Stack>
             {!data && pending && <Throbber />}
             {data && daySections.length === 0 && (
@@ -608,34 +635,7 @@ const EventSchedule = () => {
                             <TableHead>
                                 <TableRow>
                                     <TableCell width={'10%'}>{t('event.schedule.startTime')}</TableCell>
-                                    <TableCell width={'40%'}>
-                                        {/* Der Umschalter sitzt an der Spalte, deren Inhalt er
-                                            ändert. Er steht in jeder Tagestabelle, wirkt aber auf
-                                            alle - wer oben umschaltet, will nicht am nächsten Tag
-                                            wieder den langen Namen lesen. */}
-                                        <Stack
-                                            direction={'row'}
-                                            spacing={0.5}
-                                            alignItems={'center'}>
-                                            <span>{t('event.schedule.slot')}</span>
-                                            <IconButton
-                                                size={'small'}
-                                                onClick={toggleShortLabels}
-                                                color={shortLabels ? 'primary' : 'default'}
-                                                aria-pressed={shortLabels}
-                                                title={t(
-                                                    shortLabels
-                                                        ? 'event.schedule.showFullNames'
-                                                        : 'event.schedule.showShortNames',
-                                                )}>
-                                                {shortLabels ? (
-                                                    <Subject fontSize={'small'} />
-                                                ) : (
-                                                    <ShortText fontSize={'small'} />
-                                                )}
-                                            </IconButton>
-                                        </Stack>
-                                    </TableCell>
+                                    <TableCell width={'40%'}>{t('event.schedule.slot')}</TableCell>
                                     <TableCell width={'20%'}>{t('event.schedule.status')}</TableCell>
                                     <TableCell width={'15%'}>{t('event.schedule.duration')}</TableCell>
                                     {canEdit && <TableCell width={'15%'} />}
@@ -714,6 +714,14 @@ const EventSchedule = () => {
                                                                             slot.competitionId!,
                                                                     }}
                                                                     search={{tab: 'execution'}}
+                                                                    // Auf Wunsch je Gerät in
+                                                                    // einem neuen Fenster (siehe
+                                                                    // Einstellungs-Popover).
+                                                                    target={
+                                                                        openExecutionInNewTab
+                                                                            ? '_blank'
+                                                                            : undefined
+                                                                    }
                                                                     style={{
                                                                         display: 'inline-flex',
                                                                         color: 'inherit',

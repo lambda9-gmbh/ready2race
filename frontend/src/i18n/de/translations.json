@@ -84,6 +84,7 @@
     },
     "ok": "Ok",
     "save": "Speichern",
+    "settings": "Einstellungen",
     "saveAndNew": "Speichern und Neu",
     "saveAndNext": "Speichern und weiter",
     "search": "Suchen",
@@ -671,6 +672,13 @@
       "label": "Durchführungsseite automatisch aktualisieren",
       "seconds": "Takt in Sekunden",
       "hint": "Die Durchführungsseite zieht Zeiten, Ergebnisse, Läufe, Rundenwechsel und Check-ins im eingestellten Takt im Hintergrund nach — ohne die Seite neu zu laden. Erlaubt sind 5 bis 60 Sekunden, voreingestellt sind 5. Während ein Dialog offen ist, ruht der Abgleich."
+    },
+    "settings": {
+      "device": "Dieses Gerät",
+      "event": "Veranstaltung",
+      "openExecutionInNewTab": "„Zur Durchführung“ in neuem Fenster öffnen",
+      "shortLabels": "Kurznamen statt ausgeschriebener Wettkampfnamen",
+      "compact": "Kompakte Darstellung"
     },
     "invoice": {
       "prefix": "Rechnungspräfix",

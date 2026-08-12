@@ -516,7 +516,7 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'schedule'} activeTab={activeTab}>
-                            <EventSchedule/>
+                            <EventSchedule event={data} reloadEvent={reload}/>
                         </TabPanel>
                         <TabPanel index={'settings'} activeTab={activeTab}>
                             <Stack spacing={4}>

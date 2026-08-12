@@ -84,6 +84,7 @@
     },
     "ok": "OK",
     "save": "Gem",
+    "settings": "Indstillinger",
     "saveAndNew": "Gem og ny",
     "saveAndNext": "Gem og fortsæt",
     "search": "Søg",
@@ -671,6 +672,13 @@
       "label": "Opdater gennemførelsessiden automatisk",
       "seconds": "Interval i sekunder",
       "hint": "Gennemførelsessiden henter tider, resultater, løb, rundeskift og check-ins i baggrunden i det indstillede interval — uden at genindlæse siden. Tilladt er 5 til 60 sekunder, standard er 5. Synkroniseringen hviler, mens en dialog er åben."
+    },
+    "settings": {
+      "device": "Denne enhed",
+      "event": "Arrangement",
+      "openExecutionInNewTab": "Åbn „Til gennemførelse“ i nyt vindue",
+      "shortLabels": "Korte navne i stedet for fulde konkurrencenavne",
+      "compact": "Kompakt visning"
     },
     "invoice": {
       "prefix": "Fakturapræfiks",

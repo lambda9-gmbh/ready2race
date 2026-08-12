@@ -6,7 +6,6 @@ import {
     BottomNavigationAction,
     Box,
     CircularProgress,
-    IconButton,
     Paper,
     Stack,
     Typography,
@@ -15,7 +14,7 @@ import {
 } from '@mui/material'
 import LiveTvIcon from '@mui/icons-material/LiveTv'
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered'
-import {ArrowBack, ShortText, Subject} from '@mui/icons-material'
+import {ArrowBack} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
@@ -37,7 +36,9 @@ import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
 import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
+import DashboardSettingsPopover from '@components/event/liveDashboard/DashboardSettingsPopover.tsx'
 import {useShortLabels} from '@components/event/shortLabels.ts'
+import {DASHBOARD_COMPACT_KEY, useDeviceFlag} from '@components/event/deviceSettings.ts'
 import {
     LiveColumn,
     LiveDashboardActions,
@@ -152,6 +153,9 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
     // Geteilt mit dem Zeitplan-Tab (siehe shortLabels.ts); hier startet es in der Kurzform.
     const [shortLabels, toggleShortLabels] = useShortLabels(true)
+    // Geräte-lokal (siehe deviceSettings.ts): dichtere Karten und kleinere Schrift — eine dezente
+    // CSS-Stufe für kleine Bildschirme am Steg, umgeschaltet im Einstellungs-Popover.
+    const [compact, setCompact] = useDeviceFlag(DASHBOARD_COMPACT_KEY)
     const cacheUserId = user.loggedIn ? user.id : ''
     // Einmal lesen, dreifach verwenden: Der Startwert aller drei Zustände kommt aus demselben
     // Eintrag, und der useState-Initialisierer läuft nur beim ersten Rendern.
@@ -547,33 +551,20 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
                         </Typography>
                     )}
                     <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
-                        {/* Dieselbe Wahl wie am Spaltenkopf "Slot" im Zeitplan-Tab: wer die Rennen
-                            am Kürzel liest, liest sie hier genauso. */}
-                        <IconButton
-                            size="small"
-                            onClick={toggleShortLabels}
-                            color={shortLabels ? 'primary' : 'default'}
-                            aria-pressed={shortLabels}
-                            title={t(
-                                shortLabels
-                                    ? 'event.schedule.showFullNames'
-                                    : 'event.schedule.showShortNames',
-                            )}>
-                            {shortLabels ? (
-                                <Subject fontSize="small" />
-                            ) : (
-                                <ShortText fontSize="small" />
-                            )}
-                        </IconButton>
                         {lastUpdated && (
                             <Typography variant="caption" noWrap sx={{color: 'grey.700'}}>
                                 {format(lastUpdated, t('format.timeWithSeconds'))}
                             </Typography>
                         )}
-                        <RefreshCountdown
-                            intervalMs={pollIntervalMs}
-                            lastUpdated={lastUpdated}
-                            onIntervalChange={setPollIntervalMs}
+                        {/* Nur noch Anzeige — den Takt wählt das Einstellungs-Popover daneben. */}
+                        <RefreshCountdown intervalMs={pollIntervalMs} lastUpdated={lastUpdated} />
+                        <DashboardSettingsPopover
+                            shortLabels={shortLabels}
+                            toggleShortLabels={toggleShortLabels}
+                            pollIntervalMs={pollIntervalMs}
+                            onPollIntervalChange={setPollIntervalMs}
+                            compact={compact}
+                            setCompact={setCompact}
                         />
                     </Stack>
                 </Stack>
@@ -604,62 +595,77 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
                         onEntryClick={scrollToTimelineEntry}
                     />
                 )}
-                {wide ? (
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-                            gap: 2,
-                            alignItems: 'start',
-                        }}>
-                        {/* Der laufende Lauf bleibt im Blick, während nebenan durch die
-                            Gesamtliste gescrollt wird. */}
-                        <Stack
-                            spacing={2}
+                {/* Kompakt ist eine reine CSS-Stufe über den Karten: dichteres Karten-Padding und
+                    eine Schriftgröße kleiner je Variante. Die Karten selbst wissen davon nichts —
+                    ihre Zeilenlogik (Container-Queries, Spalten) bleibt unangetastet. */}
+                <Box
+                    sx={
+                        compact
+                            ? {
+                                  '& .MuiCardContent-root': {p: 0.75, '&:last-child': {pb: 0.5}},
+                                  '& .MuiTypography-subtitle1': {fontSize: '0.875rem'},
+                                  '& .MuiTypography-body2': {fontSize: '0.8rem'},
+                                  '& .MuiTypography-caption': {fontSize: '0.7rem'},
+                              }
+                            : undefined
+                    }>
+                    {wide ? (
+                        <Box
                             sx={{
-                                minWidth: 0,
-                                position: 'sticky',
-                                top: 16,
-                                maxHeight: 'calc(100vh - 32px)',
-                                overflowY: 'auto',
+                                display: 'grid',
+                                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+                                gap: 2,
+                                alignItems: 'start',
                             }}>
-                            <Typography variant="subtitle1" fontWeight={700}>
-                                {t('event.liveDashboard.tabs.live')}
-                            </Typography>
-                            {liveColumn}
-                        </Stack>
-                        {/* „Läufe" scrollt in sich selbst, statt die ganze Seite in die Länge zu
+                            {/* Der laufende Lauf bleibt im Blick, während nebenan durch die
+                            Gesamtliste gescrollt wird. */}
+                            <Stack
+                                spacing={2}
+                                sx={{
+                                    minWidth: 0,
+                                    position: 'sticky',
+                                    top: 16,
+                                    maxHeight: 'calc(100vh - 32px)',
+                                    overflowY: 'auto',
+                                }}>
+                                <Typography variant="subtitle1" fontWeight={700}>
+                                    {t('event.liveDashboard.tabs.live')}
+                                </Typography>
+                                {liveColumn}
+                            </Stack>
+                            {/* „Läufe" scrollt in sich selbst, statt die ganze Seite in die Länge zu
                             ziehen (Rückmeldung vom 10.08.2026) - der Überlauf greift erst, wenn die
                             Liste höher ist als das Fenster, kurze Listen stehen also ruhig. Die
                             Kopfzeile bleibt beim Scrollen oben. */}
-                        <Stack
-                            spacing={2}
-                            sx={{
-                                minWidth: 0,
-                                position: 'sticky',
-                                top: 16,
-                                maxHeight: 'calc(100vh - 32px)',
-                                overflowY: 'auto',
-                            }}>
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight={700}
+                            <Stack
+                                spacing={2}
                                 sx={{
+                                    minWidth: 0,
                                     position: 'sticky',
-                                    top: 0,
-                                    bgcolor: 'background.default',
-                                    zIndex: 1,
+                                    top: 16,
+                                    maxHeight: 'calc(100vh - 32px)',
+                                    overflowY: 'auto',
                                 }}>
-                                {t('event.liveDashboard.tabs.matches')}
-                            </Typography>
-                            {matchListColumn}
-                        </Stack>
-                    </Box>
-                ) : tab === 'live' ? (
-                    liveColumn
-                ) : (
-                    matchListColumn
-                )}
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight={700}
+                                    sx={{
+                                        position: 'sticky',
+                                        top: 0,
+                                        bgcolor: 'background.default',
+                                        zIndex: 1,
+                                    }}>
+                                    {t('event.liveDashboard.tabs.matches')}
+                                </Typography>
+                                {matchListColumn}
+                            </Stack>
+                        </Box>
+                    ) : tab === 'live' ? (
+                        liveColumn
+                    ) : (
+                        matchListColumn
+                    )}
+                </Box>
             </Stack>
             <LiveDashboardTeamDialog
                 team={selectedTeam}
