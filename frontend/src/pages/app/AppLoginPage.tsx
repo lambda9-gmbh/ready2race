@@ -1,11 +1,23 @@
 import {useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {FormContainer, useForm} from 'react-hook-form-mui'
-import {Box, Stack, Typography, Button, TextField, Paper, useMediaQuery, useTheme} from '@mui/material'
+import {
+    Alert,
+    Box,
+    Stack,
+    Typography,
+    Button,
+    TextField,
+    Paper,
+    useMediaQuery,
+    useTheme,
+} from '@mui/material'
+import InstallMobileIcon from '@mui/icons-material/InstallMobile'
 import {userLogin} from '@api/sdk.gen.ts'
 import {LoginRequest} from '@api/types.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {useFeedback} from "@utils/hooks.ts";
+import {useInstallHint} from '@pwa/useInstallHint.ts'
 
 const AppLoginPage = () => {
     const user = useUser()
@@ -34,12 +46,14 @@ const AppLoginPage = () => {
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const installHint = useInstallHint()
 
     return (
-        <Box 
-            sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 alignItems: 'center',
                 minHeight: '80vh',
                 width: '100%',
@@ -98,6 +112,32 @@ const AppLoginPage = () => {
                     </Stack>
                 </FormContainer>
             </Paper>
+            {/* Installationshinweis: nur solange die App nicht installiert und der Hinweis
+                nicht weggeklickt ist - useInstallHint entscheidet, welche Variante passt */}
+            {(installHint.showInstallButton || installHint.showIosHint) && (
+                <Alert
+                    severity="info"
+                    icon={<InstallMobileIcon fontSize="small" />}
+                    onClose={installHint.dismiss}
+                    sx={{
+                        mt: 2,
+                        width: '100%',
+                        maxWidth: {xs: '100%', sm: 400},
+                        alignItems: 'center',
+                    }}
+                >
+                    {installHint.showInstallButton ? (
+                        <Stack spacing={1} alignItems="flex-start">
+                            <Typography variant="body2">{t('app.install.message')}</Typography>
+                            <Button size="small" variant="outlined" onClick={installHint.promptInstall}>
+                                {t('app.install.button')}
+                            </Button>
+                        </Stack>
+                    ) : (
+                        <Typography variant="body2">{t('app.install.iosHint')}</Typography>
+                    )}
+                </Alert>
+            )}
         </Box>
     )
 }

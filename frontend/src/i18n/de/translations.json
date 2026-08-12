@@ -2621,6 +2621,11 @@
       "available": "Neue Version verfügbar",
       "reload": "Jetzt laden"
     },
+    "install": {
+      "message": "Du kannst diese App auf deinem Gerät installieren.",
+      "button": "App installieren",
+      "iosHint": "Du kannst diese App installieren: Tippe auf das Teilen-Symbol und wähle „Zum Home-Bildschirm“."
+    },
     "reset": {
       "button": "App zurücksetzen",
       "confirm": "Setzt die App auf dem Gerät zurück und lädt sie neu. Angemeldet bleibst du."

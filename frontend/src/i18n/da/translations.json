@@ -2615,6 +2615,11 @@
       "available": "Ny version tilgængelig",
       "reload": "Indlæs nu"
     },
+    "install": {
+      "message": "Du kan installere denne app på din enhed.",
+      "button": "Installer app",
+      "iosHint": "Du kan installere denne app: Tryk på del-ikonet og vælg „Føj til hjemmeskærm“."
+    },
     "reset": {
       "button": "Nulstil app",
       "confirm": "Nulstiller appen på denne enhed og genindlæser den. Du forbliver logget ind."

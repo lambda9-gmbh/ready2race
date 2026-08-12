@@ -2625,6 +2625,11 @@
       "available": "New version available",
       "reload": "Reload now"
     },
+    "install": {
+      "message": "You can install this app on your device.",
+      "button": "Install app",
+      "iosHint": "You can install this app: tap the share icon and choose “Add to Home Screen”."
+    },
     "reset": {
       "button": "Reset app",
       "confirm": "Resets the app on this device and reloads it. You stay signed in."
