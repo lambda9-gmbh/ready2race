@@ -24,6 +24,7 @@ import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 import SidebarContent from '@components/sidebar/SidebarContent.tsx'
 import {useThemeConfig} from '@contexts/theme/ThemeContext.ts'
 import Config from '../Config.ts'
+import {FullWidthLayoutContext} from './fullWidthLayout.ts'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -41,6 +42,10 @@ const RootLayout = () => {
     const isOnLoginRoute = matchRoute({to: '/login'})
     const isOnRegistrationRoute = matchRoute({to: '/registration'})
 
+    // Einzelne Ansichten (Veranstaltungs-Modus im Zeitplan-Tab) heben die xl-Beschränkung des
+    // Containers vorübergehend auf — siehe fullWidthLayout.ts.
+    const [fullWidth, setFullWidth] = useState(false)
+
     // Auto-close drawer on navigation when on mobile
     useEffect(() => {
         if (isMobile && drawerExpanded) {
@@ -49,7 +54,8 @@ const RootLayout = () => {
     }, [location.pathname, isMobile])
 
     return (
-        <Container maxWidth={'xl'} disableGutters={isMobile}>
+        <FullWidthLayoutContext.Provider value={setFullWidth}>
+        <Container maxWidth={fullWidth ? false : 'xl'} disableGutters={isMobile}>
             <Paper elevation={isMobile ? 0 : 24}>
                 <Box sx={{background: t => t.palette.background.default}}>
                     <AppBar
@@ -197,6 +203,7 @@ const RootLayout = () => {
                 </Box>
             </Paper>
         </Container>
+        </FullWidthLayoutContext.Provider>
     )
 }
 

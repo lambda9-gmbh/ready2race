@@ -1951,6 +1951,15 @@
       },
       "allPlanned": "All scheduled races are already planned.",
       "goToExecution": "Go to execution",
+      "eventMode": {
+        "enable": "Enable event mode: schedule and execution side by side",
+        "disable": "Disable event mode",
+        "tooSmall": "Event mode needs a wide screen — this window is too narrow for it.",
+        "loadHint": "Loads the execution next to the schedule. The device setting “Open in new window” does not apply in event mode.",
+        "close": "Close execution",
+        "empty": "Select a race — its execution will appear here next to the schedule.",
+        "execution": "Execution"
+      },
       "indicator": {
         "now": "Now",
         "state": {

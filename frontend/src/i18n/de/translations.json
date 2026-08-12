@@ -1947,6 +1947,15 @@
       },
       "allPlanned": "Alle geplanten Läufe sind bereits eingeplant.",
       "goToExecution": "Zur Durchführung",
+      "eventMode": {
+        "enable": "Veranstaltungs-Modus einschalten: Zeitplan und Durchführung nebeneinander",
+        "disable": "Veranstaltungs-Modus ausschalten",
+        "tooSmall": "Der Veranstaltungs-Modus braucht einen breiten Bildschirm — dieses Fenster ist dafür zu schmal.",
+        "loadHint": "Lädt die Durchführung rechts neben dem Zeitplan. Die Geräte-Einstellung „In neuem Fenster öffnen“ gilt im Veranstaltungs-Modus nicht.",
+        "close": "Durchführung schließen",
+        "empty": "Wähle einen Lauf — seine Durchführung erscheint hier neben dem Zeitplan.",
+        "execution": "Durchführung"
+      },
       "indicator": {
         "now": "Jetzt",
         "state": {
