@@ -196,7 +196,9 @@ const QrAssignPage = () => {
             spacing={3}
             alignItems="center"
             justifyContent="flex-start"
-            sx={{width: '100%', maxWidth: 600, px: 2, py: 3}}>
+            // mx: 'auto' zentriert die Spalte — das App-Layout streckt seine Kinder nur, auf dem
+            // Tablet klebte der auf 600px begrenzte Stack sonst am linken Rand.
+            sx={{width: '100%', maxWidth: 600, mx: 'auto', px: 2, py: 3}}>
             <Box sx={{width: '100%', textAlign: 'center'}}>
                 <AppTopTitle title={t('qrAssign.title')} disableBackButton={scanningSystemUser} />
                 <Typography variant="body2" color="text.secondary">
