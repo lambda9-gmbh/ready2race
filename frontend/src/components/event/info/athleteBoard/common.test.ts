@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {TFunction} from 'i18next'
-import {COUNTDOWN_MAX_SECONDS, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
+import {COUNTDOWN_MAX_SECONDS, finishComplete, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
 
 // Gibt den letzten Abschnitt des Schlüssels zurück, damit die Erwartungen unabhängig
 // von den echten Übersetzungen lesbar bleiben: "…hoursUnit" -> "hoursUnit".
@@ -97,6 +97,23 @@ describe('scaled', () => {
         expect(scaled('1rem', '2vw', '3rem')).toBe(
             'calc(var(--ab-scale, 1) * clamp(1rem, 2vw, 3rem))',
         )
+    })
+})
+
+// Die Wartestand-Kennzeichnung der „Im Rennen"-Karte: genau dann, wenn jedes Boot
+// Platz/Zeit hat oder gescheitert ist — dieselbe Auslegung wie teamHasResult im Backend.
+describe('finishComplete', () => {
+    test('alle Boote gewertet oder gescheitert: komplett', () => {
+        expect(finishComplete([{place: 1}, {place: 2}, {failed: true}])).toBe(true)
+    })
+
+    test('ein Boot noch ohne Ergebnis: nicht komplett', () => {
+        expect(finishComplete([{place: 1}, {place: null, failed: false}])).toBe(false)
+    })
+
+    // Leere Aufstellung (Platzhalter, wartende Runde): kein Zieleinlauf, kein Band.
+    test('ohne Boote nie komplett', () => {
+        expect(finishComplete([])).toBe(false)
     })
 })
 

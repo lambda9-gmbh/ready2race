@@ -1575,6 +1575,7 @@
         "unscheduled": "Time open",
         "failed": "not classified",
         "startedAt": "started {{time}}",
+        "awaitingReferee": "Finish complete — awaiting referee decision",
         "preparing": "in preparation",
         "penalty": "incl. {{seconds}} s penalty",
         "deregistered": "withdrawn",
@@ -1997,14 +1998,31 @@
         "addElement": "Add element",
         "width": "Width (columns)",
         "height": "Height (rows)",
-        "add": "Add tile"
+        "add": "Add tile",
+        "addDisabledMatchDetail": "The announcer tile fills the whole board — no further tiles are possible"
+      },
+      "delay": {
+        "subtitle": "vs. schedule, as of last start",
+        "onTime": "on time",
+        "noStarts": "No race started yet"
+      },
+      "detail": {
+        "status": {
+          "upcoming": "Upcoming",
+          "preparing": "Preparing",
+          "running": "Running",
+          "awaiting": "Awaiting referee decision",
+          "finished": "Finished"
+        }
       },
       "element": {
         "type": {
           "label": "Element type",
           "match": "Match",
+          "matchDetail": "Announcer tile (full screen)",
           "matchList": "Match list",
           "clock": "Clock",
+          "delay": "Delay",
           "text": "Notice",
           "awardCeremony": "Award ceremony"
         },
@@ -2026,6 +2044,11 @@
           "results": "Latest results",
           "running": "Running matches",
           "schedule": "Day program"
+        },
+        "scheduleMode": {
+          "label": "View",
+          "follow": "Moving window around now",
+          "full": "Whole day (scrollable)"
         },
         "titleCurrent": "Racing now",
         "titleNext": "Up next",

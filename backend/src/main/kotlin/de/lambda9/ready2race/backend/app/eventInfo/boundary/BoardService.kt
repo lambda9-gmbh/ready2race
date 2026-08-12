@@ -2,9 +2,12 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonyService
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.BoardRepo
+import de.lambda9.ready2race.backend.app.eventInfo.control.MyEventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
+import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toJsonb
@@ -130,15 +133,46 @@ object BoardService {
                 // aufbaut. Sprecherinnen-Details (Crew einzeln, Jahrgänge, meldender
                 // Verein) kommen nur mit, wenn irgendein Element sie anfordert.
                 val details = needs.crewDetails
-                var running = (!EventInfoService.getRunningMatches(eventId, needs.runningLimit, clubShortNames))
-                    .data.map { it.toAthleteBoardMatch(now, showCountdown = true, includeDetails = details) }
+                val runningInfos =
+                    (!EventInfoService.getRunningMatches(eventId, needs.runningLimit, clubShortNames)).data
+                val upcomingInfos =
+                    (!EventInfoService.getUpcomingMatchesForBoard(eventId, needs.upcomingLimit, clubShortNames)).data
+                // confirmedOnly: die „Letztes Ergebnis"-Kachel zeigt nur beendete Läufe —
+                // ein voll gewerteter, unbeendeter läuft nebenan noch als „Im Rennen" mit
+                // Live-Stand und würde sonst doppelt erscheinen (Begründung am Parameter).
+                val resultInfos = (!EventInfoService.getLatestMatchResults(
+                    eventId,
+                    needs.resultsLimit,
+                    null,
+                    clubShortNames,
+                    confirmedOnly = true,
+                )).data
+
+                // Bedingungen je Person nur, wenn eine Sprecher-Kachel sie anfordert
+                // (needs.requirements) — drei Extra-Abfragen und je Person Nutzlast, die kein
+                // anderes Board zahlt. Vor der Konversion gesammelt, weil nur die Info-Typen
+                // die Personen-Kennungen tragen; welche Slots die Kachel am Ende zeigt, steht
+                // hier noch nicht fest, deshalb alle drei Blöcke.
+                val requirements = if (needs.requirements) {
+                    val participantIds = (
+                        runningInfos.flatMap { m -> m.teams.flatMap { it.participants } }.map { it.participantId } +
+                            upcomingInfos.flatMap { m -> m.teams.flatMap { it.participants } }.map { it.participantId } +
+                            resultInfos.flatMap { m -> m.teams.flatMap { it.participants } }.map { it.participantId }
+                        ).toSet()
+                    !participantRequirements(eventId, participantIds)
+                } else emptyMap()
+
+                var running = runningInfos.map {
+                    it.toAthleteBoardMatch(now, showCountdown = true, includeDetails = details, requirements = requirements)
+                }
                 var upcoming = AthleteBoardLogic.sortByStartTime(
-                    (!EventInfoService.getUpcomingMatchesForBoard(eventId, needs.upcomingLimit, clubShortNames))
-                        .data.map { it.toAthleteBoardMatch(now, showCountdown = true, includeDetails = details) }
+                    upcomingInfos.map {
+                        it.toAthleteBoardMatch(now, showCountdown = true, includeDetails = details, requirements = requirements)
+                    }
                 ) { it.startTime }
-                val results =
-                    (!EventInfoService.getLatestMatchResults(eventId, needs.resultsLimit, null, clubShortNames))
-                        .data.map { it.toAthleteBoardResult() }
+                val results = resultInfos.map {
+                    it.toAthleteBoardResult(includeDetails = details, requirements = requirements)
+                }
 
                 // „Weiter kommen N Boote → Finale": matchId IST die Setup-Lauf-Id; die
                 // Platzhalter der Zeitstrahl-Slots treffen in der Abfrage schlicht nichts.
@@ -160,9 +194,16 @@ object BoardService {
 
                 val program = if (needs.schedule) !buildProgram(eventId) else emptyList()
 
-                // Der Hinweis liegt mit im View-Zwischenspeicher; eine Änderung erscheint
+// Der Hinweis liegt mit im View-Zwischenspeicher; eine Änderung erscheint
                 // also erst nach Cache-TTL plus Poll-Takt des Bildschirms.
                 val notice = !EventRepo.getNotice(eventId).orDie()
+
+                // Nur für Boards mit DELAY-Element (needs-Muster): der Running-Block trägt die
+                // Zahl nicht verlässlich — der zuletzt gestartete Lauf kann längst beendet und
+                // dort verschwunden sein. Deshalb die eigene kleine Abfrage, gated statt gratis.
+                val currentDelaySeconds = if (needs.delay) {
+                    BoardLogic.currentDelaySeconds(!CompetitionMatchRepo.getLatestStartedTimes(eventId).orDie())
+                } else null
 
                 val dto = BoardViewDto(
                     boardId = board.id,
@@ -183,7 +224,8 @@ object BoardService {
                         }
                     },
                     ceremonies = ceremonies,
-                    notice = notice,
+notice = notice,
+                    currentDelaySeconds = currentDelaySeconds,
                 )
 
                 boardViewCache[boardId] = CachedView(now, dto)
@@ -197,12 +239,65 @@ object BoardService {
      * öffentlichen Anzeigen zeigt — dieselbe Regel wie bei den Platzhaltern der
      * Lauf-Blöcke (EventInfoService.mergeWithPendingPlaceholders).
      */
+    /**
+     * Bedingungen je Person für die Sprecher-Kachel — mit der DATENSCHUTZ-Leitplanke des
+     * persönlichen Dashboards (MyEventService): Boards sind öffentliche Endpunkte, deshalb
+     * verlassen ausschließlich Bedingungen den Server, die (a) für die Rolle der Person
+     * überhaupt gelten (rollengebundene Bedingungen zählen nur für Personen in dieser Rolle,
+     * Regel aus `ParticipantRequirementForEventRepo.getRequirementsForNamedParticipants`) und
+     * (b) ausdrücklich `publicly_visible = true` tragen. Freitext-Notizen werden gar nicht
+     * erst geladen (`MyEventRepo.findFulfilledRequirementIdsByParticipant`). Gebatcht auf drei
+     * Abfragen für alle Personen zusammen — die Boards fragen im Sekundentakt ab.
+     */
+    private fun participantRequirements(
+        eventId: UUID,
+        participantIds: Set<UUID>,
+    ): App<Nothing, Map<UUID, List<AthleteBoardRequirement>>> = KIO.comprehension {
+        if (participantIds.isEmpty()) return@comprehension KIO.ok(emptyMap())
+
+        val visible = (!ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie())
+            .filter { it.publiclyVisible == true }
+        if (visible.isEmpty()) return@comprehension KIO.ok(emptyMap())
+
+        val rolesByParticipant =
+            !MyEventRepo.findNamedParticipantIdsByParticipant(eventId, participantIds).orDie()
+        val bindings = !ParticipantRequirementForEventRepo
+            .getRequirementsForNamedParticipants(
+                eventId,
+                rolesByParticipant.values.flatten().distinct(),
+            )
+            .orDie()
+        val fulfilledByParticipant =
+            !MyEventRepo.findFulfilledRequirementIdsByParticipant(eventId, participantIds).orDie()
+
+        KIO.ok(participantIds.associateWith { participantId ->
+            val roles = rolesByParticipant[participantId] ?: emptySet()
+            val applicable = bindings
+                .filter { it.namedParticipant == null || roles.contains(it.namedParticipant) }
+                .map { it.participantRequirement }
+                .toSet()
+            visible
+                .filter { applicable.contains(it.id) }
+                .map {
+                    AthleteBoardRequirement(
+                        name = it.name ?: "",
+                        fulfilled = fulfilledByParticipant[participantId]?.contains(it.id) == true,
+                    )
+                }
+                .sortedBy { it.name }
+        })
+    }
+
     private fun buildProgram(eventId: UUID): App<EventInfoProblem, List<BoardProgramEntry>> =
         KIO.comprehension {
             val showBreaks = !EventRepo.getShowBreaksOnPublicBoards(eventId).orDie()
             val slotRecords = !EventScheduleRepo.getSlots(eventId).orDie()
 
             KIO.ok(
+                // markPassedFreeSlots: Programmpunkte ohne eigenen Erledigt-Zustand gelten als
+                // vorbei, sobald ein späterer Lauf Aktivität zeigt — sonst bleibt der
+                // mitlaufende Ausschnitt an einer überholten Pause hängen.
+                BoardLogic.markPassedFreeSlots(
                 slotRecords.mapNotNull { r ->
                     val isFree = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH] == null
                     val skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null
@@ -229,6 +324,7 @@ object BoardService {
                         }
                     }
                 }
+                )
             )
         }
 }

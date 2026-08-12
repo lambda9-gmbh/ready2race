@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest'
 import {AthleteBoardMatch, BoardElement, BoardTile, BoardViewDto} from '@api/types.gen'
 import {densityScale} from '../info/athleteBoard/boardLayout'
-import {ceremonyForElement, elementScale, gridPlacement, listForElement, programForElement, slotForElement} from './boardView'
+import {ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, slotForElement} from './boardView'
 
 const match = (id: string, boats = 4): AthleteBoardMatch =>
     ({
@@ -81,6 +81,17 @@ describe('gridPlacement', () => {
         const {rows} = gridPlacement([tile(3, 1), tile(3, 2)], 3)
         expect(rows).toBe(3)
     })
+
+    // Der Editor erlaubt bis zu 4 Spalten (MAX_COLUMNS); mit dem immer aktiven Raster
+    // muss auch das volle 4×4 sauber platziert werden — 16 Kacheln, keine Lücke.
+    test('ein volles 4×4-Raster platziert alle 16 Kacheln lückenlos', () => {
+        const tiles = Array.from({length: 16}, () => tile())
+        const {rows, positions} = gridPlacement(tiles, 4)
+        expect(rows).toBe(4)
+        expect(positions.map(p => [p.column, p.row])).toEqual(
+            Array.from({length: 16}, (_, i) => [(i % 4) + 1, Math.floor(i / 4) + 1]),
+        )
+    })
 })
 
 describe('slotForElement', () => {
@@ -109,6 +120,27 @@ describe('slotForElement', () => {
 
     test('andere Elementtypen haben keinen Slot', () => {
         expect(slotForElement(v, {type: 'CLOCK'})).toBeNull()
+    })
+
+    // Die Sprecher-Kachel wählt über denselben Offset wie MATCH.
+    test('die Sprecher-Kachel greift denselben Slot wie MATCH', () => {
+        expect(slotForElement(v, {type: 'MATCH_DETAIL', offset: 0})?.match?.matchId).toBe('r1')
+    })
+})
+
+// Der Editor sperrt „Kachel hinzufügen", solange eine Sprecher-Kachel existiert —
+// die Vollbild-Regel des Backends soll in der Maske gar nicht erst verletzbar sein.
+describe('hasMatchDetail', () => {
+    test('findet die Sprecher-Kachel auch als Rotations-Element', () => {
+        expect(
+            hasMatchDetail([
+                {elements: [matchElement(0), {type: 'MATCH_DETAIL', offset: 0}]},
+            ]),
+        ).toBe(true)
+    })
+
+    test('ohne Sprecher-Kachel bleibt alles erlaubt', () => {
+        expect(hasMatchDetail([tile(), tile()])).toBe(false)
     })
 })
 
@@ -206,6 +238,35 @@ describe('programForElement', () => {
 
     test('andere Modi haben kein Programm', () => {
         expect(programForElement(v, {type: 'MATCH_LIST', listMode: 'UPCOMING', limit: 4})).toBeNull()
+    })
+
+    // FOLLOW explizit gesetzt verhält sich wie das Alt-Verhalten ohne Feld.
+    test('scheduleMode FOLLOW schneidet wie ohne Feld zu', () => {
+        const program = programForElement(v, {
+            type: 'MATCH_LIST',
+            listMode: 'SCHEDULE',
+            scheduleMode: 'FOLLOW',
+            limit: 4,
+        })
+        expect(program?.map(e => e.startTime)).toEqual(['08:30', '09:00', '09:30', '10:00'])
+    })
+
+    // FULL: ganzer Tag ohne Zuschnitt — auch das Limit greift nicht, die Kachel scrollt.
+    test('scheduleMode FULL liefert den ganzen Tag und ignoriert das Limit', () => {
+        const program = programForElement(v, {
+            type: 'MATCH_LIST',
+            listMode: 'SCHEDULE',
+            scheduleMode: 'FULL',
+            limit: 2,
+        })
+        expect(program?.map(e => e.startTime)).toEqual([
+            '08:00',
+            '08:30',
+            '09:00',
+            '09:30',
+            '10:00',
+            '10:30',
+        ])
     })
 })
 

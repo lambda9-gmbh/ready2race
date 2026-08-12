@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamLapRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.control.toLiveMatchInfo
@@ -72,9 +73,20 @@ object EventInfoService {
         competitionId: UUID?,
         clubShortNames: ClubShortNameSettings,
         matchId: UUID? = null,
+        // Nur für die Kachel-Boards (BoardService): deren „Letztes Ergebnis"-Kachel zeigt
+        // ausschließlich beendete Läufe, unabhängig vom Sichtbarkeitsmodus der Veranstaltung.
+        // Ein voll gewerteter, unbeendeter Lauf läuft dort noch in der „Im Rennen"-Kachel mit
+        // Live-Zeiten mit — erst die Schiedsrichter-Entscheidung verschiebt ihn herüber, sonst
+        // doppeln sich die beiden Kacheln (Nutzerwunsch vom 11.08.2026). Alle anderen Aufrufer
+        // (öffentliche Ergebnisseite, Kiosk) behalten die Visibility-Weiche unverändert.
+        confirmedOnly: Boolean = false,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
 
-        val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
+        // FINISHED_ONLY ist in CompetitionMatchRepo.getMatchResults exakt „finished_at gesetzt" —
+        // das Erzwingen dieser Stufe IST die Nur-Bestätigt-Auswahl, ohne zweite Repo-Weiche.
+        val visibility =
+            if (confirmedOnly) PublicResultsVisibility.FINISHED_ONLY
+            else !EventRepo.getPublicResultsVisibility(eventId).orDie()
         val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit, visibility, matchId).orDie()
 
         val result = matches.map { match ->
@@ -250,9 +262,20 @@ object EventInfoService {
                     skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
                 )
             }
-            AthleteBoardLogic.placeholdersFromFreeSlots(freeSlots)
+            val candidates = AthleteBoardLogic.placeholdersFromFreeSlots(freeSlots)
                 .filterNot { it.matchId in realMatchIds }
                 .stillUpcoming()
+            // Programm-Reihenfolgen-Regel (BoardLogic.freeSlotPassed): ein Programmpunkt gilt
+            // als vorbei, sobald ein im Programm SPÄTERER Lauf gestartet/beendet ist — sonst
+            // hängt die 15-Uhr-Besprechung bei Verspätung ewig in „Als Nächstes", während
+            // längst die Nachmittagsläufe fahren (Prod-Screenshot vom 11.08.2026). Der Filter
+            // sitzt bewusst HIER, vor dem take(limit) am Ende: ein überholter Punkt darf den
+            // Block gar nicht erst besetzen. Läufe selbst regeln sich über ihre Zustände.
+            if (candidates.isEmpty()) candidates
+            else {
+                val latestProgress = !CompetitionMatchRepo.getLatestProgressStartTime(eventId).orDie()
+                candidates.filterNot { BoardLogic.freeSlotPassed(it.scheduledStartTime, latestProgress) }
+            }
         } else {
             emptyList()
         }

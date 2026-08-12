@@ -114,6 +114,25 @@ data class AthleteBoardParticipant(
      */
     val year: Int? = null,
     val clubName: String? = null,
+    /**
+     * Bedingungen dieser Person (Sprecher-Kachel MATCH_DETAIL). Nur befüllt, wenn das Board
+     * eine solche Kachel hat, und serverseitig doppelt gefiltert: ausschließlich Bedingungen,
+     * die für die Rolle der Person überhaupt gelten UND `publicly_visible = true` tragen —
+     * dieselbe Regel wie das persönliche Dashboard (MyEventService). Interne Bedingungen und
+     * Freitext-Notizen verlassen den Server nie (siehe [AthleteBoardRequirement]).
+     */
+    val requirements: List<AthleteBoardRequirement> = emptyList(),
+)
+
+/**
+ * Eine Bedingung auf der öffentlichen Sprecher-Kachel: bewusst nur Name und Erfüllt-Status.
+ * Keine Kennung, keine Beschreibung und vor allem keine Notiz — die `note`-Spalte der
+ * Erfüllungstabelle ist für interne Augen und wird für Boards gar nicht erst geladen
+ * (gleiche Vorsicht wie `MyEventRepo.findFulfilledRequirementIds`).
+ */
+data class AthleteBoardRequirement(
+    val name: String,
+    val fulfilled: Boolean,
 )
 
 data class AthleteBoardResult(
@@ -163,4 +182,10 @@ data class AthleteBoardResultTeam(
     val deregisteredReason: String?,
     /** Zwischenzeiten wie bei [AthleteBoardTeam.laps]; leer, wenn das Rennen keine führt. */
     val laps: List<MatchTeamLapDto> = emptyList(),
+    /**
+     * Aufstellung des Bootes — nur befüllt, wenn ein Board-Element Crew-Details anfordert
+     * (bis zur Sprecher-Kachel zeigten Ergebnis-Karten nie eine Crew; die Ergebnis-Quelle
+     * trägt die Personen längst, siehe `MatchResultTeamInfo.participants`).
+     */
+    val participants: List<AthleteBoardParticipant> = emptyList(),
 )

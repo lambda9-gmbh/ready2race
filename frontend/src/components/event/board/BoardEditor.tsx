@@ -15,6 +15,7 @@ import {
     TextField,
     ToggleButton,
     ToggleButtonGroup,
+    Tooltip,
     Typography,
 } from '@mui/material'
 import {
@@ -33,16 +34,18 @@ import {
     BoardElementType,
     BoardListMode,
     BoardRequest,
+    BoardScheduleMode,
     BoardTile,
 } from '@api/types.gen'
-import {gridPlacement} from './boardView'
+import {gridPlacement, hasMatchDetail} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
 const MIN_ROTATION_SECONDS = 3
 const MIN_REFRESH_SECONDS = 3
 const MAX_COLUMNS = 4
-const MAX_TILES = 12
+// 16, damit ein volles 4×4-Raster aus 1×1-Kacheln möglich ist (wie BoardLimits.MAX_TILES).
+const MAX_TILES = 16
 const MAX_ROW_SPAN = 3
 
 const defaultElement = (): BoardElement => ({
@@ -67,10 +70,16 @@ const elementForType = (type: BoardElementType): BoardElement => {
     switch (type) {
         case 'MATCH':
             return defaultElement()
+        case 'MATCH_DETAIL':
+            // Sprecher-Kachel: nur die Slot-Wahl — alle Details sind dort immer an.
+            return {type, offset: 0}
         case 'MATCH_LIST':
             return {type, listMode: 'UPCOMING', limit: 10, useShortNames: false}
         case 'CLOCK':
             return {type, showEventName: true}
+        case 'DELAY':
+            // Die Verspätung rechnet der Server — das Element hat keine Optionen.
+            return {type}
         case 'TEXT':
             return {type, text: ''}
         case 'AWARD_CEREMONY':
@@ -234,10 +243,19 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         )
                     }>
                     <MenuItem value="MATCH">{t('event.boards.element.type.match')}</MenuItem>
+                    {/* Die Sprecher-Kachel gilt nur als einzige Kachel des Boards
+                        (Backend-Validierung) — mit Nachbarn taucht sie gar nicht erst
+                        in der Auswahl auf. */}
+                    {(config.tiles.length === 1 || element.type === 'MATCH_DETAIL') && (
+                        <MenuItem value="MATCH_DETAIL">
+                            {t('event.boards.element.type.matchDetail')}
+                        </MenuItem>
+                    )}
                     <MenuItem value="MATCH_LIST">
                         {t('event.boards.element.type.matchList')}
                     </MenuItem>
                     <MenuItem value="CLOCK">{t('event.boards.element.type.clock')}</MenuItem>
+                    <MenuItem value="DELAY">{t('event.boards.element.type.delay')}</MenuItem>
                     <MenuItem value="TEXT">{t('event.boards.element.type.text')}</MenuItem>
                     <MenuItem value="AWARD_CEREMONY">
                         {t('event.boards.element.type.awardCeremony')}
@@ -316,6 +334,30 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                 </Stack>
             )}
 
+            {element.type === 'MATCH_DETAIL' && (
+                // Nur die Slot-Wahl wie bei MATCH — die Sprecher-Kachel kennt keine
+                // Abschalt-Optionen, sie zeigt immer die volle Detailtiefe.
+                <TextField
+                    select
+                    size="small"
+                    label={t('event.boards.element.offset')}
+                    value={element.offset ?? 0}
+                    onChange={e =>
+                        updateElement(tileIndex, elementIndex, {
+                            ...element,
+                            offset: Number(e.target.value),
+                        })
+                    }>
+                    {Array.from({length: MAX_OFFSET * 2 + 1}, (_, i) => i - MAX_OFFSET).map(
+                        offset => (
+                            <MenuItem key={offset} value={offset}>
+                                {offsetLabel(offset)}
+                            </MenuItem>
+                        ),
+                    )}
+                </TextField>
+            )}
+
             {element.type === 'MATCH_LIST' && (
                 <Stack gap={1}>
                     <TextField
@@ -327,6 +369,11 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             updateElement(tileIndex, elementIndex, {
                                 ...element,
                                 listMode: e.target.value as BoardListMode,
+                                // scheduleMode gehört nur zum Tagesprogramm — beim Wechsel
+                                // auf eine andere Liste abräumen, sonst lehnt die
+                                // Backend-Validierung die Konfiguration ab.
+                                scheduleMode:
+                                    e.target.value === 'SCHEDULE' ? element.scheduleMode : undefined,
                             })
                         }>
                         <MenuItem value="UPCOMING">
@@ -342,6 +389,29 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             {t('event.boards.element.listMode.schedule')}
                         </MenuItem>
                     </TextField>
+                    {/* Nur das Tagesprogramm hat zwei Zuschnitt-Modi: mitlaufendes Fenster
+                        um „jetzt" (FOLLOW, Default und Alt-Verhalten) oder der ganze Tag,
+                        wobei die Kachel scrollt (FULL). */}
+                    {element.listMode === 'SCHEDULE' && (
+                        <TextField
+                            select
+                            size="small"
+                            label={t('event.boards.element.scheduleMode.label')}
+                            value={element.scheduleMode ?? 'FOLLOW'}
+                            onChange={e =>
+                                updateElement(tileIndex, elementIndex, {
+                                    ...element,
+                                    scheduleMode: e.target.value as BoardScheduleMode,
+                                })
+                            }>
+                            <MenuItem value="FOLLOW">
+                                {t('event.boards.element.scheduleMode.follow')}
+                            </MenuItem>
+                            <MenuItem value="FULL">
+                                {t('event.boards.element.scheduleMode.full')}
+                            </MenuItem>
+                        </TextField>
+                    )}
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -357,23 +427,28 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         }
                         label={t('event.boards.element.useShortNames')}
                     />
-                    <Box>
-                        <Typography variant="caption" color="text.secondary">
-                            {t('event.boards.element.limit')}: {element.limit ?? 10}
-                        </Typography>
-                        <Slider
-                            size="small"
-                            value={element.limit ?? 10}
-                            min={1}
-                            max={20}
-                            onChange={(_, value) =>
-                                updateElement(tileIndex, elementIndex, {
-                                    ...element,
-                                    limit: value as number,
-                                })
-                            }
-                        />
-                    </Box>
+                    {/* Bei FULL wird das Limit ausgeblendet statt genullt: der Wert bleibt
+                        gespeichert (das Backend verlangt ihn ohnehin) und gilt wieder,
+                        sobald jemand auf FOLLOW zurückwechselt. */}
+                    {!(element.listMode === 'SCHEDULE' && element.scheduleMode === 'FULL') && (
+                        <Box>
+                            <Typography variant="caption" color="text.secondary">
+                                {t('event.boards.element.limit')}: {element.limit ?? 10}
+                            </Typography>
+                            <Slider
+                                size="small"
+                                value={element.limit ?? 10}
+                                min={1}
+                                max={20}
+                                onChange={(_, value) =>
+                                    updateElement(tileIndex, elementIndex, {
+                                        ...element,
+                                        limit: value as number,
+                                    })
+                                }
+                            />
+                        </Box>
+                    )}
                 </Stack>
             )}
 
@@ -513,15 +588,13 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                     </Stack>
 
                     {/* Die Kacheln im selben Raster wie auf dem Bildschirm — der Editor
-                        ist damit zugleich die Vorschau der Anordnung. */}
+                        ist damit zugleich die Vorschau der Anordnung. Wie die Bühne gilt
+                        das Raster auf jeder Viewportbreite, ohne Breakpoint-Fallback. */}
                     <Box
                         sx={{
                             display: 'grid',
                             gap: 2,
-                            gridTemplateColumns: {
-                                xs: '1fr',
-                                md: `repeat(${columns}, minmax(0, 1fr))`,
-                            },
+                            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
                         }}>
                         {config.tiles.map((tile, tileIndex) => {
                             const position = placement.positions[tileIndex]
@@ -531,14 +604,8 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                     variant="outlined"
                                     sx={{
                                         p: 1.5,
-                                        gridColumn: {
-                                            xs: 'auto',
-                                            md: `${position.column} / span ${position.colSpan}`,
-                                        },
-                                        gridRow: {
-                                            xs: 'auto',
-                                            md: `${position.row} / span ${position.rowSpan}`,
-                                        },
+                                        gridColumn: `${position.column} / span ${position.colSpan}`,
+                                        gridRow: `${position.row} / span ${position.rowSpan}`,
                                     }}>
                                     <Stack gap={1.5}>
                                         <Stack direction="row" alignItems="center" gap={1}>
@@ -654,12 +721,28 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         })}
                     </Box>
 
-                    <Button
-                        startIcon={<AddIcon />}
-                        disabled={config.tiles.length >= MAX_TILES}
-                        onClick={() => setConfig({...config, tiles: [...config.tiles, defaultTile()]})}>
-                        {t('event.boards.tile.add')}
-                    </Button>
+                    {/* Solange eine Sprecher-Kachel existiert, gibt es keine zweite Kachel —
+                        der Tooltip erklärt das, statt den Knopf wortlos zu sperren. Das span
+                        ist nötig, weil ein disabled-Button keine Hover-Events feuert. */}
+                    <Tooltip
+                        title={
+                            hasMatchDetail(config.tiles)
+                                ? t('event.boards.tile.addDisabledMatchDetail')
+                                : ''
+                        }>
+                        <span>
+                            <Button
+                                startIcon={<AddIcon />}
+                                disabled={
+                                    config.tiles.length >= MAX_TILES || hasMatchDetail(config.tiles)
+                                }
+                                onClick={() =>
+                                    setConfig({...config, tiles: [...config.tiles, defaultTile()]})
+                                }>
+                                {t('event.boards.tile.add')}
+                            </Button>
+                        </span>
+                    </Tooltip>
                 </Stack>
             </DialogContent>
             <DialogActions>

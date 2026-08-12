@@ -14019,12 +14019,15 @@ components:
 
     BoardElementType:
       type: string
+      description: "MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile"
       enum:
         - MATCH
+        - MATCH_DETAIL
         - MATCH_LIST
         - CLOCK
         - TEXT
         - AWARD_CEREMONY
+        - DELAY
 
     BoardListMode:
       type: string
@@ -14033,6 +14036,13 @@ components:
         - RESULTS
         - RUNNING
         - SCHEDULE
+
+    BoardScheduleMode:
+      type: string
+      description: "SCHEDULE only: FOLLOW = moving window around now (default), FULL = the whole day, the tile scrolls instead"
+      enum:
+        - FOLLOW
+        - FULL
 
     BoardElement:
       type: object
@@ -14076,6 +14086,8 @@ components:
           nullable: true
         listMode:
           $ref: '#/components/schemas/BoardListMode'
+        scheduleMode:
+          $ref: '#/components/schemas/BoardScheduleMode'
         limit:
           type: integer
           minimum: 1
@@ -14505,6 +14517,23 @@ components:
         clubName:
           type: string
           nullable: true
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardRequirement'
+          description: "only filled for boards with a MATCH_DETAIL tile; server-side restricted to publicly visible requirements applicable to this person's role"
+
+    AthleteBoardRequirement:
+      type: object
+      description: "a participant requirement on the public announcer tile - deliberately just name and fulfilled state, never internal notes"
+      required:
+        - name
+        - fulfilled
+      properties:
+        name:
+          type: string
+        fulfilled:
+          type: boolean
 
     AthleteBoardTeam:
       type: object
@@ -14695,6 +14724,11 @@ components:
           items:
             $ref: '#/components/schemas/MatchTeamLapDto'
           description: "split times from RaceClocker, in mark order; empty when the race records none"
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardParticipant'
+          description: "the crew of this boat - only filled when a board element requests crew details (announcer tile)"
 
     AthleteBoardResult:
       type: object
@@ -14938,6 +14972,11 @@ components:
             $ref: '#/components/schemas/BoardCeremonyDto'
         notice:
           $ref: '#/components/schemas/EventNoticeDto'
+        currentDelaySeconds:
+          type: integer
+          format: int64
+          nullable: true
+          description: "current delay in seconds: started_at minus start_time of the latest started match; negative = ahead of schedule; null while nothing has started or the board has no DELAY element"
 
     MyEventTeamMemberDto:
       type: object

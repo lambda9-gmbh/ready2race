@@ -11,6 +11,7 @@ import {
 } from './AthleteBoardBoatRow'
 import {
     COUNTDOWN_MAX_SECONDS,
+    finishComplete,
     formatClockTime,
     formatPlace,
     formatRemaining,
@@ -227,6 +228,14 @@ const AthleteBoardMatchCard = ({
     // umsortierte Liste ohne sichtbare Zeiten wäre vom Steg aus nicht zu deuten.
     const teams = showLiveResult ? sortRunningTeams(match.teams) : match.teams
 
+    // Zieleinlauf komplett, aber der Schiedsrichter hat den Lauf noch nicht beendet: die Karte
+    // sagt das ausdrücklich, denn in „Letztes Ergebnis" taucht der Lauf bewusst erst mit dem
+    // Beenden auf (BoardService, confirmedOnly) — ohne den Hinweis sähe der volle Zieleinlauf
+    // hier wie ein hängengebliebenes Rennen aus. Client-seitig abgeleitet ([finishComplete]),
+    // dieselbe Auslegung wie die Zustandsableitung des Backends für laufende Läufe.
+    const awaitingReferee =
+        variant === 'running' && !match.name && !match.pendingRound && finishComplete(match.teams)
+
     return (
         <>
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
@@ -268,6 +277,32 @@ const AthleteBoardMatchCard = ({
                                     />
                                 )}
                             </Stack>
+                            {/* Deutlich sichtbares Band statt eines weiteren grauen Chips: die
+                                Zeiten/Plätze stehen normal darunter, nur ihr Status („noch nicht
+                                bestätigt") muss auffallen. Die Schrift läuft über scaled() mit
+                                der Dichte-Skalierung mit und darf umbrechen — so sprengt das Band
+                                auch kleine Kacheln nicht. */}
+                            {awaitingReferee && (
+                                <Box
+                                    sx={{
+                                        display: 'inline-block',
+                                        mt: scaled('0.15rem', '0.25vw', '0.4rem'),
+                                        px: scaled('0.35rem', '0.6vw', '0.9rem'),
+                                        py: scaled('0.1rem', '0.15vw', '0.25rem'),
+                                        borderRadius: 1,
+                                        bgcolor: 'warning.main',
+                                        color: 'warning.contrastText',
+                                    }}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: scaled('0.7rem', '1.2vw', '1.6rem'),
+                                            fontWeight: 700,
+                                            lineHeight: 1.25,
+                                        }}>
+                                        {t('event.info.athleteBoard.awaitingReferee')}
+                                    </Typography>
+                                </Box>
+                            )}
                             {/* Sprecherinnen-Zeile: worum geht es in diesem Lauf. Ohne
                                 Platzzahl (Massenfeld-Folgerunde) nur die Runde. */}
                             {showAdvancement && match.nextRoundName && (

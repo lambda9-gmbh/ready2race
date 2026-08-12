@@ -69,4 +69,10 @@ data class BoardViewDto(
     val ceremonies: List<BoardCeremonyDto> = emptyList(),
     /** Der veranstaltungsweite Hinweisbanner (z.B. Wetterwarnung); null = kein Banner. */
     val notice: EventNoticeDto? = null,
+    /**
+     * Aktuelle Verspätung in Sekunden: `started_at − start_time` des zuletzt gestarteten Laufs
+     * (BoardLogic.currentDelaySeconds). Negativ = Verfrühung. Null, wenn noch nichts gestartet
+     * ist — oder das Board kein DELAY-Element hat (needs-Muster, siehe BoardDataNeeds.delay).
+     */
+    val currentDelaySeconds: Long? = null,
 )

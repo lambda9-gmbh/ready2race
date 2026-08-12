@@ -69,11 +69,28 @@ data class BoardRequest(
                         }
                     }
 
+                    BoardElementType.MATCH_DETAIL -> {
+                        // Dieselbe Slot-Wahl wie MATCH — und die Vollbild-Regel: die
+                        // Sprecher-Kachel duldet keine Nachbarkacheln (siehe BoardElementType).
+                        val offset = element.offset
+                        if (offset == null || offset < -BoardLimits.MAX_OFFSET || offset > BoardLimits.MAX_OFFSET) {
+                            errors += "$at: MATCH_DETAIL needs offset in -${BoardLimits.MAX_OFFSET}..${BoardLimits.MAX_OFFSET}"
+                        }
+                        if (config.tiles.size > 1) {
+                            errors += "$at: MATCH_DETAIL must be the only tile of the board"
+                        }
+                    }
+
                     BoardElementType.MATCH_LIST -> {
                         if (element.listMode == null) errors += "$at: MATCH_LIST needs listMode"
                         val limit = element.limit
                         if (limit == null || limit < BoardLimits.MIN_LIST_LIMIT || limit > BoardLimits.MAX_LIST_LIMIT) {
                             errors += "$at: MATCH_LIST needs limit in ${BoardLimits.MIN_LIST_LIMIT}..${BoardLimits.MAX_LIST_LIMIT}"
+                        }
+                        // scheduleMode steuert nur den Tagesprogramm-Zuschnitt; auf anderen
+                        // Listen wäre er ein stiller Konfigurationsfehler.
+                        if (element.scheduleMode != null && element.listMode != BoardListMode.SCHEDULE) {
+                            errors += "$at: scheduleMode requires listMode SCHEDULE"
                         }
                     }
 
@@ -86,6 +103,9 @@ data class BoardRequest(
                     }
 
                     BoardElementType.CLOCK -> {}
+
+                    // Wie CLOCK: keine Pflichtfelder — die Verspätung rechnet der Server.
+                    BoardElementType.DELAY -> {}
                 }
             }
         }

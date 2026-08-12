@@ -1,3 +1,4 @@
+import {useEffect, useRef} from 'react'
 import {Box, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {BoardElement, BoardViewDto} from '@api/types.gen'
@@ -8,6 +9,13 @@ interface BoardMatchListElementProps {
     element: BoardElement
     view: BoardViewDto
 }
+
+/**
+ * Wie lange nach einer Hand-Interaktion (Wischen/Scrollen in der Kachel) das
+ * automatische Nachführen des ganzen Tages pausiert — wer gerade selbst liest,
+ * soll nicht vom nächsten Datenupdate weggezogen werden.
+ */
+const MANUAL_SCROLL_IDLE_MS = 30_000
 
 /**
  * Ein Listen-Element: die kompakte Zeilenform der alten Info-Views. Bewusst schlicht —
@@ -87,6 +95,35 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                     detail: null,
                 }))
 
+    // „Ganzer Tag": die Kachel führt beim Datenupdate sanft zum aktuellen Slot nach —
+    // aber nur, wenn niemand gerade selbst in der Liste scrollt (siehe
+    // MANUAL_SCROLL_IDLE_MS). Interaktion wird über Eingabe-Events erkannt, nicht über
+    // das scroll-Event, das auch unser eigenes programmatisches Scrollen feuern würde.
+    const isFullSchedule = element.listMode === 'SCHEDULE' && element.scheduleMode === 'FULL'
+    const currentIndex = rows.findIndex(row => row.state != null && row.state !== 'FINISHED')
+    const currentKey = isFullSchedule && currentIndex >= 0 ? rows[currentIndex].key : null
+    const scrollRef = useRef<HTMLDivElement | null>(null)
+    const currentRowRef = useRef<HTMLDivElement | null>(null)
+    const lastManualScroll = useRef(0)
+    const markManualScroll = () => {
+        lastManualScroll.current = Date.now()
+    }
+
+    useEffect(() => {
+        if (currentKey == null) return
+        if (Date.now() - lastManualScroll.current < MANUAL_SCROLL_IDLE_MS) return
+        const container = scrollRef.current
+        const row = currentRowRef.current
+        if (!container || !row) return
+        // Die aktuelle Zeile ins obere Viertel der Kachel — so bleibt etwas beendeter
+        // Kontext darüber sichtbar, wie beim mitlaufenden Ausschnitt.
+        const delta = row.getBoundingClientRect().top - container.getBoundingClientRect().top
+        container.scrollTo({
+            top: container.scrollTop + delta - container.clientHeight * 0.25,
+            behavior: 'smooth',
+        })
+    }, [currentKey])
+
     return (
         <Box
             sx={{
@@ -110,7 +147,14 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                 color="text.secondary">
                 {title}
             </Typography>
-            <Box sx={{minHeight: 0, overflow: 'hidden'}}>
+            {/* Scrollen statt Abschneiden: passt die Liste nicht in die Zelle, bleibt
+                der Rest per Scroll erreichbar, statt kommentarlos zu verschwinden. */}
+            <Box
+                ref={scrollRef}
+                onWheel={markManualScroll}
+                onTouchStart={markManualScroll}
+                onPointerDown={markManualScroll}
+                sx={{minHeight: 0, overflow: 'auto'}}>
                 {rows.length === 0 ? (
                     <Typography
                         sx={{fontSize: scaled('0.85rem', '1.2vw', '1.8rem')}}
@@ -127,6 +171,7 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                     rows.map((row, index) => (
                         <Stack
                             key={row.key}
+                            ref={index === currentIndex ? currentRowRef : undefined}
                             direction="row"
                             gap={1.5}
                             alignItems="baseline"

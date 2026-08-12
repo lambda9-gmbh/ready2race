@@ -282,6 +282,64 @@ object MyEventRepo {
     }
 
     /**
+     * Batch-Fassung von [findFulfilledRequirementIds] für die Sprecher-Kachel der Boards: alle
+     * Personen eines Laufs in einer Abfrage statt einer je Person (die Boards fragen im
+     * Sekundentakt ab). Dieselbe Vorsicht wie dort: nur Kennungen, die `note`-Spalte wird gar
+     * nicht erst geladen.
+     */
+    fun findFulfilledRequirementIdsByParticipant(
+        eventId: UUID,
+        participantIds: Collection<UUID>,
+    ): JIO<Map<UUID, Set<UUID>>> = Jooq.query {
+        if (participantIds.isEmpty()) emptyMap()
+        else select(
+            PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT,
+            PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT,
+        )
+            .from(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT)
+            .where(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.EVENT.eq(eventId))
+            .and(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT.`in`(participantIds))
+            .fetch()
+            .groupBy({ it.value1()!! }, { it.value2()!! })
+            .mapValues { (_, ids) -> ids.toSet() }
+    }
+
+    /**
+     * Batch-Fassung von [findNamedParticipantIdsForParticipant] — dieselben beiden Zweige
+     * (Meldungen und Einwechslungen, siehe die Begründung dort), nur für viele Personen auf
+     * einmal und mit der Person im Ergebnis, damit sich die Rollen zuordnen lassen.
+     */
+    fun findNamedParticipantIdsByParticipant(
+        eventId: UUID,
+        participantIds: Collection<UUID>,
+    ): JIO<Map<UUID, Set<UUID>>> = Jooq.query {
+        if (participantIds.isEmpty()) emptyMap()
+        else selectDistinct(
+            COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT,
+            COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT,
+        )
+            .from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
+            .join(COMPETITION_REGISTRATION)
+            .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            .join(COMPETITION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.`in`(participantIds))
+            .union(
+                selectDistinct(SUBSTITUTION.PARTICIPANT_IN, SUBSTITUTION.NAMED_PARTICIPANT)
+                    .from(SUBSTITUTION)
+                    .join(COMPETITION_REGISTRATION)
+                    .on(SUBSTITUTION.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+                    .join(COMPETITION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION.ID))
+                    .where(COMPETITION.EVENT.eq(eventId))
+                    .and(SUBSTITUTION.PARTICIPANT_IN.`in`(participantIds))
+                    .and(SUBSTITUTION.NAMED_PARTICIPANT.isNotNull)
+            )
+            .fetch()
+            .groupBy({ it.value1()!! }, { it.value2()!! })
+            .mapValues { (_, roles) -> roles.toSet() }
+    }
+
+    /**
      * Die Auswechslungen zu den angegebenen Paaren aus Meldung und Runde - mehr nicht. Beide
      * Hälften des Schlüssels müssen mit: eine Auswechslung gilt genau in ihrer Runde, und die
      * Zeilen der Folgerunde sind eigene Kopien (siehe `SubstitutionRecord.applyNewRound`). Nur

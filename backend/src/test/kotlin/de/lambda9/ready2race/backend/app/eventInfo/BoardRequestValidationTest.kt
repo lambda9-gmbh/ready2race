@@ -42,8 +42,9 @@ class BoardRequestValidationTest {
     @Test
     fun tileCountIsBounded() {
         assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = emptyList())).validate())
-        assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(13))).validate())
-        assertEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(12))).validate())
+        assertNotEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(17))).validate())
+        // 16 = volles 4×4-Raster aus 1×1-Kacheln — der Anlass für die Grenze.
+        assertEquals(ValidationResult.Valid, request(BoardConfig(columns = 3, tiles = tiles(16))).validate())
     }
 
     @Test
@@ -107,6 +108,63 @@ class BoardRequestValidationTest {
         assertNotEquals(ValidationResult.Valid, request(listElement(null, 5)).validate())
         assertNotEquals(ValidationResult.Valid, request(listElement(BoardListMode.UPCOMING, 0)).validate())
         assertNotEquals(ValidationResult.Valid, request(listElement(BoardListMode.UPCOMING, 21)).validate())
+    }
+
+    // scheduleMode wählt den Tagesprogramm-Zuschnitt (FOLLOW/FULL) — nur dort erlaubt;
+    // fehlend bleibt gültig, damit Alt-Konfigurationen unverändert weiterlaufen.
+    @Test
+    fun scheduleModeIsOnlyValidOnScheduleLists() {
+        fun listElement(mode: BoardListMode, scheduleMode: BoardScheduleMode?) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(
+                    elements = listOf(
+                        BoardElement(
+                            type = BoardElementType.MATCH_LIST,
+                            listMode = mode,
+                            limit = 5,
+                            scheduleMode = scheduleMode,
+                        )
+                    )
+                )
+            ),
+        )
+        assertEquals(ValidationResult.Valid, request(listElement(BoardListMode.SCHEDULE, null)).validate())
+        assertEquals(ValidationResult.Valid, request(listElement(BoardListMode.SCHEDULE, BoardScheduleMode.FOLLOW)).validate())
+        assertEquals(ValidationResult.Valid, request(listElement(BoardListMode.SCHEDULE, BoardScheduleMode.FULL)).validate())
+        assertNotEquals(ValidationResult.Valid, request(listElement(BoardListMode.UPCOMING, BoardScheduleMode.FULL)).validate())
+    }
+
+    // Die Sprecher-Kachel: Slot-Wahl wie MATCH, aber nur als einzige Kachel des Boards —
+    // sie ist als Vollbild für den zweiten Bildschirm gedacht, nicht als Raster-Baustein.
+    @Test
+    fun aMatchDetailElementMustBeTheOnlyTile() {
+        fun detailTile(offset: Int? = 0) = BoardTile(
+            elements = listOf(BoardElement(type = BoardElementType.MATCH_DETAIL, offset = offset))
+        )
+        assertEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 1, tiles = listOf(detailTile()))).validate(),
+        )
+        // Spannweiten sind egal — nur Nachbarkacheln sind verboten.
+        assertEquals(
+            ValidationResult.Valid,
+            request(
+                BoardConfig(
+                    columns = 3,
+                    tiles = listOf(BoardTile(colSpan = 3, rowSpan = 2, elements = detailTile().elements)),
+                )
+            ).validate(),
+        )
+        assertNotEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 2, tiles = listOf(detailTile()) + tiles(1))).validate(),
+        )
+        // Und wie MATCH: ohne Offset kein Slot.
+        assertNotEquals(
+            ValidationResult.Valid,
+            request(BoardConfig(columns = 1, tiles = listOf(detailTile(offset = null)))).validate(),
+        )
     }
 
     @Test

@@ -1575,6 +1575,7 @@
         "unscheduled": "Tid ikke fastsat",
         "failed": "ikke placeret",
         "startedAt": "startet {{time}}",
+        "awaitingReferee": "Målgang komplet — afventer dommerafgørelse",
         "preparing": "under forberedelse",
         "penalty": "inkl. {{seconds}} s tidsstraf",
         "deregistered": "afmeldt",
@@ -1987,14 +1988,31 @@
         "addElement": "Tilføj element",
         "width": "Bredde (kolonner)",
         "height": "Højde (rækker)",
-        "add": "Tilføj felt"
+        "add": "Tilføj felt",
+        "addDisabledMatchDetail": "Speaker-feltet fylder hele boardet — flere felter er ikke mulige"
+      },
+      "delay": {
+        "subtitle": "i forhold til tidsplanen, pr. seneste start",
+        "onTime": "til tiden",
+        "noStarts": "Intet løb startet endnu"
+      },
+      "detail": {
+        "status": {
+          "upcoming": "Kommende",
+          "preparing": "Under forberedelse",
+          "running": "I gang",
+          "awaiting": "Afventer dommerafgørelse",
+          "finished": "Afsluttet"
+        }
       },
       "element": {
         "type": {
           "label": "Elementtype",
           "match": "Løb",
+          "matchDetail": "Speaker-felt (fuld skærm)",
           "matchList": "Løbsliste",
           "clock": "Ur",
+          "delay": "Forsinkelse",
           "text": "Infotekst",
           "awardCeremony": "Præmieoverrækkelse"
         },
@@ -2016,6 +2034,11 @@
           "results": "Seneste resultater",
           "running": "Igangværende løb",
           "schedule": "Dagsprogram"
+        },
+        "scheduleMode": {
+          "label": "Udsnit",
+          "follow": "Løbende udsnit",
+          "full": "Hele dagen (kan scrolles)"
         },
         "titleCurrent": "I løb nu",
         "titleNext": "Næste løb",

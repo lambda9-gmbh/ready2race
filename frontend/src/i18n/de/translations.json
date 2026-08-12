@@ -1575,6 +1575,7 @@
         "unscheduled": "Zeit offen",
         "failed": "nicht gewertet",
         "startedAt": "gestartet {{time}}",
+        "awaitingReferee": "Zieleinlauf komplett — wartet auf Schiedsrichter-Entscheidung",
         "preparing": "in Vorbereitung",
         "penalty": "inkl. {{seconds}} s Zeitstrafe",
         "deregistered": "abgemeldet",
@@ -1993,14 +1994,31 @@
         "addElement": "Element hinzufügen",
         "width": "Breite (Spalten)",
         "height": "Höhe (Zeilen)",
-        "add": "Kachel hinzufügen"
+        "add": "Kachel hinzufügen",
+        "addDisabledMatchDetail": "Die Sprecher-Kachel füllt das ganze Board — weitere Kacheln sind nicht möglich"
+      },
+      "delay": {
+        "subtitle": "gegenüber Zeitplan, Stand letzter Start",
+        "onTime": "pünktlich",
+        "noStarts": "Noch kein Lauf gestartet"
+      },
+      "detail": {
+        "status": {
+          "upcoming": "Bevorstehend",
+          "preparing": "In Vorbereitung",
+          "running": "Läuft",
+          "awaiting": "Wartet auf Schiedsrichter-Entscheidung",
+          "finished": "Beendet"
+        }
       },
       "element": {
         "type": {
           "label": "Elementtyp",
           "match": "Lauf",
+          "matchDetail": "Sprecher-Kachel (Vollbild)",
           "matchList": "Laufliste",
           "clock": "Uhr",
+          "delay": "Verspätung",
           "text": "Hinweistext",
           "awardCeremony": "Siegerehrung"
         },
@@ -2022,6 +2040,11 @@
           "results": "Letzte Ergebnisse",
           "running": "Laufende Läufe",
           "schedule": "Tagesprogramm"
+        },
+        "scheduleMode": {
+          "label": "Ausschnitt",
+          "follow": "Mitlaufender Ausschnitt",
+          "full": "Ganzer Tag (scrollbar)"
         },
         "titleCurrent": "Im Rennen",
         "titleNext": "Als Nächstes",
