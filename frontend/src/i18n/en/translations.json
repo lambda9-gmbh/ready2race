@@ -2962,7 +2962,8 @@
   },
   "myEvent": {
     "tab": "My Event",
-    "hint": "Scan the QR code on your wristband to see your races and results.",
+    "emptyTitle": "Your personal schedule",
+    "emptyHint": "Scan the QR code on your wristband with your phone camera. Your races, start times and results will then appear here automatically.",
     "notFound": "There is no entry for this code at this event.",
     "next": "Your next race",
     "running": "Running now",

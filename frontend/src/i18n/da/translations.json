@@ -2952,7 +2952,8 @@
   },
   "myEvent": {
     "tab": "Min begivenhed",
-    "hint": "Scan QR-koden på dit armbånd for at se dine løb og resultater.",
+    "emptyTitle": "Din personlige tidsplan",
+    "emptyHint": "Scan QR-koden på dit deltagerarmbånd med mobilkameraet. Dine løb, starttider og resultater vises derefter automatisk her.",
     "notFound": "Der findes ingen deltagelse med denne kode ved dette stævne.",
     "next": "Dit næste løb",
     "running": "I gang nu",
