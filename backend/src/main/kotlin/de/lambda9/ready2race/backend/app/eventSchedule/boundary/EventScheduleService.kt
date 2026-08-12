@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRound
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.*
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
@@ -142,6 +143,9 @@ object EventScheduleService {
             !EventScheduleRepo.stampMatchStartTime(setupMatchId, request.startTime, userId).orDie()
         }
 
+        // Das Tagesprogramm der Boards zeigt die Slots — Zeitplan-Schreiber bumpen deshalb alle.
+        EventChangeMarker.bump(eventId)
+
         KIO.ok(ApiResponse.Created(id))
     }
 
@@ -178,6 +182,8 @@ object EventScheduleService {
             !EventScheduleRepo.stampMatchStartTime(setupMatchId, request.startTime, userId).orDie()
         }
 
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -191,6 +197,7 @@ object EventScheduleService {
         if (deleted < 1) {
             KIO.fail(EventScheduleError.SlotNotFound(slotId))
         } else {
+            EventChangeMarker.bump(eventId)
             noData
         }
     }
@@ -284,6 +291,9 @@ object EventScheduleService {
                 skippedBy = null
             }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
         }
+
+        // Ein entfallener (oder zurückgeholter) Slot ändert Tagesprogramm und „nächste Läufe".
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -389,6 +399,9 @@ object EventScheduleService {
             !AutoRoundProgressionService.progressAfterMatch(eventId, someSetupMatchId, userId)
         }
 
+        // Wie beim Einzel-Skip: die entfallene Runde ändert Tagesprogramm und „nächste Läufe".
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -413,6 +426,8 @@ object EventScheduleService {
             ?: return@comprehension KIO.fail(EventScheduleError.SlotNotLinked(slotId))
 
         val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        // Kein eigener EventChangeMarker.bump: finishMatchInternal ist der gemeinsame Trichter
+        // fürs Beenden und bumpt am Ende selbst.
         !LiveDashboardService.finishMatchInternal(eventId, matchId, userId, openResults, mode)
 
         noData
@@ -447,6 +462,9 @@ object EventScheduleService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
+
+        // „In Vorbereitung" soll sofort auf den Anzeigen stehen.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -758,7 +776,11 @@ object EventScheduleService {
 
                 KIO.unit
             }
-        }.map { }
+        }.map {
+            // Der gemeinsame Trichter von Verschieben und Aufrücken: neue Startzeiten stehen im
+            // Tagesprogramm und in den Countdowns der Anzeigen. Dry-Runs kommen hier nie an.
+            EventChangeMarker.bump(eventId)
+        }
 
     /**
      * Excel-Import des Zeitstrahls (Task 12). `dryRun=true` liefert nur die Vorschau (Matching je
@@ -900,6 +922,9 @@ object EventScheduleService {
         !finalRows.filter { it.first.status == ImportRowStatus.LINKED }.traverse { (result, _) ->
             EventScheduleRepo.stampMatchStartTime(result.setupMatchId!!, result.startTime, userId).orDie()
         }
+
+        // Der Import ersetzt den ganzen Zeitstrahl — Tagesprogramm und Startzeiten sind neu.
+        EventChangeMarker.bump(eventId)
 
         KIO.ok(ApiResponse.Dto(ScheduleImportResultDto(rowDtos, applied = true)))
     }

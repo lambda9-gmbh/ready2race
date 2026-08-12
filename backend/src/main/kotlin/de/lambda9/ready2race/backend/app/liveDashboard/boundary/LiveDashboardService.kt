@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRound
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleLogic
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
@@ -587,6 +588,10 @@ object LiveDashboardService {
         // geparkt war.
         !AutoRoundProgressionService.progressAfterMatch(eventId, matchId, userId)
 
+        // Der gemeinsame Trichter fürs Beenden (Dashboard UND Büro über finishSlot) — ein Bump
+        // deckt den Stempel, die Ketten-Aktivierung und die Folgerunden-Automatik zusammen ab.
+        EventChangeMarker.bump(eventId)
+
         KIO.unit
     }
 
@@ -610,6 +615,10 @@ object LiveDashboardService {
         }
 
         !CompetitionExecutionService.setMatchActivation(matchId, activated, userId)
+
+        // setMatchActivation selbst kennt die Veranstaltung nicht — beide Aufrufer (hier und
+        // CompetitionExecutionService.updateMatchActivation) bumpen deshalb selbst.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -644,6 +653,9 @@ object LiveDashboardService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
+
+        // „Läuft" soll sofort auf den Anzeigen stehen, nicht erst nach Ablauf der Cache-TTL.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
