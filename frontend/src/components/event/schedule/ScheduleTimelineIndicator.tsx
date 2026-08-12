@@ -2,6 +2,7 @@ import {ButtonBase, Box, Tooltip, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
+    computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
     TimelineEntry,
@@ -16,6 +17,15 @@ type Props = {
 
 const ROW_HEIGHT = 22
 const ROW_GAP = 3
+// Beschriftungsstreifen unter der Fläche: Stundenmarken und das Uhrzeit-Label des Jetzt-Markers.
+const AXIS_HEIGHT = 18
+
+/**
+ * Zentrierung eines Achsen-Labels auf seiner Marke — an den Rändern einseitig, damit "08:00" am
+ * linken und "18:00" am rechten Ende nicht aus der Fläche hinausragen.
+ */
+const axisLabelTransform = (percent: number): string =>
+    percent < 2 ? 'none' : percent > 98 ? 'translateX(-100%)' : 'translateX(-50%)'
 
 /**
  * Compact "where are we right now" bar for one race day: every slot/match as a time-proportional
@@ -33,6 +43,7 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
     }
 
     const positioned = computeTimelinePositions(entries)
+    const hourMarks = computeHourMarks(entries)
     const nowPercent = computeNowMarkerPercent(entries, now)
     const rows = Math.max(...positioned.map(e => e.stackRow)) + 1
     const barHeight = rows * ROW_HEIGHT + (rows - 1) * ROW_GAP
@@ -73,9 +84,7 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
             sx={{
                 position: 'relative',
                 width: '100%',
-                height: barHeight,
-                borderRadius: 1,
-                backgroundColor: 'action.hover',
+                height: barHeight + AXIS_HEIGHT,
                 overflow: 'visible',
                 '@keyframes r2r-timeline-pulse': {
                     '0%': {boxShadow: `0 0 0 0 ${theme.palette.primary.main}80`},
@@ -84,6 +93,45 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
                 },
             }}
             aria-hidden={false}>
+            {/* Die Fläche selbst — die Stundenmarken liegen IN ihr, die Beschriftung darunter. */}
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: barHeight,
+                    borderRadius: 1,
+                    backgroundColor: 'action.hover',
+                }}
+            />
+            {hourMarks.map(mark => (
+                <Box key={mark.timeMs} sx={{pointerEvents: 'none'}}>
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            left: `${mark.percent}%`,
+                            top: 0,
+                            height: barHeight,
+                            width: '1px',
+                            backgroundColor: 'divider',
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            left: `${mark.percent}%`,
+                            top: barHeight + 2,
+                            transform: axisLabelTransform(mark.percent),
+                            fontSize: '0.65rem',
+                            lineHeight: 1.2,
+                            color: 'text.secondary',
+                            whiteSpace: 'nowrap',
+                        }}>
+                        {format(new Date(mark.timeMs), t('format.time'))}
+                    </Box>
+                </Box>
+            ))}
             {positioned.map(entry => (
                 <Tooltip
                     key={entry.id}
@@ -115,20 +163,44 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
                     />
                 </Tooltip>
             ))}
+            {/* Der Jetzt-Marker: rote Linie über die volle Fläche plus Uhrzeit-Label im
+                Achsenstreifen. Das Label bekommt einen Papier-Hintergrund und liegt über den
+                Stundenmarken — kollidieren beide, gewinnt die Aussage "jetzt ist 09:12". */}
             {nowPercent != null && (
-                <Tooltip title={t('event.schedule.indicator.now')}>
+                <>
                     <Box
                         sx={{
                             position: 'absolute',
                             left: `${nowPercent}%`,
                             top: -2,
-                            bottom: -2,
+                            height: barHeight + 4,
                             width: '2px',
-                            backgroundColor: 'text.primary',
+                            backgroundColor: 'error.main',
                             pointerEvents: 'none',
+                            zIndex: 2,
                         }}
                     />
-                </Tooltip>
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            left: `${nowPercent}%`,
+                            top: barHeight + 2,
+                            transform: axisLabelTransform(nowPercent),
+                            fontSize: '0.65rem',
+                            lineHeight: 1.2,
+                            fontWeight: 700,
+                            color: 'error.main',
+                            backgroundColor: 'background.paper',
+                            borderRadius: 0.5,
+                            px: 0.25,
+                            whiteSpace: 'nowrap',
+                            pointerEvents: 'none',
+                            zIndex: 3,
+                        }}
+                        aria-label={t('event.schedule.indicator.now')}>
+                        {format(now, t('format.time'))}
+                    </Box>
+                </>
             )}
         </Box>
     )

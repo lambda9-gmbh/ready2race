@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest'
 import {EventScheduleSlotDto, LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
+    computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
     dashboardEntriesForDay,
@@ -9,6 +10,7 @@ import {
     resolveDashboardDay,
     scheduleSlotsToEntries,
     scheduleSlotState,
+    timelineSpan,
 } from './timelineIndicator.ts'
 
 const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): EventScheduleSlotDto => ({
@@ -196,6 +198,62 @@ describe('resolveDashboardDay', () => {
     })
 })
 
+describe('timelineSpan', () => {
+    it('rounds the axis outwards to full hours so hour marks close it on both ends', () => {
+        const span = timelineSpan(
+            scheduleSlotsToEntries([
+                slot('2026-08-17T08:15:00', {durationMinutes: 10}),
+                slot('2026-08-17T09:40:00', {durationMinutes: 10}),
+            ]),
+        )
+        expect(span).not.toBeNull()
+        expect(new Date(span!.startMs).getHours()).toBe(8)
+        expect(new Date(span!.startMs).getMinutes()).toBe(0)
+        // Letztes Ende 09:50 -> Achse endet 10:00
+        expect(new Date(span!.endMs).getHours()).toBe(10)
+        expect(new Date(span!.endMs).getMinutes()).toBe(0)
+    })
+
+    it('spans at least one hour for a single zero-duration entry', () => {
+        const span = timelineSpan(scheduleSlotsToEntries([slot('2026-08-17T12:00:00')]))
+        expect(span!.endMs - span!.startMs).toBe(3_600_000)
+    })
+
+    it('is null without entries', () => {
+        expect(timelineSpan([])).toBeNull()
+    })
+})
+
+describe('computeHourMarks', () => {
+    it('marks every full hour of a short span, first at 0 % and last at 100 %', () => {
+        const marks = computeHourMarks(
+            scheduleSlotsToEntries([
+                slot('2026-08-17T08:00:00'),
+                slot('2026-08-17T10:00:00'),
+            ]),
+        )
+        expect(marks.map(m => m.percent)).toEqual([0, 50, 100])
+        expect(new Date(marks[1].timeMs).getHours()).toBe(9)
+    })
+
+    it('widens the step on long days so at most about ten marks remain', () => {
+        const marks = computeHourMarks(
+            scheduleSlotsToEntries([
+                slot('2026-08-17T06:00:00'),
+                // 06:00 bis 22:00 = 16 Stunden -> Schrittweite 2 h statt 17 Marken
+                slot('2026-08-17T22:00:00'),
+            ]),
+        )
+        expect(marks.length).toBeLessThanOrEqual(11)
+        const hourStep = (marks[1].timeMs - marks[0].timeMs) / 3_600_000
+        expect(hourStep).toBe(2)
+    })
+
+    it('returns no marks without entries', () => {
+        expect(computeHourMarks([])).toEqual([])
+    })
+})
+
 describe('computeTimelinePositions', () => {
     it('positions entries proportionally across the day span', () => {
         const entries = scheduleSlotsToEntries([
@@ -228,6 +286,31 @@ describe('computeTimelinePositions', () => {
         expect(positioned[1].stackRow).toBe(1)
     })
 
+    it('moves an entry overlapping a still-running one to a second lane', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {durationMinutes: 60}),
+            slot('2026-08-17T08:30:00', {durationMinutes: 60}),
+            // 09:30 beginnt, wenn beide vorbei sind - zurück in Spur 0
+            slot('2026-08-17T09:30:00', {durationMinutes: 30}),
+        ])
+        const positioned = computeTimelinePositions(entries)
+        expect(positioned[0].stackRow).toBe(0)
+        expect(positioned[1].stackRow).toBe(1)
+        expect(positioned[2].stackRow).toBe(0)
+    })
+
+    it('also dodges purely visual overlap caused by the minimum width', () => {
+        // Zwei dauerlose Läufe eine Minute auseinander auf einer Stunde Achse: zeitlich
+        // überschneidungsfrei, gezeichnet (Mindestbreite!) übereinander -> zweite Spur.
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00'),
+            slot('2026-08-17T08:01:00'),
+        ])
+        const positioned = computeTimelinePositions(entries)
+        expect(positioned[0].stackRow).toBe(0)
+        expect(positioned[1].stackRow).toBe(1)
+    })
+
     it('returns an empty array for no entries', () => {
         expect(computeTimelinePositions([])).toEqual([])
     })
@@ -254,5 +337,14 @@ describe('computeNowMarkerPercent', () => {
 
     it('returns null when there are no entries', () => {
         expect(computeNowMarkerPercent([], new Date())).toBeNull()
+    })
+
+    it('returns null when the entries belong to a different calendar day', () => {
+        // Wer den Zeitplan von übermorgen ansieht, bekommt kein an den Rand geklemmtes "Jetzt".
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00'),
+            slot('2026-08-17T10:00:00'),
+        ])
+        expect(computeNowMarkerPercent(entries, new Date('2026-08-19T09:00:00'))).toBeNull()
     })
 })

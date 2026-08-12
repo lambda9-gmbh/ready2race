@@ -172,59 +172,123 @@ export const resolveDashboardDay = (
     return format(now, 'yyyy-MM-dd')
 }
 
-// ---- Position math -------------------------------------------------------------------------
-
-const MIN_WIDTH_PERCENT = 3
-const MIN_SPAN_MINUTES = 30
+// ---- Positionsrechnung ------------------------------------------------------------------------
 
 /**
- * Time-proportional x-position for every entry along the day's span (first entry start to last
- * entry end, at least MIN_SPAN_MINUTES wide so a single entry or a day with only one distinct
- * time doesn't degenerate to a division by zero). Entries get a minimum width so short/instant
- * slots stay clickable, and entries sharing the exact same start time stack into separate rows
- * (via `stackRow`) instead of drawing on top of each other.
+ * Mindestbreite eines Segments in Prozent der Achse. Der bewusste Kompromiss: Ein 4-Minuten-Lauf
+ * auf einem 12-Stunden-Tag wäre zeitgetreu ~0,5 % breit — ein unklickbarer Strich. Die
+ * Mindestbreite opfert an dieser einen Stelle die Zeittreue zugunsten der Bedienbarkeit; dicht
+ * gestartete Kurzläufe werden dadurch breiter gezeichnet, als sie dauern, und weichen einander
+ * über die Spurzuteilung (siehe `stackRow`) aus, statt sich zu überdecken.
  */
-export const computeTimelinePositions = (entries: TimelineEntry[]): PositionedTimelineEntry[] => {
-    if (entries.length === 0) {
-        return []
-    }
-    const sorted = [...entries].sort((a, b) => a.startTime.localeCompare(b.startTime))
-    const starts = sorted.map(e => new Date(e.startTime).getTime())
-    const ends = sorted.map((e, i) => starts[i] + (e.durationMinutes ?? 0) * 60_000)
-    const minStart = Math.min(...starts)
-    const maxEnd = Math.max(...ends, ...starts)
-    const spanMs = Math.max(maxEnd - minStart, MIN_SPAN_MINUTES * 60_000)
+const MIN_WIDTH_PERCENT = 3
 
-    const stackRowByStart = new Map<number, number>()
+const HOUR_MS = 3_600_000
 
-    return sorted.map((entry, i) => {
-        const start = starts[i]
-        const durationMs = (entry.durationMinutes ?? 0) * 60_000
-        const leftPercent = ((start - minStart) / spanMs) * 100
-        const widthPercent = Math.min(
-            Math.max((durationMs / spanMs) * 100, MIN_WIDTH_PERCENT),
-            100 - leftPercent,
-        )
-        const stackRow = stackRowByStart.get(start) ?? 0
-        stackRowByStart.set(start, stackRow + 1)
-        return {...entry, leftPercent, widthPercent, stackRow}
-    })
+/** Volle Stunde vor [ms] — über die Date-API statt Modulo, damit auch halbstündige Zeitzonen stimmen. */
+const floorToHour = (ms: number): number => {
+    const d = new Date(ms)
+    d.setMinutes(0, 0, 0)
+    return d.getTime()
 }
 
+export type TimelineSpan = {startMs: number; endMs: number}
+
 /**
- * Position of the now-marker on the same axis as computeTimelinePositions, clamped to [0, 100] so
- * "now" before the first entry or after the last still shows at the respective edge instead of
- * disappearing off the bar. Null when there is nothing to position it against.
+ * Die Achse des Tages: von der vollen Stunde vor dem ersten Start bis zur vollen Stunde nach dem
+ * letzten Ende. Auf volle Stunden gerundet, damit die Stundenmarken die Achse an beiden Enden
+ * abschließen statt irgendwo im Nichts zu beginnen; mindestens eine Stunde breit, damit ein Tag
+ * mit einem einzigen (oder dauerlosen) Eintrag nicht zur Division durch null entartet.
  */
-export const computeNowMarkerPercent = (entries: TimelineEntry[], now: Date): number | null => {
+export const timelineSpan = (entries: TimelineEntry[]): TimelineSpan | null => {
     if (entries.length === 0) {
         return null
     }
     const starts = entries.map(e => new Date(e.startTime).getTime())
     const ends = entries.map((e, i) => starts[i] + (e.durationMinutes ?? 0) * 60_000)
-    const minStart = Math.min(...starts)
-    const maxEnd = Math.max(...ends, ...starts)
-    const spanMs = Math.max(maxEnd - minStart, MIN_SPAN_MINUTES * 60_000)
-    const percent = ((now.getTime() - minStart) / spanMs) * 100
+    const startMs = floorToHour(Math.min(...starts))
+    const lastEnd = Math.max(...ends, ...starts)
+    const endMs = Math.max(
+        floorToHour(lastEnd) === lastEnd ? lastEnd : floorToHour(lastEnd) + HOUR_MS,
+        startMs + HOUR_MS,
+    )
+    return {startMs, endMs}
+}
+
+export type HourMark = {percent: number; timeMs: number}
+
+/**
+ * Die beschrifteten Stundenmarken entlang der Achse. Die Schrittweite wächst mit der Spanne
+ * (1 h, 2 h, 3 h, …), sodass höchstens ~10 Marken entstehen — mehr Beschriftung liefe auf
+ * schmalen Flächen ineinander und sagte nichts, was die feineren Marken nicht auch sagen.
+ */
+export const computeHourMarks = (entries: TimelineEntry[]): HourMark[] => {
+    const span = timelineSpan(entries)
+    if (span == null) {
+        return []
+    }
+    const spanMs = span.endMs - span.startMs
+    const hours = spanMs / HOUR_MS
+    const step = [1, 2, 3, 4, 6, 12].find(s => hours / s <= 10) ?? 24
+    const marks: HourMark[] = []
+    for (let timeMs = span.startMs; timeMs <= span.endMs; timeMs += step * HOUR_MS) {
+        marks.push({percent: ((timeMs - span.startMs) / spanMs) * 100, timeMs})
+    }
+    return marks
+}
+
+/**
+ * Zeitproportionale x-Position für jeden Eintrag entlang der Tagesachse (siehe {@link timelineSpan}).
+ * Einträge bekommen eine Mindestbreite, damit kurze/dauerlose Slots klickbar bleiben (Kompromiss
+ * siehe MIN_WIDTH_PERCENT), und Einträge, die sich GEZEICHNET überschneiden würden — gleiche
+ * Startzeit, überlappende Dauern oder bloß dichter gestartet, als die Mindestbreite Platz lässt —
+ * weichen in die erste freie Spur aus (`stackRow`, First-Fit) statt übereinander zu liegen.
+ */
+export const computeTimelinePositions = (entries: TimelineEntry[]): PositionedTimelineEntry[] => {
+    const span = timelineSpan(entries)
+    if (span == null) {
+        return []
+    }
+    const spanMs = span.endMs - span.startMs
+    const sorted = [...entries].sort((a, b) => a.startTime.localeCompare(b.startTime))
+
+    // Rechte Kante (in Prozent) des jeweils letzten Eintrags je Spur — First-Fit reicht, weil die
+    // Einträge nach Startzeit sortiert ankommen und Spuren damit nie rückwärts belegt werden.
+    const laneRightEdges: number[] = []
+
+    return sorted.map(entry => {
+        const start = new Date(entry.startTime).getTime()
+        const durationMs = (entry.durationMinutes ?? 0) * 60_000
+        const leftPercent = ((start - span.startMs) / spanMs) * 100
+        const widthPercent = Math.min(
+            Math.max((durationMs / spanMs) * 100, MIN_WIDTH_PERCENT),
+            100 - leftPercent,
+        )
+        let stackRow = laneRightEdges.findIndex(rightEdge => rightEdge <= leftPercent + 1e-6)
+        if (stackRow === -1) {
+            stackRow = laneRightEdges.length
+            laneRightEdges.push(0)
+        }
+        laneRightEdges[stackRow] = leftPercent + widthPercent
+        return {...entry, leftPercent, widthPercent, stackRow}
+    })
+}
+
+/**
+ * Position des Jetzt-Markers auf derselben Achse wie computeTimelinePositions, auf [0, 100]
+ * geklemmt: "jetzt" vor der ersten vollen Stunde oder nach der letzten klebt am jeweiligen Rand,
+ * statt von der Fläche zu verschwinden. Null, wenn es nichts zu positionieren gibt — oder wenn
+ * die Einträge zu einem ANDEREN Kalendertag gehören: Wer den Zeitplan von übermorgen ansieht,
+ * für den wäre ein an den Rand geklemmtes "Jetzt" eine Falschaussage.
+ */
+export const computeNowMarkerPercent = (entries: TimelineEntry[], now: Date): number | null => {
+    const span = timelineSpan(entries)
+    if (span == null) {
+        return null
+    }
+    if (dayOf(entries[0].startTime) !== format(now, 'yyyy-MM-dd')) {
+        return null
+    }
+    const percent = ((now.getTime() - span.startMs) / (span.endMs - span.startMs)) * 100
     return Math.min(100, Math.max(0, percent))
 }
