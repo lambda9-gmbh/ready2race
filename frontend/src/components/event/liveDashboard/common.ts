@@ -363,6 +363,32 @@ export const nextUpEntry = (
 }
 
 /**
+ * Der nächste Vorfahr, der selbst scrollt — z. B. die „Läufe"-Spalte des Dashboards oder die
+ * Durchführungs-Spalte des Veranstaltungs-Modus (overflowY: auto). Gibt es keinen, übernimmt
+ * das Fenster (dann null, und `scrollIntoView` ist der richtige Weg). Die Prüfung auf
+ * scrollHeight > clientHeight lässt Boxen aus, die zwar overflow gesetzt haben, aber mit ihrem
+ * Inhalt wachsen — etwa den Seitenrahmen, dessen overflowX: hidden das berechnete overflowY auf
+ * auto hebt, ohne dass er je scrollt. body/html bleiben außen vor: dort scrollt das Fenster.
+ * Bis zum 12.08.2026 lag die Funktion privat in der LiveDashboardPage; hierher gezogen, weil
+ * der Veranstaltungs-Modus des Zeitplan-Tabs denselben Container-Scroll braucht.
+ */
+export const scrollContainerOf = (el: HTMLElement): HTMLElement | null => {
+    for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+        if (parent === document.body || parent === document.documentElement) {
+            return null
+        }
+        const overflowY = window.getComputedStyle(parent).overflowY
+        if (
+            (overflowY === 'auto' || overflowY === 'scroll') &&
+            parent.scrollHeight > parent.clientHeight
+        ) {
+            return parent
+        }
+    }
+    return null
+}
+
+/**
  * Ziel-scrollTop, das ein Element mittig in seinen Scroll-Container stellt — das rechnerische
  * Gegenstück zu `scrollIntoView({block: 'center'})`, nur eben auf einen einzigen Container
  * bezogen statt auf alle scrollbaren Vorfahren. `elementTop` ist die Oberkante des Elements im

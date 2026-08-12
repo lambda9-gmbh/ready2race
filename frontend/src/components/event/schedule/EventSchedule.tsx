@@ -724,6 +724,30 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                     rowRefs.current.delete(slot.id)
                                                 }
                                             }}
+                                            // Im Veranstaltungs-Modus lädt die GANZE Zeile die
+                                            // Durchführung rechts, nicht nur das kleine Symbol —
+                                            // aber nur bei Zeilen mit Wettkampfbezug, und nie,
+                                            // wenn der Klick eigentlich einem Element in der
+                                            // Zeile galt (Aktions-Icons, Links): deren Klicks
+                                            // steigen hierher auf, das closest() erkennt sie am
+                                            // Ziel und lässt sie ihren eigenen Zweck erfüllen.
+                                            onClick={
+                                                eventMode && slot.competitionId
+                                                    ? event => {
+                                                          const target =
+                                                              event.target as HTMLElement
+                                                          if (target.closest('button, a')) {
+                                                              return
+                                                          }
+                                                          setEventModeSelection(
+                                                              nextEventModeSelection(
+                                                                  eventModeSelection,
+                                                                  slot,
+                                                              ),
+                                                          )
+                                                      }
+                                                    : undefined
+                                            }
                                             sx={{
                                                 backgroundColor:
                                                     highlightedSlotId === slot.id ||
@@ -734,6 +758,16 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                         ? 'action.selected'
                                                         : undefined,
                                                 transition: 'background-color 0.3s ease',
+                                                // Nur im Modus und nur mit Wettkampf: die Zeile
+                                                // zeigt an, dass sie als Ganzes klickbar ist.
+                                                // Außerhalb des Modus bleibt alles wie bisher.
+                                                ...(eventMode &&
+                                                    slot.competitionId && {
+                                                        cursor: 'pointer',
+                                                        '&:hover': {
+                                                            backgroundColor: 'action.hover',
+                                                        },
+                                                    }),
                                             }}>
                                             <TableCell>
                                                 {format(new Date(slot.startTime), t('format.time'))}
@@ -1260,6 +1294,7 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                             key={eventModeSelection.competitionId}
                             eventId={eventId}
                             competitionId={eventModeSelection.competitionId}
+                            focusMatchId={eventModeSelection.matchId}
                             autoRefresh={{
                                 enabled: event.executionAutoRefresh,
                                 seconds: event.executionAutoRefreshSeconds,

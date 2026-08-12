@@ -54,6 +54,7 @@ import {
     LiveDashboardTab,
     liveMatches,
     nextUpEntry,
+    scrollContainerOf,
     storedPollInterval,
 } from '@components/event/liveDashboard/common.ts'
 import ScheduleTimelineIndicator from '@components/event/schedule/ScheduleTimelineIndicator.tsx'
@@ -92,30 +93,6 @@ const useCrewRequested = (): boolean => {
         return () => window.removeEventListener('resize', onResize)
     }, [])
     return requested
-}
-
-/**
- * Der nächste Vorfahr, der selbst scrollt — breit ist das die „Läufe"-Spalte (overflowY: auto),
- * schmal gibt es keinen und das Fenster übernimmt (dann null). Die Prüfung auf
- * scrollHeight > clientHeight lässt Boxen aus, die zwar overflow gesetzt haben, aber mit ihrem
- * Inhalt wachsen — etwa den Seitenrahmen, dessen overflowX: hidden das berechnete overflowY auf
- * auto hebt, ohne dass er je scrollt. body/html bleiben außen vor: dort scrollt das Fenster, und
- * dafür ist scrollIntoView der richtige Weg.
- */
-const scrollContainerOf = (el: HTMLElement): HTMLElement | null => {
-    for (let parent = el.parentElement; parent; parent = parent.parentElement) {
-        if (parent === document.body || parent === document.documentElement) {
-            return null
-        }
-        const overflowY = window.getComputedStyle(parent).overflowY
-        if (
-            (overflowY === 'auto' || overflowY === 'scroll') &&
-            parent.scrollHeight > parent.clientHeight
-        ) {
-            return parent
-        }
-    }
-    return null
 }
 
 export type LiveDashboardPageProps = {
