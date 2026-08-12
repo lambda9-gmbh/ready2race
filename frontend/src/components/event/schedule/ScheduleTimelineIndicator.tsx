@@ -79,7 +79,9 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
         return null
     }
 
-    const positioned = computeTimelinePositions(entries)
+    // Auch die Blockgeometrie rechnet gegen die gemessene Breite: die Mindest-Zeichenbreite
+    // (gegen Unsichtbarkeit) und die Mindest-Klickbreite sind Pixel, keine Achsenprozente.
+    const positioned = computeTimelinePositions(entries, containerWidth)
     // Die Marken werden gegen die gemessene Breite geplant (Format und Schrittweite, siehe
     // computeHourMarks) — auf dem Handy nackte Stunden statt ineinanderlaufender "08:00"-Labels.
     const hourMarkPlan = computeHourMarks(entries, containerWidth)
@@ -280,53 +282,72 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
                                 }}
                             />
                         )}
+                        {/* Klickfläche und Zeichnung sind getrennt: die ButtonBase ist die
+                            unsichtbare, mindestens 24 px breite Hitbox (Geometrie siehe
+                            computeTimelinePositions), der zeittreue Block liegt als Kind darin.
+                            Der Tooltip hängt an der Hitbox — die weicht vom sichtbaren Block um
+                            höchstens die halbe Mindest-Klickbreite ab, der Anker bleibt also
+                            praktisch der Block. */}
                         <Tooltip title={entryTooltip(entry)}>
                             <ButtonBase
                                 onClick={() => onEntryClick?.(entry.id)}
                                 aria-label={`${entry.label}, ${format(new Date(entry.startTime), t('format.time'))}, ${stateLabel(entry)}`}
                                 sx={{
                                     position: 'absolute',
-                                    left: `${entry.leftPercent}%`,
-                                    width: `${entry.widthPercent}%`,
+                                    left: `${entry.hitLeftPercent}%`,
+                                    width: `${entry.hitWidthPercent}%`,
                                     top: entry.stackRow * (rowHeight + rowGap),
                                     height: rowHeight,
-                                    borderRadius: 0.75,
-                                    overflow: 'hidden',
-                                    ...segmentSx(a),
-                                    animation:
-                                        entry.state === 'running'
-                                            ? 'r2r-timeline-pulse 2s infinite'
-                                            : 'none',
-                                    transition: 'filter 0.15s ease',
-                                    '&:hover': {
+                                    '&:hover .r2r-timeline-block': {
                                         filter: 'brightness(0.92)',
                                     },
-                                    '&:focus-visible': {
+                                    '&:focus-visible .r2r-timeline-block': {
                                         outline: `2px solid ${theme.palette.primary.dark}`,
                                         outlineOffset: 1,
                                     },
                                 }}>
-                                {showLabel && (
-                                    <Box
-                                        component={'span'}
-                                        sx={{
-                                            fontSize: '0.65rem',
-                                            lineHeight: 1,
-                                            px: 0.5,
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            // Auf Füllungen die Kontrastfarbe der Palette, auf
-                                            // Umrissen die normale Textfarbe der Fläche.
-                                            color:
-                                                a.variant === 'outlined'
-                                                    ? 'text.primary'
-                                                    : theme.palette.getContrastText(
-                                                          a.muted ? pal.light : pal.main,
-                                                      ),
-                                        }}>
-                                        {shortLabel}
-                                    </Box>
-                                )}
+                                <Box
+                                    className={'r2r-timeline-block'}
+                                    sx={{
+                                        position: 'absolute',
+                                        left: `${((entry.leftPercent - entry.hitLeftPercent) / entry.hitWidthPercent) * 100}%`,
+                                        width: `${(entry.widthPercent / entry.hitWidthPercent) * 100}%`,
+                                        top: 0,
+                                        bottom: 0,
+                                        borderRadius: 0.75,
+                                        overflow: 'hidden',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        ...segmentSx(a),
+                                        animation:
+                                            entry.state === 'running'
+                                                ? 'r2r-timeline-pulse 2s infinite'
+                                                : 'none',
+                                        transition: 'filter 0.15s ease',
+                                    }}>
+                                    {showLabel && (
+                                        <Box
+                                            component={'span'}
+                                            sx={{
+                                                fontSize: '0.65rem',
+                                                lineHeight: 1,
+                                                px: 0.5,
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                // Auf Füllungen die Kontrastfarbe der Palette, auf
+                                                // Umrissen die normale Textfarbe der Fläche.
+                                                color:
+                                                    a.variant === 'outlined'
+                                                        ? 'text.primary'
+                                                        : theme.palette.getContrastText(
+                                                              a.muted ? pal.light : pal.main,
+                                                          ),
+                                            }}>
+                                            {shortLabel}
+                                        </Box>
+                                    )}
+                                </Box>
                             </ButtonBase>
                         </Tooltip>
                         {/* Die Ist-Ebene: dünner Strich am unteren Rand der Spur, positioniert am

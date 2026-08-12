@@ -48,8 +48,17 @@ export type TimelineEntry = {
 }
 
 export type PositionedTimelineEntry = TimelineEntry & {
+    /** Der SICHTBARE Block: zeittreu — Position und Breite entsprechen Startzeit und Dauer. */
     leftPercent: number
     widthPercent: number
+    /**
+     * Die KLICK-/Hover-Fläche, getrennt von der Zeichnung: mindestens MIN_HIT_PX breit, damit
+     * ein 7-Minuten-Lauf antippbar bleibt, ohne breiter auszusehen, als er dauert. Zwischen
+     * dicht liegenden Blöcken endet sie in der Mitte der Lücke — der Klick trifft damit immer
+     * den nächstgelegenen Block. Sie umfasst den sichtbaren Block immer vollständig.
+     */
+    hitLeftPercent: number
+    hitWidthPercent: number
     stackRow: number
 }
 
@@ -306,13 +315,16 @@ export const labelFitsWidth = (label: string, blockPx: number): boolean =>
 // ---- Positionsrechnung ------------------------------------------------------------------------
 
 /**
- * Mindestbreite eines Segments in Prozent der Achse. Der bewusste Kompromiss: Ein 4-Minuten-Lauf
- * auf einem 12-Stunden-Tag wäre zeitgetreu ~0,5 % breit — ein unklickbarer Strich. Die
- * Mindestbreite opfert an dieser einen Stelle die Zeittreue zugunsten der Bedienbarkeit; dicht
- * gestartete Kurzläufe werden dadurch breiter gezeichnet, als sie dauern, und weichen einander
- * über die Spurzuteilung (siehe `stackRow`) aus, statt sich zu überdecken.
+ * Mindest-ZEICHENbreite eines Blocks in Pixeln — nur gegen Unsichtbarkeit, nicht für die
+ * Bedienbarkeit. Die Zeichnung bleibt damit zeittreu (ein 7-Minuten-Lauf sieht aus wie
+ * 7 Minuten); bedienbar macht die Blöcke die davon GETRENNTE Klickfläche (MIN_HIT_PX).
+ * Die frühere prozentuale Mindestbreite (3 % der Achse) zeichnete Kurzläufe um ein
+ * Mehrfaches zu lang und trieb den First-Fit in Scheinspuren.
  */
-const MIN_WIDTH_PERCENT = 3
+const MIN_BLOCK_PX = 3
+
+/** Bequeme Mindestbreite der (unsichtbaren) Klick-/Hover-Fläche eines Blocks. */
+export const MIN_HIT_PX = 24
 
 const HOUR_MS = 3_600_000
 
@@ -447,39 +459,100 @@ export const nowLabelHidesHourLabel = (
 
 /**
  * Zeitproportionale x-Position für jeden Eintrag entlang der Tagesachse (siehe {@link timelineSpan}).
- * Einträge bekommen eine Mindestbreite, damit kurze/dauerlose Slots klickbar bleiben (Kompromiss
- * siehe MIN_WIDTH_PERCENT), und Einträge, die sich GEZEICHNET überschneiden würden — gleiche
- * Startzeit, überlappende Dauern oder bloß dichter gestartet, als die Mindestbreite Platz lässt —
- * weichen in die erste freie Spur aus (`stackRow`, First-Fit) statt übereinander zu liegen.
+ *
+ * Die Blöcke werden ZEITTREU gezeichnet — die Breite ist die echte Dauer, mit MIN_BLOCK_PX nur
+ * als Sichtbarkeitsgrenze. In eine zweite Spur (`stackRow`, First-Fit) weicht ein Eintrag nur
+ * noch bei ECHTER Zeitüberlappung aus: sein Start liegt vor dem Ende eines Spurvorgängers oder
+ * exakt auf dessen Start (dauerlose Einträge überlappen sich sonst nie). Bloßes Zeichen- oder
+ * Klickflächen-Gedränge erzeugt keine Spuren mehr — das stapelte sequenzielle Kurzläufe in
+ * Scheinparallelität.
+ *
+ * Die Klickfläche (hitLeftPercent/hitWidthPercent) wird je Spur nachgerechnet: symmetrisch auf
+ * MIN_HIT_PX aufgeweitet, aber an der MITTE der Lücke zum Spurnachbarn gekappt — bei dichten
+ * Kurzläufen trifft der Klick so immer den nächstgelegenen Block. Sie deckt den sichtbaren
+ * Block stets vollständig ab.
  */
-export const computeTimelinePositions = (entries: TimelineEntry[]): PositionedTimelineEntry[] => {
+export const computeTimelinePositions = (
+    entries: TimelineEntry[],
+    containerPx: number,
+): PositionedTimelineEntry[] => {
     const span = timelineSpan(entries)
     if (span == null) {
         return []
     }
+    const px = containerPx > 0 ? containerPx : FALLBACK_CONTAINER_PX
     const spanMs = span.endMs - span.startMs
+    const minBlockPercent = (MIN_BLOCK_PX / px) * 100
+    const minHitPercent = (MIN_HIT_PX / px) * 100
     const sorted = [...entries].sort((a, b) => a.startTime.localeCompare(b.startTime))
 
-    // Rechte Kante (in Prozent) des jeweils letzten Eintrags je Spur — First-Fit reicht, weil die
-    // Einträge nach Startzeit sortiert ankommen und Spuren damit nie rückwärts belegt werden.
-    const laneRightEdges: number[] = []
+    // Zeitliche Belegung je Spur: Start und Ende des jeweils letzten Eintrags.
+    const lanes: {lastStartMs: number; lastEndMs: number}[] = []
 
-    return sorted.map(entry => {
-        const start = new Date(entry.startTime).getTime()
-        const durationMs = (entry.durationMinutes ?? 0) * 60_000
-        const leftPercent = ((start - span.startMs) / spanMs) * 100
+    const positioned = sorted.map(entry => {
+        const startMs = new Date(entry.startTime).getTime()
+        const endMs = startMs + (entry.durationMinutes ?? 0) * 60_000
+        const leftPercent = ((startMs - span.startMs) / spanMs) * 100
         const widthPercent = Math.min(
-            Math.max((durationMs / spanMs) * 100, MIN_WIDTH_PERCENT),
+            Math.max(((endMs - startMs) / spanMs) * 100, minBlockPercent),
             100 - leftPercent,
         )
-        let stackRow = laneRightEdges.findIndex(rightEdge => rightEdge <= leftPercent + 1e-6)
+        // Frei ist eine Spur nur ohne Zeitüberlappung; ein identischer Start zählt als
+        // Überlappung, sonst läge ein dauerloser Doppelstart deckungsgleich auf dem ersten.
+        let stackRow = lanes.findIndex(
+            lane => startMs >= lane.lastEndMs && startMs > lane.lastStartMs,
+        )
         if (stackRow === -1) {
-            stackRow = laneRightEdges.length
-            laneRightEdges.push(0)
+            stackRow = lanes.length
+            lanes.push({lastStartMs: 0, lastEndMs: 0})
         }
-        laneRightEdges[stackRow] = leftPercent + widthPercent
-        return {...entry, leftPercent, widthPercent, stackRow}
+        lanes[stackRow] = {lastStartMs: startMs, lastEndMs: endMs}
+        return {
+            ...entry,
+            leftPercent,
+            widthPercent,
+            hitLeftPercent: 0,
+            hitWidthPercent: 0,
+            stackRow,
+        }
     })
+
+    // Klickflächen je Spur: erst aufweiten, dann an der Lückenmitte zum Nachbarn kappen.
+    const byLane = new Map<number, typeof positioned>()
+    for (const entry of positioned) {
+        byLane.set(entry.stackRow, [...(byLane.get(entry.stackRow) ?? []), entry])
+    }
+    for (const laneEntries of byLane.values()) {
+        laneEntries.forEach((entry, i) => {
+            const blockRight = entry.leftPercent + entry.widthPercent
+            const prev = laneEntries[i - 1]
+            const next = laneEntries[i + 1]
+            // Harte Grenzen: Achse und Lückenmitte zum Spurnachbarn.
+            const limitLeft = Math.max(
+                0,
+                prev == null ? 0 : (prev.leftPercent + prev.widthPercent + entry.leftPercent) / 2,
+            )
+            const limitRight = Math.min(
+                100,
+                next == null ? 100 : (blockRight + next.leftPercent) / 2,
+            )
+            const desired = Math.max(entry.widthPercent, minHitPercent)
+            const growth = Math.max(0, (minHitPercent - entry.widthPercent) / 2)
+            let hitLeft = Math.max(limitLeft, entry.leftPercent - growth)
+            let hitRight = Math.min(limitRight, blockRight + growth)
+            // Was Rand oder Nachbar auf einer Seite abschneiden, kommt - soweit möglich -
+            // auf der anderen dazu, damit die Mindest-Klickbreite auch am Achsenrand steht.
+            if (hitRight - hitLeft < desired) {
+                hitRight = Math.min(limitRight, hitLeft + desired)
+                hitLeft = Math.max(limitLeft, hitRight - desired)
+            }
+            // Der sichtbare Block ist immer vollständig abgedeckt.
+            entry.hitLeftPercent = Math.min(hitLeft, entry.leftPercent)
+            entry.hitWidthPercent = Math.max(hitRight, blockRight) - entry.hitLeftPercent
+        })
+    }
+
+    return positioned
 }
 
 // ---- Soll vs. Ist -------------------------------------------------------------------------------
