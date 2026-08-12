@@ -238,14 +238,47 @@ class ClubShortNameServiceTest {
             ),
         )
 
+        // Sortiert nach Länge der Kurzform absteigend: "Marburger Ruderverein" (21) vor den beiden
+        // 19er-Kurzformen (alphabetisch) vor "Kölner Ruderverein" (18, Jahreszahl fällt weg).
         val all = (!ClubShortNameService.list(null)).data.map { it.names.first() }
         assertEquals(
-            listOf("Kölner Ruderverein von 1877", "Marburger Ruderverein", "Pirnaer Ruderverein", rostock),
+            listOf("Marburger Ruderverein", "Pirnaer Ruderverein", rostock, "Kölner Ruderverein von 1877"),
             all,
         )
 
         val atTheStart = (!ClubShortNameService.list(eventId)).data.map { it.names.first() }
         assertEquals(listOf("Marburger Ruderverein", rostock), atTheStart)
+    }
+
+    /**
+     * Die Liste ist eine Arbeitsliste: sie soll die längsten - also noch nicht ordentlich
+     * gekürzten - Kurzformen zuerst zeigen, damit man sie von oben abarbeiten kann
+     * (Nutzerwunsch 11.08.2026). Erst bei gleicher Länge entscheidet das Alphabet.
+     */
+    @Test
+    fun theLongestShortNameLeadsTheWorkList() = testComprehension {
+        val admin = adminId()
+
+        // Drei verschieden lange Kurzformen plus ein Längen-Gleichstand. Die Kurzformen werden
+        // gepflegt statt der Heuristik überlassen, damit ihre Längen im Test feststehen.
+        listOf(
+            "Verein Nord" to "Sehr lange Kurzform", // 19 Zeichen
+            "Verein Ost" to "Mittellang",           // 10 Zeichen
+            "Verein West" to "Kurz",                //  4 Zeichen - Gleichstand mit Süd
+            "Verein Süd" to "Knap",                 //  4 Zeichen - Gleichstand mit West
+        ).forEach { (name, shortName) ->
+            club(name)
+            !ClubShortNameService.set(
+                nameKey = ClubNameKey.of(name),
+                request = ClubShortNameRequest(shortName = shortName, sampleName = name),
+                userId = admin,
+            )
+        }
+
+        val order = (!ClubShortNameService.list(null)).data.map { it.names.first() }
+
+        // Längste zuerst; bei den beiden Vierern entscheidet das Alphabet (Süd vor West).
+        assertEquals(listOf("Verein Nord", "Verein Ost", "Verein Süd", "Verein West"), order)
     }
 
     /**

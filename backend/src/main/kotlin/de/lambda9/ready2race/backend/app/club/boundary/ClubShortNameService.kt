@@ -61,7 +61,14 @@ object ClubShortNameService {
                     maintained = settings.aliases.containsKey(nameKey),
                 )
             }
-            .sortedBy { it.names.first().lowercase() }
+            // Die Seite ist eine Arbeitsliste: sie soll die längsten - also noch nicht ordentlich
+            // gekürzten - Kurzformen zuerst zeigen, damit man sie von oben abarbeiten kann
+            // (Nutzerwunsch 11.08.2026). Bei gleicher Länge alphabetisch, damit die Reihenfolge
+            // stabil und vorhersehbar bleibt.
+            .sortedWith(
+                compareByDescending<ClubShortNameDto> { it.shortName.length }
+                    .thenBy { it.names.first().lowercase() }
+            )
 
         KIO.ok(ApiResponse.ListDto(rows))
     }
