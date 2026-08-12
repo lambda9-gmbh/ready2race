@@ -167,6 +167,57 @@ class BoardRequestValidationTest {
         )
     }
 
+    // Kachelfarbe (Hex) und Deckkraft sind für jeden Elementtyp erlaubt; fehlende Felder
+    // bleiben gültig, damit Alt-Konfigurationen unverändert deserialisieren.
+    @Test
+    fun backgroundColorMustBeHex() {
+        fun colored(color: String?) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(
+                    elements = listOf(
+                        BoardElement(type = BoardElementType.MATCH, offset = 0, backgroundColor = color)
+                    )
+                )
+            ),
+        )
+        // Beide Hex-Formen gelten, Groß-/Kleinschreibung egal.
+        assertEquals(ValidationResult.Valid, request(colored("#f00")).validate())
+        assertEquals(ValidationResult.Valid, request(colored("#C62828")).validate())
+        // Fehlend = bisheriges Aussehen.
+        assertEquals(ValidationResult.Valid, request(colored(null)).validate())
+        assertNotEquals(ValidationResult.Valid, request(colored("rot")).validate())
+        assertNotEquals(ValidationResult.Valid, request(colored("C62828")).validate())
+        assertNotEquals(ValidationResult.Valid, request(colored("#C6282")).validate())
+        assertNotEquals(ValidationResult.Valid, request(colored("#GGHHII")).validate())
+    }
+
+    @Test
+    fun backgroundOpacityMustBeInUnitInterval() {
+        fun withOpacity(opacity: Double?, type: BoardElementType = BoardElementType.CLOCK) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(
+                    elements = listOf(
+                        BoardElement(type = type, backgroundColor = "#0a0", backgroundOpacity = opacity)
+                    )
+                )
+            ),
+        )
+        // Die Grenzen selbst sind gültig — 0.0 (unsichtbar) bis 1.0 (deckend).
+        assertEquals(ValidationResult.Valid, request(withOpacity(0.0)).validate())
+        assertEquals(ValidationResult.Valid, request(withOpacity(0.3)).validate())
+        assertEquals(ValidationResult.Valid, request(withOpacity(1.0)).validate())
+        assertEquals(ValidationResult.Valid, request(withOpacity(null)).validate())
+        assertNotEquals(ValidationResult.Valid, request(withOpacity(-0.1)).validate())
+        assertNotEquals(ValidationResult.Valid, request(withOpacity(1.1)).validate())
+        // Und auch auf anderen Elementtypen erlaubt — z. B. der Verspätungs-Kachel.
+        assertEquals(
+            ValidationResult.Valid,
+            request(withOpacity(0.5, type = BoardElementType.DELAY)).validate(),
+        )
+    }
+
     @Test
     fun aTextElementNeedsText() {
         val config = BoardConfig(

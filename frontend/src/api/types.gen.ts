@@ -478,6 +478,14 @@ export type BoardElement = {
     ratingCategoryId?: string | null
     showEventName?: boolean | null
     text?: string | null
+    /**
+     * Tile background as hex color (#RGB or #RRGGBB), allowed on every element type; absent = default look
+     */
+    backgroundColor?: string | null
+    /**
+     * Opacity of the background color only (content stays fully visible), absent = 1.0
+     */
+    backgroundOpacity?: number | null
 }
 
 /**

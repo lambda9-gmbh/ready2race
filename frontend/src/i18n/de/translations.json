@@ -2093,7 +2093,11 @@
         "showCrewDetails": "Crew im Detail (je Zeile)",
         "showBirthYears": "Jahrgänge zeigen",
         "showAdvancement": "Weiterkommens-Regel zeigen",
-        "showRegisteringClub": "Meldenden Verein zeigen"
+        "showRegisteringClub": "Meldenden Verein zeigen",
+        "backgroundColor": "Kachelfarbe",
+        "backgroundColorRemove": "Farbe entfernen",
+        "backgroundOpacity": "Deckkraft",
+        "backgroundColorHint": "Kräftige Farben mit niedriger Deckkraft bleiben lesbar"
       },
       "columns": "Spalten",
       "columnCount": "{{count}} Spalten",
