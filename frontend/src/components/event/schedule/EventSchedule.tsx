@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {
     Box,
@@ -75,6 +75,7 @@ import {scheduleSlotsToEntries} from './timelineIndicator.ts'
 import {EventModeSelection, isSlotSelected, nextEventModeSelection} from './eventMode.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
 import {useFullWidthLayout} from '../../../layouts/fullWidthLayout.ts'
+import {debounce} from '@utils/debounce.ts'
 import {delayParts, latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
 import {
     matchStatusChip,
@@ -228,6 +229,13 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
     // leer starten, aber ein Re-Render (30-Sekunden-Abgleich!) soll die Auswahl nicht verlieren.
     const [eventModeSelection, setEventModeSelection] = useState<EventModeSelection>(null)
     useFullWidthLayout(eventMode)
+
+    // Änderungen aus der rechten Durchführung sofort links zeigen, statt auf den
+    // 30-Sekunden-Takt zu warten. Entprellt, damit Aktions-Serien („Speichern & weiter")
+    // keinen Abruf-Sturm auslösen; useMemo hält dieselbe Instanz über Re-Renders, sonst
+    // liefe jede Entprellung ins Leere. setLastRequested (in reload) ist stabil.
+    const reloadDebounced = useMemo(() => debounce(reload, 500), [])
+    useEffect(() => () => reloadDebounced.cancel(), [reloadDebounced])
 
     const now = useLocalClock(30_000)
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
@@ -1295,6 +1303,7 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                             eventId={eventId}
                             competitionId={eventModeSelection.competitionId}
                             focusMatchId={eventModeSelection.matchId}
+                            onDataChanged={reloadDebounced}
                             autoRefresh={{
                                 enabled: event.executionAutoRefresh,
                                 seconds: event.executionAutoRefreshSeconds,

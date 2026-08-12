@@ -141,9 +141,16 @@ type Props = CompetitionScopeProps & {
      * alles beim Alten.
      */
     focusMatchId?: string | null
+    /**
+     * Meldet, dass eine schreibende Aktion die Daten verändert hat (Lauf aktiviert/beendet,
+     * Ergebnis eingetragen, Runde erzeugt/gelöscht, …). Der Veranstaltungs-Modus lädt darüber
+     * den Zeitplan links sofort nach, statt auf dessen 30-Sekunden-Takt zu warten. Auf der
+     * Wettkampf-Seite bleibt das Prop leer — keine Verhaltensänderung.
+     */
+    onDataChanged?: () => void
 }
 
-const CompetitionExecution = ({autoRefresh, focusMatchId, ...scope}: Props) => {
+const CompetitionExecution = ({autoRefresh, focusMatchId, onDataChanged, ...scope}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const theme = useTheme()
@@ -157,6 +164,24 @@ const CompetitionExecution = ({autoRefresh, focusMatchId, ...scope}: Props) => {
     const [submitting, setSubmitting] = useState(false)
 
     const [reloadData, setReloadData] = useState(false)
+
+    // Ein Trichter für alle schreibenden Aktionen: Jede von ihnen stößt ihren Neu-Abruf über
+    // das Umschalten von [reloadData] an — die eigenen Handler hier ebenso wie die der
+    // Runden-Kinder, deren reloadRoundDto genau dieses Umschalten ist. Deshalb meldet dieser
+    // eine Effekt die Änderung nach draußen (siehe [onDataChanged]), statt an jeder
+    // Aktionsstelle einzeln aufzurufen. Der erste Durchlauf beim Mount ist keine Änderung.
+    // Einzige schreibende Stelle ohne diesen Trichter ist das Speichern der Folgerunden-
+    // Einstellung (RoundProgressionSetting) — sie ändert am Zeitplan nichts.
+    const onDataChangedRef = useRef(onDataChanged)
+    onDataChangedRef.current = onDataChanged
+    const reloadDataMountRef = useRef(true)
+    useEffect(() => {
+        if (reloadDataMountRef.current) {
+            reloadDataMountRef.current = false
+            return
+        }
+        onDataChangedRef.current?.()
+    }, [reloadData])
 
     // Die drei Dialoge stehen hier oben, weil der automatische Abgleich sie kennen muss: Solange
     // einer offen ist, ruht der Takt (siehe `paused` weiter unten). Ihre Öffnen/Schließen-Helfer
