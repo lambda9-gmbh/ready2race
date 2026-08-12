@@ -15,11 +15,11 @@ import {
     finishComplete,
     formatClockTime,
     formatClockTimeWithSeconds,
-    formatPlace,
     scaled,
     sortRunningTeams,
     teamLabel,
 } from '../info/athleteBoard/common'
+import {formatPlaceOrdinal} from '@utils/placeOrdinal'
 import {elementScale, slotForElement} from './boardView'
 
 interface BoardMatchDetailElementProps {
@@ -235,7 +235,7 @@ const BoardMatchDetailElement = ({
                       label: team.failed
                           ? (team.failedReason ?? t('event.info.athleteBoard.failed'))
                           : team.place != null || team.timeString
-                            ? `${team.place != null ? `${formatPlace(team.place, t)} ` : ''}${team.timeString ?? ''}`.trim()
+                            ? `${team.place != null ? `${formatPlaceOrdinal(team.place)} ` : ''}${team.timeString ?? ''}`.trim()
                             : null,
                       muted: team.failed,
                   },
@@ -261,12 +261,12 @@ const BoardMatchDetailElement = ({
                               : t('event.info.athleteBoard.deregistered')
                           : team.failed
                             ? (team.failedReason ?? t('event.info.athleteBoard.failed'))
-                            : `${team.place != null ? `${formatPlace(team.place, t)} ` : ''}${team.timeString ?? ''}`.trim() ||
+                            : `${team.place != null ? `${formatPlaceOrdinal(team.place)} ` : ''}${team.timeString ?? ''}`.trim() ||
                               null,
                       muted: team.failed || team.deregistered,
                   },
                   team.ratingCategory
-                      ? `${team.ratingCategory.name}${team.categoryPlace != null ? ` — ${formatPlace(team.categoryPlace, t)}` : ''}`
+                      ? `${team.ratingCategory.name}${team.categoryPlace != null ? ` — ${formatPlaceOrdinal(team.categoryPlace)}` : ''}`
                       : null,
                   team.participants ?? [],
                   lapsLine(team.laps),

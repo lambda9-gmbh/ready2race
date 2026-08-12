@@ -13,6 +13,7 @@ import {
     BoatListRow,
 } from './AthleteBoardBoatRow'
 import {formatClockTime, scaled} from './common'
+import {formatPlaceOrdinal} from '@utils/placeOrdinal'
 import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 
 interface AthleteBoardResultCardProps {
@@ -122,12 +123,15 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                                 key={`${result.matchId}-${team.startNumber}`}
                                 index={index}
                                 // Der Platz innerhalb der Wertungskategorie — team.place bleibt der
-                                // Platz im Lauf und ist nur seine Grundlage. Seit dem 12.08.2026
-                                // als nackte große Zahl wie die Startnummer der Lauf-Karte
-                                // (Angleichung der beiden Karten, Nutzerwunsch); dass sie der
-                                // Platz und nicht die Startnummer ist, sagt die „Nr. N"-Zeile
-                                // klein darunter.
-                                leadNumber={team.categoryPlace ?? '–'}
+                                // Platz im Lauf und ist nur seine Grundlage. Als englisches
+                                // Ordinal „1st/2nd/3rd" (formatPlaceOrdinal, Nutzerentscheidung
+                                // 12.08.2026): die zwischenzeitlich nackte Zahl war von einer
+                                // Startnummer nicht zu unterscheiden.
+                                leadNumber={
+                                    team.categoryPlace != null
+                                        ? formatPlaceOrdinal(team.categoryPlace)
+                                        : '–'
+                                }
                                 trailing={
                                     // Ohne Zeiten bleibt die rechte Spalte den Booten
                                     // vorbehalten, die eine Erklärung brauchen.

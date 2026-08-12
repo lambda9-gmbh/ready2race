@@ -13,13 +13,13 @@ import {
     COUNTDOWN_MAX_SECONDS,
     finishComplete,
     formatClockTime,
-    formatPlace,
     formatRemaining,
     formatShortDate,
     isSameDay,
     scaled,
     sortRunningTeams,
 } from './common'
+import {formatPlaceOrdinal} from '@utils/placeOrdinal'
 
 /**
  * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits in der Arena,
@@ -361,7 +361,7 @@ const AthleteBoardMatchCard = ({
                                                       t('event.info.athleteBoard.failed'))
                                                     // Als Ordnungszahl, damit der Zwischenstand
                                                     // nicht wie eine zweite Startnummer liest.
-                                                    : `${team.place != null ? `${formatPlace(team.place, t)} ` : ''}${team.timeString}`
+                                                    : `${team.place != null ? `${formatPlaceOrdinal(team.place)} ` : ''}${team.timeString}`
                                             }
                                         />
                                         <AthleteBoardPenaltyNote

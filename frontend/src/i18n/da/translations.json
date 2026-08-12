@@ -1624,7 +1624,6 @@
         "minutesUnit": "min",
         "hoursUnit": "t",
         "secondsUnit": "sek",
-        "place": "{{count}}.",
         "advancing": "{{count}} både går videre → {{round}}",
         "advancing_one": "1 båd går videre → {{round}}",
         "advancingUnsized": "Videre: {{round}}",
