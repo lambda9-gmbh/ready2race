@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.text.TextAlign
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import org.apache.pdfbox.pdmodel.common.PDRectangle
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.test.Test
@@ -165,9 +166,22 @@ class GapDocumentsDocxTest {
         val framed = document.paragraphs.filter { it.ctp.pPr?.framePr != null }
         assertEquals(listOf("Carina Hein", "Malte Hein"), framed.map { it.text })
 
-        // Die zweite Zeile sitzt genau eine Zeilenhöhe (24 pt = 480 Twips) unter der ersten.
+        // Bis zum 11.08.2026 stand hier eine volle Zeilenhöhe von 24 pt (480 Twips) - zwei
+        // 24-pt-Zeilen in einem 42-pt-Kasten wuchsen damals symmetrisch über den Kasten hinaus.
+        // Auf Wunsch vom 11.08.2026 schrumpft die Schrift stattdessen, bis der Block passt: die
+        // Zeilenhöhe ist jetzt die halbe Kastenhöhe, und beide Zeilen bleiben im Kasten.
+        val boxTop = PDRectangle.A4.height * 0.45f
+        val boxHeight = PDRectangle.A4.height * 0.05f
         val ys = framed.map { it.ctp.pPr.framePr.y.toString().toLong() }
-        assertEquals(480L, ys[1] - ys[0])
+        assertTrue(
+            abs((ys[1] - ys[0]) - twips(boxHeight / 2)) <= 1,
+            "Zeilenabstand ${ys[1] - ys[0]} Twips statt der halben Kastenhöhe (${twips(boxHeight / 2)} Twips)",
+        )
+        assertTrue(ys[0] >= twips(boxTop) - 1, "erste Zeile beginnt über dem Kasten")
+        assertTrue(
+            ys[1] + twips(boxHeight / 2) <= twips(boxTop + boxHeight) + 1,
+            "zweite Zeile ragt unter dem Kasten heraus",
+        )
         document.close()
     }
 

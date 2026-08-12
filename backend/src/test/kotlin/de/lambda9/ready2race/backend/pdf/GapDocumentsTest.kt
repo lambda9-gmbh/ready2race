@@ -382,6 +382,67 @@ class GapDocumentsTest {
         assertTrue(content.isNotBlank())
     }
 
+    /**
+     * Der Fall von der echten Urkunde des Nutzers (11.08.2026): ein Doppelvierer mit Steuerfrau
+     * bringt fünf Namen in einen Kasten, der auf eine Zeile eingemessen ist. Vorher wuchs der
+     * Namensblock symmetrisch über den Kasten hinaus und überdruckte die fest positionierte
+     * Wettkampfzeile darüber und die Vereinszeile darunter. Seit dem Schrumpfen in gapTextMetrics
+     * müssen alle fünf Baselines innerhalb des Namenskastens liegen.
+     */
+    @Test
+    fun fiveNamesShrinkIntoTheirBoxInsteadOfOverprintingTheNeighbours() {
+        val competition = addition("12 JM4x+ Doppelvierer mit Steuerfrau", 0.40)
+        val names = addition(
+            "Carina Hein\nMalte Hein\nJette Petersen\nBjarne Lorenzen\nFriederike Sinning",
+            0.45,
+            fontSize = null,
+        )
+        val club = addition("Ruderklub Flensburg e.V.", 0.50)
+
+        val doc = gapDocuments(
+            template = templateBytes(),
+            font = null,
+            withBackground = false,
+            pages = listOf(listOf(competition, names, club)),
+        )
+
+        // Für die Sichtkontrolle neben den Assertions - testOutputs/ ist gitignored.
+        java.io.File("testOutputs").mkdirs()
+        val out = ByteArrayOutputStream()
+        doc.save(out)
+        java.io.File("testOutputs/urkunde_fuenf_namen.pdf").writeBytes(out.toByteArray())
+
+        // Baselines in Zeichenreihenfolge: 1x Wettkampf, 5x Name, 1x Verein.
+        val baselines = operatorOperands(doc.getPage(0))
+            .filter { it.first == "Tm" }
+            .map { it.second[5].numberValue() }
+        assertEquals(7, baselines.size)
+
+        // Namenskasten in PDF-Koordinaten (bottom-up): relTop 0.45, relHeight 0.05.
+        val pageHeight = PDRectangle.A4.height
+        val boxTop = pageHeight * (1 - 0.45f)
+        val boxBottom = boxTop - pageHeight * 0.05f
+        baselines.subList(1, 6).forEachIndexed { index, baseline ->
+            assertTrue(
+                baseline in boxBottom..boxTop,
+                "Baseline der Namenszeile ${index + 1} ($baseline) liegt außerhalb des Kastens [$boxBottom, $boxTop]",
+            )
+        }
+
+        // Und nichts überdruckt die Nachbarzeilen: die Namens-Baselines bleiben unterhalb der
+        // Wettkampf- und oberhalb der Vereins-Baseline.
+        val competitionBaseline = baselines.first()
+        val clubBaseline = baselines.last()
+        baselines.subList(1, 6).forEach { baseline ->
+            assertTrue(baseline < competitionBaseline && baseline > clubBaseline)
+        }
+
+        val content = text(doc, 1)
+        listOf("Carina Hein", "Malte Hein", "Jette Petersen", "Bjarne Lorenzen", "Friederike Sinning")
+            .forEach { assertTrue(content.contains(it), "Name '$it' fehlt im geschrumpften Block") }
+        doc.close()
+    }
+
     @Test
     fun existingSingleDocumentApiStillWorks() {
         // Rückwärtskompatibilität: die Teilnahmeurkunde nutzt weiterhin document(original, additions)
