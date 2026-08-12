@@ -143,6 +143,12 @@ object CompetitionExecutionService {
             // Number of teams placed into the round being created - used to resolve the bracket size N below.
             var justPlacedCount = 0
 
+            // Setzungszahlen der fahrenden (nicht `out`) Boote je erzeugtem Setup-Lauf — die
+            // Grundlage der Freilos-Benennung unten ([byeNumbersForRound]). Beide Pfade erheben
+            // sie, weil die Setzung einmal aus der Setzliste kommt (erste Runde) und einmal aus
+            // dem Setup-Platz (Folgerunde).
+            var racingSeedsByMatch: Map<UUID, List<Int?>> = emptyMap()
+
             // Die Setup-Lauf-Ids der Runde, die dieser Durchlauf erzeugt - Grundlage des Vermerks
             // unten. `createdSetupMatchIds` sammelt über alle Durchläufe hinweg und taugt dafür nicht.
             var createdThisRound: List<UUID> = emptyList()
@@ -208,6 +214,14 @@ object CompetitionExecutionService {
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
                 justPlacedCount = newTeamRecords.count { !it.out!! }
+
+                // Die Setzung eines Boots der ersten Runde ist seine Position in der Setzliste
+                // (index + 1: aktive Meldungen nach teamNumber, Abmeldungen dahinter) —
+                // newTeamRecords ist parallel zu sortedRegistrations gebaut, der Index passt.
+                racingSeedsByMatch = newTeamRecords
+                    .mapIndexed { index, record -> record to index + 1 }
+                    .filter { (record, _) -> !record.out!! }
+                    .groupBy({ (record, _) -> record.competitionMatch!! }, { (_, seed) -> seed as Int? })
 
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
@@ -294,6 +308,13 @@ object CompetitionExecutionService {
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
                 justPlacedCount = newTeamRecords.count { !it.out!! }
 
+                // In einer Folgerunde ist die Setzung der `seed` des Setup-Platzes, den das Boot
+                // besetzt — genau die Zahl, die MatchByeRepo später über ranking == startNumber
+                // zurückliest ("Freilos 1" auf Karte und Chip meint dann dieselbe Zahl wie hier).
+                racingSeedsByMatch = currentTeamsToParticipantId
+                    .filter { (prevTeam, _) -> !prevTeam.deregistered && !prevTeam.out && !prevTeam.failed }
+                    .groupBy({ it.second!!.competitionSetupMatch!! }, { it.second!!.seed })
+
                 // Carry over all substitutions to the new round
                 val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
                 val substitutionsRelevantForNextRound = currentRoundSubstitutions.map { record ->
@@ -331,6 +352,24 @@ object CompetitionExecutionService {
                             ).orDie()
                         }
                     }
+                }
+            }
+
+            // Freilos-Namen materialisieren (Anforderung vom 12.08.2026) - NACH der unveränderten
+            // Benennungs-Anwendung oben und an der LAUF-INSTANZ statt der Setup-Vorlage: Ein Lauf,
+            // in dem nur ein Boot fährt, heißt überall "Freilos <Setzungszahl>" (gelesen als
+            // coalesce(competition_match.bye_name, competition_setup_match.name), V202608121300),
+            // statt einen Pseudo-Namen aus Satz oder Vorlage zu zeigen. Weil die Instanz mit der
+            // Runde stirbt, heilt Löschen und Neu-Erzeugen - der Arbeitsfluss bei jeder (auch
+            // zurückgenommenen) An- oder Abmeldung - den Namen von selbst; die Benennungs-Logik
+            // selbst bleibt vollständig unberührt. Der Text ist bewusst deutsch und unübersetzt:
+            // ein Datum wie die Satz-Namen ("VF1") selbst, die Oberflächen übersetzen den
+            // Freilos-Chip daneben weiterhin je Sprache.
+            if (nextRound != null && createdThisRound.isNotEmpty()) {
+                val byeNames = byeNumbersForRound(nextRound, racingSeedsByMatch)
+                    .mapValues { (_, number) -> "Freilos $number" }
+                if (byeNames.isNotEmpty()) {
+                    !CompetitionMatchRepo.setByeNames(byeNames).orDie()
                 }
             }
 
@@ -458,6 +497,41 @@ object CompetitionExecutionService {
         ).orDie().onNullFail { CompetitionError.CompetitionNotFound }
 
         noData
+    }
+
+    /**
+     * Die Freilos-Nummern der soeben erzeugten Läufe einer Runde: Setup-Lauf-Id -> Nummer.
+     *
+     * Ein Freilos ist ein Lauf, in dem genau ein Boot fährt, in einer nicht verpflichtenden
+     * Runde - dieselbe Regel, nach der [MatchStatusLogic.deriveBye] die Anzeigen speist und nach
+     * der `automaticFirstPlace` in [createNewRound] den automatischen ersten Platz vergibt.
+     * [racingSeedsByMatch] trägt je erzeugtem Setup-Lauf die Setzungszahlen seiner fahrenden
+     * Boote; nicht erzeugte Läufe (weniger Meldungen als Läufe) fehlen in der Karte und bekommen
+     * keine Nummer.
+     *
+     * Die Nummer ist bevorzugt die Setzungszahl des fahrenden Boots: "Freilos 1" ist das Freilos
+     * des bestgesetzten Boots - dieselbe Zahl, die `MatchByeDto.seed` auf Chip und Freilos-Satz
+     * zeigt. Fehlt eine Setzung oder käme eine Nummer doppelt vor (defensiv - bei der Erzeugung
+     * ist die Setzung auf beiden Pfaden bekannt und je Runde eindeutig), werden stattdessen ALLE
+     * Freilose der Runde fortlaufend 1..k in weighting-Reihenfolge nummeriert: lieber lückenlos
+     * und deterministisch als halb Setzung, halb geraten.
+     */
+    internal fun byeNumbersForRound(
+        round: CompetitionSetupRoundWithMatches,
+        racingSeedsByMatch: Map<UUID, List<Int?>>,
+    ): Map<UUID, Int> {
+        if (round.required) return emptyMap()
+
+        val byes = round.setupMatches
+            .sortedBy { it.weighting }
+            .filter { racingSeedsByMatch[it.id]?.size == 1 }
+
+        val seeds = byes.map { racingSeedsByMatch.getValue(it.id!!).single() }
+        val allSeedsUsable = seeds.all { it != null } && seeds.distinct().size == seeds.size
+
+        return byes.mapIndexed { index, setupMatch ->
+            setupMatch.id!! to if (allSeedsUsable) seeds[index]!! else index + 1
+        }.toMap()
     }
 
     fun sortRounds(
@@ -2435,9 +2509,10 @@ object CompetitionExecutionService {
                                 setupMatchId = match.competitionSetupMatch,
                                 startTime = match.startTime,
                                 roundName = round.setupRoundName,
-                                // Der Laufname steht nur am Setup-Lauf, nicht an der erzeugten
-                                // Partie - für Vorschau und Fehlermeldungen nachgeschlagen.
-                                matchName = round.setupMatches
+                                // Der Anzeigename für Vorschau und Fehlermeldungen: ein Freilos
+                                // trägt seinen materialisierten Namen (V202608121300), sonst den
+                                // am Setup-Lauf nachgeschlagenen.
+                                matchName = match.byeName ?: round.setupMatches
                                     .find { it.id == match.competitionSetupMatch }?.name,
                                 matchTeamIds = match.teams.map { it.id },
                             )

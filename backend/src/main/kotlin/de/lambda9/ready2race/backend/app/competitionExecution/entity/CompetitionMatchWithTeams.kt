@@ -32,5 +32,12 @@ data class CompetitionMatchWithTeams(
      * Freilos-Besetzung ist das Flag wirkungslos.
      */
     val byeMustRace: Boolean = false,
+    /**
+     * Materialisierter Freilos-Name ("Freilos <Setzungszahl>", competition_match.bye_name,
+     * V202608121300). Gesetzt von `createNewRound` für Läufe mit genau einem fahrenden Boot in
+     * einer nicht verpflichtenden Runde; die Anzeigenamen entstehen überall als
+     * `byeName ?: <Setup-Name>`. Stirbt mit der Lauf-Instanz beim Löschen der Runde.
+     */
+    val byeName: String? = null,
     val teams: List<CompetitionMatchTeamWithRegistration>
 )
