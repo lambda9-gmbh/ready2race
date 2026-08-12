@@ -555,6 +555,14 @@
         "log": "Participant Status Log",
         "entry": "Log entry",
         "status": "Status",
+        "filter": {
+          "onlyLatest": "Only latest status",
+          "status": {
+            "all": "All",
+            "entry": "Checked in",
+            "exit": "Checked out"
+          }
+        },
         "in": "In",
         "out": "Out",
         "teams": "Teams",

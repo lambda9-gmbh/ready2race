@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.participantTracking.control
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantTrackingSort
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
@@ -69,13 +70,17 @@ object ParticipantTrackingRepo {
         search: String?,
         eventId: UUID,
         user: AppUserWithPrivilegesRecord,
-        scope: Privilege.Scope
+        scope: Privilege.Scope,
+        onlyLatest: Boolean,
+        scanType: ParticipantScanType?,
     ): JIO<Int> = Jooq.query {
         with(PARTICIPANT_TRACKING_VIEW) {
             fetchCount(
                 this, search.metaSearch(searchFields())
                     .and(EVENT_ID.eq(eventId))
                     .and(filterScopeForView(scope, user.club))
+                    .and(filterOnlyLatest(onlyLatest))
+                    .and(filterScanType(scanType))
             )
         }
     }
@@ -84,7 +89,9 @@ object ParticipantTrackingRepo {
         params: PaginationParameters<ParticipantTrackingSort>,
         eventId: UUID,
         user: AppUserWithPrivilegesRecord,
-        scope: Privilege.Scope
+        scope: Privilege.Scope,
+        onlyLatest: Boolean,
+        scanType: ParticipantScanType?,
     ): JIO<List<ParticipantTrackingViewRecord>> = Jooq.query {
         with(PARTICIPANT_TRACKING_VIEW) {
             selectFrom(this)
@@ -92,11 +99,55 @@ object ParticipantTrackingRepo {
                     DSL.and(
                         EVENT_ID.eq(eventId)
                             .and(filterScopeForView(scope, user.club))
+                            .and(filterOnlyLatest(onlyLatest))
+                            .and(filterScanType(scanType))
                     )
                 }
                 .fetch()
         }
     }
+
+    /**
+     * Reduziert das Protokoll auf das jüngste Ereignis je Person: eine Zeile bleibt stehen, wenn
+     * dieselbe Person bei derselben Veranstaltung keinen späteren Scan hat. Als Anti-Join gegen die
+     * Roh-Tabelle formuliert (die Entsprechung eines `distinct on (participant) ... order by
+     * scanned_at desc`), damit Suche, Sortierung, Seitengrenzen und der Gesamtzähler unverändert
+     * über die bestehende Bedingung laufen.
+     *
+     * Entscheidend für die Kombination mit [filterScanType]: der Teilnehmervergleich hier kennt den
+     * Status-Filter bewusst NICHT. Erst wird je Person das jüngste Ereignis bestimmt, dann wird
+     * dessen Status gefiltert. Andersherum (erst nach EXIT filtern, dann das jüngste EXIT nehmen)
+     * fände "aufs Wasser abgemeldet und noch nicht zurück" auch alle, die längst wieder angemeldet
+     * sind - deren letztes Ereignis ist ein ENTRY, aber ihr letztes EXIT existiert trotzdem.
+     */
+    private fun filterOnlyLatest(onlyLatest: Boolean): Condition =
+        if (!onlyLatest) {
+            DSL.trueCondition()
+        } else {
+            val later = PARTICIPANT_TRACKING.`as`("pt_later")
+            DSL.notExists(
+                DSL.selectOne()
+                    .from(later)
+                    .where(
+                        later.PARTICIPANT.eq(PARTICIPANT_TRACKING_VIEW.PARTICIPANT_ID)
+                            .and(later.EVENT.eq(PARTICIPANT_TRACKING_VIEW.EVENT_ID))
+                            .and(
+                                later.SCANNED_AT.gt(PARTICIPANT_TRACKING_VIEW.SCANNED_AT)
+                                    // Zeitgleiche Einträge je Person verhindert die Sequenzprüfung;
+                                    // falls doch welche existieren, entscheidet die ID, damit
+                                    // deterministisch genau eine Zeile übrig bleibt.
+                                    .or(
+                                        later.SCANNED_AT.eq(PARTICIPANT_TRACKING_VIEW.SCANNED_AT)
+                                            .and(later.ID.gt(PARTICIPANT_TRACKING_VIEW.ID))
+                                    )
+                            )
+                    )
+            )
+        }
+
+    private fun filterScanType(scanType: ParticipantScanType?): Condition =
+        if (scanType == null) DSL.trueCondition()
+        else PARTICIPANT_TRACKING_VIEW.SCAN_TYPE.eq(scanType.name)
 
 
     private fun filterScopeForView(

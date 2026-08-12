@@ -5316,6 +5316,14 @@ export type GetParticipantTrackingsData = {
          */
         offset?: number
         /**
+         * Reduces the log to the most recent event per participant. Defaults to false. The scanType filter is applied AFTER this reduction, so onlyLatest=true with scanType=EXIT answers "who has checked out onto the water and is not back yet".
+         */
+        onlyLatest?: boolean
+        /**
+         * Only events with this status. Applied after the onlyLatest reduction.
+         */
+        scanType?: 'ENTRY' | 'EXIT'
+        /**
          * Filter result with space-separated search terms for pagination
          */
         search?: string
