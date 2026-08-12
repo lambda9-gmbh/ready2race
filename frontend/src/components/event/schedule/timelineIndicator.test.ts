@@ -316,8 +316,8 @@ describe('timelineEntryAppearance', () => {
 
 describe('bye flag on entries', () => {
     it('marks non-racing byes from schedule slots and dashboard matches, but not must-race byes', () => {
-        const bye = {cause: 'DEREGISTERED', mustRace: false} as const
-        const mustRace = {cause: 'DEREGISTERED', mustRace: true} as const
+        const bye = {cause: 'DEREGISTRATION', mustRace: false} as const
+        const mustRace = {cause: 'DEREGISTRATION', mustRace: true} as const
         expect(scheduleSlotsToEntries([slot('2026-08-17T08:00:00', {bye})])[0].bye).toBe(true)
         expect(scheduleSlotsToEntries([slot('2026-08-17T08:00:00', {bye: mustRace})])[0].bye).toBe(
             false,
