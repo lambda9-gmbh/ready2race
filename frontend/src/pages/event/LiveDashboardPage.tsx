@@ -35,6 +35,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
+import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
 import {useShortLabels} from '@components/event/shortLabels.ts'
 import {
@@ -497,6 +498,9 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
                         />
                     </Stack>
                 </Stack>
+                {/* Der veranstaltungsweite Hinweis (z.B. Wetterwarnung) — er hängt am selben
+                    Poll wie das Dashboard und erscheint damit ohne Neuladen. */}
+                <EventNoticeBanner notice={dashboard?.notice} />
                 {staleState.show && dashboard && (
                     <Alert severity="warning">
                         {staleState.fromCache && lastUpdated

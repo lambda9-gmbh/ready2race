@@ -160,6 +160,10 @@ object BoardService {
 
                 val program = if (needs.schedule) !buildProgram(eventId) else emptyList()
 
+                // Der Hinweis liegt mit im View-Zwischenspeicher; eine Änderung erscheint
+                // also erst nach Cache-TTL plus Poll-Takt des Bildschirms.
+                val notice = !EventRepo.getNotice(eventId).orDie()
+
                 val dto = BoardViewDto(
                     boardId = board.id,
                     eventName = eventName!!,
@@ -179,6 +183,7 @@ object BoardService {
                         }
                     },
                     ceremonies = ceremonies,
+                    notice = notice,
                 )
 
                 boardViewCache[boardId] = CachedView(now, dto)

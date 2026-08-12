@@ -16,6 +16,7 @@ import {blockOrder, MyEventBlock, nothingToShow} from './myEventOrder.ts'
 import {MyEventMatchList, MyEventResultList, MyEventUnscheduledList} from './MyEventMatchList.tsx'
 import {MyEventPersonSwitcher} from './MyEventPersonSwitcher.tsx'
 import {MyEventRequirements} from './MyEventRequirements.tsx'
+import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 
 const FALLBACK_INTERVAL_SECONDS = 15
 // Wie beim Athleten-Board: erst ein tatsächlich fehlgeschlagener Abruf macht aus einem
@@ -151,6 +152,9 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
 
     return (
         <Stack gap={2}>
+            {/* Der veranstaltungsweite Hinweis (z.B. Wetterwarnung) kommt eingebettet mit dem
+                ohnehin laufenden Poll — ganz oben, noch vor dem eigenen Namen. */}
+            <EventNoticeBanner notice={data.notice} />
             <Stack
                 direction="row"
                 justifyContent="space-between"

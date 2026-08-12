@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.liveDashboard.entity
 
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchTeamLapDto
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
+import de.lambda9.ready2race.backend.app.event.entity.EventNoticeDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDateTime
@@ -255,4 +256,10 @@ data class LiveDashboardDto(
     val pendingSlots: List<PendingSlotDto>,
     /** Steuert im Frontend, ob "Lauf beenden" im Dashboard überhaupt angeboten wird (C1). */
     val chainProgressionMode: ChainProgressionMode,
+    /**
+     * Der veranstaltungsweite Hinweisbanner (z.B. Wetterwarnung); null = kein Banner. Ändert er
+     * sich, ändert sich das serialisierte DTO und damit das ETag - die Telefone am Steg holen
+     * den neuen Stand also mit dem nächsten Poll, genau wie gewollt.
+     */
+    val notice: EventNoticeDto? = null,
 )

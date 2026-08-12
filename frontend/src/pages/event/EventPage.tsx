@@ -82,6 +82,7 @@ import EventTimingConfig from '@components/event/timing/EventTimingConfig.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import AwardCertificateDialog from '@components/awardCertificate/AwardCertificateDialog.tsx'
 import CheckSeverityDialog from '@components/event/liveDashboard/CheckSeverityDialog.tsx'
+import EventNoticeCard from '@components/eventNotice/EventNoticeCard.tsx'
 import WorkspacePremium from '@mui/icons-material/WorkspacePremium'
 import SplitButton from '@components/SplitButton.tsx'
 import {useDocumentTitle} from '@utils/useDocumentTitle.ts'
@@ -468,6 +469,15 @@ const EventPage = () => {
                                             </Button>
                                         )}
                                     </Card>
+                                )}
+                                {/* Globaler Hinweis (z.B. Wetterwarnung): erscheint auf allen
+                                    öffentlichen Anzeigen und im Schiedsrichter-Dashboard. */}
+                                {user.checkPrivilege(updateEventGlobal) && (
+                                    <EventNoticeCard
+                                        eventId={eventId}
+                                        notice={data.notice}
+                                        onChanged={reload}
+                                    />
                                 )}
                             </Stack>
                         </TabPanel>

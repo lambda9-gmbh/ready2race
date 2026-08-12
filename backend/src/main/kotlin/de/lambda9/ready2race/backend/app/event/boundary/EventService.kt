@@ -108,6 +108,34 @@ object EventService {
         KIO.ok(ApiResponse.NoData)
     }
 
+    /**
+     * Setzt oder löscht den veranstaltungsweiten Hinweis - der schmale Handgriff am Renntag,
+     * bewusst getrennt vom großen [updateEvent] (siehe [UpdateEventNoticeRequest]).
+     *
+     * Sichtbar wird die Änderung nicht sofort überall: die gepollten Antworten halten kurze
+     * Zwischenspeicher (MyEventService, BoardService, EventInfoService.getLiveMatches - je
+     * wenige Sekunden), und die Geräte pollen in ihrem eigenen Takt (bis 15 Sekunden). Bis zur
+     * Anzeige vergehen also Cache-TTL plus Poll-Intervall - für eine Wetterwarnung in Ordnung,
+     * hier aber festgehalten, damit niemand die Verzögerung für einen Fehler hält.
+     */
+    fun updateEventNotice(
+        eventId: UUID,
+        userId: UUID,
+        request: UpdateEventNoticeRequest,
+    ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
+
+        val eventRecord = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
+
+        !EventRepo.update(eventRecord) {
+            noticeText = request.text
+            noticeSeverity = request.severityOrNull()?.name
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
+    }
+
     fun deleteEvent(
         id: UUID,
     ): App<EventError, ApiResponse.NoData> = KIO.comprehension {

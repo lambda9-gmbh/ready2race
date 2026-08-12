@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyRank
+import de.lambda9.ready2race.backend.app.event.entity.EventNoticeDto
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -66,4 +67,6 @@ data class BoardViewDto(
     val lists: List<BoardListDto>,
     /** Je konfiguriertem Siegerehrungs-Element eine Ehrung; fehlende bleiben einfach aus. */
     val ceremonies: List<BoardCeremonyDto> = emptyList(),
+    /** Der veranstaltungsweite Hinweisbanner (z.B. Wetterwarnung); null = kein Banner. */
+    val notice: EventNoticeDto? = null,
 )

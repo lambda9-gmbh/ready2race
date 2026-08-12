@@ -4,17 +4,24 @@ import {Alert, Box, Card, CardActionArea, CardContent, Chip, Stack, Typography} 
 import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
 import {useState} from 'react'
-import {CompetitionChoiceDto, LatestMatchResultInfo} from '@api/types.gen.ts'
+import {CompetitionChoiceDto, EventNoticeDto, LatestMatchResultInfo} from '@api/types.gen.ts'
 import ResultsMatchDialog from '@components/results/ResultsMatchDialog.tsx'
 import ResultsMatchCard from '@components/results/ResultsMatchCard.tsx'
+import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 
 type Props = {
     eventId: string
     competitionSelected: CompetitionChoiceDto | null
     setCompetitionSelected: (value: CompetitionChoiceDto | null) => void
+    /**
+     * Der veranstaltungsweite Hinweis aus dem EventDto der Seite. Dieser Tab pollt nicht —
+     * der Banner ist so aktuell wie der Rest des Tabs (Stand des Seitenaufrufs); live
+     * nachgezogen wird er auf dem Live-Tab und in "Mein Event".
+     */
+    notice?: EventNoticeDto | null
 }
 
-const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Props) => {
+const MatchResults = ({eventId, competitionSelected, setCompetitionSelected, notice}: Props) => {
     const matchesLimit = 100 // todo
 
     const {t} = useTranslation()
@@ -83,6 +90,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
     return (
         <>
             <Stack spacing={2} sx={{p: 2}}>
+                <EventNoticeBanner notice={notice} />
                 {competitionsPending || (competitionSelected && matchResultsPending) ? (
                     <Throbber />
                 ) : !competitionSelected ? (
