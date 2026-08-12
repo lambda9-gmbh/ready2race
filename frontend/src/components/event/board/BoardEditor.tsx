@@ -37,7 +37,7 @@ import {
     BoardScheduleMode,
     BoardTile,
 } from '@api/types.gen'
-import {gridPlacement, hasMatchDetail, tileColor} from './boardView'
+import {gridPlacement, hasMatchDetail, rowSizes, tileColor} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
@@ -675,6 +675,15 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             display: 'grid',
                             gap: 2,
                             gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                            // Dieselbe Zeilen-Einstufung wie die Bühne (rowSizes): kompakte
+                            // Zeilen 'auto', Inhalts-Zeilen anteilig. Der Editor hat keine
+                            // feste Höhe — die fr-Zeilen gleichen sich hier nur untereinander
+                            // auf die höchste Karte an; als Untergrenze min-content statt 0,
+                            // denn die Karten sind Formulare und dürfen nie unter ihren
+                            // Inhalt schrumpfen (die Bühnen-Zellen scrollen stattdessen innen).
+                            gridTemplateRows: rowSizes(config.tiles, placement.positions, placement.rows)
+                                .map(size => (size === '1fr' ? 'minmax(min-content, 1fr)' : 'auto'))
+                                .join(' '),
                         }}>
                         {config.tiles.map((tile, tileIndex) => {
                             const position = placement.positions[tileIndex]
