@@ -27,6 +27,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.COMPET
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
+import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.testing.kio.TestComprehensionScope
 import de.lambda9.ready2race.testing.testComprehension
@@ -36,14 +37,21 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Die Wieder-Anwendung der Lauf-Benennungen bei der Rundenerzeugung - der Nutzer-Fall vom
- * 12.08.2026: Runde mit n=8 erzeugt (VF1..VF4), gelöscht, eine Abmeldung, mit n=7 neu erzeugt.
- * Vor dem Fix behielt der Lauf, dessen weighting im Satz für das NEUE n nicht vorkam, den Namen
- * der ALTEN Anwendung - zweimal "VF1" auf Zeitplan und Schiedsrichter-Dashboard, kein "VF2".
+ * Die Lauf-Benennung bei der Rundenerzeugung, in beiden Teilen:
  *
- * Der Ausgangszustand (der im Setup konfigurierte Name samt Reihenfolge) wird seit V202608121200
- * beim ersten Überschreiben gesichert und beim Zurücksetzen GENAU wiederhergestellt - kein
- * erfundener Name (siehe CompetitionSetupMatchRepo.applyNaming).
+ * 1. **Wieder-Anwendung der Benennungs-Sätze** (verpflichtende Runde, dort gibt es keine
+ *    Freilose): Läufe, deren weighting im Satz für das AKTUELLE n nicht vorkommt, fallen auf
+ *    ihren Ausgangszustand zurück, statt den Namen einer FRÜHEREN Anwendung zu behalten
+ *    (zweimal "VF1", kein "VF2" - Nutzer-Screenshots vom 12.08.2026). Der Ausgangszustand wird
+ *    seit V202608121200 beim ersten Überschreiben gesichert und GENAU wiederhergestellt - kein
+ *    erfundener Name (siehe CompetitionSetupMatchRepo.applyNaming).
+ *
+ * 2. **Freilos-Benennung** (nicht verpflichtende Runde - der eigentliche Nutzer-Fall vom
+ *    12.08.2026): Ein Lauf, in dem nur ein Boot fährt, heißt "Freilos <Setzungszahl>" statt
+ *    eines Pseudo-Namens aus Satz oder Setup. Der echte Lauf folgt weiter dem Benennungs-Satz
+ *    (das ehemalige VF-x wird zum neuen VF1) - diese Logik bleibt unberührt. Fährt der Lauf
+ *    später wieder (Abmeldung zurückgenommen, Runde neu erzeugt), sorgt derselbe
+ *    Ausgangszustand aus Teil 1 dafür, dass er nicht "Freilos" heißen bleibt.
  */
 class MatchNamingReapplicationTest {
 
@@ -59,11 +67,22 @@ class MatchNamingReapplicationTest {
 
     /**
      * Ein Wettkampf mit einer einzigen (Viertelfinal-)Runde: vier Setup-Läufe à zwei Plätze
-     * (Kapazität 8) mit den Ausgangsnamen "Lauf 1".."Lauf 4", acht Meldungen und zwei
-     * Benennungs-Sätzen - n=8 benennt alle vier Läufe (VF1..VF4), n=7 nur die weightings 1..3
-     * (VF1..VF3): genau die Lücke, in der vorher der Alt-Name stehen blieb.
+     * (Kapazität 8), acht Meldungen und frei wählbaren Benennungs-Sätzen
+     * ([namingSets]: participantCount -> (weighting -> Name)).
+     *
+     * Standard ist der Aufbau des Wieder-Anwendungs-Falls: verpflichtende Runde, Ausgangsnamen
+     * "Lauf 1".."Lauf 4", n=8 benennt alle vier Läufe (VF1..VF4), n=7 nur die weightings 1..3
+     * (VF1..VF3) - genau die Lücke, in der vorher der Alt-Name stehen blieb. Die Freilos-Fälle
+     * setzen [required] = false und eigene [setupNames]/[namingSets].
      */
-    private fun TestComprehensionScope<JEnv>.seed(): Seeded {
+    private fun TestComprehensionScope<JEnv>.seed(
+        required: Boolean = true,
+        setupNames: List<String> = listOf("Lauf 1", "Lauf 2", "Lauf 3", "Lauf 4"),
+        namingSets: Map<Int, Map<Int, String>> = mapOf(
+            8 to mapOf(1 to "VF1", 2 to "VF2", 3 to "VF3", 4 to "VF4"),
+            7 to mapOf(1 to "VF1", 2 to "VF2", 3 to "VF3"),
+        ),
+    ): Seeded {
         val eventId = UUID.randomUUID()
         val competitionId = UUID.randomUUID()
         val propertiesId = UUID.randomUUID()
@@ -89,7 +108,7 @@ class MatchNamingReapplicationTest {
                 id = roundId,
                 competitionSetup = propertiesId,
                 name = "Viertelfinale",
-                required = true,
+                required = required,
                 useDefaultSeeding = true,
                 placesOption = CompetitionSetupPlacesOption.EQUAL.name,
             )
@@ -101,34 +120,25 @@ class MatchNamingReapplicationTest {
                     competitionSetupRound = roundId,
                     weighting = weighting,
                     teams = 2,
-                    name = "Lauf $weighting",
+                    name = setupNames[weighting - 1],
                     executionOrder = weighting,
                 )
             )
         }
 
         // Benennungs-Sätze: Abweichungen vom Ausgangszustand je Bracket-Größe.
-        (1..4).forEach { weighting ->
-            !COMPETITION_SETUP_MATCH_NAMING.insert(
-                CompetitionSetupMatchNamingRecord(
-                    competitionSetupRound = roundId,
-                    participantCount = 8,
-                    matchWeighting = weighting,
-                    name = "VF$weighting",
-                    executionOrder = null,
+        namingSets.forEach { (participantCount, names) ->
+            names.forEach { (weighting, name) ->
+                !COMPETITION_SETUP_MATCH_NAMING.insert(
+                    CompetitionSetupMatchNamingRecord(
+                        competitionSetupRound = roundId,
+                        participantCount = participantCount,
+                        matchWeighting = weighting,
+                        name = name,
+                        executionOrder = null,
+                    )
                 )
-            )
-        }
-        (1..3).forEach { weighting ->
-            !COMPETITION_SETUP_MATCH_NAMING.insert(
-                CompetitionSetupMatchNamingRecord(
-                    competitionSetupRound = roundId,
-                    participantCount = 7,
-                    matchWeighting = weighting,
-                    name = "VF$weighting",
-                    executionOrder = null,
-                )
-            )
+            }
         }
 
         val registrationIds = (1..8).map { teamNumber ->
@@ -184,6 +194,8 @@ class MatchNamingReapplicationTest {
 
     @Test
     fun reapplyingASmallerNamingSetResetsUncoveredMatchesToTheirSetupNames() = testComprehension {
+        // Verpflichtende Runde: auch ein Lauf mit nur einem fahrenden Boot wird gefahren, es gibt
+        // keine Freilose - hier zeigt sich die reine Wieder-Anwendung der Sätze.
         val seeded = seed()
 
         // Erste Erzeugung: n=8, alle vier Läufe bekommen ihre VF-Namen.
@@ -228,6 +240,98 @@ class MatchNamingReapplicationTest {
 
         assertEquals(
             listOf<Pair<String?, Int>>("Lauf 1" to 1, "Lauf 2" to 2, "Lauf 3" to 3, "Lauf 4" to 4),
+            namesByWeighting(seeded.roundId),
+        )
+    }
+
+    /**
+     * Der eigentliche Nutzer-Fall vom 12.08.2026, wörtlich: "Ich möchte einfach nur, dass ein
+     * Freilos zu einem 'Freilos 1' Lauf wird anstatt ein Pseudo VF1 zu werden. Das VF1 ist in
+     * unserem Beispiel das ehemalige VF2 und das muss auch so bleiben."
+     *
+     * Nicht verpflichtende Runde mit den Ausgangsnamen VF1..VF4, drei Abmeldungen -> n=5. Das
+     * Schlangen-Seeding ([CompetitionExecutionService.getSeedingList]) paart {1,8} {2,7} {3,6}
+     * {4,5}: der einzige echte Lauf ist weighting 4 (das ehemalige VF4 - im Beispiel des Nutzers
+     * war es das VF2, die Rolle ist dieselbe), und genau ihn benennt der Satz für n=5 in "VF1"
+     * um. Die drei Freilose tragen die Setzungszahl ihres fahrenden Boots - und das ehemalige
+     * Ausgangs-"VF1" (weighting 1) taucht nirgends mehr als Pseudo-Duplikat auf.
+     */
+    @Test
+    fun byesAreNamedFreilosWhileTheRealMatchFollowsTheNamingScheme() = testComprehension {
+        val seeded = seed(
+            required = false,
+            setupNames = listOf("VF1", "VF2", "VF3", "VF4"),
+            // Volle Kapazität (n=8) ist der Ausgangszustand und hat bewusst keinen Satz -
+            // genau wie die Konfigurationsoberfläche es anbietet (CompetitionSetupRoundNaming).
+            namingSets = mapOf(5 to mapOf(4 to "VF1")),
+        )
+
+        // Erste Erzeugung mit vollem Feld: kein Satz für n=8, die Ausgangsnamen bleiben.
+        !CompetitionExecutionService.createNewRound(seeded.eventId, seeded.competitionId, SYSTEM_USER)
+        assertEquals(
+            listOf<Pair<String?, Int>>("VF1" to 1, "VF2" to 2, "VF3" to 3, "VF4" to 4),
+            namesByWeighting(seeded.roundId),
+        )
+
+        // Runde löschen, drei Abmeldungen (Setzungen 6, 7, 8), mit n=5 neu erzeugen.
+        !CompetitionExecutionService.deleteCurrentRound(seeded.competitionId, seeded.eventId)
+        deregister(seeded.registrationIds[5], seeded.roundId)
+        deregister(seeded.registrationIds[6], seeded.roundId)
+        deregister(seeded.registrationIds[7], seeded.roundId)
+        !CompetitionExecutionService.createNewRound(seeded.eventId, seeded.competitionId, SYSTEM_USER)
+
+        val names = namesByWeighting(seeded.roundId)
+        assertEquals(
+            listOf<Pair<String?, Int>>(
+                "Freilos 1" to 1,
+                "Freilos 2" to 2,
+                "Freilos 3" to 3,
+                "VF1" to 4,
+            ),
+            names,
+        )
+        // Nirgends doppelte Namen - genau die Verwirrung aus den Screenshots.
+        assertEquals(names.map { it.first }.distinct().size, names.size)
+    }
+
+    /**
+     * Die Gegenrichtung - und der Grund, warum der Ausgangszustand (V202608121200) auch für die
+     * Freilos-Benennung tragend ist: Werden die Abmeldungen zurückgenommen und die Runde mit
+     * vollem Feld neu erzeugt, gibt es keinen Satz für n=8 und keine Freilose mehr - alle Läufe
+     * müssen zu ihren Ausgangsnamen zurück. Ohne die Sicherung hieße ein wieder gefahrener Lauf
+     * für immer "Freilos 1".
+     */
+    @Test
+    fun aByeTurnedContestedAgainReturnsToItsSetupName() = testComprehension {
+        val seeded = seed(
+            required = false,
+            setupNames = listOf("VF1", "VF2", "VF3", "VF4"),
+            namingSets = mapOf(5 to mapOf(4 to "VF1")),
+        )
+
+        !CompetitionExecutionService.createNewRound(seeded.eventId, seeded.competitionId, SYSTEM_USER)
+        !CompetitionExecutionService.deleteCurrentRound(seeded.competitionId, seeded.eventId)
+        deregister(seeded.registrationIds[5], seeded.roundId)
+        deregister(seeded.registrationIds[6], seeded.roundId)
+        deregister(seeded.registrationIds[7], seeded.roundId)
+        !CompetitionExecutionService.createNewRound(seeded.eventId, seeded.competitionId, SYSTEM_USER)
+        assertEquals(
+            listOf<Pair<String?, Int>>(
+                "Freilos 1" to 1,
+                "Freilos 2" to 2,
+                "Freilos 3" to 3,
+                "VF1" to 4,
+            ),
+            namesByWeighting(seeded.roundId),
+        )
+
+        // Abmeldungen zurückgenommen, Runde mit vollem Feld neu erzeugt: keine Freilose mehr.
+        !CompetitionExecutionService.deleteCurrentRound(seeded.competitionId, seeded.eventId)
+        !COMPETITION_DEREGISTRATION.delete { COMPETITION_SETUP_ROUND.eq(seeded.roundId) }
+        !CompetitionExecutionService.createNewRound(seeded.eventId, seeded.competitionId, SYSTEM_USER)
+
+        assertEquals(
+            listOf<Pair<String?, Int>>("VF1" to 1, "VF2" to 2, "VF3" to 3, "VF4" to 4),
             namesByWeighting(seeded.roundId),
         )
     }
