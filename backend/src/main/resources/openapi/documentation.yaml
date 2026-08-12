@@ -7043,6 +7043,16 @@ paths:
           fails the whole export with a structured error instead of a silent partial export.
         schema:
           type: boolean
+      - name: raceclockerRaceId
+        in: query
+        required: false
+        description: >-
+          Restrict the export to competitions whose assigned RaceClocker race
+          (competition.raceclocker_race) is the given one - for importing race by race. Applies to
+          both the full and the delta export; omitted means all competitions.
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: downloadEventStartlists
       description: >-

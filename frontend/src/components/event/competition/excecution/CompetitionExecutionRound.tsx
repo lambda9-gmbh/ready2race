@@ -268,6 +268,14 @@ const CompetitionExecutionRound = ({
                         <Typography>
                             {t('event.competition.execution.resetMatch.confirmation.keeps')}
                         </Typography>
+                        {/* Nur bei RaceClocker-Zeitnahme: Der Reset pausiert den automatischen
+                            Abruf, sonst spielte der nächste Takt die gelöschten Ergebnisse sofort
+                            wieder ein - fortgesetzt wird bewusst über den bestehenden Knopf. */}
+                        {timingSystem === 'RACECLOCKER' && (
+                            <Typography>
+                                {t('event.competition.execution.resetMatch.confirmation.autoPull')}
+                            </Typography>
+                        )}
                         <Typography sx={{fontWeight: 'bold'}}>
                             {t('event.competition.execution.resetMatch.confirmation.question')}
                         </Typography>

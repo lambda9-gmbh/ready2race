@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.BulkStartlistCompetitionRow
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchForRunningStatusDto
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListConfigTarget
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
@@ -110,15 +111,17 @@ object CompetitionMatchRepo {
 
     /**
      * Die Wettkämpfe einer Veranstaltung für den Startlisten-Sammelexport: Kennung (Dateiname und
-     * Reihenfolge der ZIP-Einträge) und das angewählte RaceClocker-Rennen (Delta-Abgleich, null =
-     * keines angewählt). Sortiert nach Kennung, damit die ZIP-Einträge in Programmreihenfolge
-     * liegen.
+     * Reihenfolge der ZIP-Einträge) und das angewählte RaceClocker-Rennen (Delta-Abgleich und
+     * Rennen-Filter, null = keines angewählt). Sortiert nach Kennung, damit die ZIP-Einträge in
+     * Programmreihenfolge liegen. Bewusst ungefiltert - ob auf ein Rennen eingeschränkt wird,
+     * entscheidet der Service (eventStartlistPlan).
      */
     fun getForBulkStartlistExport(eventId: UUID) = Jooq.query {
         select(
             COMPETITION.ID,
             COMPETITION_PROPERTIES.IDENTIFIER,
             RACECLOCKER_RACE.RESULTS_URL,
+            RACECLOCKER_RACE.ID,
         )
             .from(COMPETITION)
             .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
@@ -126,10 +129,11 @@ object CompetitionMatchRepo {
             .where(COMPETITION.EVENT.eq(eventId))
             .orderBy(COMPETITION_PROPERTIES.IDENTIFIER)
             .fetch { record ->
-                Triple(
-                    record[COMPETITION.ID]!!,
-                    record[COMPETITION_PROPERTIES.IDENTIFIER]!!,
-                    record[RACECLOCKER_RACE.RESULTS_URL],
+                BulkStartlistCompetitionRow(
+                    competitionId = record[COMPETITION.ID]!!,
+                    identifier = record[COMPETITION_PROPERTIES.IDENTIFIER]!!,
+                    raceUrl = record[RACECLOCKER_RACE.RESULTS_URL],
+                    raceId = record[RACECLOCKER_RACE.ID],
                 )
             }
     }

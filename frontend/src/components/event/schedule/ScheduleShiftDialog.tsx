@@ -28,11 +28,13 @@ import {EventScheduleSlotDto, ShiftMode, ShiftScheduleRequest} from '@api/types.
 import {useFeedback} from '@utils/hooks.ts'
 import {buildShiftPreviewRows, defaultFromSlotId, slotLabel, slotsAfter} from './common.ts'
 import {ScheduleErrorText, shiftErrorText} from './scheduleError.ts'
+import {parseShiftMinutes} from './shiftMinutes.ts'
 
 type ShiftForm = {
     fromSlotId: string
     mode: ShiftMode
-    minutes: number | null
+    /** Als Text, nicht als Zahl - geparst wird erst beim Absenden (siehe shiftMinutes.ts). */
+    minutes: string
     newTime: string
     targetSlotId: string
 }
@@ -48,7 +50,7 @@ type Props = {
 const blankValues = (slots: EventScheduleSlotDto[]): ShiftForm => ({
     fromSlotId: defaultFromSlotId(slots) ?? '',
     mode: 'PLUS_MINUTES',
-    minutes: null,
+    minutes: '',
     newTime: new Date().toLocaleString(),
     targetSlotId: '',
 })
@@ -64,7 +66,7 @@ const toRequest = (form: ShiftForm, dryRun: boolean): ShiftScheduleRequest => ({
         form.mode === 'PLUS_MINUTES' ||
         form.mode === 'COMPRESS_TO_TARGET' ||
         form.mode === 'PLUS_MINUTES_RANGE'
-            ? form.minutes
+            ? parseShiftMinutes(form.minutes)
             : null,
     newTime: form.mode === 'SET_TIME' ? form.newTime : null,
     targetSlotId:
@@ -221,6 +223,11 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
                         {(mode === 'PLUS_MINUTES' ||
                             mode === 'COMPRESS_TO_TARGET' ||
                             mode === 'PLUS_MINUTES_RANGE') && (
+                            // Bewusst OHNE transform: Ein Parsen je Tastendruck machte aus dem
+                            // Zwischenzustand „-" ein NaN - negative Minuten (Zeitplan nach vorn
+                            // ziehen) waren so nicht eintippbar. Der Wert bleibt Text, `integer`
+                            // lässt auch negative Ganzzahlen durch die Validierung, geparst wird
+                            // erst in toRequest (siehe shiftMinutes.ts).
                             <FormInputNumber
                                 name={'minutes'}
                                 label={t(
@@ -229,10 +236,7 @@ const ScheduleShiftDialog = ({eventId, open, onClose, reloadData, slots}: Props)
                                         : 'event.schedule.shift.minutes',
                                 )}
                                 required
-                                transform={{
-                                    output: value =>
-                                        value.target.value !== '' ? Number(value.target.value) : null,
-                                }}
+                                integer
                             />
                         )}
                         {mode === 'SET_TIME' && (

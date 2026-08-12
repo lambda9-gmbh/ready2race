@@ -46,12 +46,17 @@ fun Route.eventSchedule() {
                 val fileType = !queryParam("fileType", enum<EventStartlistFileType>())
                 val skipByes = !optionalQueryParam("skipByes", boolean)
                 val onlyMissing = !optionalQueryParam("onlyMissingInRaceClocker", boolean)
+                // Optional auf ein RaceClocker-Rennen eingeschränkt - für den Import Rennen für
+                // Rennen. Ein fremder oder gelöschter Rennen-Id trifft keinen Wettkampf und
+                // liefert schlicht einen leeren Export, kein Fehlerfall.
+                val raceclockerRaceId = !optionalQueryParam("raceclockerRaceId", uuid)
 
                 downloadEventStartlists(
                     eventId = eventId,
                     fileType = fileType,
                     skipByes = skipByes ?: true,
                     onlyMissingInRaceClocker = onlyMissing ?: false,
+                    raceclockerRaceId = raceclockerRaceId,
                 )
             }
         }

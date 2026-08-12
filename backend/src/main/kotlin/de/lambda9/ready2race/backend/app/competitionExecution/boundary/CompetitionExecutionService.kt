@@ -1621,10 +1621,10 @@ object CompetitionExecutionService {
      * nur, was aus dem gefahrenen Rennen stammt.
      *
      * Geleert wird der Ausführungszustand:
-     * - `competition_match`: `activated_at`, `started_at`, `finished_at`, dazu die Abruf-Vermerke
-     *   `raceclocker_auto_paused_at` und `raceclocker_poll_error` - ein zurückgesetzter Lauf soll
-     *   ohne weiteren Handgriff wieder automatisch abgerufen werden. `raceclocker_polled_at`
-     *   bleibt: es beschreibt den Job, nicht den Lauf.
+     * - `competition_match`: `activated_at`, `started_at`, `finished_at` und
+     *   `raceclocker_poll_error`. `raceclocker_auto_paused_at` wird dagegen GESETZT statt geleert
+     *   - der Reset pausiert den automatischen Abruf (Begründung unten am Update).
+     *   `raceclocker_polled_at` bleibt: es beschreibt den Job, nicht den Lauf.
      * - `competition_match_team`: Platz, Ausscheidung ([CompetitionMatchTeamRecord.failed] samt
      *   Grund), Zeit (Timecode-Zeile wird gelöscht), Strafzeit, Boot-Start und alle Rundenzeiten -
      *   genau die Felder, die [updateMatchResult] und [applyParsedTeamResults] schreiben.
@@ -1690,7 +1690,13 @@ object CompetitionExecutionService {
             activatedAt = null
             startedAt = null
             finishedAt = null
-            raceclockerAutoPausedAt = null
+            // GESETZT statt geleert: Solange RaceClocker den alten Stand noch führt, würde der
+            // nächste Poll-Takt die soeben gelöschten Ergebnisse sofort wieder einspielen - der
+            // Reset höbe sich selbst auf (Nutzer-Beobachtung 12.08.2026). Die Kette ist dieselbe
+            // wie beim Deaktivieren eines Laufs (getCandidates filtert pausierte Läufe bereits):
+            // Reset → Abruf pausiert → Schiedsrichter räumt den Lauf in RaceClocker auf →
+            // bewusstes Fortsetzen über den bestehenden Knopf ([resumeRaceClockerAutoPull]).
+            raceclockerAutoPausedAt = now
             raceclockerPollError = null
             updatedBy = userId
             updatedAt = now
@@ -1698,8 +1704,10 @@ object CompetitionExecutionService {
 
         // Der Job merkt sich je Lauf den zuletzt geschriebenen Stand und schreibt nichts, solange
         // der Feed unverändert ist. Nach dem Reset beschreibt dieser Merkposten nicht mehr, was in
-        // der Datenbank steht - ohne das Vergessen bliebe der Lauf leer, bis sich in RaceClocker
-        // irgendwann eine Zeile ändert (gleiche Falle wie bei [resumeRaceClockerAutoPull]).
+        // der Datenbank steht - ohne das Vergessen bliebe der Lauf NACH dem bewussten Fortsetzen
+        // leer, bis sich in RaceClocker irgendwann eine Zeile ändert (gleiche Falle wie bei
+        // [resumeRaceClockerAutoPull]). Vor dem Fortsetzen greift es nicht: pausierte Läufe
+        // erreicht der Job gar nicht erst.
         RaceClockerPollService.forget(matchId)
 
         logger.info { "Lauf $matchId zurückgesetzt - Ausführungszustand geleert, Aufstellung und Kennungen bleiben." }
@@ -2352,16 +2360,23 @@ object CompetitionExecutionService {
      *
      * [skipByes] lässt Freilose weg - außer denen mit "muss gefahren werden" (bye_must_race), die
      * IMMER exportiert werden: Sie werden gefahren und brauchen ihre Welle im Zeitnahme-System.
+     *
+     * [raceclockerRaceId] schränkt auf die Wettkämpfe ein, deren angewähltes RaceClocker-Rennen
+     * (competition.raceclocker_race, seit dem Ein-Rennen-Modell eindeutig) das übergebene ist -
+     * für den Import Rennen für Rennen statt immer über die ganze Veranstaltung. null = alle.
      */
     fun eventStartlistPlan(
         eventId: UUID,
         allRounds: Boolean,
         skipByes: Boolean,
+        raceclockerRaceId: UUID? = null,
     ): App<ServiceError, List<BulkStartlistCompetition>> = KIO.comprehension {
         val competitions = !CompetitionMatchRepo.getForBulkStartlistExport(eventId).orDie()
         val byeByMatch = !MatchByeService.byeByMatch(eventId)
 
-        competitions.traverse { (competitionId, identifier, raceUrl) ->
+        competitions
+            .filter { raceclockerRaceId == null || it.raceId == raceclockerRaceId }
+            .traverse { (competitionId, identifier, raceUrl) ->
             KIO.comprehension {
                 val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
                 val sorted = sortRounds(setupRounds).filter { it.matches.isNotEmpty() }
@@ -2521,10 +2536,18 @@ object CompetitionExecutionService {
         fileType: EventStartlistFileType,
         skipByes: Boolean,
         onlyMissingInRaceClocker: Boolean,
+        // Nur Wettkämpfe dieses RaceClocker-Rennens (null = alle) - wirkt für Voll- UND
+        // Delta-Export; im Delta wird dann auch nur noch der Feed dieses Rennens geholt.
+        raceclockerRaceId: UUID? = null,
     ): App<ServiceError, ApiResponse.File> {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
-        val plan = !eventStartlistPlan(eventId, allRounds = onlyMissingInRaceClocker, skipByes = skipByes)
+        val plan = !eventStartlistPlan(
+            eventId,
+            allRounds = onlyMissingInRaceClocker,
+            skipByes = skipByes,
+            raceclockerRaceId = raceclockerRaceId,
+        )
 
         val feeds = if (onlyMissingInRaceClocker) {
             val fetched = mutableMapOf<String, List<RaceClockerFeedRow>>()
