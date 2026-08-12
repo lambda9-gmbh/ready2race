@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react'
 import {Box, Fade} from '@mui/material'
 import {BoardTile, BoardViewDto} from '@api/types.gen'
+import {tileBackground} from './boardView'
 import BoardElementView from './BoardElementView'
 
 const DEFAULT_ROTATION_SECONDS = 10
@@ -42,10 +43,27 @@ const BoardTileView = ({tile, view, now, effectiveColumns, heightFraction}: Boar
     // Nach einer Umkonfiguration kann der gemerkte Index über das Ende zeigen.
     const element = tile.elements[index % count]
 
+    // Die konfigurierte Signalfarbe des aktiven Elements — als rgba-Hintergrund der
+    // Zelle, damit die Deckkraft nur die Farbe dämpft und nie den Inhalt ausbleicht.
+    // Rotieren mehrere Elemente, wechselt die Farbe mit dem Element im selben Fade.
+    const background = tileBackground(element.backgroundColor, element.backgroundOpacity)
+
     return (
         <Box sx={{height: '100%', minHeight: 0, position: 'relative'}}>
             <Fade key={index % count} in timeout={600}>
-                <Box sx={{height: '100%', minHeight: 0}}>
+                <Box
+                    sx={{
+                        height: '100%',
+                        minHeight: 0,
+                        backgroundColor: background,
+                        borderRadius: background ? 1 : 0,
+                        // Der Lauf-Rahmen (AthleteBoardColumnCard) ist eine deckende
+                        // MUI-Card und würde die Kachelfarbe verdecken — mit gesetzter
+                        // Farbe wird er durchsichtig, sein Rahmen bleibt.
+                        ...(background
+                            ? {'& .MuiCard-root': {backgroundColor: 'transparent'}}
+                            : {}),
+                    }}>
                     <BoardElementView
                         element={element}
                         view={view}

@@ -2087,7 +2087,11 @@
         "showCrewDetails": "Besætning i detaljer (én linje pr. person)",
         "showBirthYears": "Vis årgange",
         "showAdvancement": "Vis oprykningsregel",
-        "showRegisteringClub": "Vis tilmeldende klub"
+        "showRegisteringClub": "Vis tilmeldende klub",
+        "backgroundColor": "Flisefarve",
+        "backgroundColorRemove": "Fjern farve",
+        "backgroundOpacity": "Opacitet",
+        "backgroundColorHint": "Kraftige farver med lav opacitet forbliver læselige"
       },
       "columns": "Kolonner",
       "columnCount": "{{count}} kolonner",

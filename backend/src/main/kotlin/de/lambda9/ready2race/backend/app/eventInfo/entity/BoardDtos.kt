@@ -61,6 +61,15 @@ data class BoardRequest(
             }
             tile.elements.forEachIndexed { elementIndex, element ->
                 val at = "tile $tileIndex element $elementIndex"
+                // Kachelfarbe und Deckkraft gelten für jeden Elementtyp — deshalb vor dem
+                // typspezifischen Zweig. Fehlende Felder bleiben gültig (Alt-Konfigurationen).
+                if (element.backgroundColor != null && !HEX_COLOR.matches(element.backgroundColor)) {
+                    errors += "$at: backgroundColor must be a hex color (#RGB or #RRGGBB)"
+                }
+                val opacity = element.backgroundOpacity
+                if (opacity != null && (opacity < 0.0 || opacity > 1.0)) {
+                    errors += "$at: backgroundOpacity must be in 0.0..1.0"
+                }
                 when (element.type) {
                     BoardElementType.MATCH -> {
                         val offset = element.offset
@@ -114,6 +123,9 @@ data class BoardRequest(
     }
 
     companion object {
+        /** Hex-Farbe in Kurz- oder Langform — dieselben zwei Formen versteht der Farb-Helfer der Anzeige. */
+        private val HEX_COLOR = Regex("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
+
         val example = BoardRequest(
             name = "Athleten-Anzeige",
             config = BoardConfig(

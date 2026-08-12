@@ -94,6 +94,13 @@ data class BoardElement(
     val showEventName: Boolean? = null,
     // TEXT
     val text: String? = null,
+    // Für jeden Elementtyp erlaubt: Signalfarben je Kachel, z. B. rot für „Letztes
+    // Ergebnis", grün für „Im Rennen" — der Veranstalter wählt selbst. Fehlen die
+    // Felder (Alt-Konfigurationen), bleibt das bisherige Aussehen.
+    /** Hintergrundfarbe der Kachel als Hex (`#RGB` oder `#RRGGBB`). */
+    val backgroundColor: String? = null,
+    /** Deckkraft NUR der Hintergrundfarbe, 0.0–1.0 (fehlend = 1.0) — der Inhalt bleibt voll sichtbar. */
+    val backgroundOpacity: Double? = null,
 )
 
 data class BoardTile(
