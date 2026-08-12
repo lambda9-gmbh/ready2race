@@ -1,17 +1,25 @@
 import {describe, expect, it} from 'vitest'
 import {EventScheduleSlotDto, LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
+    computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
+    computeTimelineProjection,
     dashboardEntriesForDay,
     dashboardMatchState,
     dayOf,
     resolveDashboardDay,
     scheduleSlotsToEntries,
+    labelFitsWidth,
     scheduleSlotState,
+    timelineEntryAppearance,
+    timelineSpan,
 } from './timelineIndicator.ts'
 
-const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): EventScheduleSlotDto => ({
+const slot = (
+    startTime: string,
+    over: Partial<EventScheduleSlotDto> = {},
+): EventScheduleSlotDto => ({
     id: crypto.randomUUID(),
     startTime,
     state: 'WAITING',
@@ -59,12 +67,22 @@ const pendingSlot = (over: Partial<PendingSlotDto> = {}): PendingSlotDto => ({
 describe('scheduleSlotState', () => {
     it('maps a finished slot regardless of its raw state', () => {
         expect(
-            scheduleSlotState(slot('2026-08-17T08:00:00', {state: 'LINKED', matchFinishedAt: '2026-08-17T08:20:00'})),
+            scheduleSlotState(
+                slot('2026-08-17T08:00:00', {
+                    state: 'LINKED',
+                    matchFinishedAt: '2026-08-17T08:20:00',
+                }),
+            ),
         ).toBe('finished')
     })
     it('maps a started-but-not-finished slot to running', () => {
         expect(
-            scheduleSlotState(slot('2026-08-17T08:00:00', {state: 'LINKED', matchStartedAt: '2026-08-17T08:01:00'})),
+            scheduleSlotState(
+                slot('2026-08-17T08:00:00', {
+                    state: 'LINKED',
+                    matchStartedAt: '2026-08-17T08:01:00',
+                }),
+            ),
         ).toBe('running')
     })
     it('maps an activated but not yet started slot to preparing', () => {
@@ -113,13 +131,68 @@ describe('scheduleSlotsToEntries', () => {
     it('maps slots to generic timeline entries preserving order', () => {
         const entries = scheduleSlotsToEntries([
             slot('2026-08-17T08:00:00', {durationMinutes: 10}),
-            slot('2026-08-17T09:00:00', {name: 'Pause', state: 'FREE', competitionName: null, roundName: null, matchName: null}),
+            slot('2026-08-17T09:00:00', {
+                name: 'Pause',
+                state: 'FREE',
+                competitionName: null,
+                roundName: null,
+                matchName: null,
+            }),
         ])
         expect(entries).toHaveLength(2)
         expect(entries[0].label).toBe('CM 1x – Achtelfinale – AF1')
         expect(entries[0].durationMinutes).toBe(10)
         expect(entries[1].label).toBe('Pause')
         expect(entries[1].state).toBe('free')
+    })
+})
+
+describe('entry labelling', () => {
+    it('gives schedule entries a short label from the competition tag and the round for the tooltip', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                competitionIdentifier: '17',
+                competitionShortName: 'CM 4x+',
+                matchStartedAt: '2026-08-17T08:03:00',
+            }),
+        ])
+        expect(entries[0].shortLabel).toBe('17 CM 4x+')
+        expect(entries[0].roundLabel).toBe('Achtelfinale – AF1')
+        expect(entries[0].actualStartTime).toBe('2026-08-17T08:03:00')
+    })
+
+    it('falls back to the program item name and then the match name', () => {
+        const program = scheduleSlotsToEntries([
+            slot('2026-08-17T12:00:00', {name: 'Mittagspause', state: 'FREE'}),
+        ])
+        expect(program[0].shortLabel).toBe('Mittagspause')
+        const noTag = scheduleSlotsToEntries([slot('2026-08-17T08:00:00')])
+        expect(noTag[0].shortLabel).toBe('AF1')
+    })
+
+    it('labels dashboard entries the same way', () => {
+        const entries = dashboardEntriesForDay(
+            [
+                match({
+                    competitionIdentifier: '3',
+                    competitionShortName: 'JM 2x',
+                    startedAt: '2026-08-17T09:02:00',
+                }),
+            ],
+            [pendingSlot({})],
+            '2026-08-17',
+        )
+        expect(entries[0].shortLabel).toBe('3 JM 2x')
+        expect(entries[0].actualStartTime).toBe('2026-08-17T09:02:00')
+        expect(entries[1].roundLabel).toBe('Achtelfinale – AF2')
+    })
+})
+
+describe('labelFitsWidth', () => {
+    it('shows a label only when the block is wide enough, and never an empty one', () => {
+        expect(labelFitsWidth('17 CM 4x+', 100)).toBe(true)
+        expect(labelFitsWidth('17 CM 4x+', 40)).toBe(false)
+        expect(labelFitsWidth('', 500)).toBe(false)
     })
 })
 
@@ -140,7 +213,10 @@ describe('dashboardEntriesForDay', () => {
             [pendingSlot({startTime: '2026-08-17T09:30:00', name: null})],
             '2026-08-17',
         )
-        expect(entries.map(e => e.startTime)).toEqual(['2026-08-17T09:00:00', '2026-08-17T09:30:00'])
+        expect(entries.map(e => e.startTime)).toEqual([
+            '2026-08-17T09:00:00',
+            '2026-08-17T09:30:00',
+        ])
         expect(entries[0].state).toBe('running')
         expect(entries[1].state).toBe('waiting')
     })
@@ -196,6 +272,141 @@ describe('resolveDashboardDay', () => {
     })
 })
 
+describe('timelineEntryAppearance', () => {
+    it('carries the same color semantics as the status chips', () => {
+        // matchStatusChip: beendet = success, läuft = primary, in Vorbereitung = info,
+        // wartet auf Beenden = warning — der Balken darf nichts anderes behaupten.
+        expect(timelineEntryAppearance('finished')).toMatchObject({
+            color: 'success',
+            variant: 'filled',
+            muted: true,
+        })
+        expect(timelineEntryAppearance('running')).toMatchObject({color: 'primary', muted: false})
+        expect(timelineEntryAppearance('preparing')).toMatchObject({color: 'info'})
+        expect(timelineEntryAppearance('awaitingFinish')).toMatchObject({color: 'warning'})
+    })
+
+    it('draws pending entries as outlines, dashed while the race is not set yet', () => {
+        expect(timelineEntryAppearance('linked')).toMatchObject({
+            variant: 'outlined',
+            dashed: false,
+        })
+        expect(timelineEntryAppearance('waiting')).toMatchObject({
+            variant: 'outlined',
+            dashed: true,
+        })
+    })
+
+    it('strikes cancelled entries through and keeps them muted, like the cancelled chip', () => {
+        expect(timelineEntryAppearance('skipped')).toMatchObject({
+            strikeThrough: true,
+            muted: true,
+            color: 'default',
+        })
+    })
+
+    it('hatches program items - nobody races there', () => {
+        expect(timelineEntryAppearance('free')).toMatchObject({hatched: true, color: 'default'})
+    })
+
+    it('hatches byes and mirrors the bye chip colors: open = info, acknowledged = success, cancelled = struck', () => {
+        expect(timelineEntryAppearance('linked', true)).toMatchObject({
+            hatched: true,
+            color: 'info',
+        })
+        expect(timelineEntryAppearance('finished', true)).toMatchObject({
+            hatched: true,
+            color: 'success',
+            muted: true,
+        })
+        expect(timelineEntryAppearance('skipped', true)).toMatchObject({
+            hatched: true,
+            strikeThrough: true,
+        })
+    })
+
+    it('lets an activated or running bye look like any other race - what happens beats the bye', () => {
+        expect(timelineEntryAppearance('running', true)).toMatchObject({
+            hatched: false,
+            color: 'primary',
+        })
+        expect(timelineEntryAppearance('preparing', true)).toMatchObject({
+            hatched: false,
+            color: 'info',
+        })
+    })
+})
+
+describe('bye flag on entries', () => {
+    it('marks non-racing byes from schedule slots and dashboard matches, but not must-race byes', () => {
+        const bye = {cause: 'DEREGISTRATION', mustRace: false} as const
+        const mustRace = {cause: 'DEREGISTRATION', mustRace: true} as const
+        expect(scheduleSlotsToEntries([slot('2026-08-17T08:00:00', {bye})])[0].bye).toBe(true)
+        expect(scheduleSlotsToEntries([slot('2026-08-17T08:00:00', {bye: mustRace})])[0].bye).toBe(
+            false,
+        )
+        const entries = dashboardEntriesForDay(
+            [match({bye}), match({bye: mustRace})],
+            [],
+            '2026-08-17',
+        )
+        expect(entries.map(e => e.bye)).toEqual([true, false])
+    })
+})
+
+describe('timelineSpan', () => {
+    it('rounds the axis outwards to full hours so hour marks close it on both ends', () => {
+        const span = timelineSpan(
+            scheduleSlotsToEntries([
+                slot('2026-08-17T08:15:00', {durationMinutes: 10}),
+                slot('2026-08-17T09:40:00', {durationMinutes: 10}),
+            ]),
+        )
+        expect(span).not.toBeNull()
+        expect(new Date(span!.startMs).getHours()).toBe(8)
+        expect(new Date(span!.startMs).getMinutes()).toBe(0)
+        // Letztes Ende 09:50 -> Achse endet 10:00
+        expect(new Date(span!.endMs).getHours()).toBe(10)
+        expect(new Date(span!.endMs).getMinutes()).toBe(0)
+    })
+
+    it('spans at least one hour for a single zero-duration entry', () => {
+        const span = timelineSpan(scheduleSlotsToEntries([slot('2026-08-17T12:00:00')]))
+        expect(span!.endMs - span!.startMs).toBe(3_600_000)
+    })
+
+    it('is null without entries', () => {
+        expect(timelineSpan([])).toBeNull()
+    })
+})
+
+describe('computeHourMarks', () => {
+    it('marks every full hour of a short span, first at 0 % and last at 100 %', () => {
+        const marks = computeHourMarks(
+            scheduleSlotsToEntries([slot('2026-08-17T08:00:00'), slot('2026-08-17T10:00:00')]),
+        )
+        expect(marks.map(m => m.percent)).toEqual([0, 50, 100])
+        expect(new Date(marks[1].timeMs).getHours()).toBe(9)
+    })
+
+    it('widens the step on long days so at most about ten marks remain', () => {
+        const marks = computeHourMarks(
+            scheduleSlotsToEntries([
+                slot('2026-08-17T06:00:00'),
+                // 06:00 bis 22:00 = 16 Stunden -> Schrittweite 2 h statt 17 Marken
+                slot('2026-08-17T22:00:00'),
+            ]),
+        )
+        expect(marks.length).toBeLessThanOrEqual(11)
+        const hourStep = (marks[1].timeMs - marks[0].timeMs) / 3_600_000
+        expect(hourStep).toBe(2)
+    })
+
+    it('returns no marks without entries', () => {
+        expect(computeHourMarks([])).toEqual([])
+    })
+})
+
 describe('computeTimelinePositions', () => {
     it('positions entries proportionally across the day span', () => {
         const entries = scheduleSlotsToEntries([
@@ -228,6 +439,31 @@ describe('computeTimelinePositions', () => {
         expect(positioned[1].stackRow).toBe(1)
     })
 
+    it('moves an entry overlapping a still-running one to a second lane', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {durationMinutes: 60}),
+            slot('2026-08-17T08:30:00', {durationMinutes: 60}),
+            // 09:30 beginnt, wenn beide vorbei sind - zurück in Spur 0
+            slot('2026-08-17T09:30:00', {durationMinutes: 30}),
+        ])
+        const positioned = computeTimelinePositions(entries)
+        expect(positioned[0].stackRow).toBe(0)
+        expect(positioned[1].stackRow).toBe(1)
+        expect(positioned[2].stackRow).toBe(0)
+    })
+
+    it('also dodges purely visual overlap caused by the minimum width', () => {
+        // Zwei dauerlose Läufe eine Minute auseinander auf einer Stunde Achse: zeitlich
+        // überschneidungsfrei, gezeichnet (Mindestbreite!) übereinander -> zweite Spur.
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00'),
+            slot('2026-08-17T08:01:00'),
+        ])
+        const positioned = computeTimelinePositions(entries)
+        expect(positioned[0].stackRow).toBe(0)
+        expect(positioned[1].stackRow).toBe(1)
+    })
+
     it('returns an empty array for no entries', () => {
         expect(computeTimelinePositions([])).toEqual([])
     })
@@ -254,5 +490,112 @@ describe('computeNowMarkerPercent', () => {
 
     it('returns null when there are no entries', () => {
         expect(computeNowMarkerPercent([], new Date())).toBeNull()
+    })
+
+    it('returns null when the entries belong to a different calendar day', () => {
+        // Wer den Zeitplan von übermorgen ansieht, bekommt kein an den Rand geklemmtes "Jetzt".
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00'),
+            slot('2026-08-17T10:00:00'),
+        ])
+        expect(computeNowMarkerPercent(entries, new Date('2026-08-19T09:00:00'))).toBeNull()
+    })
+})
+
+describe('computeTimelineProjection', () => {
+    // Achse 08:00-10:00. Ein um 10 Minuten verspätet gestarteter Lauf plus zwei noch offene.
+    const entriesWithDelay = () =>
+        scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                state: 'LINKED',
+                durationMinutes: 20,
+                matchStartedAt: '2026-08-17T08:10:00',
+            }),
+            slot('2026-08-17T09:00:00', {state: 'LINKED', durationMinutes: 20}),
+            slot('2026-08-17T09:30:00', {state: 'WAITING', durationMinutes: 20}),
+        ])
+
+    it('places the actual-start layer at the real start on the same axis', () => {
+        const projection = computeTimelineProjection(
+            entriesWithDelay(),
+            new Date('2026-08-17T08:30:00'),
+        )
+        // 08:10 auf der Achse 08:00-10:00 = 8,33 %
+        const [actual] = [...projection.actualLeftPercent.values()]
+        expect(actual).toBeCloseTo((10 / 120) * 100, 5)
+    })
+
+    it('shifts pending entries by the latest start delay, as an expectation with the delay rule of the boards', () => {
+        const entries = entriesWithDelay()
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T08:30:00'))
+        expect(projection.delaySeconds).toBe(600)
+        // Beide offenen Einträge bekommen eine um 10 Minuten verschobene Andeutung.
+        expect(projection.expected.size).toBe(2)
+        const expected = projection.expected.get(entries[1].id)
+        expect(expected).toBeDefined()
+        expect(expected!.expectedStartMs).toBe(new Date('2026-08-17T09:10:00').getTime())
+        expect(expected!.leftPercent).toBeCloseTo((70 / 120) * 100, 5)
+    })
+
+    it('gives no expectation to entries whose expected start is already in the past', () => {
+        const entries = entriesWithDelay()
+        // 09:15: der 09:00-Eintrag wäre um 09:10 erwartet gewesen - die Andeutung ist widerlegt.
+        // Der 09:30-Eintrag (erwartet 09:40) behält seine.
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T09:15:00'))
+        expect(projection.expected.has(entries[1].id)).toBe(false)
+        expect(projection.expected.has(entries[2].id)).toBe(true)
+    })
+
+    it('suggests nothing while the schedule is on time (below one minute), same threshold as delayParts', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                state: 'LINKED',
+                matchStartedAt: '2026-08-17T08:00:30',
+            }),
+            slot('2026-08-17T09:00:00', {state: 'LINKED'}),
+        ])
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T08:30:00'))
+        expect(projection.expected.size).toBe(0)
+    })
+
+    it('suggests nothing when no entry has started yet', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {state: 'LINKED'}),
+            slot('2026-08-17T09:00:00', {state: 'LINKED'}),
+        ])
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T07:00:00'))
+        expect(projection.delaySeconds).toBeNull()
+        expect(projection.expected.size).toBe(0)
+        expect(projection.actualLeftPercent.size).toBe(0)
+    })
+
+    it('never projects finished, running or cancelled entries', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                state: 'LINKED',
+                matchStartedAt: '2026-08-17T08:10:00',
+                matchFinishedAt: '2026-08-17T08:20:00',
+            }),
+            slot('2026-08-17T09:00:00', {state: 'SKIPPED'}),
+        ])
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T08:30:00'))
+        expect(projection.expected.size).toBe(0)
+        // Der beendete Lauf behält seine Ist-Ebene - Soll/Ist bleibt auch rückblickend ablesbar.
+        expect(projection.actualLeftPercent.size).toBe(1)
+    })
+
+    it('clamps expected positions to the axis', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                state: 'LINKED',
+                matchStartedAt: '2026-08-17T09:30:00',
+            }),
+            slot('2026-08-17T08:50:00', {state: 'LINKED'}),
+        ])
+        // 90 Minuten Verzug schöbe den 08:50-Eintrag auf 10:20 - hinter das Achsenende 09:00...
+        const projection = computeTimelineProjection(entries, new Date('2026-08-17T09:31:00'))
+        const expected = projection.expected.get(entries[1].id)
+        expect(expected).toBeDefined()
+        expect(expected!.leftPercent).toBeLessThanOrEqual(100)
     })
 })

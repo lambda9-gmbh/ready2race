@@ -1990,6 +1990,9 @@
       },
       "indicator": {
         "now": "Jetzt",
+          "planned": "Geplant {{time}}",
+          "started": "Gestartet {{time}}",
+          "expected": "Erwartet ~{{time}}",
         "state": {
           "finished": "Beendet",
           "preparing": "In Vorbereitung",
@@ -1998,7 +2001,8 @@
           "linked": "Verknüpft",
           "waiting": "Lauf noch nicht gesetzt",
           "free": "Programmpunkt",
-          "skipped": "Übersprungen"
+          "skipped": "Übersprungen",
+          "bye": "Freilos"
         }
       },
       "error": {

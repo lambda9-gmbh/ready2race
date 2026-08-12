@@ -1984,6 +1984,9 @@
       },
       "indicator": {
         "now": "Nu",
+          "planned": "Planlagt {{time}}",
+          "started": "Startet {{time}}",
+          "expected": "Forventet ~{{time}}",
         "state": {
           "finished": "Afsluttet",
           "preparing": "Forbereder",
@@ -1992,7 +1995,8 @@
           "linked": "Tilknyttet",
           "waiting": "Løb ikke sat endnu",
           "free": "Programpunkt",
-          "skipped": "Sprunget over"
+          "skipped": "Sprunget over",
+          "bye": "Oversidder"
         }
       },
       "error": {

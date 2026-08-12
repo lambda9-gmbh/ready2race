@@ -720,6 +720,9 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
                         entries={indicatorEntries}
                         now={now}
                         onEntryClick={scrollToTimelineEntry}
+                        // Kompakt: über den Karten ist der Zeitstrahl Orientierung, nicht
+                        // Hauptfläche — flachere Spuren, keine Block-Kürzel (siehe Props).
+                        density={'compact'}
                     />
                 )}
                 {/* Kompakt und Schriftgröße sind eine reine CSS-Stufe über den Karten: Kompakt
