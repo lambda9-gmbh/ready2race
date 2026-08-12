@@ -1696,6 +1696,30 @@
         "tooltip": "Next refresh in {{seconds}} s (every {{interval}} s)",
         "everySeconds": "Every {{seconds}} seconds"
       },
+      "settings": {
+        "focus": "Focus",
+        "competitionFilter": {
+          "label": "Filter competitions",
+          "all": "All competitions",
+          "empty": "No races available",
+          "chip_one": "filtered: {{count}} competition",
+          "chip_other": "filtered: {{count}} competitions"
+        },
+        "onlyToday": "Show only the current race day",
+        "hideFinished": "Hide finished races (last {{count}} stay)",
+        "followCurrent": "Follow the current race",
+        "display": "Display",
+        "notePreview": "Note preview on the boat row",
+        "showCrew": "Show line-up",
+        "readability": "Readability",
+        "fontSize": {
+          "label": "Font size",
+          "normal": "Normal",
+          "large": "Large",
+          "xlarge": "Extra large"
+        },
+        "criticalChecksOnly": "Show only critical checks"
+      },
       "penaltyIncluded": "incl. {{seconds}} s",
       "resultsCompleteWaiting": "Results complete — waiting to finish",
       "control": {

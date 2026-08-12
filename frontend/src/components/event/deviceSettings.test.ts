@@ -1,5 +1,12 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {setStoredFlag, storedFlag} from './deviceSettings.ts'
+import {
+    setStoredChoice,
+    setStoredFlag,
+    setStoredList,
+    storedChoice,
+    storedFlag,
+    storedList,
+} from './deviceSettings.ts'
 
 // Das Projekt hat keine DOM-Testumgebung (kein jsdom/happy-dom), darum gibt es kein
 // eingebautes localStorage und kein window. Für die Tests reicht eine minimale
@@ -66,5 +73,60 @@ describe('deviceSettings', () => {
         expect(() => setStoredFlag('irgendein_schalter', true)).not.toThrow()
         // Ohne neuen Wert gibt es auch nichts zu verteilen.
         expect(dispatched).not.toHaveBeenCalled()
+    })
+
+    describe('storedChoice', () => {
+        const stufen = ['normal', 'large', 'xlarge'] as const
+
+        it('liefert die Voreinstellung, solange nichts gespeichert ist', () => {
+            expect(storedChoice('schriftgroesse', 'normal', stufen)).toBe('normal')
+        })
+
+        it('liest die gespeicherte Stufe statt der Voreinstellung', () => {
+            setStoredChoice('schriftgroesse', 'xlarge')
+            expect(storedChoice('schriftgroesse', 'normal', stufen)).toBe('xlarge')
+            expect(dispatched).toHaveBeenCalledTimes(1)
+        })
+
+        it('behandelt einen Wert außerhalb der Werteliste wie nicht gespeichert', () => {
+            localStorage.setItem('schriftgroesse', 'riesig')
+            expect(storedChoice('schriftgroesse', 'normal', stufen)).toBe('normal')
+        })
+
+        it('fällt auf die Voreinstellung zurück, wenn localStorage fehlt', () => {
+            // @ts-expect-error Simuliert ein Gerät/Umgebung ohne localStorage.
+            delete globalThis.localStorage
+            expect(storedChoice('schriftgroesse', 'large', stufen)).toBe('large')
+        })
+    })
+
+    describe('storedList', () => {
+        it('liefert eine leere Liste, solange nichts gespeichert ist', () => {
+            expect(storedList('wettkampf_filter')).toEqual([])
+        })
+
+        it('liest die gespeicherte Liste', () => {
+            setStoredList('wettkampf_filter', ['a', 'b'])
+            expect(storedList('wettkampf_filter')).toEqual(['a', 'b'])
+            expect(dispatched).toHaveBeenCalledTimes(1)
+        })
+
+        it('behandelt kaputtes JSON wie nicht gespeichert', () => {
+            localStorage.setItem('wettkampf_filter', '["a",')
+            expect(storedList('wettkampf_filter')).toEqual([])
+        })
+
+        it('behandelt Nicht-Zeichenketten-Arrays wie nicht gespeichert', () => {
+            localStorage.setItem('wettkampf_filter', '[1, 2]')
+            expect(storedList('wettkampf_filter')).toEqual([])
+            localStorage.setItem('wettkampf_filter', '{"a": true}')
+            expect(storedList('wettkampf_filter')).toEqual([])
+        })
+
+        it('fällt auf die leere Liste zurück, wenn localStorage fehlt', () => {
+            // @ts-expect-error Simuliert ein Gerät/Umgebung ohne localStorage.
+            delete globalThis.localStorage
+            expect(storedList('wettkampf_filter')).toEqual([])
+        })
     })
 })

@@ -1,4 +1,4 @@
-import {ReactNode, useState} from 'react'
+import {ReactNode, useRef, useState} from 'react'
 import {IconButton, Popover, Stack, Tooltip, Typography} from '@mui/material'
 import {Settings} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
@@ -9,6 +9,14 @@ type Props = {
     minWidth?: number
     /** Obergrenze der Breite, als CSS-Ausdruck. */
     maxWidth?: string
+    /**
+     * Optional von außen gesteuert: Ist [open] gesetzt, hält der Aufrufer den Zustand und das
+     * Popover meldet Öffnen/Schließen über [onOpenChange] — so kann neben dem Zahnrad auch ein
+     * zweiter Auslöser (der Filter-Chip des Schiedsrichter-Boards) dasselbe Popover öffnen.
+     * Ohne [open] verhält sich alles wie bisher: der Zustand liegt hier drin.
+     */
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 /**
@@ -26,24 +34,40 @@ type Props = {
  * Der Inhalt wird erst beim Öffnen gebaut (MUI-Popover ohne keepMounted): Abschnitte mit eigenem
  * Formularzustand starten dadurch bei jedem Öffnen frisch vom aktuellen Stand.
  */
-const SettingsPopover = ({children, minWidth = 360, maxWidth = 'min(420px, 90vw)'}: Props) => {
+const SettingsPopover = ({
+    children,
+    minWidth = 360,
+    maxWidth = 'min(420px, 90vw)',
+    open,
+    onOpenChange,
+}: Props) => {
     const {t} = useTranslation()
-    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+    const [innerOpen, setInnerOpen] = useState(false)
+    // Anker ist immer das Zahnrad — auch wenn ein externer Auslöser öffnet, gehört das Popover
+    // optisch an die Stelle, an der es sich sonst öffnet.
+    const buttonRef = useRef<HTMLButtonElement | null>(null)
+
+    const isOpen = open ?? innerOpen
+    const setOpen = (next: boolean) => {
+        setInnerOpen(next)
+        onOpenChange?.(next)
+    }
 
     return (
         <>
             <Tooltip title={t('common.settings')}>
                 <IconButton
                     size={'small'}
-                    onClick={e => setAnchorEl(e.currentTarget)}
+                    ref={buttonRef}
+                    onClick={() => setOpen(true)}
                     aria-label={t('common.settings')}>
                     <Settings fontSize={'small'} />
                 </IconButton>
             </Tooltip>
             <Popover
-                open={anchorEl !== null}
-                anchorEl={anchorEl}
-                onClose={() => setAnchorEl(null)}
+                open={isOpen && buttonRef.current !== null}
+                anchorEl={buttonRef.current}
+                onClose={() => setOpen(false)}
                 anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
                 transformOrigin={{vertical: 'top', horizontal: 'right'}}>
                 {/* min-width gewinnt in CSS gegen max-width, deshalb ist auch sie auf 90vw
