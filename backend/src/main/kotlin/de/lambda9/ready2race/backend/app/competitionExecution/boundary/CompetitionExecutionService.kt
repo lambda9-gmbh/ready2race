@@ -2352,16 +2352,23 @@ object CompetitionExecutionService {
      *
      * [skipByes] lässt Freilose weg - außer denen mit "muss gefahren werden" (bye_must_race), die
      * IMMER exportiert werden: Sie werden gefahren und brauchen ihre Welle im Zeitnahme-System.
+     *
+     * [raceclockerRaceId] schränkt auf die Wettkämpfe ein, deren angewähltes RaceClocker-Rennen
+     * (competition.raceclocker_race, seit dem Ein-Rennen-Modell eindeutig) das übergebene ist -
+     * für den Import Rennen für Rennen statt immer über die ganze Veranstaltung. null = alle.
      */
     fun eventStartlistPlan(
         eventId: UUID,
         allRounds: Boolean,
         skipByes: Boolean,
+        raceclockerRaceId: UUID? = null,
     ): App<ServiceError, List<BulkStartlistCompetition>> = KIO.comprehension {
         val competitions = !CompetitionMatchRepo.getForBulkStartlistExport(eventId).orDie()
         val byeByMatch = !MatchByeService.byeByMatch(eventId)
 
-        competitions.traverse { (competitionId, identifier, raceUrl) ->
+        competitions
+            .filter { raceclockerRaceId == null || it.raceId == raceclockerRaceId }
+            .traverse { (competitionId, identifier, raceUrl) ->
             KIO.comprehension {
                 val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
                 val sorted = sortRounds(setupRounds).filter { it.matches.isNotEmpty() }
@@ -2521,10 +2528,18 @@ object CompetitionExecutionService {
         fileType: EventStartlistFileType,
         skipByes: Boolean,
         onlyMissingInRaceClocker: Boolean,
+        // Nur Wettkämpfe dieses RaceClocker-Rennens (null = alle) - wirkt für Voll- UND
+        // Delta-Export; im Delta wird dann auch nur noch der Feed dieses Rennens geholt.
+        raceclockerRaceId: UUID? = null,
     ): App<ServiceError, ApiResponse.File> {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
-        val plan = !eventStartlistPlan(eventId, allRounds = onlyMissingInRaceClocker, skipByes = skipByes)
+        val plan = !eventStartlistPlan(
+            eventId,
+            allRounds = onlyMissingInRaceClocker,
+            skipByes = skipByes,
+            raceclockerRaceId = raceclockerRaceId,
+        )
 
         val feeds = if (onlyMissingInRaceClocker) {
             val fetched = mutableMapOf<String, List<RaceClockerFeedRow>>()

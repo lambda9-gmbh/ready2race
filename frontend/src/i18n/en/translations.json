@@ -1812,6 +1812,11 @@
           "label": "Skip byes",
           "hint": "Matches flagged “Must be raced” are always exported – even with this box checked."
         },
+        "race": {
+          "label": "RaceClocker race",
+          "all": "All",
+          "hint": "Exports only the competitions whose assigned RaceClocker race is the selected one – for importing race by race."
+        },
         "onlyMissing": {
           "label": "Only matches missing in RaceClocker",
           "hint": "Fetches each competition's assigned race and exports only matches whose teams do not appear there yet."

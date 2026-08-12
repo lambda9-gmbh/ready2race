@@ -7582,6 +7582,10 @@ export type DownloadEventStartlistsData = {
          */
         onlyMissingInRaceClocker?: boolean
         /**
+         * Restrict the export to competitions whose assigned RaceClocker race (competition.raceclocker_race) is the given one - for importing race by race. Applies to both the full and the delta export; omitted means all competitions.
+         */
+        raceclockerRaceId?: string
+        /**
          * Skip bye matches (default true). Matches flagged as 'bye must race' (competition_match.bye_must_race) are ALWAYS exported, overriding this flag - they are raced and need their wave in the timing tooling.
          */
         skipByes?: boolean

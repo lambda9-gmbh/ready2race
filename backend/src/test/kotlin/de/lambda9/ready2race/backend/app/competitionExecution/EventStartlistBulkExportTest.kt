@@ -101,16 +101,23 @@ class EventStartlistBulkExportTest {
         return eventId
     }
 
-    private fun TestComprehensionScope<JEnv>.insertRace(eventId: UUID, url: String): UUID {
+    private fun TestComprehensionScope<JEnv>.insertRace(
+        eventId: UUID,
+        url: String,
+        // Name und Position parametrierbar: je Veranstaltung sind beide eindeutig, und der
+        // Rennen-Filter-Fall braucht ZWEI Rennen in derselben Veranstaltung.
+        name: String = "Kurzstrecke",
+        position: Int = 1,
+    ): UUID {
         val raceId = UUID.randomUUID()
         !RACECLOCKER_RACE.insert(
             RaceclockerRaceRecord(
                 id = raceId,
                 event = eventId,
-                name = "Kurzstrecke",
+                name = name,
                 resultsUrl = url,
                 capturesLaps = false,
-                position = 1,
+                position = position,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -452,6 +459,57 @@ class EventStartlistBulkExportTest {
         val csvPlanned = !CompetitionExecutionService.buildEventStartlists(plan, EventStartlistFileType.CSV, feeds)
         val csv = String((csvPlanned as ApiResponse.File).bytes)
         assertEquals(listOf("10:10:00", "10:10:00"), csvColumn(csv, "Start"))
+    }
+
+    /**
+     * Der Rennen-Filter (Import Rennen für Rennen): Zwei Wettkämpfe auf zwei Rennen, dazu einer
+     * ganz ohne Rennen - gefiltert kommen nur die Läufe des Wettkampfs am gewählten Rennen,
+     * ungefiltert weiterhin alle.
+     */
+    @Test
+    fun raceFilterPlansOnlyCompetitionsOfTheChosenRace() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        val raceA = insertRace(eventId, "https://raceclocker.com/aaa111", name = "Kurzstrecke", position = 1)
+        val raceB = insertRace(eventId, "https://raceclocker.com/bbb222", name = "Langstrecke", position = 2)
+
+        val onRaceA = insertCompetition(
+            eventId, "1",
+            matchTeamCounts = listOf(2, 2),
+            startOffsetsMinutes = listOf(0, 10),
+            raceId = raceA,
+        )
+        insertCompetition(
+            eventId, "2",
+            matchTeamCounts = listOf(2),
+            startOffsetsMinutes = listOf(5),
+            raceId = raceB,
+        )
+        insertCompetition(eventId, "3", matchTeamCounts = listOf(2), startOffsetsMinutes = listOf(15))
+
+        val filtered = !CompetitionExecutionService.eventStartlistPlan(
+            eventId, allRounds = false, skipByes = true, raceclockerRaceId = raceA,
+        )
+        // Nur der Wettkampf am gewählten Rennen - und dort ALLE seine Läufe.
+        assertEquals(listOf(onRaceA.competitionId), filtered.map { it.competitionId })
+        assertEquals(
+            onRaceA.matches.map { it.setupMatchId },
+            filtered.single().matches.map { it.setupMatchId },
+        )
+
+        // Auch die gebaute Datei trägt nur die Läufe des gewählten Rennens (10:00 und 10:10).
+        val file = !CompetitionExecutionService.buildEventStartlists(filtered, EventStartlistFileType.CSV)
+        val csv = String((file as ApiResponse.File).bytes)
+        assertEquals(
+            listOf("10:00:00", "10:00:00", "10:10:00", "10:10:00"),
+            csvColumn(csv, "Start"),
+        )
+
+        // Ohne Filter bleibt alles beim Alten: alle drei Wettkämpfe.
+        val unfiltered = !CompetitionExecutionService.eventStartlistPlan(
+            eventId, allRounds = false, skipByes = true,
+        )
+        assertEquals(3, unfiltered.size)
     }
 
     /**

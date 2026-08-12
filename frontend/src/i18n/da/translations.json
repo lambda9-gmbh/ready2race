@@ -1808,6 +1808,11 @@
           "label": "Spring oversiddere over",
           "hint": "Løb markeret “Skal gennemføres” eksporteres altid – også med dette flueben."
         },
+        "race": {
+          "label": "RaceClocker-løb",
+          "all": "Alle",
+          "hint": "Eksporterer kun de konkurrencer, hvis tildelte RaceClocker-løb er det valgte – til import løb for løb."
+        },
         "onlyMissing": {
           "label": "Kun løb der mangler i RaceClocker",
           "hint": "Henter hvert løbs tildelte RaceClocker-løb og eksporterer kun løb, hvis hold endnu ikke findes dér."

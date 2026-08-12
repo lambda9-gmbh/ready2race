@@ -1808,6 +1808,11 @@
           "label": "Freilose überspringen",
           "hint": "Läufe mit „Muss gefahren werden“ werden immer exportiert – auch mit gesetztem Häkchen."
         },
+        "race": {
+          "label": "RaceClocker-Rennen",
+          "all": "Alle",
+          "hint": "Exportiert nur die Wettkämpfe, deren zugeordnetes RaceClocker-Rennen das gewählte ist – für den Import Rennen für Rennen."
+        },
         "onlyMissing": {
           "label": "Nur in RaceClocker fehlende Läufe",
           "hint": "Ruft je Wettkampf das zugewiesene Rennen ab und exportiert nur Läufe, deren Teams dort noch nicht auftauchen."

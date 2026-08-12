@@ -11,12 +11,14 @@ import {
     FormControlLabel,
     FormHelperText,
     FormLabel,
+    MenuItem,
     Radio,
     RadioGroup,
     Stack,
+    TextField,
 } from '@mui/material'
 import {Download} from '@mui/icons-material'
-import {downloadEventStartlists, getEventTimingConfig} from '@api/sdk.gen.ts'
+import {downloadEventStartlists, getEventTimingConfig, getRaceClockerRaces} from '@api/sdk.gen.ts'
 import {EventStartlistFileType} from '@api/types.gen.ts'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getFilename} from '@utils/helpers.ts'
@@ -25,6 +27,9 @@ import LoadingButton from '@components/form/LoadingButton.tsx'
 type Props = {
     eventId: string
 }
+
+/** Platzhalter-Wert des Rennen-Filters: kein Filter, alle Wettkämpfe exportieren. */
+const ALL_RACES = 'ALL'
 
 /**
  * Der Startlisten-Sammelexport am Zeitplan-Tab: ein Knopf, ein Dialog, ein Download.
@@ -47,6 +52,10 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
     const [fileType, setFileType] = useState<EventStartlistFileType>('ZIP')
     const [skipByes, setSkipByes] = useState(true)
     const [onlyMissing, setOnlyMissing] = useState(false)
+    // ALL_RACES = alle Rennen, sonst die Id des gewählten RaceClocker-Rennens (Import Rennen für
+    // Rennen). Ein benannter Platzhalter statt '' - bei leerem Wert hielte MUI das Select für
+    // leer und ließe das Label über der Anzeige „Alle" stehen.
+    const [raceFilter, setRaceFilter] = useState(ALL_RACES)
     const [downloading, setDownloading] = useState(false)
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
@@ -65,6 +74,13 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
     )
     const isRaceClocker = timingConfig?.timingSystem === 'RACECLOCKER'
 
+    // Die konfigurierten Rennen der Veranstaltung - Optionen des Rennen-Filters. Nur bei
+    // Zeitnahme über RaceClocker geholt, anderswo gibt es weder Rennen noch das Select dazu.
+    const {data: races} = useFetch(signal => getRaceClockerRaces({signal, path: {eventId}}), {
+        preCondition: () => isRaceClocker,
+        deps: [eventId, isRaceClocker],
+    })
+
     const handleDownload = async () => {
         setDownloading(true)
         const {data, error, response} = await downloadEventStartlists({
@@ -73,6 +89,9 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                 fileType,
                 skipByes,
                 onlyMissingInRaceClocker: isRaceClocker && onlyMissing,
+                // Wirkt für Voll- UND Delta-Export; „Alle" lässt den Parameter weg.
+                raceclockerRaceId:
+                    isRaceClocker && raceFilter !== ALL_RACES ? raceFilter : undefined,
             },
         })
         setDownloading(false)
@@ -150,6 +169,33 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                                 {t('event.schedule.startlistExport.skipByes.hint')}
                             </FormHelperText>
                         </FormControl>
+                        {isRaceClocker && (
+                            <FormControl>
+                                {/* Import Rennen für Rennen: nur die Wettkämpfe, deren angewähltes
+                                    RaceClocker-Rennen das gewählte ist - wirkt für Voll- UND
+                                    Delta-Export. */}
+                                <TextField
+                                    select
+                                    size={'small'}
+                                    label={t('event.schedule.startlistExport.race.label')}
+                                    value={raceFilter}
+                                    onChange={e => setRaceFilter(e.target.value)}>
+                                    <MenuItem value={ALL_RACES}>
+                                        {t('event.schedule.startlistExport.race.all')}
+                                    </MenuItem>
+                                    {[...(races ?? [])]
+                                        .sort((a, b) => a.position - b.position)
+                                        .map(race => (
+                                            <MenuItem key={race.id} value={race.id}>
+                                                {race.name}
+                                            </MenuItem>
+                                        ))}
+                                </TextField>
+                                <FormHelperText>
+                                    {t('event.schedule.startlistExport.race.hint')}
+                                </FormHelperText>
+                            </FormControl>
+                        )}
                         {isRaceClocker && (
                             <FormControl>
                                 <FormControlLabel
