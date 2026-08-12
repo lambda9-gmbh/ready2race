@@ -26,7 +26,7 @@ import {
     openResultTeams,
     pendingSlotLabel,
     shortenClubChain,
-    showsSeverityIcon,
+    dashboardRowColumns,
     teamHasResult,
     teamNoteCount,
     teamsInDisplayOrder,
@@ -878,19 +878,15 @@ describe('latestTeamNote', () => {
     })
 })
 
-describe('showsSeverityIcon', () => {
-    it('zeigt ohne die Einstellung alle Icons', () => {
-        expect(showsSeverityIcon('OK', false)).toBe(true)
-        expect(showsSeverityIcon('WARNING', false)).toBe(true)
-        expect(showsSeverityIcon('CRITICAL', false)).toBe(true)
-        expect(showsSeverityIcon('NEUTRAL', false)).toBe(true)
+describe('dashboardRowColumns', () => {
+    it('reserviert mit Prüfungs-Icons die 26px-Spalte am Zeilenende', () => {
+        expect(dashboardRowColumns(false, true)).toBe('2ch minmax(0, 1fr) 26px')
+        expect(dashboardRowColumns(true, true)).toBe('2ch minmax(0, 1fr) 10.5ch 2rem 26px')
     })
 
-    it('lässt mit „nur kritische" ausschließlich CRITICAL stehen', () => {
-        expect(showsSeverityIcon('CRITICAL', true)).toBe(true)
-        expect(showsSeverityIcon('OK', true)).toBe(false)
-        expect(showsSeverityIcon('WARNING', true)).toBe(false)
-        expect(showsSeverityIcon('NEUTRAL', true)).toBe(false)
+    it('räumt die Icon-Spalte KOMPLETT, wenn Prüfungen ausgeblendet sind — der Platzgewinn ist der Zweck', () => {
+        expect(dashboardRowColumns(false, false)).toBe('2ch minmax(0, 1fr)')
+        expect(dashboardRowColumns(true, false)).toBe('2ch minmax(0, 1fr) 10.5ch 2rem')
     })
 })
 

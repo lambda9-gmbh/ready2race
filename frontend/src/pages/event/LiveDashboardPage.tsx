@@ -42,7 +42,7 @@ import DashboardSettingsPopover from '@components/event/liveDashboard/DashboardS
 import {useShortLabels} from '@components/event/shortLabels.ts'
 import {
     DASHBOARD_COMPACT_KEY,
-    DASHBOARD_CRITICAL_CHECKS_ONLY_KEY,
+    DASHBOARD_SHOW_CHECKS_KEY,
     DASHBOARD_FOLLOW_CURRENT_KEY,
     DASHBOARD_FONT_SCALE_KEY,
     DASHBOARD_HIDE_FINISHED_KEY,
@@ -221,8 +221,8 @@ const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardP
     // Der Detailgrad der Bootszeilen — als Bündel an die Karten durchgereicht.
     const [notePreview] = useDeviceFlag(DASHBOARD_NOTE_PREVIEW_KEY, true)
     const [showCrewDetails] = useDeviceFlag(DASHBOARD_SHOW_CREW_KEY, true)
-    const [criticalChecksOnly] = useDeviceFlag(DASHBOARD_CRITICAL_CHECKS_ONLY_KEY, false)
-    const detail = {notePreview, showCrew: showCrewDetails, criticalChecksOnly}
+    const [showChecks] = useDeviceFlag(DASHBOARD_SHOW_CHECKS_KEY, true)
+    const detail = {notePreview, showCrew: showCrewDetails, showChecks}
     // Lesbarkeit: dreistufige Schriftgröße NEBEN dem Kompaktmodus — beide landen im selben
     // Karten-Wrapper und verrechnen sich dort (siehe dashboardTypographySizes).
     const [fontScale] = useDeviceChoice(DASHBOARD_FONT_SCALE_KEY, 'normal', DASHBOARD_FONT_SCALES)

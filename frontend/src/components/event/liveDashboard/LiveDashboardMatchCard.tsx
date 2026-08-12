@@ -24,7 +24,7 @@ import {
     openResultTeams,
     pendingSlotLabel,
     shortenClubChain,
-    showsSeverityIcon,
+    dashboardRowColumns,
     teamShowsClubLine,
     teamShowsCrew,
     teamsInDisplayOrder,
@@ -144,7 +144,8 @@ const LiveDashboardMatchCard = ({
     )
     const openTeams = openResultTeams(match)
     const resultsComplete = match.teams.length > 0 && openTeams.length === 0
-    const columns = hasResults ? '2ch minmax(0, 1fr) 10.5ch 2rem 26px' : '2ch minmax(0, 1fr) 26px'
+    // Ohne Prüfungs-Icons entfällt deren Spalte ganz — der Platz wächst der Namensspalte zu.
+    const columns = dashboardRowColumns(hasResults, detail.showChecks)
     // Sobald Zeit und Platz ihre Spalten belegen, bleibt der Vereinszeile am Telefon noch die
     // Hälfte der Breite - die Kette muss dann früher aufs "+n" ausweichen.
     const narrowChainChars = hasResults ? CLUB_CHAIN_NARROW_RESULT_CHARS : CLUB_CHAIN_NARROW_CHARS
@@ -659,18 +660,15 @@ const LiveDashboardMatchCard = ({
                                     </>
                                 )}
                                 {/*
-                                    „Nur kritische Prüfungen zeigen": OK/Warnung/Neutral treten
-                                    ab, nur CRITICAL bleibt stehen (die verdichtete Severity je
-                                    Boot kommt fertig bewertet aus dem Backend, siehe
-                                    LiveDashboardTeamDto.severity). Die leere Box hält die
-                                    Icon-Spalte des Grids besetzt, damit Zeilen mit und ohne
-                                    Icon bündig bleiben.
+                                    „Prüfungen anzeigen" aus heißt: kein Icon UND keine Spalte —
+                                    `columns` (siehe dashboardRowColumns) hat den 26px-Platz dann
+                                    gar nicht erst reserviert, die Zeile wird wirklich schmaler
+                                    statt eine leere Lücke zu behalten. Die verdichtete Severity
+                                    je Boot kommt fertig bewertet aus dem Backend
+                                    (LiveDashboardTeamDto.severity); der Detail-Dialog zeigt die
+                                    Prüfungen unabhängig von dieser Einstellung weiter.
                                 */}
-                                {showsSeverityIcon(team.severity, detail.criticalChecksOnly) ? (
-                                    <SeverityIcon severity={team.severity} />
-                                ) : (
-                                    <Box />
-                                )}
+                                {detail.showChecks && <SeverityIcon severity={team.severity} />}
                             </Box>
                         </Fragment>
                     )

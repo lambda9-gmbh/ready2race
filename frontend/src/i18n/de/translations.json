@@ -1711,6 +1711,7 @@
         "display": "Anzeige",
         "notePreview": "Notiz-Vorschau an der Bootszeile",
         "showCrew": "Aufstellung anzeigen",
+        "showChecks": "Prüfungen anzeigen",
         "readability": "Lesbarkeit",
         "fontSize": {
           "label": "Schriftgröße",
@@ -1718,7 +1719,8 @@
           "large": "Groß",
           "xlarge": "Sehr groß"
         },
-        "criticalChecksOnly": "Nur kritische Prüfungen zeigen"
+        "refresh": "Aktualisierung",
+        "deviceHint": "Alle Einstellungen gelten nur für dieses Gerät."
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",

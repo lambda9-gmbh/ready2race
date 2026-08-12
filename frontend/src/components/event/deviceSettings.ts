@@ -46,8 +46,12 @@ export const DASHBOARD_NOTE_PREVIEW_KEY = 'live_dashboard_note_preview'
 export const DASHBOARD_SHOW_CREW_KEY = 'live_dashboard_show_crew'
 /** Dreistufige Schriftgröße der Karten (normal / large / xlarge), neben dem Kompaktmodus. */
 export const DASHBOARD_FONT_SCALE_KEY = 'live_dashboard_font_scale'
-/** An den Bootszeilen nur noch Prüfungs-Icons mit Severity CRITICAL zeigen. */
-export const DASHBOARD_CRITICAL_CHECKS_ONLY_KEY = 'live_dashboard_critical_checks_only'
+/**
+ * Prüfungs-Icons an den Bootszeilen zeigen. Aus räumt die ganze Icon-Spalte aus dem Zeilen-Grid —
+ * der Platzgewinn ist der Zweck. (Ersetzt am 12.08.2026 nach Nutzer-Feedback die nie
+ * veröffentlichte Stufe „nur kritische zeigen", deren alter Schlüssel ersatzlos entfällt.)
+ */
+export const DASHBOARD_SHOW_CHECKS_KEY = 'live_dashboard_show_checks'
 
 const CHANGE_EVENT = 'r2r:device-setting'
 
