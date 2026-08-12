@@ -170,7 +170,7 @@ object BoardService {
                         it.toAthleteBoardMatch(now, showCountdown = true, includeDetails = details, requirements = requirements)
                     }
                 ) { it.startTime }
-                val results = resultInfos.map {
+                var results = resultInfos.map {
                     it.toAthleteBoardResult(includeDetails = details, requirements = requirements)
                 }
 
@@ -185,6 +185,31 @@ object BoardService {
                         ?: this
                     running = running.map { it.withAdvancement() }
                     upcoming = upcoming.map { it.withAdvancement() }
+                }
+
+                // Gemessene Boot-Starts nur für die Sprecher-Kachel (needs-Muster wie die
+                // Bedingungen): beim Zeitfahren startet jedes Boot einzeln
+                // (competition_match_team.started_at aus dem RaceClocker-Feed), und die
+                // Sprecherin will wissen, wer schon unterwegs ist. Anstehende Läufe haben
+                // keine Starts; zugeordnet wird über (Lauf, Startnummer), weil die
+                // Anzeige-DTOs keine Meldungs-IDs führen. Alle anderen Boards zahlen weder
+                // die Abfrage noch Nutzlast (NON_NULL-Serialisierung lässt null-Felder weg).
+                if (needs.boatStarts) {
+                    val boatStarts = !BoardRepo
+                        .boatStarts((running.map { it.matchId } + results.map { it.matchId }).toSet())
+                        .orDie()
+                    if (boatStarts.isNotEmpty()) {
+                        running = running.map { m ->
+                            m.copy(teams = m.teams.map { t ->
+                                t.copy(startedAt = boatStarts[m.matchId to t.startNumber])
+                            })
+                        }
+                        results = results.map { m ->
+                            m.copy(teams = m.teams.map { t ->
+                                t.copy(startedAt = boatStarts[m.matchId to t.startNumber])
+                            })
+                        }
+                    }
                 }
 
                 // Ehrungen sind bewusst fehlertolerant: eine veraltete Kachel-Konfiguration

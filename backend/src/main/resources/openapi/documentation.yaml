@@ -14728,6 +14728,11 @@ components:
           items:
             $ref: '#/components/schemas/MatchTeamLapDto'
           description: "split times from RaceClocker, in mark order; empty when the race records none"
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element"
 
     AthleteBoardMatch:
       type: object
@@ -14864,6 +14869,11 @@ components:
           items:
             $ref: '#/components/schemas/AthleteBoardParticipant'
           description: "the crew of this boat - only filled when a board element requests crew details (announcer tile)"
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element"
 
     AthleteBoardResult:
       type: object

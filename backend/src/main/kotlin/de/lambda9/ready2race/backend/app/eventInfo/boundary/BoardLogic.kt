@@ -45,6 +45,13 @@ object BoardLogic {
          */
         val requirements: Boolean = false,
         /**
+         * Gemessene Boot-Starts (`competition_match_team.started_at`, Sprecher-Kachel
+         * MATCH_DETAIL). Beim Zeitfahren starten die Boote versetzt — die Sprecherin will
+         * je Boot wissen, wann es losgefahren ist. Eigenes Flag wie [requirements]: die
+         * Zusatzabfrage und die Nutzlast zahlt nur ein Board mit der Kachel.
+         */
+        val boatStarts: Boolean = false,
+        /**
          * Aktuelle Verspätung (DELAY-Element) angefordert. Eigenes Flag statt „immer mitliefern":
          * der Running-Block trägt die Zahl nicht verlässlich — der zuletzt gestartete Lauf kann
          * längst beendet sein und ist dann dort verschwunden. Die Zahl braucht deshalb ihre
@@ -100,6 +107,7 @@ object BoardLogic {
             schedule = BoardListMode.SCHEDULE in listLimits,
             ceremonies = ceremonies,
             requirements = matchDetail,
+            boatStarts = matchDetail,
             delay = elements.any { it.type == BoardElementType.DELAY },
         )
     }

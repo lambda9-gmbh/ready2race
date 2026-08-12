@@ -2021,6 +2021,7 @@
       "copyUrl": "Copy URL",
       "urlCopied": "URL copied",
       "name": "Name",
+      "saveAndClose": "Save and close",
       "notFound": "Board not found",
       "tileCount": "{{count}} tiles",
       "tileCount_one": "1 tile",

@@ -91,7 +91,11 @@ const elementForType = (type: BoardElementType): BoardElement => {
 interface BoardEditorProps {
     eventId: string
     board: BoardDto | null
-    onSubmit: (request: BoardRequest) => void
+    /**
+     * [stay] = true speichert, lässt den Editor aber offen — für den Blick auf den
+     * zweiten Bildschirm nebenan; false ist das bisherige Speichern-und-Schließen.
+     */
+    onSubmit: (request: BoardRequest, stay: boolean) => void
     onCancel: () => void
 }
 
@@ -823,11 +827,19 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
             </DialogContent>
             <DialogActions>
                 <Button onClick={onCancel}>{t('common.cancel')}</Button>
+                {/* Speichern ohne Schließen: das Board im zweiten Tab zieht die Änderung
+                    mit seinem Poll binnen Sekunden nach, hier wird weiter justiert. */}
+                <Button
+                    variant="outlined"
+                    disabled={name.trim() === '' || hasBlankText}
+                    onClick={() => onSubmit({name: name.trim(), config}, true)}>
+                    {t('common.save')}
+                </Button>
                 <Button
                     variant="contained"
                     disabled={name.trim() === '' || hasBlankText}
-                    onClick={() => onSubmit({name: name.trim(), config})}>
-                    {board ? t('common.update') : t('common.create')}
+                    onClick={() => onSubmit({name: name.trim(), config}, false)}>
+                    {t('event.boards.saveAndClose')}
                 </Button>
             </DialogActions>
         </>

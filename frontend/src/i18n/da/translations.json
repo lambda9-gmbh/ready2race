@@ -2011,6 +2011,7 @@
       "copyUrl": "Kopiér URL",
       "urlCopied": "URL kopieret",
       "name": "Navn",
+      "saveAndClose": "Gem og luk",
       "notFound": "Board ikke fundet",
       "tileCount": "{{count}} felter",
       "tileCount_one": "1 felt",

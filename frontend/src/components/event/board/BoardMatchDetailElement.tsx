@@ -14,6 +14,7 @@ import {
 import {
     finishComplete,
     formatClockTime,
+    formatClockTimeWithSeconds,
     formatPlace,
     scaled,
     sortRunningTeams,
@@ -131,6 +132,15 @@ const BoardMatchDetailElement = ({
         </Stack>
     )
 
+    // Der gemessene Start DIESES Bootes (Zeitfahren: die Boote starten versetzt), mit
+    // Sekunden — nur der Server eines MATCH_DETAIL-Boards liefert das Feld überhaupt.
+    const startedLine = (team: AthleteBoardTeam | AthleteBoardResultTeam) =>
+        team.startedAt
+            ? t('event.info.athleteBoard.startedAt', {
+                  time: formatClockTimeWithSeconds(team.startedAt),
+              })
+            : null
+
     const boatRow = (
         key: string,
         startNumber: number,
@@ -181,17 +191,29 @@ const BoardMatchDetailElement = ({
                     </Typography>
                 )}
             </Box>
-            {trailing.label && (
-                <Typography
-                    sx={{
-                        fontSize: scaled('1rem', '1.7vw', '2.4rem'),
-                        fontWeight: 700,
-                        flexShrink: 0,
-                        textAlign: 'right',
-                    }}
-                    color={trailing.muted ? 'text.secondary' : 'text.primary'}>
-                    {trailing.label}
-                </Typography>
+            {(trailing.label || startedLine(team)) && (
+                <Stack alignItems="flex-end" sx={{flexShrink: 0}}>
+                    {trailing.label && (
+                        <Typography
+                            sx={{
+                                fontSize: scaled('1rem', '1.7vw', '2.4rem'),
+                                fontWeight: 700,
+                                textAlign: 'right',
+                            }}
+                            color={trailing.muted ? 'text.secondary' : 'text.primary'}>
+                            {trailing.label}
+                        </Typography>
+                    )}
+                    {/* Beim laufenden Boot der Live-Eindruck („schon unterwegs"), beim
+                        gewerteten steht der Start dezent neben bzw. unter der Zielzeit. */}
+                    {startedLine(team) && (
+                        <Typography
+                            sx={{fontSize: scaled('0.75rem', '1.1vw', '1.5rem')}}
+                            color="text.secondary">
+                            {startedLine(team)}
+                        </Typography>
+                    )}
+                </Stack>
             )}
         </Stack>
     )

@@ -3,6 +3,18 @@ import {TFunction} from 'i18next'
 export const formatClockTime = (value: string) =>
     new Date(value).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})
 
+/**
+ * Uhrzeit MIT Sekunden — für den gemessenen Boot-Start auf der Sprecher-Kachel: bei
+ * Einzelstarts (Zeitfahren) liegen die Boote Sekunden auseinander, „10:31" hilft der
+ * Sprecherin nicht.
+ */
+export const formatClockTimeWithSeconds = (value: string) =>
+    new Date(value).toLocaleTimeString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    })
+
 /** Tag und Monat ohne Jahr — genug, um "heute" von "nächste Woche" zu unterscheiden. */
 export const formatShortDate = (value: string) =>
     new Date(value).toLocaleDateString(undefined, {day: '2-digit', month: '2-digit'})

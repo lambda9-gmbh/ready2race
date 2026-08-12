@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {TFunction} from 'i18next'
-import {COUNTDOWN_MAX_SECONDS, finishComplete, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
+import {COUNTDOWN_MAX_SECONDS, finishComplete, formatClockTimeWithSeconds, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
 
 // Gibt den letzten Abschnitt des Schlüssels zurück, damit die Erwartungen unabhängig
 // von den echten Übersetzungen lesbar bleiben: "…hoursUnit" -> "hoursUnit".
@@ -155,5 +155,19 @@ describe('sortRunningTeams', () => {
             team(3, null, true),
         ])
         expect(sorted.map(t => t.startNumber)).toEqual([2, 1, 3])
+    })
+})
+
+describe('formatClockTimeWithSeconds', () => {
+    // Locale-tolerant geprüft (Trennzeichen und 12/24h variieren mit der Testumgebung):
+    // entscheidend ist, dass die Sekunden dabei sind — bei Einzelstarts zählen sie.
+    test('trägt die Sekunden', () => {
+        expect(formatClockTimeWithSeconds('2026-08-14T10:31:04')).toMatch(/10[:.]31[:.]04/)
+    })
+
+    test('unterscheidet Boote, die dieselbe Minute starten', () => {
+        const a = formatClockTimeWithSeconds('2026-08-14T10:31:04')
+        const b = formatClockTimeWithSeconds('2026-08-14T10:31:34')
+        expect(a).not.toBe(b)
     })
 })

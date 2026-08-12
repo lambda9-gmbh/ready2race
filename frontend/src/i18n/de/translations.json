@@ -2017,6 +2017,7 @@
       "copyUrl": "URL kopieren",
       "urlCopied": "URL kopiert",
       "name": "Name",
+      "saveAndClose": "Speichern und Beenden",
       "notFound": "Board nicht gefunden",
       "tileCount": "{{count}} Kacheln",
       "tileCount_one": "1 Kachel",
