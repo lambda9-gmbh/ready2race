@@ -2017,6 +2017,7 @@
       "urlCopied": "URL kopiert",
       "name": "Name",
       "saveAndClose": "Speichern und Beenden",
+      "matchDetailFullscreen": "Die Sprecher-Kachel füllt immer das ganze Board — Spalten und Spannweiten wirken hier nicht",
       "notFound": "Board nicht gefunden",
       "tileCount": "{{count}} Kacheln",
       "tileCount_one": "1 Kachel",

@@ -1,6 +1,6 @@
 import {Box} from '@mui/material'
 import {BoardViewDto} from '@api/types.gen'
-import {gridPlacement, rowSizes} from './boardView'
+import {boardColumns, gridPlacement, rowSizes} from './boardView'
 import BoardTileView from './BoardTileView'
 import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 
@@ -19,7 +19,9 @@ interface BoardRendererProps {
  * Layout kollabiert; für schmale Geräte ist ein eigenes 1-Spalten-Board der Weg.
  */
 const BoardRenderer = ({view, now}: BoardRendererProps) => {
-    const columns = view.config.columns ?? 3
+    // Sprecher-Boards erzwingen ein 1-Spalten-Raster, egal was konfiguriert ist —
+    // Begründung und Bedingung bei [boardColumns] (heilt Fehlkonfigurationen im Lesen).
+    const columns = boardColumns(view.config)
     const {rows, positions} = gridPlacement(view.config.tiles, columns)
 
     // Kompakte Zeilen (nur Uhr/Verspätung) schrumpfen auf Inhaltshöhe ('auto'),

@@ -2011,6 +2011,7 @@
       "urlCopied": "URL kopieret",
       "name": "Navn",
       "saveAndClose": "Gem og luk",
+      "matchDetailFullscreen": "Speaker-feltet fylder altid hele boardet — kolonner og spænd har ingen virkning her",
       "notFound": "Board ikke fundet",
       "tileCount": "{{count}} felter",
       "tileCount_one": "1 felt",

@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest'
 import {AthleteBoardMatch, BoardElement, BoardTile, BoardViewDto} from '@api/types.gen'
 import {densityScale} from '../info/athleteBoard/boardLayout'
-import {ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, rowSizes, slotForElement, tileColor} from './boardView'
+import {boardColumns, ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, rowSizes, slotForElement, tileColor} from './boardView'
 
 const match = (id: string, boats = 4): AthleteBoardMatch =>
     ({
@@ -365,5 +365,33 @@ describe('rowSizes', () => {
     test('ohne Inhalts-Kacheln sind alle Zeilen auto', () => {
         const sizes = sizesFor([tileOf(['CLOCK']), tileOf(['DELAY'])], 1)
         expect(sizes).toEqual(['auto', 'auto'])
+    })
+})
+
+describe('boardColumns', () => {
+    const detailTile: BoardTile = {
+        colSpan: 1,
+        rowSpan: 1,
+        elements: [{type: 'MATCH_DETAIL', offset: 0} as BoardElement],
+    }
+
+    // Der Nutzer-Befund vom 12.08.2026: 3 Spalten + Sprecher-Kachel quetschte die
+    // Kachel in eine Spalte. Das Rendering ignoriert die Geometrie und heilt damit
+    // auch gespeicherte Fehlkonfigurationen — ohne neuen Validierungsfehler.
+    test('ein Sprecher-Board rendert immer einspaltig', () => {
+        expect(boardColumns({columns: 3, tiles: [detailTile]})).toBe(1)
+        expect(boardColumns({columns: 1, tiles: [detailTile]})).toBe(1)
+    })
+
+    test('normale Boards behalten ihre Spaltenwahl', () => {
+        expect(boardColumns({columns: 4, tiles: [tile(), tile()]})).toBe(4)
+        // Ohne Spaltenwahl gilt der alte Default.
+        expect(boardColumns({tiles: [tile()]})).toBe(3)
+    })
+
+    // Die Heilung gilt nur für das Vollbild-Board (einzige Kachel) — ein hypothetischer
+    // Altbestand mit Nachbarkacheln bleibt beim konfigurierten Raster.
+    test('mit Nachbarkacheln greift die Heilung nicht', () => {
+        expect(boardColumns({columns: 3, tiles: [detailTile, tile()]})).toBe(3)
     })
 })

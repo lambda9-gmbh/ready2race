@@ -2017,6 +2017,7 @@
       "urlCopied": "URL copied",
       "name": "Name",
       "saveAndClose": "Save and close",
+      "matchDetailFullscreen": "The announcer tile always fills the whole board — columns and spans have no effect here",
       "notFound": "Board not found",
       "tileCount": "{{count}} tiles",
       "tileCount_one": "1 tile",

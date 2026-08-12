@@ -152,6 +152,19 @@ export const hasMatchDetail = (tiles: BoardTile[]): boolean =>
     tiles.some(tile => tile.elements.some(element => element.type === 'MATCH_DETAIL'))
 
 /**
+ * Die wirksame Spaltenzahl eines Boards. Sonderfall Sprecher-Kachel (Nutzer-Befund
+ * 12.08.2026): ein Board, dessen EINZIGE Kachel MATCH_DETAIL enthält, rendert immer
+ * vollflächig — die konfigurierten columns/colSpan werden ignoriert statt abgelehnt.
+ * Die Backend-Validierung prüft nur „einzige Kachel", nicht die Rastergeometrie;
+ * mit 3 gewählten Spalten quetschte sich die Kachel in eine Spalte. Ignorieren statt
+ * neuer Validierungsfehler heilt auch GESPEICHERTE Fehlkonfigurationen sofort, ohne
+ * Migration der Configs. Bühne (BoardRenderer) und Editor-Vorschau lesen dieselbe
+ * Funktion, damit beide dasselbe zeigen.
+ */
+export const boardColumns = (config: {columns?: number | null; tiles: BoardTile[]}): number =>
+    config.tiles.length === 1 && hasMatchDetail(config.tiles) ? 1 : (config.columns ?? 3)
+
+/**
  * Die Daten eines Listen-Elements, auf sein eigenes Limit zugeschnitten. Der Server
  * liefert je Modus das größte Limit aller Elemente; das Zuschneiden je Element
  * passiert hier.
