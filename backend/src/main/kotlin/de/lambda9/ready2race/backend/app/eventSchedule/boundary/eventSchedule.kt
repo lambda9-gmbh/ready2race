@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.downloadEventStartlists
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.previewEventStartlists
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.EventStartlistFileType
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.AdvanceScheduleRequest
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.ShiftScheduleRequest
@@ -12,6 +13,7 @@ import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.authenticateAny
 import de.lambda9.ready2race.backend.calls.requests.hasPrivilege
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
+import de.lambda9.ready2race.backend.calls.requests.param
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.queryParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
@@ -22,7 +24,9 @@ import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.ready2race.backend.xls.checkValidXls
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import io.ktor.http.content.*
+import java.util.UUID
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
@@ -50,10 +54,36 @@ fun Route.eventSchedule() {
                 // Rennen. Ein fremder oder gelöschter Rennen-Id trifft keinen Wettkampf und
                 // liefert schlicht einen leeren Export, kein Fehlerfall.
                 val raceclockerRaceId = !optionalQueryParam("raceclockerRaceId", uuid)
+                // Mehrfach-Parameter (?matchIds=a&matchIds=b) - die Abwahl aus der Vorschau. Die
+                // Einzelwert-Helfer können das nicht; geparst wird jeder Wert einzeln, damit ein
+                // kaputter als ParameterUnparsable endet statt als 500er. Wirkt nur als
+                // Schnittmenge mit dem Plan (restrictPlanToMatches).
+                val matchIds = call.request.queryParameters.getAll("matchIds")
+                    ?.let { raw -> !raw.traverse { uuid.param("matchIds", it, UUID::class) } }
+                    ?.toSet()
 
                 downloadEventStartlists(
                     eventId = eventId,
                     fileType = fileType,
+                    skipByes = skipByes ?: true,
+                    onlyMissingInRaceClocker = onlyMissing ?: false,
+                    raceclockerRaceId = raceclockerRaceId,
+                    matchIds = matchIds,
+                )
+            }
+        }
+        // Die Vorschau zum Sammelexport: dieselben Parameter (ohne fileType), dieselbe
+        // Plan-Logik - welche Läufe der Export liefern würde, als JSON statt als Datei.
+        get("/startlists/preview") {
+            call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val skipByes = !optionalQueryParam("skipByes", boolean)
+                val onlyMissing = !optionalQueryParam("onlyMissingInRaceClocker", boolean)
+                val raceclockerRaceId = !optionalQueryParam("raceclockerRaceId", uuid)
+
+                previewEventStartlists(
+                    eventId = eventId,
                     skipByes = skipByes ?: true,
                     onlyMissingInRaceClocker = onlyMissing ?: false,
                     raceclockerRaceId = raceclockerRaceId,

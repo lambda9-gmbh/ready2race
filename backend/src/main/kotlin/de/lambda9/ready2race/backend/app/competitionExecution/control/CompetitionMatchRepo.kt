@@ -122,6 +122,8 @@ object CompetitionMatchRepo {
             COMPETITION_PROPERTIES.IDENTIFIER,
             RACECLOCKER_RACE.RESULTS_URL,
             RACECLOCKER_RACE.ID,
+            COMPETITION_PROPERTIES.SHORT_NAME,
+            COMPETITION_PROPERTIES.NAME,
         )
             .from(COMPETITION)
             .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
@@ -134,6 +136,8 @@ object CompetitionMatchRepo {
                     identifier = record[COMPETITION_PROPERTIES.IDENTIFIER]!!,
                     raceUrl = record[RACECLOCKER_RACE.RESULTS_URL],
                     raceId = record[RACECLOCKER_RACE.ID],
+                    shortName = record[COMPETITION_PROPERTIES.SHORT_NAME],
+                    name = record[COMPETITION_PROPERTIES.NAME],
                 )
             }
     }

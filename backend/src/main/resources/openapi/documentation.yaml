@@ -7053,6 +7053,22 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: matchIds
+        in: query
+        required: false
+        style: form
+        explode: true
+        description: >-
+          Restrict the export to these setup match ids (repeatable parameter) - the deselection
+          made in the export preview. Safety rule: this only ever INTERSECTS the plan - ids the
+          plan does not yield (foreign competitions, other events, matches excluded by the bye or
+          race filter) are silently ignored, so the parameter can only narrow the export, never
+          widen it. Omitted means everything the plan yields.
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
     get:
       operationId: downloadEventStartlists
       description: >-
@@ -7078,6 +7094,58 @@ paths:
           $ref: '#/components/responses/404'
         409:
           $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/startlists/preview:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: skipByes
+        in: query
+        required: false
+        description: Same semantics as on the export itself.
+        schema:
+          type: boolean
+      - name: onlyMissingInRaceClocker
+        in: query
+        required: false
+        description: Same semantics as on the export itself.
+        schema:
+          type: boolean
+      - name: raceclockerRaceId
+        in: query
+        required: false
+        description: Same semantics as on the export itself.
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: previewEventStartlists
+      description: >-
+        Preview of the bulk start list export: exactly the matches the export with the same
+        parameters would export (same plan logic, no second truth), as JSON instead of a file.
+        Matches with startTime null would block the export
+        (STARTLIST_MATCHES_WITHOUT_START_TIME) - deselect them via the export's matchIds
+        parameter. RaceClocker feeds are fetched (also without delta mode) whenever the plan
+        contains competitions with an assigned race, so missingInRaceClocker carries information;
+        an unreachable race fails the preview like it fails the export.
+      responses:
+        200:
+          description: The matches the export would contain, sorted by start time (nulls last)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventStartlistPreviewMatchDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
 
@@ -9459,6 +9527,7 @@ components:
         - RACECLOCKER_RACE_NAME_TAKEN
         - RACECLOCKER_RACE_URL_TAKEN
         - STARTLIST_CONFIG_NOT_CONFIGURED
+        - STARTLIST_MATCHES_WITHOUT_START_TIME
         - RESULT_IMPORT_CONFIG_NOT_CONFIGURED
         - SCHEDULE_SHIFT_WITHOUT_CHANGE
         - SCHEDULE_SHIFT_TARGET_INVALID
@@ -13321,6 +13390,45 @@ components:
       enum:
         - ZIP
         - CSV
+
+    EventStartlistPreviewMatchDto:
+      type: object
+      description: >-
+        One row of the bulk start list export preview: a match the export with the same
+        parameters would export. startTime null means the match would block the export until it
+        is deselected via matchIds.
+      required:
+        - matchId
+        - competitionId
+        - competitionIdentifier
+        - roundName
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionShortName:
+          type: string
+        competitionName:
+          type: string
+        roundName:
+          type: string
+        matchName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        missingInRaceClocker:
+          type: boolean
+          description: >-
+            Whether the match is missing in the feed of the competition's assigned RaceClocker
+            race. Trivially true everywhere in delta mode (the others are already filtered out);
+            without delta the flag carries the information. Absent/null = no race assigned, there
+            is nothing to compare against.
 
     UpdateMatchByeMustRaceRequest:
       type: object

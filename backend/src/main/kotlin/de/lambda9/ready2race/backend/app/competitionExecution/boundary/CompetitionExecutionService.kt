@@ -2446,9 +2446,9 @@ object CompetitionExecutionService {
 
         competitions
             .filter { raceclockerRaceId == null || it.raceId == raceclockerRaceId }
-            .traverse { (competitionId, identifier, raceUrl) ->
+            .traverse { row ->
             KIO.comprehension {
-                val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+                val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(row.competitionId)
                 val sorted = sortRounds(setupRounds).filter { it.matches.isNotEmpty() }
                 val rounds = if (allRounds) sorted else listOfNotNull(sorted.firstOrNull())
 
@@ -2466,6 +2466,10 @@ object CompetitionExecutionService {
                                 setupMatchId = match.competitionSetupMatch,
                                 startTime = match.startTime,
                                 roundName = round.setupRoundName,
+                                // Der Laufname steht nur am Setup-Lauf, nicht an der erzeugten
+                                // Partie - für Vorschau und Fehlermeldungen nachgeschlagen.
+                                matchName = round.setupMatches
+                                    .find { it.id == match.competitionSetupMatch }?.name,
                                 matchTeamIds = match.teams.map { it.id },
                             )
                         }
@@ -2473,14 +2477,102 @@ object CompetitionExecutionService {
 
                 KIO.ok(
                     BulkStartlistCompetition(
-                        competitionId = competitionId,
-                        identifier = identifier,
-                        raceUrl = raceUrl,
+                        competitionId = row.competitionId,
+                        identifier = row.identifier,
+                        shortName = row.shortName,
+                        name = row.name,
+                        raceUrl = row.raceUrl,
                         matches = matches,
                     )
                 )
             }
         }
+    }
+
+    /**
+     * Schränkt den Plan auf die übergebenen Läufe ein - die Schnittmenge, niemals mehr:
+     * Eine mitgeschickte Id, die der Plan nicht hergibt (fremder Wettkampf, andere Veranstaltung,
+     * per Freilos-/Rennen-Filter ausgeschlossen), wird stillschweigend ignoriert. Der Parameter
+     * kann die Plan-Auswahl also nur VERKLEINERN, nie erweitern - sonst wäre `matchIds` ein Weg,
+     * an allen Filtern (und an der Veranstaltungszugehörigkeit) vorbei zu exportieren.
+     *
+     * null = keine Einschränkung (der Normalfall ohne Vorschau-Abwahl).
+     */
+    fun restrictPlanToMatches(
+        plan: List<BulkStartlistCompetition>,
+        matchIds: Set<UUID>?,
+    ): List<BulkStartlistCompetition> =
+        if (matchIds == null) plan
+        else plan.map { competition ->
+            competition.copy(matches = competition.matches.filter { it.setupMatchId in matchIds })
+        }
+
+    /**
+     * Der Delta-Abgleich als eigene Funktion - die EINE Stelle, die entscheidet, welche Läufe
+     * „in RaceClocker fehlen": Export ([buildEventStartlists]) und Vorschau
+     * ([buildEventStartlistPreview]) konsumieren sie beide, damit die Vorschau nie etwas anderes
+     * verspricht, als der Export liefert.
+     *
+     * [feedsByUrl] == null heißt kein Delta: der Plan bleibt unangetastet. Sonst bleibt je
+     * Wettkampf nur, was im Feed seines Rennens fehlt ([RaceClockerAssignmentLogic.matchInFeed]);
+     * ein Wettkampf ohne angewähltes Rennen fällt komplett heraus - es gibt kein Rennen, in dem
+     * seine Wellen fehlen könnten, und keins, in das sie importiert würden.
+     */
+    fun filterPlanAgainstFeeds(
+        plan: List<BulkStartlistCompetition>,
+        feedsByUrl: Map<String, List<RaceClockerFeedRow>>?,
+    ): List<BulkStartlistCompetition> =
+        if (feedsByUrl == null) plan
+        else plan.map { competition ->
+            val rows = competition.raceUrl?.let { feedsByUrl[it] }
+            if (rows == null) {
+                competition.copy(matches = emptyList())
+            } else {
+                competition.copy(
+                    matches = competition.matches.filter {
+                        !RaceClockerAssignmentLogic.matchInFeed(rows, it.matchTeamIds)
+                    }
+                )
+            }
+        }
+
+    /**
+     * Die Vorschau des Sammelexports: exakt die Läufe, die [buildEventStartlists] mit demselben
+     * Plan und denselben Feeds exportieren würde - gleiche Bausteine ([filterPlanAgainstFeeds]),
+     * keine zweite Auswahl-Logik.
+     *
+     * Das Flag `missingInRaceClocker` wird auch OHNE Delta-Modus korrekt berechnet, wenn Feeds
+     * vorliegen - im Delta ist es trivialerweise überall true, ohne trägt es die Information,
+     * welche Läufe schon drüben sind. Läufe ohne geplante Startzeit stehen mit `startTime = null`
+     * in der Liste: Die Oberfläche weist sie als nicht exportierbar aus, der Export lehnt sie mit
+     * [CompetitionExecutionError.StartlistMatchesWithoutStartTime] ab.
+     */
+    fun buildEventStartlistPreview(
+        plan: List<BulkStartlistCompetition>,
+        feedsByUrl: Map<String, List<RaceClockerFeedRow>>?,
+        onlyMissingInRaceClocker: Boolean,
+    ): List<EventStartlistPreviewMatchDto> {
+        val effective = if (onlyMissingInRaceClocker) filterPlanAgainstFeeds(plan, feedsByUrl) else plan
+
+        return effective.flatMap { competition ->
+            competition.matches.map { match ->
+                EventStartlistPreviewMatchDto(
+                    matchId = match.setupMatchId,
+                    competitionId = competition.competitionId,
+                    competitionIdentifier = competition.identifier,
+                    competitionShortName = competition.shortName,
+                    competitionName = competition.name,
+                    roundName = match.roundName,
+                    matchName = match.matchName,
+                    startTime = match.startTime,
+                    missingInRaceClocker = competition.raceUrl
+                        ?.let { feedsByUrl?.get(it) }
+                        ?.let { rows -> !RaceClockerAssignmentLogic.matchInFeed(rows, match.matchTeamIds) },
+                )
+            }
+        // Dieselbe Reihenfolge wie die große CSV: nach Startzeit über alle Wettkämpfe, Läufe ohne
+        // Startzeit ans Ende - dort sammelt die Oberfläche sie ohnehin in einem eigenen Abschnitt.
+        }.sortedWith(compareBy(nullsLast()) { it.startTime })
     }
 
     /**
@@ -2499,21 +2591,33 @@ object CompetitionExecutionService {
         fileType: EventStartlistFileType,
         feedsByUrl: Map<String, List<RaceClockerFeedRow>>? = null,
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
-        val filtered = plan.map { competition ->
-            if (feedsByUrl == null) {
-                competition
-            } else {
-                val rows = competition.raceUrl?.let { feedsByUrl[it] }
-                if (rows == null) {
-                    competition.copy(matches = emptyList())
-                } else {
-                    competition.copy(
-                        matches = competition.matches.filter {
-                            !RaceClockerAssignmentLogic.matchInFeed(rows, it.matchTeamIds)
-                        }
+        val filtered = filterPlanAgainstFeeds(plan, feedsByUrl)
+
+        // Startzeit-Wächter über ALLE Läufe statt Abbruch beim ersten (appendMatchCsv bliebe als
+        // Rückhalt): Ein nacktes "StartTime not set" ohne Laufbezug ist am Renntag unbrauchbar
+        // (HAR-Beleg 12.08.2026). Der Export blockiert weiterhin laut, statt die Läufe still
+        // wegzulassen - eine unbemerkt unvollständige Startliste wäre gefährlicher als ein
+        // Fehler. Wer sie bewusst weglassen will, wählt sie in der Vorschau ab (matchIds).
+        // Läufe ohne Mannschaften zählen nicht: die überspringt der Bau ohnehin kommentarlos.
+        val withoutStartTime = filtered.flatMap { competition ->
+            competition.matches
+                .filter { it.startTime == null && it.matchTeamIds.isNotEmpty() }
+                .map { match ->
+                    CompetitionExecutionError.StartlistMatchWithoutStartTime(
+                        matchId = match.setupMatchId,
+                        competitionIdentifier = competition.identifier,
+                        competitionShortName = competition.shortName,
+                        competitionName = competition.name,
+                        roundName = match.roundName,
+                        matchName = match.matchName,
                     )
                 }
-            }
+        // Deterministisch sortiert: Ohne Startzeit gibt der Plan keine Ordnung her (array_agg),
+        // und eine Fehlermeldung, die ihre Läufe bei jedem Aufruf anders reiht, liest sich wie
+        // eine andere Meldung.
+        }.sortedWith(compareBy({ it.competitionIdentifier }, { it.roundName }, { it.matchName ?: "" }))
+        !KIO.failOn(withoutStartTime.isNotEmpty()) {
+            CompetitionExecutionError.StartlistMatchesWithoutStartTime(withoutStartTime)
         }
 
         val fileNameDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
@@ -2609,6 +2713,9 @@ object CompetitionExecutionService {
         // Nur Wettkämpfe dieses RaceClocker-Rennens (null = alle) - wirkt für Voll- UND
         // Delta-Export; im Delta wird dann auch nur noch der Feed dieses Rennens geholt.
         raceclockerRaceId: UUID? = null,
+        // Schnittmenge mit dem Plan, nie mehr (Sicherheitsregel in [restrictPlanToMatches]) -
+        // die Abwahl aus der Export-Vorschau. null = alles, was der Plan hergibt.
+        matchIds: Set<UUID>? = null,
     ): App<ServiceError, ApiResponse.File> {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
@@ -2618,19 +2725,67 @@ object CompetitionExecutionService {
             skipByes = skipByes,
             raceclockerRaceId = raceclockerRaceId,
         )
+        val restricted = restrictPlanToMatches(plan, matchIds)
 
+        // Erst nach der Einschränkung geholt: Ein Wettkampf, dessen Läufe alle abgewählt sind,
+        // braucht keinen Feed mehr - und sein nicht erreichbares Rennen soll den Export dann
+        // auch nicht mehr abbrechen.
         val feeds = if (onlyMissingInRaceClocker) {
-            val fetched = mutableMapOf<String, List<RaceClockerFeedRow>>()
-            for (rawUrl in plan.mapNotNull { it.raceUrl }.distinct()) {
-                val url = !RaceClockerFeed.normalizeUrl(rawUrl)
-                fetched[rawUrl] = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
-            }
-            fetched
+            !fetchFeedsFor(restricted)
         } else {
             null
         }
 
-        return buildEventStartlists(plan, fileType, feeds)
+        return buildEventStartlists(restricted, fileType, feeds)
+    }
+
+    /**
+     * Die Vorschau zum Sammelexport: dieselben Parameter (ohne fileType - eine Datei entsteht
+     * nicht), dieselbe Plan-Logik, dieselben Feeds - geliefert wird die Liste der Läufe, die der
+     * Export exportieren würde, samt `missingInRaceClocker`-Flag ([buildEventStartlistPreview]).
+     *
+     * Die Feeds werden auch OHNE Delta-Modus geholt, sobald der (ggf. per Rennen-Filter
+     * verkleinerte) Plan Wettkämpfe mit angewähltem Rennen enthält - nur so trägt das Flag auch
+     * dort Information. Ein nicht erreichbares Rennen bricht die Vorschau wie den Export mit
+     * [RaceClockerError.Unreachable] ab: eine Vorschau, die still so tut, als fehle alles, würde
+     * denselben Schaden anrichten wie ein stiller Teilexport.
+     */
+    suspend fun CallComprehensionScope.previewEventStartlists(
+        eventId: UUID,
+        skipByes: Boolean,
+        onlyMissingInRaceClocker: Boolean,
+        raceclockerRaceId: UUID? = null,
+    ): App<ServiceError, ApiResponse.ListDto<EventStartlistPreviewMatchDto>> {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val plan = !eventStartlistPlan(
+            eventId,
+            allRounds = onlyMissingInRaceClocker,
+            skipByes = skipByes,
+            raceclockerRaceId = raceclockerRaceId,
+        )
+        val feeds = !fetchFeedsFor(plan)
+
+        return KIO.ok(
+            ApiResponse.ListDto(buildEventStartlistPreview(plan, feeds, onlyMissingInRaceClocker))
+        )
+    }
+
+    /**
+     * Holt je angewähltem Rennen des Plans genau einmal den Feed - dieselbe Fetch-Maschinerie wie
+     * der automatische Abruf, samt Host-Allowlist. Wettkämpfe ohne verbleibende Läufe werden
+     * übersprungen: Für sie wird nichts verglichen, ihr Rennen muss also auch nicht erreichbar
+     * sein.
+     */
+    private suspend fun CallComprehensionScope.fetchFeedsFor(
+        plan: List<BulkStartlistCompetition>,
+    ): App<ServiceError, Map<String, List<RaceClockerFeedRow>>> {
+        val fetched = mutableMapOf<String, List<RaceClockerFeedRow>>()
+        for (rawUrl in plan.filter { it.matches.isNotEmpty() }.mapNotNull { it.raceUrl }.distinct()) {
+            val url = !RaceClockerFeed.normalizeUrl(rawUrl)
+            fetched[rawUrl] = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
+        }
+        return KIO.ok(fetched)
     }
 
     /**

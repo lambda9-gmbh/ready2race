@@ -47,6 +47,31 @@ sealed interface CompetitionExecutionError : ServiceError {
      */
     data object ResetBlockedByNextRound : CompetitionExecutionError
     data object StartTimeNotSet : CompetitionExecutionError
+
+    /**
+     * Ein Lauf ohne geplante Startzeit, wie ihn [StartlistMatchesWithoutStartTime] benennt -
+     * Kürzel/Name des Wettkampfs, Runde und Laufname, damit der Nutzer den Lauf im Zeitplan
+     * findet, ohne zu raten.
+     */
+    data class StartlistMatchWithoutStartTime(
+        val matchId: java.util.UUID,
+        val competitionIdentifier: String,
+        val competitionShortName: String?,
+        val competitionName: String?,
+        val roundName: String,
+        val matchName: String?,
+    )
+
+    /**
+     * Der Startlisten-Sammelexport enthält Läufe ohne geplante Startzeit. Bewusst ALLE gesammelt
+     * statt beim ersten abzubrechen ([StartTimeNotSet], 12.08.2026 per HAR belegt: ein nacktes
+     * „StartTime not set" ohne Laufbezug ist am Renntag unbrauchbar). Der Export blockiert
+     * weiterhin laut, statt still unvollständig zu liefern - abwählen kann der Nutzer die Läufe
+     * über die Vorschau (matchIds), dann exportiert der Rest.
+     */
+    data class StartlistMatchesWithoutStartTime(
+        val matches: List<StartlistMatchWithoutStartTime>,
+    ) : CompetitionExecutionError
     data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
     data object IsChallengeEvent : CompetitionExecutionError
     data object ResultConfirmationImageMissing : CompetitionExecutionError
@@ -178,6 +203,23 @@ sealed interface CompetitionExecutionError : ServiceError {
         StartTimeNotSet -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "StartTime not set",
+        )
+
+        is StartlistMatchesWithoutStartTime -> ApiError(
+            status = HttpStatusCode.Conflict,
+            // Lesbarer Fallback für Klienten ohne Detail-Auswertung: „11 CF1x Viertelfinale VF2, …"
+            message = "${matches.size} matches without a planned start time: " +
+                matches.joinToString { match ->
+                    listOfNotNull(
+                        match.competitionIdentifier,
+                        match.competitionShortName ?: match.competitionName,
+                        match.roundName,
+                        match.matchName,
+                    ).joinToString(" ")
+                },
+            errorCode = ErrorCode.STARTLIST_MATCHES_WITHOUT_START_TIME,
+            // Strukturiert fürs Frontend: die Liste als Detail-Feld, nicht nur als Satz.
+            details = mapOf("matches" to matches),
         )
 
         TeamWasPreviouslyDeregistered -> ApiError(

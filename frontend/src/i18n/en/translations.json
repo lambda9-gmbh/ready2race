@@ -1818,9 +1818,18 @@
           "label": "Only matches missing in RaceClocker",
           "hint": "Fetches each competition's assigned race and exports only matches whose teams do not appear there yet."
         },
+        "preview": {
+          "loading": "Loading preview …",
+          "selectedCount": "{{selected}} of {{total}} selected",
+          "toggleAll": "Select or deselect all",
+          "empty": "Nothing to export – all matches are already in RaceClocker.",
+          "noStartTime": "No planned start time – excluded from the export:"
+        },
         "download": "Download",
         "error": {
-          "unreachable": "A RaceClocker race was unreachable – nothing was exported."
+          "unreachable": "A RaceClocker race was unreachable – nothing was exported.",
+          "noStartTime_one": "{{count}} match without a planned start time blocks the export:",
+          "noStartTime_other": "{{count}} matches without a planned start time block the export:"
         }
       },
       "slotType": "Type",
