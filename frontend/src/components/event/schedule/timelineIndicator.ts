@@ -1,6 +1,6 @@
 import {format} from 'date-fns'
 import {EventScheduleSlotDto, LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
-import {slotLabel} from './common.ts'
+import {competitionTag, slotLabel} from './common.ts'
 import {isLiveMatch, pendingSlotLabel} from '@components/event/liveDashboard/common.ts'
 import {ChipColor} from '@components/event/match/matchStatusChip.ts'
 
@@ -34,6 +34,16 @@ export type TimelineEntry = {
      * niemand auf ein Ergebnis wartet.
      */
     bye?: boolean
+    /**
+     * Das Kürzel für den Block selbst (Rennnummer + Kurzname, bei Programmpunkten der Name) —
+     * bewusst getrennt von [label]: der Block hat nur Platz für die Kurzform, der Tooltip
+     * spricht aus, was gemeint ist.
+     */
+    shortLabel?: string
+    /** Runde und Lauf für den Tooltip, z. B. "Achtelfinale – AF1". */
+    roundLabel?: string | null
+    /** Ist-Start des verknüpften Laufs — der Tooltip stellt ihn der geplanten Zeit gegenüber. */
+    actualStartTime?: string | null
 }
 
 export type PositionedTimelineEntry = TimelineEntry & {
@@ -82,6 +92,22 @@ export const scheduleSlotState = (slot: EventScheduleSlotDto): TimelineEntryStat
     }
 }
 
+/**
+ * Das Block-Kürzel: Rennnummer + Kurzname des Wettkampfs ("17 CM 4x+"), bei Programmpunkten der
+ * Name, sonst der Laufname — kurz genug, um in einem zeitproportionalen Block lesbar zu sein.
+ */
+const entryShortLabel = (item: {
+    competitionIdentifier?: string | null
+    competitionShortName?: string | null
+    name?: string | null
+    matchName?: string | null
+}): string => competitionTag(item) || item.name || item.matchName || ''
+
+const entryRoundLabel = (item: {
+    roundName?: string | null
+    matchName?: string | null
+}): string | null => [item.roundName, item.matchName].filter(Boolean).join(' – ') || null
+
 export const scheduleSlotsToEntries = (slots: EventScheduleSlotDto[]): TimelineEntry[] =>
     slots.map(slot => ({
         id: slot.id,
@@ -90,6 +116,9 @@ export const scheduleSlotsToEntries = (slots: EventScheduleSlotDto[]): TimelineE
         label: slotLabel(slot),
         durationMinutes: slot.durationMinutes,
         bye: slot.bye != null && !slot.bye.mustRace,
+        shortLabel: entryShortLabel(slot),
+        roundLabel: entryRoundLabel(slot),
+        actualStartTime: slot.matchStartedAt,
     }))
 
 // ---- Referee dashboard: LiveDashboardMatchDto + PendingSlotDto --------------------------------
@@ -142,6 +171,9 @@ export const dashboardEntriesForDay = (
             state: dashboardMatchState(m),
             label: m.matchName ?? m.roundName ?? m.competitionName,
             bye: m.bye != null && !m.bye.mustRace,
+            shortLabel: entryShortLabel(m),
+            roundLabel: entryRoundLabel(m),
+            actualStartTime: m.startedAt,
         }))
     const slotEntries: TimelineEntry[] = pendingSlots
         .filter(s => dayOf(s.startTime) === day)
@@ -150,6 +182,8 @@ export const dashboardEntriesForDay = (
             startTime: s.startTime,
             state: pendingSlotState(s),
             label: pendingSlotLabel(s),
+            shortLabel: entryShortLabel(s),
+            roundLabel: entryRoundLabel(s),
         }))
     return [...matchEntries, ...slotEntries].sort((a, b) => a.startTime.localeCompare(b.startTime))
 }
@@ -258,6 +292,15 @@ export const timelineEntryAppearance = (
             return appearance({muted: true, hatched: true})
     }
 }
+
+/**
+ * Passt das Kürzel in einen [blockPx] Pixel breiten Block? Grobe Messung über eine mittlere
+ * Zeichenbreite statt Canvas/DOM — bewusst konservativ gerundet: lieber ein Kürzel zu wenig als
+ * eines, das über den Nachbarblock läuft. Die Komponente blendet nicht passende Kürzel ganz aus
+ * (leerer Block statt "…"), weil ein abgeschnittenes "17 C…" nichts sagt.
+ */
+export const labelFitsWidth = (label: string, blockPx: number): boolean =>
+    label.length > 0 && blockPx >= label.length * 6.5 + 8
 
 // ---- Positionsrechnung ------------------------------------------------------------------------
 

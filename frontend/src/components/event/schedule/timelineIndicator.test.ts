@@ -9,6 +9,7 @@ import {
     dayOf,
     resolveDashboardDay,
     scheduleSlotsToEntries,
+    labelFitsWidth,
     scheduleSlotState,
     timelineEntryAppearance,
     timelineSpan,
@@ -123,6 +124,55 @@ describe('scheduleSlotsToEntries', () => {
         expect(entries[0].durationMinutes).toBe(10)
         expect(entries[1].label).toBe('Pause')
         expect(entries[1].state).toBe('free')
+    })
+})
+
+describe('entry labelling', () => {
+    it('gives schedule entries a short label from the competition tag and the round for the tooltip', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {
+                competitionIdentifier: '17',
+                competitionShortName: 'CM 4x+',
+                matchStartedAt: '2026-08-17T08:03:00',
+            }),
+        ])
+        expect(entries[0].shortLabel).toBe('17 CM 4x+')
+        expect(entries[0].roundLabel).toBe('Achtelfinale – AF1')
+        expect(entries[0].actualStartTime).toBe('2026-08-17T08:03:00')
+    })
+
+    it('falls back to the program item name and then the match name', () => {
+        const program = scheduleSlotsToEntries([
+            slot('2026-08-17T12:00:00', {name: 'Mittagspause', state: 'FREE'}),
+        ])
+        expect(program[0].shortLabel).toBe('Mittagspause')
+        const noTag = scheduleSlotsToEntries([slot('2026-08-17T08:00:00')])
+        expect(noTag[0].shortLabel).toBe('AF1')
+    })
+
+    it('labels dashboard entries the same way', () => {
+        const entries = dashboardEntriesForDay(
+            [
+                match({
+                    competitionIdentifier: '3',
+                    competitionShortName: 'JM 2x',
+                    startedAt: '2026-08-17T09:02:00',
+                }),
+            ],
+            [pendingSlot({})],
+            '2026-08-17',
+        )
+        expect(entries[0].shortLabel).toBe('3 JM 2x')
+        expect(entries[0].actualStartTime).toBe('2026-08-17T09:02:00')
+        expect(entries[1].roundLabel).toBe('Achtelfinale – AF2')
+    })
+})
+
+describe('labelFitsWidth', () => {
+    it('shows a label only when the block is wide enough, and never an empty one', () => {
+        expect(labelFitsWidth('17 CM 4x+', 100)).toBe(true)
+        expect(labelFitsWidth('17 CM 4x+', 40)).toBe(false)
+        expect(labelFitsWidth('', 500)).toBe(false)
     })
 })
 

@@ -1,10 +1,13 @@
-import {alpha, ButtonBase, Box, Tooltip, useTheme} from '@mui/material'
+import {alpha, ButtonBase, Box, Stack, Tooltip, Typography, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
+import {useEffect, useRef, useState} from 'react'
 import {
     computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
+    labelFitsWidth,
+    PositionedTimelineEntry,
     TimelineAppearance,
     timelineEntryAppearance,
     TimelineEntry,
@@ -38,6 +41,22 @@ const axisLabelTransform = (percent: number): string =>
 const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
     const {t} = useTranslation()
     const theme = useTheme()
+
+    // Breite der Fläche in Pixeln, für die Frage "passt das Kürzel in diesen Block?" —
+    // beobachtet statt einmalig gemessen, damit Fenstergrößen-Änderungen die Kürzel nachziehen.
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const [containerWidth, setContainerWidth] = useState(0)
+    useEffect(() => {
+        const el = containerRef.current
+        if (el == null) {
+            return
+        }
+        const observer = new ResizeObserver(observed =>
+            setContainerWidth(observed[0]?.contentRect.width ?? 0),
+        )
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [])
 
     if (entries.length === 0) {
         return null
@@ -85,8 +104,42 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
             ? t('event.schedule.indicator.state.bye')
             : t(`event.schedule.indicator.state.${entry.state}`)
 
+    /**
+     * Der Tooltip eines Blocks: volle Bezeichnung, Runde/Lauf, geplante Zeit (mit Dauer, wenn
+     * gepflegt), Ist-Start (wenn gestartet) und Status — die Langform dessen, wofür der Block
+     * selbst nur Platz für ein Kürzel hat.
+     */
+    const entryTooltip = (entry: PositionedTimelineEntry) => (
+        <Stack spacing={0.25}>
+            <Typography variant={'caption'} fontWeight={600}>
+                {entry.label}
+            </Typography>
+            {entry.roundLabel != null && entry.roundLabel !== entry.label && (
+                <Typography variant={'caption'}>{entry.roundLabel}</Typography>
+            )}
+            <Typography variant={'caption'}>
+                {t('event.schedule.indicator.planned', {
+                    time: format(new Date(entry.startTime), t('format.time')),
+                })}
+                {entry.durationMinutes ? ` · ${entry.durationMinutes} min` : ''}
+            </Typography>
+            {entry.actualStartTime != null && (
+                <Typography variant={'caption'}>
+                    {t('event.schedule.indicator.started', {
+                        time: format(new Date(entry.actualStartTime), t('format.time')),
+                    })}
+                </Typography>
+            )}
+            {/* Kein color-Prop: der Tooltip bringt seine eigene (helle) Textfarbe mit. */}
+            <Typography variant={'caption'} sx={{opacity: 0.85}}>
+                {stateLabel(entry)}
+            </Typography>
+        </Stack>
+    )
+
     return (
         <Box
+            ref={containerRef}
             sx={{
                 position: 'relative',
                 width: '100%',
@@ -138,34 +191,65 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
                     </Box>
                 </Box>
             ))}
-            {positioned.map(entry => (
-                <Tooltip
-                    key={entry.id}
-                    title={`${entry.label} · ${format(new Date(entry.startTime), t('format.time'))} · ${stateLabel(entry)}`}>
-                    <ButtonBase
-                        onClick={() => onEntryClick?.(entry.id)}
-                        aria-label={`${entry.label}, ${format(new Date(entry.startTime), t('format.time'))}, ${stateLabel(entry)}`}
-                        sx={{
-                            position: 'absolute',
-                            left: `${entry.leftPercent}%`,
-                            width: `${entry.widthPercent}%`,
-                            top: entry.stackRow * (ROW_HEIGHT + ROW_GAP),
-                            height: ROW_HEIGHT,
-                            borderRadius: 0.75,
-                            ...segmentSx(timelineEntryAppearance(entry.state, entry.bye)),
-                            animation: entry.state === 'running' ? 'r2r-timeline-pulse 2s infinite' : 'none',
-                            transition: 'filter 0.15s ease',
-                            '&:hover': {
-                                filter: 'brightness(0.92)',
-                            },
-                            '&:focus-visible': {
-                                outline: `2px solid ${theme.palette.primary.dark}`,
-                                outlineOffset: 1,
-                            },
-                        }}
-                    />
-                </Tooltip>
-            ))}
+            {positioned.map(entry => {
+                const a = timelineEntryAppearance(entry.state, entry.bye)
+                const pal = chipPalette(a.color)
+                const blockPx = (containerWidth * entry.widthPercent) / 100
+                const shortLabel = entry.shortLabel ?? ''
+                // Passt das Kürzel nicht, bleibt der Block leer — der Tooltip sagt alles.
+                const showLabel = labelFitsWidth(shortLabel, blockPx)
+                return (
+                    <Tooltip key={entry.id} title={entryTooltip(entry)}>
+                        <ButtonBase
+                            onClick={() => onEntryClick?.(entry.id)}
+                            aria-label={`${entry.label}, ${format(new Date(entry.startTime), t('format.time'))}, ${stateLabel(entry)}`}
+                            sx={{
+                                position: 'absolute',
+                                left: `${entry.leftPercent}%`,
+                                width: `${entry.widthPercent}%`,
+                                top: entry.stackRow * (ROW_HEIGHT + ROW_GAP),
+                                height: ROW_HEIGHT,
+                                borderRadius: 0.75,
+                                overflow: 'hidden',
+                                ...segmentSx(a),
+                                animation:
+                                    entry.state === 'running'
+                                        ? 'r2r-timeline-pulse 2s infinite'
+                                        : 'none',
+                                transition: 'filter 0.15s ease',
+                                '&:hover': {
+                                    filter: 'brightness(0.92)',
+                                },
+                                '&:focus-visible': {
+                                    outline: `2px solid ${theme.palette.primary.dark}`,
+                                    outlineOffset: 1,
+                                },
+                            }}>
+                            {showLabel && (
+                                <Box
+                                    component={'span'}
+                                    sx={{
+                                        fontSize: '0.65rem',
+                                        lineHeight: 1,
+                                        px: 0.5,
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        // Auf Füllungen die Kontrastfarbe der Palette, auf
+                                        // Umrissen die normale Textfarbe der Fläche.
+                                        color:
+                                            a.variant === 'outlined'
+                                                ? 'text.primary'
+                                                : theme.palette.getContrastText(
+                                                      a.muted ? pal.light : pal.main,
+                                                  ),
+                                    }}>
+                                    {shortLabel}
+                                </Box>
+                            )}
+                        </ButtonBase>
+                    </Tooltip>
+                )
+            })}
             {/* Der Jetzt-Marker: rote Linie über die volle Fläche plus Uhrzeit-Label im
                 Achsenstreifen. Das Label bekommt einen Papier-Hintergrund und liegt über den
                 Stundenmarken — kollidieren beide, gewinnt die Aussage "jetzt ist 09:12". */}

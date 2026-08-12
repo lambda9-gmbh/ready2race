@@ -1953,6 +1953,8 @@
       "goToExecution": "Go to execution",
       "indicator": {
         "now": "Now",
+          "planned": "Planned {{time}}",
+          "started": "Started {{time}}",
         "state": {
           "finished": "Finished",
           "preparing": "Preparing",

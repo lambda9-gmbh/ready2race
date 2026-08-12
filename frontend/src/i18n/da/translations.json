@@ -1943,6 +1943,8 @@
       "goToExecution": "Til gennemførelse",
       "indicator": {
         "now": "Nu",
+          "planned": "Planlagt {{time}}",
+          "started": "Startet {{time}}",
         "state": {
           "finished": "Afsluttet",
           "preparing": "Forbereder",

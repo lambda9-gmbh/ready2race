@@ -1949,6 +1949,8 @@
       "goToExecution": "Zur Durchführung",
       "indicator": {
         "now": "Jetzt",
+          "planned": "Geplant {{time}}",
+          "started": "Gestartet {{time}}",
         "state": {
           "finished": "Beendet",
           "preparing": "In Vorbereitung",
