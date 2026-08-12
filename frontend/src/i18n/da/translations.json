@@ -2089,9 +2089,9 @@
         "showAdvancement": "Vis oprykningsregel",
         "showRegisteringClub": "Vis tilmeldende klub",
         "backgroundColor": "Flisefarve",
-        "backgroundColorRemove": "Fjern farve",
-        "backgroundOpacity": "Opacitet",
-        "backgroundColorHint": "Kraftige farver med lav opacitet forbliver læselige"
+        "borderColor": "Kantfarve",
+        "colorRemove": "Fjern farve",
+        "backgroundColorHint": "Lyse farvetoner holder indholdet læseligt"
       },
       "columns": "Kolonner",
       "columnCount": "{{count}} kolonner",

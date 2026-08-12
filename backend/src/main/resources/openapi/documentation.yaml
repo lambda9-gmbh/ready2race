@@ -14230,12 +14230,10 @@ components:
           description: "Tile background as hex color (#RGB or #RRGGBB), allowed on every element type; absent = default look"
           pattern: '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$'
           nullable: true
-        backgroundOpacity:
-          type: number
-          format: double
-          description: "Opacity of the background color only (content stays fully visible), absent = 1.0"
-          minimum: 0
-          maximum: 1
+        borderColor:
+          type: string
+          description: "Tile border as hex color (#RGB or #RRGGBB), independent of backgroundColor; absent = default look"
+          pattern: '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$'
           nullable: true
 
     BoardTile:

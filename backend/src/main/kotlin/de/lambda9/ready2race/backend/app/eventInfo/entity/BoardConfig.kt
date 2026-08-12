@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.UUID
 
 /** Grenzen der Board-Konfiguration — eine Stelle für Backend-Validierung und Editor-Hinweise. */
@@ -60,7 +61,14 @@ enum class BoardScheduleMode { FOLLOW, FULL }
  * handgepflegte OpenAPI-YAML und den hey-api-Generator, die mit einem Discriminator
  * beide mehr Reibung als Nutzen erzeugen. Welche Felder je [type] Pflicht sind,
  * erzwingt [BoardRequest.validate].
+ *
+ * `ignoreUnknown`: Die Konfiguration liegt als JSON in der Datenbank — gespeicherte
+ * Stände können Felder tragen, die es nicht mehr gibt. Konkret: `backgroundOpacity`
+ * (Deckkraft der Kachelfarbe, am 12.08.2026 ersatzlos entfernt — hellere Töne wählt
+ * man direkt als Farbe). Ohne die Annotation risse jedes solche Alt-Feld die
+ * Deserialisierung (Jacksons FAIL_ON_UNKNOWN_PROPERTIES ist standardmäßig an).
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class BoardElement(
     val type: BoardElementType,
     // MATCH: Position auf der Tages-Timeline, 0 = zuletzt gestarteter noch laufender Lauf.
@@ -95,12 +103,13 @@ data class BoardElement(
     // TEXT
     val text: String? = null,
     // Für jeden Elementtyp erlaubt: Signalfarben je Kachel, z. B. rot für „Letztes
-    // Ergebnis", grün für „Im Rennen" — der Veranstalter wählt selbst. Fehlen die
-    // Felder (Alt-Konfigurationen), bleibt das bisherige Aussehen.
+    // Ergebnis", grün für „Im Rennen" — der Veranstalter wählt selbst. Fläche und Rand
+    // sind unabhängig setzbar (nur Rand, nur Fläche, beides). Fehlen die Felder
+    // (Alt-Konfigurationen), bleibt das bisherige Aussehen.
     /** Hintergrundfarbe der Kachel als Hex (`#RGB` oder `#RRGGBB`). */
     val backgroundColor: String? = null,
-    /** Deckkraft NUR der Hintergrundfarbe, 0.0–1.0 (fehlend = 1.0) — der Inhalt bleibt voll sichtbar. */
-    val backgroundOpacity: Double? = null,
+    /** Randfarbe der Kachel als Hex (`#RGB` oder `#RRGGBB`) — rahmt die Kachelzelle. */
+    val borderColor: String? = null,
 )
 
 data class BoardTile(

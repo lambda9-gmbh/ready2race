@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import {Box, Fade} from '@mui/material'
 import {BoardTile, BoardViewDto} from '@api/types.gen'
-import {tileBackground} from './boardView'
+import {tileColor} from './boardView'
 import BoardElementView from './BoardElementView'
 
 const DEFAULT_ROTATION_SECONDS = 10
@@ -43,10 +43,11 @@ const BoardTileView = ({tile, view, now, effectiveColumns, heightFraction}: Boar
     // Nach einer Umkonfiguration kann der gemerkte Index über das Ende zeigen.
     const element = tile.elements[index % count]
 
-    // Die konfigurierte Signalfarbe des aktiven Elements — als rgba-Hintergrund der
-    // Zelle, damit die Deckkraft nur die Farbe dämpft und nie den Inhalt ausbleicht.
-    // Rotieren mehrere Elemente, wechselt die Farbe mit dem Element im selben Fade.
-    const background = tileBackground(element.backgroundColor, element.backgroundOpacity)
+    // Die konfigurierten Signalfarben des aktiven Elements — Fläche und Rand unabhängig
+    // voneinander, direkt an der Kachelzelle. Rotieren mehrere Elemente, wechseln die
+    // Farben mit dem Element im selben Fade.
+    const background = tileColor(element.backgroundColor)
+    const border = tileColor(element.borderColor)
 
     return (
         <Box sx={{height: '100%', minHeight: 0, position: 'relative'}}>
@@ -56,12 +57,22 @@ const BoardTileView = ({tile, view, now, effectiveColumns, heightFraction}: Boar
                         height: '100%',
                         minHeight: 0,
                         backgroundColor: background,
-                        borderRadius: background ? 1 : 0,
+                        // Deutlich sichtbar als Rahmen der Kachelzelle; box-sizing der
+                        // MUI-Box ist border-box, die Zellhöhe bleibt also stehen.
+                        border: border ? `3px solid ${border}` : undefined,
+                        borderRadius: background || border ? 1 : 0,
                         // Der Lauf-Rahmen (AthleteBoardColumnCard) ist eine deckende
                         // MUI-Card und würde die Kachelfarbe verdecken — mit gesetzter
-                        // Farbe wird er durchsichtig, sein Rahmen bleibt.
+                        // Fläche wird er durchsichtig, …
                         ...(background
                             ? {'& .MuiCard-root': {backgroundColor: 'transparent'}}
+                            : {}),
+                        // … und mit gesetztem Rand verschwindet seine eigene graue
+                        // Umrandung (nur die Farbe, damit das Layout nicht springt):
+                        // der Rand soll die Kachelzelle rahmen, nicht die innere Card
+                        // doppelt einfassen.
+                        ...(border
+                            ? {'& .MuiCard-root': {borderColor: 'transparent'}}
                             : {}),
                     }}>
                     <BoardElementView

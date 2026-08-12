@@ -78,29 +78,13 @@ export const gridPlacement = (tiles: BoardTile[], columns: number): GridPlacemen
 const HEX_COLOR = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
 /**
- * Übersetzt die konfigurierte Kachelfarbe (Hex, `#RGB` oder `#RRGGBB`) samt Deckkraft
- * in einen `rgba()`-Wert für den Zellhintergrund. Bewusst rgba statt CSS-`opacity` auf
- * der Zelle: die Deckkraft soll nur die Farbe dämpfen, nie den Inhalt ausbleichen.
- * Ungültige oder fehlende Farben ergeben `undefined` (bisheriges Aussehen); die
- * Deckkraft wird auf [0, 1] geklemmt, fehlend gilt 1.
+ * Prüft eine konfigurierte Kachelfarbe (Fläche oder Rand) fürs Rendering: gültiges Hex
+ * (`#RGB` oder `#RRGGBB`) geht unverändert durch, alles andere ergibt `undefined` —
+ * dann bleibt das bisherige Aussehen. Der Filter schützt die Anzeige vor Alt- oder
+ * Handständen in der Datenbank, die die Backend-Validierung nie gesehen hat.
  */
-export const tileBackground = (
-    color: string | null | undefined,
-    opacity?: number | null,
-): string | undefined => {
-    if (!color) return undefined
-    const match = HEX_COLOR.exec(color)
-    if (!match) return undefined
-    const hex =
-        match[1].length === 3
-            ? [...match[1]].map(c => c + c).join('')
-            : match[1]
-    const r = parseInt(hex.slice(0, 2), 16)
-    const g = parseInt(hex.slice(2, 4), 16)
-    const b = parseInt(hex.slice(4, 6), 16)
-    const a = Math.min(1, Math.max(0, opacity ?? 1))
-    return `rgba(${r}, ${g}, ${b}, ${a})`
-}
+export const tileColor = (color: string | null | undefined): string | undefined =>
+    color != null && HEX_COLOR.test(color) ? color : undefined
 
 /**
  * Der Timeline-Slot eines Lauf-Elements (MATCH und die Sprecher-Kachel MATCH_DETAIL —

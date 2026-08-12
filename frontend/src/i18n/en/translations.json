@@ -2099,9 +2099,9 @@
         "showAdvancement": "Show advancement rule",
         "showRegisteringClub": "Show registering club",
         "backgroundColor": "Tile color",
-        "backgroundColorRemove": "Remove color",
-        "backgroundOpacity": "Opacity",
-        "backgroundColorHint": "Strong colors with low opacity stay readable"
+        "borderColor": "Border color",
+        "colorRemove": "Remove color",
+        "backgroundColorHint": "Light color tones keep the content readable"
       },
       "columns": "Columns",
       "columnCount": "{{count}} columns",

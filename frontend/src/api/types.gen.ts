@@ -483,9 +483,9 @@ export type BoardElement = {
      */
     backgroundColor?: string | null
     /**
-     * Opacity of the background color only (content stays fully visible), absent = 1.0
+     * Tile border as hex color (#RGB or #RRGGBB), independent of backgroundColor; absent = default look
      */
-    backgroundOpacity?: number | null
+    borderColor?: string | null
 }
 
 /**
