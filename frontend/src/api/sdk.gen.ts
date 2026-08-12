@@ -772,6 +772,9 @@ import type {
     DownloadEventStartlistsData,
     DownloadEventStartlistsError,
     DownloadEventStartlistsResponse,
+    PreviewEventStartlistsData,
+    PreviewEventStartlistsError,
+    PreviewEventStartlistsResponse,
     CreateScheduleSlotData,
     CreateScheduleSlotError,
     CreateScheduleSlotResponse,
@@ -4291,6 +4294,22 @@ export const downloadEventStartlists = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule/startlists',
+    })
+}
+
+/**
+ * Preview of the bulk start list export: exactly the matches the export with the same parameters would export (same plan logic, no second truth), as JSON instead of a file. Matches with startTime null would block the export (STARTLIST_MATCHES_WITHOUT_START_TIME) - deselect them via the export's matchIds parameter. RaceClocker feeds are fetched (also without delta mode) whenever the plan contains competitions with an assigned race, so missingInRaceClocker carries information; an unreachable race fails the preview like it fails the export.
+ */
+export const previewEventStartlists = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<PreviewEventStartlistsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        PreviewEventStartlistsResponse,
+        PreviewEventStartlistsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/startlists/preview',
     })
 }
 

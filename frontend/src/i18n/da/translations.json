@@ -1819,9 +1819,18 @@
           "label": "Kun løb der mangler i RaceClocker",
           "hint": "Henter hvert løbs tildelte RaceClocker-løb og eksporterer kun løb, hvis hold endnu ikke findes dér."
         },
+        "preview": {
+          "loading": "Indlæser forhåndsvisning …",
+          "selectedCount": "{{selected}} af {{total}} valgt",
+          "toggleAll": "Vælg eller fravælg alle",
+          "empty": "Intet at eksportere – alle løb er allerede i RaceClocker.",
+          "noStartTime": "Uden planlagt starttid – udeladt fra eksporten:"
+        },
         "download": "Download",
         "error": {
-          "unreachable": "Et RaceClocker-løb kunne ikke nås – intet blev eksporteret."
+          "unreachable": "Et RaceClocker-løb kunne ikke nås – intet blev eksporteret.",
+          "noStartTime_one": "{{count}} løb uden planlagt starttid blokerer eksporten:",
+          "noStartTime_other": "{{count}} løb uden planlagt starttid blokerer eksporten:"
         }
       },
       "slotType": "Type",

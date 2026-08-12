@@ -1819,9 +1819,18 @@
           "label": "Nur in RaceClocker fehlende Läufe",
           "hint": "Ruft je Wettkampf das zugewiesene Rennen ab und exportiert nur Läufe, deren Teams dort noch nicht auftauchen."
         },
+        "preview": {
+          "loading": "Vorschau wird geladen …",
+          "selectedCount": "{{selected}} von {{total}} ausgewählt",
+          "toggleAll": "Alle an- oder abwählen",
+          "empty": "Nichts zu exportieren – alle Läufe sind bereits in RaceClocker.",
+          "noStartTime": "Ohne geplante Startzeit – vom Export ausgenommen:"
+        },
         "download": "Herunterladen",
         "error": {
-          "unreachable": "Ein RaceClocker-Rennen war nicht erreichbar – es wurde nichts exportiert."
+          "unreachable": "Ein RaceClocker-Rennen war nicht erreichbar – es wurde nichts exportiert.",
+          "noStartTime_one": "{{count}} Lauf ohne geplante Startzeit blockiert den Export:",
+          "noStartTime_other": "{{count}} Läufe ohne geplante Startzeit blockieren den Export:"
         }
       },
       "slotType": "Art",

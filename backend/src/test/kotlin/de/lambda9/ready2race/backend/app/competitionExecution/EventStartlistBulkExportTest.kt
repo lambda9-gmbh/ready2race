@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.competitionExecution
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.EventStartlistFileType
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateMatchByeMustRaceRequest
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
@@ -189,7 +190,8 @@ class EventStartlistBulkExportTest {
         roundName: String = "Vorlauf",
         required: Boolean = true,
         matchTeamCounts: List<Int>,
-        startOffsetsMinutes: List<Long>,
+        // null = keine geplante Startzeit - der Fall, der den Export blockieren muss.
+        startOffsetsMinutes: List<Long?>,
         raceId: UUID? = null,
         withEmptyFollowingRound: Boolean = false,
     ): SeededCompetition {
@@ -274,7 +276,7 @@ class EventStartlistBulkExportTest {
             !COMPETITION_MATCH.insert(
                 CompetitionMatchRecord(
                     competitionSetupMatch = matchId,
-                    startTime = now.plusMinutes(startOffsetsMinutes[index]),
+                    startTime = startOffsetsMinutes[index]?.let { now.plusMinutes(it) },
                     createdAt = now,
                     updatedAt = now,
                 )
@@ -510,6 +512,140 @@ class EventStartlistBulkExportTest {
             eventId, allRounds = false, skipByes = true,
         )
         assertEquals(3, unfiltered.size)
+    }
+
+    /**
+     * Die Vorschau ist keine zweite Wahrheit: Mit demselben Plan und denselben Fixture-Feeds
+     * listet sie im Delta-Modus GENAU die Läufe, die der Export in die Datei schreibt.
+     */
+    @Test
+    fun previewListsExactlyWhatTheDeltaExportContains() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        val raceUrl = "https://raceclocker.com/preview1"
+        val raceId = insertRace(eventId, raceUrl)
+
+        val withRace = insertCompetition(
+            eventId, "1",
+            matchTeamCounts = listOf(2, 2),
+            startOffsetsMinutes = listOf(0, 10),
+            raceId = raceId,
+        )
+        // Ohne Rennen: fällt im Delta aus Export UND Vorschau - dieselbe Regel, dieselbe Funktion.
+        insertCompetition(eventId, "2", matchTeamCounts = listOf(2), startOffsetsMinutes = listOf(5))
+
+        // Lauf 1 steht schon im Rennen, Lauf 2 fehlt.
+        val feeds = mapOf(
+            raceUrl to listOf(
+                RaceClockerFeedRow(
+                    name = "Boot", rank = null, bib = null, wave = null,
+                    ids = listOf(withRace.matches[0].matchTeamIds.first()),
+                    result = null, start = null, penaltySeconds = null, penaltyNote = null,
+                )
+            )
+        )
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = true, skipByes = true)
+
+        val preview = CompetitionExecutionService.buildEventStartlistPreview(
+            plan, feeds, onlyMissingInRaceClocker = true,
+        )
+        assertEquals(listOf(withRace.matches[1].setupMatchId), preview.map { it.matchId })
+        // Im Delta trivial überall true - die Information steckt im Nicht-Delta-Fall (Test unten).
+        assertEquals(listOf(true), preview.map { it.missingInRaceClocker })
+
+        // Der Export mit denselben Eingaben schreibt genau diesen einen Lauf (10:10).
+        val file = !CompetitionExecutionService.buildEventStartlists(plan, EventStartlistFileType.CSV, feeds)
+        val csv = String((file as ApiResponse.File).bytes)
+        assertEquals(listOf("10:10:00", "10:10:00"), csvColumn(csv, "Start"))
+    }
+
+    /**
+     * Ohne Delta listet die Vorschau alle Läufe des Plans - und das Flag trägt die Information:
+     * true = fehlt im Feed, false = schon drüben, null = kein Rennen angewählt.
+     */
+    @Test
+    fun previewFlagsMissingCorrectlyWithoutDelta() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        val raceUrl = "https://raceclocker.com/preview2"
+        val raceId = insertRace(eventId, raceUrl)
+
+        val withRace = insertCompetition(
+            eventId, "1",
+            matchTeamCounts = listOf(2, 2),
+            startOffsetsMinutes = listOf(0, 10),
+            raceId = raceId,
+        )
+        val withoutRace = insertCompetition(
+            eventId, "2",
+            matchTeamCounts = listOf(2),
+            startOffsetsMinutes = listOf(5),
+        )
+
+        val feeds = mapOf(
+            raceUrl to listOf(
+                RaceClockerFeedRow(
+                    name = "Boot", rank = null, bib = null, wave = null,
+                    ids = listOf(withRace.matches[0].matchTeamIds.first()),
+                    result = null, start = null, penaltySeconds = null, penaltyNote = null,
+                )
+            )
+        )
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+        val preview = CompetitionExecutionService.buildEventStartlistPreview(
+            plan, feeds, onlyMissingInRaceClocker = false,
+        )
+
+        // Nach Startzeit sortiert: 10:00 (im Feed), 10:05 (kein Rennen), 10:10 (fehlt).
+        assertEquals(
+            listOf(
+                withRace.matches[0].setupMatchId to false,
+                withoutRace.matches[0].setupMatchId to null,
+                withRace.matches[1].setupMatchId to true,
+            ),
+            preview.map { it.matchId to it.missingInRaceClocker },
+        )
+        // Und die Beschriftung reicht für die Anzeige: Kennung, Runde, Laufname.
+        assertEquals("1", preview.first().competitionIdentifier)
+        assertEquals("Vorlauf", preview.first().roundName)
+        assertEquals("Lauf 1", preview.first().matchName)
+    }
+
+    /**
+     * Die Schnittmengen-Regel von matchIds: Der Parameter kann den Plan nur verkleinern - eine
+     * fremde Id (anderer Wettkampf, andere Veranstaltung, ausgefiltert) wird ignoriert, nie
+     * exportiert.
+     */
+    @Test
+    fun matchIdsOnlyEverIntersectThePlan() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        val competition = insertCompetition(
+            eventId, "1",
+            matchTeamCounts = listOf(2, 2),
+            startOffsetsMinutes = listOf(0, 10),
+        )
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+
+        // Ein echter Lauf plus eine untergeschobene fremde Id: nur der echte bleibt.
+        val restricted = CompetitionExecutionService.restrictPlanToMatches(
+            plan,
+            setOf(competition.matches[0].setupMatchId, UUID.randomUUID()),
+        )
+        assertEquals(
+            listOf(competition.matches[0].setupMatchId),
+            restricted.flatMap { it.matches }.map { it.setupMatchId },
+        )
+
+        // Nur fremde Ids: leerer Plan, kein Fehler - der Parameter kann nichts hinzufügen.
+        val foreignOnly = CompetitionExecutionService.restrictPlanToMatches(plan, setOf(UUID.randomUUID()))
+        assertTrue(foreignOnly.flatMap { it.matches }.isEmpty())
+
+        // null = keine Einschränkung.
+        assertEquals(plan, CompetitionExecutionService.restrictPlanToMatches(plan, null))
     }
 
     /**

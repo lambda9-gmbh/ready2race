@@ -1437,6 +1437,7 @@ export type ErrorCode =
     | 'RACECLOCKER_RACE_NAME_TAKEN'
     | 'RACECLOCKER_RACE_URL_TAKEN'
     | 'STARTLIST_CONFIG_NOT_CONFIGURED'
+    | 'STARTLIST_MATCHES_WITHOUT_START_TIME'
     | 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
     | 'SCHEDULE_SHIFT_WITHOUT_CHANGE'
     | 'SCHEDULE_SHIFT_TARGET_INVALID'
@@ -1819,6 +1820,24 @@ export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' 
  * Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer needs, one race per competition), CSV writes one big file sorted by start time (what RaceClocker needs, one race carrying all waves).
  */
 export type EventStartlistFileType = 'ZIP' | 'CSV'
+
+/**
+ * One row of the bulk start list export preview: a match the export with the same parameters would export. startTime null means the match would block the export until it is deselected via matchIds.
+ */
+export type EventStartlistPreviewMatchDto = {
+    matchId: string
+    competitionId: string
+    competitionIdentifier: string
+    competitionShortName?: string
+    competitionName?: string
+    roundName: string
+    matchName?: string
+    startTime?: string
+    /**
+     * Whether the match is missing in the feed of the competition's assigned RaceClocker race. Trivially true everywhere in delta mode (the others are already filtered out); without delta the flag carries the information. Absent/null = no race assigned, there is nothing to compare against.
+     */
+    missingInRaceClocker?: boolean
+}
 
 /**
  * Event-wide timing defaults. Timing system and the file-format presets live here once and every competition without its own values inherits them. The race selection is NOT here - it is assigned per race on each competition (RaceClockerRaceAssignments), no event-wide default.
@@ -7594,6 +7613,10 @@ export type DownloadEventStartlistsData = {
     query: {
         fileType: EventStartlistFileType
         /**
+         * Restrict the export to these setup match ids (repeatable parameter) - the deselection made in the export preview. Safety rule: this only ever INTERSECTS the plan - ids the plan does not yield (foreign competitions, other events, matches excluded by the bye or race filter) are silently ignored, so the parameter can only narrow the export, never widen it. Omitted means everything the plan yields.
+         */
+        matchIds?: Array<string>
+        /**
          * Delta export (default false): fetch each competition's configured RaceClocker race feed server-side and export only matches whose match team ids do not appear in the feed's 'Extra info'. Competitions without an assigned race are excluded. An unreachable race fails the whole export with a structured error instead of a silent partial export.
          */
         onlyMissingInRaceClocker?: boolean
@@ -7611,6 +7634,30 @@ export type DownloadEventStartlistsData = {
 export type DownloadEventStartlistsResponse = Blob | File
 
 export type DownloadEventStartlistsError = BadRequestError | ApiError
+
+export type PreviewEventStartlistsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Same semantics as on the export itself.
+         */
+        onlyMissingInRaceClocker?: boolean
+        /**
+         * Same semantics as on the export itself.
+         */
+        raceclockerRaceId?: string
+        /**
+         * Same semantics as on the export itself.
+         */
+        skipByes?: boolean
+    }
+}
+
+export type PreviewEventStartlistsResponse = Array<EventStartlistPreviewMatchDto>
+
+export type PreviewEventStartlistsError = BadRequestError | ApiError
 
 export type CreateScheduleSlotData = {
     body: UpsertScheduleSlotRequest
