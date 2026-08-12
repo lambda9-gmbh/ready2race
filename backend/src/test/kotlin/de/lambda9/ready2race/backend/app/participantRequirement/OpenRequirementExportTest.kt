@@ -15,9 +15,10 @@ class OpenRequirementExportTest {
         year: Int? = 1999,
         roles: List<String> = listOf("Senior:in"),
         email: String? = "rosa@example.org",
+        registrantEmail: String? = "meldung@example.org",
         competitions: List<String> = listOf("11 CF1x"),
         open: List<String> = listOf("Aktivenpass"),
-    ) = OpenRequirementExport.Row(club, lastname, firstname, year, roles, email, competitions, open)
+    ) = OpenRequirementExport.Row(club, lastname, firstname, year, roles, email, registrantEmail, competitions, open)
 
     /** Liest die erzeugte Mappe zurück - Kopfzeile plus alle Datenzeilen als Text. */
     private fun read(rows: List<OpenRequirementExport.Row>): List<List<String>> =
@@ -25,7 +26,7 @@ class OpenRequirementExportTest {
             val sheet = wb.getSheetAt(0)
             (0..sheet.lastRowNum).map { r ->
                 val row = sheet.getRow(r)
-                (0 until 8).map { c ->
+                (0 until 9).map { c ->
                     val cell = row?.getCell(c) ?: return@map ""
                     when (cell.cellType) {
                         org.apache.poi.ss.usermodel.CellType.NUMERIC ->
@@ -48,6 +49,7 @@ class OpenRequirementExportTest {
                 OpenRequirementExport.COLUMN_YEAR,
                 OpenRequirementExport.COLUMN_ROLE,
                 OpenRequirementExport.COLUMN_EMAIL,
+                OpenRequirementExport.COLUMN_REGISTRANT_EMAIL,
                 OpenRequirementExport.COLUMN_COMPETITIONS,
                 OpenRequirementExport.COLUMN_OPEN,
             ),
@@ -73,17 +75,20 @@ class OpenRequirementExportTest {
         assertEquals("1999", data[3])
         assertEquals("Senior:in, Steuerleute", data[4])
         assertEquals("rosa@example.org", data[5])
-        assertEquals("11 CF1x, 16 CF4x+", data[6])
-        assertEquals("Aktivenpass, Waage 55 kg", data[7])
+        assertEquals("meldung@example.org", data[6])
+        assertEquals("11 CF1x, 16 CF4x+", data[7])
+        assertEquals("Aktivenpass, Waage 55 kg", data[8])
     }
 
     @Test
     fun aMissingEmailLeavesTheCellEmptyInsteadOfNull() {
         // Nur 18 der 189 Gemeldeten der Coastal-Regatta 2026 haben eine Adresse hinterlegt -
         // die leere Zelle ist hier der Normalfall, nicht die Ausnahme.
-        val data = read(listOf(row(email = null, year = null)))[1]
+        val data = read(listOf(row(email = null, year = null, registrantEmail = null)))[1]
 
         assertEquals("", data[5])
+        // Auch die E-Mail des Meldenden kann fehlen - gelöschter User oder Verein ohne Meldung.
+        assertEquals("", data[6])
         assertEquals("", data[3])
     }
 
