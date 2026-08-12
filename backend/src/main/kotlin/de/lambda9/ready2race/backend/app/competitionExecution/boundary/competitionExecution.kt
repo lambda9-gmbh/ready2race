@@ -154,6 +154,23 @@ fun Route.competitionExecution() {
                     )
                 }
             }
+            // Lauf zurücksetzen — Ausführungszustand leeren, Aufstellung und UUIDs behalten
+            // (siehe Service-KDoc). Nur solange die Folgerunde keine erzeugten Läufe hat.
+            put("/reset") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    CompetitionExecutionService.resetMatch(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                    )
+                }
+            }
             route("/results") {
                 put {
                     call.respondComprehension {

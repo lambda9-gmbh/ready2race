@@ -1033,6 +1033,17 @@
           "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
           "success": "Runde erfolgreich gelöscht"
         },
+        "resetMatch": {
+          "action": "Lauf zurücksetzen",
+          "confirmation": {
+            "title": "Lauf zurücksetzen?",
+            "warning": "Achtung: Dieser Lauf wird auf „nie gefahren“ zurückgesetzt. Unwiderruflich verloren gehen: der Ist-Start, alle Ziel- und Zwischenzeiten, alle Plätze, Ausscheidungen und Zeitstrafen dieses Laufs.",
+            "keeps": "Erhalten bleiben: Aufstellung, Bahnen und die Kennungen der Boote — die RaceClocker-Zuordnung bleibt gültig, der Lauf kann direkt neu gefahren werden.",
+            "question": "Lauf wirklich zurücksetzen?"
+          },
+          "error": "Beim Zurücksetzen des Laufs ist ein Fehler aufgetreten",
+          "success": "Lauf zurückgesetzt"
+        },
         "cancelRound": {
           "action": "Runde entfällt",
           "confirmation": {
@@ -1289,6 +1300,7 @@
           "matchIsBye": "Dieser Lauf ist ein Freilos: das Boot zieht ohne zu fahren weiter, es gibt kein Ergebnis einzutragen.",
           "placesNotContinuous": "Die Plätze müssen lückenlos bei 1 beginnen. Erwartet war Platz {{expected}}, eingetragen ist Platz {{actual}}.",
           "startTimeManagedBySchedule": "Die Startzeit dieses Laufs wird über den Zeitplan gepflegt und lässt sich hier nicht ändern. Bitte den Slot im Zeitplan-Tab anpassen.",
+          "resetBlockedByNextRound": "Der Lauf lässt sich nicht mehr zurücksetzen: Aus den Ergebnissen wurde bereits die nächste Runde erstellt. Zuerst die neuere Runde löschen, dann den Lauf zurücksetzen.",
           "teamsNotMatching": "Die übertragenen Boote passen nicht zu den Booten dieses Laufs — vermutlich hat sich die Aufstellung zwischenzeitlich geändert (Ummeldung oder Abmeldung). Bitte die Ansicht neu laden und erneut speichern."
         }
       },

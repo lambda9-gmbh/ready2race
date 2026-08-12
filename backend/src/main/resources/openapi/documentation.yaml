@@ -1682,6 +1682,32 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reset:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: resetMatch
+      description: "Resets a single match to 'never raced': clears activation, real start, finish stamp, places, times, penalties and laps while keeping the line-up, lanes and all row UUIDs (external timing references stay valid). Only allowed while the following round has no created matches yet."
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -9405,6 +9431,7 @@ components:
         - EXECUTION_MATCH_IS_BYE
         - EXECUTION_PLACES_NOT_CONTINUOUS
         - EXECUTION_START_TIME_MANAGED_BY_SCHEDULE
+        - EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND
         - LIVE_DASHBOARD_FINISH_RESERVED_FOR_OFFICE
         - QR_CODE_ALREADY_IN_USE
         - TRACKING_TEAM_ALREADY_CHECKED_IN

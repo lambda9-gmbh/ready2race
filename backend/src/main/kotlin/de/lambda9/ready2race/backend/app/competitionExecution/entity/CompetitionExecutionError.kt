@@ -37,6 +37,15 @@ sealed interface CompetitionExecutionError : ServiceError {
 
     /** Beenden zurücknehmen setzt einen beendeten Lauf voraus - sonst gibt es nichts zurückzunehmen. */
     data object MatchNotFinished : CompetitionExecutionError
+
+    /**
+     * Ein Lauf lässt sich nur zurücksetzen, solange seine Folgerunde noch keine erzeugten Läufe
+     * hat - dieselbe Stromrichtung wie beim Löschen der aktuellen Runde: Sobald aus den Ergebnissen
+     * die nächste Runde gesät ist, würde der Reset einen Stand leeren, auf dem die Setzung der
+     * Folgerunde bereits aufbaut. Eigener Fehler statt [MatchResultsLocked], weil die Abhilfe eine
+     * andere ist: erst die Folgerunde löschen, dann zurücksetzen.
+     */
+    data object ResetBlockedByNextRound : CompetitionExecutionError
     data object StartTimeNotSet : CompetitionExecutionError
     data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
     data object IsChallengeEvent : CompetitionExecutionError
@@ -158,6 +167,12 @@ sealed interface CompetitionExecutionError : ServiceError {
         MatchNotFinished -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "This match is not finished - there is nothing to reopen.",
+        )
+
+        ResetBlockedByNextRound -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "This match cannot be reset: the following round has already been created from its results. Delete the following round first.",
+            errorCode = ErrorCode.EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND,
         )
 
         StartTimeNotSet -> ApiError(

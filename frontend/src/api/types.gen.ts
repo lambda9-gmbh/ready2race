@@ -1467,6 +1467,7 @@ export type ErrorCode =
     | 'EXECUTION_MATCH_IS_BYE'
     | 'EXECUTION_PLACES_NOT_CONTINUOUS'
     | 'EXECUTION_START_TIME_MANAGED_BY_SCHEDULE'
+    | 'EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND'
     | 'LIVE_DASHBOARD_FINISH_RESERVED_FOR_OFFICE'
     | 'QR_CODE_ALREADY_IN_USE'
     | 'TRACKING_TEAM_ALREADY_CHECKED_IN'
@@ -4943,6 +4944,18 @@ export type ReopenMatchData = {
 export type ReopenMatchResponse = void
 
 export type ReopenMatchError = BadRequestError | ApiError
+
+export type ResetMatchData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type ResetMatchResponse = void
+
+export type ResetMatchError = BadRequestError | ApiError
 
 export type UpdateMatchResultsData = {
     body: UpdateCompetitionMatchResultRequest

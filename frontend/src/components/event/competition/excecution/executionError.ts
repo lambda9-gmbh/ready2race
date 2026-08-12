@@ -41,6 +41,7 @@ const matchKeys = {
     placesNotContinuous: 'event.competition.execution.error.placesNotContinuous',
     startTimeManagedBySchedule: 'event.competition.execution.error.startTimeManagedBySchedule',
     teamsNotMatching: 'event.competition.execution.error.teamsNotMatching',
+    resetBlockedByNextRound: 'event.competition.execution.error.resetBlockedByNextRound',
 } as const
 
 export const raceClockerKeys = {
@@ -147,6 +148,11 @@ export const matchErrorText = (error: ExecutionApiError): ExecutionErrorText | u
 
         case 'EXECUTION_TEAMS_NOT_MATCHING':
             return {key: matchKeys.teamsNotMatching}
+
+        // Bewusst getrennt von matchResultsLocked: Die Abhilfe ist eine andere - erst die
+        // Folgerunde löschen, dann den Lauf zurücksetzen.
+        case 'EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND':
+            return {key: matchKeys.resetBlockedByNextRound}
 
         case 'EXECUTION_PLACES_NOT_CONTINUOUS': {
             const details = (error.details as Record<string, unknown> | undefined) ?? {}
