@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest'
-import {delayParts, latestStartDelaySeconds} from './scheduleDelay'
+import {delayColor, delayParts, latestStartDelaySeconds} from './scheduleDelay'
 
 describe('delayParts', () => {
     test('unter ±60 Sekunden gilt der Zeitplan als eingehalten', () => {
@@ -12,6 +12,16 @@ describe('delayParts', () => {
         expect(delayParts(18 * 60)).toEqual({kind: 'late', minutes: 18})
         expect(delayParts(90)).toEqual({kind: 'late', minutes: 2})
         expect(delayParts(-300)).toEqual({kind: 'early', minutes: 5})
+    })
+})
+
+describe('delayColor', () => {
+    // Verzug warnt, „pünktlich" bestätigt grün, Verfrühung bleibt dezent —
+    // Begründung (auch gegen Info-Blau) am Helfer selbst.
+    test('färbt nach Lage', () => {
+        expect(delayColor('late')).toBe('warning.main')
+        expect(delayColor('onTime')).toBe('success.main')
+        expect(delayColor('early')).toBe('text.secondary')
     })
 })
 

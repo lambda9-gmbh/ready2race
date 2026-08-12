@@ -2,7 +2,8 @@ import {useEffect, useRef} from 'react'
 import {Box, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {BoardElement, BoardViewDto} from '@api/types.gen'
-import {formatClockTime, formatPlace, scaled, teamLabel} from '../info/athleteBoard/common'
+import {formatClockTime, scaled, teamLabel} from '../info/athleteBoard/common'
+import {formatPlaceOrdinal} from '@utils/placeOrdinal'
 import {listForElement, programForElement} from './boardView'
 
 interface BoardMatchListElementProps {
@@ -76,7 +77,7 @@ const BoardMatchListElement = ({element, view}: BoardMatchListElementProps) => {
                             .filter(Boolean)
                             .join(' · '),
                         detail: winner
-                            ? `${formatPlace(1, t)} ${teamLabel(winner, t, 'short')}${winner.timeString ? ` — ${winner.timeString}` : ''}`
+                            ? `${formatPlaceOrdinal(1)} ${teamLabel(winner, t, 'short')}${winner.timeString ? ` — ${winner.timeString}` : ''}`
                             : null,
                     }
                 })

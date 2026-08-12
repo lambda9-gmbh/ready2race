@@ -87,6 +87,49 @@ export const tileColor = (color: string | null | undefined): string | undefined 
     color != null && HEX_COLOR.test(color) ? color : undefined
 
 /**
+ * Elementtypen, die von sich aus klein bleiben: feste clamp()-Schrift statt Dichteformel,
+ * kein wachsender Listeninhalt. Eine Rasterzeile, deren Kacheln AUSSCHLIESSLICH solche
+ * Elemente tragen, braucht keine 1fr-Höhe — sie schrumpft auf Inhaltshöhe und schenkt
+ * die gewonnene Höhe den Inhalts-Zeilen (Nutzerentscheidung 12.08.2026: automatisch,
+ * kein Schalter). Bewusst als erweiterbares Set, falls weitere „statisch kleine" Typen
+ * dazukommen.
+ */
+const COMPACT_ELEMENT_TYPES: ReadonlySet<BoardElement['type']> = new Set(['CLOCK', 'DELAY'])
+
+/** Die Höhenklasse einer Rasterzeile: Inhalts-Zeile ('1fr') oder Kompakt-Zeile ('auto'). */
+export type RowSize = '1fr' | 'auto'
+
+/**
+ * Die Höhenklassen aller Rasterzeilen, aus den Platzierungen von [gridPlacement]:
+ * eine Zeile ist nur dann kompakt ('auto'), wenn KEINE Inhalts-Kachel sie berührt.
+ * Eine Inhalts-Kachel mit rowSpan macht dabei alle überspannten Zeilen zu '1fr' —
+ * sie braucht ihre Höhe über die ganze Spannweite. Rotiert eine Kachel Uhr UND Lauf,
+ * zählt sie als Inhalt (every über die Elemente). Bühne (BoardRenderer) und
+ * Editor-Vorschau (BoardEditor) lesen dieselbe Funktion, damit beide dieselben
+ * Zeilen schrumpfen.
+ */
+export const rowSizes = (
+    tiles: BoardTile[],
+    positions: GridPlacement['positions'],
+    rows: number,
+): RowSize[] => {
+    const sizes: RowSize[] = Array.from({length: rows}, () => 'auto')
+    tiles.forEach((tile, index) => {
+        // Leere Kacheln (validierungswidrig, aber denkbar in Altdaten) gelten als
+        // Inhalt — im Zweifel lieber eine zu hohe Zeile als eine zerquetschte.
+        const compact =
+            tile.elements.length > 0 &&
+            tile.elements.every(element => COMPACT_ELEMENT_TYPES.has(element.type))
+        if (compact) return
+        const position = positions[index]
+        for (let row = position.row; row < position.row + position.rowSpan; row++) {
+            sizes[row - 1] = '1fr'
+        }
+    })
+    return sizes
+}
+
+/**
  * Der Timeline-Slot eines Lauf-Elements (MATCH und die Sprecher-Kachel MATCH_DETAIL —
  * beide wählen über denselben Offset). `null` heißt: die Antwort trägt diesen Offset
  * nicht (Konfiguration und Daten stammen aus verschiedenen Ständen) — die Kachel zeigt
@@ -107,6 +150,19 @@ export const slotForElement = (
  */
 export const hasMatchDetail = (tiles: BoardTile[]): boolean =>
     tiles.some(tile => tile.elements.some(element => element.type === 'MATCH_DETAIL'))
+
+/**
+ * Die wirksame Spaltenzahl eines Boards. Sonderfall Sprecher-Kachel (Nutzer-Befund
+ * 12.08.2026): ein Board, dessen EINZIGE Kachel MATCH_DETAIL enthält, rendert immer
+ * vollflächig — die konfigurierten columns/colSpan werden ignoriert statt abgelehnt.
+ * Die Backend-Validierung prüft nur „einzige Kachel", nicht die Rastergeometrie;
+ * mit 3 gewählten Spalten quetschte sich die Kachel in eine Spalte. Ignorieren statt
+ * neuer Validierungsfehler heilt auch GESPEICHERTE Fehlkonfigurationen sofort, ohne
+ * Migration der Configs. Bühne (BoardRenderer) und Editor-Vorschau lesen dieselbe
+ * Funktion, damit beide dasselbe zeigen.
+ */
+export const boardColumns = (config: {columns?: number | null; tiles: BoardTile[]}): number =>
+    config.tiles.length === 1 && hasMatchDetail(config.tiles) ? 1 : (config.columns ?? 3)
 
 /**
  * Die Daten eines Listen-Elements, auf sein eigenes Limit zugeschnitten. Der Server

@@ -37,7 +37,7 @@ import {
     BoardScheduleMode,
     BoardTile,
 } from '@api/types.gen'
-import {gridPlacement, hasMatchDetail, tileColor} from './boardView'
+import {boardColumns, gridPlacement, hasMatchDetail, rowSizes, tileColor} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
@@ -124,7 +124,12 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
         },
     )
 
-    const columns = config.columns ?? 3
+    // Wirksame Spaltenzahl wie auf der Bühne (boardColumns): ein Sprecher-Board rendert
+    // immer 1×1-vollflächig. `config.columns` bleibt dabei bewusst UNVERÄNDERT stehen —
+    // das Rendering ignoriert es ohnehin, und wer die Sprecher-Kachel wieder entfernt,
+    // bekommt seine alte Spaltenwahl zurück.
+    const detailFullscreen = config.tiles.length === 1 && hasMatchDetail(config.tiles)
+    const columns = boardColumns(config)
 
     const changeColumns = (value: number) =>
         setConfig({
@@ -625,20 +630,26 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                     />
 
                     <Stack direction="row" gap={4} alignItems="center" flexWrap="wrap">
-                        <Box>
-                            <Typography gutterBottom>{t('event.boards.columns')}</Typography>
-                            <ToggleButtonGroup
-                                exclusive
-                                size="small"
-                                value={columns}
-                                onChange={(_, value) => value && changeColumns(value as number)}>
-                                {Array.from({length: MAX_COLUMNS}, (_, i) => i + 1).map(n => (
-                                    <ToggleButton key={n} value={n}>
-                                        {n}
-                                    </ToggleButton>
-                                ))}
-                            </ToggleButtonGroup>
-                        </Box>
+                        {/* Solange die Sprecher-Kachel das Board füllt, ist die Spaltenwahl
+                            wirkungslos — deaktiviert mit Erklärung statt stiller Falle
+                            (3 Spalten + Sprecher-Kachel quetschte die Kachel in eine Spalte). */}
+                        <Tooltip
+                            title={detailFullscreen ? t('event.boards.matchDetailFullscreen') : ''}>
+                            <Box>
+                                <Typography gutterBottom>{t('event.boards.columns')}</Typography>
+                                <ToggleButtonGroup
+                                    exclusive
+                                    size="small"
+                                    value={columns}
+                                    onChange={(_, value) => value && changeColumns(value as number)}>
+                                    {Array.from({length: MAX_COLUMNS}, (_, i) => i + 1).map(n => (
+                                        <ToggleButton key={n} value={n} disabled={detailFullscreen}>
+                                            {n}
+                                        </ToggleButton>
+                                    ))}
+                                </ToggleButtonGroup>
+                            </Box>
+                        </Tooltip>
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -675,6 +686,15 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             display: 'grid',
                             gap: 2,
                             gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                            // Dieselbe Zeilen-Einstufung wie die Bühne (rowSizes): kompakte
+                            // Zeilen 'auto', Inhalts-Zeilen anteilig. Der Editor hat keine
+                            // feste Höhe — die fr-Zeilen gleichen sich hier nur untereinander
+                            // auf die höchste Karte an; als Untergrenze min-content statt 0,
+                            // denn die Karten sind Formulare und dürfen nie unter ihren
+                            // Inhalt schrumpfen (die Bühnen-Zellen scrollen stattdessen innen).
+                            gridTemplateRows: rowSizes(config.tiles, placement.positions, placement.rows)
+                                .map(size => (size === '1fr' ? 'minmax(min-content, 1fr)' : 'auto'))
+                                .join(' '),
                         }}>
                         {config.tiles.map((tile, tileIndex) => {
                             const position = placement.positions[tileIndex]
@@ -714,49 +734,62 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                             </IconButton>
                                         </Stack>
 
-                                        <Stack direction="row" gap={1}>
-                                            <TextField
-                                                select
-                                                size="small"
-                                                sx={{flex: 1}}
-                                                label={t('event.boards.tile.width')}
-                                                value={Math.min(tile.colSpan ?? 1, columns)}
-                                                onChange={e =>
-                                                    updateTile(tileIndex, {
-                                                        ...tile,
-                                                        colSpan: Number(e.target.value),
-                                                    })
-                                                }>
-                                                {Array.from({length: columns}, (_, i) => i + 1).map(
-                                                    n => (
+                                        {/* Spannweiten sind auf einem Sprecher-Board ebenso
+                                            wirkungslos wie die Spaltenwahl — gleiche Sperre,
+                                            gleiche Erklärung. */}
+                                        <Tooltip
+                                            title={
+                                                detailFullscreen
+                                                    ? t('event.boards.matchDetailFullscreen')
+                                                    : ''
+                                            }>
+                                            <Stack direction="row" gap={1}>
+                                                <TextField
+                                                    select
+                                                    size="small"
+                                                    sx={{flex: 1}}
+                                                    disabled={detailFullscreen}
+                                                    label={t('event.boards.tile.width')}
+                                                    value={Math.min(tile.colSpan ?? 1, columns)}
+                                                    onChange={e =>
+                                                        updateTile(tileIndex, {
+                                                            ...tile,
+                                                            colSpan: Number(e.target.value),
+                                                        })
+                                                    }>
+                                                    {Array.from(
+                                                        {length: columns},
+                                                        (_, i) => i + 1,
+                                                    ).map(n => (
                                                         <MenuItem key={n} value={n}>
                                                             {n}
                                                         </MenuItem>
-                                                    ),
-                                                )}
-                                            </TextField>
-                                            <TextField
-                                                select
-                                                size="small"
-                                                sx={{flex: 1}}
-                                                label={t('event.boards.tile.height')}
-                                                value={tile.rowSpan ?? 1}
-                                                onChange={e =>
-                                                    updateTile(tileIndex, {
-                                                        ...tile,
-                                                        rowSpan: Number(e.target.value),
-                                                    })
-                                                }>
-                                                {Array.from(
-                                                    {length: MAX_ROW_SPAN},
-                                                    (_, i) => i + 1,
-                                                ).map(n => (
-                                                    <MenuItem key={n} value={n}>
-                                                        {n}
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </Stack>
+                                                    ))}
+                                                </TextField>
+                                                <TextField
+                                                    select
+                                                    size="small"
+                                                    sx={{flex: 1}}
+                                                    disabled={detailFullscreen}
+                                                    label={t('event.boards.tile.height')}
+                                                    value={tile.rowSpan ?? 1}
+                                                    onChange={e =>
+                                                        updateTile(tileIndex, {
+                                                            ...tile,
+                                                            rowSpan: Number(e.target.value),
+                                                        })
+                                                    }>
+                                                    {Array.from(
+                                                        {length: MAX_ROW_SPAN},
+                                                        (_, i) => i + 1,
+                                                    ).map(n => (
+                                                        <MenuItem key={n} value={n}>
+                                                            {n}
+                                                        </MenuItem>
+                                                    ))}
+                                                </TextField>
+                                            </Stack>
+                                        </Tooltip>
 
                                         {tile.elements.map((element, elementIndex) =>
                                             renderElement(tileIndex, elementIndex, element),

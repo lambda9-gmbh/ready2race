@@ -88,9 +88,16 @@ const BoardMatchSlotElement = ({
                         showRegisteringClub={element.showRegisteringClub === true}
                     />
                 ) : content?.result ? (
+                    // Dieselben Anzeige-Optionen wie die Lauf-Karte (12.08.2026): die
+                    // Kachel soll ihre Crew-Zeilen nicht verlieren, nur weil der Lauf
+                    // vom laufenden in den beendeten Zustand wechselt.
                     <AthleteBoardResultCard
                         result={content.result}
                         showTimes={element.showTimes !== false}
+                        showCrew={element.showCrew !== false}
+                        showCrewDetails={element.showCrewDetails === true}
+                        showBirthYears={element.showBirthYears === true}
+                        showRegisteringClub={element.showRegisteringClub === true}
                     />
                 ) : undefined}
             </AthleteBoardColumnCard>
