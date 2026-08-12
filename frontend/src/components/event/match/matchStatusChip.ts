@@ -51,13 +51,21 @@ const isPartiallyScored = (status: MatchStatusDto): boolean =>
  * (`finished_at`); „entfallen" ist die abgesagte Runde. An beidem ändert sich nichts.
  */
 const byeChip = (status: MatchStatusDto): MatchChip => {
+    // Die Setzungszahl im Label ("Freilos 1 · offen") - dieselbe {{seed}}-Interpolation wie in
+    // byeExplanation: Wert " 1" mit führendem Leerzeichen oder leer, siehe byeSeedValue.
+    const values = {seed: status.bye?.seed != null ? ` ${status.bye.seed}` : ''}
     if (status.state === 'FINISHED') {
-        return {labelKey: 'event.match.status.bye.acknowledged', color: 'success'}
+        return {labelKey: 'event.match.status.bye.acknowledged', values, color: 'success'}
     }
     if (status.state === 'SKIPPED') {
-        return {labelKey: 'event.match.status.bye.cancelled', color: 'default', strikeThrough: true}
+        return {
+            labelKey: 'event.match.status.bye.cancelled',
+            values,
+            color: 'default',
+            strikeThrough: true,
+        }
     }
-    return {labelKey: 'event.match.status.bye.open', color: 'info'}
+    return {labelKey: 'event.match.status.bye.open', values, color: 'info'}
 }
 
 /**
@@ -184,11 +192,7 @@ export const arenaChip = (status: MatchStatusDto): MatchChip | null => {
     // Rauschen.
     if (status.bye) return null
     if (status.teamsTotal === 0) return null
-    if (
-        status.state !== 'UPCOMING' &&
-        status.state !== 'PREPARING' &&
-        status.state !== 'RUNNING'
-    )
+    if (status.state !== 'UPCOMING' && status.state !== 'PREPARING' && status.state !== 'RUNNING')
         return null
     if (inArena >= status.teamsTotal) return null
     return {
@@ -276,7 +280,9 @@ export const roundCounterChips = (statuses: MatchStatusDto[], minMatches = 2): M
  */
 export const unplannedMatchStatus = (match: UnplannedSetupMatchDto): MatchStatusDto | null => {
     const hasMatchState =
-        match.matchActivatedAt != null || match.matchStartedAt != null || match.matchFinishedAt != null
+        match.matchActivatedAt != null ||
+        match.matchStartedAt != null ||
+        match.matchFinishedAt != null
     if (!hasMatchState && !match.bye) return null
 
     const state = match.matchActivatedAt

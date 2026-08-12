@@ -1651,9 +1651,9 @@
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Does not take place",
         "bye": {
-          "open": "Bye · open",
-          "acknowledged": "Bye · acknowledged",
-          "cancelled": "Bye · cancelled"
+          "open": "Bye{{seed}} · open",
+          "acknowledged": "Bye{{seed}} · acknowledged",
+          "cancelled": "Bye{{seed}} · cancelled"
         },
         "counter": {
           "preparing": "{{n}} preparing",
@@ -1664,10 +1664,11 @@
         }
       },
       "bye": {
-        "deregistration": "Bye after withdrawal — {{team}}",
-        "deregistrationWithReason": "Bye after withdrawal — {{team}} ({{reason}})",
-        "noOpponent": "Bye — no opponent in this round",
-        "mustRace": "raced — time out of competition"
+        "deregistration": "Bye{{seed}} after withdrawal — {{team}}",
+        "deregistrationWithReason": "Bye{{seed}} after withdrawal — {{team}} ({{reason}})",
+        "noOpponent": "Bye{{seed}} — no opponent in this round",
+        "mustRace": "raced — time out of competition",
+        "mustRaceExplanation": "Raced for fairness: the same effort as the competition. The time does not count towards advancing."
       }
     },
     "liveDashboard": {

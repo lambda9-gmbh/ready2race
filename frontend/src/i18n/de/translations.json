@@ -1647,9 +1647,9 @@
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Findet nicht statt",
         "bye": {
-          "open": "Freilos · offen",
-          "acknowledged": "Freilos · quittiert",
-          "cancelled": "Freilos · entfallen"
+          "open": "Freilos{{seed}} · offen",
+          "acknowledged": "Freilos{{seed}} · quittiert",
+          "cancelled": "Freilos{{seed}} · entfallen"
         },
         "counter": {
           "preparing": "{{n}} in Vorbereitung",
@@ -1660,10 +1660,11 @@
         }
       },
       "bye": {
-        "deregistration": "Freilos wegen Abmeldung – {{team}}",
-        "deregistrationWithReason": "Freilos wegen Abmeldung – {{team}} ({{reason}})",
-        "noOpponent": "Freilos – keine Gegner:in in dieser Runde",
-        "mustRace": "wird gefahren – Zeit außer Konkurrenz"
+        "deregistration": "Freilos{{seed}} wegen Abmeldung – {{team}}",
+        "deregistrationWithReason": "Freilos{{seed}} wegen Abmeldung – {{team}} ({{reason}})",
+        "noOpponent": "Freilos{{seed}} – keine Gegner:in in dieser Runde",
+        "mustRace": "wird gefahren – Zeit außer Konkurrenz",
+        "mustRaceExplanation": "Wird aus Fairness gefahren: gleiche Belastung wie die Konkurrenz. Die Zeit zählt nicht für das Weiterkommen."
       }
     },
     "liveDashboard": {

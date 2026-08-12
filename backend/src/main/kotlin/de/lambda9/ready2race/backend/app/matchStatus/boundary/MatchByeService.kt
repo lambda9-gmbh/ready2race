@@ -38,6 +38,7 @@ object MatchByeService {
                             name = teamName(row),
                             deregistered = row.get("deregistered", Boolean::class.java) == true,
                             deregistrationReason = row.get("deregistration_reason", String::class.java),
+                            seed = row.get("team_seed", Int::class.javaObjectType),
                         )
                     },
                 )

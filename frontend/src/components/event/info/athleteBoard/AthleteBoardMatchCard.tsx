@@ -1,6 +1,7 @@
 import {Box, Chip, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch} from '@api/types.gen'
+import {byeExplanation} from '@components/event/match/matchBye.ts'
 import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
 import AthleteBoardTeamLabel from './AthleteBoardTeamLabel'
 import {
@@ -66,6 +67,13 @@ const AthleteBoardMatchCard = ({
     showRegisteringClub = false,
 }: AthleteBoardMatchCardProps) => {
     const {t} = useTranslation()
+    // Der Freilos-Schlüssel steht erst zur Laufzeit fest — dieselbe gelockerte Signatur wie in
+    // Zeitplan und Schiedsrichter-Dashboard.
+    const translate = t as (key: string, values?: Record<string, string | number>) => string
+
+    // „Muss gefahren werden"-Freilos: die Zweitzeile erklärt der Besatzung am Steg, warum das
+    // Boot allein fährt (Fairness) und dass die Zeit nicht fürs Weiterkommen zählt.
+    const bye = byeExplanation(match.bye)
 
     const startsInSeconds = match.startTime
         ? (new Date(match.startTime).getTime() - now.getTime()) / 1000
@@ -244,7 +252,11 @@ const AthleteBoardMatchCard = ({
                         Darstellung ohne Wettkampf-/Team-Bezug und ohne Interaktion. */}
                     {match.name ? (
                         <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-                            <Chip label={t('event.info.freeSlot')} size="small" variant="outlined" />
+                            <Chip
+                                label={t('event.info.freeSlot')}
+                                size="small"
+                                variant="outlined"
+                            />
                             <Typography
                                 sx={{fontSize: scaled('1rem', '1.8vw', '2.6rem'), fontWeight: 700}}
                                 color="text.secondary">
@@ -307,7 +319,10 @@ const AthleteBoardMatchCard = ({
                                 Platzzahl (Massenfeld-Folgerunde) nur die Runde. */}
                             {showAdvancement && match.nextRoundName && (
                                 <Typography
-                                    sx={{fontSize: scaled('0.75rem', '1.2vw', '1.6rem'), fontWeight: 600}}
+                                    sx={{
+                                        fontSize: scaled('0.75rem', '1.2vw', '1.6rem'),
+                                        fontWeight: 600,
+                                    }}
                                     color="primary">
                                     {match.advancingSeats != null
                                         ? t('event.info.athleteBoard.advancing', {
@@ -317,6 +332,17 @@ const AthleteBoardMatchCard = ({
                                         : t('event.info.athleteBoard.advancingUnsized', {
                                               round: match.nextRoundName,
                                           })}
+                                </Typography>
+                            )}
+                            {/* Kleine Zweitzeile nur beim „muss gefahren werden"-Freilos:
+                                Label („Freilos 1 …") plus die volle Begründung. Gewöhnliche
+                                Freilose erscheinen in diesen Blöcken ohnehin nicht als
+                                gefahrene Läufe und behalten ihre bisherige Darstellung. */}
+                            {bye?.mustRace && (
+                                <Typography
+                                    sx={{fontSize: scaled('0.7rem', '1.2vw', '1.6rem')}}
+                                    color="text.secondary">
+                                    {`${translate(bye.key, bye.values)} – ${t('event.match.bye.mustRaceExplanation')}`}
                                 </Typography>
                             )}
                         </>
@@ -359,9 +385,9 @@ const AthleteBoardMatchCard = ({
                                                 team.failed
                                                     ? (team.failedReason ??
                                                       t('event.info.athleteBoard.failed'))
-                                                    // Als Ordnungszahl, damit der Zwischenstand
-                                                    // nicht wie eine zweite Startnummer liest.
-                                                    : `${team.place != null ? `${formatPlace(team.place, t)} ` : ''}${team.timeString}`
+                                                    : // Als Ordnungszahl, damit der Zwischenstand
+                                                      // nicht wie eine zweite Startnummer liest.
+                                                      `${team.place != null ? `${formatPlace(team.place, t)} ` : ''}${team.timeString}`
                                             }
                                         />
                                         <AthleteBoardPenaltyNote

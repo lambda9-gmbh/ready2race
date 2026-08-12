@@ -20,6 +20,7 @@ import {
     sortRunningTeams,
     teamLabel,
 } from '../info/athleteBoard/common'
+import {byeExplanation} from '@components/event/match/matchBye.ts'
 import {elementScale, slotForElement} from './boardView'
 
 interface BoardMatchDetailElementProps {
@@ -43,12 +44,19 @@ const BoardMatchDetailElement = ({
     heightFraction,
 }: BoardMatchDetailElementProps) => {
     const {t} = useTranslation()
+    // Der Freilos-Schlüssel steht erst zur Laufzeit fest — dieselbe gelockerte Signatur wie in
+    // Zeitplan und Schiedsrichter-Dashboard.
+    const translate = t as (key: string, values?: Record<string, string | number>) => string
 
     const offset = element.offset ?? 0
     const slot = slotForElement(view, element)
     const match = slot?.match ?? null
     const result = slot?.result ?? null
     const content = slot ? {match, result} : null
+
+    // „Muss gefahren werden"-Freilos: eigene Zeile für die Sprecherin — Label mit Setzungszahl
+    // („Freilos 1 …") plus die volle Begründung, direkt vorlesbar.
+    const bye = byeExplanation(match?.bye)
 
     // Zustand für die Kopfzeile: dieselben Ableitungen wie überall (match.state vom
     // Server, Wartestand über finishComplete) — nur als ein Wort für die Ansage.
@@ -171,8 +179,7 @@ const BoardMatchDetailElement = ({
                 {startNumber}
             </Typography>
             <Box sx={{minWidth: 0, flex: 1}}>
-                <Typography
-                    sx={{fontSize: scaled('0.95rem', '1.6vw', '2.2rem'), fontWeight: 700}}>
+                <Typography sx={{fontSize: scaled('0.95rem', '1.6vw', '2.2rem'), fontWeight: 700}}>
                     {teamLabel(team, t, 'full')}
                 </Typography>
                 {subline && (
@@ -219,7 +226,9 @@ const BoardMatchDetailElement = ({
     )
 
     const lapsLine = (laps: {name: string; timeString: string}[] | undefined) =>
-        laps && laps.length > 0 ? laps.map(lap => `${lap.name} ${lap.timeString}`).join(' · ') : null
+        laps && laps.length > 0
+            ? laps.map(lap => `${lap.name} ${lap.timeString}`).join(' · ')
+            : null
 
     // Laufende/anstehende Aufstellung: sobald Zwischenstände da sind, sortiert die
     // Platzierung (dieselbe Regel wie die „Im Rennen"-Karte).
@@ -299,11 +308,16 @@ const BoardMatchDetailElement = ({
                         gap={2}>
                         <Box sx={{minWidth: 0}}>
                             <Typography
-                                sx={{fontSize: scaled('1.4rem', '2.6vw', '3.6rem'), fontWeight: 800}}>
+                                sx={{
+                                    fontSize: scaled('1.4rem', '2.6vw', '3.6rem'),
+                                    fontWeight: 800,
+                                }}>
                                 {competitionName}
                             </Typography>
                             <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-                                {shortName && <Chip label={shortName} size="small" variant="outlined" />}
+                                {shortName && (
+                                    <Chip label={shortName} size="small" variant="outlined" />
+                                )}
                                 {roundName && (
                                     <Typography
                                         sx={{fontSize: scaled('0.9rem', '1.4vw', '2rem')}}
@@ -351,6 +365,13 @@ const BoardMatchDetailElement = ({
                                         : t('event.info.athleteBoard.advancingUnsized', {
                                               round: match.nextRoundName,
                                           })}
+                                </Typography>
+                            )}
+                            {bye?.mustRace && (
+                                <Typography
+                                    sx={{fontSize: scaled('0.85rem', '1.3vw', '1.8rem')}}
+                                    color="text.secondary">
+                                    {`${translate(bye.key, bye.values)} – ${t('event.match.bye.mustRaceExplanation')}`}
                                 </Typography>
                             )}
                         </Box>

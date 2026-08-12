@@ -1647,9 +1647,9 @@
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Gennemføres ikke",
         "bye": {
-          "open": "Oversidder · åben",
-          "acknowledged": "Oversidder · kvitteret",
-          "cancelled": "Oversidder · aflyst"
+          "open": "Oversidder{{seed}} · åben",
+          "acknowledged": "Oversidder{{seed}} · kvitteret",
+          "cancelled": "Oversidder{{seed}} · aflyst"
         },
         "counter": {
           "preparing": "{{n}} forbereder",
@@ -1660,10 +1660,11 @@
         }
       },
       "bye": {
-        "deregistration": "Oversidder efter afmelding – {{team}}",
-        "deregistrationWithReason": "Oversidder efter afmelding – {{team}} ({{reason}})",
-        "noOpponent": "Oversidder – ingen modstander i denne runde",
-        "mustRace": "gennemføres – tid uden for konkurrence"
+        "deregistration": "Oversidder{{seed}} efter afmelding – {{team}}",
+        "deregistrationWithReason": "Oversidder{{seed}} efter afmelding – {{team}} ({{reason}})",
+        "noOpponent": "Oversidder{{seed}} – ingen modstander i denne runde",
+        "mustRace": "gennemføres – tid uden for konkurrence",
+        "mustRaceExplanation": "Gennemføres af hensyn til fairness: samme belastning som konkurrenterne. Tiden tæller ikke med i avancementet."
       }
     },
     "liveDashboard": {

@@ -58,6 +58,14 @@ data class AthleteBoardMatch(
      */
     val nextRoundName: String? = null,
     val advancingSeats: Int? = null,
+    /**
+     * Das Freilos dieses Laufs — dieselbe Ableitung wie im Zeitplan und im
+     * Schiedsrichter-Dashboard (`MatchStatusLogic.deriveBye`), befüllt in
+     * `BoardService.getBoardView`. Die öffentlichen Anzeigen brauchen sie vor allem für
+     * Freilose mit „muss gefahren werden": Dort erklärt eine Zweitzeile, warum das Boot allein
+     * fährt und dass die Zeit außer Konkurrenz läuft.
+     */
+    val bye: de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto? = null,
 )
 
 data class AthleteBoardTeam(

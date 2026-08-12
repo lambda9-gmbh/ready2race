@@ -1,5 +1,5 @@
 import {Fragment} from 'react'
-import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
+import {Box, Button, Card, CardContent, Divider, Stack, Tooltip, Typography} from '@mui/material'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import StickyNote2OutlinedIcon from '@mui/icons-material/StickyNote2Outlined'
 import {useTranslation} from 'react-i18next'
@@ -216,37 +216,49 @@ const LiveDashboardMatchCard = ({
                             .join(' · ')}
                     </Typography>
                     <Box sx={{justifySelf: 'end'}}>
-                        <Box
-                            component="span"
-                            sx={{
-                                display: 'inline-block',
-                                px: 0.75,
-                                py: 0.25,
-                                borderRadius: 1,
-                                fontSize: '0.8rem',
-                                fontWeight: 700,
-                                whiteSpace: 'nowrap',
-                                // Die Farbe bleibt die Betonung der Karte (der laufende Lauf trägt
-                                // den kräftigsten Ton), der Text kommt aus der geteilten
-                                // Ableitung. „In Vorbereitung" bekommt den helleren Blauton, weil
-                                // „wartet auf Beenden" den dunklen schon belegt.
-                                backgroundColor: running
-                                    ? 'success.dark'
-                                    : preparing
-                                      ? 'info.main'
-                                      : skipped
-                                        ? 'warning.dark'
-                                        : awaitingFinish
-                                          ? 'info.dark'
-                                          : 'grey.200',
-                                color:
-                                    running || preparing || skipped || awaitingFinish
-                                        ? 'common.white'
-                                        : 'grey.900',
-                                textDecoration: statusChip.strikeThrough ? 'line-through' : 'none',
-                            }}>
-                            {translate(statusChip.labelKey, statusChip.values)}
-                        </Box>
+                        {/* Beim „muss gefahren werden"-Freilos erklärt der Tooltip am Chip,
+                            warum das Boot allein fährt (Fairness, Zeit zählt nicht fürs
+                            Weiterkommen). Ein leerer Titel schaltet den Tooltip ab. */}
+                        <Tooltip
+                            title={
+                                bye?.mustRace
+                                    ? translate('event.match.bye.mustRaceExplanation')
+                                    : ''
+                            }>
+                            <Box
+                                component="span"
+                                sx={{
+                                    display: 'inline-block',
+                                    px: 0.75,
+                                    py: 0.25,
+                                    borderRadius: 1,
+                                    fontSize: '0.8rem',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    // Die Farbe bleibt die Betonung der Karte (der laufende Lauf trägt
+                                    // den kräftigsten Ton), der Text kommt aus der geteilten
+                                    // Ableitung. „In Vorbereitung" bekommt den helleren Blauton, weil
+                                    // „wartet auf Beenden" den dunklen schon belegt.
+                                    backgroundColor: running
+                                        ? 'success.dark'
+                                        : preparing
+                                          ? 'info.main'
+                                          : skipped
+                                            ? 'warning.dark'
+                                            : awaitingFinish
+                                              ? 'info.dark'
+                                              : 'grey.200',
+                                    color:
+                                        running || preparing || skipped || awaitingFinish
+                                            ? 'common.white'
+                                            : 'grey.900',
+                                    textDecoration: statusChip.strikeThrough
+                                        ? 'line-through'
+                                        : 'none',
+                                }}>
+                                {translate(statusChip.labelKey, statusChip.values)}
+                            </Box>
+                        </Tooltip>
                     </Box>
                     {/*
                         Muss der letzte Kind-Knoten dieses Grids bleiben: die vier Kinder davor
@@ -524,25 +536,22 @@ const LiveDashboardMatchCard = ({
                                         unterwegs?" beantwortet der gemessene Boot-Start aus der
                                         Zeitnahme, solange weder Zielzeit noch Ausscheidung da ist.
                                     */}
-                                    {running &&
-                                        team.startedAt &&
-                                        !team.time &&
-                                        !team.failed && (
-                                            <Typography
-                                                variant="caption"
-                                                display="block"
-                                                sx={{
-                                                    color: 'primary.main',
-                                                    fontVariantNumeric: 'tabular-nums',
-                                                }}>
-                                                {t('event.liveDashboard.team.startedAt', {
-                                                    time: format(
-                                                        new Date(team.startedAt),
-                                                        t('format.timeWithSeconds'),
-                                                    ),
-                                                })}
-                                            </Typography>
-                                        )}
+                                    {running && team.startedAt && !team.time && !team.failed && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{
+                                                color: 'primary.main',
+                                                fontVariantNumeric: 'tabular-nums',
+                                            }}>
+                                            {t('event.liveDashboard.team.startedAt', {
+                                                time: format(
+                                                    new Date(team.startedAt),
+                                                    t('format.timeWithSeconds'),
+                                                ),
+                                            })}
+                                        </Typography>
+                                    )}
                                     {team.inArenaRequired && team.inArenaAt && (
                                         <Typography
                                             variant="caption"
