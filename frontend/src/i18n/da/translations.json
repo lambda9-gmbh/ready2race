@@ -1711,6 +1711,7 @@
         "display": "Visning",
         "notePreview": "Notat-forhåndsvisning ved bådlinjen",
         "showCrew": "Vis opstilling",
+        "showChecks": "Vis kontroller",
         "readability": "Læsbarhed",
         "fontSize": {
           "label": "Skriftstørrelse",
@@ -1718,7 +1719,8 @@
           "large": "Stor",
           "xlarge": "Meget stor"
         },
-        "criticalChecksOnly": "Vis kun kritiske kontroller"
+        "refresh": "Opdatering",
+        "deviceHint": "Alle indstillinger gælder kun for denne enhed."
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Resultater komplette — venter på afslutning",

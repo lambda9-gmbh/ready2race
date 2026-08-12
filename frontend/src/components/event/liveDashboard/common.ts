@@ -566,8 +566,8 @@ export type LiveDashboardDetailSettings = {
     notePreview: boolean
     /** Crew-Zeilen (Aufstellung) zeigen — aus ist radikaler als der Kompaktmodus. */
     showCrew: boolean
-    /** An den Bootszeilen nur noch Prüfungs-Icons mit Severity CRITICAL (siehe showsSeverityIcon). */
-    criticalChecksOnly: boolean
+    /** Prüfungs-Icons an den Bootszeilen zeigen — aus entfällt die ganze Icon-Spalte. */
+    showChecks: boolean
 }
 
 /**
@@ -583,12 +583,15 @@ export const latestTeamNote = (
 }
 
 /**
- * Ob die Bootszeile ihr Prüfungs-Icon zeigt. Mit „Nur kritische Prüfungen zeigen" bleiben nur
- * CRITICAL-Icons stehen — OK/Warnung/Neutral verschwinden, damit auf einem vollen Board nur noch
- * das ins Auge springt, was ein Eingreifen verlangt. Standard ist aus: alle Icons.
+ * Die Grid-Spalten einer Bootszeile der Karte. Die letzte Spalte (26px) gehört dem Prüfungs-Icon
+ * und entfällt KOMPLETT, wenn die Icons abgeschaltet sind („Prüfungen anzeigen" aus) — der
+ * Namensspalte wächst der Platz zu, statt dass eine leere Lücke stehen bliebe. Genau dieser
+ * Platzgewinn ist der Zweck der Einstellung (Nutzer-Feedback vom 12.08.2026, Telefon am Steg).
  */
-export const showsSeverityIcon = (severity: EffectiveSeverity, onlyCritical: boolean): boolean =>
-    !onlyCritical || severity === 'CRITICAL'
+export const dashboardRowColumns = (hasResults: boolean, showChecks: boolean): string => {
+    const base = hasResults ? '2ch minmax(0, 1fr) 10.5ch 2rem' : '2ch minmax(0, 1fr)'
+    return showChecks ? `${base} 26px` : base
+}
 
 /** Die drei Stufen der Karten-Schriftgröße — eigene Einstellung NEBEN dem Kompaktmodus. */
 export const DASHBOARD_FONT_SCALES = ['normal', 'large', 'xlarge'] as const

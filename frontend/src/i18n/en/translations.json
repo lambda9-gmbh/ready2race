@@ -1711,6 +1711,7 @@
         "display": "Display",
         "notePreview": "Note preview on the boat row",
         "showCrew": "Show line-up",
+        "showChecks": "Show checks",
         "readability": "Readability",
         "fontSize": {
           "label": "Font size",
@@ -1718,7 +1719,8 @@
           "large": "Large",
           "xlarge": "Extra large"
         },
-        "criticalChecksOnly": "Show only critical checks"
+        "refresh": "Refresh",
+        "deviceHint": "All settings apply to this device only."
       },
       "penaltyIncluded": "incl. {{seconds}} s",
       "resultsCompleteWaiting": "Results complete — waiting to finish",

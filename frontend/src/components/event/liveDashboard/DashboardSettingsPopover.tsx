@@ -1,9 +1,17 @@
-import {Checkbox, FormControlLabel, ListItemText, MenuItem, Switch, TextField} from '@mui/material'
+import {
+    Checkbox,
+    FormControlLabel,
+    ListItemText,
+    MenuItem,
+    Switch,
+    TextField,
+    Typography,
+} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import SettingsPopover, {SettingsSection} from '@components/SettingsPopover.tsx'
 import {
     dashboardCompetitionFilterKey,
-    DASHBOARD_CRITICAL_CHECKS_ONLY_KEY,
+    DASHBOARD_SHOW_CHECKS_KEY,
     DASHBOARD_FOLLOW_CURRENT_KEY,
     DASHBOARD_FONT_SCALE_KEY,
     DASHBOARD_HIDE_FINISHED_KEY,
@@ -42,9 +50,15 @@ type Props = {
  * Das Einstellungs-Popover des Schiedsrichter-Boards — dasselbe Zahnrad-Muster wie am
  * Zeitplan-Tab, hier durchgehend geräte-lokal. Seit dem 12.08.2026 in vier Abschnitten:
  * „Fokus" (Wettkampf-Filter, Tagesfilter, Beendete, Folgen), „Anzeige" (Kurznamen,
- * Notiz-Vorschau, Aufstellung), „Lesbarkeit" (Kompaktmodus, Schriftgröße, Prüfungs-Icons) und
- * „Dieses Gerät" (Abruftakt). Der Kompaktmodus steht bewusst bei der Schriftgröße: die beiden
+ * Notiz-Vorschau, Aufstellung, Prüfungs-Icons), „Lesbarkeit" (Kompaktmodus, Schriftgröße) und
+ * „Aktualisierung" (Abruftakt). Der Kompaktmodus steht bewusst bei der Schriftgröße: die beiden
  * verrechnen sich (siehe dashboardTypographySizes) und gehören nebeneinander bedient.
+ *
+ * Einen Abschnitt „Dieses Gerät" gibt es hier bewusst NICHT (Rückmeldung vom 12.08.2026): Auf
+ * diesem Board gilt ausnahmslos alles geräte-lokal, die Überschrift über nur einem Teil
+ * suggerierte fälschlich, die übrigen Abschnitte gälten für die Veranstaltung. Stattdessen sagt
+ * es eine Zeile am Fuß einmal für alle. Anders am Zeitplan-Popover: Dort gibt es die Trennung
+ * Gerät/Veranstaltung wirklich, und dort bleibt sie.
  *
  * Die Schalter der neuen Abschnitte lesen und schreiben ihre Werte selbst über die
  * deviceSettings-Hooks — die Seite liest dieselben Schlüssel, das Fenster-Ereignis hält beide
@@ -75,17 +89,17 @@ const DashboardSettingsPopover = ({
     const [hideFinished, setHideFinished] = useDeviceFlag(DASHBOARD_HIDE_FINISHED_KEY, false)
     const [followCurrent, setFollowCurrent] = useDeviceFlag(DASHBOARD_FOLLOW_CURRENT_KEY, false)
 
-    // --- Anzeige: der Detailgrad der Bootszeilen, beides standardmäßig an ----------------------
+    // --- Anzeige: der Detailgrad der Bootszeilen, alles standardmäßig an -----------------------
     const [notePreview, setNotePreview] = useDeviceFlag(DASHBOARD_NOTE_PREVIEW_KEY, true)
     const [showCrew, setShowCrew] = useDeviceFlag(DASHBOARD_SHOW_CREW_KEY, true)
+    const [showChecks, setShowChecks] = useDeviceFlag(DASHBOARD_SHOW_CHECKS_KEY, true)
 
-    // --- Lesbarkeit: Schriftstufe und Icon-Dosierung -------------------------------------------
+    // --- Lesbarkeit: die Schriftstufe -----------------------------------------------------------
     const [fontScale, setFontScale] = useDeviceChoice(
         DASHBOARD_FONT_SCALE_KEY,
         'normal',
         DASHBOARD_FONT_SCALES,
     )
-    const [criticalOnly, setCriticalOnly] = useDeviceFlag(DASHBOARD_CRITICAL_CHECKS_ONLY_KEY, false)
 
     const optionLabelById = new Map(
         competitionOptions.map(option => [option.competitionId, option.label]),
@@ -198,6 +212,16 @@ const DashboardSettingsPopover = ({
                     }
                     label={t('event.liveDashboard.settings.showCrew')}
                 />
+                {/* Aus räumt die Icon-Spalte komplett aus den Bootszeilen — Platz fürs Telefon. */}
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={showChecks}
+                            onChange={(_, checked) => setShowChecks(checked)}
+                        />
+                    }
+                    label={t('event.liveDashboard.settings.showChecks')}
+                />
             </SettingsSection>
             <SettingsSection title={t('event.liveDashboard.settings.readability')}>
                 <FormControlLabel
@@ -223,17 +247,8 @@ const DashboardSettingsPopover = ({
                         </MenuItem>
                     ))}
                 </TextField>
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={criticalOnly}
-                            onChange={(_, checked) => setCriticalOnly(checked)}
-                        />
-                    }
-                    label={t('event.liveDashboard.settings.criticalChecksOnly')}
-                />
             </SettingsSection>
-            <SettingsSection title={t('event.settings.device')}>
+            <SettingsSection title={t('event.liveDashboard.settings.refresh')}>
                 <TextField
                     select
                     size={'small'}
@@ -250,6 +265,10 @@ const DashboardSettingsPopover = ({
                     ))}
                 </TextField>
             </SettingsSection>
+            {/* Einmal für alle Abschnitte statt einer Überschrift über nur einem Teil. */}
+            <Typography variant="caption" sx={{color: 'text.secondary'}}>
+                {t('event.liveDashboard.settings.deviceHint')}
+            </Typography>
         </SettingsPopover>
     )
 }
