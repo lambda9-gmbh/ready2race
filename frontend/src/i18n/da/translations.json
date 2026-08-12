@@ -730,8 +730,6 @@
       "competition": "Konkurrence",
       "competitions": "Konkurrencer",
       "navigation": {
-        "modeCompetitions": "Løb",
-        "modeSchedule": "Tidsplan",
         "backToEvent": "Tilbage til arrangementet",
         "filter": "Filtrér",
         "showShortNames": "Vis korte navne",
