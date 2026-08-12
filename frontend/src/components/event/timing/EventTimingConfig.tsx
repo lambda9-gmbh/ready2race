@@ -45,12 +45,7 @@ const describeDeviation = (
 ) =>
     [
         deviation.timingSystem ? t('event.timing.deviations.system' as never) : null,
-        deviation.startlistConfigQualification
-            ? t('event.timing.deviations.startlistQualification' as never)
-            : null,
-        deviation.startlistConfigRounds
-            ? t('event.timing.deviations.startlistRounds' as never)
-            : null,
+        deviation.startlistConfig ? t('event.timing.deviations.startlist' as never) : null,
         deviation.resultImportConfig ? t('event.timing.deviations.resultImport' as never) : null,
     ].filter(text => text !== null)
 
@@ -228,10 +223,7 @@ const EventTimingConfig = () => {
                                                     variant={'body2'}
                                                     color={'text.secondary'}
                                                     sx={{wordBreak: 'break-all'}}>
-                                                    {t(
-                                                        `event.timing.races.startModes.${race.startMode}`,
-                                                    )}{' '}
-                                                    · {race.resultsUrl}
+                                                    {race.resultsUrl}
                                                 </Typography>
                                             </Box>
                                             <IconButton
@@ -351,23 +343,11 @@ const EventTimingConfig = () => {
                         Rennen im Fremdsystem laufen und dort dieselbe Spaltenzuordnung brauchen. */}
                     {timingSystem !== 'NONE' && (
                         <Stack spacing={4}>
-                            {timingSystem === 'RACECLOCKER' && (
-                                <FormInputAutocomplete
-                                    name={'startlistConfigQualification'}
-                                    options={startListConfigs ?? []}
-                                    loading={startListConfigsPending}
-                                    label={t('event.timing.startlistQualification')}
-                                />
-                            )}
                             <FormInputAutocomplete
-                                name={'startlistConfigRounds'}
+                                name={'startlistConfig'}
                                 options={startListConfigs ?? []}
                                 loading={startListConfigsPending}
-                                label={t(
-                                    timingSystem === 'RACECLOCKER'
-                                        ? 'event.timing.startlistRounds'
-                                        : 'event.timing.startlist',
-                                )}
+                                label={t('event.timing.startlist')}
                             />
                             <FormInputAutocomplete
                                 name={'resultImportConfig'}

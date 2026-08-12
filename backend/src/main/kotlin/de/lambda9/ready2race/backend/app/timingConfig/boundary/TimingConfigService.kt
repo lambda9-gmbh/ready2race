@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
-import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerRaceRepo
@@ -32,8 +31,6 @@ object TimingConfigService {
         val competition = !CompetitionRepo.getRecordById(competitionId).orDie()
             .onNullFail { CompetitionError.CompetitionNotFound }
 
-        val hasQualificationRound = !CompetitionSetupRoundRepo.existsQualificationRound(competitionId).orDie()
-
         val event = !EventRepo.get(competition.event!!).orDie()
             .onNullFail { EventError.NotFound }
 
@@ -41,15 +38,11 @@ object TimingConfigService {
             ApiResponse.Dto(
                 TimingConfigDto(
                     timingSystem = competition.timingSystem?.let { TimingSystem.valueOf(it) },
-                    raceQualification = competition.raceclockerRaceQualification,
-                    raceRounds = competition.raceclockerRaceRounds,
-                    startlistConfigQualification = competition.startlistConfigQualification,
-                    startlistConfigRounds = competition.startlistConfigRounds,
+                    race = competition.raceclockerRace,
+                    startlistConfig = competition.startlistConfig,
                     resultImportConfig = competition.resultImportConfig,
-                    hasQualificationRound = hasQualificationRound,
                     eventTimingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
-                    eventStartlistConfigQualification = event.startlistConfigQualification,
-                    eventStartlistConfigRounds = event.startlistConfigRounds,
+                    eventStartlistConfig = event.startlistConfig,
                     eventResultImportConfig = event.resultImportConfig,
                 )
             )
@@ -69,8 +62,7 @@ object TimingConfigService {
             ApiResponse.Dto(
                 EventTimingConfigDto(
                     timingSystem = event.timingSystem?.let { TimingSystem.valueOf(it) },
-                    startlistConfigQualification = event.startlistConfigQualification,
-                    startlistConfigRounds = event.startlistConfigRounds,
+                    startlistConfig = event.startlistConfig,
                     resultImportConfig = event.resultImportConfig,
                     // Spalten sind in der Datenbank NOT NULL (Migration V202608071600); jOOQ generiert
                     // Record-Felder dennoch nullable - dasselbe Muster wie bei den übrigen
@@ -97,8 +89,7 @@ object TimingConfigService {
 
         !EventRepo.update(event) {
             timingSystem = request.timingSystem?.name
-            startlistConfigQualification = request.startlistConfigQualification
-            startlistConfigRounds = request.startlistConfigRounds
+            startlistConfig = request.startlistConfig
             resultImportConfig = request.resultImportConfig
             raceclockerAutoPull = request.autoPull
             raceclockerIntervalActiveSeconds = request.intervalActiveSeconds
@@ -124,14 +115,12 @@ object TimingConfigService {
         // Ein Rennen gehört einer Veranstaltung. Der Fremdschlüssel allein hindert niemanden daran,
         // das Rennen einer FREMDEN Veranstaltung anzuwählen -- dann liefe dieser Wettkampf gegen ein
         // Rennen, das mit seiner Regatta nichts zu tun hat.
-        !ensureRacesBelongToEvent(competition.event!!, request.raceQualification, request.raceRounds)
+        !ensureRaceBelongsToEvent(competition.event!!, request.race)
 
         !CompetitionRepo.update(competitionId) {
             timingSystem = request.timingSystem?.name
-            raceclockerRaceQualification = request.raceQualification
-            raceclockerRaceRounds = request.raceRounds
-            startlistConfigQualification = request.startlistConfigQualification
-            startlistConfigRounds = request.startlistConfigRounds
+            raceclockerRace = request.race
+            startlistConfig = request.startlistConfig
             resultImportConfig = request.resultImportConfig
             updatedBy = userId
             updatedAt = LocalDateTime.now()
@@ -141,16 +130,16 @@ object TimingConfigService {
     }
 
     /**
-     * Beide angewählten Rennen müssen zu dieser Veranstaltung gehören.
+     * Das angewählte Rennen muss zu dieser Veranstaltung gehören.
      *
      * Die Datenbank erzwingt das nicht: Dafür bräuchte es einen zusammengesetzten Fremdschlüssel
      * über (event, id), der den übrigen Tabellen dieses Projekts fremd wäre. Also fragt der Service.
      */
-    private fun ensureRacesBelongToEvent(
+    private fun ensureRaceBelongsToEvent(
         eventId: UUID,
-        vararg raceIds: UUID?,
+        raceId: UUID?,
     ): App<ServiceError, Unit> = KIO.comprehension {
-        raceIds.filterNotNull().forEach { raceId ->
+        if (raceId != null) {
             val belongs = !RaceClockerRaceRepo.belongsToEvent(raceId, eventId).orDie()
             if (!belongs) return@comprehension KIO.fail(RaceClockerRaceError.NotFound)
         }

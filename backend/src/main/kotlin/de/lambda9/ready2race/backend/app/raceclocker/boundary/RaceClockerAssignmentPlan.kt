@@ -6,15 +6,14 @@ import java.util.UUID
  * Rechnet aus, welche Wettkämpfe ihre RaceClocker-Anwahl ändern, wenn EIN Rennen neu zugeordnet
  * wird — die reine Entscheidung, ohne Datenbank, damit die „verschieben"-Regel prüfbar bleibt.
  *
- * Betrachtet wird immer nur EINE Rundenart (Qualifikation ODER Läufe) auf einmal. Regel je
- * Wettkampf:
+ * Jeder Wettkampf hat genau ein Rennen für alle seine Runden. Regel je Wettkampf:
  * - steht er in [selected] → zeigt danach auf [raceId] (verschiebt sich, falls er vorher woanders
  *   hing — der letzte Klick gewinnt, Entscheidung von Thomas am 11.08.2026);
- * - steht er NICHT in [selected], zeigte aber bisher auf [raceId] → fällt zurück auf „erbt" (null);
- * - zeigt er auf ein ANDERES Rennen oder erbt schon → unverändert (dieses Rennen geht ihn nichts an).
+ * - steht er NICHT in [selected], zeigte aber bisher auf [raceId] → hat danach kein Rennen (null);
+ * - zeigt er auf ein ANDERES Rennen oder hat keines → unverändert (dieses Rennen geht ihn nichts an).
  *
- * Zurück kommen nur die tatsächlichen Änderungen (`competitionId` → neuer Wert, `null` = erbt),
- * damit der Aufruf nur schreibt, was sich wirklich ändert.
+ * Zurück kommen nur die tatsächlichen Änderungen (`competitionId` → neuer Wert, `null` = kein
+ * Rennen), damit der Aufruf nur schreibt, was sich wirklich ändert.
  */
 object RaceClockerAssignmentPlan {
 

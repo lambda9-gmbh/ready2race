@@ -7,13 +7,14 @@ export type EventTimingFormSystem = TimingSystem | 'NONE'
 export type EventTimingForm = {
     timingSystem: EventTimingFormSystem
     /**
-     * Startlisten-Export und Rennergebnisse-Import wie im Wettkampf (Migration V202608071300). Sie
-     * stehen hier, weil alle Wettkämpfe einer Regatta dieselben Spalten brauchen; abweichende
-     * Bootsklassen scheren im Wettkampf aus. Die RaceClocker-Rennen dagegen werden pro Wettkampf
-     * zugewiesen (RaceClockerRaceAssignments) — die Veranstaltung hat dafür keine Voreinstellung.
+     * Startlisten-Export und Rennergebnisse-Import wie im Wettkampf. Sie stehen hier, weil alle
+     * Wettkämpfe einer Regatta dieselben Spalten brauchen; abweichende Bootsklassen scheren im
+     * Wettkampf aus. Seit dem 11.08.2026 gibt es nur noch EIN Startlisten-Preset — RaceClocker
+     * kennt keine Startarten mehr, also braucht die Qualifikation kein eigenes. Die
+     * RaceClocker-Rennen werden pro Wettkampf zugewiesen (RaceClockerRaceAssignments) — die
+     * Veranstaltung hat dafür keine Voreinstellung.
      */
-    startlistConfigQualification: AutocompleteOption
-    startlistConfigRounds: AutocompleteOption
+    startlistConfig: AutocompleteOption
     resultImportConfig: AutocompleteOption
     /**
      * Der automatische Abruf. Nur bei RaceClocker sichtbar und speicherbar — Webscorer hat keinen
@@ -28,8 +29,7 @@ export type EventTimingForm = {
 
 export const emptyEventTimingForm: EventTimingForm = {
     timingSystem: 'NONE',
-    startlistConfigQualification: null,
-    startlistConfigRounds: null,
+    startlistConfig: null,
     resultImportConfig: null,
     autoPull: false,
     intervalActiveSeconds: 5,
@@ -41,12 +41,7 @@ export const emptyEventTimingForm: EventTimingForm = {
 export const mapDtoToEventTimingForm = (dto: EventTimingConfigDto): EventTimingForm => ({
     timingSystem: dto.timingSystem ?? 'NONE',
     // Wie im Wettkampf-Formular: nur die ID, das Label füllt die Komponente aus den geladenen Listen.
-    startlistConfigQualification: dto.startlistConfigQualification
-        ? {id: dto.startlistConfigQualification, label: ''}
-        : null,
-    startlistConfigRounds: dto.startlistConfigRounds
-        ? {id: dto.startlistConfigRounds, label: ''}
-        : null,
+    startlistConfig: dto.startlistConfig ? {id: dto.startlistConfig, label: ''} : null,
     resultImportConfig: dto.resultImportConfig ? {id: dto.resultImportConfig, label: ''} : null,
     autoPull: dto.autoPull,
     intervalActiveSeconds: dto.intervalActiveSeconds,
@@ -66,11 +61,7 @@ export const mapEventTimingFormToRequest = (form: EventTimingForm): EventTimingC
 
     return {
         timingSystem: form.timingSystem === 'NONE' ? null : form.timingSystem,
-        // Nur RaceClocker kennt die Zweiteilung Zeitfahren/Läufe; Webscorer füllt allein den Runden-Slot.
-        startlistConfigQualification: raceClocker
-            ? (form.startlistConfigQualification?.id ?? null)
-            : null,
-        startlistConfigRounds: configured ? (form.startlistConfigRounds?.id ?? null) : null,
+        startlistConfig: configured ? (form.startlistConfig?.id ?? null) : null,
         resultImportConfig: configured ? (form.resultImportConfig?.id ?? null) : null,
         // Die Takte werden immer mitgeschickt: Sie haben in der Datenbank eine Vorgabe, und ein
         // Abschalten des Systems soll die eingestellten Werte nicht verlieren.

@@ -13370,21 +13370,12 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        raceQualification:
+        race:
           type: string
           format: uuid
           nullable: true
-          description: The selected RaceClocker race for qualification rounds.
-        raceRounds:
-          type: string
-          format: uuid
-          nullable: true
-          description: The selected RaceClocker race for all other rounds.
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+          description: The one selected RaceClocker race of this competition - qualification and all other rounds alike.
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13392,27 +13383,15 @@ components:
           type: string
           format: uuid
           nullable: true
-        hasQualificationRound:
-          type: boolean
-          description: >
-            Whether this competition's setup contains a qualification round. Read-only; it comes along
-            with the timing config because both the timing tab and the execution tab already load it,
-            and both need to know whether the qualification start list preset and the qualification race
-            are required at all.
         eventTimingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
           description: Event-wide default timing system; the competition inherits it while its own field is null.
-        eventStartlistConfigQualification:
+        eventStartlistConfig:
           type: string
           format: uuid
           nullable: true
-          description: Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
-        eventStartlistConfigRounds:
-          type: string
-          format: uuid
-          nullable: true
-          description: Event-wide default start list export for the other rounds; inherited while the competition's own field is null.
+          description: Event-wide default start list export; inherited while the competition's own field is null.
         eventResultImportConfig:
           type: string
           format: uuid
@@ -13452,11 +13431,7 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13495,9 +13470,8 @@ components:
       type: object
       description: >
         A competition that overrides the event-wide timing defaults. Only the inheritable fields are
-        listed; the column presets are per competition anyway and therefore no deviation. A null
-        timingSystem with a URL set is a partial override - the competition inherits the system and
-        has a race of its own.
+        listed - system, start list export and result import. The race selection is no deviation:
+        it is always assigned per competition, there is no event default to deviate from.
       properties:
         competitionId:
           type: string
@@ -13509,11 +13483,7 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13528,7 +13498,7 @@ components:
 
     RaceClockerRaceDto:
       type: object
-      required: [id, name, resultsUrl, startMode, capturesLaps, position]
+      required: [id, name, resultsUrl, capturesLaps, position]
       properties:
         id:
           type: string
@@ -13537,31 +13507,24 @@ components:
           type: string
         resultsUrl:
           type: string
-        startMode:
-          $ref: '#/components/schemas/RaceClockerStartMode'
         capturesLaps:
           type: boolean
         position:
           type: integer
     RaceClockerRaceRequest:
       type: object
-      required: [name, resultsUrl, startMode, capturesLaps]
+      required: [name, resultsUrl, capturesLaps]
       properties:
         name:
           type: string
         resultsUrl:
           type: string
-        startMode:
-          $ref: '#/components/schemas/RaceClockerStartMode'
         capturesLaps:
           type: boolean
-    RaceClockerStartMode:
-      type: string
-      enum: [INDIVIDUAL, WAVE]
 
     CompetitionRaceAssignmentDto:
       type: object
-      required: [competitionId, identifier, name, hasQualificationRound]
+      required: [competitionId, identifier, name]
       properties:
         competitionId:
           type: string
@@ -13570,33 +13533,19 @@ components:
           type: string
         name:
           type: string
-        hasQualificationRound:
-          type: boolean
-          description: "Whether the competition's setup even has a qualification round"
-        raceQualification:
+        race:
           type: string
           format: uuid
           nullable: true
-          description: "Explicitly chosen qualification race; null means it inherits the event default"
-        raceRounds:
-          type: string
-          format: uuid
-          nullable: true
-          description: "Explicitly chosen rounds race; null means it inherits the event default"
+          description: "The one selected race; null means no race is assigned"
 
     RaceClockerRaceAssignmentsRequest:
       type: object
-      required: [qualificationCompetitions, roundsCompetitions]
+      required: [competitions]
       properties:
-        qualificationCompetitions:
+        competitions:
           type: array
-          description: "Competitions that use this race for their qualification"
-          items:
-            type: string
-            format: uuid
-        roundsCompetitions:
-          type: array
-          description: "Competitions that use this race for their remaining rounds"
+          description: "Competitions that use this race for all of their rounds"
           items:
             type: string
             format: uuid
@@ -13612,11 +13561,7 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13656,27 +13601,18 @@ components:
       type: object
       description: >
         Every field is optional - the RaceClocker races only exist shortly before the regatta, so an
-        incomplete configuration must be storable. Both race ids must belong to this competition's
+        incomplete configuration must be storable. The race id must belong to this competition's
         event; the service rejects a race from another event.
       properties:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        raceQualification:
+        race:
           type: string
           format: uuid
           nullable: true
-          description: The selected RaceClocker race for qualification rounds.
-        raceRounds:
-          type: string
-          format: uuid
-          nullable: true
-          description: The selected RaceClocker race for all other rounds.
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+          description: The one selected RaceClocker race - qualification and all other rounds alike.
+        startlistConfig:
           type: string
           format: uuid
           nullable: true

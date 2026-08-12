@@ -26,8 +26,7 @@ object TimingConfigRepo {
             COMPETITION_PROPERTIES.IDENTIFIER,
             COMPETITION_PROPERTIES.NAME,
             COMPETITION.TIMING_SYSTEM,
-            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
-            COMPETITION.STARTLIST_CONFIG_ROUNDS,
+            COMPETITION.STARTLIST_CONFIG,
             COMPETITION.RESULT_IMPORT_CONFIG,
         )
             .from(COMPETITION)
@@ -36,8 +35,7 @@ object TimingConfigRepo {
             .and(
                 DSL.or(
                     COMPETITION.TIMING_SYSTEM.isNotNull,
-                    COMPETITION.STARTLIST_CONFIG_QUALIFICATION.isNotNull,
-                    COMPETITION.STARTLIST_CONFIG_ROUNDS.isNotNull,
+                    COMPETITION.STARTLIST_CONFIG.isNotNull,
                     COMPETITION.RESULT_IMPORT_CONFIG.isNotNull,
                 )
             )
@@ -49,8 +47,7 @@ object TimingConfigRepo {
                     identifier = it[COMPETITION_PROPERTIES.IDENTIFIER]!!,
                     name = it[COMPETITION_PROPERTIES.NAME]!!,
                     timingSystem = it[COMPETITION.TIMING_SYSTEM]?.let { s -> TimingSystem.valueOf(s) },
-                    startlistConfigQualification = it[COMPETITION.STARTLIST_CONFIG_QUALIFICATION],
-                    startlistConfigRounds = it[COMPETITION.STARTLIST_CONFIG_ROUNDS],
+                    startlistConfig = it[COMPETITION.STARTLIST_CONFIG],
                     resultImportConfig = it[COMPETITION.RESULT_IMPORT_CONFIG],
                 )
             }

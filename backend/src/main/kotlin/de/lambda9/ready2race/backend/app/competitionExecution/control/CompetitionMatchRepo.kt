@@ -6,7 +6,6 @@ import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
 import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRef
-import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
@@ -66,35 +65,23 @@ object CompetitionMatchRepo {
      * time, competition and match name, see [WaveName] - MUST be formatted exactly like
      * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.buildCsv]
      * builds it for the export, or the wave-name fallback filter in `assignFeedRows` never matches)
-     * and the two RaceClocker races it selected. Which of the two applies follows from the round: a
-     * qualification round is timed as a separate time trial race, because only individual starts have
-     * a real countdown in RaceClocker.
+     * and the ONE RaceClocker race the competition selected - since 2026-08-11 it serves the
+     * qualification and every other round alike.
      */
     fun getForRaceClockerPull(id: UUID) = Jooq.query {
-        // Die Zuordnung Wettkampf→Rennen steht ausschließlich am Wettkampf (seit dem 11.08.2026 nur
-        // noch über die Pro-Rennen-Anwahl im Zeitnahme-Tab der Veranstaltung gesetzt). Der frühere
-        // Veranstaltungs-Default ist entfallen: er duplizierte die Pro-Rennen-Zuordnung und ein
-        // nicht zugeordneter Wettkampf soll ehrlich „kein Rennen" sein, statt still zu erben.
-        // Zwei Aliase, weil dieselbe Tabelle zweimal gebraucht wird.
-        val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
-        val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")
-        val qualiRaceId = COMPETITION.RACECLOCKER_RACE_QUALIFICATION
-        val roundsRaceId = COMPETITION.RACECLOCKER_RACE_ROUNDS
-
+        // Die Zuordnung Wettkampf→Rennen steht ausschließlich am Wettkampf (seit dem 11.08.2026).
+        // Der frühere Veranstaltungs-Default ist entfallen: er duplizierte die Pro-Rennen-Zuordnung
+        // und ein nicht zugeordneter Wettkampf soll ehrlich „kein Rennen" sein, statt still zu erben.
         select(
             COMPETITION_SETUP_MATCH.NAME,
             COMPETITION_MATCH.START_TIME,
-            COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
-            // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die sechs
+            // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die drei
             // Rennen-Spalten die Anwahl.
             COMPETITION_PROPERTIES.IDENTIFIER,
             COMPETITION_PROPERTIES.SHORT_NAME,
-            qualiRace.ID,
-            qualiRace.NAME,
-            qualiRace.RESULTS_URL,
-            roundsRace.ID,
-            roundsRace.NAME,
-            roundsRace.RESULTS_URL,
+            RACECLOCKER_RACE.ID,
+            RACECLOCKER_RACE.NAME,
+            RACECLOCKER_RACE.RESULTS_URL,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -104,8 +91,7 @@ object CompetitionMatchRepo {
             .join(COMPETITION_PROPERTIES)
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(qualiRace).on(qualiRace.ID.eq(qualiRaceId))
-            .leftJoin(roundsRace).on(roundsRace.ID.eq(roundsRaceId))
+            .leftJoin(RACECLOCKER_RACE).on(RACECLOCKER_RACE.ID.eq(COMPETITION.RACECLOCKER_RACE))
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne { record ->
                 RaceClockerMatchTarget(
@@ -115,41 +101,26 @@ object CompetitionMatchRepo {
                         competitionIdentifier = record[COMPETITION_PROPERTIES.IDENTIFIER],
                         competitionShortName = record[COMPETITION_PROPERTIES.SHORT_NAME],
                     ),
-                    // Not null in the schema; the projection just loses that guarantee.
-                    isQualification = record[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
-                    qualificationRace = record[qualiRace.ID]?.let {
-                        RaceClockerRaceRef(it, record[qualiRace.NAME]!!, record[qualiRace.RESULTS_URL]!!)
-                    },
-                    roundsRace = record[roundsRace.ID]?.let {
-                        RaceClockerRaceRef(it, record[roundsRace.NAME]!!, record[roundsRace.RESULTS_URL]!!)
+                    race = record[RACECLOCKER_RACE.ID]?.let {
+                        RaceClockerRaceRef(it, record[RACECLOCKER_RACE.NAME]!!, record[RACECLOCKER_RACE.RESULTS_URL]!!)
                     },
                 )
             }
     }
 
     /**
-     * Welches Spalten-Preset die Startliste dieses Laufs bekommt. Dieselbe Join-Kette wie
-     * [getForRaceClockerPull] und aus demselben Grund dieselbe Weiche: die Runde entscheidet, weil
-     * RaceClocker pro Wettkampf zwei Rennen mit unterschiedlichen Spalten braucht.
+     * Welches Spalten-Preset die Startliste dieses Laufs bekommt: das eine Preset des Wettkampfs,
+     * mit der Veranstaltung als Vorgabe. Die frühere Weiche nach Rundenart ist mit den
+     * RaceClocker-Startarten entfallen (11.08.2026) — jede Runde exportiert dieselben Spalten.
      */
     fun getStartListConfigTarget(id: UUID) = Jooq.query {
-        // Wettkampf-Wert vor Veranstaltungs-Voreinstellung, wie in getForRaceClockerPull.
-        val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM).`as`("timing_system")
-        val qualificationConfig = DSL.coalesce(
-            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
-            EVENT.STARTLIST_CONFIG_QUALIFICATION,
-        ).`as`("qualification_config")
-        val roundsConfig = DSL.coalesce(
-            COMPETITION.STARTLIST_CONFIG_ROUNDS,
-            EVENT.STARTLIST_CONFIG_ROUNDS,
-        ).`as`("rounds_config")
+        // Wettkampf-Wert vor Veranstaltungs-Voreinstellung, wie beim Zeitnahmesystem.
+        val config = DSL.coalesce(
+            COMPETITION.STARTLIST_CONFIG,
+            EVENT.STARTLIST_CONFIG,
+        ).`as`("startlist_config")
 
-        select(
-            COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
-            timingSystem,
-            qualificationConfig,
-            roundsConfig,
-        )
+        select(config)
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
             .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
@@ -162,14 +133,8 @@ object CompetitionMatchRepo {
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne {
                 StartListConfigTarget(
-                    // Im Schema not null; die Projektion verliert nur die Garantie.
-                    isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
-                    // Als Text gespeichert, kein jOOQ-Converter in diesem Projekt -- von Hand
-                    // konvertiert wie EventRepo.getChainProgressionMode. null ist hier legitim:
-                    // es bedeutet "kein Zeitnahmesystem gesetzt".
-                    timingSystem = it[timingSystem]?.let { s -> TimingSystem.valueOf(s) },
-                    qualificationConfig = it[qualificationConfig],
-                    roundsConfig = it[roundsConfig],
+                    // null ist hier legitim: es bedeutet "kein Preset konfiguriert".
+                    configId = it[config],
                 )
             }
     }

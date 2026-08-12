@@ -11,8 +11,7 @@ import java.util.UUID
  */
 data class EventTimingConfigRequest(
     val timingSystem: TimingSystem?,
-    val startlistConfigQualification: UUID?,
-    val startlistConfigRounds: UUID?,
+    val startlistConfig: UUID?,
     val resultImportConfig: UUID?,
     /**
      * Der automatische Abruf und seine Takte. Anders als die Felder darüber nicht optional: Sie
@@ -59,8 +58,7 @@ data class EventTimingConfigRequest(
         val example
             get() = EventTimingConfigRequest(
                 timingSystem = TimingSystem.RACECLOCKER,
-                startlistConfigQualification = UUID.randomUUID(),
-                startlistConfigRounds = UUID.randomUUID(),
+                startlistConfig = UUID.randomUUID(),
                 resultImportConfig = UUID.randomUUID(),
                 autoPull = true,
                 intervalActiveSeconds = 5,

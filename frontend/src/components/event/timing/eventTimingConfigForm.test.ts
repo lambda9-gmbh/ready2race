@@ -37,29 +37,28 @@ describe('mapEventTimingFormToRequest', () => {
         expect(mapEventTimingFormToRequest(emptyEventTimingForm).timingSystem).toBeNull()
     })
 
-    it('verwirft das Qualifikations-Format, wenn nicht RaceClocker gewählt ist', () => {
-        // Webscorer kennt die Zweiteilung Zeitfahren/Läufe nicht und zeigt nur ein Export-Feld.
+    it('übernimmt das eine Startlisten-Format für jedes gesetzte System', () => {
+        // Seit dem 11.08.2026 gibt es nur noch ein Preset — auch bei RaceClocker, das keine
+        // Startarten mehr kennt. Webscorer und RaceClocker teilen sich damit dasselbe Feld.
         const request = mapEventTimingFormToRequest({
             ...emptyEventTimingForm,
             timingSystem: 'WEBSCORER',
-            startlistConfigQualification: {id: '11111111-1111-1111-1111-111111111111', label: 'Q'},
-            startlistConfigRounds: {id: '22222222-2222-2222-2222-222222222222', label: 'R'},
+            startlistConfig: {id: '22222222-2222-2222-2222-222222222222', label: 'R'},
             resultImportConfig: {id: '33333333-3333-3333-3333-333333333333', label: 'I'},
         })
 
-        expect(request.startlistConfigQualification).toBeNull()
-        expect(request.startlistConfigRounds).toBe('22222222-2222-2222-2222-222222222222')
+        expect(request.startlistConfig).toBe('22222222-2222-2222-2222-222222222222')
         expect(request.resultImportConfig).toBe('33333333-3333-3333-3333-333333333333')
     })
 
     it('verwirft die Formate, wenn kein System gesetzt ist', () => {
         const request = mapEventTimingFormToRequest({
             ...emptyEventTimingForm,
-            startlistConfigRounds: {id: '22222222-2222-2222-2222-222222222222', label: 'R'},
+            startlistConfig: {id: '22222222-2222-2222-2222-222222222222', label: 'R'},
             resultImportConfig: {id: '33333333-3333-3333-3333-333333333333', label: 'I'},
         })
 
-        expect(request.startlistConfigRounds).toBeNull()
+        expect(request.startlistConfig).toBeNull()
         expect(request.resultImportConfig).toBeNull()
     })
 })
@@ -68,8 +67,7 @@ describe('automatischer Abruf', () => {
     it('übernimmt die Abruf-Einstellungen aus dem Dto', () => {
         const form = mapDtoToEventTimingForm({
             timingSystem: 'RACECLOCKER',
-            startlistConfigQualification: null,
-            startlistConfigRounds: null,
+            startlistConfig: null,
             resultImportConfig: null,
             autoPull: true,
             intervalActiveSeconds: 3,
