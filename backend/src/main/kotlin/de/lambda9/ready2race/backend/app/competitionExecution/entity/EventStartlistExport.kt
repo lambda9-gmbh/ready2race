@@ -9,9 +9,12 @@ import java.util.UUID
  * [ZIP] packt eine CSV je Wettkampf (Dateinamen wie beim Runden-Export) - die Form, die Webscorer
  * braucht, weil dort jeder Wettkampf ein eigenes Rennen ist. [CSV] schreibt eine große Datei, nach
  * Startzeit über alles sortiert - die Form für RaceClocker, wo ein Rennen alle Wellen trägt.
- * Vorbelegt wird nach dem Zeitnahmesystem der Veranstaltung, umschaltbar bleibt beides.
+ * [PDF] hängt die bekannten Einzel-Startlisten-PDFs in Startzeit-Reihenfolge aneinander - der
+ * Aushang bzw. das (geänderte) Meldeergebnis in einem Rutsch (Wunsch Regattabüro, 12.08.2026).
+ * Vorbelegt wird nach dem Zeitnahmesystem der Veranstaltung (Webscorer → ZIP, RaceClocker → CSV),
+ * PDF wählt man immer von Hand.
  */
-enum class EventStartlistFileType { ZIP, CSV }
+enum class EventStartlistFileType { ZIP, CSV, PDF }
 
 /**
  * Ein Lauf des Sammelexports, so weit Delta-Abgleich, Sortierung, Dateiname und Vorschau ihn

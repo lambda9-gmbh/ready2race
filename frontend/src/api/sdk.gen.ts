@@ -4282,7 +4282,7 @@ export const getEventSchedule = <ThrowOnError extends boolean = false>(
 }
 
 /**
- * Bulk start list export for the whole event: the first created round of every competition (or, in delta mode, every created match missing in RaceClocker), either as a ZIP with one CSV per competition (file names like the round export) or as one big CSV sorted by start time across all competitions.
+ * Bulk start list export for the whole event: the first created round of every competition (or, in delta mode, every created match missing in RaceClocker), as a ZIP with one CSV per competition (file names like the round export), as one big CSV sorted by start time across all competitions, or as one PDF concatenating the per-match start list PDFs in the same order.
  */
 export const downloadEventStartlists = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<DownloadEventStartlistsData, ThrowOnError>,
