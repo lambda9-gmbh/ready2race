@@ -31,11 +31,18 @@ object AwardCeremonyLogic {
      * entstehen: geehrt wird, wer den Rang hat.
      *
      * Boote ohne Platz - abgemeldet, ausgeschieden, disqualifiziert oder noch nicht gewertet - haben
-     * auf einem Siegerehrungsbogen nichts zu suchen; in der Ergebnisliste stehen sie weiterhin.
+     * weder auf dem Siegerehrungsbogen noch auf der ausgehängten Ergebnisliste etwas zu suchen:
+     * gedruckt werden nur bestätigte Platzierungen, in beiden Formen dieselbe Regel.
+     *
+     * @param maxRank Der Schnitt der Rangliste; `null` heißt ohne Schnitt - die Ergebnisliste zum
+     * Aushängen nennt alle platzierten Boote, der Siegerehrungsbogen nur das Podium.
      */
-    fun ranks(entries: List<RankedEntry<AwardCeremonyCandidate>>): List<AwardCeremonyRank> = entries
+    fun ranks(
+        entries: List<RankedEntry<AwardCeremonyCandidate>>,
+        maxRank: Int? = MAX_RANK,
+    ): List<AwardCeremonyRank> = entries
         .mapNotNull { entry -> entry.categoryPlace?.let { it to entry.item } }
-        .filter { (place, _) -> place <= MAX_RANK }
+        .filter { (place, _) -> maxRank == null || place <= maxRank }
         // groupBy hält die Reihenfolge der zuerst gesehenen Schlüssel, und die Einträge kommen
         // bereits nach Platz und Startnummer sortiert an - die Blockfolge bleibt damit die des Blatts.
         .groupBy { (place, _) -> place }
@@ -137,6 +144,7 @@ object AwardCeremonyLogic {
         competitionName: String,
         ratingCategoryName: String?,
         entries: List<RankedEntry<AwardCeremonyCandidate>>,
+        maxRank: Int? = MAX_RANK,
     ): AwardCeremonySheet =
         AwardCeremonySheet(
             eventName = eventName,
@@ -148,6 +156,6 @@ object AwardCeremonyLogic {
             ratingCategoryName = ratingCategoryName,
             // Siehe AwardCeremonySheet.ceremonyTime: der Zeitplan gibt den Termin (noch) nicht her.
             ceremonyTime = null,
-            ranks = ranks(entries),
+            ranks = ranks(entries, maxRank),
         )
 }

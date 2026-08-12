@@ -2975,6 +2975,32 @@
       }
     }
   },
+  "resultList": {
+    "download": {
+      "button": "Resultatliste",
+      "title": "Udskriv resultatliste",
+      "action": "Download",
+      "hint": "Til opslagstavlen eller til overrækkelsen — vælg selv delene; skabelonen udfylder dem kun på forhånd. Hver side bærer et tidsstempel. Kun bekræftede placeringer udskrives.",
+      "preset": {
+        "label": "Skabelon",
+        "posting": "Opslag",
+        "ceremony": "Præmieoverrækkelse"
+      },
+      "options": {
+        "crew": "Mandskabsopstilling (navne pr. båd)",
+        "times": "Tider og tidsstraffe",
+        "podiumOnly": "Kun placeringerne 1 til 3",
+        "byRatingCategory": "Ét afsnit pr. bedømmelseskategori",
+        "largePrint": "Stor skrift (opslag)"
+      },
+      "error": {
+        "noResults": "Der er endnu ingen bekræftede placeringer til denne resultatliste.",
+        "competitionNotInEvent": "Denne konkurrence hører ikke til dette stævne. Genindlæs siden.",
+        "isChallengeEvent": "Et challenge-stævne har ingen resultatlister — der afvikles ingen løb, og der gives ingen placeringer.",
+        "unexpected": "Resultatlisten kunne ikke oprettes. Genindlæs siden, og prøv igen."
+      }
+    }
+  },
   "myEvent": {
     "tab": "Min begivenhed",
     "emptyTitle": "Din personlige tidsplan",

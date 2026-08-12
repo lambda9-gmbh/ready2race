@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyChoic
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyError
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyKeyRequest
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonySelectionRequest
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.ResultListOptions
 import de.lambda9.ready2race.backend.app.certificate.boundary.AwardCertificateLogic
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
@@ -29,6 +30,8 @@ import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.UUID
 
 /**
@@ -114,7 +117,91 @@ object AwardCeremonyService {
         KIO.ok(
             ApiResponse.File(
                 name = "siegerehrung_${event.name}.pdf",
-                bytes = AwardCeremonyPdf.render(sheets),
+                // Der Bogen ist seit der Verallgemeinerung ein Preset der Ergebnisliste - dass hier
+                // dasselbe Blatt herauskommt wie vor dem Umbau, sichern die PDF-Tests zu.
+                bytes = AwardCeremonyPdf.render(sheets, ResultListOptions.ceremony),
+            )
+        )
+    }
+
+    // Ohne Sekunden: der Aushang wird minutenweise erneuert, nicht sekundenweise - und zwei
+    // Ausdrucke derselben Minute sind auch fachlich derselbe Stand.
+    private val standFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm", Locale.GERMANY)
+
+    /**
+     * Die Ergebnisliste zum Aushängen - dieselbe Datenbasis wie der Siegerehrungsbogen, aber mit
+     * wählbaren Bestandteilen: mit oder ohne Schnitt beim Podium, je Wertung ein Abschnitt oder
+     * das Gesamtfeld, Mannschaften und Zeiten zuschaltbar, Schriftgrad Aushang oder Siegerehrung.
+     *
+     * Gedruckt werden ausschließlich bestätigte Platzierungen - exakt die Regel des Bogens:
+     * abgemeldete, ausgeschiedene und disqualifizierte Boote fallen heraus, ungewertete ebenso.
+     *
+     * Jedes Blatt trägt eine Fußzeile mit Veranstaltung und „Stand: …": am Brett hängen erfahrungs-
+     * gemäß mehrere Generationen desselben Aushangs, und nur der Zeitstempel sagt, welche gilt.
+     */
+    fun resultList(
+        eventId: UUID,
+        competitionId: UUID?,
+        options: ResultListOptions,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        // Steht bewusst vor allem anderen: siehe AwardCeremonyError.IsChallengeEvent.
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { AwardCeremonyError.IsChallengeEvent }
+
+        val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
+        val eventDays = !EventDayRepo.getByEvent(eventId).orDie()
+        val eventDate = AwardCertificateLogic.formatEventDate(eventDays.map { it.date })
+
+        val competitions = (!CompetitionRepo.getByEvent(eventId).orDie())
+            .sortedWith(lexiNumberComp { it.identifier })
+        val selected = if (competitionId == null) competitions else {
+            !KIO.failOn(competitions.none { it.id == competitionId }) {
+                AwardCeremonyError.CompetitionNotInEvent
+            }
+            competitions.filter { it.id == competitionId }
+        }
+
+        val maxRank = if (options.podiumOnly) AwardCeremonyLogic.MAX_RANK else null
+
+        val sheets = !selected.traverse { competition ->
+            candidatesOf(competition).map { candidates ->
+                // Ohne Trennung nach Wertung wird das Gesamtfeld als *ein* Abschnitt gezählt -
+                // dieselbe Zählregel (Gleichstände halten den Platz, danach reißt eine Lücke),
+                // nur eben über alle Boote des Rennens.
+                val sections = RatingCategoryRanking.groupAndRank(
+                    items = candidates,
+                    category = { if (options.byRatingCategory) it.ratingCategory else null },
+                    place = { it.competitionPlace },
+                    tieBreak = { it.startNumber },
+                )
+                sections.map { section ->
+                    AwardCeremonyLogic.sheet(
+                        eventName = event.name,
+                        eventDate = eventDate,
+                        eventLocation = event.location,
+                        competitionIdentifier = competition.identifier!!,
+                        competitionShortName = competition.shortName,
+                        competitionName = competition.name!!,
+                        ratingCategoryName = section.category?.name,
+                        entries = section.entries,
+                        maxRank = maxRank,
+                    )
+                }
+            }
+        }.map { it.flatten() }
+            // Ein Abschnitt ohne einen einzigen bestätigten Platz ergäbe ein Blatt, das nur aus
+            // Kopf besteht - am Brett wäre das ein Aushang, der nichts aussagt. Er entfällt.
+            .map { all -> all.filter { it.ranks.isNotEmpty() } }
+
+        !KIO.failOn(sheets.isEmpty()) { AwardCeremonyError.NoResults }
+
+        val stamped = options.copy(
+            footerLine = "${event.name} — Stand: ${LocalDateTime.now().format(standFormat)}",
+        )
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "ergebnisliste_${event.name}.pdf",
+                bytes = AwardCeremonyPdf.render(sheets, stamped),
             )
         )
     }
@@ -192,7 +279,13 @@ object AwardCeremonyService {
         selected.traverse { ceremoniesOf(it) }.map { it.flatten() }
     }
 
-    private fun ceremoniesOf(competition: CompetitionViewRecord): App<ServiceError, List<Ceremony>> =
+    /**
+     * Die bestätigten Ergebnisse eines Wettkampfs, wie sie in Bogen und Ergebnisliste eingehen -
+     * die eine Ergebnisregel für beide Formen: abgemeldete, ausgeschiedene und disqualifizierte
+     * Boote bekommen von der Platzberechnung der Vollständigkeit halber einen Platz, gedruckt
+     * werden sie nicht (dieselbe Regel wie im Urkundengenerator).
+     */
+    private fun candidatesOf(competition: CompetitionViewRecord): App<ServiceError, List<AwardCeremonyCandidate>> =
         KIO.comprehension {
             val competitionId = competition.id!!
 
@@ -205,39 +298,44 @@ object AwardCeremonyService {
             )
             val places = CompetitionExecutionService.computeCompetitionPlaces(rounds)
 
-            val candidates = places
-                // Dieselbe Regel wie im Urkundengenerator: abgemeldete, ausgeschiedene und
-                // disqualifizierte Boote bekommen von der Platzberechnung der Vollständigkeit
-                // halber einen Platz, geehrt werden sie nicht.
-                .filterNot { (team, _) -> team.deregistered || team.out || team.failed }
-                .map { (team, place) ->
-                    val (roundName, matchName, matchTime) = raceOf(rounds, team.competitionRegistration)
+            KIO.ok(
+                places
+                    .filterNot { (team, _) -> team.deregistered || team.out || team.failed }
+                    .map { (team, place) ->
+                        val (roundName, matchName, matchTime) = raceOf(rounds, team.competitionRegistration)
 
-                    AwardCeremonyCandidate(
-                        competitionPlace = place,
-                        startNumber = team.startNumber,
-                        ratingCategory = team.ratingCategory,
-                        registeringClubName = team.clubName,
-                        teamName = team.registrationName,
-                        time = team.timeString,
-                        penaltySeconds = team.penaltySeconds,
-                        penaltyNote = team.penaltyNote,
-                        roundName = roundName,
-                        matchName = matchName,
-                        matchTime = matchTime,
-                        participants = team.participants.map {
-                            AwardCeremonyCandidateParticipant(
-                                firstName = it.firstName,
-                                lastName = it.lastName,
-                                year = it.year,
-                                role = it.namedParticipantName,
-                                external = it.external,
-                                externalClubName = it.externalClubName,
-                                ownClubName = it.clubName,
-                            )
-                        },
-                    )
-                }
+                        AwardCeremonyCandidate(
+                            competitionPlace = place,
+                            startNumber = team.startNumber,
+                            ratingCategory = team.ratingCategory,
+                            registeringClubName = team.clubName,
+                            teamName = team.registrationName,
+                            time = team.timeString,
+                            penaltySeconds = team.penaltySeconds,
+                            penaltyNote = team.penaltyNote,
+                            roundName = roundName,
+                            matchName = matchName,
+                            matchTime = matchTime,
+                            participants = team.participants.map {
+                                AwardCeremonyCandidateParticipant(
+                                    firstName = it.firstName,
+                                    lastName = it.lastName,
+                                    year = it.year,
+                                    role = it.namedParticipantName,
+                                    external = it.external,
+                                    externalClubName = it.externalClubName,
+                                    ownClubName = it.clubName,
+                                )
+                            },
+                        )
+                    }
+            )
+        }
+
+    private fun ceremoniesOf(competition: CompetitionViewRecord): App<ServiceError, List<Ceremony>> =
+        KIO.comprehension {
+            val competitionId = competition.id!!
+            val candidates = !candidatesOf(competition)
 
             // Dieselbe Rechnung wie auf der öffentlichen Ergebnisseite, im Schiedsrichter-Dashboard
             // und im Ergebnis-PDF - samt der Reihenfolge der Abschnitte aus der gepflegten

@@ -2,11 +2,15 @@ package de.lambda9.ready2race.backend.app.awardCeremony.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonySelectionRequest
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.ResultListOptions
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.ResultListSize
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -37,6 +41,36 @@ fun Route.awardCeremony() {
                 val body = !receiveKIO(AwardCeremonySelectionRequest.example)
 
                 AwardCeremonyService.download(eventId, body)
+            }
+        }
+    }
+
+    route("/resultList") {
+        // GET, anders als der Bogen: hier gibt es keine Auswahl einzelner Ehrungen, nur eine
+        // Handvoll Schalter - die passen in den Query-String. Jeder fehlende Schalter fällt auf
+        // den Aushang-Vorgabewert zurück, das Preset „Siegerehrung" setzt der Dialog über die
+        // einzelnen Parameter.
+        get("/pdf") {
+            call.respondComprehension {
+                // Dieselben Rechte wie der Siegerehrungsbogen: beides sind interne Ergebnisdrucke.
+                !authenticate(Privilege.ReadEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                // Von der Platzierungsseite eines Wettkampfs aus interessiert nur dieser eine -
+                // dieselbe Kostenbegründung wie bei der Ehrungs-Auswahl oben.
+                val competitionId = !optionalQueryParam("competitionId", uuid)
+
+                val options = ResultListOptions(
+                    heading = "ERGEBNISLISTE",
+                    includeCrew = !optionalQueryParam("crew", boolean) ?: true,
+                    includeTimes = !optionalQueryParam("times", boolean) ?: true,
+                    podiumOnly = !optionalQueryParam("podiumOnly", boolean) ?: false,
+                    byRatingCategory = !optionalQueryParam("byRatingCategory", boolean) ?: true,
+                    size = !optionalQueryParam("size", enum<ResultListSize>()) ?: ResultListSize.POSTING,
+                    // Die Fußzeile mit dem Stand setzt der Service - er kennt die Veranstaltung.
+                    footerLine = null,
+                )
+
+                AwardCeremonyService.resultList(eventId, competitionId, options)
             }
         }
     }
