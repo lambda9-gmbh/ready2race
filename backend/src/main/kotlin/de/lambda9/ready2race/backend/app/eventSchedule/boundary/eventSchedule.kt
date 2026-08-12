@@ -1,6 +1,8 @@
 package de.lambda9.ready2race.backend.app.eventSchedule.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.downloadEventStartlists
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.EventStartlistFileType
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.AdvanceScheduleRequest
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.ShiftScheduleRequest
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.UpsertScheduleSlotRequest
@@ -11,9 +13,11 @@ import de.lambda9.ready2race.backend.calls.requests.authenticateAny
 import de.lambda9.ready2race.backend.calls.requests.hasPrivilege
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
+import de.lambda9.ready2race.backend.calls.requests.queryParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.ready2race.backend.xls.checkValidXls
@@ -30,6 +34,25 @@ fun Route.eventSchedule() {
                 !authenticate(Privilege.ReadEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
                 EventScheduleService.getSchedule(eventId)
+            }
+        }
+        // Startlisten-Sammelexport: alles für den Import ins Zeitnahme-System in einem Download.
+        // Liegt am Zeitplan (dort sitzt der Knopf und der Umfang ist die ganze Veranstaltung),
+        // die Logik wohnt beim Runden-Export in CompetitionExecutionService.
+        get("/startlists") {
+            call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val fileType = !queryParam("fileType", enum<EventStartlistFileType>())
+                val skipByes = !optionalQueryParam("skipByes", boolean)
+                val onlyMissing = !optionalQueryParam("onlyMissingInRaceClocker", boolean)
+
+                downloadEventStartlists(
+                    eventId = eventId,
+                    fileType = fileType,
+                    skipByes = skipByes ?: true,
+                    onlyMissingInRaceClocker = onlyMissing ?: false,
+                )
             }
         }
         post("/slot") {

@@ -25,7 +25,7 @@ const round = (matches: CompetitionMatchDto[]): CompetitionRoundDto =>
 
 describe('byeMatches', () => {
     it('nimmt genau die Läufe mit Freilos, nach Gewichtung sortiert', () => {
-        const bye: MatchByeDto = {cause: 'NO_OPPONENT'}
+        const bye: MatchByeDto = {cause: 'NO_OPPONENT', mustRace: false}
         const result = byeMatches(
             round([
                 match('a', {bye, teams: 1, weighting: 3}),
@@ -43,7 +43,7 @@ describe('byeMatches', () => {
 
 describe('raceableMatches', () => {
     it('lässt Freilose weg und sortiert nach Startreihenfolge', () => {
-        const bye: MatchByeDto = {cause: 'NO_OPPONENT'}
+        const bye: MatchByeDto = {cause: 'NO_OPPONENT', mustRace: false}
         const result = raceableMatches(
             round([
                 match('a', {order: 2}),
@@ -60,12 +60,23 @@ describe('raceableMatches', () => {
 
     /** Panel und Kartenliste teilen die Runde vollständig und überschneidungsfrei auf. */
     it('teilt die Runde vollständig auf', () => {
-        const bye: MatchByeDto = {cause: 'NO_OPPONENT'}
+        const bye: MatchByeDto = {cause: 'NO_OPPONENT', mustRace: false}
         const r = round([match('a'), match('b', {bye, teams: 1}), match('c')])
         expect([...byeMatches(r), ...raceableMatches(r)].map(m => m.id).sort()).toEqual([
             'a',
             'b',
             'c',
         ])
+    })
+
+    /**
+     * Ein Freilos mit „muss gefahren werden" bekommt beides: die Lauf-Karte (es wird gefahren)
+     * UND den Panel-Eintrag (dort sitzt der Schalter).
+     */
+    it('behält ein Freilos mit mustRace als Lauf-Karte', () => {
+        const bye: MatchByeDto = {cause: 'NO_OPPONENT', mustRace: true}
+        const r = round([match('a'), match('b', {bye, teams: 1})])
+        expect(raceableMatches(r).map(m => m.id)).toEqual(['a', 'b'])
+        expect(byeMatches(r).map(m => m.id)).toEqual(['b'])
     })
 })

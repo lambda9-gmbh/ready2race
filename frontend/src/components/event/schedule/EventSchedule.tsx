@@ -71,6 +71,7 @@ import {
     unplannedMatchStatus,
 } from '@components/event/match/matchStatusChip.ts'
 import {byeExplanation} from '@components/event/match/matchBye.ts'
+import ScheduleStartlistExportButton from './ScheduleStartlistExportButton.tsx'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 import ScheduleAdvanceDialog from './ScheduleAdvanceDialog.tsx'
@@ -519,6 +520,7 @@ const EventSchedule = () => {
                 <Typography variant={'h2'}>{t('event.schedule.tab')}</Typography>
                 {canEdit && (
                     <Stack direction={'row'} spacing={2}>
+                        <ScheduleStartlistExportButton eventId={eventId} />
                         <Button variant={'outlined'} onClick={openImportDialog}>
                             {t('event.schedule.import')}
                         </Button>
@@ -707,7 +709,10 @@ const EventSchedule = () => {
                                                         variant={'caption'}
                                                         display={'block'}
                                                         sx={{color: 'text.secondary'}}>
-                                                        {translate(bye.key, bye.values)}
+                                                        {translate(bye.key, bye.values) +
+                                                            (bye.mustRace
+                                                                ? ` – ${translate('event.match.bye.mustRace')}`
+                                                                : '')}
                                                     </Typography>
                                                 )}
                                             </TableCell>

@@ -9,7 +9,12 @@ describe('byeExplanation', () => {
 
     it('nennt bei einer Abmeldung Mannschaft und Grund', () => {
         expect(
-            byeExplanation({cause: 'DEREGISTRATION', teamName: 'RV Hansa', reason: 'Krankheit'}),
+            byeExplanation({
+                cause: 'DEREGISTRATION',
+                teamName: 'RV Hansa',
+                reason: 'Krankheit',
+                mustRace: false,
+            }),
         ).toEqual({
             key: 'event.match.bye.deregistrationWithReason',
             values: {team: 'RV Hansa', reason: 'Krankheit'},
@@ -17,22 +22,30 @@ describe('byeExplanation', () => {
     })
 
     it('nennt die Mannschaft auch ohne gespeicherten Grund', () => {
-        expect(byeExplanation({cause: 'DEREGISTRATION', teamName: 'RV Hansa'})).toEqual({
+        expect(byeExplanation({cause: 'DEREGISTRATION', teamName: 'RV Hansa', mustRace: false})).toEqual({
             key: 'event.match.bye.deregistration',
             values: {team: 'RV Hansa'},
         })
     })
 
     it('bleibt beim neutralen Satz, wenn kein Gegner benannt ist', () => {
-        expect(byeExplanation({cause: 'NO_OPPONENT'})).toEqual({
+        expect(byeExplanation({cause: 'NO_OPPONENT', mustRace: false})).toEqual({
             key: 'event.match.bye.noOpponent',
         })
     })
 
     /** Eine Abmeldung ohne Namen ist keine belegte Ursache - dann lieber der neutrale Satz. */
     it('fällt ohne Mannschaftsnamen auf den neutralen Satz zurück', () => {
-        expect(byeExplanation({cause: 'DEREGISTRATION', reason: 'Krankheit'})).toEqual({
+        expect(byeExplanation({cause: 'DEREGISTRATION', reason: 'Krankheit', mustRace: false})).toEqual({
             key: 'event.match.bye.noOpponent',
+        })
+    })
+
+    /** „Muss gefahren werden" reicht der Satz als Flag weiter - die Komponente hängt den Hinweis an. */
+    it('reicht mustRace als Flag durch', () => {
+        expect(byeExplanation({cause: 'NO_OPPONENT', mustRace: true})).toEqual({
+            key: 'event.match.bye.noOpponent',
+            mustRace: true,
         })
     })
 })

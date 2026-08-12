@@ -45,4 +45,26 @@ object RaceClockerAssignmentLogic {
             team.competitionRegistration to candidates.filter { team.competitionRegistration in it.ids }
         }.filterValues { it.isNotEmpty() }
     }
+
+    /**
+     * Ob dieser Lauf im geholten Rennen bereits vorhanden ist - die Delta-Frage des
+     * Startlisten-Sammelexports ("nur in RaceClocker fehlende Läufe exportieren").
+     *
+     * Geprüft wird ausschließlich die Lauf-Mannschafts-Kennung (competition_match_team.id) in
+     * RaceClockers "Extra info" - dieselbe Kennung, über die [assignFeedRows] primär zuordnet, und
+     * die einzige, die je Runde eindeutig ist. Daraus folgen zwei bewusste Entscheidungen:
+     *
+     * - Zeilen ohne Kennungen können einen Lauf nie als vorhanden belegen. Fehlt das UUID-Mapping
+     *   im Feed (Startliste ohne Lauf-Spalte importiert oder Spalte beim Import nicht auf
+     *   "Extra info" gelegt), gilt der Lauf als fehlend und wird exportiert - lieber eine Welle
+     *   doppelt angeboten (das fällt beim Import sofort auf) als still ausgelassen. Der Wellenname
+     *   wäre das Zweitkriterium für diese Fälle, ist aber bewusst NICHT gebaut: Wellen werden am
+     *   Renntag in RaceClocker umbenannt und zusammengelegt ("AF4 & AF2"), ein Abgleich darüber
+     *   riete also genau dann, wenn es darauf ankommt.
+     * - Die Meldungs-Kennung (registration id) scheidet ebenfalls aus: Sie wiederholt sich über
+     *   die Runden desselben Rennens und meldete eine Folgerunde als vorhanden, sobald die
+     *   Vorrunde importiert war.
+     */
+    fun matchInFeed(rows: List<RaceClockerFeedRow>, matchTeamIds: List<UUID>): Boolean =
+        rows.any { row -> matchTeamIds.any { it in row.ids } }
 }

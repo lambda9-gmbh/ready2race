@@ -11,12 +11,14 @@ import {
     Card,
     Divider,
     Stack,
+    Switch,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
+    Tooltip,
     Typography,
     useTheme,
 } from '@mui/material'
@@ -33,6 +35,7 @@ import {
     reopenMatch,
     skipScheduleRound,
     updateMatchActivation,
+    updateMatchByeMustRace,
 } from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
@@ -243,6 +246,33 @@ const CompetitionExecutionRound = ({
         }
     }
 
+    /**
+     * Freilos "muss gefahren werden": Der Lauf wird operativ zum echten Rennen (Startliste,
+     * Zeitnahme, Beenden), das Weiterkommen bleibt Freilos-Semantik - Server-KDoc
+     * `updateByeMustRace`.
+     */
+    const handleToggleByeMustRace = async (match: CompetitionMatchDto, mustRace: boolean) => {
+        props.setSubmitting(true)
+        const {error} = await updateMatchByeMustRace({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+            body: {
+                mustRace,
+            },
+        })
+        props.setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else {
+            feedback.success(t('event.competition.execution.byeMustRace.success'))
+            props.reloadRoundDto()
+        }
+    }
+
     const handleToggleActivation = async (match: CompetitionMatchDto) => {
         // Check if match has no places set
         const hasPlacesSet = match.teams.some(
@@ -312,7 +342,7 @@ const CompetitionExecutionRound = ({
                                                         'event.competition.setup.match.outcome.outcome',
                                                     )}
                                                 </TableCell>
-                                                <TableCell width="60%">
+                                                <TableCell width="40%">
                                                     {t('event.competition.execution.match.team')}
                                                 </TableCell>
                                                 {/* Der Zustand des Laufs, aus derselben Ableitung
@@ -322,6 +352,11 @@ const CompetitionExecutionRound = ({
                                                 <TableCell width="25%">
                                                     {t('event.competition.execution.match.status')}
                                                 </TableCell>
+                                                <TableCell width="20%">
+                                                    {t(
+                                                        'event.competition.execution.byeMustRace.label',
+                                                    )}
+                                                </TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -330,7 +365,7 @@ const CompetitionExecutionRound = ({
                                                     <TableCell width="15%">
                                                         {match.weighting}
                                                     </TableCell>
-                                                    <TableCell width="60%">
+                                                    <TableCell width="40%">
                                                         {match.teams[0]
                                                             ? match.teams[0].clubName +
                                                               (match.teams[0].name
@@ -346,6 +381,35 @@ const CompetitionExecutionRound = ({
                                                                 now,
                                                             )}
                                                         />
+                                                    </TableCell>
+                                                    <TableCell width="20%">
+                                                        {/* Fairness-Regel: Strecke trotz Freilos
+                                                            fahren - Platzierung egal, Zeit läuft
+                                                            außer Konkurrenz (Hilfetext). */}
+                                                        <Tooltip
+                                                            title={t(
+                                                                'event.competition.execution.byeMustRace.hint',
+                                                            )}>
+                                                            <Switch
+                                                                size={'small'}
+                                                                checked={
+                                                                    match.status.bye?.mustRace ??
+                                                                    false
+                                                                }
+                                                                disabled={submitting}
+                                                                onChange={(_, checked) =>
+                                                                    handleToggleByeMustRace(
+                                                                        match,
+                                                                        checked,
+                                                                    )
+                                                                }
+                                                                inputProps={{
+                                                                    'aria-label': t(
+                                                                        'event.competition.execution.byeMustRace.label',
+                                                                    ),
+                                                                }}
+                                                            />
+                                                        </Tooltip>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

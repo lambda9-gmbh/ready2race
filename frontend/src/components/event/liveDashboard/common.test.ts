@@ -601,9 +601,12 @@ describe('dashboardMatchStatus', () => {
 
     it('trägt das Freilos in den Dashboard-Status', () => {
         const status = dashboardMatchStatus(
-            match({state: 'AWAITING_FINISH', bye: {cause: 'DEREGISTRATION', teamName: 'RV Hansa'}}),
+            match({
+                state: 'AWAITING_FINISH',
+                bye: {cause: 'DEREGISTRATION', teamName: 'RV Hansa', mustRace: false},
+            }),
         )
-        expect(status.bye).toEqual({cause: 'DEREGISTRATION', teamName: 'RV Hansa'})
+        expect(status.bye).toEqual({cause: 'DEREGISTRATION', teamName: 'RV Hansa', mustRace: false})
     })
 
     it('lässt einen gewöhnlichen Lauf ohne Freilos', () => {

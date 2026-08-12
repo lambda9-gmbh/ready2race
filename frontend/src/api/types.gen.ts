@@ -1744,6 +1744,11 @@ export type EventScheduleSlotDto = {
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
 
 /**
+ * Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer needs, one race per competition), CSV writes one big file sorted by start time (what RaceClocker needs, one race carrying all waves).
+ */
+export type EventStartlistFileType = 'ZIP' | 'CSV'
+
+/**
  * Event-wide timing defaults. Timing system and the file-format presets live here once and every competition without its own values inherits them. The race selection is NOT here - it is assigned per race on each competition (RaceClockerRaceAssignments), no event-wide default.
  *
  */
@@ -2276,7 +2281,7 @@ export type ManualTrackingRequest = {
 export type MatchByeCause = 'DEREGISTRATION' | 'NO_OPPONENT'
 
 /**
- * The bye of a match. Display only - it changes nothing about the chain, the result lock or the automatic first place.
+ * The bye of a match. Display only - it changes nothing about the chain, the result lock or the automatic first place. Exception: mustRace makes the match operationally a real race.
  */
 export type MatchByeDto = {
     cause: MatchByeCause
@@ -2288,6 +2293,10 @@ export type MatchByeDto = {
      * The stored withdrawal reason - only when exactly one row is deregistered, because with several the mapping name -> reason would be a guess.
      */
     reason?: string | null
+    /**
+     * 'Must race' (competition_match.bye_must_race): the match stays a bye but is raced - exports, polling and the chain treat it like any match, the measured time runs out of competition.
+     */
+    mustRace: boolean
 }
 
 export type MatchForRunningStatusDto = {
@@ -3680,6 +3689,13 @@ export type UpdateGlobalConfigurationsRequest = {
     allowClubCreationOnRegistration: boolean
 }
 
+/**
+ * Toggles 'must race' on a bye match. Fairness rule of some rule books: even a boat without an opponent races the course. Progression keeps bye semantics, the time is taken and shown as out of competition.
+ */
+export type UpdateMatchByeMustRaceRequest = {
+    mustRace: boolean
+}
+
 export type UpdateQrCodeRequirementDto = {
     requirementId: string
     namedParticipantId?: string
@@ -4781,6 +4797,19 @@ export type DownloadRoundStartListData = {
 export type DownloadRoundStartListResponse = Blob | File
 
 export type DownloadRoundStartListError = BadRequestError | ApiError
+
+export type UpdateMatchByeMustRaceData = {
+    body: UpdateMatchByeMustRaceRequest
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UpdateMatchByeMustRaceResponse = void
+
+export type UpdateMatchByeMustRaceError = BadRequestError | ApiError
 
 export type MarkMatchStartedFromExecutionData = {
     path: {
@@ -7355,6 +7384,27 @@ export type GetEventScheduleData = {
 export type GetEventScheduleResponse = EventScheduleDto
 
 export type GetEventScheduleError = ApiError
+
+export type DownloadEventStartlistsData = {
+    path: {
+        eventId: string
+    }
+    query: {
+        fileType: EventStartlistFileType
+        /**
+         * Delta export (default false): fetch each competition's configured RaceClocker race feed server-side and export only matches whose match team ids do not appear in the feed's 'Extra info'. Competitions without an assigned race are excluded. An unreachable race fails the whole export with a structured error instead of a silent partial export.
+         */
+        onlyMissingInRaceClocker?: boolean
+        /**
+         * Skip bye matches (default true). Matches flagged as 'bye must race' (competition_match.bye_must_race) are ALWAYS exported, overriding this flag - they are raced and need their wave in the timing tooling.
+         */
+        skipByes?: boolean
+    }
+}
+
+export type DownloadEventStartlistsResponse = Blob | File
+
+export type DownloadEventStartlistsError = BadRequestError | ApiError
 
 export type CreateScheduleSlotData = {
     body: UpsertScheduleSlotRequest

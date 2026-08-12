@@ -863,6 +863,9 @@ select cm.competition_setup_match,
        cm.raceclocker_poll_error,
        cm.raceclocker_auto_paused_at,
        cm.pairings_recalculated_at,
+       -- Freilos "muss gefahren werden" (V202608111800): funktional abhängig vom Primärschlüssel
+       -- cm.competition_setup_match, deshalb ohne eigenen group-by-Eintrag zulässig.
+       cm.bye_must_race,
        coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams,
        cmtwr.mixed_team_term                                                as mixed_team_term
 from competition_match cm

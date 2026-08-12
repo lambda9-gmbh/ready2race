@@ -1032,6 +1032,11 @@
           "success": "Runde als entfallen markiert"
         },
         "teamsWithBye": "Teams mit Freilos",
+        "byeMustRace": {
+          "label": "Muss gefahren werden",
+          "hint": "Fairness: Die Athlet:innen fahren die Strecke trotz Freilos. Die Platzierung spielt keine Rolle – das Team kommt in jedem Fall weiter –, die Zeit wird genommen und außer Konkurrenz angezeigt.",
+          "success": "Gespeichert"
+        },
         "match": {
           "status": "Status",
           "startTime": "Startzeit",
@@ -1612,7 +1617,8 @@
       "bye": {
         "deregistration": "Freilos wegen Abmeldung – {{team}}",
         "deregistrationWithReason": "Freilos wegen Abmeldung – {{team}} ({{reason}})",
-        "noOpponent": "Freilos – keine Gegner:in in dieser Runde"
+        "noOpponent": "Freilos – keine Gegner:in in dieser Runde",
+        "mustRace": "wird gefahren – Zeit außer Konkurrenz"
       }
     },
     "liveDashboard": {
@@ -1731,6 +1737,27 @@
       "showShortNames": "Kurznamen zeigen",
       "showFullNames": "Ausgeschriebene Namen zeigen",
       "addSlot": "Slot hinzufügen",
+      "startlistExport": {
+        "button": "Startlisten",
+        "title": "Startlisten exportieren",
+        "format": {
+          "label": "Format",
+          "zip": "ZIP – eine CSV je Wettkampf",
+          "csv": "Eine große CSV – nach Startzeit sortiert"
+        },
+        "skipByes": {
+          "label": "Freilose überspringen",
+          "hint": "Läufe mit „Muss gefahren werden“ werden immer exportiert – auch mit gesetztem Häkchen."
+        },
+        "onlyMissing": {
+          "label": "Nur in RaceClocker fehlende Läufe",
+          "hint": "Ruft je Wettkampf das zugewiesene Rennen ab und exportiert nur Läufe, deren Teams dort noch nicht auftauchen."
+        },
+        "download": "Herunterladen",
+        "error": {
+          "unreachable": "Ein RaceClocker-Rennen war nicht erreichbar – es wurde nichts exportiert."
+        }
+      },
       "slotType": "Art",
       "freeSlot": "Freier Slot",
       "matchSlot": "Lauf",

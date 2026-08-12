@@ -29,6 +29,12 @@ sealed interface CompetitionExecutionError : ServiceError {
      */
     data object MatchIsBye : CompetitionExecutionError
 
+    /**
+     * Die Umkehrung: "muss gefahren werden" (bye_must_race) lässt sich nur an einem Lauf setzen,
+     * der überhaupt ein Freilos ist - an jedem anderen wäre das Flag wirkungslos und irreführend.
+     */
+    data object MatchIsNoBye : CompetitionExecutionError
+
     /** Beenden zurücknehmen setzt einen beendeten Lauf voraus - sonst gibt es nichts zurückzunehmen. */
     data object MatchNotFinished : CompetitionExecutionError
     data object StartTimeNotSet : CompetitionExecutionError
@@ -142,6 +148,11 @@ sealed interface CompetitionExecutionError : ServiceError {
             status = HttpStatusCode.BadRequest,
             message = "This match is a bye - the team moves on without racing, there is no result to record.",
             errorCode = ErrorCode.EXECUTION_MATCH_IS_BYE,
+        )
+
+        MatchIsNoBye -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "This match is not a bye - 'must race' can only be set on a bye match.",
         )
 
         MatchNotFinished -> ApiError(

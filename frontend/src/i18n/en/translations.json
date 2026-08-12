@@ -1032,6 +1032,11 @@
           "success": "Round marked as cancelled"
         },
         "teamsWithBye": "Teams with a bye",
+        "byeMustRace": {
+          "label": "Must be raced",
+          "hint": "Fairness: the athletes race the course despite the bye. Placement does not matter – the team advances either way – the time is taken and shown out of competition.",
+          "success": "Saved"
+        },
         "match": {
           "status": "Status",
           "startTime": "Start time",
@@ -1616,7 +1621,8 @@
       "bye": {
         "deregistration": "Bye after withdrawal — {{team}}",
         "deregistrationWithReason": "Bye after withdrawal — {{team}} ({{reason}})",
-        "noOpponent": "Bye — no opponent in this round"
+        "noOpponent": "Bye — no opponent in this round",
+        "mustRace": "raced — time out of competition"
       }
     },
     "liveDashboard": {
@@ -1735,6 +1741,27 @@
       "showShortNames": "Show short names",
       "showFullNames": "Show full names",
       "addSlot": "Add slot",
+      "startlistExport": {
+        "button": "Start lists",
+        "title": "Export start lists",
+        "format": {
+          "label": "Format",
+          "zip": "ZIP – one CSV per competition",
+          "csv": "One big CSV – sorted by start time"
+        },
+        "skipByes": {
+          "label": "Skip byes",
+          "hint": "Matches flagged “Must be raced” are always exported – even with this box checked."
+        },
+        "onlyMissing": {
+          "label": "Only matches missing in RaceClocker",
+          "hint": "Fetches each competition's assigned race and exports only matches whose teams do not appear there yet."
+        },
+        "download": "Download",
+        "error": {
+          "unreachable": "A RaceClocker race was unreachable – nothing was exported."
+        }
+      },
       "slotType": "Type",
       "freeSlot": "Free slot",
       "matchSlot": "Race",

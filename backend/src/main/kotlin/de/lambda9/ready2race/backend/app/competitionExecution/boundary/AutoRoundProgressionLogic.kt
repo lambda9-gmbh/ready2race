@@ -58,9 +58,13 @@ object AutoRoundProgressionLogic {
     /**
      * Ein Freilos: ein einziges Boot in einer nicht erforderlichen Runde. In einer erforderlichen
      * Runde wird auch allein gefahren (Zeitfahren) — dort ist ein einzelnes Boot kein Freilos.
+     *
+     * Ein Freilos mit "muss gefahren werden" ([CompetitionMatchWithTeams.byeMustRace]) zählt hier
+     * ausdrücklich NICHT als Freilos: Es wird gefahren, bekommt ein Ergebnis und einen
+     * Beenden-Stempel — die Automatik wartet darauf wie bei jedem Lauf.
      */
     private fun bye(match: CompetitionMatchWithTeams, roundRequired: Boolean): Boolean =
-        !roundRequired && match.teams.size == 1
+        !roundRequired && match.teams.size == 1 && !match.byeMustRace
 
     /**
      * Ob ein Lauf kein einziges wertbares Boot mehr hat — alle Boote sind abgemeldet, ausgefallen

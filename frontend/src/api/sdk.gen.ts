@@ -180,6 +180,9 @@ import type {
     DownloadRoundStartListData,
     DownloadRoundStartListError,
     DownloadRoundStartListResponse,
+    UpdateMatchByeMustRaceData,
+    UpdateMatchByeMustRaceError,
+    UpdateMatchByeMustRaceResponse,
     MarkMatchStartedFromExecutionData,
     MarkMatchStartedFromExecutionError,
     MarkMatchStartedFromExecutionResponse,
@@ -754,6 +757,9 @@ import type {
     GetEventScheduleData,
     GetEventScheduleError,
     GetEventScheduleResponse,
+    DownloadEventStartlistsData,
+    DownloadEventStartlistsError,
+    DownloadEventStartlistsResponse,
     CreateScheduleSlotData,
     CreateScheduleSlotError,
     CreateScheduleSlotResponse,
@@ -1649,6 +1655,22 @@ export const downloadRoundStartList = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/round/{setupRoundId}/startList',
+    })
+}
+
+/**
+ * Toggles 'must race' on a bye match (competition_match.bye_must_race). The match then operationally counts as a real race (start list exports, RaceClocker polling, the chain waits for it to be finished), while progression keeps bye semantics - the racing team moves on regardless of the measured time, which is displayed as out of competition.
+ */
+export const updateMatchByeMustRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchByeMustRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchByeMustRaceResponse,
+        UpdateMatchByeMustRaceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/bye-must-race',
     })
 }
 
@@ -4178,6 +4200,22 @@ export const getEventSchedule = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule',
+    })
+}
+
+/**
+ * Bulk start list export for the whole event: the first created round of every competition (or, in delta mode, every created match missing in RaceClocker), either as a ZIP with one CSV per competition (file names like the round export) or as one big CSV sorted by start time across all competitions.
+ */
+export const downloadEventStartlists = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadEventStartlistsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadEventStartlistsResponse,
+        DownloadEventStartlistsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/startlists',
     })
 }
 

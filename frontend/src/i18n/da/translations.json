@@ -1032,6 +1032,11 @@
           "success": "Runden er markeret som aflyst"
         },
         "teamsWithBye": "Hold med frirunde",
+        "byeMustRace": {
+          "label": "Skal gennemføres",
+          "hint": "Fairness: atleterne gennemfører distancen trods oversidderen. Placeringen er uden betydning – holdet går videre uanset – tiden tages og vises uden for konkurrence.",
+          "success": "Gemt"
+        },
         "match": {
           "status": "Status",
           "startTime": "Starttid",
@@ -1612,7 +1617,8 @@
       "bye": {
         "deregistration": "Oversidder efter afmelding – {{team}}",
         "deregistrationWithReason": "Oversidder efter afmelding – {{team}} ({{reason}})",
-        "noOpponent": "Oversidder – ingen modstander i denne runde"
+        "noOpponent": "Oversidder – ingen modstander i denne runde",
+        "mustRace": "gennemføres – tid uden for konkurrence"
       }
     },
     "liveDashboard": {
@@ -1731,6 +1737,27 @@
       "showShortNames": "Vis korte navne",
       "showFullNames": "Vis fulde navne",
       "addSlot": "Tilføj slot",
+      "startlistExport": {
+        "button": "Startlister",
+        "title": "Eksportér startlister",
+        "format": {
+          "label": "Format",
+          "zip": "ZIP – én CSV pr. konkurrence",
+          "csv": "Én stor CSV – sorteret efter starttid"
+        },
+        "skipByes": {
+          "label": "Spring oversiddere over",
+          "hint": "Løb markeret “Skal gennemføres” eksporteres altid – også med dette flueben."
+        },
+        "onlyMissing": {
+          "label": "Kun løb der mangler i RaceClocker",
+          "hint": "Henter hvert løbs tildelte RaceClocker-løb og eksporterer kun løb, hvis hold endnu ikke findes dér."
+        },
+        "download": "Download",
+        "error": {
+          "unreachable": "Et RaceClocker-løb kunne ikke nås – intet blev eksporteret."
+        }
+      },
       "slotType": "Type",
       "freeSlot": "Fri slot",
       "matchSlot": "Løb",

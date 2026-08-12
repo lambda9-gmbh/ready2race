@@ -59,6 +59,7 @@ class AutoRoundProgressionLogicTest {
     private fun match(
         finishedAt: LocalDateTime? = now,
         skipped: Boolean = false,
+        byeMustRace: Boolean = false,
         teams: List<CompetitionMatchTeamWithRegistration>,
     ) = CompetitionMatchWithTeams(
         competitionSetupMatch = UUID.randomUUID(),
@@ -71,6 +72,7 @@ class AutoRoundProgressionLogicTest {
         raceClockerPollError = null,
         raceClockerAutoPausedAt = null,
         pairingsRecalculatedAt = null,
+        byeMustRace = byeMustRace,
         teams = teams,
     )
 
@@ -150,6 +152,33 @@ class AutoRoundProgressionLogicTest {
         )
 
         assertTrue(AutoRoundProgressionLogic.roundIsComplete(withBye))
+    }
+
+    /**
+     * Ein Freilos mit "muss gefahren werden" (bye_must_race) ist KEIN Freilos mehr für die
+     * Automatik: Es wird gefahren, und die Runde wartet auf sein Ergebnis und sein Beenden wie
+     * bei jedem Lauf.
+     */
+    @Test
+    fun aMustRaceByeHoldsTheRoundBackLikeAnyMatch() {
+        val open = round(
+            required = false,
+            matches = listOf(
+                match(teams = listOf(team(place = 1, startNumber = 1), team(place = 2, startNumber = 2))),
+                match(finishedAt = null, byeMustRace = true, teams = listOf(team(startNumber = 1))),
+            )
+        )
+        assertFalse(AutoRoundProgressionLogic.roundIsComplete(open))
+
+        // Gefahren, Zeit genommen, beendet: jetzt ist die Runde durch.
+        val finished = round(
+            required = false,
+            matches = listOf(
+                match(teams = listOf(team(place = 1, startNumber = 1), team(place = 2, startNumber = 2))),
+                match(byeMustRace = true, teams = listOf(team(place = 1, startNumber = 1))),
+            )
+        )
+        assertTrue(AutoRoundProgressionLogic.roundIsComplete(finished))
     }
 
     /**

@@ -1594,6 +1594,42 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/bye-must-race:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateMatchByeMustRace
+      description: >-
+        Toggles 'must race' on a bye match (competition_match.bye_must_race). The match then
+        operationally counts as a real race (start list exports, RaceClocker polling, the chain
+        waits for it to be finished), while progression keeps bye semantics - the racing team moves
+        on regardless of the measured time, which is displayed as out of competition.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMatchByeMustRaceRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/mark-started:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6824,6 +6860,61 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/startlists:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: fileType
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventStartlistFileType'
+      - name: skipByes
+        in: query
+        required: false
+        description: >-
+          Skip bye matches (default true). Matches flagged as 'bye must race'
+          (competition_match.bye_must_race) are ALWAYS exported, overriding this flag - they are
+          raced and need their wave in the timing tooling.
+        schema:
+          type: boolean
+      - name: onlyMissingInRaceClocker
+        in: query
+        required: false
+        description: >-
+          Delta export (default false): fetch each competition's configured RaceClocker race feed
+          server-side and export only matches whose match team ids do not appear in the feed's
+          'Extra info'. Competitions without an assigned race are excluded. An unreachable race
+          fails the whole export with a structured error instead of a silent partial export.
+        schema:
+          type: boolean
+    get:
+      operationId: downloadEventStartlists
+      description: >-
+        Bulk start list export for the whole event: the first created round of every competition
+        (or, in delta mode, every created match missing in RaceClocker), either as a ZIP with one
+        CSV per competition (file names like the round export) or as one big CSV sorted by start
+        time across all competitions.
+      responses:
+        200:
+          description: The start list file (ZIP or CSV, depending on fileType)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
 
@@ -12721,9 +12812,10 @@ components:
       type: object
       description: >-
         The bye of a match. Display only - it changes nothing about the chain, the result lock or
-        the automatic first place.
+        the automatic first place. Exception: mustRace makes the match operationally a real race.
       required:
         - cause
+        - mustRace
       properties:
         cause:
           $ref: '#/components/schemas/MatchByeCause'
@@ -12737,6 +12829,12 @@ components:
           description: >-
             The stored withdrawal reason - only when exactly one row is deregistered, because with
             several the mapping name -> reason would be a guess.
+        mustRace:
+          type: boolean
+          description: >-
+            'Must race' (competition_match.bye_must_race): the match stays a bye but is raced -
+            exports, polling and the chain treat it like any match, the measured time runs out of
+            competition.
 
     MatchStatusDto:
       type: object
@@ -12930,6 +13028,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpdateCompetitionMatchTeamRequest'
+
+    EventStartlistFileType:
+      type: string
+      description: >-
+        Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer
+        needs, one race per competition), CSV writes one big file sorted by start time (what
+        RaceClocker needs, one race carrying all waves).
+      enum:
+        - ZIP
+        - CSV
+
+    UpdateMatchByeMustRaceRequest:
+      type: object
+      description: >-
+        Toggles 'must race' on a bye match. Fairness rule of some rule books: even a boat without
+        an opponent races the course. Progression keeps bye semantics, the time is taken and shown
+        as out of competition.
+      required:
+        - mustRace
+      properties:
+        mustRace:
+          type: boolean
 
     UpdateCompetitionMatchActivationRequest:
       type: object

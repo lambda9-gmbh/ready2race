@@ -119,6 +119,25 @@ fun Route.competitionExecution() {
                 }
             }
 
+            // Freilos "muss gefahren werden" — nur an einem Freilos-Lauf, siehe Service-KDoc.
+            put("/bye-must-race") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    val body = !receiveKIO(UpdateMatchByeMustRaceRequest.example)
+                    CompetitionExecutionService.updateByeMustRace(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                        request = body,
+                    )
+                }
+            }
+
             // Beenden zurücknehmen — nur in der jüngsten Runde, siehe Service-KDoc.
             put("/reopen") {
                 call.respondComprehension {
