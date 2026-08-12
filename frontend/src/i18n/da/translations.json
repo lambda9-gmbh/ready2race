@@ -1696,6 +1696,19 @@
         "tooltip": "Næste opdatering om {{seconds}} s (hvert {{interval}}. s)",
         "everySeconds": "Hvert {{seconds}}. sekund"
       },
+      "settings": {
+        "focus": "Fokus",
+        "competitionFilter": {
+          "label": "Filtrér konkurrencer",
+          "all": "Alle konkurrencer",
+          "empty": "Ingen løb tilgængelige",
+          "chip_one": "filtreret: {{count}} konkurrence",
+          "chip_other": "filtreret: {{count}} konkurrencer"
+        },
+        "onlyToday": "Vis kun den aktuelle løbsdag",
+        "hideFinished": "Skjul afsluttede løb (de seneste {{count}} bliver)",
+        "followCurrent": "Følg det aktuelle løb"
+      },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Resultater komplette — venter på afslutning",
       "control": {

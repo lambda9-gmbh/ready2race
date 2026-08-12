@@ -1696,6 +1696,19 @@
         "tooltip": "Nächste Aktualisierung in {{seconds}} s (alle {{interval}} s)",
         "everySeconds": "Alle {{seconds}} Sekunden"
       },
+      "settings": {
+        "focus": "Fokus",
+        "competitionFilter": {
+          "label": "Wettkämpfe filtern",
+          "all": "Alle Wettkämpfe",
+          "empty": "Keine Läufe vorhanden",
+          "chip_one": "gefiltert: {{count}} Wettkampf",
+          "chip_other": "gefiltert: {{count}} Wettkämpfe"
+        },
+        "onlyToday": "Nur den aktuellen Renntag zeigen",
+        "hideFinished": "Beendete ausblenden (die letzten {{count}} bleiben)",
+        "followCurrent": "Folge dem aktuellen Lauf"
+      },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",
       "control": {
