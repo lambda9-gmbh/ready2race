@@ -2495,13 +2495,28 @@ export type MyEventRegistrationDto = {
 export type MyEventRequirementDto = {
     id: string
     name: string
-    description?: string | null
+    /**
+     * Public, athlete-facing text. The internal description is deliberately never delivered here.
+     */
+    publicNote?: string | null
     optional: boolean
     fulfilled: boolean
+    /**
+     * Earliest moment the requirement can be checked - first future start minus checkEarliestMinutesBefore; null without a window or a future start
+     */
+    checkFrom?: string | null
+    /**
+     * Latest moment, analogous from checkLatestMinutesBefore
+     */
+    checkUntil?: string | null
 }
 
 export type MyEventResultDto = {
     matchId: string
+    /**
+     * The own boat's registration - matches teamId of the teams in /latest-match-results, used to mark the own boat in the full field
+     */
+    teamId?: string | null
     competitionName: string
     categoryName?: string | null
     roundName?: string | null
@@ -2773,6 +2788,10 @@ export type ParticipantRequirementDto = {
     id: string
     name: string
     description?: string
+    /**
+     * Public, athlete-facing text shown on My Event - separate from the internal description
+     */
+    publicNote?: string | null
     optional: boolean
     /**
      * Per App prüfbar
@@ -2812,6 +2831,10 @@ export type ParticipantRequirementForEventDto = {
 export type ParticipantRequirementUpsertDto = {
     name: string
     description?: string
+    /**
+     * Public, athlete-facing text shown on My Event - separate from the internal description
+     */
+    publicNote?: string | null
     optional?: boolean
     /**
      * Per App prüfbar
@@ -7236,6 +7259,10 @@ export type GetLatestMatchResultsData = {
     query: {
         competitionId?: string
         limit: number
+        /**
+         * Restricts the response to the field of one single match (used by My Event) - the visibility rule stays the same, an unreleased match answers with an empty list
+         */
+        matchId?: string
     }
 }
 

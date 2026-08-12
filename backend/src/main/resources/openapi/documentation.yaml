@@ -6485,6 +6485,13 @@ paths:
         schema:
           type: string
           format: uuid
+      - in: query
+        name: matchId
+        required: false
+        description: "Restricts the response to the field of one single match (used by My Event) - the visibility rule stays the same, an unreleased match answers with an empty list"
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: getLatestMatchResults
       parameters:
@@ -11376,6 +11383,10 @@ components:
           type: string
         description:
           type: string
+        publicNote:
+          type: string
+          nullable: true
+          description: "Public, athlete-facing text shown on My Event - separate from the internal description"
         optional:
           type: boolean
         checkInApp:
@@ -11460,6 +11471,10 @@ components:
           type: string
         description:
           type: string
+        publicNote:
+          type: string
+          nullable: true
+          description: "Public, athlete-facing text shown on My Event - separate from the internal description"
         optional:
           type: boolean
         checkInApp:
@@ -14942,6 +14957,11 @@ components:
         matchId:
           type: string
           format: uuid
+        teamId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "The own boat's registration - matches teamId of the teams in /latest-match-results, used to mark the own boat in the full field"
         competitionName:
           type: string
         categoryName:
@@ -15021,13 +15041,24 @@ components:
           format: uuid
         name:
           type: string
-        description:
+        publicNote:
           type: string
           nullable: true
+          description: "Public, athlete-facing text. The internal description is deliberately never delivered here."
         optional:
           type: boolean
         fulfilled:
           type: boolean
+        checkFrom:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Earliest moment the requirement can be checked - first future start minus checkEarliestMinutesBefore; null without a window or a future start"
+        checkUntil:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Latest moment, analogous from checkLatestMinutesBefore"
 
     MyEventDto:
       type: object

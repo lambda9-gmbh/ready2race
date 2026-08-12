@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 import {MyEventDto, MyEventRequirementDto} from '@api/types.gen.ts'
-import {blockOrder, nothingToShow, openRequirements} from './myEventOrder.ts'
+import {blockOrder, nothingToShow, openRequirements, requirementWindow} from './myEventOrder.ts'
 
 const requirement = (o: Partial<MyEventRequirementDto>): MyEventRequirementDto => ({
     id: crypto.randomUUID(),
@@ -32,6 +32,39 @@ describe('openRequirements', () => {
             requirement({fulfilled: false, optional: true}),
         ])
         expect(result).toEqual([open])
+    })
+})
+
+describe('requirementWindow', () => {
+    it('liefert beide Grenzen, wenn der Server beide schickt', () => {
+        const window = requirementWindow(
+            requirement({checkFrom: '2026-08-14T06:30:00', checkUntil: '2026-08-14T07:30:00'}),
+        )
+        expect(window).toEqual({from: '2026-08-14T06:30:00', until: '2026-08-14T07:30:00'})
+    })
+
+    it.each([
+        ['nur ab', {checkFrom: '2026-08-14T06:30:00'}, {from: '2026-08-14T06:30:00'}],
+        ['nur bis', {checkUntil: '2026-08-14T07:30:00'}, {until: '2026-08-14T07:30:00'}],
+    ])('trägt ein halbes Fenster (%s) durch', (_name, fields, expected) => {
+        expect(requirementWindow(requirement(fields))).toEqual(expected)
+    })
+
+    it('zeigt ohne Grenzen keine Zeile', () => {
+        expect(requirementWindow(requirement({}))).toBeNull()
+    })
+
+    it('zeigt für erfüllte Bedingungen keine Zeile', () => {
+        // "Erledigen zwischen 06:30 und 07:30" unter einem grünen Haken liest sich wie eine
+        // noch offene Aufgabe.
+        const window = requirementWindow(
+            requirement({
+                fulfilled: true,
+                checkFrom: '2026-08-14T06:30:00',
+                checkUntil: '2026-08-14T07:30:00',
+            }),
+        )
+        expect(window).toBeNull()
     })
 })
 

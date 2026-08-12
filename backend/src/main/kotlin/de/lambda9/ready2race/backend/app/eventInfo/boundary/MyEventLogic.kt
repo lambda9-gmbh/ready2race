@@ -36,6 +36,8 @@ object MyEventLogic {
      */
     data class RawMatch(
         val matchId: UUID,
+        /** Die eigene Meldung in diesem Lauf — wird nur am Ergebnis nach außen gereicht. */
+        val teamId: UUID?,
         val competitionName: String,
         val categoryName: String?,
         val roundName: String?,
@@ -105,6 +107,32 @@ object MyEventLogic {
         )
     }
 
+    /**
+     * Der erste künftige Start der Person: die früheste geplante Startzeit unter den kommenden
+     * Läufen, echt nach [now]. Abgemeldete Boote zählen nicht — dieser Start findet für die
+     * Person nicht statt, ein daraus gerechnetes Erledigungsfenster schickte sie zur falschen
+     * Zeit an die Meldestelle. Überfällige Läufe (Startzeit verstrichen, Nachfrist läuft noch)
+     * zählen ebenfalls nicht: "künftig" heißt hier wörtlich in der Zukunft.
+     */
+    fun firstFutureStart(upcoming: List<MyEventMatchDto>, now: LocalDateTime): LocalDateTime? =
+        upcoming.asSequence()
+            .filter { !it.deregistered }
+            .mapNotNull { it.startTime }
+            .filter { it.isAfter(now) }
+            .minOrNull()
+
+    /**
+     * Eine Grenze des Erledigungsfensters einer Bedingung: [minutesBefore] Minuten vor dem
+     * ersten künftigen Start. null, sobald eine der beiden Größen fehlt — ein halbes Fenster
+     * gibt es, ein erfundenes nicht.
+     */
+    fun checkWindowBound(firstFutureStart: LocalDateTime?, minutesBefore: Int?): LocalDateTime? =
+        if (firstFutureStart != null && minutesBefore != null) {
+            firstFutureStart.minusMinutes(minutesBefore.toLong())
+        } else {
+            null
+        }
+
     private fun RawMatch.toMatchDto(now: LocalDateTime, showCountdown: Boolean) = MyEventMatchDto(
         matchId = matchId,
         competitionName = competitionName,
@@ -126,6 +154,7 @@ object MyEventLogic {
 
     private fun RawMatch.toResultDto() = MyEventResultDto(
         matchId = matchId,
+        teamId = teamId,
         competitionName = competitionName,
         categoryName = categoryName,
         roundName = roundName,

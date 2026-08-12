@@ -6,9 +6,11 @@ import java.util.UUID
 /**
  * Das persönliche Dashboard eines Teilnehmenden, erreichbar über den QR-Code am Band.
  *
- * Bewusst nicht enthalten: E-Mail-Adresse, Geschlecht, Jahrgang und die Freitext-Notiz zu
- * einer Bedingung. Die ersten drei braucht die Ansicht nicht, die Notiz ist für interne
- * Augen geschrieben. Siehe docs/superpowers/specs/2026-08-09-mein-event-design.md.
+ * Bewusst nicht enthalten: E-Mail-Adresse, Geschlecht, Jahrgang, die Freitext-Notiz zu
+ * einer Bedingung sowie deren interne Beschreibung (`description` — an ihrer Stelle steht
+ * der öffentliche Text `publicNote`, siehe [MyEventRequirementDto]). Die ersten drei braucht
+ * die Ansicht nicht, Notiz und Beschreibung sind für interne Augen geschrieben. Siehe
+ * docs/superpowers/specs/2026-08-09-mein-event-design.md.
  */
 data class MyEventDto(
     val displayName: String,
@@ -55,6 +57,12 @@ data class MyEventTeamMemberDto(
 
 data class MyEventResultDto(
     val matchId: UUID,
+    /**
+     * Die Meldung des eigenen Bootes — derselbe Schlüssel wie `teamId` in den Mannschaften
+     * von `/latest-match-results`. Darüber markiert "Mein Event" das eigene Boot, wenn es
+     * das komplette Feld des Laufs nachlädt.
+     */
+    val teamId: UUID?,
     val competitionName: String,
     val categoryName: String?,
     val roundName: String?,
@@ -83,7 +91,21 @@ data class MyEventRegistrationDto(
 data class MyEventRequirementDto(
     val id: UUID,
     val name: String,
-    val description: String?,
+    /**
+     * Der athletengerechte, öffentliche Text zur Bedingung (Spalte `public_note`, Migration
+     * V202608111600). Die interne `description` ist eine Arbeitsanweisung für die Meldestelle
+     * und wird seit dem 11.08.2026 bewusst nicht mehr ausgeliefert — wer hier einen Text
+     * ergänzt, ergänzt ihn für die Öffentlichkeit.
+     */
+    val publicNote: String?,
     val optional: Boolean,
     val fulfilled: Boolean,
+    /**
+     * Ab wann die Bedingung erledigt werden kann: erster künftiger Start der Person minus
+     * `check_earliest_minutes_before`. null, wenn die Bedingung kein Fenster trägt oder kein
+     * künftiger Start bekannt ist — dann zeigt die Anzeige keine Zeile.
+     */
+    val checkFrom: LocalDateTime?,
+    /** Bis wann, analog aus `check_latest_minutes_before`. */
+    val checkUntil: LocalDateTime?,
 )

@@ -14,6 +14,7 @@ import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 type ParticipantRequirementForm = {
     name: string
     description: string
+    publicNote: string
     optional: boolean
     checkInApp: boolean
     publiclyVisible: boolean
@@ -43,6 +44,7 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
     const defaultValues: ParticipantRequirementForm = {
         name: '',
         description: '',
+        publicNote: '',
         optional: false,
         checkInApp: false,
         publiclyVisible: false,
@@ -66,6 +68,13 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
             <Stack spacing={4}>
                 <FormInputText name="name" label={t('event.name')} required />
                 <FormInputText name="description" label={t('entity.description')} />
+                {/* Getrennt von der Beschreibung: die ist die interne Arbeitsanweisung, dieser
+                    Text geht wörtlich an die Athleten in "Mein Event". */}
+                <FormInputText
+                    name="publicNote"
+                    label={t('participantRequirement.publicNote')}
+                    helperText={t('participantRequirement.publicNoteHint')}
+                />
                 <FormInputCheckbox name="optional" label={t('entity.optional')} />
                 <FormInputCheckbox name="checkInApp" label={t('participantRequirement.checkInApp')} />
                 <FormInputCheckbox
@@ -93,6 +102,7 @@ function mapFormToRequest(formData: ParticipantRequirementForm): ParticipantRequ
     return {
         name: formData.name,
         description: takeIfNotEmpty(formData.description),
+        publicNote: takeIfNotEmpty(formData.publicNote),
         optional: formData.optional,
         checkInApp: formData.checkInApp,
         publiclyVisible: formData.publiclyVisible,
@@ -111,6 +121,7 @@ function mapDtoToForm(dto: ParticipantRequirementDto): ParticipantRequirementFor
     return {
         name: dto.name,
         description: dto.description ?? '',
+        publicNote: dto.publicNote ?? '',
         optional: dto.optional,
         checkInApp: dto.checkInApp,
         publiclyVisible: dto.publiclyVisible,

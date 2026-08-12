@@ -129,7 +129,7 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
                 return data.results.length > 0 ? (
                     <Box>
                         <BlockHeading title={t('myEvent.results')} />
-                        <MyEventResultList results={data.results} />
+                        <MyEventResultList results={data.results} eventId={eventId} />
                     </Box>
                 ) : null
             case 'unscheduled':
