@@ -2095,9 +2095,9 @@
         "showAdvancement": "Weiterkommens-Regel zeigen",
         "showRegisteringClub": "Meldenden Verein zeigen",
         "backgroundColor": "Kachelfarbe",
-        "backgroundColorRemove": "Farbe entfernen",
-        "backgroundOpacity": "Deckkraft",
-        "backgroundColorHint": "Kräftige Farben mit niedriger Deckkraft bleiben lesbar"
+        "borderColor": "Randfarbe",
+        "colorRemove": "Farbe entfernen",
+        "backgroundColorHint": "Helle Farbtöne halten den Inhalt lesbar"
       },
       "columns": "Spalten",
       "columnCount": "{{count}} Spalten",

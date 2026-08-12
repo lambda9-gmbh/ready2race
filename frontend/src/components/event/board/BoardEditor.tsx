@@ -37,7 +37,7 @@ import {
     BoardScheduleMode,
     BoardTile,
 } from '@api/types.gen'
-import {gridPlacement, hasMatchDetail, tileBackground} from './boardView'
+import {gridPlacement, hasMatchDetail, tileColor} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
@@ -228,13 +228,14 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
         <Box
             key={elementIndex}
             sx={{
-                border: '1px solid',
-                borderColor: 'divider',
+                // Die Vorschau der Färbung — derselbe Helfer wie auf der Bühne
+                // (tileColor), damit Editor und Anzeige dasselbe zeigen: Fläche als
+                // Hintergrund, Rand als dickere Umrandung anstelle der grauen.
+                border: tileColor(element.borderColor) ? '3px solid' : '1px solid',
+                borderColor: tileColor(element.borderColor) ?? 'divider',
                 borderRadius: 1,
                 p: 1.5,
-                // Die Vorschau der Färbung — derselbe Helfer wie auf der Bühne
-                // (tileBackground), damit Editor und Anzeige dasselbe zeigen.
-                backgroundColor: tileBackground(element.backgroundColor, element.backgroundOpacity),
+                backgroundColor: tileColor(element.backgroundColor),
             }}>
             <Stack direction="row" alignItems="center" gap={1} sx={{mb: 1}}>
                 <TextField
@@ -535,11 +536,12 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                 />
             )}
 
-            {/* Signalfarbe der Kachel — für jeden Elementtyp erlaubt (z. B. rot für
-                „Letztes Ergebnis", grün für „Im Rennen"). Native Farbwahl in
-                MUI-Verpackung; ohne Farbe bleibt das bisherige Aussehen. */}
+            {/* Signalfarben der Kachel — für jeden Elementtyp erlaubt (z. B. rot für
+                „Letztes Ergebnis", grün für „Im Rennen"). Fläche und Rand unabhängig
+                voneinander; native Farbwahl in MUI-Verpackung, ohne Farbe bleibt das
+                bisherige Aussehen. */}
             <Stack gap={0.5} sx={{mt: 1.5}}>
-                <Stack direction="row" alignItems="center" gap={1}>
+                <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
                     <TextField
                         type="color"
                         size="small"
@@ -559,41 +561,45 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         <Button
                             size="small"
                             onClick={() =>
-                                // Mit der Farbe geht auch die Deckkraft — ein neuer
-                                // Anlauf startet wieder bei voller Deckung.
                                 updateElement(tileIndex, elementIndex, {
                                     ...element,
                                     backgroundColor: undefined,
-                                    backgroundOpacity: undefined,
                                 })
                             }>
-                            {t('event.boards.element.backgroundColorRemove')}
+                            {t('event.boards.element.colorRemove')}
+                        </Button>
+                    )}
+                    <TextField
+                        type="color"
+                        size="small"
+                        sx={{width: 110}}
+                        label={t('event.boards.element.borderColor')}
+                        value={element.borderColor ?? '#ffffff'}
+                        onChange={e =>
+                            updateElement(tileIndex, elementIndex, {
+                                ...element,
+                                borderColor: e.target.value,
+                            })
+                        }
+                    />
+                    {element.borderColor != null && (
+                        <Button
+                            size="small"
+                            onClick={() =>
+                                updateElement(tileIndex, elementIndex, {
+                                    ...element,
+                                    borderColor: undefined,
+                                })
+                            }>
+                            {t('event.boards.element.colorRemove')}
                         </Button>
                     )}
                 </Stack>
+                {/* Bewusst nur ein Hinweis statt einer Kontrast-Automatik. */}
                 {element.backgroundColor != null && (
-                    <Box>
-                        <Typography variant="caption" color="text.secondary">
-                            {t('event.boards.element.backgroundOpacity')}:{' '}
-                            {Math.round((element.backgroundOpacity ?? 1) * 100)}%
-                        </Typography>
-                        <Slider
-                            size="small"
-                            value={Math.round((element.backgroundOpacity ?? 1) * 100)}
-                            min={0}
-                            max={100}
-                            onChange={(_, value) =>
-                                updateElement(tileIndex, elementIndex, {
-                                    ...element,
-                                    backgroundOpacity: (value as number) / 100,
-                                })
-                            }
-                        />
-                        {/* Bewusst nur ein Hinweis statt einer Kontrast-Automatik. */}
-                        <Typography variant="caption" color="text.secondary" component="div">
-                            {t('event.boards.element.backgroundColorHint')}
-                        </Typography>
-                    </Box>
+                    <Typography variant="caption" color="text.secondary" component="div">
+                        {t('event.boards.element.backgroundColorHint')}
+                    </Typography>
                 )}
             </Stack>
         </Box>

@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest'
 import {AthleteBoardMatch, BoardElement, BoardTile, BoardViewDto} from '@api/types.gen'
 import {densityScale} from '../info/athleteBoard/boardLayout'
-import {ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, slotForElement, tileBackground} from './boardView'
+import {ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, slotForElement, tileColor} from './boardView'
 
 const match = (id: string, boats = 4): AthleteBoardMatch =>
     ({
@@ -299,34 +299,20 @@ describe('elementScale', () => {
     })
 })
 
-describe('tileBackground', () => {
-    test('übersetzt #RRGGBB samt Deckkraft nach rgba', () => {
-        expect(tileBackground('#C62828', 0.3)).toBe('rgba(198, 40, 40, 0.3)')
+describe('tileColor', () => {
+    // Beide Hex-Formen der Konfiguration gehen unverändert durch — für Fläche und Rand.
+    test('lässt gültiges Hex in beiden Formen durch', () => {
+        expect(tileColor('#C62828')).toBe('#C62828')
+        expect(tileColor('#0a0')).toBe('#0a0')
     })
 
-    // Kurzform: jede Ziffer verdoppelt sich (#0a0 → #00aa00).
-    test('versteht auch die #RGB-Kurzform', () => {
-        expect(tileBackground('#0a0', 1)).toBe('rgba(0, 170, 0, 1)')
-    })
-
-    // Fehlende Deckkraft heißt volle Deckung — wie die Backend-Vorgabe.
-    test('ohne Deckkraft gilt 1', () => {
-        expect(tileBackground('#ffffff')).toBe('rgba(255, 255, 255, 1)')
-        expect(tileBackground('#fff', null)).toBe('rgba(255, 255, 255, 1)')
-    })
-
-    // Werte außerhalb [0, 1] werden geklemmt statt durchgereicht.
-    test('klemmt die Deckkraft auf [0, 1]', () => {
-        expect(tileBackground('#000', -0.5)).toBe('rgba(0, 0, 0, 0)')
-        expect(tileBackground('#000', 1.5)).toBe('rgba(0, 0, 0, 1)')
-    })
-
-    // Ohne (gültige) Farbe bleibt das bisherige Aussehen — undefined statt rgba.
+    // Ohne (gültige) Farbe bleibt das bisherige Aussehen — undefined statt Farbwert.
     test('fehlende oder ungültige Farbe ergibt undefined', () => {
-        expect(tileBackground(undefined, 0.5)).toBeUndefined()
-        expect(tileBackground(null)).toBeUndefined()
-        expect(tileBackground('rot')).toBeUndefined()
-        expect(tileBackground('C62828')).toBeUndefined()
-        expect(tileBackground('#C6282')).toBeUndefined()
+        expect(tileColor(undefined)).toBeUndefined()
+        expect(tileColor(null)).toBeUndefined()
+        expect(tileColor('rot')).toBeUndefined()
+        expect(tileColor('C62828')).toBeUndefined()
+        expect(tileColor('#C6282')).toBeUndefined()
+        expect(tileColor('#GGHHII')).toBeUndefined()
     })
 })

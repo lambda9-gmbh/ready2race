@@ -1,5 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventInfo
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import kotlin.test.Test
@@ -167,7 +169,7 @@ class BoardRequestValidationTest {
         )
     }
 
-    // Kachelfarbe (Hex) und Deckkraft sind für jeden Elementtyp erlaubt; fehlende Felder
+    // Kachel- und Randfarbe (Hex) sind für jeden Elementtyp erlaubt; fehlende Felder
     // bleiben gültig, damit Alt-Konfigurationen unverändert deserialisieren.
     @Test
     fun backgroundColorMustBeHex() {
@@ -193,29 +195,67 @@ class BoardRequestValidationTest {
     }
 
     @Test
-    fun backgroundOpacityMustBeInUnitInterval() {
-        fun withOpacity(opacity: Double?, type: BoardElementType = BoardElementType.CLOCK) = BoardConfig(
+    fun borderColorMustBeHexAndIndependentOfBackground() {
+        fun colored(
+            border: String?,
+            background: String? = null,
+            type: BoardElementType = BoardElementType.CLOCK,
+        ) = BoardConfig(
             columns = 1,
             tiles = listOf(
                 BoardTile(
                     elements = listOf(
-                        BoardElement(type = type, backgroundColor = "#0a0", backgroundOpacity = opacity)
+                        BoardElement(type = type, backgroundColor = background, borderColor = border)
                     )
                 )
             ),
         )
-        // Die Grenzen selbst sind gültig — 0.0 (unsichtbar) bis 1.0 (deckend).
-        assertEquals(ValidationResult.Valid, request(withOpacity(0.0)).validate())
-        assertEquals(ValidationResult.Valid, request(withOpacity(0.3)).validate())
-        assertEquals(ValidationResult.Valid, request(withOpacity(1.0)).validate())
-        assertEquals(ValidationResult.Valid, request(withOpacity(null)).validate())
-        assertNotEquals(ValidationResult.Valid, request(withOpacity(-0.1)).validate())
-        assertNotEquals(ValidationResult.Valid, request(withOpacity(1.1)).validate())
-        // Und auch auf anderen Elementtypen erlaubt — z. B. der Verspätungs-Kachel.
+        // Beide Hex-Formen gelten — und der Rand braucht keine Fläche (nur Rand ist gültig).
+        assertEquals(ValidationResult.Valid, request(colored("#f00")).validate())
+        assertEquals(ValidationResult.Valid, request(colored("#2E7D32")).validate())
+        // Beides zusammen und beides fehlend sind ebenso gültig.
+        assertEquals(ValidationResult.Valid, request(colored("#f00", background = "#0a0")).validate())
+        assertEquals(ValidationResult.Valid, request(colored(null)).validate())
+        assertNotEquals(ValidationResult.Valid, request(colored("rot")).validate())
+        assertNotEquals(ValidationResult.Valid, request(colored("2E7D32")).validate())
+        assertNotEquals(ValidationResult.Valid, request(colored("#2E7D3")).validate())
+        // Ein gültiger Hintergrund heilt keinen ungültigen Rand — die Felder sind unabhängig.
+        assertNotEquals(ValidationResult.Valid, request(colored("rot", background = "#0a0")).validate())
+        // Und auch auf anderen Elementtypen erlaubt — z. B. der Lauf-Kachel.
         assertEquals(
             ValidationResult.Valid,
-            request(withOpacity(0.5, type = BoardElementType.DELAY)).validate(),
+            request(
+                BoardConfig(
+                    columns = 1,
+                    tiles = listOf(
+                        BoardTile(
+                            elements = listOf(
+                                BoardElement(type = BoardElementType.MATCH, offset = 0, borderColor = "#c62828")
+                            )
+                        )
+                    ),
+                )
+            ).validate(),
         )
+    }
+
+    // Die Konfiguration liegt als JSON in der Datenbank — ein gespeicherter Stand mit dem
+    // am 12.08.2026 entfernten Feld `backgroundOpacity` muss weiterhin fehlerfrei laden.
+    // Der Mapper ist wie der produktive in den Conversions gebaut (nacktes Kotlin-Modul,
+    // FAIL_ON_UNKNOWN_PROPERTIES standardmäßig an) — die Toleranz kommt aus der
+    // @JsonIgnoreProperties-Annotation am BoardElement, nicht aus der Mapper-Konfiguration.
+    @Test
+    fun aStoredConfigWithTheRemovedOpacityFieldStillDeserializes() {
+        val mapper = ObjectMapper().registerKotlinModule()
+        val stored = """
+            {"columns": 1, "refreshIntervalSeconds": 15, "tiles": [
+              {"colSpan": 1, "rowSpan": 1, "elements": [
+                {"type": "MATCH", "offset": 0, "backgroundColor": "#c62828", "backgroundOpacity": 0.3}
+              ]}
+            ]}
+        """.trimIndent()
+        val config = mapper.readValue(stored, BoardConfig::class.java)
+        assertEquals("#c62828", config.tiles.single().elements.single().backgroundColor)
     }
 
     @Test

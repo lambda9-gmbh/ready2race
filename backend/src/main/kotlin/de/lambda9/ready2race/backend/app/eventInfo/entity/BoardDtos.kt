@@ -61,14 +61,14 @@ data class BoardRequest(
             }
             tile.elements.forEachIndexed { elementIndex, element ->
                 val at = "tile $tileIndex element $elementIndex"
-                // Kachelfarbe und Deckkraft gelten für jeden Elementtyp — deshalb vor dem
-                // typspezifischen Zweig. Fehlende Felder bleiben gültig (Alt-Konfigurationen).
+                // Kachel- und Randfarbe gelten für jeden Elementtyp — deshalb vor dem
+                // typspezifischen Zweig, unabhängig voneinander setzbar. Fehlende Felder
+                // bleiben gültig (Alt-Konfigurationen).
                 if (element.backgroundColor != null && !HEX_COLOR.matches(element.backgroundColor)) {
                     errors += "$at: backgroundColor must be a hex color (#RGB or #RRGGBB)"
                 }
-                val opacity = element.backgroundOpacity
-                if (opacity != null && (opacity < 0.0 || opacity > 1.0)) {
-                    errors += "$at: backgroundOpacity must be in 0.0..1.0"
+                if (element.borderColor != null && !HEX_COLOR.matches(element.borderColor)) {
+                    errors += "$at: borderColor must be a hex color (#RGB or #RRGGBB)"
                 }
                 when (element.type) {
                     BoardElementType.MATCH -> {
