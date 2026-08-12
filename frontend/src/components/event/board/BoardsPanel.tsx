@@ -52,35 +52,62 @@ const BoardsPanel = ({eventId}: BoardsPanelProps) => {
     const layoutLabel = (board: BoardDto) =>
         t('event.boards.columnCount', {count: board.config.columns ?? 3})
 
-    const handleSubmit = async (request: BoardRequest) => {
-        // Der Fetch-Client wirft NICHT bei 4xx/5xx, er gibt {error} zurück. Das try/catch hier fing
-        // deshalb nie etwas, und jeder abgelehnte Speichervorgang (z. B. eine 422-Validierung wie
-        // „TEXT braucht Text") meldete trotzdem „gespeichert" — das Board war weg, der Nutzer ahnte
-        // nichts. Jetzt wird der Fehler geprüft und der Grund gezeigt, wenn der Server einen nennt.
-        const {error} = editingBoard
-            ? await updateBoard({path: {eventId, boardId: editingBoard.id}, body: request})
-            : await createBoard({path: {eventId}, body: request})
+    // Den 422-Grund des Servers zeigen, wenn vorhanden ("layout … expects N tiles",
+    // "TEXT needs text"). Der generierte Fehlertyp kennt `details` nicht, deshalb die
+    // Prüfung über unknown.
+    const showSaveError = (error: unknown) => {
+        const details = (error as {details?: unknown}).details
+        const reason =
+            details !== null &&
+            typeof details === 'object' &&
+            'reason' in details &&
+            typeof (details as {reason?: unknown}).reason === 'string'
+                ? (details as {reason: string}).reason
+                : undefined
+        feedback.error(reason ?? t('common.error.unexpected'))
+    }
 
-        if (error) {
-            // Den 422-Grund des Servers zeigen, wenn vorhanden ("layout … expects N tiles",
-            // "TEXT needs text"). Der generierte Fehlertyp kennt `details` nicht, deshalb die
-            // Prüfung über unknown.
-            const details = (error as {details?: unknown}).details
-            const reason =
-                details !== null &&
-                typeof details === 'object' &&
-                'reason' in details &&
-                typeof (details as {reason?: unknown}).reason === 'string'
-                    ? (details as {reason: string}).reason
-                    : undefined
-            feedback.error(reason ?? t('common.error.unexpected'))
-            return
+    /**
+     * Zwei Speichern-Wege: [stay] = false schließt wie bisher; true lässt den Editor
+     * offen — für den Blick auf den zweiten Bildschirm, der die Änderung mit seinem
+     * Poll binnen Sekunden nachzieht, während hier weiter justiert wird.
+     *
+     * Der Fetch-Client wirft NICHT bei 4xx/5xx, er gibt {error} zurück. Ein try/catch
+     * fing hier deshalb nie etwas, und jeder abgelehnte Speichervorgang (z. B. eine
+     * 422-Validierung wie „TEXT braucht Text") meldete trotzdem „gespeichert" — daher
+     * die explizite Fehlerprüfung je Zweig.
+     */
+    const handleSubmit = async (request: BoardRequest, stay: boolean) => {
+        if (editingBoard) {
+            const {error} = await updateBoard({
+                path: {eventId, boardId: editingBoard.id},
+                body: request,
+            })
+            if (error) {
+                showSaveError(error)
+                return
+            }
+        } else {
+            const {data, error} = await createBoard({path: {eventId}, body: request})
+            if (error || !data) {
+                showSaveError(error)
+                return
+            }
+            // Beim Bleiben nach dem ERSTEN Speichern eines neuen Boards übernimmt der
+            // Editor das angelegte Board vom Server: ab jetzt gilt der Bearbeiten-Weg
+            // (update statt create) — sonst legte das zweite „Speichern" ein Duplikat
+            // an. Der key-Wechsel ('new' → id) remountet den Editor mit dem
+            // Server-Stand; der ist identisch mit dem gerade Gespeicherten, es geht
+            // also nichts verloren.
+            if (stay) setEditingBoard(data)
         }
 
         feedback.success(t('event.boards.saved'))
-        setEditorOpen(false)
-        setEditingBoard(null)
         setReloadKey(prev => prev + 1)
+        if (!stay) {
+            setEditorOpen(false)
+            setEditingBoard(null)
+        }
     }
 
     const handleDelete = (board: BoardDto) => {
