@@ -1621,10 +1621,10 @@ object CompetitionExecutionService {
      * nur, was aus dem gefahrenen Rennen stammt.
      *
      * Geleert wird der Ausführungszustand:
-     * - `competition_match`: `activated_at`, `started_at`, `finished_at`, dazu die Abruf-Vermerke
-     *   `raceclocker_auto_paused_at` und `raceclocker_poll_error` - ein zurückgesetzter Lauf soll
-     *   ohne weiteren Handgriff wieder automatisch abgerufen werden. `raceclocker_polled_at`
-     *   bleibt: es beschreibt den Job, nicht den Lauf.
+     * - `competition_match`: `activated_at`, `started_at`, `finished_at` und
+     *   `raceclocker_poll_error`. `raceclocker_auto_paused_at` wird dagegen GESETZT statt geleert
+     *   - der Reset pausiert den automatischen Abruf (Begründung unten am Update).
+     *   `raceclocker_polled_at` bleibt: es beschreibt den Job, nicht den Lauf.
      * - `competition_match_team`: Platz, Ausscheidung ([CompetitionMatchTeamRecord.failed] samt
      *   Grund), Zeit (Timecode-Zeile wird gelöscht), Strafzeit, Boot-Start und alle Rundenzeiten -
      *   genau die Felder, die [updateMatchResult] und [applyParsedTeamResults] schreiben.
@@ -1690,7 +1690,13 @@ object CompetitionExecutionService {
             activatedAt = null
             startedAt = null
             finishedAt = null
-            raceclockerAutoPausedAt = null
+            // GESETZT statt geleert: Solange RaceClocker den alten Stand noch führt, würde der
+            // nächste Poll-Takt die soeben gelöschten Ergebnisse sofort wieder einspielen - der
+            // Reset höbe sich selbst auf (Nutzer-Beobachtung 12.08.2026). Die Kette ist dieselbe
+            // wie beim Deaktivieren eines Laufs (getCandidates filtert pausierte Läufe bereits):
+            // Reset → Abruf pausiert → Schiedsrichter räumt den Lauf in RaceClocker auf →
+            // bewusstes Fortsetzen über den bestehenden Knopf ([resumeRaceClockerAutoPull]).
+            raceclockerAutoPausedAt = now
             raceclockerPollError = null
             updatedBy = userId
             updatedAt = now
@@ -1698,8 +1704,10 @@ object CompetitionExecutionService {
 
         // Der Job merkt sich je Lauf den zuletzt geschriebenen Stand und schreibt nichts, solange
         // der Feed unverändert ist. Nach dem Reset beschreibt dieser Merkposten nicht mehr, was in
-        // der Datenbank steht - ohne das Vergessen bliebe der Lauf leer, bis sich in RaceClocker
-        // irgendwann eine Zeile ändert (gleiche Falle wie bei [resumeRaceClockerAutoPull]).
+        // der Datenbank steht - ohne das Vergessen bliebe der Lauf NACH dem bewussten Fortsetzen
+        // leer, bis sich in RaceClocker irgendwann eine Zeile ändert (gleiche Falle wie bei
+        // [resumeRaceClockerAutoPull]). Vor dem Fortsetzen greift es nicht: pausierte Läufe
+        // erreicht der Job gar nicht erst.
         RaceClockerPollService.forget(matchId)
 
         logger.info { "Lauf $matchId zurückgesetzt - Ausführungszustand geleert, Aufstellung und Kennungen bleiben." }

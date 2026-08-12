@@ -11,7 +11,9 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.raceclocker.boundary.RaceClockerPollService
+import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerPollRepo
 import de.lambda9.ready2race.backend.app.timecode.control.TimecodeRepo
+import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
 import de.lambda9.ready2race.backend.app.timecode.control.toRecord
 import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
@@ -20,13 +22,18 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchTeamRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.RaceclockerRaceRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_TEAM
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.RACECLOCKER_RACE
 import de.lambda9.ready2race.backend.database.generated.tables.references.TIMECODE
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.selectOne
+import de.lambda9.ready2race.backend.database.update
 import de.lambda9.ready2race.testing.kio.TestComprehensionScope
 import de.lambda9.ready2race.testing.testComprehension
 import java.time.LocalDateTime
@@ -87,7 +94,9 @@ class CompetitionMatchResetTest {
         assertNull(match.activatedAt, "Aktivierung steht noch")
         assertNull(match.startedAt, "Ist-Start steht noch")
         assertNull(match.finishedAt, "Beenden-Stempel steht noch")
-        assertNull(match.raceclockerAutoPausedAt, "Abruf-Pause steht noch")
+        // GESETZT, nicht geleert: Der Reset pausiert den automatischen Abruf, sonst spielte der
+        // nächste Takt die gelöschten Ergebnisse sofort wieder ein (siehe eigener Testfall unten).
+        assertNotNull(match.raceclockerAutoPausedAt, "Der Reset muss den automatischen Abruf pausieren")
         assertNull(match.raceclockerPollError, "Abruf-Fehler steht noch")
         // Die geplante Startzeit ist Struktur, kein Ausführungszustand.
         assertNotNull(match.startTime, "Die geplante Startzeit wurde gelöscht")
@@ -114,6 +123,67 @@ class CompetitionMatchResetTest {
         // Und der Lauf steht unangetastet da.
         val team = (!CompetitionMatchTeamRepo.getByMatch(previousMatchId)).single()
         assertEquals(2, team.place, "Der gesperrte Reset hat trotzdem geschrieben")
+    }
+
+    /**
+     * Die Pause selbst, gegen den echten Kandidaten-Filter: Ein pollbarer Lauf (RaceClocker als
+     * Zeitnahmesystem, angewähltes Rennen, weder beendet noch pausiert) ist VOR dem Reset
+     * Kandidat des Abruf-Jobs - danach nicht mehr. Ohne die Pause importierte der nächste Takt
+     * die soeben gelöschten Ergebnisse sofort wieder aus dem Feed, solange RaceClocker den alten
+     * Stand noch führt: Der Reset höbe sich selbst auf (Nutzer-Beobachtung 12.08.2026).
+     * Fortgesetzt wird bewusst über [CompetitionExecutionService.resumeRaceClockerAutoPull],
+     * nachdem der Lauf in RaceClocker aufgeräumt ist.
+     */
+    @Test
+    fun resetPausiertDenAutomatischenAbruf() = testComprehension {
+        val seeded = seedClubChain()
+        seedRacedState(seeded)
+
+        // Den Lauf pollbar machen: Zeitnahmesystem an der Veranstaltung, angewähltes Rennen am
+        // Wettkampf - und Beenden/Pause aus dem Seed zurücknehmen, damit die Gegenprobe VOR dem
+        // Reset überhaupt greifen kann.
+        val raceId = UUID.randomUUID()
+        !RACECLOCKER_RACE.insert(
+            RaceclockerRaceRecord(
+                id = raceId,
+                event = seeded.eventId,
+                name = "Kurzstrecke",
+                resultsUrl = "https://raceclocker.com/reset-test",
+                capturesLaps = false,
+                position = 1,
+                createdAt = CHAIN_SEED_TIME,
+                updatedAt = CHAIN_SEED_TIME,
+            )
+        )
+        !EVENT.update({ timingSystem = TimingSystem.RACECLOCKER.name }) { ID.eq(seeded.eventId) }
+        !COMPETITION.update({ raceclockerRace = raceId }) { ID.eq(seeded.competitionId) }
+        !CompetitionMatchRepo.update(seeded.matchId) {
+            finishedAt = null
+            raceclockerAutoPausedAt = null
+        }
+
+        val before = !RaceClockerPollRepo.getCandidates(seeded.eventId)
+        assertTrue(
+            before.any { it.matchId == seeded.matchId },
+            "Gegenprobe schlägt fehl: Der Lauf müsste vor dem Reset Abruf-Kandidat sein",
+        )
+
+        !CompetitionExecutionService.resetMatch(
+            eventId = seeded.eventId,
+            competitionId = seeded.competitionId,
+            matchId = seeded.matchId,
+            userId = SYSTEM_USER,
+        )
+
+        assertNotNull(
+            matchRecord(seeded.matchId).raceclockerAutoPausedAt,
+            "Der Reset muss raceclocker_auto_paused_at setzen",
+        )
+        val after = !RaceClockerPollRepo.getCandidates(seeded.eventId)
+        assertTrue(
+            after.none { it.matchId == seeded.matchId },
+            "Der zurückgesetzte Lauf ist noch Abruf-Kandidat - der nächste Takt spielte die gelöschten Ergebnisse wieder ein",
+        )
     }
 
     /**

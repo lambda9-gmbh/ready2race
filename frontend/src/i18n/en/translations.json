@@ -1039,6 +1039,7 @@
             "title": "Reset race?",
             "warning": "Warning: This race will be reset to “never raced”. Irrevocably lost: the actual start, all finish and split times, all places, disqualifications and time penalties of this race.",
             "keeps": "Kept: line-up, lanes and the boats' identifiers — the RaceClocker mapping stays valid and the race can be raced again right away.",
+          "autoPull": "The automatic RaceClocker pull is paused for this race — otherwise the next pull would immediately re-import the deleted results. After cleaning up in RaceClocker, resume deliberately via “Resume automatic pull”.",
             "question": "Really reset this race?"
           },
           "error": "An error has occurred when resetting the race",

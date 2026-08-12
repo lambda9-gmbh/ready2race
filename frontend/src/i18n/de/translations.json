@@ -1039,6 +1039,7 @@
             "title": "Lauf zurücksetzen?",
             "warning": "Achtung: Dieser Lauf wird auf „nie gefahren“ zurückgesetzt. Unwiderruflich verloren gehen: der Ist-Start, alle Ziel- und Zwischenzeiten, alle Plätze, Ausscheidungen und Zeitstrafen dieses Laufs.",
             "keeps": "Erhalten bleiben: Aufstellung, Bahnen und die Kennungen der Boote — die RaceClocker-Zuordnung bleibt gültig, der Lauf kann direkt neu gefahren werden.",
+          "autoPull": "Der automatische RaceClocker-Abruf wird für diesen Lauf pausiert — sonst spielte der nächste Abruf die gelöschten Ergebnisse sofort wieder ein. Nach dem Aufräumen in RaceClocker über „Automatik wieder aufnehmen“ bewusst fortsetzen.",
             "question": "Lauf wirklich zurücksetzen?"
           },
           "error": "Beim Zurücksetzen des Laufs ist ein Fehler aufgetreten",
