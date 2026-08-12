@@ -32,7 +32,10 @@ object BoardService {
     // der Resolve-Endpoint ist öffentlich und wird von jedem montierten Bildschirm und
     // jedem Telefon im Takt abgerufen — die Datenbank zahlt höchstens einmal je
     // CACHE_TTL_SECONDS und Board. serverTime bleibt je Antwort frisch (Countdown-Anker).
-    private data class CachedView(val builtAt: LocalDateTime, val dto: BoardViewDto)
+    // [marker] ist der [EventChangeMarker]-Stand beim Bau: schreibt danach jemand an der
+    // Veranstaltung (Ergebnis, Beenden, Hinweis, …), gilt der Eintrag sofort als alt —
+    // die TTL deckelt nur noch den Nichts-passiert-Fall.
+    private data class CachedView(val builtAt: LocalDateTime, val marker: Long, val dto: BoardViewDto)
 
     private val boardViewCache = ConcurrentHashMap<UUID, CachedView>()
 
@@ -105,7 +108,13 @@ object BoardService {
         KIO.comprehension {
             val now = LocalDateTime.now()
 
-            val cached = boardViewCache[boardId]?.takeIf { BoardLogic.isCacheFresh(it.builtAt, now) }
+            // Markerstand VOR dem Bau lesen: fällt ein Schreibzugriff mitten in den Bau, trägt
+            // der Eintrag den alten Stand und ist beim nächsten Abruf sofort wieder alt —
+            // lieber einmal umsonst neu bauen als einen veralteten Stand für die TTL halten.
+            val marker = EventChangeMarker.current(eventId)
+
+            val cached = boardViewCache[boardId]
+                ?.takeIf { BoardLogic.isCacheFresh(it.builtAt, now) && it.marker == marker }
             if (cached != null) {
                 KIO.ok(ApiResponse.Dto(cached.dto.copy(serverTime = now)))
             } else {
@@ -219,8 +228,9 @@ object BoardService {
 
                 val program = if (needs.schedule) !buildProgram(eventId) else emptyList()
 
-// Der Hinweis liegt mit im View-Zwischenspeicher; eine Änderung erscheint
-                // also erst nach Cache-TTL plus Poll-Takt des Bildschirms.
+                // Der Hinweis liegt mit im View-Zwischenspeicher; sein PUT bumpt den
+                // EventChangeMarker, eine Änderung erscheint also mit dem nächsten
+                // Poll-Takt des Bildschirms.
                 val notice = !EventRepo.getNotice(eventId).orDie()
 
                 // Nur für Boards mit DELAY-Element (needs-Muster): der Running-Block trägt die
@@ -253,7 +263,7 @@ notice = notice,
                     currentDelaySeconds = currentDelaySeconds,
                 )
 
-                boardViewCache[boardId] = CachedView(now, dto)
+                boardViewCache[boardId] = CachedView(now, marker, dto)
                 KIO.ok(ApiResponse.Dto(dto))
             }
         }

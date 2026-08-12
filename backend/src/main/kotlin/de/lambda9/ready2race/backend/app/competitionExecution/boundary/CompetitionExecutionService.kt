@@ -21,6 +21,7 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
 import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipantError
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
@@ -353,6 +354,9 @@ object CompetitionExecutionService {
         // fällige Slot jetzt selbst — das ist der zweite Auslöser des wartenden Breakpoints.
         !ScheduleChainService.resumeIfParked(eventId, userId)
 
+        // Neue Läufe erscheinen im Block „nächste Läufe" der öffentlichen Anzeigen.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -597,6 +601,9 @@ object CompetitionExecutionService {
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
         }
 
+        // Bahnentausch und Startzeit stehen auf den öffentlichen Anzeigen.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -775,6 +782,9 @@ object CompetitionExecutionService {
         // dann ist das Ergebnis der letzte fehlende Baustein der Runde.
         !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
 
+        // Handeingaben sind genau die Korrekturen, die sofort auf die Anzeigen sollen.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -817,6 +827,9 @@ object CompetitionExecutionService {
         !applyRaceClockerRows(match, matchId, target, rows, userId)
 
         !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
+
+        // Datei-Import ist ein Ergebnis-Schreiber wie die Handeingabe.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -1001,6 +1014,9 @@ object CompetitionExecutionService {
         // dann ist das Ergebnis der letzte fehlende Baustein der Runde.
         !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
 
+        // Datei-Import ist ein Ergebnis-Schreiber wie die Handeingabe.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -1113,7 +1129,13 @@ object CompetitionExecutionService {
         val url = !RaceClockerFeed.normalizeUrl(rawUrl)
         val rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
 
-        return applyRaceClockerRows(match, matchId, target, rows, userId)
+        val response = !applyRaceClockerRows(match, matchId, target, rows, userId)
+
+        // Der manuelle Pull schreibt denselben Stand wie die Automatik — und soll ihn genauso
+        // sofort auf den Anzeigen zeigen.
+        EventChangeMarker.bump(eventId)
+
+        return KIO.ok(response)
     }
 
     /**
@@ -1144,6 +1166,8 @@ object CompetitionExecutionService {
         // drückt, will genau das Gegenteil: den nächsten Takt voll durchlaufen sehen.
         RaceClockerPollService.forget(matchId)
 
+        // Bewusst kein EventChangeMarker.bump: Pause-Vermerk und Fehlerspalte zeigt kein
+        // öffentliches Board, und der nächste Takt bumpt selbst, sobald er wirklich schreibt.
         noData
     }
 
@@ -1564,6 +1588,9 @@ object CompetitionExecutionService {
             updatedAt = LocalDateTime.now()
         }.orDie()
 
+        // „Läuft" soll sofort auf den Anzeigen stehen, nicht erst nach Ablauf der Cache-TTL.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -1606,6 +1633,9 @@ object CompetitionExecutionService {
         }.orDie()
 
         logger.info { "Beenden von Lauf $matchId zurückgenommen." }
+
+        // Der Lauf wandert auf den Anzeigen aus den Ergebnissen zurück.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -1712,6 +1742,9 @@ object CompetitionExecutionService {
 
         logger.info { "Lauf $matchId zurückgesetzt - Ausführungszustand geleert, Aufstellung und Kennungen bleiben." }
 
+        // Zeiten und Zustand des Laufs verschwinden von den Anzeigen.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -1726,6 +1759,10 @@ object CompetitionExecutionService {
         !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
         !setMatchActivation(matchId, request.activated, userId)
+
+        // setMatchActivation selbst kennt die Veranstaltung nicht — beide Aufrufer (hier und
+        // LiveDashboardService.setMatchActivated) bumpen deshalb selbst.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -1805,6 +1842,8 @@ object CompetitionExecutionService {
         if (deleted < 1) {
             KIO.fail(CompetitionExecutionError.RoundNotFound)
         } else {
+            // Die gelöschten Läufe verschwinden aus „nächste Läufe" der Anzeigen.
+            EventChangeMarker.bump(eventId)
             noData
         }
     }
@@ -2629,6 +2668,9 @@ object CompetitionExecutionService {
                 updatedAt = LocalDateTime.now()
             }.orDie()
         }
+
+        // Freilos-Zustand und automatischer Platz stehen in der Freilos-Anzeige der Boards.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
