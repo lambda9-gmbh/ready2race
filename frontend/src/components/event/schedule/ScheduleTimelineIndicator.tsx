@@ -17,12 +17,20 @@ type Props = {
     entries: TimelineEntry[]
     now: Date
     onEntryClick?: (id: string) => void
+    /**
+     * Zeitplan-Tab rendert 'full' (Standard), das Schiedsrichter-Dashboard 'compact': dort ist
+     * der Zeitstrahl Orientierung über den Karten, nicht die Hauptfläche — flachere Spuren und
+     * keine Block-Kürzel, der Tooltip bleibt vollständig.
+     */
+    density?: 'full' | 'compact'
 }
 
-const ROW_HEIGHT = 22
-const ROW_GAP = 3
-// Beschriftungsstreifen unter der Fläche: Stundenmarken und das Uhrzeit-Label des Jetzt-Markers.
-const AXIS_HEIGHT = 18
+// Spurhöhe, Spurabstand und Höhe des Beschriftungsstreifens (Stundenmarken + Jetzt-Label) je
+// Dichte-Stufe.
+const SIZES = {
+    full: {rowHeight: 22, rowGap: 3, axisHeight: 18},
+    compact: {rowHeight: 14, rowGap: 2, axisHeight: 16},
+} as const
 
 /**
  * Zentrierung eines Achsen-Labels auf seiner Marke — an den Rändern einseitig, damit "08:00" am
@@ -38,9 +46,10 @@ const axisLabelTransform = (percent: number): string =>
  * pending slots) - both map their own data shape to the generic TimelineEntry in
  * timelineIndicator.ts before handing it to this component.
  */
-const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
+const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'}: Props) => {
     const {t} = useTranslation()
     const theme = useTheme()
+    const {rowHeight, rowGap, axisHeight} = SIZES[density]
 
     // Breite der Fläche in Pixeln, für die Frage "passt das Kürzel in diesen Block?" —
     // beobachtet statt einmalig gemessen, damit Fenstergrößen-Änderungen die Kürzel nachziehen.
@@ -66,7 +75,7 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
     const hourMarks = computeHourMarks(entries)
     const nowPercent = computeNowMarkerPercent(entries, now)
     const rows = Math.max(...positioned.map(e => e.stackRow)) + 1
-    const barHeight = rows * ROW_HEIGHT + (rows - 1) * ROW_GAP
+    const barHeight = rows * rowHeight + (rows - 1) * rowGap
 
     // Die Farbfamilien der Status-Chips (matchStatusChip.ChipColor), übersetzt in die Theme-
     // Palette. 'default' hat dort keine eigene Palette — grau in zwei Stufen übernimmt die Rolle.
@@ -143,7 +152,7 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
             sx={{
                 position: 'relative',
                 width: '100%',
-                height: barHeight + AXIS_HEIGHT,
+                height: barHeight + axisHeight,
                 overflow: 'visible',
                 '@keyframes r2r-timeline-pulse': {
                     '0%': {boxShadow: `0 0 0 0 ${theme.palette.primary.main}80`},
@@ -197,7 +206,9 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
                 const blockPx = (containerWidth * entry.widthPercent) / 100
                 const shortLabel = entry.shortLabel ?? ''
                 // Passt das Kürzel nicht, bleibt der Block leer — der Tooltip sagt alles.
-                const showLabel = labelFitsWidth(shortLabel, blockPx)
+                // Kompakt gibt es gar keine Kürzel: die flachen Spuren des Dashboards sind
+                // Orientierung, keine Lesefläche.
+                const showLabel = density === 'full' && labelFitsWidth(shortLabel, blockPx)
                 return (
                     <Tooltip key={entry.id} title={entryTooltip(entry)}>
                         <ButtonBase
@@ -207,8 +218,8 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick}: Props) => {
                                 position: 'absolute',
                                 left: `${entry.leftPercent}%`,
                                 width: `${entry.widthPercent}%`,
-                                top: entry.stackRow * (ROW_HEIGHT + ROW_GAP),
-                                height: ROW_HEIGHT,
+                                top: entry.stackRow * (rowHeight + rowGap),
+                                height: rowHeight,
                                 borderRadius: 0.75,
                                 overflow: 'hidden',
                                 ...segmentSx(a),
