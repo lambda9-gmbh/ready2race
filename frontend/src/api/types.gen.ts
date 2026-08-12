@@ -198,6 +198,10 @@ export type AthleteBoardMatch = {
      * number of seats in the following round; null when the following round is an open field
      */
     advancingSeats?: number | null
+    /**
+     * the bye of this match, same derivation as schedule and referee dashboard - public boards need it mainly for must-race byes, where a second line explains why the boat races alone and that its time runs out of competition
+     */
+    bye?: MatchByeDto | null
 }
 
 export type AthleteBoardParticipant = {

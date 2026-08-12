@@ -1666,7 +1666,8 @@
         "deregistration": "Bye{{seed}} after withdrawal — {{team}}",
         "deregistrationWithReason": "Bye{{seed}} after withdrawal — {{team}} ({{reason}})",
         "noOpponent": "Bye{{seed}} — no opponent in this round",
-        "mustRace": "raced — time out of competition"
+        "mustRace": "raced — time out of competition",
+        "mustRaceExplanation": "Raced for fairness: the same effort as the competition. The time does not count towards advancing."
       }
     },
     "liveDashboard": {

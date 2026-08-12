@@ -329,9 +329,7 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                           time: format(new Date(slot.startTime), t('format.time')),
                       }),
                 okText: t(
-                    slot.setupRoundId
-                        ? 'event.schedule.skipOk'
-                        : 'event.schedule.skipOkFree',
+                    slot.setupRoundId ? 'event.schedule.skipOk' : 'event.schedule.skipOkFree',
                 ),
             },
         )
@@ -634,10 +632,16 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                         <Table size={'small'}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell width={'10%'}>{t('event.schedule.startTime')}</TableCell>
+                                    <TableCell width={'10%'}>
+                                        {t('event.schedule.startTime')}
+                                    </TableCell>
                                     <TableCell width={'40%'}>{t('event.schedule.slot')}</TableCell>
-                                    <TableCell width={'20%'}>{t('event.schedule.status')}</TableCell>
-                                    <TableCell width={'15%'}>{t('event.schedule.duration')}</TableCell>
+                                    <TableCell width={'20%'}>
+                                        {t('event.schedule.status')}
+                                    </TableCell>
+                                    <TableCell width={'15%'}>
+                                        {t('event.schedule.duration')}
+                                    </TableCell>
                                     {canEdit && <TableCell width={'15%'} />}
                                 </TableRow>
                             </TableHead>
@@ -739,15 +743,28 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                     </Box>
                                                 </Stack>
                                                 {bye && (
-                                                    <Typography
-                                                        variant={'caption'}
-                                                        display={'block'}
-                                                        sx={{color: 'text.secondary'}}>
-                                                        {translate(bye.key, bye.values) +
-                                                            (bye.mustRace
-                                                                ? ` – ${translate('event.match.bye.mustRace')}`
-                                                                : '')}
-                                                    </Typography>
+                                                    // Beim „muss gefahren werden"-Freilos trägt
+                                                    // der Tooltip die volle Begründung (Fairness,
+                                                    // Zeit zählt nicht) - die Zeile selbst bleibt
+                                                    // beim kurzen Suffix.
+                                                    <Tooltip
+                                                        title={
+                                                            bye.mustRace
+                                                                ? translate(
+                                                                      'event.match.bye.mustRaceExplanation',
+                                                                  )
+                                                                : ''
+                                                        }>
+                                                        <Typography
+                                                            variant={'caption'}
+                                                            display={'block'}
+                                                            sx={{color: 'text.secondary'}}>
+                                                            {translate(bye.key, bye.values) +
+                                                                (bye.mustRace
+                                                                    ? ` – ${translate('event.match.bye.mustRace')}`
+                                                                    : '')}
+                                                        </Typography>
+                                                    </Tooltip>
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -831,7 +848,9 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                                         <IconButton
                                                                             size={'small'}
                                                                             onClick={() =>
-                                                                                handleMarkStarted(slot)
+                                                                                handleMarkStarted(
+                                                                                    slot,
+                                                                                )
                                                                             }>
                                                                             <DirectionsRun
                                                                                 fontSize={'small'}
@@ -851,9 +870,13 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                                         <IconButton
                                                                             size={'small'}
                                                                             onClick={() =>
-                                                                                handleDeactivate(slot)
+                                                                                handleDeactivate(
+                                                                                    slot,
+                                                                                )
                                                                             }>
-                                                                            <Undo fontSize={'small'} />
+                                                                            <Undo
+                                                                                fontSize={'small'}
+                                                                            />
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}
@@ -862,7 +885,8 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                             {slot.state === 'LINKED' &&
                                                                 (slot.bye
                                                                     ? !slot.matchFinishedAt
-                                                                    : slot.matchActivatedAt != null) && (
+                                                                    : slot.matchActivatedAt !=
+                                                                      null) && (
                                                                     <Tooltip
                                                                         title={t(
                                                                             slot.bye
@@ -872,9 +896,13 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                                         <IconButton
                                                                             size={'small'}
                                                                             onClick={() =>
-                                                                                handleFinishSlot(slot)
+                                                                                handleFinishSlot(
+                                                                                    slot,
+                                                                                )
                                                                             }>
-                                                                            <Stop fontSize={'small'} />
+                                                                            <Stop
+                                                                                fontSize={'small'}
+                                                                            />
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}
@@ -889,7 +917,9 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                                             onClick={() =>
                                                                                 handleReopen(slot)
                                                                             }>
-                                                                            <Replay fontSize={'small'} />
+                                                                            <Replay
+                                                                                fontSize={'small'}
+                                                                            />
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}
@@ -897,7 +927,9 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                         <Box sx={actionSlotSx}>
                                                             {slot.state === 'SKIPPED' ? (
                                                                 <Tooltip
-                                                                    title={t('event.schedule.unskip')}>
+                                                                    title={t(
+                                                                        'event.schedule.unskip',
+                                                                    )}>
                                                                     <IconButton
                                                                         size={'small'}
                                                                         onClick={() =>
@@ -933,7 +965,9 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                                                             <Tooltip title={t('common.delete')}>
                                                                 <IconButton
                                                                     size={'small'}
-                                                                    onClick={() => handleDelete(slot)}>
+                                                                    onClick={() =>
+                                                                        handleDelete(slot)
+                                                                    }>
                                                                     <Delete fontSize={'small'} />
                                                                 </IconButton>
                                                             </Tooltip>
@@ -962,10 +996,14 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                         <Table size={'small'}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell width={'25%'}>{t('event.schedule.competition')}</TableCell>
+                                    <TableCell width={'25%'}>
+                                        {t('event.schedule.competition')}
+                                    </TableCell>
                                     <TableCell width={'20%'}>{t('event.schedule.round')}</TableCell>
                                     <TableCell width={'20%'}>{t('event.schedule.match')}</TableCell>
-                                    <TableCell width={'20%'}>{t('event.schedule.status')}</TableCell>
+                                    <TableCell width={'20%'}>
+                                        {t('event.schedule.status')}
+                                    </TableCell>
                                     {canEdit && <TableCell width={'15%'} />}
                                 </TableRow>
                             </TableHead>

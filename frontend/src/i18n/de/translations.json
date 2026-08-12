@@ -1662,7 +1662,8 @@
         "deregistration": "Freilos{{seed}} wegen Abmeldung – {{team}}",
         "deregistrationWithReason": "Freilos{{seed}} wegen Abmeldung – {{team}} ({{reason}})",
         "noOpponent": "Freilos{{seed}} – keine Gegner:in in dieser Runde",
-        "mustRace": "wird gefahren – Zeit außer Konkurrenz"
+        "mustRace": "wird gefahren – Zeit außer Konkurrenz",
+        "mustRaceExplanation": "Wird aus Fairness gefahren: gleiche Belastung wie die Konkurrenz. Die Zeit zählt nicht für das Weiterkommen."
       }
     },
     "liveDashboard": {

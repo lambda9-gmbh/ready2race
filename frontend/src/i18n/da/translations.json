@@ -1662,7 +1662,8 @@
         "deregistration": "Oversidder{{seed}} efter afmelding – {{team}}",
         "deregistrationWithReason": "Oversidder{{seed}} efter afmelding – {{team}} ({{reason}})",
         "noOpponent": "Oversidder{{seed}} – ingen modstander i denne runde",
-        "mustRace": "gennemføres – tid uden for konkurrence"
+        "mustRace": "gennemføres – tid uden for konkurrence",
+        "mustRaceExplanation": "Gennemføres af hensyn til fairness: samme belastning som konkurrenterne. Tiden tæller ikke med i avancementet."
       }
     },
     "liveDashboard": {
