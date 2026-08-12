@@ -58,11 +58,20 @@ export const AthleteBoardBoatList = ({rows, children}: AthleteBoardBoatListProps
     )
 }
 
-/** Die Überschrift eines Wertungskategorie-Abschnitts innerhalb der Liste. */
+/**
+ * Die Überschrift eines Wertungskategorie-Abschnitts innerhalb der Liste. Das Polster oben
+ * gibt dem Abschnitt Luft zur vorigen Bootszeile (statt des früheren `alignSelf: 'end'`,
+ * das noch aus den 1fr-verteilten Zeilen stammte und seit den natürlichen Zeilenhöhen
+ * nichts mehr tat) — die Abschnitte wirkten sonst gedrängt (Rückmeldung vom 12.08.2026).
+ */
 export const AthleteBoardSectionHeading = ({children}: {children: ReactNode}) => (
     <Typography
         noWrap
-        sx={{fontSize: scaled('0.8rem', '1.3vw', '1.8rem'), fontWeight: 700, alignSelf: 'end'}}
+        sx={{
+            fontSize: scaled('0.8rem', '1.3vw', '1.8rem'),
+            fontWeight: 700,
+            pt: scaled('0.45rem', '0.7vw', '1rem'),
+        }}
         color="text.secondary">
         {children}
     </Typography>

@@ -49,6 +49,12 @@ const AthleteBoardColumnCard = ({
             overflow: allowOverflow ? 'visible' : {xs: 'visible', lg: 'hidden'},
             display: 'grid',
             gridTemplateRows: allowOverflow ? 'auto auto' : {xs: 'auto auto', lg: 'auto 1fr'},
+            // Oben andocken statt vertikal zentrieren: ohne das streckt align-content
+            // (Default stretch) die beiden auto-Zeilen über die volle Kachelhöhe, und
+            // eine halb gefüllte Karte hängt mit großem Leerraum in der Mitte
+            // (Nutzer-Rückmeldung vom 12.08.2026 — „kann ruhig oben sein"). Gilt für
+            // Lauf- UND Ergebnis-Karte, die beide in diesem Rahmen stehen.
+            alignContent: 'start',
             rowGap: scaled('0.25rem', '0.4vw', '0.6rem'),
             p: scaled('0.5rem', '0.9vw', '1.25rem'),
         }}>
