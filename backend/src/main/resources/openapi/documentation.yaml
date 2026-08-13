@@ -14521,6 +14521,7 @@ components:
         - TEXT
         - AWARD_CEREMONY
         - DELAY
+        - STREAM
 
     BoardListMode:
       type: string
@@ -14581,6 +14582,15 @@ components:
           $ref: '#/components/schemas/BoardListMode'
         scheduleMode:
           $ref: '#/components/schemas/BoardScheduleMode'
+        streamMode:
+          type: string
+          nullable: true
+          description: "STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result)"
+          enum:
+            - AUTO
+            - RUNNING
+            - RESULTS
+            - UPCOMING
         limit:
           type: integer
           minimum: 1

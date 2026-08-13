@@ -492,6 +492,10 @@ export type BoardElement = {
     showRegisteringClub?: boolean | null
     listMode?: BoardListMode
     scheduleMode?: BoardScheduleMode
+    /**
+     * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result)
+     */
+    streamMode?: ('AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING') | null
     limit?: number | null
     useShortNames?: boolean | null
     competitionId?: string | null
@@ -509,6 +513,11 @@ export type BoardElement = {
 }
 
 /**
+ * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result)
+ */
+export type streamMode = 'AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING'
+
+/**
  * MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile
  */
 export type BoardElementType =
@@ -519,6 +528,7 @@ export type BoardElementType =
     | 'TEXT'
     | 'AWARD_CEREMONY'
     | 'DELAY'
+    | 'STREAM'
 
 export type BoardListDto = {
     mode: BoardListMode
