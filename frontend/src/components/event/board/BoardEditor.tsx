@@ -36,6 +36,7 @@ import {
     BoardRequest,
     BoardScheduleMode,
     BoardTile,
+    streamMode,
 } from '@api/types.gen'
 import {boardColumns, gridPlacement, hasMatchDetail, rowSizes, tileColor} from './boardView'
 
@@ -85,6 +86,9 @@ const elementForType = (type: BoardElementType): BoardElement => {
         case 'AWARD_CEREMONY':
             // Die Ehrung wählt das Formular; ohne Auswahl lehnt der Server das Board ab.
             return {type}
+        case 'STREAM':
+            // Stream-Overlay: Grün als Key-Farbe voreingestellt, Kurzform an, Modus AUTO.
+            return {type, streamMode: 'AUTO', useShortNames: true, backgroundColor: '#00FF00'}
     }
 }
 
@@ -278,6 +282,11 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                     <MenuItem value="AWARD_CEREMONY">
                         {t('event.boards.element.type.awardCeremony')}
                     </MenuItem>
+                    {/* Das Stream-Overlay füllt wie die Sprecher-Kachel immer das ganze
+                        Board (Backend-Validierung) — dieselbe Sichtbarkeitsregel. */}
+                    {(config.tiles.length === 1 || element.type === 'STREAM') && (
+                        <MenuItem value="STREAM">{t('event.boards.element.type.stream')}</MenuItem>
+                    )}
                 </TextField>
                 <Box sx={{flex: 1}} />
                 <IconButton
@@ -374,6 +383,42 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         ),
                     )}
                 </TextField>
+            )}
+
+            {element.type === 'STREAM' && (
+                <Stack gap={1}>
+                    <TextField
+                        select
+                        size="small"
+                        label={t('event.boards.stream.mode.label')}
+                        value={element.streamMode ?? 'AUTO'}
+                        onChange={e =>
+                            updateElement(tileIndex, elementIndex, {
+                                ...element,
+                                streamMode: e.target.value as streamMode,
+                            })
+                        }>
+                        <MenuItem value="AUTO">{t('event.boards.stream.mode.auto')}</MenuItem>
+                        <MenuItem value="RUNNING">{t('event.boards.stream.mode.running')}</MenuItem>
+                        <MenuItem value="RESULTS">{t('event.boards.stream.mode.results')}</MenuItem>
+                        <MenuItem value="UPCOMING">{t('event.boards.stream.mode.upcoming')}</MenuItem>
+                    </TextField>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={element.useShortNames === false}
+                                onChange={e =>
+                                    updateElement(tileIndex, elementIndex, {
+                                        ...element,
+                                        useShortNames: !e.target.checked,
+                                    })
+                                }
+                            />
+                        }
+                        label={t('event.boards.stream.longClubNames')}
+                    />
+                </Stack>
             )}
 
             {element.type === 'MATCH_LIST' && (

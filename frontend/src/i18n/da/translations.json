@@ -2133,7 +2133,8 @@
           "clock": "Ur",
           "delay": "Forsinkelse",
           "text": "Infotekst",
-          "awardCeremony": "Præmieoverrækkelse"
+          "awardCeremony": "Præmieoverrækkelse",
+          "stream": "Livestream-overlay"
         },
         "offset": "Position",
         "offsetCurrent": "Aktuelt løb",
@@ -2187,7 +2188,20 @@
       "columns": "Kolonner",
       "columnCount": "{{count}} kolonner",
       "columnCount_one": "1 kolonne",
-      "showHeader": "Sidehoved med navn og ur"
+      "showHeader": "Sidehoved med navn og ur",
+      "stream": {
+        "running": "I gang",
+        "result": "Resultat",
+        "upcoming": "Næste",
+        "mode": {
+          "label": "Indhold",
+          "auto": "Automatisk (i gang, ellers seneste resultat)",
+          "running": "Kun løb i gang",
+          "results": "Kun seneste resultat",
+          "upcoming": "Næste kommende løb"
+        },
+        "longClubNames": "Fulde klubnavne"
+      }
     }
   },
   "task": {
