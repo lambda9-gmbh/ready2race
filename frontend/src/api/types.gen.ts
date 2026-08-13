@@ -1821,9 +1821,9 @@ export type EventScheduleSlotDto = {
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
 
 /**
- * Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer needs, one race per competition), CSV writes one big file sorted by start time (what RaceClocker needs, one race carrying all waves).
+ * Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer needs, one race per competition), CSV writes one big file sorted by start time (what RaceClocker needs, one race carrying all waves), PDF concatenates the per-match start list PDFs sorted by start time (notice board / registration report style; rendered with the event's assigned START_LIST template, or the built-in layout when none is assigned).
  */
-export type EventStartlistFileType = 'ZIP' | 'CSV'
+export type EventStartlistFileType = 'ZIP' | 'CSV' | 'PDF'
 
 /**
  * One row of the bulk start list export preview: a match the export with the same parameters would export. startTime null means the match would block the export until it is deselected via matchIds.

@@ -214,8 +214,7 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
             }
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(new Blob([data]))
-            anchor.download =
-                getFilename(response) ?? `startLists.${fileType === 'ZIP' ? 'zip' : 'csv'}`
+            anchor.download = getFilename(response) ?? `startLists.${fileType.toLowerCase()}`
             anchor.click()
             anchor.href = ''
             anchor.download = ''
@@ -255,6 +254,13 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                                     value={'CSV'}
                                     control={<Radio />}
                                     label={t('event.schedule.startlistExport.format.csv')}
+                                />
+                                {/* Immer nur von Hand wählbar - die Vorauswahl folgt weiterhin
+                                    dem Zeitnahmesystem (Webscorer → ZIP, RaceClocker → CSV). */}
+                                <FormControlLabel
+                                    value={'PDF'}
+                                    control={<Radio />}
+                                    label={t('event.schedule.startlistExport.format.pdf')}
                                 />
                             </RadioGroup>
                         </FormControl>
