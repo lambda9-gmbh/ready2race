@@ -9,6 +9,7 @@ import {
     AthleteBoardBoatRow,
     AthleteBoardBoatStatus,
     AthleteBoardBoatSubline,
+    AthleteBoardLapTimes,
 } from './AthleteBoardBoatRow'
 import {
     COUNTDOWN_MAX_SECONDS,
@@ -376,36 +377,46 @@ const AthleteBoardMatchCard = ({
                                 // Teilergebnis: sobald die Zeitnahme dieses Boot gewertet hat,
                                 // steht die Zeit hier — der Lauf läuft dabei weiter, bis die
                                 // Organisation ihn beendet, und eine später ergänzte Zeitstrafe
-                                // ändert die Zeile beim nächsten Abruf noch.
-                                showLiveResult && (team.failed || team.timeString) ? (
+                                // ändert die Zeile beim nächsten Abruf noch. Rundenzeiten allein
+                                // (Boot zwischen zwei Marken, noch ohne Endzeit) öffnen die
+                                // Spalte ebenfalls — sie gehören an die Zeit, nicht zur Crew.
+                                showLiveResult &&
+                                (team.failed ||
+                                    team.timeString ||
+                                    (team.laps ?? []).length > 0) ? (
                                     <>
-                                        <AthleteBoardBoatStatus
-                                            muted={team.failed}
-                                            label={
-                                                team.failed
-                                                    ? (team.failedReason ??
-                                                      t('event.info.athleteBoard.failed'))
-                                                    // Als Ordnungszahl (Suffix hochgestellt), damit
-                                                    // der Zwischenstand nicht wie eine zweite
-                                                    // Startnummer liest.
-                                                    : (
-                                                          <>
-                                                              {team.place != null && (
-                                                                  <>
-                                                                      <PlaceOrdinal
-                                                                          place={team.place}
-                                                                      />{' '}
-                                                                  </>
-                                                              )}
-                                                              {team.timeString}
-                                                          </>
-                                                      )
-                                            }
-                                        />
+                                        {(team.failed || team.timeString) && (
+                                            <AthleteBoardBoatStatus
+                                                muted={team.failed}
+                                                label={
+                                                    team.failed
+                                                        ? (team.failedReason ??
+                                                          t('event.info.athleteBoard.failed'))
+                                                        // Als Ordnungszahl (Suffix hochgestellt),
+                                                        // damit der Zwischenstand nicht wie eine
+                                                        // zweite Startnummer liest.
+                                                        : (
+                                                              <>
+                                                                  {team.place != null && (
+                                                                      <>
+                                                                          <PlaceOrdinal
+                                                                              place={team.place}
+                                                                          />{' '}
+                                                                      </>
+                                                                  )}
+                                                                  {team.timeString}
+                                                              </>
+                                                          )
+                                                }
+                                            />
+                                        )}
                                         <AthleteBoardPenaltyNote
                                             penaltySeconds={team.penaltySeconds}
                                             penaltyNote={team.penaltyNote}
                                         />
+                                        {/* Rundenzeiten prominent unter der Zwischen-/Endzeit
+                                            (12.08.2026) — vorher eine Crew-Subline links. */}
+                                        <AthleteBoardLapTimes laps={team.laps} />
                                     </>
                                 ) : undefined
                             }>
@@ -445,16 +456,6 @@ const AthleteBoardMatchCard = ({
                                     {t('event.info.athleteBoard.registeringClub', {
                                         club: team.registeringClub,
                                     })}
-                                </AthleteBoardBoatSubline>
-                            )}
-                            {/* Zwischenzeiten aus RaceClocker unter dem Boot — nur wenn die
-                                Teilergebnisse ohnehin sichtbar sind (showLiveResult), sonst hinge
-                                eine Fahrzeit ohne Endzeit in der Luft. */}
-                            {showLiveResult && (team.laps ?? []).length > 0 && (
-                                <AthleteBoardBoatSubline>
-                                    {(team.laps ?? [])
-                                        .map(lap => `${lap.name} ${lap.timeString}`)
-                                        .join(' · ')}
                                 </AthleteBoardBoatSubline>
                             )}
                         </AthleteBoardBoatRow>

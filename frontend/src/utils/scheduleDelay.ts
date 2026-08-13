@@ -19,15 +19,23 @@ export const delayParts = (seconds: number): {kind: DelayKind; minutes: number} 
 }
 
 /**
- * Die Farbe der großen Zahl im Verspätungs-Element, je Lage (12.08.2026):
- * Verzug warnfarben (Handlungsbedarf), „pünktlich" grün (alles gut — die Bestätigung,
- * für die der Bildschirm hängt), Verfrühung bewusst dezent grau statt Info-Blau:
- * ein früher Lauf ist kein Alarm, ein drittes Signalblau konkurrierte mit den
- * primary-Chips der Nachbarkacheln, und im „Farben aus"-Graustufenmodus der Boards
- * wäre Blau ohnehin nicht von Grau zu unterscheiden.
+ * Die Farbe der großen Zahl im Verspätungs-Element als Ampel-Schema (Nutzerentscheidung
+ * 12.08.2026): Verzug warnfarben (Handlungsbedarf), „pünktlich" grün (alles gut — die
+ * Bestätigung, für die der Bildschirm hängt), Verfrühung Info-Blau. Die Verfrühung stand
+ * zuvor bewusst grau (kein Alarm, kein drittes Signalblau neben den primary-Chips) —
+ * wirkte auf der Anzeigetafel aber wie ungestylt; jede Lage soll auf einen Blick als
+ * Zustand erkennbar sein, dem ist der frühere Einwand untergeordnet.
  */
 export const delayColor = (kind: DelayKind): string =>
-    kind === 'late' ? 'warning.main' : kind === 'onTime' ? 'success.main' : 'text.secondary'
+    kind === 'late' ? 'warning.main' : kind === 'onTime' ? 'success.main' : 'info.main'
+
+/**
+ * Dieselbe Ampel als MUI-Chip-Farbe für den Verspätungs-Chip am Zeitplan-Kopf — eine
+ * Quelle für beide Anzeigen; der Chip hatte zwischenzeitlich seine eigene Zuordnung
+ * (Verzug warnfarben, alles andere grau) und lief damit vom Board-Element weg.
+ */
+export const delayChipColor = (kind: DelayKind): 'warning' | 'success' | 'info' =>
+    kind === 'late' ? 'warning' : kind === 'onTime' ? 'success' : 'info'
 
 /**
  * `started_at − start_time` des zuletzt (nach Ist-Start) gestarteten Eintrags — dieselbe

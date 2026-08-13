@@ -12,7 +12,7 @@ interface BoardDelayElementProps {
  * Seite des Stegs — nach dem Vorbild der Uhr (BoardClockElement). Die Zahl kommt fertig
  * vom Server (`currentDelaySeconds`, Stand des zuletzt gestarteten Laufs); hier wird nur
  * gerundet und semantisch eingefärbt (delayColor): Verzug warnfarben, „pünktlich" grün,
- * Verfrühung dezent. Der Untertitel bleibt neutral.
+ * Verfrühung Info-Blau. Der Untertitel bleibt neutral.
  */
 const BoardDelayElement = ({view}: BoardDelayElementProps) => {
     const {t} = useTranslation()

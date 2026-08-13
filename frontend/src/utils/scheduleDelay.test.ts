@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest'
-import {delayColor, delayParts, latestStartDelaySeconds} from './scheduleDelay'
+import {delayChipColor, delayColor, delayParts, latestStartDelaySeconds} from './scheduleDelay'
 
 describe('delayParts', () => {
     test('unter ±60 Sekunden gilt der Zeitplan als eingehalten', () => {
@@ -16,12 +16,21 @@ describe('delayParts', () => {
 })
 
 describe('delayColor', () => {
-    // Verzug warnt, „pünktlich" bestätigt grün, Verfrühung bleibt dezent —
-    // Begründung (auch gegen Info-Blau) am Helfer selbst.
+    // Ampel-Schema (12.08.2026): Verzug warnt, „pünktlich" bestätigt grün, Verfrühung
+    // Info-Blau — jede Lage sofort als Zustand erkennbar, Begründung am Helfer selbst.
     test('färbt nach Lage', () => {
         expect(delayColor('late')).toBe('warning.main')
         expect(delayColor('onTime')).toBe('success.main')
-        expect(delayColor('early')).toBe('text.secondary')
+        expect(delayColor('early')).toBe('info.main')
+    })
+})
+
+describe('delayChipColor', () => {
+    // Der Zeitplan-Chip trägt dieselbe Ampel wie das Board-Element — eine Quelle.
+    test('gleiche Ampel als Chip-Farbe', () => {
+        expect(delayChipColor('late')).toBe('warning')
+        expect(delayChipColor('onTime')).toBe('success')
+        expect(delayChipColor('early')).toBe('info')
     })
 })
 

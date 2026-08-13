@@ -76,7 +76,7 @@ import {EventModeSelection, isSlotSelected, nextEventModeSelection} from './even
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
 import {useFullWidthLayout} from '../../../layouts/fullWidthLayout.ts'
 import {debounce} from '@utils/debounce.ts'
-import {delayParts, latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
+import {delayChipColor, delayParts, latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
 import {
     matchStatusChip,
     slotMatchStatus,
@@ -585,7 +585,9 @@ const EventSchedule = ({event}: Props) => {
                     {delay && (
                         <Chip
                             size={'small'}
-                            color={delay.kind === 'late' ? 'warning' : 'default'}
+                            // Dieselbe Ampel wie das Verspätungs-Element der Boards —
+                            // eine Quelle (delayChipColor), keine eigene Zuordnung mehr.
+                            color={delayChipColor(delay.kind)}
                             label={
                                 delay.kind === 'onTime'
                                     ? t('event.boards.delay.onTime')

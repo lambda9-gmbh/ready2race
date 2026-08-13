@@ -139,6 +139,17 @@ export const teamLabel = (
 }
 
 /**
+ * Kurzform eines Rundennamens für die Runden-Zeile an der Zeit: „Runde 1" → „R1",
+ * „Lap 2" → „L2". Die Namen sind Spaltenüberschriften aus RaceClocker und damit freier
+ * Text — nur das Muster „ein Wort plus Zahl" wird eingedampft, alles andere (etwa
+ * „500m") bleibt unverändert stehen, bevor eine zu forsche Kürzung den Sinn kostet.
+ */
+export const compactLapLabel = (name: string): string => {
+    const match = name.trim().match(/^(\p{L})\p{L}*\s*(\d+)$/u)
+    return match ? `${match[1].toUpperCase()}${match[2]}` : name
+}
+
+/**
  * Eine Größe, die mit der Dichte der Bühne mitskaliert.
  *
  * `--ab-scale` setzt die Bühne einmal aus [densityScale]; jede Schriftgröße und jeder Abstand der

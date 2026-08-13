@@ -11,7 +11,9 @@ import {
     AthleteBoardTeam,
     BoardElement,
     BoardViewDto,
+    MatchTeamLapDto,
 } from '@api/types.gen'
+import {AthleteBoardLapTimes} from '../info/athleteBoard/AthleteBoardBoatRow'
 import {
     finishComplete,
     formatClockTime,
@@ -158,7 +160,7 @@ const BoardMatchDetailElement = ({
         trailing: {label: ReactNode; muted: boolean},
         subline: string | null,
         participants: AthleteBoardParticipant[],
-        laps: string | null,
+        laps: MatchTeamLapDto[] | undefined,
     ) => (
         <Stack
             key={key}
@@ -192,15 +194,8 @@ const BoardMatchDetailElement = ({
                     </Typography>
                 )}
                 {renderCrew(participants)}
-                {laps && (
-                    <Typography
-                        sx={{fontSize: scaled('0.75rem', '1.1vw', '1.5rem')}}
-                        color="text.secondary">
-                        {laps}
-                    </Typography>
-                )}
             </Box>
-            {(trailing.label || startedLine(team)) && (
+            {(trailing.label || startedLine(team) || (laps ?? []).length > 0) && (
                 <Stack alignItems="flex-end" sx={{flexShrink: 0}}>
                     {trailing.label && (
                         <Typography
@@ -213,6 +208,10 @@ const BoardMatchDetailElement = ({
                             {trailing.label}
                         </Typography>
                     )}
+                    {/* Rundenzeiten prominent unter der Zeit — dieselbe Zeile wie auf
+                        Lauf- und Ergebnis-Karte (12.08.2026); vorher eine kleine graue
+                        Zeile links unter der Crew. */}
+                    <AthleteBoardLapTimes laps={laps} />
                     {/* Beim laufenden Boot der Live-Eindruck („schon unterwegs"), beim
                         gewerteten steht der Start dezent neben bzw. unter der Zielzeit. */}
                     {startedLine(team) && (
@@ -226,11 +225,6 @@ const BoardMatchDetailElement = ({
             )}
         </Stack>
     )
-
-    const lapsLine = (laps: {name: string; timeString: string}[] | undefined) =>
-        laps && laps.length > 0
-            ? laps.map(lap => `${lap.name} ${lap.timeString}`).join(' · ')
-            : null
 
     // Laufende/anstehende Aufstellung: sobald Zwischenstände da sind, sortiert die
     // Platzierung (dieselbe Regel wie die „Im Rennen"-Karte).
@@ -261,7 +255,7 @@ const BoardMatchDetailElement = ({
                       ? t('event.info.athleteBoard.registeringClub', {club: team.registeringClub})
                       : null,
                   team.participants,
-                  lapsLine(team.laps),
+                  team.laps,
               ),
           )
         : null
@@ -295,7 +289,7 @@ const BoardMatchDetailElement = ({
                       ? `${team.ratingCategory.name}${team.categoryPlace != null ? ` — ${formatPlaceOrdinal(team.categoryPlace)}` : ''}`
                       : null,
                   team.participants ?? [],
-                  lapsLine(team.laps),
+                  team.laps,
               ),
           )
         : null
