@@ -1857,7 +1857,13 @@
         "bundle": {
           "label": "Attach bundle documents",
           "hint": "Assembles the event's export bundle – documents and collected start lists in the order configured under settings, each deselectable.",
-          "skippedNonPdf": "not a PDF, will be skipped"
+          "skippedNonPdf": "not a PDF, will be skipped",
+          "disabled": {
+            "onlyStartlists": "The export bundle contains nothing to attach besides the collected start lists – documents can be added on the event's “Settings” tab under “Export bundle”.",
+            "loading": "Loading the export bundle …",
+            "loadFailed": "The export bundle could not be loaded – close the dialog and try again.",
+            "forbidden": "No permission to read the export bundle."
+          }
         },
         "skipByes": {
           "label": "Skip byes",

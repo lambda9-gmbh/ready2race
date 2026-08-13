@@ -69,6 +69,44 @@ export const toggleBundleItem = (selected: Set<string>, itemId: string): Set<str
 }
 
 /**
+ * Warum „Mappen-Dokumente anhängen" gerade nicht wählbar ist - oder null, wenn es das ist.
+ * Nie stumm ausgrauen (Nutzer-Feedback 13.08.2026): Der Dialog zeigt zu jedem Grund einen
+ * eigenen Text als Tooltip und Hinweiszeile.
+ *
+ * Die Reihenfolge der Prüfungen trägt Bedeutung: Geladene Einträge entscheiden zuerst - ein
+ * Reload (pending bei vorhandenen items) soll den Schalter nicht flackern lassen. [ONLY_STARTLISTS]
+ * ist der wahrscheinlichste Fall: Die Mappe enthält außer dem Startlisten-Platzhalter nichts,
+ * es gäbe also nichts anzuhängen (der Platzhalter selbst ist der generierte Teil, den der
+ * Export ohnehin baut). Ein Ladefehler unterscheidet fehlende Berechtigung (401/403) vom Rest.
+ */
+export type BundleAttachDisabledReason =
+    | 'LOADING'
+    | 'FORBIDDEN'
+    | 'LOAD_FAILED'
+    | 'ONLY_STARTLISTS'
+
+export const bundleAttachDisabledReason = (
+    items: EventExportBundleItemDto[] | null,
+    pending: boolean,
+    errorStatus: number | null,
+): BundleAttachDisabledReason | null => {
+    if (items !== null) {
+        return items.some(item => item.kind === 'DOCUMENT') ? null : 'ONLY_STARTLISTS'
+    }
+    // Läuft der Abruf (auch der Neuanlauf nach einem Fehler), zählt das Warten - ein noch
+    // gehaltener alter Fehlerstatus soll nicht als Fehler durchscheinen.
+    if (pending) {
+        return 'LOADING'
+    }
+    if (errorStatus !== null) {
+        return errorStatus === 401 || errorStatus === 403 ? 'FORBIDDEN' : 'LOAD_FAILED'
+    }
+    // Noch keine Antwort, kein Fehler, kein laufender Abruf: er startet gleich (preCondition) -
+    // für den Schalter dasselbe wie Laden.
+    return 'LOADING'
+}
+
+/**
  * Ist mit dieser Auswahl der generierte Startlisten-Teil dabei? Ohne Platzhalter-Datensatz (die
  * Mappe wurde nie geladen) baut der Server die Startlisten ans Ende - deshalb zählt nur ein
  * VORHANDENER, abgewählter Platzhalter als "ohne Startlisten".

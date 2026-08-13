@@ -1857,7 +1857,13 @@
         "bundle": {
           "label": "Mappen-Dokumente anhängen",
           "hint": "Baut die Export-Mappe der Veranstaltung zusammen – Dokumente und gesammelte Startlisten in der unter Einstellungen festgelegten Reihenfolge, einzeln abwählbar.",
-          "skippedNonPdf": "kein PDF, wird übersprungen"
+          "skippedNonPdf": "kein PDF, wird übersprungen",
+          "disabled": {
+            "onlyStartlists": "Die Export-Mappe enthält außer den gesammelten Startlisten nichts zum Anhängen – Dokumente lassen sich am Reiter „Einstellungen“ der Veranstaltung unter „Export-Mappe“ hinzufügen.",
+            "loading": "Die Export-Mappe wird geladen …",
+            "loadFailed": "Die Export-Mappe konnte nicht geladen werden – Dialog schließen und erneut versuchen.",
+            "forbidden": "Keine Berechtigung, die Export-Mappe zu lesen."
+          }
         },
         "skipByes": {
           "label": "Freilose überspringen",
