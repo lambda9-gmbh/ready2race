@@ -36,8 +36,9 @@ import {
     BoardRequest,
     BoardScheduleMode,
     BoardTile,
+    streamMode,
 } from '@api/types.gen'
-import {boardColumns, gridPlacement, hasMatchDetail, rowSizes, tileColor} from './boardView'
+import {boardColumns, gridPlacement, hasMatchDetail, hasStreamOverlay, rowSizes, tileColor} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
@@ -85,6 +86,9 @@ const elementForType = (type: BoardElementType): BoardElement => {
         case 'AWARD_CEREMONY':
             // Die Ehrung wählt das Formular; ohne Auswahl lehnt der Server das Board ab.
             return {type}
+        case 'STREAM':
+            // Stream-Overlay: Grün als Key-Farbe voreingestellt, Kurzform an, Modus AUTO.
+            return {type, streamMode: 'AUTO', useShortNames: true, backgroundColor: '#00FF00'}
     }
 }
 
@@ -124,11 +128,11 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
         },
     )
 
-    // Wirksame Spaltenzahl wie auf der Bühne (boardColumns): ein Sprecher-Board rendert
-    // immer 1×1-vollflächig. `config.columns` bleibt dabei bewusst UNVERÄNDERT stehen —
-    // das Rendering ignoriert es ohnehin, und wer die Sprecher-Kachel wieder entfernt,
-    // bekommt seine alte Spaltenwahl zurück.
-    const detailFullscreen = config.tiles.length === 1 && hasMatchDetail(config.tiles)
+    // Wirksame Spaltenzahl wie auf der Bühne (boardColumns): ein Sprecher-Board oder
+    // Stream-Overlay rendert immer 1×1-vollflächig. `config.columns` bleibt dabei bewusst
+    // UNVERÄNDERT stehen — das Rendering ignoriert es ohnehin, und wer die Vollbild-Kachel
+    // wieder entfernt, bekommt seine alte Spaltenwahl zurück.
+    const fullscreenTile = config.tiles.length === 1 && (hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles))
     const columns = boardColumns(config)
 
     const changeColumns = (value: number) =>
@@ -278,6 +282,11 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                     <MenuItem value="AWARD_CEREMONY">
                         {t('event.boards.element.type.awardCeremony')}
                     </MenuItem>
+                    {/* Das Stream-Overlay füllt wie die Sprecher-Kachel immer das ganze
+                        Board (Backend-Validierung) — dieselbe Sichtbarkeitsregel. */}
+                    {(config.tiles.length === 1 || element.type === 'STREAM') && (
+                        <MenuItem value="STREAM">{t('event.boards.element.type.stream')}</MenuItem>
+                    )}
                 </TextField>
                 <Box sx={{flex: 1}} />
                 <IconButton
@@ -374,6 +383,42 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         ),
                     )}
                 </TextField>
+            )}
+
+            {element.type === 'STREAM' && (
+                <Stack gap={1}>
+                    <TextField
+                        select
+                        size="small"
+                        label={t('event.boards.stream.mode.label')}
+                        value={element.streamMode ?? 'AUTO'}
+                        onChange={e =>
+                            updateElement(tileIndex, elementIndex, {
+                                ...element,
+                                streamMode: e.target.value as streamMode,
+                            })
+                        }>
+                        <MenuItem value="AUTO">{t('event.boards.stream.mode.auto')}</MenuItem>
+                        <MenuItem value="RUNNING">{t('event.boards.stream.mode.running')}</MenuItem>
+                        <MenuItem value="RESULTS">{t('event.boards.stream.mode.results')}</MenuItem>
+                        <MenuItem value="UPCOMING">{t('event.boards.stream.mode.upcoming')}</MenuItem>
+                    </TextField>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={element.useShortNames === false}
+                                onChange={e =>
+                                    updateElement(tileIndex, elementIndex, {
+                                        ...element,
+                                        useShortNames: !e.target.checked,
+                                    })
+                                }
+                            />
+                        }
+                        label={t('event.boards.stream.longClubNames')}
+                    />
+                </Stack>
             )}
 
             {element.type === 'MATCH_LIST' && (
@@ -634,7 +679,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             wirkungslos — deaktiviert mit Erklärung statt stiller Falle
                             (3 Spalten + Sprecher-Kachel quetschte die Kachel in eine Spalte). */}
                         <Tooltip
-                            title={detailFullscreen ? t('event.boards.matchDetailFullscreen') : ''}>
+                            title={fullscreenTile ? t('event.boards.matchDetailFullscreen') : ''}>
                             <Box>
                                 <Typography gutterBottom>{t('event.boards.columns')}</Typography>
                                 <ToggleButtonGroup
@@ -643,7 +688,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                     value={columns}
                                     onChange={(_, value) => value && changeColumns(value as number)}>
                                     {Array.from({length: MAX_COLUMNS}, (_, i) => i + 1).map(n => (
-                                        <ToggleButton key={n} value={n} disabled={detailFullscreen}>
+                                        <ToggleButton key={n} value={n} disabled={fullscreenTile}>
                                             {n}
                                         </ToggleButton>
                                     ))}
@@ -739,7 +784,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                             gleiche Erklärung. */}
                                         <Tooltip
                                             title={
-                                                detailFullscreen
+                                                fullscreenTile
                                                     ? t('event.boards.matchDetailFullscreen')
                                                     : ''
                                             }>
@@ -748,7 +793,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                                     select
                                                     size="small"
                                                     sx={{flex: 1}}
-                                                    disabled={detailFullscreen}
+                                                    disabled={fullscreenTile}
                                                     label={t('event.boards.tile.width')}
                                                     value={Math.min(tile.colSpan ?? 1, columns)}
                                                     onChange={e =>
@@ -770,7 +815,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                                     select
                                                     size="small"
                                                     sx={{flex: 1}}
-                                                    disabled={detailFullscreen}
+                                                    disabled={fullscreenTile}
                                                     label={t('event.boards.tile.height')}
                                                     value={tile.rowSpan ?? 1}
                                                     onChange={e =>
@@ -847,7 +892,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             <Button
                                 startIcon={<AddIcon />}
                                 disabled={
-                                    config.tiles.length >= MAX_TILES || hasMatchDetail(config.tiles)
+                                    config.tiles.length >= MAX_TILES || hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles)
                                 }
                                 onClick={() =>
                                     setConfig({...config, tiles: [...config.tiles, defaultTile()]})

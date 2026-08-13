@@ -151,6 +151,10 @@ export const slotForElement = (
 export const hasMatchDetail = (tiles: BoardTile[]): boolean =>
     tiles.some(tile => tile.elements.some(element => element.type === 'MATCH_DETAIL'))
 
+/** Board mit Stream-Overlay: rendert vollflächig in Key-Farbe, ohne Raster und Kopfzeile. */
+export const hasStreamOverlay = (tiles: BoardTile[]): boolean =>
+    tiles.some(tile => tile.elements.some(element => element.type === 'STREAM'))
+
 /**
  * Die wirksame Spaltenzahl eines Boards. Sonderfall Sprecher-Kachel (Nutzer-Befund
  * 12.08.2026): ein Board, dessen EINZIGE Kachel MATCH_DETAIL enthält, rendert immer
@@ -162,7 +166,9 @@ export const hasMatchDetail = (tiles: BoardTile[]): boolean =>
  * Funktion, damit beide dasselbe zeigen.
  */
 export const boardColumns = (config: {columns?: number | null; tiles: BoardTile[]}): number =>
-    config.tiles.length === 1 && hasMatchDetail(config.tiles) ? 1 : (config.columns ?? 3)
+    config.tiles.length === 1 && (hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles))
+        ? 1
+        : (config.columns ?? 3)
 
 /**
  * Die Daten eines Listen-Elements, auf sein eigenes Limit zugeschnitten. Der Server

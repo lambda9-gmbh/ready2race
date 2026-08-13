@@ -2139,7 +2139,8 @@
           "clock": "Clock",
           "delay": "Delay",
           "text": "Notice",
-          "awardCeremony": "Award ceremony"
+          "awardCeremony": "Award ceremony",
+          "stream": "Livestream overlay"
         },
         "offset": "Position",
         "offsetCurrent": "Current match",
@@ -2193,7 +2194,20 @@
       "columns": "Columns",
       "columnCount": "{{count}} columns",
       "columnCount_one": "1 column",
-      "showHeader": "Header with name and clock"
+      "showHeader": "Header with name and clock",
+      "stream": {
+        "running": "Running",
+        "result": "Result",
+        "upcoming": "Up next",
+        "mode": {
+          "label": "Content",
+          "auto": "Automatic (running, else latest result)",
+          "running": "Running match only",
+          "results": "Latest result only",
+          "upcoming": "Next upcoming match"
+        },
+        "longClubNames": "Full club names"
+      }
     }
   },
   "task": {

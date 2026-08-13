@@ -1,6 +1,7 @@
 import {Box} from '@mui/material'
 import {BoardViewDto} from '@api/types.gen'
-import {boardColumns, gridPlacement, rowSizes} from './boardView'
+import {boardColumns, gridPlacement, hasStreamOverlay, rowSizes} from './boardView'
+import BoardStreamOverlayElement from './BoardStreamOverlayElement'
 import BoardTileView from './BoardTileView'
 import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 
@@ -19,6 +20,14 @@ interface BoardRendererProps {
  * Layout kollabiert; für schmale Geräte ist ein eigenes 1-Spalten-Board der Weg.
  */
 const BoardRenderer = ({view, now}: BoardRendererProps) => {
+    // Ein Stream-Board ist kein Raster: nur das Overlay, randlos, ohne Kopfzeile —
+    // dieselbe Heilungs-Idee wie beim Sprecher-Board (Fehlkonfiguration beim Lesen).
+    if (hasStreamOverlay(view.config.tiles)) {
+        const tile = view.config.tiles.find(t => t.elements.some(e => e.type === 'STREAM'))!
+        const element = tile.elements.find(e => e.type === 'STREAM')!
+        return <BoardStreamOverlayElement view={view} element={element} />
+    }
+
     // Sprecher-Boards erzwingen ein 1-Spalten-Raster, egal was konfiguriert ist —
     // Begründung und Bedingung bei [boardColumns] (heilt Fehlkonfigurationen im Lesen).
     const columns = boardColumns(view.config)

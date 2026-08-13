@@ -2139,7 +2139,8 @@
           "clock": "Uhr",
           "delay": "Verspätung",
           "text": "Hinweistext",
-          "awardCeremony": "Siegerehrung"
+          "awardCeremony": "Siegerehrung",
+          "stream": "Livestream-Overlay"
         },
         "offset": "Position",
         "offsetCurrent": "Aktueller Lauf",
@@ -2193,7 +2194,20 @@
       "columns": "Spalten",
       "columnCount": "{{count}} Spalten",
       "columnCount_one": "1 Spalte",
-      "showHeader": "Kopfzeile mit Name und Uhr"
+      "showHeader": "Kopfzeile mit Name und Uhr",
+      "stream": {
+        "running": "Läuft",
+        "result": "Ergebnis",
+        "upcoming": "Als Nächstes",
+        "mode": {
+          "label": "Inhalt",
+          "auto": "Automatisch (läuft, sonst letztes Ergebnis)",
+          "running": "Nur laufender Lauf",
+          "results": "Nur letztes Ergebnis",
+          "upcoming": "Nächster anstehender Lauf"
+        },
+        "longClubNames": "Vereins-Langform"
+      }
     }
   },
   "task": {

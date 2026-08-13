@@ -5,6 +5,7 @@ import BoardDelayElement from './BoardDelayElement'
 import BoardMatchDetailElement from './BoardMatchDetailElement'
 import BoardMatchListElement from './BoardMatchListElement'
 import BoardMatchSlotElement from './BoardMatchSlotElement'
+import BoardStreamOverlayElement from './BoardStreamOverlayElement'
 import BoardTextElement from './BoardTextElement'
 
 interface BoardElementViewProps {
@@ -53,6 +54,8 @@ const BoardElementView = ({
             return <BoardTextElement element={element} />
         case 'AWARD_CEREMONY':
             return <BoardCeremonyElement element={element} view={view} />
+        case 'STREAM':
+            return <BoardStreamOverlayElement element={element} view={view} />
     }
 }
 
