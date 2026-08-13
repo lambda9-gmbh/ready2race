@@ -41,12 +41,14 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 selfSubmission = allowSelfSubmission,
                 submissionNeedsVerification = submissionNeedsVerification,
                 participantSelfRegistration = allowParticipantSelfRegistration,
-                chainProgressionMode = chainProgressionMode.name,
-                autoCreateFollowingRounds = autoCreateFollowingRounds,
+                // Server-Defaults: diese Einstellungen leben erst im Einstellungen-Tab einer
+                // bestehenden Veranstaltung (EventExecutionSettings), siehe CreateEventRequest.
+                chainProgressionMode = ChainProgressionMode.DEAKTIVIERT.name,
+                autoCreateFollowingRounds = false,
                 showBreaksOnPublicBoards = showBreaksOnPublicBoards,
                 publicResultsVisibility = publicResultsVisibility.name,
-                executionAutoRefresh = executionAutoRefresh,
-                executionAutoRefreshSeconds = executionAutoRefreshSeconds,
+                executionAutoRefresh = true,
+                executionAutoRefreshSeconds = ExecutionAutoRefresh.DEFAULT_SECONDS,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,

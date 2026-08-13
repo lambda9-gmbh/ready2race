@@ -18,7 +18,6 @@ import {addEvent, updateEvent} from '@api/sdk.gen.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import FormInputDate from '@components/form/input/FormInputDate.tsx'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
-import {AUTO_REFRESH_DEFAULT_SECONDS} from '@components/event/competition/excecution/autoRefresh.ts'
 
 type EventForm = {
     name: string
@@ -38,8 +37,9 @@ type EventForm = {
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
     // Die Durchführungs-Einstellungen (chainProgressionMode, autoCreateFollowingRounds,
-    // executionAutoRefresh) fehlen hier bewusst: Sie werden seit dem 11.08.2026 im
-    // Einstellungs-Popover des Zeitplan-Tabs gepflegt (siehe ScheduleSettingsPopover).
+    // executionAutoRefresh) fehlen hier bewusst: Sie leben erst im Einstellungen-Tab einer
+    // bestehenden Veranstaltung (siehe EventExecutionSettings), den es beim Anlegen noch
+    // nicht gibt.
     showBreaksOnPublicBoards: boolean
     publicResultsVisibility: PublicResultsVisibility
 }
@@ -211,10 +211,10 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
-        // Die Durchführungs-Einstellungen gehören zum Zeitplan-Popover; eine neue Veranstaltung
-        // startet mit den Server-Voreinstellungen (der Modus-Default liegt beim Backend).
-        executionAutoRefresh: true,
-        executionAutoRefreshSeconds: AUTO_REFRESH_DEFAULT_SECONDS,
+        // chainProgressionMode, autoCreateFollowingRounds, executionAutoRefresh und
+        // executionAutoRefreshSeconds fehlen bewusst: Sie leben erst im Einstellungen-Tab
+        // einer bestehenden Veranstaltung (EventExecutionSettings); neue Events starten mit
+        // den Server-Defaults.
     }
 }
 

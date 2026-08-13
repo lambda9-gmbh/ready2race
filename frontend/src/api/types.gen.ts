@@ -1297,24 +1297,11 @@ export type CreateEventRequest = {
     allowSelfSubmission: boolean
     submissionNeedsVerification: boolean
     allowParticipantSelfRegistration: boolean
-    chainProgressionMode?: ChainProgressionMode
-    /**
-     * Creates the pairings of the following round automatically once a round is fully finished
-     */
-    autoCreateFollowingRounds?: boolean
     /**
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
     publicResultsVisibility?: PublicResultsVisibility
-    /**
-     * Whether the execution page keeps itself up to date in the background
-     */
-    executionAutoRefresh: boolean
-    /**
-     * Interval of that background sync in seconds; only in effect while executionAutoRefresh is set
-     */
-    executionAutoRefreshSeconds: number
 }
 
 export type CustomFontDto = {

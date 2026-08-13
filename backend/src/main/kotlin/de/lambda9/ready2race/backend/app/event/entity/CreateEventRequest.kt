@@ -27,22 +27,17 @@ data class CreateEventRequest(
     val allowSelfSubmission: Boolean,
     val submissionNeedsVerification: Boolean,
     val allowParticipantSelfRegistration: Boolean,
-    /** Steuert, wer Läufe beenden/aktivieren darf und ob die Kette dabei automatisch weiterzieht. */
-    val chainProgressionMode: ChainProgressionMode,
-    /** Voreinstellung für die Folgerunden-Automatik; Wettkämpfe können sie einzeln übersteuern. */
-    val autoCreateFollowingRounds: Boolean,
     /** Zeigt Pausen/Programmpunkte aus dem Zeitplan auch auf Kiosk und Athleten-Anzeige. */
     val showBreaksOnPublicBoards: Boolean,
     /** Ab welchem Zustand ein Lauf als Ergebnis auf den öffentlichen Ansichten erscheint. */
     val publicResultsVisibility: PublicResultsVisibility,
-    /** Ob die Durchführungsseite ihren Stand im Hintergrund nachzieht. */
-    val executionAutoRefresh: Boolean,
-    /** Takt dieses Abgleichs in Sekunden; Grenzen siehe [ExecutionAutoRefresh]. */
-    val executionAutoRefreshSeconds: Int,
+    // chainProgressionMode, autoCreateFollowingRounds, executionAutoRefresh und
+    // executionAutoRefreshSeconds fehlen bewusst: Sie leben erst im Einstellungen-Tab einer
+    // bestehenden Veranstaltung (EventExecutionSettings), den es beim Anlegen noch nicht gibt.
+    // Neue Events starten mit den Server-Defaults, siehe CreateEventRequest.toRecord.
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
-            ExecutionAutoRefresh.validateSeconds(executionAutoRefreshSeconds),
             this::name validate notBlank,
             this::description validate notBlank,
             this::location validate notBlank,
@@ -79,12 +74,8 @@ data class CreateEventRequest(
                 allowSelfSubmission = false,
                 submissionNeedsVerification = false,
                 allowParticipantSelfRegistration = false,
-                chainProgressionMode = ChainProgressionMode.DEAKTIVIERT,
-                autoCreateFollowingRounds = false,
                 showBreaksOnPublicBoards = false,
                 publicResultsVisibility = PublicResultsVisibility.FINISHED_ONLY,
-                executionAutoRefresh = true,
-                executionAutoRefreshSeconds = ExecutionAutoRefresh.DEFAULT_SECONDS,
             )
     }
 }

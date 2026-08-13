@@ -10753,8 +10753,6 @@ components:
         - allowSelfSubmission
         - submissionNeedsVerification
         - allowParticipantSelfRegistration
-        - executionAutoRefresh
-        - executionAutoRefreshSeconds
       properties:
         name:
           type: string
@@ -10793,24 +10791,11 @@ components:
           type: boolean
         allowParticipantSelfRegistration:
           type: boolean
-        chainProgressionMode:
-          $ref: '#/components/schemas/ChainProgressionMode'
-        autoCreateFollowingRounds:
-          type: boolean
-          description: "Creates the pairings of the following round automatically once a round is fully finished"
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
-        executionAutoRefresh:
-          type: boolean
-          description: "Whether the execution page keeps itself up to date in the background"
-        executionAutoRefreshSeconds:
-          type: integer
-          minimum: 5
-          maximum: 60
-          description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
 
     UpdateEventRequest:
       type: object
