@@ -59,11 +59,13 @@ const solidOr = (color: string, fallback: string): string =>
 const BoardStreamOverlayElement = ({view, element}: Props) => {
     const {t} = useTranslation()
     const theme = useTheme()
-    const content = streamOverlayContent(view.slots, element.streamMode)
+    const content = streamOverlayContent(view, element.streamMode)
     const keyColor = element.backgroundColor ?? STREAM_DEFAULT_BACKGROUND
 
     // Leerzustand: reine Key-Farbe — das Overlay verschwindet im Stream von selbst.
-    if (content === null) {
+    // upcomingList/laps bekommen ihre eigene Darstellung erst in Task 11 — bis dahin
+    // fällt die Kachel für diese Modi auf die reine Key-Farbe zurück.
+    if (content === null || content.kind === 'upcomingList' || content.kind === 'laps') {
         return <Box sx={{position: 'fixed', inset: 0, backgroundColor: keyColor}} />
     }
 
