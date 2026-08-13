@@ -186,6 +186,9 @@ import type {
     MarkMatchStartedFromExecutionData,
     MarkMatchStartedFromExecutionError,
     MarkMatchStartedFromExecutionResponse,
+    FinishMatchFromExecutionData,
+    FinishMatchFromExecutionError,
+    FinishMatchFromExecutionResponse,
     ReopenMatchData,
     ReopenMatchError,
     ReopenMatchResponse,
@@ -1705,6 +1708,22 @@ export const markMatchStartedFromExecution = <ThrowOnError extends boolean = fal
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/mark-started',
+    })
+}
+
+/**
+ * Finishes the match from the execution page (regatta office side). Works in every chainProgressionMode, like finishScheduleSlot - unlike finishLiveDashboardMatch, which is gated in REGATTABUERO mode.
+ */
+export const finishMatchFromExecution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<FinishMatchFromExecutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        FinishMatchFromExecutionResponse,
+        FinishMatchFromExecutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/finish',
     })
 }
 

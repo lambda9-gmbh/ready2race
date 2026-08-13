@@ -1656,6 +1656,40 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/finish:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: finishMatchFromExecution
+      description: "Finishes the match from the execution page (regatta office side). Works in every chainProgressionMode, like finishScheduleSlot - unlike finishLiveDashboardMatch, which is gated in REGATTABUERO mode."
+      parameters:
+        - name: openResults
+          in: query
+          required: false
+          description: "Marks every team without a result as failed with this reason. Deregistered teams are left alone."
+          schema:
+            type: string
+            enum: [DNS, DNF, DSQ]
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reopen:
     parameters:
       - $ref: '#/components/parameters/eventId'

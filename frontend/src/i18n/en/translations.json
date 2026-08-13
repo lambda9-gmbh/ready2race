@@ -1087,6 +1087,9 @@
             "activate": "Activate race",
             "deactivate": "Deactivate race",
             "markStarted": "Running",
+          "finish": "Finish race",
+          "finishConfirm": "Finish this race now? If the event advances automatically, this activates the next races.",
+          "finishSuccess": "Race finished",
             "reopen": "Undo finish"
           }
         },

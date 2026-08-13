@@ -31,6 +31,7 @@ import {teamNameSuffix} from '@utils/helpers.ts'
 import {Dispatch, Fragment, SetStateAction, SyntheticEvent, useRef} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
+    finishMatchFromExecution,
     markMatchStartedFromExecution,
     reopenMatch,
     resetMatch,
@@ -243,6 +244,42 @@ const CompetitionExecutionRound = ({
             feedback.success(t('event.competition.execution.running.success'))
             props.reloadRoundDto()
         }
+    }
+
+    /**
+     * Lauf beenden — vom Büro aus in JEDEM chainProgressionMode erlaubt, wie der Zeitplan-Weg
+     * und anders als das Schiedsrichter-Dashboard, das im REGATTABUERO-Modus sperrt. Bis zum
+     * 12.08.2026 fehlte der Knopf hier ganz: Im SCHIEDSRICHTER-Modus konnte das Büro einen Lauf
+     * ohne verknüpften Zeitplan-Slot nirgends beenden, obwohl der Hinweistext der Einstellung
+     * genau das verspricht (Nutzer-Feedback aus dem Veranstaltungs-Modus). Mit Bestätigung wie
+     * am Zeitplan: Beenden schaltet ggf. die Kette weiter, das soll kein Verklicker auslösen.
+     */
+    const handleFinishMatch = async (match: CompetitionMatchDto) => {
+        confirmAction(
+            async () => {
+                props.setSubmitting(true)
+                const {error} = await finishMatchFromExecution({
+                    path: {
+                        eventId: eventId,
+                        competitionId: competitionId,
+                        competitionMatchId: match.id,
+                    },
+                })
+                props.setSubmitting(false)
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                } else {
+                    feedback.success(
+                        t('event.competition.execution.match.control.finishSuccess'),
+                    )
+                }
+                props.reloadRoundDto()
+            },
+            {
+                content: t('event.competition.execution.match.control.finishConfirm'),
+                okText: t('event.competition.execution.match.control.finish'),
+            },
+        )
     }
 
     /**
@@ -646,6 +683,23 @@ const CompetitionExecutionRound = ({
                                                     onClick={() => handleMarkStarted(match)}>
                                                     {t(
                                                         'event.competition.execution.match.control.markStarted',
+                                                    )}
+                                                </LoadingButton>
+                                            )}
+                                        {/* Beenden in JEDEM chainProgressionMode (siehe
+                                            handleFinishMatch) — angeboten, sobald der Lauf
+                                            unterwegs ist (aktiviert) oder alle Boote gewertet
+                                            sind („Wartet auf Beenden", auch ohne Aktivierung). */}
+                                        {match.finishedAt == null &&
+                                            (match.activatedAt != null ||
+                                                match.status.state === 'AWAITING_FINISH') && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    pending={submitting}
+                                                    onClick={() => handleFinishMatch(match)}>
+                                                    {t(
+                                                        'event.competition.execution.match.control.finish',
                                                     )}
                                                 </LoadingButton>
                                             )}

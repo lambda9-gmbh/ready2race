@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.updateMatchResultFromRaceClocker
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.EventDocumentService
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -134,6 +135,25 @@ fun Route.competitionExecution() {
                         matchId = competitionMatchId,
                         userId = user.id!!,
                         request = body,
+                    )
+                }
+            }
+
+            // Lauf beenden — in JEDEM chainProgressionMode erlaubt, wie der Zeitplan-Weg
+            // (/schedule/slot/{slotId}/finish) und anders als das Schiedsrichter-Dashboard,
+            // das im REGATTABUERO-Modus sperrt. Siehe Service-KDoc.
+            put("/finish") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+                    val openResults = !optionalQueryParam("openResults", enum<OpenResultHandling>())
+
+                    CompetitionExecutionService.finishMatch(
+                        eventId = eventId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                        openResults = openResults,
                     )
                 }
             }
