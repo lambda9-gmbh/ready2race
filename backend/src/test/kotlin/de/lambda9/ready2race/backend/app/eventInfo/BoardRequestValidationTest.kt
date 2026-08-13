@@ -331,4 +331,18 @@ class BoardRequestValidationTest {
         )
         assertNotEquals(ValidationResult.Valid, invalid.validate())
     }
+
+    @Test
+    fun `streamCrew ist nur an STREAM-Elementen erlaubt`() {
+        val invalid = BoardRequest(
+            name = "Uhr",
+            config = BoardConfig(
+                columns = 1,
+                tiles = listOf(BoardTile(elements = listOf(
+                    BoardElement(type = BoardElementType.CLOCK, streamCrew = StreamCrewDisplay.CLUBS_ONLY)
+                ))),
+            ),
+        )
+        assertNotEquals(ValidationResult.Valid, invalid.validate())
+    }
 }
