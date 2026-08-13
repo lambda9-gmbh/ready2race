@@ -2332,6 +2332,13 @@
       "invitation": "Invitation",
       "pendingInvitations": "Pending invitations",
       "accept": "Accept invitation",
+      "expiresAt": "Expires on",
+      "withdraw": "Withdraw invitation",
+      "withdrawConfirm": "Withdraw the invitation to {{email}}? The link that was already sent will stop working. You can invite the person again afterwards.",
+      "withdrawSuccess": "Invitation withdrawn",
+      "resend": "Resend invitation",
+      "resendConfirm": "Send the invitation to {{email}} again? They will receive a new link valid for seven days, and the link from the first mail will stop working.",
+      "resendSuccess": "Invitation sent again",
       "hint": "Please enter a password for the user account that will be created.",
       "submitPassword": "Accept invitation",
       "userCreated": {

@@ -249,6 +249,63 @@ object AppUserService {
         noData
     }
 
+    /**
+     * Zieht eine noch nicht angenommene Einladung zurueck. Rollen und Mail-Verknuepfung haengen
+     * per Fremdschluessel daran, und eine Regel gibt die Adresse in email_address wieder frei -
+     * dieselbe Person kann also anschliessend neu eingeladen werden.
+     */
+    fun deleteInvitation(
+        invitationId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val deleted = !AppUserInvitationRepo.delete(invitationId).orDie()
+        !KIO.failOn(deleted == 0) { AppUserError.InvitationNotFound }
+
+        noData
+    }
+
+    /**
+     * Verschickt die Einladung erneut - mit neuem Token und voller Laufzeit. Der Link aus der
+     * ersten Mail wird dadurch ungueltig.
+     */
+    fun resendInvitation(
+        request: ResendInvitationRequest,
+        invitationId: UUID,
+        sender: AppUserWithPrivilegesRecord,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val newToken = RandomUtilities.token()
+
+        val invitation = !AppUserInvitationRepo.refreshToken(invitationId, newToken, invitationLifeTime).orDie()
+            .onNullFail { AppUserError.InvitationNotFound }
+
+        val content = !EmailService.getTemplate(
+            EmailTemplateKey.USER_INVITATION,
+            EmailLanguage.valueOf(invitation.language),
+        ).map { template ->
+            template.toContent(
+                EmailTemplatePlaceholder.RECIPIENT to invitation.firstname + " " + invitation.lastname,
+                EmailTemplatePlaceholder.SENDER to sender.firstname + " " + sender.lastname,
+                EmailTemplatePlaceholder.LINK to request.callbackUrl + newToken,
+            )
+        }
+
+        val emailId = !EmailService.enqueue(
+            recipient = invitation.email,
+            content = content,
+            priority = EmailPriority.HIGH,
+        )
+
+        !AppUserInvitationToEmailRepo.upsert(
+            AppUserInvitationToEmailRecord(
+                appUserInvitation = invitationId,
+                email = emailId,
+            )
+        ).orDie()
+
+        noData
+    }
+
     fun acceptInvitation(
         request: AcceptInvitationRequest,
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {

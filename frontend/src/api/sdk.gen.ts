@@ -45,6 +45,12 @@ import type {
     AcceptUserInvitationData,
     AcceptUserInvitationError,
     AcceptUserInvitationResponse,
+    DeleteInvitationData,
+    DeleteInvitationError,
+    DeleteInvitationResponse,
+    ResendInvitationData,
+    ResendInvitationError,
+    ResendInvitationResponse,
     InitPasswordResetData,
     InitPasswordResetError,
     InitPasswordResetResponse,
@@ -1150,6 +1156,32 @@ export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/user/invitation/accept',
+    })
+}
+
+export const deleteInvitation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteInvitationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteInvitationResponse,
+        DeleteInvitationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/invitation/{invitationId}',
+    })
+}
+
+export const resendInvitation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResendInvitationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        ResendInvitationResponse,
+        ResendInvitationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/invitation/{invitationId}/resend',
     })
 }
 

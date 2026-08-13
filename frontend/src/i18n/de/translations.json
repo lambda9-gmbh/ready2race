@@ -2332,6 +2332,13 @@
       "invitation": "Einladung",
       "pendingInvitations": "Ausstehende Einladungen",
       "accept": "Einladung annehmen",
+      "expiresAt": "Läuft ab am",
+      "withdraw": "Einladung zurückziehen",
+      "withdrawConfirm": "Die Einladung an {{email}} zurückziehen? Der bereits verschickte Link wird damit ungültig. Die Person kann anschließend neu eingeladen werden.",
+      "withdrawSuccess": "Einladung zurückgezogen",
+      "resend": "Einladung erneut verschicken",
+      "resendConfirm": "Die Einladung erneut an {{email}} verschicken? Sie erhält einen neuen Link mit sieben Tagen Frist, der Link aus der ersten Mail wird ungültig.",
+      "resendSuccess": "Einladung erneut verschickt",
       "hint": "Bitte vergeben Sie noch ein Passwort für das zu erstellende Benutzerkonto.",
       "submitPassword": "Einladung annehmen",
       "userCreated": {

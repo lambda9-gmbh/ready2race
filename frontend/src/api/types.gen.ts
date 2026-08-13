@@ -3240,6 +3240,10 @@ export type ResendAccessTokenRequest = {
     callbackUrl: string
 }
 
+export type ResendInvitationRequest = {
+    callbackUrl: string
+}
+
 export type Resource =
     | 'USER'
     | 'EVENT'
@@ -4215,6 +4219,27 @@ export type AcceptUserInvitationData = {
 export type AcceptUserInvitationResponse = unknown
 
 export type AcceptUserInvitationError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteInvitationData = {
+    path: {
+        invitationId: string
+    }
+}
+
+export type DeleteInvitationResponse = void
+
+export type DeleteInvitationError = ApiError
+
+export type ResendInvitationData = {
+    body: ResendInvitationRequest
+    path: {
+        invitationId: string
+    }
+}
+
+export type ResendInvitationResponse = void
+
+export type ResendInvitationError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type InitPasswordResetData = {
     body: PasswordResetInitRequest
