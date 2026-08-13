@@ -73,6 +73,7 @@ import CompetitionExecutionRound, {
 import RoundProgressionSetting from '@components/event/competition/excecution/RoundProgressionSetting.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
+import SettingsPopover from '@components/SettingsPopover.tsx'
 import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
 import FormInputTimecode from '@components/form/input/FormInputTimecode.tsx'
 import {
@@ -1097,7 +1098,17 @@ const CompetitionExecution = ({autoRefresh, focusMatchId, onDataChanged, ...scop
                             </HtmlTooltip>
                         )}
                     </Box>
-                    <RoundProgressionSetting eventId={eventId} competitionId={competitionId} />
+                    {/* Der Folgerunden-Override ist eine Ausnahmefall-Einstellung — als offenes
+                        Formular thronte er über der ganzen Durchführung (Nutzer-Feedback aus dem
+                        Veranstaltungs-Modus, 12.08.2026). Jetzt sitzt er hinter dem Zahnrad neben
+                        dem Knopf, den er betrifft; das Popover baut den Inhalt erst beim Öffnen,
+                        die Einstellung lädt also jedes Mal frisch. */}
+                    <SettingsPopover minWidth={420} maxWidth={'min(520px, 90vw)'}>
+                        <RoundProgressionSetting
+                            eventId={eventId}
+                            competitionId={competitionId}
+                        />
+                    </SettingsPopover>
                 </Box>
             )}
             <Stack spacing={6}>

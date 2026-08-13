@@ -20,6 +20,8 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
@@ -1667,6 +1669,35 @@ object CompetitionExecutionService {
 
         // „Läuft" soll sofort auf den Anzeigen stehen, nicht erst nach Ablauf der Cache-TTL.
         EventChangeMarker.bump(eventId)
+
+        noData
+    }
+
+    /**
+     * Beendet den Lauf von der Durchführungsseite aus — in JEDEM chainProgressionMode, genau wie
+     * der Zeitplan-Weg
+     * ([de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleService.finishSlot]).
+     *
+     * Das Beenden des Schiedsrichter-Dashboards ist im REGATTABUERO-Modus gesperrt
+     * ([LiveDashboardService.finishMatch]) — die Durchführungsseite ist aber gerade das Werkzeug
+     * des Regattabüros, und der Hinweistext der Einstellung verspricht ihm das Eingreifen
+     * unabhängig vom Modus. Bis zum 12.08.2026 hatte diese Seite gar keinen eigenen Beenden-Weg
+     * (Nutzer-Feedback aus dem Veranstaltungs-Modus): Ohne verknüpften Zeitplan-Slot blieb nur
+     * das Dashboard, und das lehnt im REGATTABUERO-Modus ab. Kette, offene Ergebnisse und
+     * Change-Marker übernimmt der gemeinsame Trichter
+     * [LiveDashboardService.finishMatchInternal].
+     */
+    fun finishMatch(
+        eventId: UUID,
+        matchId: UUID,
+        userId: UUID,
+        openResults: OpenResultHandling? = null,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+        !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        !LiveDashboardService.finishMatchInternal(eventId, matchId, userId, openResults, mode)
 
         noData
     }

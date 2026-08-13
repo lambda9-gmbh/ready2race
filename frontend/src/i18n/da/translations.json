@@ -1090,6 +1090,9 @@
             "activate": "Aktiver løb",
             "deactivate": "Deaktiver løb",
             "markStarted": "I gang",
+            "finish": "Afslut løb",
+            "finishConfirm": "Afslut dette løb nu? Hvis stævnet skifter automatisk videre, aktiveres de næste løb.",
+            "finishSuccess": "Løbet er afsluttet",
             "reopen": "Fortryd afslutning"
           }
         },

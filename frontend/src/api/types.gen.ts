@@ -4987,6 +4987,24 @@ export type MarkMatchStartedFromExecutionResponse = void
 
 export type MarkMatchStartedFromExecutionError = BadRequestError | ApiError
 
+export type FinishMatchFromExecutionData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+    query?: {
+        /**
+         * Marks every team without a result as failed with this reason. Deregistered teams are left alone.
+         */
+        openResults?: 'DNS' | 'DNF' | 'DSQ'
+    }
+}
+
+export type FinishMatchFromExecutionResponse = void
+
+export type FinishMatchFromExecutionError = BadRequestError | ApiError
+
 export type ReopenMatchData = {
     path: {
         competitionId: string
