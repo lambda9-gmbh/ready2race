@@ -23,6 +23,7 @@ import {
     readInvoiceGlobal,
     readUserGlobal,
     updateEventGlobal,
+    updateUserGlobal,
 } from '@authorization/privileges.ts'
 import {useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
@@ -122,10 +123,12 @@ const SidebarContent = ({...props}: Props) => {
                 privilege={readUserGlobal}
                 to={'/user'}
             />
+            {/* Dasselbe Recht wie die Route selbst (rolesIndexRoute): wer nur lesen darf, wurde
+                hier bisher auf einen Eintrag geklickt, der ihn sofort wieder wegleitet. */}
             <SidebarItem
                 text={t('navigation.titles.roles')}
                 icon={<Work />}
-                privilege={readUserGlobal}
+                privilege={updateUserGlobal}
                 to={'/role'}
             />
             <SidebarItem
