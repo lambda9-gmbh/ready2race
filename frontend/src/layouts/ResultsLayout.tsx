@@ -1,8 +1,11 @@
 import {Outlet} from '@tanstack/react-router'
-import {Container, Box} from '@mui/material'
+import {Container, Box, Link as MuiLink} from '@mui/material'
+import {Link} from '@tanstack/react-router'
+import {useTranslation} from 'react-i18next'
 import {useEffect} from 'react'
 
 const ResultsLayout = () => {
+    const {t} = useTranslation()
     // Die Ergebnisseite trägt Namen von Teilnehmenden und über "Mein Event" den Zustand
     // persönlicher Bedingungen. Ein Suchmaschinentreffer würde aus "wer den Link hat"
     // ein "wer den Namen sucht" machen. Der Schutz hängt bewusst am Layout und nicht an
@@ -40,6 +43,18 @@ const ResultsLayout = () => {
                     flexDirection: 'column',
                 }}>
                 <Outlet />
+            </Box>
+            {/* Dezenter Fußbereich: die Datenschutzerklärung muss von der öffentlichen
+                Seite aus erreichbar sein (Informationspflicht), ohne die Anzeige zu stören. */}
+            <Box component="footer" sx={{py: 2}}>
+                <MuiLink
+                    component={Link}
+                    to="/datenschutz"
+                    variant="caption"
+                    color="text.secondary"
+                    underline="hover">
+                    {t('legal.privacy')}
+                </MuiLink>
             </Box>
         </Container>
     )
