@@ -43,6 +43,12 @@ const byNullsLast =
         return av - bv
     }
 
+// Nur deckende Hex-Farben dürfen auf die Key-Fläche: während das Theme lädt, liefert
+// MUI rgba-Vorgaben (z. B. text.primary = rgba(0,0,0,0.87)) — die würden sich mit der
+// Key-Farbe mischen und beim Keying Farbsäume ziehen. Also im Zweifel ein festes Hex.
+const solidOr = (color: string, fallback: string): string =>
+    color.startsWith('#') ? color : fallback
+
 /**
  * Das Livestream-Overlay: vollflächige Key-Farbe, unten ein Lower-Third im r2r-Design.
  *
@@ -114,15 +120,15 @@ const BoardStreamOverlayElement = ({view, element}: Props) => {
                     overflow: 'hidden',
                     borderRadius: 2,
                     display: 'flex',
-                    backgroundColor: theme.palette.text.primary, // dunkles, DECKENDES Panel
-                    color: theme.palette.background.paper,
+                    backgroundColor: solidOr(theme.palette.text.primary, '#1d1d1d'), // dunkles, DECKENDES Panel
+                    color: solidOr(theme.palette.background.paper, '#ffffff'),
                 }}>
                 {/* Akzentband links — eine harte Kante in Primärfarbe, kein Verlauf. */}
                 <Box
                     sx={{
                         width: '0.6rem',
                         flexShrink: 0,
-                        backgroundColor: theme.palette.primary.main,
+                        backgroundColor: solidOr(theme.palette.primary.main, '#1976d2'),
                     }}
                 />
                 <Stack sx={{minWidth: 0, flex: 1, p: 3, gap: 1.5, overflow: 'hidden'}}>
@@ -134,8 +140,8 @@ const BoardStreamOverlayElement = ({view, element}: Props) => {
                                 px: 1.5,
                                 py: 0.5,
                                 borderRadius: 1,
-                                backgroundColor: theme.palette.primary.main,
-                                color: theme.palette.primary.contrastText,
+                                backgroundColor: solidOr(theme.palette.primary.main, '#1976d2'),
+                                color: solidOr(theme.palette.primary.contrastText, '#ffffff'),
                             }}>
                             <Typography
                                 sx={{
@@ -214,7 +220,12 @@ const BoardStreamOverlayElement = ({view, element}: Props) => {
                                             <Typography
                                                 variant="body2"
                                                 noWrap
-                                                sx={{color: theme.palette.warning.light}}>
+                                                sx={{
+                                                    color: solidOr(
+                                                        theme.palette.warning.light,
+                                                        '#ffb74d',
+                                                    ),
+                                                }}>
                                                 {[
                                                     team.penaltySeconds != null
                                                         ? `${team.penaltySeconds}s`

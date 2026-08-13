@@ -6,6 +6,7 @@ import {
 } from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import BoardRenderer from '@components/event/board/BoardRenderer'
+import {hasStreamOverlay} from '@components/event/board/boardView'
 import {useBoardViewData} from '@components/event/board/useBoardViewData'
 import {useServerClock} from '@components/event/info/athleteBoard/useServerClock'
 import {boardDisplayRoute} from '@routes'
@@ -140,6 +141,14 @@ const BoardDisplayPage = () => {
         loadFailed && lastUpdated !== null && Date.now() - lastUpdated.getTime() > staleThresholdMs
 
     const showHeader = data.config.showHeader !== false
+
+    // Stream-Boards laufen als OBS-Browserquelle vor Chroma-Key: JEDES Chrome (Kopf,
+    // Vollbild-Knopf, Stand-Hinweis) würde als Fläche über der Key-Farbe liegen und beim
+    // Keying stehen bleiben — eine Maus, die den Knopf ausblenden könnte, gibt es dort nie.
+    // Also nur das Overlay selbst, ohne jede Umrandung dieser Seite.
+    if (hasStreamOverlay(data.config.tiles)) {
+        return <BoardRenderer view={data} now={now} />
+    }
 
     return (
         <Box
