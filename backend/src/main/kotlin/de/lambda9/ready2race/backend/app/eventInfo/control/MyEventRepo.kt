@@ -95,7 +95,8 @@ object MyEventRepo {
             COMPETITION_MATCH.STARTED_AT,
             COMPETITION_MATCH.FINISHED_AT,
             COMPETITION_MATCH.ACTIVATED_AT,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION_PROPERTIES.NAME.`as`("competition_name"),
             COMPETITION_CATEGORY.NAME.`as`("category_name"),

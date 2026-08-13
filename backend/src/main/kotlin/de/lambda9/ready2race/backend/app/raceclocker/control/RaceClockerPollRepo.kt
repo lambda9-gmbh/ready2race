@@ -74,7 +74,9 @@ object RaceClockerPollRepo {
             COMPETITION_MATCH.ACTIVATED_AT,
             // Der Ist-Start entscheidet, ob der Abruf ihn im Feed noch nachtragen muss.
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_SETUP_MATCH.NAME,
+            // Freilose tragen ihren materialisierten Namen (V202608121300) - dieselbe Koaleszenz
+            // wie startlist_view, sonst fände der Wellennamen-Abgleich die exportierte Welle nicht.
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION.ID.`as`("competition_id"),
             // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die drei
             // Rennen-Spalten die Anwahl.
@@ -119,7 +121,7 @@ object RaceClockerPollRepo {
                     startedAt = record[COMPETITION_MATCH.STARTED_AT],
                     target = RaceClockerMatchTarget(
                         waveName = WaveName.format(
-                            matchName = record[COMPETITION_SETUP_MATCH.NAME],
+                            matchName = record["match_name", String::class.java],
                             startTime = record[COMPETITION_MATCH.START_TIME],
                             competitionIdentifier = record[COMPETITION_PROPERTIES.IDENTIFIER],
                             competitionShortName = record[COMPETITION_PROPERTIES.SHORT_NAME],

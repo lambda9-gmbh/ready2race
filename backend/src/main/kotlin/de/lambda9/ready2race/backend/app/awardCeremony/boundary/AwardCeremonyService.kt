@@ -381,7 +381,9 @@ object AwardCeremonyService {
         } ?: return Triple(null, null, null)
 
         val (round, match) = found
-        val name = round.setupMatches.firstOrNull { it.id == match.competitionSetupMatch }?.name
+        // Ein Freilos steht auch auf dem Bogen als "Freilos <Setzungszahl>" (V202608121300).
+        val name = match.byeName
+            ?: round.setupMatches.firstOrNull { it.id == match.competitionSetupMatch }?.name
         // Der tatsächliche Start geht dem geplanten vor: auf dem Blatt steht, wann gefahren wurde.
         return Triple(round.setupRoundName, name, match.startedAt ?: match.startTime)
     }

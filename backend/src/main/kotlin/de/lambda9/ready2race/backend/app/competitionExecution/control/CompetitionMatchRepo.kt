@@ -45,6 +45,18 @@ object CompetitionMatchRepo {
         )
 
     /**
+     * Materialisiert die Freilos-Namen ("Freilos <Setzungszahl>") an den Lauf-Instanzen der
+     * soeben erzeugten Runde (Schlüssel: Setup-Lauf-Id = Primärschlüssel von competition_match).
+     * Nur `createNewRound` schreibt hier, direkt nach der Erzeugung - ein Zurücksetzen braucht es
+     * nicht, weil die Instanz samt Name beim Löschen der Runde stirbt (V202608121300).
+     */
+    fun setByeNames(byeNameBySetupMatch: Map<UUID, String>) =
+        COMPETITION_MATCH.updateMany(
+            f = { byeName = byeNameBySetupMatch.getValue(competitionSetupMatch!!) },
+            condition = { COMPETITION_SETUP_MATCH.`in`(byeNameBySetupMatch.keys) },
+        )
+
+    /**
      * Der Wettkampf, zu dem dieser Lauf gehört — die Kette Lauf → Setup-Lauf → Runde →
      * Eigenschaften → Wettkampf. Die Aufrufer der Automatik kennen nur den Lauf.
      */
@@ -74,7 +86,9 @@ object CompetitionMatchRepo {
         // Der frühere Veranstaltungs-Default ist entfallen: er duplizierte die Pro-Rennen-Zuordnung
         // und ein nicht zugeordneter Wettkampf soll ehrlich „kein Rennen" sein, statt still zu erben.
         select(
-            COMPETITION_SETUP_MATCH.NAME,
+            // Freilose tragen ihren materialisierten Namen (V202608121300) - dieselbe Koaleszenz
+            // wie startlist_view, sonst fände der Wellennamen-Abgleich die exportierte Welle nicht.
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_MATCH.START_TIME,
             // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die drei
             // Rennen-Spalten die Anwahl.
@@ -97,7 +111,7 @@ object CompetitionMatchRepo {
             .fetchOne { record ->
                 RaceClockerMatchTarget(
                     waveName = WaveName.format(
-                        matchName = record[COMPETITION_SETUP_MATCH.NAME],
+                        matchName = record["match_name", String::class.java],
                         startTime = record[COMPETITION_MATCH.START_TIME],
                         competitionIdentifier = record[COMPETITION_PROPERTIES.IDENTIFIER],
                         competitionShortName = record[COMPETITION_PROPERTIES.SHORT_NAME],
@@ -223,7 +237,8 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.UPDATED_AT,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
@@ -327,7 +342,8 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.STARTED_AT,
             COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
@@ -362,7 +378,8 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_MATCH.START_TIME_OFFSET,
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
@@ -407,7 +424,8 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_MATCH.START_TIME_OFFSET,
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),

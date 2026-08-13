@@ -87,7 +87,8 @@ object EventScheduleRepo {
             COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
             COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.`as`("setup_round_id"),
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH.isNotNull.`as`("match_exists"),
             COMPETITION_MATCH.STARTED_AT.`as`("match_started_at"),
@@ -263,7 +264,9 @@ object EventScheduleRepo {
             COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
             COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300) - gerade hier: die
+            // nicht verplanten Läufe sind vor allem Dauer-Freilose.
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             // Der Lauf-Zustand, sofern die Runde schon gesetzt ist: Die nicht verplanten Läufe
             // sind vor allem Dauer-Freilose, und ob so eines noch quittiert werden muss, soll
             // der Zeitplan zeigen, statt es hinter "Zur Durchführung" zu verstecken.
